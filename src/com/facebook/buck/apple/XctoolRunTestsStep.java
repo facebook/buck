@@ -88,7 +88,8 @@ class XctoolRunTestsStep implements Step {
   private final Optional<Long> xctoolStutterTimeout;
   private final Path outputPath;
   private final Optional<? extends StdoutReadingCallback> stdoutReadingCallback;
-  private final AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider;
+  private final Optional<AppleDeveloperDirectoryForTestsProvider>
+      appleDeveloperDirectoryForTestsProvider;
   private final TestSelectorList testSelectorList;
   private final Optional<String> logDirectoryEnvironmentVariable;
   private final Optional<Path> logDirectory;
@@ -164,7 +165,7 @@ class XctoolRunTestsStep implements Step {
       Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
       Path outputPath,
       Optional<? extends StdoutReadingCallback> stdoutReadingCallback,
-      AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider,
+      Optional<AppleDeveloperDirectoryForTestsProvider> appleDeveloperDirectoryForTestsProvider,
       TestSelectorList testSelectorList,
       boolean waitForDebugger,
       Optional<String> logDirectoryEnvironmentVariable,
@@ -220,9 +221,10 @@ class XctoolRunTestsStep implements Step {
 
   public ImmutableMap<String, String> getEnv(ExecutionContext context) {
     Map<String, String> environment = new HashMap<>(context.getEnvironment());
-    Path xcodeDeveloperDir =
-        appleDeveloperDirectoryForTestsProvider.getAppleDeveloperDirectoryForTests();
-    environment.put("DEVELOPER_DIR", xcodeDeveloperDir.toString());
+    Optional<Path> xcodeDeveloperDir =
+        appleDeveloperDirectoryForTestsProvider.map(
+            AppleDeveloperDirectoryForTestsProvider::getAppleDeveloperDirectoryForTests);
+    xcodeDeveloperDir.ifPresent(path -> environment.put("DEVELOPER_DIR", path.toString()));
     // xctool will only pass through to the test environment variables whose names
     // start with `XCTOOL_TEST_ENV_`. (It will remove that prefix when passing them
     // to the test.)

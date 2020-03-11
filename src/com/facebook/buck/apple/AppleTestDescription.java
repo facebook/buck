@@ -414,7 +414,7 @@ public class AppleTestDescription
           testHostWithTargetApp.flatMap(TestHostInfo::getUiTestTargetApp),
           args.getContacts(),
           args.getLabels(),
-          toolchainProvider.getByName(
+          toolchainProvider.getByNameIfPresent(
               AppleDeveloperDirectoryForTestsProvider.DEFAULT_NAME,
               targetConfiguration,
               AppleDeveloperDirectoryForTestsProvider.class),
@@ -441,7 +441,7 @@ public class AppleTestDescription
         args.getContacts(),
         args.getLabels(),
         args.getRunTestSeparately(),
-        toolchainProvider.getByName(
+        toolchainProvider.getByNameIfPresent(
             AppleDeveloperDirectoryForTestsProvider.DEFAULT_NAME,
             targetConfiguration,
             AppleDeveloperDirectoryForTestsProvider.class),

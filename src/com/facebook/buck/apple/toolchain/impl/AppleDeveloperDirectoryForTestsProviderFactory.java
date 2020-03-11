@@ -19,6 +19,7 @@ package com.facebook.buck.apple.toolchain.impl;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
@@ -37,6 +38,13 @@ public class AppleDeveloperDirectoryForTestsProviderFactory
       ToolchainCreationContext context,
       TargetConfiguration toolchainTargetConfiguration) {
     AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
+
+    Optional<BuildTarget> toolchainSetTarget =
+        appleConfig.getAppleToolchainSetTarget(toolchainTargetConfiguration);
+    if (toolchainSetTarget.isPresent()) {
+      return Optional.empty();
+    }
+
     Optional<String> xcodeDeveloperDirectory = appleConfig.getXcodeDeveloperDirectoryForTests();
     Path developerDirectoryForTests;
     if (xcodeDeveloperDirectory.isPresent()) {

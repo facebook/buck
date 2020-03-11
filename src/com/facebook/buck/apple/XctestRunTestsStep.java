@@ -58,7 +58,8 @@ class XctestRunTestsStep implements Step {
   private final Path logicTestBundlePath;
   private final Path outputPath;
   private final Optional<? extends OutputReadingCallback> outputReadingCallback;
-  private final AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider;
+  private final Optional<AppleDeveloperDirectoryForTestsProvider>
+      appleDeveloperDirectoryForTestsProvider;
 
   public XctestRunTestsStep(
       ProjectFilesystem filesystem,
@@ -67,7 +68,7 @@ class XctestRunTestsStep implements Step {
       Path logicTestBundlePath,
       Path outputPath,
       Optional<? extends OutputReadingCallback> outputReadingCallback,
-      AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider) {
+      Optional<AppleDeveloperDirectoryForTestsProvider> appleDeveloperDirectoryForTestsProvider) {
     this.filesystem = filesystem;
     this.environment = environment;
     this.xctest = xctest;
@@ -93,9 +94,10 @@ class XctestRunTestsStep implements Step {
 
   public ImmutableMap<String, String> getEnv(ExecutionContext context) {
     Map<String, String> environment = new HashMap<>(context.getEnvironment());
-    Path xcodeDeveloperDir =
-        appleDeveloperDirectoryForTestsProvider.getAppleDeveloperDirectoryForTests();
-    environment.put("DEVELOPER_DIR", xcodeDeveloperDir.toString());
+    Optional<Path> xcodeDeveloperDir =
+        appleDeveloperDirectoryForTestsProvider.map(
+            AppleDeveloperDirectoryForTestsProvider::getAppleDeveloperDirectoryForTests);
+    xcodeDeveloperDir.ifPresent(path -> environment.put("DEVELOPER_DIR", path.toString()));
     environment.putAll(this.environment);
     // if (appTestHostAppPath.isPresent()) {
     //   TODO(grp): Pass XCBundleInjection environment.

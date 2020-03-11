@@ -68,7 +68,8 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -120,7 +121,8 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -177,7 +179,8 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -234,7 +237,8 @@ public class XctoolRunTestsStepTest {
                 ImmutableMap.of(Paths.get("/path/to/Foo.app"), Paths.get("/path/to/Target.app"))),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -289,7 +293,8 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -346,7 +351,8 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -401,7 +407,8 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.EMPTY,
             false,
             Optional.empty(),
@@ -455,7 +462,8 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.builder().addRawSelectors("#.*Magic.*").build(),
             false,
             Optional.empty(),
@@ -546,7 +554,8 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.builder().addRawSelectors("#.*Magic.*").build(),
             false,
             Optional.empty(),
@@ -612,7 +621,8 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.builder().addRawSelectors("Blargh#Xyzzy").build(),
             false,
             Optional.empty(),
@@ -674,7 +684,8 @@ public class XctoolRunTestsStepTest {
             ImmutableMap.of(),
             Paths.get("/path/to/output.json"),
             Optional.empty(),
-            AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir")),
+            Optional.of(
+                AppleDeveloperDirectoryForTestsProvider.of(Paths.get("/path/to/developer/dir"))),
             TestSelectorList.EMPTY,
             false,
             Optional.of("TEST_LOG_PATH"),

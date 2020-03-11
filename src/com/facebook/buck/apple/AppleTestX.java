@@ -101,7 +101,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<AppleBundle> uiTestTargetApp,
       ImmutableSet<String> contacts,
       ImmutableSet<String> labels,
-      AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider,
+      Optional<AppleDeveloperDirectoryForTestsProvider> appleDeveloperDirectoryForTestsProvider,
       boolean isUiTest,
       Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
       boolean useIdb,
@@ -266,7 +266,8 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
      *
      * <p>Should not be added to rule key.
      */
-    private final AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider;
+    private final Optional<AppleDeveloperDirectoryForTestsProvider>
+        appleDeveloperDirectoryForTestsProvider;
 
     @AddToRuleKey private final boolean isUiTest;
     private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
@@ -282,7 +283,7 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
         Tool xctest,
         String platformName,
         Optional<String> defaultDestinationSpecifier,
-        AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider,
+        Optional<AppleDeveloperDirectoryForTestsProvider> appleDeveloperDirectoryForTestsProvider,
         boolean isUiTest,
         Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
         boolean useIdb,
@@ -323,11 +324,14 @@ public class AppleTestX extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
         generator.writeStringField(PLATFORM, platformName);
         generator.writeStringField(DEFAULT_DESTINATION, defaultDestinationSpecifier.orElse(""));
-        generator.writeStringField(
-            DEVELOPER_DIRECTORY_FOR_TESTS,
-            appleDeveloperDirectoryForTestsProvider
-                .getAppleDeveloperDirectoryForTests()
-                .toString());
+        if (appleDeveloperDirectoryForTestsProvider.isPresent()) {
+          generator.writeStringField(
+              DEVELOPER_DIRECTORY_FOR_TESTS,
+              appleDeveloperDirectoryForTestsProvider
+                  .get()
+                  .getAppleDeveloperDirectoryForTests()
+                  .toString());
+        }
         generator.writeStringField(
             SNAPSHOT_REFERENCE_IMG_PATH,
             snapshotReferenceImagesPath

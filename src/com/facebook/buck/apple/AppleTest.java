@@ -123,7 +123,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
    *
    * <p>Should not be added to rule key.
    */
-  private final AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider;
+  private final Optional<AppleDeveloperDirectoryForTestsProvider>
+      appleDeveloperDirectoryForTestsProvider;
 
   private static class AppleTestXctoolStdoutReader
       implements XctoolRunTestsStep.StdoutReadingCallback {
@@ -209,7 +210,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> contacts,
       ImmutableSet<String> labels,
       boolean runTestSeparately,
-      AppleDeveloperDirectoryForTestsProvider appleDeveloperDirectoryForTestsProvider,
+      Optional<AppleDeveloperDirectoryForTestsProvider> appleDeveloperDirectoryForTestsProvider,
       String testLogDirectoryEnvironmentVariable,
       String testLogLevelEnvironmentVariable,
       String testLogLevel,
