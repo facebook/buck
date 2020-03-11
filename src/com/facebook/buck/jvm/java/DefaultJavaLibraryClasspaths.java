@@ -58,16 +58,6 @@ abstract class DefaultJavaLibraryClasspaths {
     return false;
   }
 
-  @Value.Lazy
-  public ImmutableSortedSet<BuildRule> getFirstOrderPackageableDeps() {
-    if (shouldCreateSourceOnlyAbi()) {
-      // Nothing is packaged based on a source ABI rule
-      return ImmutableSortedSet.of();
-    }
-
-    return getDeps().getDeps();
-  }
-
   ImmutableSortedSet<BuildRule> getCompileTimeClasspathDeps() {
     ImmutableSortedSet<BuildRule> buildRules;
 

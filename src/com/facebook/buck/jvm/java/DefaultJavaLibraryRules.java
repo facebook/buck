@@ -397,8 +397,6 @@ public abstract class DefaultJavaLibraryRules {
   }
 
   private DefaultJavaLibrary buildLibraryRule(@Nullable CalculateSourceAbi sourceAbiRule) {
-    DefaultJavaLibraryClasspaths classpaths = getClasspaths();
-
     UnusedDependenciesAction unusedDependenciesAction = getUnusedDependenciesAction();
     Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory = Optional.empty();
 
@@ -435,7 +433,7 @@ public abstract class DefaultJavaLibraryRules {
                 getJarBuildStepsFactory(),
                 getActionGraphBuilder(),
                 getProguardConfig(),
-                classpaths.getFirstOrderPackageableDeps(),
+                Objects.requireNonNull(getDeps()).getDeps(),
                 Objects.requireNonNull(getDeps()).getExportedDeps(),
                 Objects.requireNonNull(getDeps()).getProvidedDeps(),
                 Objects.requireNonNull(getDeps()).getExportedProvidedDeps(),
