@@ -428,6 +428,7 @@ public class SwiftCompile extends AbstractBuildRule {
     if (!swiftBuckConfig.getUseModulewrap()) {
       return ImmutableList.<Arg>builder()
           .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
+          .add(StringArg.of("-Xlinker"))
           .add(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath)))
           .build();
     } else {
