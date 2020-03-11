@@ -60,7 +60,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
   public static Collection<Object[]> data() {
     return ImmutableList.of(
         new Object[] {"SKYLARK_WITHOUT_VERSIONS", Syntax.SKYLARK, false},
-        new Object[] {"SKYLARK_WITH_VERSIONS", Syntax.SKYLARK, true});
+        new Object[] {"SKYLARK_WITH_VERSIONS", Syntax.SKYLARK, true},
+        new Object[] {"PYTHON_DSL_WITHOUT_VERSIONS", Syntax.SKYLARK, false},
+        new Object[] {"PYTHON_DSL_WITH_VERSIONS", Syntax.SKYLARK, true});
   }
 
   @Parameterized.Parameter(value = 0)

@@ -1416,6 +1416,8 @@ class BuildFileProcessor(object):
             return self._project_root
 
     def _get_label_for_include(self, cell_name, package_path, file_name):
+        if package_path == ".":
+            package_path = ""
         if cell_name:
             return "@{}//{}:{}".format(cell_name, package_path, file_name)
         else:
