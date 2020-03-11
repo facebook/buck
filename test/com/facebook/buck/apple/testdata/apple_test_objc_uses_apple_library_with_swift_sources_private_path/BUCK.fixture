@@ -4,7 +4,7 @@ apple_library(
     frameworks = [
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
-    swift_version = "4",
+    swift_version = "5",
     tests = [":LibTest"],
 )
 

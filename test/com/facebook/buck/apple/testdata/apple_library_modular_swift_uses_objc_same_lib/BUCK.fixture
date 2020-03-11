@@ -9,5 +9,5 @@ apple_library(
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
     modular = True,
-    swift_version = "4",
+    swift_version = "5",
 )

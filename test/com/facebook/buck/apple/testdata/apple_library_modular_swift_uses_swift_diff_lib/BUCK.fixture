@@ -2,13 +2,13 @@ apple_library(
     name = "Foo",
     srcs = ["Foo.swift"],
     modular = True,
-    swift_version = "4",
+    swift_version = "5",
 )
 
 apple_library(
     name = "Bar",
     srcs = ["Bar.swift"],
-    swift_version = "4",
+    swift_version = "5",
     modular = True,
     deps = [":Foo"],
 )

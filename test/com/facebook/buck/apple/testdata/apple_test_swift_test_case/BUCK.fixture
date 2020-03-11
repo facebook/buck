@@ -6,5 +6,5 @@ apple_test(
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
     info_plist = "Test/LibTest.plist",
-    swift_version = "4",
+    swift_version = "5",
 )
