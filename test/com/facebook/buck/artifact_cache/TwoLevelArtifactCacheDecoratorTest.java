@@ -19,6 +19,7 @@ package com.facebook.buck.artifact_cache;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -29,9 +30,12 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -230,6 +234,41 @@ public class TwoLevelArtifactCacheDecoratorTest {
           Futures.getUnchecked(twoLevelCacheNoStore.fetchAsync(null, dummyRuleKey, dummyFile))
               .getType(),
           Matchers.equalTo(CacheResultType.HIT));
+    }
+  }
+
+  @Test
+  public void test2ndLevelFetchExceptionDoesNotPropagate() throws IOException {
+    ProjectFilesystem fs = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+
+    try (InMemoryArtifactCache inMemoryArtifactCache = new InMemoryArtifactCache();
+        TwoLevelArtifactCacheDecorator twoLevelCache =
+            new TwoLevelArtifactCacheDecorator(
+                inMemoryArtifactCache,
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus) {
+                  @Override
+                  public ListenableFuture<CacheResult> fetchAsync(
+                      BuildTarget target, String contentKey, LazyPath output) {
+                    return MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor())
+                        .submit(
+                            () -> {
+                              throw new RuntimeException("I am throwing!");
+                            });
+                  }
+                },
+                fs,
+                eventBus,
+                /* performTwoLevelStores */ true,
+                /* minimumTwoLevelStoredArtifactSize */ 0L,
+                /* maximumTwoLevelStoredArtifactSize */ Optional.empty())) {
+      LazyPath dummyFile = LazyPath.ofInstance(tmp.newFile());
+      twoLevelCache.store(
+          ArtifactInfo.builder().addRuleKeys(dummyRuleKey).build(),
+          BorrowablePath.notBorrowablePath(dummyFile.get()));
+      CacheResult cacheResult =
+          Futures.getUnchecked(twoLevelCache.fetchAsync(null, dummyRuleKey, dummyFile));
+      assertThat(cacheResult.getType(), Matchers.equalTo(CacheResultType.MISS));
     }
   }
 }

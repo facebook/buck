@@ -16,6 +16,7 @@
 
 package com.facebook.buck.artifact_cache;
 
+import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -136,7 +137,16 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
 
           String contentHashKey = fetchResult.getMetadata().get(METADATA_KEY);
           ListenableFuture<CacheResult> outputFileFetchResultFuture =
-              secondLevelDelegate.fetchAsync(target, contentHashKey, output);
+              Futures.catchingAsync(
+                  secondLevelDelegate.fetchAsync(target, contentHashKey, output),
+                  Exception.class,
+                  e -> {
+                    LOG.warn(e, "Error in second-level cache fetch, reporting cache miss.");
+                    return Futures.immediateFuture(
+                        CacheResult.miss(
+                            "TwoLevelArtifactCacheDecorator", ArtifactCacheMode.unknown));
+                  },
+                  MoreExecutors.directExecutor());
 
           return Futures.transformAsync(
               outputFileFetchResultFuture,
@@ -170,7 +180,8 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
                 CacheResult finalResult =
                     fetchResult.withTwoLevelContentHashKey(Optional.of(contentHashKey));
 
-                // The two level content hash was not part of the original metadata that was stored
+                // The two level content hash was not part of the original metadata that was
+                // stored
                 // to the cache, don't include it in the result.
                 finalResult =
                     finalResult.withMetadata(
