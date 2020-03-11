@@ -583,6 +583,23 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testBuckProjectWithBidirectionalObjCAndSwiftInSameLibrary()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "apple_library_modular_objc_swift_bidirectional", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "//:Mixed");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Mixed.xcworkspace", "Mixed");
+  }
+
+  @Test
   @Ignore("Currently failing")
   public void testBuckProjectUsingDefaultPlatformAttributePropagatesFlavor() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);

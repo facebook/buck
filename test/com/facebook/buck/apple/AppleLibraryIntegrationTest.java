@@ -1011,6 +1011,11 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildAppleLibraryWhereModularObjcAndSwiftUseEachOther() throws Exception {
+    testModularScenario("apple_library_modular_objc_swift_bidirectional", "Mixed");
+  }
+
+  @Test
   public void testBuildAppleLibraryWhereModularObjcUsesSwiftDiffLib() throws Exception {
     testModularScenario("apple_library_modular_objc_uses_swift_diff_lib", "Bar");
   }

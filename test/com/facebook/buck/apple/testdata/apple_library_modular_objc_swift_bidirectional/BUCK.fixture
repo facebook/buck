@@ -1,0 +1,16 @@
+apple_library(
+    name = "Mixed",
+    srcs = [
+        "Hello.m",
+        "dummy.swift",
+    ],
+    exported_headers = [
+        "Hello.h",
+        "Mixed.h",
+    ],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    modular = True,
+    swift_version = "5",
+)
