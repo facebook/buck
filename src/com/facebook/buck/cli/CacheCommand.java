@@ -157,7 +157,7 @@ public class CacheCommand extends AbstractCommand {
 
     BuildEvent.Started started = BuildEvent.started(getArguments());
 
-    List<ArtifactRunner> results = null;
+    List<ArtifactRunner> results = new ArrayList<>();
     try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
