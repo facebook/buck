@@ -41,6 +41,7 @@ import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.exceptions.ThrowableCauseIterable;
 import com.facebook.buck.core.exceptions.config.ErrorHandlingBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.config.DepsAwareExecutorConfig;
 import com.facebook.buck.core.graph.transformation.executor.factory.DepsAwareExecutorFactory;
@@ -779,7 +780,9 @@ public final class MainRunner {
         Optional<String> currentBuckCoreKey =
             filesystem.readFileIfItExists(filesystem.getBuckPaths().getCurrentVersionFile());
         BuckPaths unconfiguredPaths =
-            filesystem.getBuckPaths().withConfiguredBuckOut(filesystem.getBuckPaths().getBuckOut());
+            filesystem
+                .getBuckPaths()
+                .withConfiguredBuckOut(RelPath.of(filesystem.getBuckPaths().getBuckOut()));
 
         previousBuckCoreKey = currentBuckCoreKey.orElse("<NOT_FOUND>");
 

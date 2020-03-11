@@ -202,12 +202,12 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     if (embeddedCellBuckOutInfo.isPresent()) {
       Path buckOut = embeddedCellBuckOutInfo.get().getCellBuckOut();
       buckOut = rootPath.relativize(buckOut);
-      buckPaths = buckPaths.withConfiguredBuckOut(buckOut).withBuckOut(buckOut);
+      buckPaths = buckPaths.withConfiguredBuckOut(RelPath.of(buckOut)).withBuckOut(buckOut);
     } else {
       Path buckOut = buckPaths.getBuckOut();
       if (configuredProjectBuckOut.isPresent()) {
         buckOut = getConfiguredBuckOut(configuredProjectBuckOut, buckOut, rootPath);
-        buckPaths = buckPaths.withConfiguredBuckOut(buckOut);
+        buckPaths = buckPaths.withConfiguredBuckOut(RelPath.of(buckOut));
       }
     }
 

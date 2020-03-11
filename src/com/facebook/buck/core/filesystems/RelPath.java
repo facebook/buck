@@ -59,6 +59,10 @@ public interface RelPath extends PathWrapper {
     return getPath().resolve(other);
   }
 
+  default Path resolve(Path other) {
+    return getPath().resolve(other);
+  }
+
   default RelPath resolveRel(String other) {
     return RelPath.of(resolve(other));
   }
@@ -69,5 +73,9 @@ public interface RelPath extends PathWrapper {
 
   default RelPath subpath(int beginIndex, int endIndex) {
     return RelPath.of(getPath().subpath(beginIndex, endIndex));
+  }
+
+  default int getNameCount() {
+    return getPath().getNameCount();
   }
 }

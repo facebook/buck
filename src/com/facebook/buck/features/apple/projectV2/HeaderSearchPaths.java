@@ -654,7 +654,8 @@ class HeaderSearchPaths {
                 .getFilesystem()
                 .resolve(headerSymlinkTreeRoot)
                 .resolve(entry.getKey())
-                .normalize());
+                .normalize())
+        .getPath();
   }
 
   private HashCode getHeaderSymlinkTreeHashCode(

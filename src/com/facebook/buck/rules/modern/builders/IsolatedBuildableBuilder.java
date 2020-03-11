@@ -27,6 +27,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
@@ -269,7 +270,7 @@ public abstract class IsolatedBuildableBuilder {
                   && buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()
                   && Platform.detect() != Platform.WINDOWS) {
                 BuckPaths unconfiguredPaths =
-                    configuredPaths.withConfiguredBuckOut(configuredPaths.getBuckOut());
+                    configuredPaths.withConfiguredBuckOut(RelPath.of(configuredPaths.getBuckOut()));
                 ImmutableMap<Path, Path> paths =
                     ImmutableMap.of(
                         unconfiguredPaths.getGenDir(), configuredPaths.getGenDir(),

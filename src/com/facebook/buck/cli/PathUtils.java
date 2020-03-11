@@ -66,7 +66,7 @@ public class PathUtils {
     // amend the output paths when this is set.
     if (outputPathOptional.isPresent() && buckOutCompatLink) {
       BuckPaths paths = rule.getProjectFilesystem().getBuckPaths();
-      if (outputPathOptional.get().startsWith(paths.getConfiguredBuckOut())) {
+      if (outputPathOptional.get().startsWith(paths.getConfiguredBuckOut().getPath())) {
         outputPathOptional =
             Optional.of(
                 paths

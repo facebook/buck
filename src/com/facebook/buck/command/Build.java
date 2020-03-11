@@ -26,6 +26,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -160,11 +161,11 @@ public class Build implements Closeable {
       BuckConfig buckConfig = cell.getBuckConfig();
       ProjectFilesystem filesystem = cell.getFilesystem();
       BuckPaths configuredPaths = filesystem.getBuckPaths();
-      if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut())
+      if (!configuredPaths.getConfiguredBuckOut().getPath().equals(configuredPaths.getBuckOut())
           && buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()
           && Platform.detect() != Platform.WINDOWS) {
         BuckPaths unconfiguredPaths =
-            configuredPaths.withConfiguredBuckOut(configuredPaths.getBuckOut());
+            configuredPaths.withConfiguredBuckOut(RelPath.of(configuredPaths.getBuckOut()));
         ImmutableMap<Path, Path> paths =
             ImmutableMap.of(
                 unconfiguredPaths.getGenDir(),

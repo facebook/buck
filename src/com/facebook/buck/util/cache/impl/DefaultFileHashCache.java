@@ -157,7 +157,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   /** Check that the file is in the buck-out of the cell that's related to the project filesystem */
   private static boolean isInBuckOut(ProjectFilesystem projectFilesystem, Path path) {
-    return path.startsWith(projectFilesystem.getBuckPaths().getConfiguredBuckOut())
+    return path.startsWith(projectFilesystem.getBuckPaths().getConfiguredBuckOut().getPath())
         && !isInEmbeddedCellBuckOut(projectFilesystem, path);
   }
 

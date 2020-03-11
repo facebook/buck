@@ -3209,7 +3209,8 @@ public class ProjectGenerator {
         projectCell
             .getFilesystem()
             .resolve(projectCell.getFilesystem().getBuckPaths().getConfiguredBuckOut())
-            .normalize(),
+            .normalize()
+            .getPath(),
         projectCell
             .getFilesystem()
             .resolve(headerSymlinkTreeRoot)
@@ -3769,16 +3770,17 @@ public class ProjectGenerator {
           (nativeNode, headerVisibility) -> {
             if (options.shouldUseAbsoluteHeaderMapPaths()) {
               ProjectFilesystem filesystem = nativeNode.getFilesystem();
-              Path buckOut = filesystem.resolve(filesystem.getBuckPaths().getConfiguredBuckOut());
-              builder.add(buckOut.toAbsolutePath().normalize());
+              AbsPath buckOut =
+                  filesystem.resolve(filesystem.getBuckPaths().getConfiguredBuckOut());
+              builder.add(buckOut.getPath().toAbsolutePath().normalize());
             } else {
               builder.add(
                   MorePaths.relativizeWithDotDotSupport(
                       targetNode.getFilesystem().resolve(outputDirectory),
                       nativeNode
                           .getFilesystem()
-                          .resolve(
-                              nativeNode.getFilesystem().getBuckPaths().getConfiguredBuckOut())));
+                          .resolve(nativeNode.getFilesystem().getBuckPaths().getConfiguredBuckOut())
+                          .getPath()));
             }
           });
     }

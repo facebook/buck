@@ -17,6 +17,7 @@
 package com.facebook.buck.io.filesystem;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.config.Config;
@@ -35,7 +36,7 @@ public abstract class BuckPaths {
   public static BuckPaths createDefaultBuckPaths(
       CanonicalCellName cellName, Path rootPath, boolean buckOutIncludeTargetConfigHash) {
     Path buckOut = rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString());
-    return BuckPaths.of(cellName, buckOut, buckOut, buckOutIncludeTargetConfigHash);
+    return BuckPaths.of(cellName, buckOut, RelPath.of(buckOut), buckOutIncludeTargetConfigHash);
   }
 
   /** Is hashed buck-out enabled? Must be queried using root cell buckconfig. */
@@ -62,7 +63,7 @@ public abstract class BuckPaths {
    * support configuring all output paths. However, for now, only certain paths below will use this
    * path.
    */
-  public abstract Path getConfiguredBuckOut();
+  public abstract RelPath getConfiguredBuckOut();
 
   /** Whether to include the target configuration hash on buck-out. */
   public abstract boolean shouldIncludeTargetConfigHash();
@@ -161,13 +162,14 @@ public abstract class BuckPaths {
   public static BuckPaths of(
       CanonicalCellName cellName,
       Path buckOut,
-      Path configuredBuckOut,
+      RelPath configuredBuckOut,
       boolean shouldIncludeTargetConfigHash) {
     return ImmutableBuckPaths.ofImpl(
         cellName, buckOut, configuredBuckOut, shouldIncludeTargetConfigHash);
   }
 
-  public BuckPaths withConfiguredBuckOut(Path configuredBuckOut) {
+  /** Replace {@link #getConfiguredBuckOut()} field. */
+  public BuckPaths withConfiguredBuckOut(RelPath configuredBuckOut) {
     if (getConfiguredBuckOut().equals(configuredBuckOut)) {
       return this;
     }
