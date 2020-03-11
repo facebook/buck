@@ -22,6 +22,7 @@ import com.facebook.buck.logd.proto.CreateLogResponse;
 import com.facebook.buck.logd.proto.LogMessage;
 import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.logd.proto.LogdServiceGrpc;
+import com.facebook.buck.logd.proto.ShutdownRequest;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.rpc.Status;
 import io.grpc.ManagedChannel;
@@ -41,6 +42,7 @@ import org.apache.logging.log4j.Logger;
 public class LogdClient implements LogDaemonClient {
   private static final Logger LOG = LogManager.getLogger();
   private static final int TIME_OUT_SECONDS = 5;
+  private static final String LOCAL_HOST = "localhost";
 
   private final ManagedChannel channel;
   private final LogdServiceGrpc.LogdServiceBlockingStub blockingStub;
@@ -51,6 +53,15 @@ public class LogdClient implements LogDaemonClient {
   private Map<Integer, String> fileIdToPath = new ConcurrentHashMap<>();
 
   private StreamObserverFactory streamObserverFactory;
+
+  /**
+   * Constructs a LogdClient that is connected to localhost at provided port number.
+   *
+   * @param port port number
+   */
+  public LogdClient(int port) {
+    this(LOCAL_HOST, port);
+  }
 
   /**
    * Constructs a LogdClient with the provided hostname and port number.
@@ -154,6 +165,18 @@ public class LogdClient implements LogDaemonClient {
       requestObserver.onError(e);
       throw new LogDaemonException(
           e, "Failed to establish a log stream to logD at %s", fileIdToPath.get(logFileId));
+    }
+  }
+
+  @Override
+  public void requestLogdServerShutdown() throws LogDaemonException {
+    try {
+      // Client sends an empty message request to signal LogD to shutdown its server
+      // We do not care about the status response for now
+      blockingStub.shutdownServer(ShutdownRequest.newBuilder().build());
+    } catch (StatusRuntimeException e) {
+      LOG.error("LogD failed to return a response: {}", e.getStatus(), e);
+      throw new LogDaemonException(e, "LogD failed to return a response: %s", e.getStatus());
     }
   }
 }

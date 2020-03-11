@@ -44,4 +44,7 @@ public interface LogDaemonClient {
 
   /** close all existing channels to logD server */
   void shutdown();
+
+  /** Sends a request to LogD signaling a server shutdown. */
+  void requestLogdServerShutdown();
 }
