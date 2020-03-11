@@ -88,7 +88,8 @@ public abstract class KnownNativeRuleTypes implements KnownRuleTypes {
         type,
         description,
         typeCoercerFactory ->
-            typeCoercerFactory.getConstructorArgDescriptor(description.getConstructorArgType()));
+            typeCoercerFactory.getNativeConstructorArgDescriptor(
+                description.getConstructorArgType()));
   }
 
   // Verify that there are no duplicate rule types being defined.

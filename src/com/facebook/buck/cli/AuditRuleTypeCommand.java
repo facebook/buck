@@ -16,10 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.description.arg.ConstructorArg;
-import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
+import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.CommandLineException;
@@ -45,8 +43,8 @@ public class AuditRuleTypeCommand extends AbstractCommand {
 
     KnownRuleTypes knownRuleTypes =
         params.getKnownRuleTypesProvider().get(params.getCells().getRootCell());
-    BaseDescription<?> description = knownRuleTypes.getDescriptorByName(ruleName).getDescription();
-    printPythonFunction(params.getConsole(), description, params.getTypeCoercerFactory());
+    RuleDescriptor<?> descriptor = knownRuleTypes.getDescriptorByName(ruleName);
+    printPythonFunction(params.getConsole(), descriptor, params.getTypeCoercerFactory());
     return ExitCode.SUCCESS;
   }
 
@@ -63,14 +61,11 @@ public class AuditRuleTypeCommand extends AbstractCommand {
   }
 
   static void printPythonFunction(
-      Console console, BaseDescription<?> description, TypeCoercerFactory typeCoercerFactory) {
+      Console console, RuleDescriptor<?> descriptor, TypeCoercerFactory typeCoercerFactory) {
     PrintStream printStream = console.getStdOut();
     ImmutableMap<String, ParamInfo<?>> allParamInfo =
-        typeCoercerFactory
-            .getConstructorArgDescriptor(
-                (Class<? extends ConstructorArg>) description.getConstructorArgType())
-            .getParamInfos();
-    String name = DescriptionCache.getRuleType(description).getName();
+        descriptor.getDtoDescriptor().apply(typeCoercerFactory).getParamInfos();
+    String name = descriptor.getRuleType().getName();
     printStream.println("def " + name + " (");
     allParamInfo.values().stream()
         .filter(param -> !param.isOptional())

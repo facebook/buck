@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
@@ -27,6 +28,7 @@ import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildT
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
+import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgFactory;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacro;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
@@ -350,6 +352,14 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     return typeCoercerForTypeUnchecked(typeToken).checkOutputAssignableTo(typeToken);
   }
 
+  @Override
+  public ImmutableMap<String, ParamInfo<?>> paramInfos(ConstructorArg constructorArg) {
+    if (constructorArg instanceof SkylarkDescriptionArgFactory) {
+      return ((SkylarkDescriptionArgFactory) constructorArg).getAllParamInfo();
+    }
+    return getNativeConstructorArgDescriptor(constructorArg.getClass()).getParamInfos();
+  }
+
   @SuppressWarnings("unchecked")
   private <T> TypeCoercer<?, ?> typeCoercerForTypeUnchecked(TypeToken<T> typeToken) {
     Type type = typeToken.getType();
@@ -390,7 +400,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
               .anyMatch(c -> c.getAnnotation(RuleArg.class) != null)) {
         selectedTypeCoercer =
             new ImmutableTypeCoercer<>(
-                getConstructorArgDescriptor((Class<? extends DataTransferObject>) rawClass));
+                getNativeConstructorArgDescriptor((Class<? extends DataTransferObject>) rawClass));
       }
       if (selectedTypeCoercer != null) {
         return selectedTypeCoercer;
@@ -485,8 +495,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   @Override
-  public <T extends DataTransferObject> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
-      Class<T> dtoType) {
+  public <T extends DataTransferObject>
+      DataTransferObjectDescriptor<T> getNativeConstructorArgDescriptor(Class<T> dtoType) {
     return coercedTypeCache.getConstructorArgDescriptor(dtoType);
   }
 

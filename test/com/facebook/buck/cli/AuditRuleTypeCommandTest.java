@@ -25,9 +25,11 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
+import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.TestConsole;
+import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import org.junit.Test;
 
@@ -60,7 +62,11 @@ public class AuditRuleTypeCommandTest {
   public void buildRuleTypePrintedAsAPythonFunction() {
     TestConsole console = new TestConsole();
 
-    AuditRuleTypeCommand.printPythonFunction(console, DESCRIPTION, new DefaultTypeCoercerFactory());
+    KnownNativeRuleTypes knownTypes =
+        KnownNativeRuleTypes.of(
+            ImmutableList.of(DESCRIPTION), ImmutableList.of(), ImmutableList.of());
+    AuditRuleTypeCommand.printPythonFunction(
+        console, knownTypes.getDescriptorByName("build_rule"), new DefaultTypeCoercerFactory());
 
     assertThat(
         console.getTextWrittenToStdOut(),

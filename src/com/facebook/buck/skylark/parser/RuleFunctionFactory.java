@@ -89,7 +89,7 @@ public class RuleFunctionFactory {
                 .put("buck.type", name);
         ImmutableMap<String, ParamInfo<?>> allParamInfo =
             typeCoercerFactory
-                .getConstructorArgDescriptor(
+                .getNativeConstructorArgDescriptor(
                     (Class<? extends ConstructorArg>) ruleClass.getConstructorArgType())
                 .getParamInfos();
         populateAttributes(kwargs, builder, allParamInfo);

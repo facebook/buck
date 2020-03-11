@@ -17,14 +17,18 @@
 package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
+import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgFactory;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
+import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
+import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -41,7 +45,8 @@ import javax.annotation.Nullable;
  * uses a backing store of attribute names -> coerced values, and makes the user's implementation
  * function available
  */
-public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, BuildRuleArg {
+public class SkylarkDescriptionArg
+    implements SkylarkDescriptionArgBuilder, SkylarkDescriptionArgFactory, BuildRuleArg {
 
   private boolean attrValuesAreMutable = true;
   private final SkylarkUserDefinedRule rule;
@@ -89,7 +94,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
    * #setPostCoercionValue(String, Object)} may not be called.
    */
   @SuppressWarnings("unchecked")
-  public void build() {
+  public SkylarkDescriptionArg build() {
     attrValuesAreMutable = false;
     name = (String) Preconditions.checkNotNull(coercedAttrValues.get("name"));
     compatibleWith =
@@ -99,6 +104,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
     defaultTargetPlatform =
         (Optional<UnconfiguredBuildTarget>)
             coercedAttrValues.getOrDefault("default_target_platform", Optional.empty());
+    return this;
   }
 
   /**
@@ -135,6 +141,7 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
     return Preconditions.checkNotNull(defaultTargetPlatform);
   }
 
+  @Override
   public ImmutableMap<String, ParamInfo<?>> getAllParamInfo() {
     return rule.getAllParamInfo();
   }
@@ -172,5 +179,36 @@ public class SkylarkDescriptionArg implements SkylarkDescriptionArgBuilder, Buil
   @Override
   public ImmutableList<UnconfiguredBuildTarget> getCompatibleWith() {
     return Preconditions.checkNotNull(compatibleWith);
+  }
+
+  /**
+   * Get a descriptor that is used to build unpopulated {@link SkylarkDescriptionArg}s using the
+   * {@link com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule} that was used for this
+   * argument
+   */
+  public DataTransferObjectDescriptor<SkylarkDescriptionArg> getConstructorArgDescriptor() {
+    return getConstructorArgDescriptor(rule);
+  }
+
+  /**
+   * Get a descriptor that is used to build unpopulated {@link SkylarkDescriptionArg}s using {@code
+   * rule}
+   */
+  public static DataTransferObjectDescriptor<SkylarkDescriptionArg> getConstructorArgDescriptor(
+      SkylarkUserDefinedRule rule) {
+    return DataTransferObjectDescriptor.of(
+        SkylarkDescriptionArg.class,
+        () -> new SkylarkDescriptionArg(rule),
+        rule.getAllParamInfo(),
+        args -> ((SkylarkDescriptionArg) args).build());
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public <T extends DataTransferObject> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
+      Class<T> dtoClass) {
+    Verify.verify(SkylarkDescriptionArg.class.isAssignableFrom(dtoClass));
+    // Unchecked because verify the T above.
+    return (DataTransferObjectDescriptor<T>) getConstructorArgDescriptor(rule);
   }
 }

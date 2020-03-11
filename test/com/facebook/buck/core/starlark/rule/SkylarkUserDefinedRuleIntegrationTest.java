@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -40,25 +41,57 @@ import com.sun.jna.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.MatcherAssert;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+@RunWith(Parameterized.class)
 public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
+  @Parameterized.Parameters(name = "{0}")
+  public static Collection<Object[]> data() {
+    return ImmutableList.of(
+        new Object[] {"SKYLARK_WITHOUT_VERSIONS", Syntax.SKYLARK, false},
+        new Object[] {"SKYLARK_WITH_VERSIONS", Syntax.SKYLARK, true});
+  }
+
+  @Parameterized.Parameter(value = 0)
+  public String testName;
+
+  @Parameterized.Parameter(value = 1)
+  public Syntax buildFileSyntax;
+
+  @Parameterized.Parameter(value = 2)
+  public boolean useVersions;
+
+  ProjectWorkspace setupWorkspace(String scenario) throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
+    workspace.setUp();
+    if (buildFileSyntax.equals(Syntax.PYTHON_DSL)) {
+      workspace.addBuckConfigLocalOption("parser", "default_build_file_syntax", "PYTHON_DSL");
+      workspace.addBuckConfigLocalOption("parser", "polyglot_parsing_enabled", "true");
+    }
+    if (useVersions) {
+      workspace.addBuckConfigLocalOption("build", "versions", "true");
+    }
+    return workspace;
+  }
+
   @Test
   public void implementationFunctionIsCalledWithCtx() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_is_called", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_is_called");
 
     workspace.runBuckBuild("//foo:bar").assertSuccess();
+
     ProcessResult failureRes = workspace.runBuckBuild("//foo:baz").assertFailure();
     assertThat(
         failureRes.getStderr(), Matchers.containsString("Expected to be called with name 'bar'"));
@@ -66,11 +99,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void implementationFunctionHasAccessToAttrs() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_has_correct_attrs_in_ctx", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_has_correct_attrs_in_ctx");
 
     workspace.runBuckBuild("//foo:").assertSuccess();
   }
@@ -78,10 +107,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
   @Test
   public void printsProperly() throws IOException {
 
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "print_works_in_impl", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("print_works_in_impl");
 
     ProcessResult result = workspace.runBuckBuild("//foo:prints").assertSuccess();
     assertThat(
@@ -94,22 +120,14 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void implementationFunctionCanDeclareFiles() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_declares_artifacts", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_declares_artifacts");
 
     workspace.runBuckBuild("//foo:valid_filename").assertSuccess();
   }
 
   @Test
   public void implementationDeclareFilesFailsOnInvalidFiles() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_declares_artifacts", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_declares_artifacts");
 
     assertThat(
         workspace.runBuckBuild("//foo:not_a_path").assertFailure().getStderr(),
@@ -121,10 +139,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void implementationWritesFilesProperly() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_writes_files", tmp);
+    ProjectWorkspace workspace = setupWorkspace("implementation_writes_files");
 
-    workspace.setUp();
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path exePath =
@@ -196,10 +212,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void builtInProvidersAreAvailableAtAnalysisTime() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_return_values", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_return_values");
 
     ProcessResult result =
         workspace.runBuckBuild("//foo:can_use_providers_in_impl").assertSuccess();
@@ -208,10 +221,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void returnsAnErrorWhenNonListIsReturned() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_return_values", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_return_values");
 
     assertThat(
         workspace.runBuckBuild("//foo:return_non_list").assertFailure().getStderr(),
@@ -220,10 +230,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void returnsAnErrorWhenItemInListIsNotProviderInfo() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_return_values", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_return_values");
 
     assertThat(
         workspace.runBuckBuild("//foo:return_non_info_in_list").assertFailure().getStderr(),
@@ -232,10 +239,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void returnsAnErrorWhenDuplicateProvidersReturned() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_return_values", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_return_values");
 
     assertThat(
         workspace.runBuckBuild("//foo:return_duplicate_info_types").assertFailure().getStderr(),
@@ -244,10 +248,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void dependenciesAreAdded() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_deps", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_deps");
 
     ProcessResult depsQueryRes =
         workspace
@@ -366,12 +367,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void implementationGetsSourceFromSourceList() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_gets_artifacts_from_source_list", tmp);
+    ProjectWorkspace workspace = setupWorkspace("implementation_gets_artifacts_from_source_list");
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
-
-    workspace.setUp();
 
     workspace.runBuckBuild("//:with_sources").assertSuccess();
 
@@ -384,13 +381,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void implementationGetsArtifactFromSourceAttribute() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_gets_artifacts_from_source", tmp);
+    ProjectWorkspace workspace = setupWorkspace("implementation_gets_artifacts_from_source");
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
-
-    workspace.setUp();
 
     workspace.runBuckBuild("//:with_source").assertSuccess();
 
@@ -403,13 +396,9 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void implementationGetsDepFromDepAttribute() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_gets_dep_from_dep", tmp);
+    ProjectWorkspace workspace = setupWorkspace("implementation_gets_dep_from_dep");
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
-
-    workspace.setUp();
 
     workspace.runBuckBuild("//:with_dep").assertSuccess();
 
@@ -422,12 +411,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void implementationGetsProviderCollectionFromDepList() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_gets_deps_from_dep_list", tmp);
+    ProjectWorkspace workspace = setupWorkspace("implementation_gets_deps_from_dep_list");
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
-
-    workspace.setUp();
 
     workspace.runBuckBuild("//:with_deps").assertSuccess();
 
@@ -440,10 +425,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void failsWhenInvalidArgTypesGiven() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "args", tmp);
+    ProjectWorkspace workspace = setupWorkspace("args");
 
-    workspace.setUp();
     assertEquals(
         ImmutableList.of("1", "--foo", "bar", "1", "2", "3", "4", "5", "6", "7", "8", "9"),
         workspace.getProjectFileSystem().readLines(workspace.buildAndReturnOutput("//:add")));
@@ -538,10 +521,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void implementationCanRunCommands() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_runs_actions", tmp);
+    ProjectWorkspace workspace = setupWorkspace("implementation_runs_actions");
 
-    workspace.setUp();
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     ProcessResult zeroResult = workspace.runBuckBuild("//foo:returning_zero").assertSuccess();
@@ -594,10 +575,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void runActionFailsForInvalidParamTypes() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_runs_actions", tmp);
-
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_runs_actions");
 
     assertThat(
         workspace.runBuckBuild("//foo:invalid_arguments").assertFailure().getStderr(),
@@ -614,9 +592,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void userDefinedProvidersCanBeUsedInProviderRestrictions() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "user_defined_providers", tmp);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("user_defined_providers");
 
     workspace.runBuckBuild("//foo:does_not_require_content_info_missing").assertSuccess();
     workspace.runBuckBuild("//foo:does_not_require_content_info").assertSuccess();
@@ -635,9 +611,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void userDefinedProvidersArePassedBetweenDeps() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "user_defined_providers", tmp);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("user_defined_providers");
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
@@ -654,9 +628,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void compatibleWith() throws Exception {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "compatible_with", tmp);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("compatible_with");
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
@@ -684,16 +656,12 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void implementationGetsArtifactFromOutputAttribute() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_gets_artifacts_from_output", tmp);
+    ProjectWorkspace workspace = setupWorkspace("implementation_gets_artifacts_from_output");
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_contents"))
             .resolve("some_out.txt");
-
-    workspace.setUp();
 
     workspace.runBuckBuild("//:with_contents").assertSuccess();
     assertEquals("some contents", workspace.getFileContents(outputPath));
@@ -722,16 +690,12 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void implementationGetsArtifactsFromOutputListAttribute() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_gets_artifacts_from_output_list", tmp);
+    ProjectWorkspace workspace = setupWorkspace("implementation_gets_artifacts_from_output_list");
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:with_contents"))
             .resolve("some_out.txt");
-
-    workspace.setUp();
 
     workspace.runBuckBuild("//:with_contents").assertSuccess();
     assertEquals("some contents", workspace.getFileContents(outputPath));
@@ -760,8 +724,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void copyFileCopiesFile() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_copies_files", tmp);
+    ProjectWorkspace workspace = setupWorkspace("implementation_copies_files");
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path outputPath1 =
@@ -775,8 +738,6 @@ public class SkylarkUserDefinedRuleIntegrationTest {
             .resolve("out_artifact.txt");
     String expected = "some contents";
 
-    workspace.setUp();
-
     workspace.runBuckBuild("//:copy_artifact").assertSuccess();
     assertEquals(expected, filesystem.readFileIfItExists(outputPath1).get().trim());
     assertEquals(expected, filesystem.readFileIfItExists(outputPath2).get().trim());
@@ -785,10 +746,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void runsIfRunInfoReturned() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_handles_executable", tmp);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_handles_executable");
 
     ImmutableList<String> expectedWithRun =
         ImmutableList.of(
@@ -837,10 +795,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void failsIfRunInfoReturnedOnInferringRule() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_handles_executable", tmp);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_handles_executable");
 
     String runOutput =
         workspace
@@ -856,10 +811,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
   @Test
   public void failsIfRunInfoNotProvidedButZeroOrMoreThanOneArtifactsReturnedInDefaultInfo()
       throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "implementation_handles_executable", tmp);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_handles_executable");
 
     String zeroOutputsOut =
         workspace
@@ -884,9 +836,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void testsIfTestAndRunInfoReturned() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_handles_test");
 
     workspace
         .runBuckCommand("test", "//:implicit_default_implicit_run_implicit_test_info")
@@ -903,9 +853,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void failsIfTestInfoReturnedOnNonTestRule() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_handles_test");
 
     String stderr =
         workspace.runBuckCommand("test", "//:nontest_with_test").assertFailure().getStderr();
@@ -915,9 +863,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void failsIfTestInfoReturnedButNoRunInfo() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_handles_test");
 
     String stderr =
         workspace.runBuckCommand("test", "//:test_without_run_info").assertFailure().getStderr();
@@ -930,9 +876,7 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
   @Test
   public void testRulesCanBeRun() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "implementation_handles_test", tmp);
-    workspace.setUp();
+    ProjectWorkspace workspace = setupWorkspace("implementation_handles_test");
 
     workspace.runBuckCommand("run", "//:default_run_test_info").assertSuccess();
   }

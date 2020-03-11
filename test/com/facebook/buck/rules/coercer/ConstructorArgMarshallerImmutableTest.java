@@ -135,7 +135,7 @@ public class ConstructorArgMarshallerImmutableTest {
   }
 
   <T extends ConstructorArg> DataTransferObjectDescriptor<T> builder(Class<T> dtoClass) {
-    return new DefaultTypeCoercerFactory().getConstructorArgDescriptor(dtoClass);
+    return new DefaultTypeCoercerFactory().getNativeConstructorArgDescriptor(dtoClass);
   }
 
   @Test

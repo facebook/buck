@@ -46,7 +46,7 @@ public class BuilderParamInfoTest {
   public void failedCoercionIncludesClassAndFieldNames() {
     try {
       ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
-          .getConstructorArgDescriptor(DtoWithBadField.class)
+          .getNativeConstructorArgDescriptor(DtoWithBadField.class)
           .getParamInfos()
           .values();
       fail("Expected exception.");
@@ -64,7 +64,7 @@ public class BuilderParamInfoTest {
   public void optionalsForAbstractClass() {
     for (ParamInfo<?> param :
         ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
-            .getConstructorArgDescriptor(DtoWithOptionals.class)
+            .getNativeConstructorArgDescriptor(DtoWithOptionals.class)
             .getParamInfos()
             .values()) {
       assertTrue("Expected param " + param.getName() + " to be optional", param.isOptional());
@@ -75,7 +75,7 @@ public class BuilderParamInfoTest {
   public void optionalsForInterface() {
     for (ParamInfo<?> param :
         ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
-            .getConstructorArgDescriptor(DtoWithOptionalsFromInterface.class)
+            .getNativeConstructorArgDescriptor(DtoWithOptionalsFromInterface.class)
             .getParamInfos()
             .values()) {
       assertTrue("Expected param " + param.getName() + " to be optional", param.isOptional());
@@ -117,7 +117,7 @@ public class BuilderParamInfoTest {
   private ParamInfo<?> getParamInfo() {
     return Iterables.getOnlyElement(
         ((TypeCoercerFactory) new DefaultTypeCoercerFactory())
-            .getConstructorArgDescriptor(DtoWithOneParameter.class)
+            .getNativeConstructorArgDescriptor(DtoWithOneParameter.class)
             .getParamInfos()
             .values());
   }

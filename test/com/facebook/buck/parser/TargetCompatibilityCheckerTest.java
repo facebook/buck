@@ -251,7 +251,7 @@ public class TargetCompatibilityCheckerTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:target");
 
     DataTransferObjectDescriptor<TestDescriptionArg> builder =
-        typeCoercerFactory.getConstructorArgDescriptor(TestDescriptionArg.class);
+        typeCoercerFactory.getNativeConstructorArgDescriptor(TestDescriptionArg.class);
 
     return marshaller.populate(
         TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),

@@ -100,14 +100,7 @@ public class KnownUserDefinedRuleTypes implements KnownRuleTypes {
         ruleType,
         (BaseDescription<T>) this.description,
         tcf ->
-            DataTransferObjectDescriptor.of(
-                ((BaseDescription<T>) this.description).getConstructorArgType(),
-                () -> new SkylarkDescriptionArg(rule),
-                rule.getAllParamInfo(),
-                args -> {
-                  ((SkylarkDescriptionArg) args).build();
-                  // Terrible cast here, but java doesn't have useful generic type constraints
-                  return (T) args;
-                }));
+            (DataTransferObjectDescriptor<T>)
+                (SkylarkDescriptionArg.getConstructorArgDescriptor(rule)));
   }
 }

@@ -80,7 +80,8 @@ public class BuckPyFunction {
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
     for (ParamInfo<?> param :
-        typeCoercerFactory.getConstructorArgDescriptor(dtoClass).getParamInfos().values().stream()
+        typeCoercerFactory.getNativeConstructorArgDescriptor(dtoClass).getParamInfos().values()
+            .stream()
             .sorted(Comparator.comparing(ParamInfo::getName))
             .collect(ImmutableList.toImmutableList())) {
       if (isSkippable(param)) {

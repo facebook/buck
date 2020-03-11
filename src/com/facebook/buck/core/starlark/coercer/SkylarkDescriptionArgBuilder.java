@@ -40,7 +40,7 @@ package com.facebook.buck.core.starlark.coercer;
  * com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg} that is in the process of being
  * constructed, without having to know about the {@link
  * com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule} that the {@link
- * com.facebook.buck.core.starlark.rule.SkylarkDescriptionArgs} holds onto.
+ * com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg} holds onto.
  */
 public interface SkylarkDescriptionArgBuilder {
   /**

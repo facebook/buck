@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgFactory;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
@@ -254,11 +255,7 @@ public abstract class TargetNodeTranslator {
       Object newConstructorArgOrBuilder) {
     boolean modified = false;
 
-    for (ParamInfo<?> param :
-        typeCoercerFactory
-            .getConstructorArgDescriptor(constructorArg.getClass())
-            .getParamInfos()
-            .values()) {
+    for (ParamInfo<?> param : typeCoercerFactory.paramInfos(constructorArg).values()) {
       Object value = param.get(constructorArg);
       Optional<Object> newValue = translate(cellNameResolver, targetBaseName, value);
       modified |= newValue.isPresent();
@@ -273,9 +270,18 @@ public abstract class TargetNodeTranslator {
         cells.getCell(node.getBuildTarget().getCell()).getCellNameResolver();
 
     A constructorArg = node.getConstructorArg();
-    DataTransferObjectDescriptor<A> newArgAndBuild =
-        typeCoercerFactory.getConstructorArgDescriptor(
-            node.getDescription().getConstructorArgType());
+
+    DataTransferObjectDescriptor<A> newArgAndBuild;
+    if (constructorArg instanceof SkylarkDescriptionArgFactory) {
+      newArgAndBuild =
+          ((SkylarkDescriptionArgFactory) constructorArg)
+              .getConstructorArgDescriptor(node.getDescription().getConstructorArgType());
+    } else {
+      newArgAndBuild =
+          typeCoercerFactory.getNativeConstructorArgDescriptor(
+              node.getDescription().getConstructorArgType());
+    }
+
     Object builder = newArgAndBuild.getBuilderFactory().get();
     boolean modified =
         translateConstructorArg(cellNameResolver, targetBaseName, constructorArg, builder);

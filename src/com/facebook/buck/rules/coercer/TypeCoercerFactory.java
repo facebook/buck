@@ -16,7 +16,9 @@
 
 package com.facebook.buck.rules.coercer;
 
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.DataTransferObject;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 
 public interface TypeCoercerFactory {
@@ -24,9 +26,19 @@ public interface TypeCoercerFactory {
   <T> TypeCoercer<?, T> typeCoercerForType(TypeToken<T> type);
 
   /**
-   * Returns an unpopulated DTO object, and the build method which must be called with it when it is
-   * finished being populated.
+   * Get the {@code ParamInfo} mapping for a given constructor arg. This should handle both UDRs and
+   * native constructor arguments
    */
-  <T extends DataTransferObject> DataTransferObjectDescriptor<T> getConstructorArgDescriptor(
+  ImmutableMap<String, ParamInfo<?>> paramInfos(ConstructorArg constructorArg);
+
+  /**
+   * Returns a DTO descriptor to build unpopulated DTO objects for built-in rules.
+   *
+   * <p>NOTE: This will fail if used on UDRs, as the DTO descriptor cannot be constructed from the
+   * class ({@link com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg}) alone. See also
+   * {@link com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes} and {@link
+   * com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes}
+   */
+  <T extends DataTransferObject> DataTransferObjectDescriptor<T> getNativeConstructorArgDescriptor(
       Class<T> dtoType);
 }

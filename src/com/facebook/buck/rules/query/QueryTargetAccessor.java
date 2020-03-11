@@ -44,12 +44,7 @@ public class QueryTargetAccessor {
       TargetNode<T> node,
       String attribute,
       CellNameResolver cellPathResolver) {
-    Class<? extends ConstructorArg> constructorArgClass = node.getConstructorArg().getClass();
-    ParamInfo<?> info =
-        typeCoercerFactory
-            .getConstructorArgDescriptor(constructorArgClass)
-            .getParamInfos()
-            .get(attribute);
+    ParamInfo<?> info = typeCoercerFactory.paramInfos(node.getConstructorArg()).get(attribute);
     if (info == null) {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();
@@ -87,12 +82,7 @@ public class QueryTargetAccessor {
       String attribute,
       Predicate<Object> predicate,
       CellNameResolver cellNameResolver) {
-    Class<? extends ConstructorArg> constructorArgClass = node.getConstructorArg().getClass();
-    ParamInfo<?> info =
-        typeCoercerFactory
-            .getConstructorArgDescriptor(constructorArgClass)
-            .getParamInfos()
-            .get(attribute);
+    ParamInfo<?> info = typeCoercerFactory.paramInfos(node.getConstructorArg()).get(attribute);
     if (info == null) {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();

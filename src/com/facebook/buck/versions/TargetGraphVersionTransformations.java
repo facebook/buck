@@ -50,10 +50,7 @@ class TargetGraphVersionTransformations {
       TypeCoercerFactory typeCoercerFactory, TargetNode<?> node) {
     ConstructorArg constructorArg = node.getConstructorArg();
     ParamInfo<?> versionedDepsParam =
-        typeCoercerFactory
-            .getConstructorArgDescriptor(constructorArg.getClass())
-            .getParamInfos()
-            .get("versioned_deps");
+        typeCoercerFactory.paramInfos(constructorArg).get("versioned_deps");
     if (versionedDepsParam == null) {
       return ImmutableMap.of();
     }

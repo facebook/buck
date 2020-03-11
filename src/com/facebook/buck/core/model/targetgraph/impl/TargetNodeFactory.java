@@ -35,7 +35,6 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ParamInfo;
@@ -159,16 +158,7 @@ public class TargetNodeFactory implements NodeCopier {
     ImmutableSet.Builder<ForwardRelativePath> filePathsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<ForwardRelativePath> dirPathsBuilder = ImmutableSet.builder();
 
-    ImmutableMap<String, ParamInfo<?>> paramInfos;
-    if (constructorArg instanceof SkylarkDescriptionArg) {
-      paramInfos = ((SkylarkDescriptionArg) constructorArg).getAllParamInfo();
-    } else {
-      paramInfos =
-          typeCoercerFactory
-              .getConstructorArgDescriptor(
-                  (Class<? extends ConstructorArg>) description.getConstructorArgType())
-              .getParamInfos();
-    }
+    ImmutableMap<String, ParamInfo<?>> paramInfos = typeCoercerFactory.paramInfos(constructorArg);
 
     CellNameResolver cellNameResolver = cellNames.cellNameResolverForCell(buildTarget.getCell());
 
