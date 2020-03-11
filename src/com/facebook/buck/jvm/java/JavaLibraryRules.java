@@ -27,14 +27,12 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.CalculateAbi;
-import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -87,38 +85,5 @@ public class JavaLibraryRules {
         graphBuilder,
         Iterables.transform(roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
         true);
-  }
-
-  public static ImmutableSortedSet<BuildRule> getAbiRules(
-      ActionGraphBuilder graphBuilder, Iterable<BuildRule> inputs) {
-    ImmutableSortedSet.Builder<BuildRule> abiRules = ImmutableSortedSet.naturalOrder();
-    for (BuildRule input : inputs) {
-      if (input instanceof HasJavaAbi && ((HasJavaAbi) input).getAbiJar().isPresent()) {
-        Optional<BuildTarget> abiJarTarget = ((HasJavaAbi) input).getAbiJar();
-        BuildRule abiJarRule = graphBuilder.requireRule(abiJarTarget.get());
-        abiRules.add(abiJarRule);
-      }
-    }
-    return abiRules.build();
-  }
-
-  public static ImmutableSortedSet<BuildRule> getSourceOnlyAbiRules(
-      ActionGraphBuilder graphBuilder, Iterable<BuildRule> inputs) {
-    ImmutableSortedSet.Builder<BuildRule> abiRules = ImmutableSortedSet.naturalOrder();
-    for (BuildRule input : inputs) {
-      if (input instanceof HasJavaAbi) {
-        HasJavaAbi hasAbi = (HasJavaAbi) input;
-        Optional<BuildTarget> abiJarTarget = hasAbi.getSourceOnlyAbiJar();
-        if (!abiJarTarget.isPresent()) {
-          abiJarTarget = hasAbi.getAbiJar();
-        }
-
-        if (abiJarTarget.isPresent()) {
-          BuildRule abiJarRule = graphBuilder.requireRule(abiJarTarget.get());
-          abiRules.add(abiJarRule);
-        }
-      }
-    }
-    return abiRules.build();
   }
 }
