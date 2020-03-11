@@ -21,8 +21,10 @@ import com.facebook.buck.logd.proto.CreateLogRequest;
 import com.facebook.buck.logd.proto.CreateLogResponse;
 import com.facebook.buck.logd.proto.LogMessage;
 import com.facebook.buck.logd.proto.LogdServiceGrpc;
+import com.facebook.buck.logd.proto.ShutdownRequest;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.SettableFuture;
 import com.google.rpc.Status;
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
@@ -35,6 +37,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -48,6 +51,7 @@ public class LogdServer implements LogDaemonServer {
   private static final int TIME_OUT_SECONDS = 5;
 
   private final Server server;
+  private final LogdServiceImpl service;
   private final int port;
 
   /**
@@ -68,7 +72,8 @@ public class LogdServer implements LogDaemonServer {
   @VisibleForTesting
   public LogdServer(int port, ServerBuilder<?> serverBuilder) {
     this.port = port;
-    this.server = serverBuilder.addService(new LogdServiceImpl()).build();
+    this.service = new LogdServiceImpl();
+    this.server = serverBuilder.addService(service).build();
   }
 
   /**
@@ -81,21 +86,28 @@ public class LogdServer implements LogDaemonServer {
     server.start();
     LOG.info("Server started, listening on port {}", port);
 
-    Runtime.getRuntime()
-        .addShutdownHook(
-            new Thread(
-                () -> {
-                  // Use stderr here since the LOG may have been reset by its JVM shutdown hook.
-                  System.err.println("*** shutting down logD server since JVM is shutting down");
-                  stop();
-                  System.err.println("*** server shut down");
-                }));
+    new Thread(
+            () -> {
+              try {
+                if (service.isLogdServiceFinished().get()) {
+                  LOG.info("LogD service triggered shutdown. Server shutting down...");
+                }
+              } catch (InterruptedException e) {
+                LOG.info("Interrupted...", e);
+                Thread.currentThread().interrupt();
+              } catch (ExecutionException e) {
+                LOG.error("Execution exception...", e);
+              } finally {
+                stop();
+              }
+            })
+        .start();
   }
 
   /** Shuts down logD server. */
   @Override
   public void stop() {
-    if (server != null) {
+    if (server != null && !server.isTerminated()) {
       try {
         LOG.info(
             "Awaiting termination of logD server. Waiting for up to {} seconds...",
@@ -116,6 +128,7 @@ public class LogdServer implements LogDaemonServer {
   }
 
   private static class LogdServiceImpl extends LogdServiceGrpc.LogdServiceImplBase {
+    private SettableFuture<Boolean> logdServiceFinished = SettableFuture.create();
     private Map<Integer, BufferedWriter> logStreams = new ConcurrentHashMap<>();
     private Map<Integer, String> fileIdToPath = new ConcurrentHashMap<>();
     private final LogFileIdGenerator logFileIdGenerator = new LogFileIdGenerator();
@@ -182,7 +195,7 @@ public class LogdServer implements LogDaemonServer {
           // then close FileOutputStream of corresponding StreamObserver
           String logFilePath = fileIdToPath.get(logId);
           try {
-            logStreams.get(logId).close();
+            logStreams.remove(logId).close();
             responseObserver.onNext(
                 Status.newBuilder()
                     .setCode(ExitCode.SUCCESS.getCode())
@@ -200,6 +213,14 @@ public class LogdServer implements LogDaemonServer {
           responseObserver.onCompleted();
         }
       };
+    }
+
+    @Override
+    public void shutdownServer(ShutdownRequest request, StreamObserver<Status> responseObserver) {
+      responseObserver.onNext(Status.newBuilder().build());
+      responseObserver.onCompleted();
+      LOG.info("Signaling LogD server to shutdown...");
+      logdServiceFinished.set(true);
     }
 
     /**
@@ -230,6 +251,10 @@ public class LogdServer implements LogDaemonServer {
         LOG.error("LogD failed to create a file at " + filePath, e);
         throw new LogDaemonException(e, "LogD failed to create a file at %s", filePath);
       }
+    }
+
+    public SettableFuture<Boolean> isLogdServiceFinished() {
+      return logdServiceFinished;
     }
 
     private void appendLog(int fileId, String message) throws IOException {

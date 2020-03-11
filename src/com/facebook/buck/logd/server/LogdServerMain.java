@@ -17,26 +17,36 @@
 package com.facebook.buck.logd.server;
 
 import java.io.IOException;
+import java.net.ServerSocket;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /** This class is run by logd.pex to start up LogD server */
 public class LogdServerMain {
   private static final Logger LOG = LogManager.getLogger();
-  private static final int PORT = 8980;
 
   /**
    * Main class starting LogD server
    *
    * @param args
    */
-  public static void main(String[] args) {
-    LogdServer logdServer = new LogdServer(PORT);
+  public static void main(String[] args) throws IOException {
+    int port = findAvailablePort();
+    LOG.info("Found available port at {}", port);
+    LogdServer logdServer = new LogdServer(port);
     try {
       logdServer.start();
-      LOG.debug("Starting up LogD...");
+      // prints found port to stdout to be read by MainRunner
+      System.out.println(port);
     } catch (IOException e) {
       LOG.error("Failed to start LogD", e);
+      throw new IOException("Failed to start LogD", e);
+    }
+  }
+
+  private static int findAvailablePort() throws IOException {
+    try (ServerSocket serverSocket = new ServerSocket(0)) {
+      return serverSocket.getLocalPort();
     }
   }
 }
