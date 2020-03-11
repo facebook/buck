@@ -74,9 +74,4 @@ public class QueryCommand extends AbstractQueryCommand {
   public String getShortDescription() {
     return "provides facilities to query information about the configured target nodes graph";
   }
-
-  @Override
-  protected WhichQueryCommand whichQueryCommand() {
-    return WhichQueryCommand.QUERY;
-  }
 }
