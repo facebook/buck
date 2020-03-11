@@ -5125,18 +5125,6 @@ buck = .
 
 {call buckconfig.entry}
   {param section: 'ui' /}
-  {param name: 'enable_show_output_warning' /}
-  {param example_value: 'false' /}
-  {param description}
-    Determines whether a deprecation warning for <code>--show-output</code> should be shown. The
-    warning also informs users that they should be using <code>--show-outputs</code> instead.
-
-    This defaults to false.
-  {/param}
-{/call}
-
-{call buckconfig.entry}
-  {param section: 'ui' /}
   {param name: 'thread_line_limit' /}
   {param example_value: '10' /}
   {param description}
