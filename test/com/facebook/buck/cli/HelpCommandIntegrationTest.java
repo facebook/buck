@@ -73,7 +73,6 @@ public class HelpCommandIntegrationTest {
             "  targets        prints the list of buildable targets",
             "  test           builds and runs the tests for the specified target",
             "  uninstall      uninstalls an APK",
-            "  uquery-dont-use provides facilities to query information about the unconfigured target nodes graph",
             "  verify-caches  Verify contents of internal Buck in-memory caches.",
             "",
             "Options:",

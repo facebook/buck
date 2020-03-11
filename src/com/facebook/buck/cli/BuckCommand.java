@@ -54,7 +54,6 @@ public class BuckCommand extends AbstractContainerCommand {
     @SubCommand(name = "targets", impl = TargetsCommand.class),
     @SubCommand(name = "test", impl = TestCommand.class),
     @SubCommand(name = "uninstall", impl = UninstallCommand.class),
-    @SubCommand(name = "uquery-dont-use", impl = UnconfiguredQueryCommand.class),
     @SubCommand(name = "verify-caches", impl = VerifyCachesCommand.class),
   })
   @Nullable
