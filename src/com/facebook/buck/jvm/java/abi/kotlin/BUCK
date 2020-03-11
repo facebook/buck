@@ -1,7 +1,7 @@
-kotlin_library(
+java_library(
     name = "kotlin",
     srcs = glob(
-        ["*.kt"],
+        ["*.java"],
     ),
     tests = [
         "//test/com/facebook/buck/jvm/java/abi:abi",
@@ -14,5 +14,8 @@ kotlin_library(
         "//third-party/java/asm:asm",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/kotlinx-metadata-jvm:kotlinx-metadata-jvm",
+    ],
+    exported_deps = [
+        "//third-party/java/guava:guava",
     ],
 )

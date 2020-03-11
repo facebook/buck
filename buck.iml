@@ -153,8 +153,6 @@
     <orderEntry type="library" name="zstd-jni-1.4.0-1" level="project" />
     <orderEntry type="library" name="a2api" level="project" />
     <orderEntry type="library" name="devspeed.logging" level="project" />
-    <orderEntry type="library" name="KotlinJavaRuntime" level="project" />
-    <orderEntry type="library" name="kotlin-annotations" level="project" />
     <orderEntry type="library" name="kotlin-compiler" level="project" />
     <orderEntry type="library" name="kotlinx-metadata" level="project" />
     <orderEntry type="library" name="jackson-module-kotlin-2.9.9" level="project" />

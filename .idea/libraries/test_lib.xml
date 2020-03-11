@@ -11,8 +11,6 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/jackson/jackson-core-2.9.7.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/hamcrest-2.1-rc3.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/easymock/easymock-4.0.2.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/mockk-dsl-jvm-1.9.3.kotlin12.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/mockk-1.9.3.kotlin12.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES>
@@ -23,8 +21,6 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/hamcrest-junit-2.0.0.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/hamcrest/hamcrest-2.1-rc3-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/easymock/easymock-4.0.2-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/mockk-dsl-jvm-1.9.3.kotlin12-sources.jar!/" />
-      <root url="jar://$PROJECT_DIR$/third-party/java/mockk/mockk-1.9.3.kotlin12-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
