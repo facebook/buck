@@ -54,7 +54,7 @@ import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.apple.clang.ModuleMapFactory;
 import com.facebook.buck.apple.clang.ModuleMapMode;
-import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
+import com.facebook.buck.apple.clang.SwiftMode;
 import com.facebook.buck.apple.clang.VFSOverlay;
 import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.GidGenerator;
@@ -3161,18 +3161,12 @@ public class ProjectGenerator {
         if (containsSwift) {
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
-                      moduleName.get(),
-                      moduleMapMode,
-                      UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER,
-                      headerPaths)
+                      moduleName.get(), moduleMapMode, SwiftMode.INCLUDE_SWIFT_HEADER, headerPaths)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
-                      moduleName.get(),
-                      moduleMapMode,
-                      UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER,
-                      headerPaths)
+                      moduleName.get(), moduleMapMode, SwiftMode.EXCLUDE_SWIFT_HEADER, headerPaths)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("objc.modulemap"));
 
@@ -3192,10 +3186,7 @@ public class ProjectGenerator {
         } else {
           projectFilesystem.writeContentsToPath(
               ModuleMapFactory.createModuleMap(
-                      moduleName.get(),
-                      moduleMapMode,
-                      UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT,
-                      headerPaths)
+                      moduleName.get(), moduleMapMode, SwiftMode.NO_SWIFT, headerPaths)
                   .render(),
               headerSymlinkTreeRoot.resolve(moduleName.get()).resolve("module.modulemap"));
         }

@@ -25,8 +25,7 @@ public class UmbrellaHeaderModuleMapTest {
 
   @Test
   public void testNoSwift() {
-    UmbrellaHeaderModuleMap testMap =
-        new UmbrellaHeaderModuleMap("TestModule", UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT);
+    UmbrellaHeaderModuleMap testMap = new UmbrellaHeaderModuleMap("TestModule", SwiftMode.NO_SWIFT);
     assertThat(
         "module TestModule {\n"
             + "    umbrella header \"TestModule.h\"\n"
@@ -41,8 +40,7 @@ public class UmbrellaHeaderModuleMapTest {
   @Test
   public void testIncludeSwift() {
     UmbrellaHeaderModuleMap testMap =
-        new UmbrellaHeaderModuleMap(
-            "TestModule", UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER);
+        new UmbrellaHeaderModuleMap("TestModule", SwiftMode.INCLUDE_SWIFT_HEADER);
     assertThat(
         "module TestModule {\n"
             + "    umbrella header \"TestModule.h\"\n"
@@ -62,8 +60,7 @@ public class UmbrellaHeaderModuleMapTest {
   @Test
   public void testExcludeSwift() {
     UmbrellaHeaderModuleMap testMap =
-        new UmbrellaHeaderModuleMap(
-            "TestModule", UmbrellaHeaderModuleMap.SwiftMode.EXCLUDE_SWIFT_HEADER);
+        new UmbrellaHeaderModuleMap("TestModule", SwiftMode.EXCLUDE_SWIFT_HEADER);
     assertThat(
         "module TestModule {\n"
             + "    umbrella header \"TestModule.h\"\n"

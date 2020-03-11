@@ -22,8 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.apple.clang.ModuleMapMode;
+import com.facebook.buck.apple.clang.SwiftMode;
 import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
-import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap.SwiftMode;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;

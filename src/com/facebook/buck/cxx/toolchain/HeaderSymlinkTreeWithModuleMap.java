@@ -18,7 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.apple.clang.ModuleMapFactory;
 import com.facebook.buck.apple.clang.ModuleMapMode;
-import com.facebook.buck.apple.clang.UmbrellaHeaderModuleMap;
+import com.facebook.buck.apple.clang.SwiftMode;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
@@ -90,8 +90,8 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
                         moduleName,
                         moduleMapMode,
                         containsSwiftHeader(paths, moduleName)
-                            ? UmbrellaHeaderModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER
-                            : UmbrellaHeaderModuleMap.SwiftMode.NO_SWIFT,
+                            ? SwiftMode.INCLUDE_SWIFT_HEADER
+                            : SwiftMode.NO_SWIFT,
                         getLinks().keySet()))));
     return builder.build();
   }

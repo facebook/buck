@@ -26,10 +26,12 @@ import org.stringtemplate.v4.ST;
 public class HeadersModuleMap implements ModuleMap {
   private String moduleName;
   private List<String> headers;
+  private SwiftMode swiftMode;
 
-  HeadersModuleMap(String moduleName, List<String> headers) {
+  HeadersModuleMap(String moduleName, List<String> headers, SwiftMode swiftMode) {
     this.moduleName = moduleName;
     this.headers = headers;
+    this.swiftMode = swiftMode;
   }
 
   private static final String template =
@@ -38,10 +40,21 @@ public class HeadersModuleMap implements ModuleMap {
           + "\n"
           + "    export *\n"
           + "}\n"
+          + "\n"
+          + "<if(include_swift_header)>"
+          + "module <module_name>.Swift {\n"
+          + "    header \"<module_name>-Swift.h\"\n"
+          + "    requires objc\n"
+          + "}\n"
+          + "<endif>"
           + "\n";
 
   @Override
   public String render() {
-    return new ST(template).add("module_name", moduleName).add("headers", headers).render();
+    return new ST(template)
+        .add("module_name", moduleName)
+        .add("headers", headers)
+        .add("include_swift_header", swiftMode.includeSwift())
+        .render();
   }
 }

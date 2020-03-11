@@ -27,13 +27,6 @@ import org.stringtemplate.v4.ST;
  * inferred submodule functionality does not work.
  */
 public class UmbrellaHeaderModuleMap implements ModuleMap {
-
-  public enum SwiftMode {
-    NO_SWIFT,
-    EXCLUDE_SWIFT_HEADER,
-    INCLUDE_SWIFT_HEADER
-  }
-
   private final SwiftMode swiftMode;
   private final String moduleName;
 

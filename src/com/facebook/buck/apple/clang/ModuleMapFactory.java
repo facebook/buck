@@ -40,10 +40,7 @@ public class ModuleMapFactory {
    * @return A module map instance.
    */
   public static ModuleMap createModuleMap(
-      String moduleName,
-      ModuleMapMode moduleMapMode,
-      UmbrellaHeaderModuleMap.SwiftMode swiftMode,
-      Set<Path> headerPaths) {
+      String moduleName, ModuleMapMode moduleMapMode, SwiftMode swiftMode, Set<Path> headerPaths) {
     switch (moduleMapMode) {
       case HEADERS:
         String stripPrefix = moduleName + "/";
@@ -59,7 +56,7 @@ public class ModuleMapFactory {
                 .sorted()
                 .collect(ImmutableList.toImmutableList());
 
-        return new HeadersModuleMap(moduleName, headerNames);
+        return new HeadersModuleMap(moduleName, headerNames, swiftMode);
       case UMBRELLA_HEADER:
         return new UmbrellaHeaderModuleMap(moduleName, swiftMode);
     }
