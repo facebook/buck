@@ -3881,7 +3881,8 @@ public class ProjectGenerator {
     visitRecursiveHeaderSymlinkTrees(
         targetNode,
         (nativeNode, headerVisibility) -> {
-          if (headerVisibility.equals(HeaderVisibility.PUBLIC)
+          if (targetNode != nativeNode
+              && headerVisibility.equals(HeaderVisibility.PUBLIC)
               && isModularAppleLibrary(nativeNode)) {
             builder.add(getHeaderSymlinkTreePath(nativeNode, headerVisibility));
           }
@@ -4207,16 +4208,18 @@ public class ProjectGenerator {
 
   private Iterable<String> collectModularTargetSpecificSwiftFlags(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
-    ImmutableList.Builder<String> targetSpecificSwiftFlags = ImmutableList.builder();
-    targetSpecificSwiftFlags.add("-import-underlying-module");
     Path vfsOverlay =
         getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(
             getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC));
-    targetSpecificSwiftFlags.add("-Xcc");
-    targetSpecificSwiftFlags.add("-ivfsoverlay");
-    targetSpecificSwiftFlags.add("-Xcc");
-    targetSpecificSwiftFlags.add("$REPO_ROOT/" + vfsOverlay);
-    return targetSpecificSwiftFlags.build();
+
+    return ImmutableList.of(
+        "-import-underlying-module",
+        "-Xcc",
+        "-ivfsoverlay",
+        "-Xcc",
+        "$REPO_ROOT/" + vfsOverlay,
+        "-Xcc",
+        "-I" + getAbsolutePathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC));
   }
 
   private boolean isTargetNodeApplicationTestTarget(
