@@ -39,6 +39,7 @@ import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
 import com.facebook.buck.parser.api.PackageMetadata;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -141,7 +142,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
             buildTarget,
             DependencyStack.root(),
-            inputAttributes,
+            RawTargetNode.copyOf(inputAttributes),
             getPackage());
 
     assertEquals(

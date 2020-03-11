@@ -34,6 +34,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -52,7 +53,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
-import java.util.Map;
 import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
@@ -93,7 +93,7 @@ public class SkylarkUserDefinedRulesParserTest {
         cell.getRootCell());
   }
 
-  private Map<String, Object> getSingleRule(Path buildFile)
+  private RawTargetNode getSingleRule(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return SkylarkProjectBuildFileParserTestUtils.getSingleRule(parser, buildFile);
   }
@@ -630,20 +630,21 @@ public class SkylarkUserDefinedRulesParserTest {
 
     Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
 
-    ImmutableMap<String, ImmutableMap<String, Object>> expected =
+    ImmutableMap<String, RawTargetNode> expected =
         ImmutableMap.of(
             "target1",
-            ImmutableMap.<String, Object>builder()
-                .put("name", "target1")
-                .put("buck.base_path", "subdir")
-                .put("buck.type", "//subdir:foo.bzl:some_rule")
-                .put("attr1", 3)
-                .put("attr2", 2)
-                .put("licenses", ImmutableSortedSet.of())
-                .put("labels", ImmutableSortedSet.of())
-                .put("default_target_platform", Optional.empty())
-                .put("compatible_with", ImmutableList.of())
-                .build());
+            RawTargetNode.copyOf(
+                ImmutableMap.<String, Object>builder()
+                    .put("name", "target1")
+                    .put("buck.base_path", "subdir")
+                    .put("buck.type", "//subdir:foo.bzl:some_rule")
+                    .put("attr1", 3)
+                    .put("attr2", 2)
+                    .put("licenses", ImmutableSortedSet.of())
+                    .put("labels", ImmutableSortedSet.of())
+                    .put("default_target_platform", Optional.empty())
+                    .put("compatible_with", ImmutableList.of())
+                    .build()));
 
     parser = createParser(eventCollector);
 
@@ -660,32 +661,34 @@ public class SkylarkUserDefinedRulesParserTest {
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
     Path buildFile = projectFilesystem.resolve("subdir").resolve("BUCK");
 
-    ImmutableMap<String, ImmutableMap<String, Object>> expected =
+    ImmutableMap<String, RawTargetNode> expected =
         ImmutableMap.of(
             "target1",
-            ImmutableMap.<String, Object>builder()
-                .put("name", "target1")
-                .put("buck.base_path", "subdir")
-                .put("buck.type", "//subdir:foo.bzl:some_rule")
-                .put("attr1", 3)
-                .put("attr2", 2)
-                .put("licenses", ImmutableSortedSet.of())
-                .put("labels", ImmutableSortedSet.of())
-                .put("default_target_platform", Optional.empty())
-                .put("compatible_with", ImmutableList.of())
-                .build(),
+            RawTargetNode.copyOf(
+                ImmutableMap.<String, Object>builder()
+                    .put("name", "target1")
+                    .put("buck.base_path", "subdir")
+                    .put("buck.type", "//subdir:foo.bzl:some_rule")
+                    .put("attr1", 3)
+                    .put("attr2", 2)
+                    .put("licenses", ImmutableSortedSet.of())
+                    .put("labels", ImmutableSortedSet.of())
+                    .put("default_target_platform", Optional.empty())
+                    .put("compatible_with", ImmutableList.of())
+                    .build()),
             "target2",
-            ImmutableMap.<String, Object>builder()
-                .put("name", "target2")
-                .put("buck.base_path", "subdir")
-                .put("buck.type", "//subdir:foo.bzl:some_rule")
-                .put("attr1", 4)
-                .put("attr2", 5)
-                .put("licenses", ImmutableSortedSet.of())
-                .put("labels", ImmutableSortedSet.of())
-                .put("default_target_platform", Optional.empty())
-                .put("compatible_with", ImmutableList.of())
-                .build());
+            RawTargetNode.copyOf(
+                ImmutableMap.<String, Object>builder()
+                    .put("name", "target2")
+                    .put("buck.base_path", "subdir")
+                    .put("buck.type", "//subdir:foo.bzl:some_rule")
+                    .put("attr1", 4)
+                    .put("attr2", 5)
+                    .put("licenses", ImmutableSortedSet.of())
+                    .put("labels", ImmutableSortedSet.of())
+                    .put("default_target_platform", Optional.empty())
+                    .put("compatible_with", ImmutableList.of())
+                    .build()));
 
     parser = createParser(eventCollector);
 

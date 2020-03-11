@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -29,12 +30,10 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
-import java.util.Map;
 import java.util.OptionalLong;
 
 /** A pipeline that provides access to a raw node by its {@link BuildTarget}. */
-public class BuildTargetRawNodeParsePipeline
-    implements BuildTargetParsePipeline<Map<String, Object>> {
+public class BuildTargetRawNodeParsePipeline implements BuildTargetParsePipeline<RawTargetNode> {
 
   private final ListeningExecutorService executorService;
   private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
@@ -51,7 +50,7 @@ public class BuildTargetRawNodeParsePipeline
    * makes error messages more useful
    */
   private static ImmutableList<UnconfiguredBuildTarget> findSimilarTargets(
-      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> buildFileTargets,
+      TwoArraysImmutableHashMap<String, RawTargetNode> buildFileTargets,
       UnconfiguredBuildTarget expectedTarget,
       int maxLevenshteinDistance) {
 
@@ -74,8 +73,8 @@ public class BuildTargetRawNodeParsePipeline
   }
 
   @Override
-  public ListenableFuture<Map<String, Object>> getNodeJob(
-      Cell cell, UnconfiguredBuildTarget buildTarget) throws BuildTargetException {
+  public ListenableFuture<RawTargetNode> getNodeJob(Cell cell, UnconfiguredBuildTarget buildTarget)
+      throws BuildTargetException {
     return Futures.transformAsync(
         buildFileRawNodeParsePipeline.getFileJob(
             cell,

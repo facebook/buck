@@ -27,6 +27,7 @@ import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.BuildFileManifestFactory;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -101,9 +102,12 @@ public class BuildFileManifestCacheTest {
             Paths.get("BUCK"),
             TestProjectFilesystems.createProjectFilesystem(cell1Path).asView());
 
-    ImmutableMap<String, ImmutableMap<String, Object>> targets =
+    ImmutableMap<String, RawTargetNode> targets =
         ImmutableMap.of(
-            "target1", ImmutableMap.of("key1", "val1"), "target2", ImmutableMap.of("key2", 2));
+            "target1",
+            RawTargetNode.copyOf(ImmutableMap.of("key1", "val1")),
+            "target2",
+            RawTargetNode.copyOf(ImmutableMap.of("key2", 2)));
     ImmutableSortedSet<String> includes =
         ImmutableSortedSet.of(includesFolder.resolve("include1.bzl").toString());
     ImmutableMap<String, Object> configs = ImmutableMap.of("config1", "cval1");

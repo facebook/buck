@@ -39,6 +39,7 @@ import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.jvm.java.PrebuiltJarDescription;
 import com.facebook.buck.maven.aether.Repository;
 import com.facebook.buck.parser.PythonDslProjectBuildFileParser;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
@@ -62,7 +63,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import org.eclipse.aether.RepositoryException;
@@ -197,11 +197,11 @@ public class ResolverIntegrationTest {
     HashCode seen = MorePaths.asByteSource(jarFile).hash(Hashing.sha1());
     assertEquals(expected, seen);
 
-    TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
+    TwoArraysImmutableHashMap<String, RawTargetNode> rules =
         buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
     assertEquals(1, rules.size());
-    Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
+    RawTargetNode rule = Iterables.getOnlyElement(rules.values());
     // Name is derived from the project identifier
     assertEquals("no-deps", rule.get("name"));
 
@@ -223,10 +223,10 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
-    TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
+    TwoArraysImmutableHashMap<String, RawTargetNode> rules =
         buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
-    Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
+    RawTargetNode rule = Iterables.getOnlyElement(rules.values());
     assertEquals("with-sources-1.0-sources.jar", rule.get("sourceJar"));
   }
 
@@ -235,14 +235,14 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:with-deps:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
-    Map<String, Object> withDeps =
+    RawTargetNode withDeps =
         Iterables.getOnlyElement(
             buildFileParser
                 .getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
                 .getTargets()
                 .values());
     Path otherDir = thirdPartyRelative.resolve("othercorp");
-    Map<String, Object> noDeps =
+    RawTargetNode noDeps =
         Iterables.getOnlyElement(
             buildFileParser
                 .getManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
@@ -273,12 +273,12 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:deps-in-same-project:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
-    TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> allTargets =
+    TwoArraysImmutableHashMap<String, RawTargetNode> allTargets =
         buildFileParser.getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK")).getTargets();
 
     assertEquals(2, allTargets.size());
 
-    Map<String, Object> noDeps = allTargets.get("no-deps");
+    RawTargetNode noDeps = allTargets.get("no-deps");
 
     assertNotNull(noDeps);
 

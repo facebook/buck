@@ -42,6 +42,7 @@ import com.facebook.buck.parser.DaemonicCellState.Cache;
 import com.facebook.buck.parser.api.BuildFileManifestFactory;
 import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.api.PackageMetadata;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -82,9 +83,10 @@ public class DaemonicCellStateTest {
         BuildFileManifestFactory.create(
             ImmutableMap.of(
                 target.getShortName(),
-                ImmutableMap.of(
-                    "name", target.getShortName(),
-                    "buck.base_path", target.getCellRelativeBasePath().getPath().toString()))),
+                RawTargetNode.copyOf(
+                    ImmutableMap.of(
+                        "name", target.getShortName(),
+                        "buck.base_path", target.getCellRelativeBasePath().getPath().toString())))),
         ImmutableSet.of(),
         ImmutableMap.of());
   }
@@ -167,9 +169,10 @@ public class DaemonicCellStateTest {
             ImmutableMap.of(
                 "target",
                 // Forms the target "//path/to:target"
-                ImmutableMap.of(
-                    "buck.base_path", "path/to",
-                    "name", "target"))),
+                RawTargetNode.copyOf(
+                    ImmutableMap.of(
+                        "buck.base_path", "path/to",
+                        "name", "target")))),
         ImmutableSet.of(),
         ImmutableMap.of());
     assertEquals("Still only one invalidated node", 1, childState.invalidatePath(targetPath));

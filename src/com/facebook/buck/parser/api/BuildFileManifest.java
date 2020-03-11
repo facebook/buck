@@ -30,8 +30,7 @@ import java.util.Optional;
 @BuckStyleValue
 public abstract class BuildFileManifest implements ComputeResult, FileManifest {
   /** @return a list of targets defined in the build file. */
-  public abstract TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>>
-      getTargets();
+  public abstract TwoArraysImmutableHashMap<String, RawTargetNode> getTargets();
 
   @Override
   public abstract ImmutableSortedSet<String> getIncludes();
@@ -49,7 +48,7 @@ public abstract class BuildFileManifest implements ComputeResult, FileManifest {
   public abstract ImmutableList<ParsingError> getErrors();
 
   public static BuildFileManifest of(
-      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> targets,
+      TwoArraysImmutableHashMap<String, RawTargetNode> targets,
       ImmutableSortedSet<String> includes,
       ImmutableMap<String, Object> configs,
       Optional<ImmutableMap<String, Optional<String>>> env,

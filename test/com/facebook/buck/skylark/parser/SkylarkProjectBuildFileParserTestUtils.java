@@ -24,6 +24,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
@@ -115,7 +116,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
         NativeGlobber::create);
   }
 
-  static Map<String, Object> getSingleRule(
+  static RawTargetNode getSingleRule(
       SkylarkProjectBuildFileParser parser, java.nio.file.Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     BuildFileManifest buildFileManifest = parser.getManifest(buildFile);

@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
@@ -131,7 +132,7 @@ public class AuditRulesCommand extends AbstractCommand {
           }
 
           // Parse the rules from the build file.
-          TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rawRules =
+          TwoArraysImmutableHashMap<String, RawTargetNode> rawRules =
               parser.getManifest(path).getTargets();
 
           // Format and print the rules from the raw data, filtered by type.
@@ -159,7 +160,7 @@ public class AuditRulesCommand extends AbstractCommand {
 
   private void printRulesToStdout(
       PrintStream stdOut,
-      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rawRules,
+      TwoArraysImmutableHashMap<String, RawTargetNode> rawRules,
       Predicate<String> includeType) {
     rawRules.entrySet().stream()
         .filter(
@@ -171,7 +172,7 @@ public class AuditRulesCommand extends AbstractCommand {
         .forEach(rawRule -> printRuleAsPythonToStdout(stdOut, rawRule.getValue()));
   }
 
-  private static void printRuleAsPythonToStdout(PrintStream out, Map<String, Object> rawRule) {
+  private static void printRuleAsPythonToStdout(PrintStream out, RawTargetNode rawRule) {
     String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);
     out.printf("%s(\n", type);
 
@@ -183,7 +184,7 @@ public class AuditRulesCommand extends AbstractCommand {
 
     // Add the properties specific to the rule.
     SortedSet<String> customProperties = new TreeSet<>();
-    for (String key : rawRule.keySet()) {
+    for (String key : rawRule.getAttrs().keySet()) {
       // Ignore keys that start with "buck.".
       if (!(key.startsWith(BuckPyFunction.INTERNAL_PROPERTY_NAME_PREFIX)
           || LAST_PROPERTIES.contains(key))) {
@@ -193,7 +194,7 @@ public class AuditRulesCommand extends AbstractCommand {
     properties.addAll(customProperties);
 
     // Add common properties that should be displayed last.
-    properties.addAll(Sets.intersection(LAST_PROPERTIES, rawRule.keySet()));
+    properties.addAll(Sets.intersection(LAST_PROPERTIES, rawRule.getAttrs().keySet()));
 
     // Write out the properties and their corresponding values.
     for (String property : properties) {

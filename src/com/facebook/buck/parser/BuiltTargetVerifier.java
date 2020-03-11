@@ -28,10 +28,10 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.Map;
 
 /** Verifies that the {@link BuildTarget} is valid during parsing */
 public class BuiltTargetVerifier {
@@ -45,7 +45,7 @@ public class BuiltTargetVerifier {
       Path buildFile,
       UnconfiguredBuildTarget target,
       BaseDescription<?> description,
-      Map<String, Object> rawNode) {
+      RawTargetNode rawNode) {
     UnflavoredBuildTarget unflavoredBuildTargetView = target.getUnflavoredBuildTarget();
     if (target.isFlavored()) {
       if (description instanceof Flavored) {
@@ -83,7 +83,7 @@ public class BuiltTargetVerifier {
               "Inconsistent internal state, target from data: %s, expected: %s, raw data: %s",
               unflavoredBuildTargetViewFromRawData,
               unflavoredBuildTargetView,
-              Joiner.on(',').withKeyValueSeparator("->").join(rawNode)));
+              Joiner.on(',').withKeyValueSeparator("->").join(rawNode.getAttrs())));
     }
   }
 
@@ -93,7 +93,7 @@ public class BuiltTargetVerifier {
       AbsPath buildFile,
       UnconfiguredBuildTarget target,
       BaseDescription<?> description,
-      Map<String, Object> rawNode) {
+      RawTargetNode rawNode) {
     verifyBuildTarget(cell, buildRuleType, buildFile.getPath(), target, description, rawNode);
   }
 }

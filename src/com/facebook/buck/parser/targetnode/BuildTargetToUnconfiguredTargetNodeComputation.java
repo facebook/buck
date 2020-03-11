@@ -31,12 +31,12 @@ import com.facebook.buck.parser.PackageFactory;
 import com.facebook.buck.parser.UnconfiguredTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.PackageMetadata;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -85,7 +85,7 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
     UnconfiguredBuildTarget buildTarget = key.getBuildTarget();
 
     BuildFileManifest manifest = env.getDep(getManifestKey(key));
-    @Nullable Map<String, Object> rawAttributes = manifest.getTargets().get(buildTarget.getName());
+    @Nullable RawTargetNode rawAttributes = manifest.getTargets().get(buildTarget.getName());
     if (rawAttributes == null) {
       throw new NoSuchBuildTargetException(buildTarget);
     }

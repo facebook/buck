@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
@@ -92,13 +93,13 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       Cell cell,
       UnconfiguredBuildTarget target,
       RuleDescriptor<?> descriptor,
-      Map<String, Object> attrs,
+      RawTargetNode attrs,
       CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
     TwoArraysImmutableHashMap.Builder<String, Object> result = TwoArraysImmutableHashMap.builder();
     DataTransferObjectDescriptor<?> constructorDescriptor =
         descriptor.dataTransferObjectDescriptor(typeCoercerFactory);
-    for (Map.Entry<String, Object> attr : attrs.entrySet()) {
+    for (Map.Entry<String, Object> attr : attrs.getAttrs().entrySet()) {
       if (attr.getKey().startsWith("buck.")
           || attr.getKey().equals(VisibilityAttributes.VISIBILITY)
           || attr.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
@@ -176,7 +177,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       Path buildFile,
       UnconfiguredBuildTarget target,
       DependencyStack dependencyStack,
-      Map<String, Object> rawAttributes,
+      RawTargetNode rawAttributes,
       Package pkg) {
     KnownRuleTypes knownRuleTypes = knownRuleTypesProvider.get(cell);
     RuleDescriptor<?> descriptor = parseRuleTypeFromRawRule(knownRuleTypes, rawAttributes);
@@ -240,7 +241,9 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
 
     // TODO(nga): UDR populate `compatible_with` while native rules populate `compatibleWith`
     Object rawCompatibleWith =
-        rawAttributes.getOrDefault("compatible_with", rawAttributes.get("compatibleWith"));
+        rawAttributes
+            .getAttrs()
+            .getOrDefault("compatible_with", rawAttributes.get("compatibleWith"));
     if (rawCompatibleWith != null) {
       try {
         compatibleWith =
@@ -265,7 +268,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   }
 
   private static RuleDescriptor<?> parseRuleTypeFromRawRule(
-      KnownRuleTypes knownRuleTypes, Map<String, Object> attributes) {
+      KnownRuleTypes knownRuleTypes, RawTargetNode attributes) {
     String type =
         (String) Objects.requireNonNull(attributes.get(BuckPyFunction.TYPE_PROPERTY_NAME));
     return knownRuleTypes.getDescriptorByName(type);

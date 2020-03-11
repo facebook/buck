@@ -22,6 +22,7 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -57,7 +58,7 @@ public class UnflavoredBuildTargetFactoryTest {
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
-        malformedMap,
+        RawTargetNode.copyOf(malformedMap),
         buildFilePath);
   }
 
@@ -73,7 +74,7 @@ public class UnflavoredBuildTargetFactoryTest {
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
-        malformedMap,
+        RawTargetNode.copyOf(malformedMap),
         buildFilePath);
   }
 
@@ -92,7 +93,7 @@ public class UnflavoredBuildTargetFactoryTest {
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
-        malformedMap,
+        RawTargetNode.copyOf(malformedMap),
         buildFilePath);
   }
 }

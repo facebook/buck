@@ -27,6 +27,7 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.PackageFileManifest;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.concurrent.AutoCloseableLock;
@@ -244,7 +245,7 @@ class DaemonicCellState {
     try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
       BuildFileManifest updated =
           allBuildFileManifests.putIfAbsentAndGet(buildFile, buildFileManifest);
-      for (Map<String, Object> node : updated.getTargets().values()) {
+      for (RawTargetNode node : updated.getTargets().values()) {
         allRawNodeTargets.add(
             UnflavoredBuildTargetFactory.createFromRawNode(
                 cellRoot.getPath(), cellCanonicalName, node, buildFile.getPath()));
@@ -298,11 +299,10 @@ class DaemonicCellState {
       int invalidatedRawNodes = 0;
       BuildFileManifest buildFileManifest = allBuildFileManifests.getIfPresent(path);
       if (buildFileManifest != null) {
-        TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rawNodes =
-            buildFileManifest.getTargets();
+        TwoArraysImmutableHashMap<String, RawTargetNode> rawNodes = buildFileManifest.getTargets();
         // Increment the counter
         invalidatedRawNodes = rawNodes.size();
-        for (Map<String, Object> rawNode : rawNodes.values()) {
+        for (RawTargetNode rawNode : rawNodes.values()) {
           UnflavoredBuildTarget target =
               UnflavoredBuildTargetFactory.createFromRawNode(
                   cellRoot.getPath(), cellCanonicalName, rawNode, path.getPath());

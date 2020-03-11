@@ -38,6 +38,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.TargetSpecResolver.TargetNodeFilterForSpecResolver;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
@@ -171,7 +172,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       return null;
     }
 
-    Map<String, Object> attributes = buildFileManifest.getTargets().get(shortName);
+    RawTargetNode attributes = buildFileManifest.getTargets().get(shortName);
 
     SortedMap<String, Object> convertedAttributes =
         copyWithResolvingConfigurableAttributes(
@@ -189,7 +190,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       PerBuildState state,
       Cell cell,
       BuildTarget buildTarget,
-      Map<String, Object> attributes,
+      RawTargetNode attributes,
       DependencyStack dependencyStack) {
     SelectableConfigurationContext configurationContext =
         ImmutableDefaultSelectableConfigurationContext.of(
@@ -199,7 +200,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
     SortedMap<String, Object> convertedAttributes = new TreeMap<>();
 
-    for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
+    for (Map.Entry<String, Object> attribute : attributes.getAttrs().entrySet()) {
       String attributeName = attribute.getKey();
       try {
         convertedAttributes.put(

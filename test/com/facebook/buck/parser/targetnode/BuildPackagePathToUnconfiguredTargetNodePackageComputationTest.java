@@ -45,6 +45,7 @@ import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.parser.NoopPackageBoundaryChecker;
 import com.facebook.buck.parser.UnconfiguredTargetNodeToTargetNodeFactory;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.manifest.BuildPackagePathToBuildFileManifestKey;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -131,9 +132,9 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
         BuildFileManifest.of(
             TwoArraysImmutableHashMap.of(
                 "target1",
-                TwoArraysImmutableHashMap.copyOf(rawAttributes1),
+                RawTargetNode.of(TwoArraysImmutableHashMap.copyOf(rawAttributes1)),
                 "target2",
-                TwoArraysImmutableHashMap.copyOf(rawAttributes2)),
+                RawTargetNode.of(TwoArraysImmutableHashMap.copyOf(rawAttributes2))),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),

@@ -29,6 +29,7 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.SimplePerfEvent.Scope;
 import com.facebook.buck.parser.PipelineNodeCache.Cache;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.util.concurrent.MoreFutures;
@@ -38,7 +39,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -115,7 +115,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                   buildFileRawNodeParsePipeline.getFileJob(cell, buildFile),
                   executorService),
               resultingPair -> {
-                ImmutableList<Map<String, Object>> allToConvert =
+                ImmutableList<RawTargetNode> allToConvert =
                     ImmutableList.copyOf(resultingPair.getSecond().getTargets().values());
                 if (shuttingDown()) {
                   return Futures.immediateCancelledFuture();
@@ -124,7 +124,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                 ImmutableList.Builder<ListenableFuture<UnconfiguredTargetNode>> allNodeJobs =
                     ImmutableList.builderWithExpectedSize(allToConvert.size());
 
-                for (Map<String, Object> from : allToConvert) {
+                for (RawTargetNode from : allToConvert) {
                   UnconfiguredBuildTarget target =
                       UnconfiguredBuildTarget.of(
                           UnflavoredBuildTargetFactory.createFromRawNode(
@@ -175,7 +175,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
                     buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget),
                     executorService),
                 resultingPair -> {
-                  Map<String, Object> rawAttributes = resultingPair.getSecond();
+                  RawTargetNode rawAttributes = resultingPair.getSecond();
                   return dispatchComputeNode(
                       cell, buildTarget, dependencyStack, rawAttributes, resultingPair.getFirst());
                 },
@@ -187,7 +187,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
       Cell cell,
       UnconfiguredBuildTarget buildTarget,
       DependencyStack dependencyStack,
-      Map<String, Object> from,
+      RawTargetNode from,
       Package pkg)
       throws BuildTargetException {
     if (shuttingDown()) {

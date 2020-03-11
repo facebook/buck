@@ -32,6 +32,7 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;
@@ -70,7 +71,7 @@ public class BuiltTargetVerifierTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("a"), "b"))),
-        ImmutableMap.of());
+        RawTargetNode.copyOf(ImmutableMap.of()));
   }
 
   @Test
@@ -88,7 +89,7 @@ public class BuiltTargetVerifierTest {
         Paths.get("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new NonFlavoredDescription(),
-        ImmutableMap.of());
+        RawTargetNode.copyOf(ImmutableMap.of()));
   }
 
   @Test
@@ -107,7 +108,7 @@ public class BuiltTargetVerifierTest {
         Paths.get("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
-        ImmutableMap.of("attribute", "value"));
+        RawTargetNode.copyOf(ImmutableMap.of("attribute", "value")));
   }
 
   @Test
@@ -126,7 +127,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
-        ImmutableMap.of("name", "target_name", "buck.base_path", "z/y/z"));
+        RawTargetNode.copyOf(ImmutableMap.of("name", "target_name", "buck.base_path", "z/y/z")));
   }
 
   @Test
@@ -144,7 +145,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
-        ImmutableMap.of("name", "target_name", "buck.base_path", "a/b"));
+        RawTargetNode.copyOf(ImmutableMap.of("name", "target_name", "buck.base_path", "a/b")));
   }
 
   @Test
@@ -158,7 +159,7 @@ public class BuiltTargetVerifierTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("d"), "b"))),
-        ImmutableMap.of("name", "c", "buck.base_path", "a/b"));
+        RawTargetNode.copyOf(ImmutableMap.of("name", "c", "buck.base_path", "a/b")));
   }
 
   @Test
@@ -171,7 +172,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
-        ImmutableMap.of("name", "c", "buck.base_path", "a/b"));
+        RawTargetNode.copyOf(ImmutableMap.of("name", "c", "buck.base_path", "a/b")));
   }
 
   private static class FlavoredDescription

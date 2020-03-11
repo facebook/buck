@@ -23,6 +23,7 @@ import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.BuildFileManifestPojoizer;
 import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.api.UserDefinedRuleLoader;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -145,12 +146,13 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
           parseResult.getRawRules();
       rulesParsed = rawRules.size();
 
-      // By contract, BuildFileManifestPojoizer converts any Map to ImmutableMap.
-      // ParseResult.getRawRules() returns ImmutableMap<String, Map<String, Object>>, so it is
-      // a safe downcast here
-      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> targets =
-          (TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>>)
-              getBuildFileManifestPojoizer().convertToPojo(rawRules);
+      // By contract, BuildFileManifestPojoizer converts any Map to TwoArraysImmutableHashMap.
+      TwoArraysImmutableHashMap<String, RawTargetNode> targets =
+          rawRules.mapValues(
+              (k, r) ->
+                  RawTargetNode.of(
+                      (TwoArraysImmutableHashMap<String, Object>)
+                          getBuildFileManifestPojoizer().convertToPojo(r)));
 
       rulesParsed = targets.size();
 

@@ -25,6 +25,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -43,7 +44,7 @@ public class TargetCountVerificationParserDecoratorTest {
   private CapturingConsoleEventListener capturingConsoleEventListener;
   private Path path;
   private ProjectBuildFileParser parserMock;
-  private ImmutableMap<String, ImmutableMap<String, Object>> rawTargets;
+  private ImmutableMap<String, RawTargetNode> rawTargets;
   private BuckEventBus eventBus;
 
   @Before
@@ -62,10 +63,10 @@ public class TargetCountVerificationParserDecoratorTest {
     retMap1.put("e", "e");
 
     String[] names = {"a", "b", "c", "d", "e"};
-    ImmutableMap.Builder<String, ImmutableMap<String, Object>> builder =
+    ImmutableMap.Builder<String, RawTargetNode> builder =
         ImmutableMap.builderWithExpectedSize(names.length);
     for (String name : names) {
-      builder.put(name, ImmutableMap.copyOf(retMap1));
+      builder.put(name, RawTargetNode.copyOf(retMap1));
     }
 
     rawTargets = builder.build();
@@ -105,13 +106,9 @@ public class TargetCountVerificationParserDecoratorTest {
     assertWarningIsEmitted();
   }
 
-  private BuildFileManifest toBuildFileManifest(
-      ImmutableMap<String, ImmutableMap<String, Object>> rawTargets) {
+  private BuildFileManifest toBuildFileManifest(ImmutableMap<String, RawTargetNode> rawTargets) {
     return BuildFileManifest.of(
-        rawTargets.entrySet().stream()
-            .collect(
-                TwoArraysImmutableHashMap.toMap(
-                    Map.Entry::getKey, e -> TwoArraysImmutableHashMap.copyOf(e.getValue()))),
+        TwoArraysImmutableHashMap.copyOf(rawTargets),
         ImmutableSortedSet.of(),
         ImmutableMap.of(),
         Optional.empty(),

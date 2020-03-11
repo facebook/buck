@@ -33,6 +33,7 @@ import com.facebook.buck.json.BuildFilePythonResult;
 import com.facebook.buck.json.BuildFileSyntaxError;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.api.UserDefinedRuleLoader;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
@@ -528,12 +529,15 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         ImmutableList.of());
   }
 
-  private static TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>>
-      indexTargetsByName(ImmutableList<Map<String, Object>> targets) {
-    TwoArraysImmutableHashMap.Builder<String, TwoArraysImmutableHashMap<String, Object>> builder =
+  private static TwoArraysImmutableHashMap<String, RawTargetNode> indexTargetsByName(
+      ImmutableList<Map<String, Object>> targets) {
+    TwoArraysImmutableHashMap.Builder<String, RawTargetNode> builder =
         TwoArraysImmutableHashMap.builderWithExpectedSize(targets.size());
     targets.forEach(
-        target -> builder.put((String) target.get("name"), convertSelectableAttributes(target)));
+        target ->
+            builder.put(
+                (String) target.get("name"),
+                RawTargetNode.of(convertSelectableAttributes(target))));
     return builder.build();
   }
 
