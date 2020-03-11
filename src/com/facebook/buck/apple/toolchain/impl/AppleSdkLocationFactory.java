@@ -22,6 +22,7 @@ import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkLocation;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
@@ -43,6 +44,12 @@ public class AppleSdkLocationFactory implements ToolchainFactory<AppleSdkLocatio
         AppleToolchainProvider.DEFAULT_NAME, toolchainTargetConfiguration)) {
       return Optional.empty();
     }
+    AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
+    Optional<BuildTarget> toolchainSetTarget =
+        appleConfig.getAppleToolchainSetTarget(toolchainTargetConfiguration);
+    if (toolchainSetTarget.isPresent()) {
+      return Optional.empty();
+    }
 
     Optional<Path> appleDeveloperDir =
         toolchainProvider
@@ -52,7 +59,6 @@ public class AppleSdkLocationFactory implements ToolchainFactory<AppleSdkLocatio
                 AppleDeveloperDirectoryProvider.class)
             .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
 
-    AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
     AppleToolchainProvider appleToolchainProvider =
         toolchainProvider.getByName(
             AppleToolchainProvider.DEFAULT_NAME,

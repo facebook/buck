@@ -20,6 +20,7 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
 import com.facebook.buck.apple.toolchain.AppleToolchainProvider;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainFactory;
@@ -38,6 +39,12 @@ public class AppleToolchainProviderFactory implements ToolchainFactory<AppleTool
       ToolchainProvider toolchainProvider,
       ToolchainCreationContext context,
       TargetConfiguration toolchainTargetConfiguration) {
+    AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
+    Optional<BuildTarget> toolchainSetTarget =
+        appleConfig.getAppleToolchainSetTarget(toolchainTargetConfiguration);
+    if (toolchainSetTarget.isPresent()) {
+      return Optional.empty();
+    }
 
     Optional<Path> appleDeveloperDir =
         toolchainProvider
@@ -47,7 +54,6 @@ public class AppleToolchainProviderFactory implements ToolchainFactory<AppleTool
                 AppleDeveloperDirectoryProvider.class)
             .map(AppleDeveloperDirectoryProvider::getAppleDeveloperDirectory);
 
-    AppleConfig appleConfig = context.getBuckConfig().getView(AppleConfig.class);
     Optional<AppleToolchainProvider> appleToolchainProvider;
     try {
       ImmutableMap<String, AppleToolchain> appleToolchains =
