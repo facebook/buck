@@ -242,7 +242,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   }
 
   @Override
-  public void loadExtensionsForUserDefinedRules(Path buildFile, BuildFileManifest manifest) {
+  public void loadExtensionsForUserDefinedRules(AbsPath buildFile, BuildFileManifest manifest) {
     ImmutableList<SkylarkImport> extensionsToLoad =
         manifest.getTargets().values().stream()
             .map(
@@ -256,7 +256,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     }
 
     try {
-      Label containingLabel = createContainingLabel(buildFile.getParent().toString());
+      Label containingLabel = createContainingLabel(getBasePath(buildFile));
       loadExtensions(containingLabel, extensionsToLoad);
     } catch (IOException | InterruptedException e) {
       throw BuildFileParseException.createForUnknownParseError("Could not parse %s", buildFile);

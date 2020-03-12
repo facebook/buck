@@ -18,7 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -130,7 +130,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @Nullable private FutureTask<Unit> stderrConsumerTerminationFuture;
   @Nullable private Thread stderrConsumerThread;
 
-  private AtomicReference<Path> currentBuildFile = new AtomicReference<Path>();
+  private AtomicReference<AbsPath> currentBuildFile = new AtomicReference<>();
 
   public PythonDslProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
@@ -266,13 +266,13 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       InputStream stderr = buckPyProcess.getStderr();
 
       AtomicInteger numberOfLines = new AtomicInteger(0);
-      AtomicReference<Path> lastPath = new AtomicReference<Path>();
+      AtomicReference<AbsPath> lastPath = new AtomicReference<>();
       InputStreamConsumer stderrConsumer =
           new InputStreamConsumer(
               stderr,
               (InputStreamConsumer.Handler)
                   line -> {
-                    Path path = currentBuildFile.get();
+                    AbsPath path = currentBuildFile.get();
                     if (!Objects.equals(path, lastPath.get())) {
                       numberOfLines.set(0);
                       lastPath.set(path);
@@ -457,7 +457,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           projectPrefix = projectWatch.getProjectPrefix().get();
         }
       }
-      currentBuildFile.set(buildFile.getPath());
+      currentBuildFile.set(buildFile);
       BuildFilePythonResult resultObject =
           performJsonRequest(
               ImmutableMap.of(
@@ -469,7 +469,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                   projectPrefix,
                   "packageImplicitLoad",
                   packageImplicitIncludeFinder.findIncludeForBuildFile(
-                      getBasePath(buildFile).getPath())));
+                      getBasePath(buildFile).toPath(buildFile.getFileSystem()))));
       Path buckPyPath = getPathToBuckPy(options.getDescriptions());
       handleDiagnostics(
           buildFile.getPath(), buckPyPath.getParent(), resultObject.getDiagnostics(), buckEventBus);
@@ -506,8 +506,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    *     /Users/foo/repo/src/bar/BUCK}, where {@code /Users/foo/repo} is the path to the repo, it
    *     would return {@code src/bar}.
    */
-  private RelPath getBasePath(AbsPath buildFile) {
-    return MorePaths.getParentOrEmpty(MorePaths.relativize(options.getProjectRoot(), buildFile));
+  private ForwardRelativePath getBasePath(AbsPath buildFile) {
+    return ForwardRelativePath.ofRelPath(MorePaths.relativize(options.getProjectRoot(), buildFile))
+        .parent()
+        .orElse(ForwardRelativePath.EMPTY);
   }
 
   @SuppressWarnings("unchecked")

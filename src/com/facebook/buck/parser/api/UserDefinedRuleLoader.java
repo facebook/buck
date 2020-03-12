@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser.api;
 
-import java.nio.file.Path;
+import com.facebook.buck.core.filesystems.AbsPath;
 
 /**
  * Reads a manifest file, and ensures that it has parsed the files required to utilize all user
@@ -29,5 +29,5 @@ public interface UserDefinedRuleLoader {
    * @param buildFile The full path to the build file
    * @param manifest The manifest from parsing a build file
    */
-  void loadExtensionsForUserDefinedRules(Path buildFile, BuildFileManifest manifest);
+  void loadExtensionsForUserDefinedRules(AbsPath buildFile, BuildFileManifest manifest);
 }

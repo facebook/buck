@@ -155,6 +155,11 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     }
   }
 
+  /** Construct from given relative {@link Path}. */
+  public static ForwardRelativePath ofRelPath(RelPath path) {
+    return ofPath(path.getPath());
+  }
+
   /** Append given path to the current path */
   public ForwardRelativePath resolve(ForwardRelativePath other) {
     if (this.isEmpty()) {

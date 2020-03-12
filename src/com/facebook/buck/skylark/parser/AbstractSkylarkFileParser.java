@@ -17,10 +17,10 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.api.FileManifest;
 import com.facebook.buck.parser.api.FileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -160,10 +160,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       throws IOException, BuildFileParseException, InterruptedException {
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(parseFile.toString());
 
-    String basePath = getBasePath(parseFile);
+    ForwardRelativePath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad =
-        loadImplicitExtension(parseFile.getFileSystem().getPath(basePath), containingLabel);
+        loadImplicitExtension(basePath.toPath(parseFile.getFileSystem()), containingLabel);
 
     BuildFileAST buildFileAst = parseFile(buildFilePath, containingLabel);
     Globber globber = getGlobber(parseFile.getPath());
@@ -249,22 +249,24 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
   @Nonnull
   private PackageContext createPackageContext(
-      String basePath, Globber globber, ImmutableMap<String, Object> implicitlyLoadedSymbols) {
+      ForwardRelativePath basePath,
+      Globber globber,
+      ImmutableMap<String, Object> implicitlyLoadedSymbols) {
     return PackageContext.of(
         globber,
         options.getRawConfig(),
         PackageIdentifier.create(
             RepositoryName.createFromValidStrippedName(options.getCellName()),
-            PathFragment.create(basePath)),
+            PathFragment.createAlreadyNormalized(basePath.toString())),
         eventHandler,
         implicitlyLoadedSymbols);
   }
 
-  protected Label createContainingLabel(String basePath) {
+  protected Label createContainingLabel(ForwardRelativePath basePath) {
     return Label.createUnvalidated(
         PackageIdentifier.create(
             RepositoryName.createFromValidStrippedName(options.getCellName()),
-            PathFragment.create(basePath)),
+            PathFragment.createAlreadyNormalized(basePath.toString())),
         "BUCK");
   }
 
@@ -804,10 +806,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     /Users/foo/repo/src/bar/BUCK}, where {@code /Users/foo/repo} is the path to the repo, it
    *     would return {@code src/bar}.
    */
-  private String getBasePath(AbsPath buildFile) {
+  protected ForwardRelativePath getBasePath(AbsPath buildFile) {
     return Optional.ofNullable(options.getProjectRoot().relativize(buildFile).getParent())
-        .map(PathFormatter::pathWithUnixSeparators)
-        .orElse("");
+        .map(ForwardRelativePath::ofRelPath)
+        .orElse(ForwardRelativePath.EMPTY);
   }
 
   @Override
@@ -815,10 +817,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       throws BuildFileParseException, InterruptedException, IOException {
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(parseFile.toString());
 
-    String basePath = getBasePath(parseFile);
+    ForwardRelativePath basePath = getBasePath(parseFile);
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad =
-        loadImplicitExtension(parseFile.getFileSystem().getPath(basePath), containingLabel);
+        loadImplicitExtension(basePath.toPath(parseFile.getFileSystem()), containingLabel);
     BuildFileAST buildFileAst = parseFile(buildFilePath, containingLabel);
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, buildFileAst.getImports());

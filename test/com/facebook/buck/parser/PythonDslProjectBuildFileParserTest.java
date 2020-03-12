@@ -70,7 +70,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -686,7 +685,7 @@ public class PythonDslProjectBuildFileParserTest {
       }
 
       @Override
-      public void loadExtensionsForUserDefinedRules(Path buildFile, BuildFileManifest manifest) {
+      public void loadExtensionsForUserDefinedRules(AbsPath buildFile, BuildFileManifest manifest) {
         parser.loadExtensionsForUserDefinedRules(buildFile, manifest);
       }
 

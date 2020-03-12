@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -70,6 +71,7 @@ import java.util.concurrent.ExecutionException;
 import org.eclipse.aether.RepositoryException;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -81,7 +83,7 @@ public class ResolverIntegrationTest {
   @Rule public TemporaryPaths temp = new TemporaryPaths();
 
   private static HttpdForTests httpd;
-  private static PythonDslProjectBuildFileParser buildFileParser;
+  private PythonDslProjectBuildFileParser buildFileParser;
   private static Path repo;
   private AbsPath buckRepoRoot;
   private AbsPath thirdParty;
@@ -101,9 +103,20 @@ public class ResolverIntegrationTest {
     httpd.close();
   }
 
-  @BeforeClass
-  public static void createParser() {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  @After
+  public void closeParser() throws BuildFileParseException, InterruptedException, IOException {
+    buildFileParser.close();
+  }
+
+  @Before
+  public void setUpRepos() throws Exception {
+    buckRepoRoot = AbsPath.of(temp.newFolder());
+    thirdPartyRelative = RelPath.of(Paths.get("third-party").resolve("java"));
+    thirdParty = buckRepoRoot.resolve(thirdPartyRelative);
+    localRepo = AbsPath.of(temp.newFolder());
+
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), buckRepoRoot);
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);
@@ -132,20 +145,6 @@ public class ResolverIntegrationTest {
             new DefaultProcessExecutor(new TestConsole()),
             Optional.empty(),
             Optional.empty());
-  }
-
-  @AfterClass
-  public static void closeParser()
-      throws BuildFileParseException, InterruptedException, IOException {
-    buildFileParser.close();
-  }
-
-  @Before
-  public void setUpRepos() throws Exception {
-    buckRepoRoot = AbsPath.of(temp.newFolder());
-    thirdPartyRelative = RelPath.of(Paths.get("third-party").resolve("java"));
-    thirdParty = buckRepoRoot.resolve(thirdPartyRelative);
-    localRepo = AbsPath.of(temp.newFolder());
   }
 
   private ArtifactConfig newConfig() {
