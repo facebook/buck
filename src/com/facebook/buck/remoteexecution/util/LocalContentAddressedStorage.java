@@ -213,7 +213,7 @@ public class LocalContentAddressedStorage implements ContentAddressedStorageClie
           if (Files.exists(path)) {
             continue;
           }
-          Path tempPath = path.getParent().resolve(path.getFileName() + ".tmp");
+          Path tempPath = path.getParent().resolve(path.getFileName() + ".cas-update.tmp");
           try (OutputStream outputStream =
                   new BufferedOutputStream(new FileOutputStream(tempPath.toFile()));
               InputStream dataStream = data.get()) {

@@ -102,7 +102,9 @@ public class ArtifactCacheHandler extends AbstractHandler {
       projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
       temp =
           projectFilesystem.createTempFile(
-              projectFilesystem.getBuckPaths().getScratchDir(), "outgoing_rulekey", ".tmp");
+              projectFilesystem.getBuckPaths().getScratchDir(),
+              "outgoing_rulekey",
+              ".outgoing.tmp");
       CacheResult fetchResult =
           Futures.getUnchecked(
               artifactCache.get().fetchAsync(null, ruleKey, LazyPath.ofInstance(temp)));
@@ -137,7 +139,7 @@ public class ArtifactCacheHandler extends AbstractHandler {
       projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
       temp =
           projectFilesystem.createTempFile(
-              projectFilesystem.getBuckPaths().getScratchDir(), "incoming_upload", ".tmp");
+              projectFilesystem.getBuckPaths().getScratchDir(), "incoming_upload", ".incoming.tmp");
 
       HttpArtifactCacheBinaryProtocol.StoreResponseReadResult storeRequest;
       try (DataInputStream requestInputData = new DataInputStream(baseRequest.getInputStream());

@@ -786,7 +786,9 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     getProjectFilesystem().mkdirs(getProjectFilesystem().getBuckPaths().getScratchDir());
     return getProjectFilesystem()
         .createTempFile(
-            getProjectFilesystem().getBuckPaths().getScratchDir(), "buckcache_artifact", ".tmp");
+            getProjectFilesystem().getBuckPaths().getScratchDir(),
+            "buckcache_artifact",
+            ".thrift-cache.tmp");
   }
 
   private ArtifactMetadata infoToMetadata(

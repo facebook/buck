@@ -100,7 +100,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
         getProjectFilesystem().createParentDirs(file);
         Path temp =
             getProjectFilesystem()
-                .createTempFile(file.getParent(), file.getFileName().toString(), ".tmp");
+                .createTempFile(file.getParent(), file.getFileName().toString(), ".http-cache.tmp");
 
         HttpArtifactCacheBinaryProtocol.FetchResponseReadResult fetchedData;
         try (OutputStream tempFileOutputStream = getProjectFilesystem().newFileOutputStream(temp)) {

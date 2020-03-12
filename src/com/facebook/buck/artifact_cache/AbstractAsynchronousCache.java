@@ -621,7 +621,7 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
     if (output.canBorrow()) {
       tmp = output.getPath();
     } else {
-      tmp = projectFilesystem.createTempFile("artifact", ".tmp");
+      tmp = projectFilesystem.createTempFile("artifact", ".async-cache.tmp");
       projectFilesystem.copyFile(output.getPath(), tmp);
     }
     return tmp;

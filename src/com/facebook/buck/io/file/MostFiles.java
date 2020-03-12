@@ -352,7 +352,7 @@ public final class MostFiles {
       throws IOException {
     // Concatenate all the logs to a temp file, then atomically rename it to the
     // passed-in concatenatedPath if any log data was collected.
-    String tempFilename = "." + dest.getFileName() + ".tmp." + UUID.randomUUID();
+    String tempFilename = "." + dest.getFileName() + ".concat.tmp." + UUID.randomUUID();
     Path tempPath = dest.resolveSibling(tempFilename);
 
     try {

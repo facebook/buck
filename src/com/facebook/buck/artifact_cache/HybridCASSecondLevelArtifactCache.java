@@ -115,7 +115,9 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
             projectFilesystem.mkdirs(projectFilesystem.getBuckPaths().getScratchDir());
             Path tmp =
                 projectFilesystem.createTempFile(
-                    projectFilesystem.getBuckPaths().getScratchDir(), "buckcache_artifact", ".tmp");
+                    projectFilesystem.getBuckPaths().getScratchDir(),
+                    "buckcache_artifact",
+                    ".hybrid-cas.tmp");
             OutputStream tmpFile = projectFilesystem.newFileOutputStream(tmp);
 
             WritableByteChannel channel = Channels.newChannel(tmpFile);
