@@ -45,7 +45,7 @@ public class ParseContext {
 
   private @Nullable PackageMetadata pkg;
 
-  private final Map<String, TwoArraysImmutableHashMap<String, Object>> rawRules;
+  private final Map<String, RecordedRule> rawRules;
   // stores every accessed configuration option while parsing the build file.
   // the schema is: section->key->value
   private final Map<String, Map<String, Optional<String>>> readConfigOptions;
@@ -68,11 +68,10 @@ public class ParseContext {
   }
 
   /** Records the parsed {@code rawRule}. */
-  public void recordRule(TwoArraysImmutableHashMap<String, Object> rawRule, FuncallExpression ast)
-      throws EvalException {
+  public void recordRule(RecordedRule rawRule, FuncallExpression ast) throws EvalException {
     Preconditions.checkState(pkg == null, "Build files cannot contain package definitions.");
     Object nameObject =
-        Objects.requireNonNull(rawRule.get("name"), "Every target must have a name.");
+        Objects.requireNonNull(rawRule.getRawRule().get("name"), "Every target must have a name.");
     if (!(nameObject instanceof String)) {
       throw new IllegalArgumentException(
           "Target name must be string, it is "
@@ -85,7 +84,8 @@ public class ParseContext {
     if (rawRules.containsKey(name)) {
       throw new EvalException(
           ast.getLocation(),
-          String.format("Cannot register rule %s with content %s again.", name, rawRule));
+          String.format(
+              "Cannot register rule %s with content %s again.", name, rawRule.getRawRule()));
     }
     rawRules.put(name, rawRule);
   }
@@ -114,8 +114,7 @@ public class ParseContext {
    * @return The list of raw build rules discovered in parsed build file. Raw rule is presented as a
    *     map with attributes as keys and parameters as values.
    */
-  public TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>>
-      getRecordedRules() {
+  public TwoArraysImmutableHashMap<String, RecordedRule> getRecordedRules() {
     return TwoArraysImmutableHashMap.copyOf(rawRules);
   }
 

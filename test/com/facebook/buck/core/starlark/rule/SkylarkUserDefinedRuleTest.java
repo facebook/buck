@@ -28,6 +28,7 @@ import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -292,12 +293,12 @@ public class SkylarkUserDefinedRuleTest {
           rule.call(
               ImmutableList.of(), ImmutableMap.of("name", "some_rule_name"), getJunkAst(), env);
 
-      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
+      TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, null).getRecordedRules();
 
       assertEquals(Runtime.NONE, res);
       assertEquals(1, rules.size());
-      assertEquals(expected, rules.get("some_rule_name"));
+      assertEquals(expected, rules.get("some_rule_name").getRawRule());
     }
   }
 
@@ -343,12 +344,12 @@ public class SkylarkUserDefinedRuleTest {
               getJunkAst(),
               env);
 
-      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
+      TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, null).getRecordedRules();
 
       assertEquals(Runtime.NONE, res);
       assertEquals(1, rules.size());
-      assertEquals(expected, rules.get("some_rule_name"));
+      assertEquals(expected, rules.get("some_rule_name").getRawRule());
     }
   }
 
@@ -475,12 +476,12 @@ public class SkylarkUserDefinedRuleTest {
               getJunkAst(),
               env);
 
-      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
+      TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, null).getRecordedRules();
 
       assertEquals(Runtime.NONE, res);
       assertEquals(1, rules.size());
-      assertEquals(expected, rules.get("some_rule_name"));
+      assertEquals(expected, rules.get("some_rule_name").getRawRule());
     }
   }
 

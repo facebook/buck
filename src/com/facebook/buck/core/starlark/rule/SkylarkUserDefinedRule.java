@@ -23,6 +23,7 @@ import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -125,7 +126,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       builder.put(name, args[i]);
       i++;
     }
-    parseContext.recordRule(builder.build(), ast);
+    parseContext.recordRule(RecordedRule.of(builder.build()), ast);
     return Runtime.NONE;
   }
 

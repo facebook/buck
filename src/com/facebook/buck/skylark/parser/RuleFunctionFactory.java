@@ -23,6 +23,7 @@ import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
@@ -94,7 +95,7 @@ public class RuleFunctionFactory {
                 .getParamInfos();
         populateAttributes(kwargs, builder, allParamInfo);
         throwOnMissingRequiredAttribute(kwargs, allParamInfo, getName(), ast);
-        parseContext.recordRule(builder.build(), ast);
+        parseContext.recordRule(RecordedRule.of(builder.build()), ast);
         return Runtime.NONE;
       }
     };

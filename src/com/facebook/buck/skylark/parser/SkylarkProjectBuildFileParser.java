@@ -36,6 +36,7 @@ import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.io.impl.CachingGlobber;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -115,8 +116,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   ParseResult getParseResult(
       Path parseFile, ParseContext context, Globber globber, ImmutableList<String> loadedPaths) {
     Preconditions.checkState(globber instanceof CachingGlobber);
-    TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rules =
-        context.getRecordedRules();
+    TwoArraysImmutableHashMap<String, RecordedRule> rules = context.getRecordedRules();
     if (LOG.isVerboseEnabled()) {
       LOG.verbose("Got rules: %s", rules.values());
     }
@@ -142,8 +142,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
     try {
       ParseResult parseResult = parse(buildFile);
 
-      TwoArraysImmutableHashMap<String, TwoArraysImmutableHashMap<String, Object>> rawRules =
-          parseResult.getRawRules();
+      TwoArraysImmutableHashMap<String, RecordedRule> rawRules = parseResult.getRawRules();
       rulesParsed = rawRules.size();
 
       // By contract, BuildFileManifestPojoizer converts any Map to TwoArraysImmutableHashMap.
@@ -152,7 +151,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
               (k, r) ->
                   RawTargetNode.of(
                       (TwoArraysImmutableHashMap<String, Object>)
-                          getBuildFileManifestPojoizer().convertToPojo(r)));
+                          getBuildFileManifestPojoizer().convertToPojo(r.getRawRule())));
 
       rulesParsed = targets.size();
 
