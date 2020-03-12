@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.NodeCopier;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -104,7 +105,8 @@ public class TargetNodeFactory implements NodeCopier {
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
-      ImmutableSet<VisibilityPattern> withinViewPatterns)
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
+      RuleType ruleType)
       throws NoSuchBuildTargetException {
     return create(
         description,
@@ -115,7 +117,8 @@ public class TargetNodeFactory implements NodeCopier {
         declaredDeps,
         configurationDeps,
         visibilityPatterns,
-        withinViewPatterns);
+        withinViewPatterns,
+        ruleType);
   }
 
   @SuppressWarnings("unchecked")
@@ -128,7 +131,8 @@ public class TargetNodeFactory implements NodeCopier {
       ImmutableSet<BuildTarget> declaredDeps,
       ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
-      ImmutableSet<VisibilityPattern> withinViewPatterns)
+      ImmutableSet<VisibilityPattern> withinViewPatterns,
+      RuleType ruleType)
       throws NoSuchBuildTargetException {
 
     boolean isConfigurationRule = description instanceof ConfigurationRuleDescription<?, ?>;
@@ -230,7 +234,8 @@ public class TargetNodeFactory implements NodeCopier {
         configurationDeps,
         visibilityPatterns,
         withinViewPatterns,
-        Optional.empty());
+        Optional.empty(),
+        ruleType);
   }
 
   private static void detectBuildTargetsAndPathsForConstructorArg(
@@ -313,7 +318,8 @@ public class TargetNodeFactory implements NodeCopier {
           originalNode.getDeclaredDeps(),
           originalNode.getConfigurationDeps(),
           originalNode.getVisibilityPatterns(),
-          originalNode.getWithinViewPatterns());
+          originalNode.getWithinViewPatterns(),
+          originalNode.getRuleType());
     } catch (NoSuchBuildTargetException e) {
       throw new IllegalStateException(
           String.format(

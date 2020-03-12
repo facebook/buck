@@ -18,7 +18,6 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
-import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.RuleType;
@@ -144,9 +143,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
   }
 
   @Override
-  public RuleType getRuleType() {
-    return DescriptionCache.getRuleType(getDescription());
-  }
+  public abstract RuleType getRuleType();
 
   @Override
   public int compareTo(TargetNode<?> o) {
@@ -178,7 +175,8 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConfigurationDeps(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
-        getSelectedVersions());
+        getSelectedVersions(),
+        getRuleType());
   }
 
   @Override
@@ -196,7 +194,8 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConfigurationDeps(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
-        getSelectedVersions());
+        getSelectedVersions(),
+        getRuleType());
   }
 
   @Override
@@ -214,7 +213,8 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConfigurationDeps(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
-        getSelectedVersions());
+        getSelectedVersions(),
+        getRuleType());
   }
 
   @Override
@@ -232,7 +232,8 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConfigurationDeps(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
-        getSelectedVersions());
+        getSelectedVersions(),
+        getRuleType());
   }
 
   @Override
@@ -250,7 +251,8 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConfigurationDeps(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
-        getSelectedVersions());
+        getSelectedVersions(),
+        getRuleType());
   }
 
   @Override
@@ -269,7 +271,8 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConfigurationDeps(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
-        getSelectedVersions());
+        getSelectedVersions(),
+        getRuleType());
   }
 
   @Override
@@ -288,7 +291,8 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         getConfigurationDeps(),
         getVisibilityPatterns(),
         getWithinViewPatterns(),
-        selectedVersions);
+        selectedVersions,
+        getRuleType());
   }
 
   public static <T extends ConstructorArg> TargetNodeImpl<T> of(
@@ -304,7 +308,8 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
       ImmutableSortedSet<BuildTarget> configurationDeps,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
-      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions) {
+      Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
+      RuleType ruleType) {
     return ImmutableTargetNodeImpl.ofImpl(
         buildTarget,
         nodeCopier,
@@ -318,6 +323,7 @@ public abstract class TargetNodeImpl<T extends ConstructorArg> implements Target
         configurationDeps,
         visibilityPatterns,
         withinViewPatterns,
-        selectedVersions);
+        selectedVersions,
+        ruleType);
   }
 }

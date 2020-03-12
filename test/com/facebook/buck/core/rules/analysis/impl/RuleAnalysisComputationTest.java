@@ -27,6 +27,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -84,7 +85,8 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -125,7 +127,8 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(buildTarget2, buildTarget3),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription,
@@ -136,7 +139,8 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
     TargetNode<?> targetNode3 =
         targetNodeFactory.createFromObject(
             ruleDescription,
@@ -147,7 +151,8 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode1);
     graph.addNode(targetNode2);
@@ -198,7 +203,8 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -267,7 +273,8 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription2,
@@ -278,7 +285,8 @@ public class RuleAnalysisComputationTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);

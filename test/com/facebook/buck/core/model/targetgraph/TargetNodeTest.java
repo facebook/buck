@@ -32,6 +32,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -194,7 +195,8 @@ public class TargetNodeTest {
                 ImmutableSet.of(),
                 ImmutableSortedSet.of(configurationBuildTarget),
                 ImmutableSet.of(),
-                ImmutableSet.of());
+                ImmutableSet.of(),
+                RuleType.of("example", RuleType.Kind.BUILD));
 
     assertEquals(ImmutableSet.of(configurationBuildTarget), targetNode.getConfigurationDeps());
   }
@@ -274,7 +276,8 @@ public class TargetNodeTest {
             declaredDeps,
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("example", RuleType.Kind.BUILD));
   }
 
   private static ExampleDescriptionArg createPopulatedConstructorArg(

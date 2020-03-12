@@ -29,6 +29,7 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeArg;
 import com.facebook.buck.core.model.targetgraph.FakeTargetNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -110,7 +111,8 @@ public class RuleAnalysisGraphImplTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -178,7 +180,8 @@ public class RuleAnalysisGraphImplTest {
             ImmutableSet.of(buildTarget2),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription2,
@@ -189,7 +192,8 @@ public class RuleAnalysisGraphImplTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
@@ -255,7 +259,8 @@ public class RuleAnalysisGraphImplTest {
             ImmutableSet.of(buildTarget2),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             legacyDescription,
@@ -266,7 +271,8 @@ public class RuleAnalysisGraphImplTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);

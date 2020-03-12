@@ -28,6 +28,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -267,7 +268,8 @@ public class TargetNodeVisibilityTest {
                 .collect(ImmutableSet.toImmutableSet()),
             withinView.stream()
                 .map(s -> VisibilityPatternParser.parse(cellNames, buildFile, s))
-                .collect(ImmutableSet.toImmutableSet()));
+                .collect(ImmutableSet.toImmutableSet()),
+            RuleType.of("fake", RuleType.Kind.BUILD));
   }
 
   private void assertVisibilityError(

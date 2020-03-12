@@ -30,6 +30,7 @@ import com.facebook.buck.core.description.RuleDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -132,7 +133,8 @@ public class RuleAnalysisCompatibleDelegatingActionGraphBuilderTest {
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            RuleType.of("fake", RuleType.Kind.BUILD));
 
     MutableDirectedGraph<TargetNode<?>> mutableDirectedGraph =
         MutableDirectedGraph.createConcurrent();

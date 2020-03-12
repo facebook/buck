@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.nameresolver.SimpleCellNameResolverProvider;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
@@ -183,7 +184,8 @@ public abstract class AbstractNodeBuilder<
                       null,
                       filesystem.getRootPath().resolve("BUCK").getPath(),
                       VisibilityPatternParser.VISIBILITY_PUBLIC)),
-              ImmutableSet.of())
+              ImmutableSet.of(),
+              DescriptionCache.getRuleType(description))
           .withSelectedVersions(selectedVersions);
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);

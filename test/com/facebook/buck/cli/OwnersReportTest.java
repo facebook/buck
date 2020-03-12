@@ -31,6 +31,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
@@ -116,7 +117,8 @@ public class OwnersReportTest {
               ImmutableSet.of(),
               ImmutableSortedSet.of(),
               ImmutableSet.of(),
-              ImmutableSet.of());
+              ImmutableSet.of(),
+              RuleType.of("fake", RuleType.Kind.BUILD));
     } catch (NoSuchBuildTargetException e) {
       throw new RuntimeException(e);
     }

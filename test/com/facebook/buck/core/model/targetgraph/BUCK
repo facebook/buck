@@ -33,6 +33,7 @@ java_immutables_library(
         "//test/...",
     ],
     deps = [
+        "//src/com/facebook/buck/core/description/impl:impl",
         "//src/com/facebook/buck/core/model/actiongraph:actiongraph",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/model/platform/impl:impl",
