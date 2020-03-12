@@ -2009,68 +2009,6 @@ public class ProjectGeneratorTest {
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
-  @Test
-  public void testGenerateOnlyHeaderSymlinkTrees() throws IOException {
-    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo", "lib");
-    TargetNode<?> node =
-        new CxxLibraryBuilder(buildTarget)
-            .setExportedHeaders(ImmutableSortedSet.of(FakeSourcePath.of("foo/dir1/bar.h")))
-            .setHeaders(
-                ImmutableSortedSet.of(
-                    FakeSourcePath.of("foo/dir1/foo.h"), FakeSourcePath.of("foo/dir2/baz.h")))
-            .setPlatformHeaders(
-                PatternMatchedCollection.<SourceSortedSet>builder()
-                    .add(
-                        Pattern.compile("default"),
-                        SourceSortedSet.ofUnnamedSources(
-                            ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup1/foo1.h"))))
-                    .build())
-            .setExportedPlatformHeaders(
-                PatternMatchedCollection.<SourceSortedSet>builder()
-                    .add(
-                        Pattern.compile("default"),
-                        SourceSortedSet.ofUnnamedSources(
-                            ImmutableSortedSet.of(FakeSourcePath.of("foo/HeaderGroup2/foo3.h"))))
-                    .build())
-            .setSrcs(ImmutableSortedSet.of())
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(node),
-            ProjectGeneratorOptions.builder()
-                .setShouldGenerateHeaderSymlinkTreesOnly(true)
-                .build());
-    projectGenerator.createXcodeProjects();
-
-    // The project should not generated since we're generating only header symlink trees.
-    assertFalse(
-        projectGenerator.getProjectPath() + " should not be generated.",
-        projectFilesystem.isDirectory(projectGenerator.getProjectPath()));
-
-    List<Path> headerSymlinkTrees = projectGenerator.getGeneratedHeaderSymlinkTrees();
-    assertThat(headerSymlinkTrees, hasSize(2));
-
-    assertThat(headerSymlinkTrees.get(0).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-pub")));
-    assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_p/CwkbTNOBmb-pub"),
-        ImmutableMap.of(
-            "foo/dir1/bar.h",
-            "foo/dir1/bar.h",
-            "foo/HeaderGroup2/foo3.h",
-            "foo/HeaderGroup2/foo3.h"));
-
-    assertThat(
-        headerSymlinkTrees.get(1).toString(), is(equalTo("buck-out/gen/_p/CwkbTNOBmb-priv")));
-    assertThatHeaderSymlinkTreeContains(
-        Paths.get("buck-out/gen/_p/CwkbTNOBmb-priv"),
-        ImmutableMap.<String, String>builder()
-            .put("foo/dir1/foo.h", "foo/dir1/foo.h")
-            .put("foo/dir2/baz.h", "foo/dir2/baz.h")
-            .put("foo/HeaderGroup1/foo1.h", "foo/HeaderGroup1/foo1.h")
-            .build());
-  }
-
   private void assertThatHeaderSymlinkTreeContains(Path root, ImmutableMap<String, String> content)
       throws IOException {
     // Read the tree's header map.

@@ -79,12 +79,6 @@ interface ProjectGeneratorOptions {
     return false;
   }
 
-  /** Generates only headers symlink trees. */
-  @Value.Default
-  default boolean shouldGenerateHeaderSymlinkTreesOnly() {
-    return false;
-  }
-
   /** Add linker flags to OTHER_LDFLAGS to force load of libraries with link_whole = true */
   @Value.Default
   default boolean shouldForceLoadLinkWholeLibraries() {

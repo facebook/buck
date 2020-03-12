@@ -314,10 +314,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "merge_header_maps_in_xcode", false);
   }
 
-  public boolean shouldGenerateHeaderSymlinkTreesOnly() {
-    return delegate.getBooleanValue(APPLE_SECTION, "generate_header_symlink_tree_only", false);
-  }
-
   public boolean shouldUseSwiftDelegate() {
     // TODO(mgd): Remove Swift delegation from Apple rules
     return delegate.getBooleanValue(APPLE_SECTION, "use_swift_delegate", true);

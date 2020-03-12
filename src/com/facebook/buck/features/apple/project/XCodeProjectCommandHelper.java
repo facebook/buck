@@ -372,8 +372,6 @@ public class XCodeProjectCommandHelper {
             .setShouldLinkSystemSwift(appleConfig.shouldLinkSystemSwift())
             .setShouldForceLoadLinkWholeLibraries(
                 appleConfig.shouldAddLinkerFlagsForLinkWholeLibraries())
-            .setShouldGenerateHeaderSymlinkTreesOnly(
-                appleConfig.shouldGenerateHeaderSymlinkTreesOnly())
             .setShouldUseShortNamesForTargets(true)
             .setShouldCreateDirectoryStructure(combinedProject)
             .setShouldGenerateProjectSchemes(createProjectSchemes)

@@ -287,52 +287,48 @@ public class WorkspaceAndProjectGenerator {
 
     writeWorkspaceMetaData(outputDirectory, workspaceName);
 
-    if (projectGeneratorOptions.shouldGenerateHeaderSymlinkTreesOnly()) {
-      return workspaceGenerator.getWorkspaceDir();
-    } else {
-      ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget =
-          buildTargetToPbxTargetMapBuilder.build();
-      ImmutableMap<PBXTarget, Path> targetToProjectPathMap = targetToProjectPathMapBuilder.build();
-      ImmutableSetMultimap<PBXProject, PBXTarget> generatedProjectToPbxTargets =
-          generatedProjectToPbxTargetsBuilder.build();
+    ImmutableMap<BuildTarget, PBXTarget> buildTargetToPBXTarget =
+        buildTargetToPbxTargetMapBuilder.build();
+    ImmutableMap<PBXTarget, Path> targetToProjectPathMap = targetToProjectPathMapBuilder.build();
+    ImmutableSetMultimap<PBXProject, PBXTarget> generatedProjectToPbxTargets =
+        generatedProjectToPbxTargetsBuilder.build();
 
-      ImmutableSetMultimap<String, PBXTarget> schemeBuildForTestNodeTargets =
-          WorkspaceAndProjectGenerator.mapFromSchemeToPBXProject(
-              buildForTestNodes, buildTargetToPBXTarget);
-      ImmutableSetMultimap<String, PBXTarget> schemeUngroupedTestTargets =
-          WorkspaceAndProjectGenerator.mapFromSchemeToPBXProject(tests, buildTargetToPBXTarget);
+    ImmutableSetMultimap<String, PBXTarget> schemeBuildForTestNodeTargets =
+        WorkspaceAndProjectGenerator.mapFromSchemeToPBXProject(
+            buildForTestNodes, buildTargetToPBXTarget);
+    ImmutableSetMultimap<String, PBXTarget> schemeUngroupedTestTargets =
+        WorkspaceAndProjectGenerator.mapFromSchemeToPBXProject(tests, buildTargetToPBXTarget);
 
-      if (projectGeneratorOptions.shouldGenerateProjectSchemes()) {
-        // compose the project targets of targets that are within the main (or extra) scheme's
-        // targets
-        ImmutableSet<PBXTarget> schemeTargets =
-            ImmutableSet.copyOf(
-                mapFromOptionalSchemeToPBXProject(schemeNameToSrcTargetNode, buildTargetToPBXTarget)
-                    .values());
+    if (projectGeneratorOptions.shouldGenerateProjectSchemes()) {
+      // compose the project targets of targets that are within the main (or extra) scheme's
+      // targets
+      ImmutableSet<PBXTarget> schemeTargets =
+          ImmutableSet.copyOf(
+              mapFromOptionalSchemeToPBXProject(schemeNameToSrcTargetNode, buildTargetToPBXTarget)
+                  .values());
 
-        LOG.debug("Generating schemes for all sub-projects.");
+      LOG.debug("Generating schemes for all sub-projects.");
 
-        writeWorkspaceSchemesForProjects(
-            buildTargetToPBXTarget,
-            schemeTargets,
-            generatedProjectToPbxTargets,
-            targetToProjectPathMap,
-            schemeBuildForTestNodeTargets,
-            schemeUngroupedTestTargets);
-      }
-
-      writeWorkspaceSchemes(
-          workspaceName,
-          outputDirectory,
-          schemeConfigs,
-          schemeNameToSrcTargetNode,
-          schemeBuildForTestNodeTargets,
-          schemeUngroupedTestTargets,
+      writeWorkspaceSchemesForProjects(
+          buildTargetToPBXTarget,
+          schemeTargets,
+          generatedProjectToPbxTargets,
           targetToProjectPathMap,
-          buildTargetToPBXTarget);
-
-      return workspaceGenerator.writeWorkspace();
+          schemeBuildForTestNodeTargets,
+          schemeUngroupedTestTargets);
     }
+
+    writeWorkspaceSchemes(
+        workspaceName,
+        outputDirectory,
+        schemeConfigs,
+        schemeNameToSrcTargetNode,
+        schemeBuildForTestNodeTargets,
+        schemeUngroupedTestTargets,
+        targetToProjectPathMap,
+        buildTargetToPBXTarget);
+
+    return workspaceGenerator.writeWorkspace();
   }
 
   /**
