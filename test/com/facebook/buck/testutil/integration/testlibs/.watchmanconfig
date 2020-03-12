@@ -1,6 +1,0 @@
-{
-  "ignore_dirs": [
-    "buck-out",
-    ".buckd"
-  ]
-}
