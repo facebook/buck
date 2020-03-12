@@ -37,9 +37,6 @@ public interface AppleNativeTargetDescriptionArg
     return false;
   }
 
-  /** A modulemap mode, to override the one specified in .buckconfig. */
-  Optional<String> getModulemapMode(); // TODO(natesm) T55436951: remove this
-
   @Value.Check
   default void checkModularUsage() {
     if (isModular() && getBridgingHeader().isPresent()) {
