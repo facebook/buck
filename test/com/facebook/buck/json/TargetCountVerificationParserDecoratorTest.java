@@ -20,6 +20,7 @@ import static java.util.Collections.singletonList;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListener;
@@ -52,7 +53,7 @@ public class TargetCountVerificationParserDecoratorTest {
     eventBus = BuckEventBusForTests.newInstance();
     capturingConsoleEventListener = new CapturingConsoleEventListener();
     eventBus.register(capturingConsoleEventListener);
-    path = Paths.get("/foo/bar");
+    path = Paths.get("/foo/bar").toAbsolutePath();
     parserMock = EasyMock.createMock(ProjectBuildFileParser.class);
 
     Map<String, Object> retMap1 = new HashMap<>();
@@ -97,11 +98,12 @@ public class TargetCountVerificationParserDecoratorTest {
   @Test
   public void givenTargetCountExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsEmitted()
       throws Exception {
-    EasyMock.expect(parserMock.getManifest(path)).andReturn(toBuildFileManifest(this.rawTargets));
+    EasyMock.expect(parserMock.getManifest(AbsPath.of(path)))
+        .andReturn(toBuildFileManifest(this.rawTargets));
 
     TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(3);
     EasyMock.replay(parserMock);
-    parserDelegate.getManifest(path);
+    parserDelegate.getManifest(AbsPath.of(path));
 
     assertWarningIsEmitted();
   }
@@ -120,11 +122,12 @@ public class TargetCountVerificationParserDecoratorTest {
   public void
       givenTargetCountNotExceedingLimitWhenGetBuildFileManifestIsInvokedAWarningIsNotEmitted()
           throws Exception {
-    EasyMock.expect(parserMock.getManifest(path)).andReturn(toBuildFileManifest(rawTargets));
+    EasyMock.expect(parserMock.getManifest(AbsPath.of(path)))
+        .andReturn(toBuildFileManifest(rawTargets));
 
     TargetCountVerificationParserDecorator parserDelegate = newParserDelegate(6);
     EasyMock.replay(parserMock);
-    parserDelegate.getManifest(path);
+    parserDelegate.getManifest(AbsPath.of(path));
 
     assertWarningIsNotEmitted();
   }

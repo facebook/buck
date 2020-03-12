@@ -16,7 +16,9 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.parser.api.BuildFileManifest;
+import com.facebook.buck.parser.api.FileParser;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -38,9 +40,9 @@ import javax.annotation.Nullable;
  * <p>This {@link PythonDslProjectBuildFileParser} wrapper creates new instances of delegated parser
  * using a provided factory and adds them to worker pool. If free parser is available at the time a
  * request is made, it is reused, if not then it is recreated. Once parsing request (aka {@link
- * ProjectBuildFileParser#getManifest(Path)} is complete, parser is returned to the worker pool.
- * Worker pool of parsers can grow unconditionally so it is really up to the user of this class to
- * manage concurrency level by calling this class' methods appropriate number of times in parallel.
+ * FileParser#getManifest(AbsPath)} is complete, parser is returned to the worker pool. Worker pool
+ * of parsers can grow unconditionally so it is really up to the user of this class to manage
+ * concurrency level by calling this class' methods appropriate number of times in parallel.
  *
  * <p>Note that {@link ConcurrentProjectBuildFileParser#reportProfile()} and {@link
  * ConcurrentProjectBuildFileParser#close()} are not synchronized with the worker pool and just call
@@ -89,7 +91,7 @@ public class ConcurrentProjectBuildFileParser implements ProjectBuildFileParser 
   }
 
   @Override
-  public BuildFileManifest getManifest(Path buildFile)
+  public BuildFileManifest getManifest(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     try (CloseableWrapper<ProjectBuildFileParser> wrapper = getWrapper()) {
       return wrapper.get().getManifest(buildFile);
@@ -105,7 +107,7 @@ public class ConcurrentProjectBuildFileParser implements ProjectBuildFileParser 
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     try (CloseableWrapper<ProjectBuildFileParser> wrapper = getWrapper()) {
       return wrapper.get().getIncludedFiles(buildFile);

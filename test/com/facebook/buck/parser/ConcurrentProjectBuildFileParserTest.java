@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -74,7 +75,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public BuildFileManifest getManifest(Path buildFile) {
+    public BuildFileManifest getManifest(AbsPath buildFile) {
       processCall("getManifest");
       return null;
     }
@@ -86,7 +87,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public ImmutableSortedSet<String> getIncludedFiles(Path buildFile) {
+    public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile) {
       processCall("getIncludedFiles");
       return null;
     }
@@ -131,7 +132,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public BuildFileManifest getManifest(Path buildFile) {
+    public BuildFileManifest getManifest(AbsPath buildFile) {
       waitLatch();
       return null;
     }
@@ -141,7 +142,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public ImmutableSortedSet<String> getIncludedFiles(Path buildFile) {
+    public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile) {
       waitLatch();
       return null;
     }
@@ -176,8 +177,13 @@ public class ConcurrentProjectBuildFileParserTest {
       List<ListenableFuture<?>> futures = new ArrayList<>(ITERATIONS * 3);
 
       for (int i = 0; i < ITERATIONS; i++) {
-        futures.add(executorService.submit(() -> buildFileParser.getManifest(Paths.get(""))));
-        futures.add(executorService.submit(() -> buildFileParser.getIncludedFiles(Paths.get(""))));
+        futures.add(
+            executorService.submit(
+                () -> buildFileParser.getManifest(AbsPath.of(Paths.get("").toAbsolutePath()))));
+        futures.add(
+            executorService.submit(
+                () ->
+                    buildFileParser.getIncludedFiles(AbsPath.of(Paths.get("").toAbsolutePath()))));
         futures.add(
             executorService.submit(
                 () ->
@@ -256,7 +262,9 @@ public class ConcurrentProjectBuildFileParserTest {
         ListeningExecutorService executorService =
             MoreExecutors.listeningDecorator(fixedThreadExecutor);
         for (int i = 0; i < threads; i++) {
-          futures.add(executorService.submit(() -> buildFileParser.getManifest(Paths.get(""))));
+          futures.add(
+              executorService.submit(
+                  () -> buildFileParser.getManifest(AbsPath.of(Paths.get("").toAbsolutePath()))));
         }
         Futures.allAsList(futures).get();
       }

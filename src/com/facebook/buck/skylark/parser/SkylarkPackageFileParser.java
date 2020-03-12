@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.parser.api.PackageFileManifest;
@@ -100,12 +101,12 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
 
   @Override
   @SuppressWarnings("unchecked")
-  public PackageFileManifest getManifest(java.nio.file.Path packageFile)
+  public PackageFileManifest getManifest(AbsPath packageFile)
       throws BuildFileParseException, InterruptedException, IOException {
     LOG.verbose("Started parsing package file file %s", packageFile);
     ParseBuckFileEvent.Started startEvent =
         ParseBuckFileEvent.started(
-            packageFile, ParseBuckFileEvent.ParserKind.SKYLARK, this.getClass());
+            packageFile.getPath(), ParseBuckFileEvent.ParserKind.SKYLARK, this.getClass());
     buckEventBus.post(startEvent);
     try {
       ParseResult parseResult = parse(packageFile);

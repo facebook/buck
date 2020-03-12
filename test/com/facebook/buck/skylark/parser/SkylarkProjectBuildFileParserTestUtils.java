@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.parser;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
@@ -116,11 +117,16 @@ public class SkylarkProjectBuildFileParserTestUtils {
         NativeGlobber::create);
   }
 
-  static RawTargetNode getSingleRule(
-      SkylarkProjectBuildFileParser parser, java.nio.file.Path buildFile)
-      throws BuildFileParseException, InterruptedException, IOException {
+  static RawTargetNode getSingleRule(SkylarkProjectBuildFileParser parser, AbsPath buildFile)
+      throws IOException, InterruptedException {
     BuildFileManifest buildFileManifest = parser.getManifest(buildFile);
     assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
     return Iterables.getOnlyElement(buildFileManifest.getTargets().values());
+  }
+
+  static RawTargetNode getSingleRule(
+      SkylarkProjectBuildFileParser parser, java.nio.file.Path buildFile)
+      throws BuildFileParseException, InterruptedException, IOException {
+    return getSingleRule(parser, AbsPath.of(buildFile));
   }
 }

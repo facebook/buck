@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -131,12 +132,12 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
   @Override
   @SuppressWarnings("unchecked")
-  public BuildFileManifest getManifest(Path buildFile)
+  public BuildFileManifest getManifest(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     LOG.verbose("Started parsing build file %s", buildFile);
     ParseBuckFileEvent.Started startEvent =
         ParseBuckFileEvent.started(
-            buildFile, ParseBuckFileEvent.ParserKind.SKYLARK, this.getClass());
+            buildFile.getPath(), ParseBuckFileEvent.ParserKind.SKYLARK, this.getClass());
     buckEventBus.post(startEvent);
     int rulesParsed = 0;
     try {

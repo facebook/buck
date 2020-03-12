@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -247,7 +248,7 @@ public class HostInfoTest {
 
     SkylarkProjectBuildFileParser parser =
         createParser(cell.getRootCell().getFilesystem(), eventHandler);
-    parser.getManifest(fs.resolve("BUCK"));
+    parser.getManifest(AbsPath.of(fs.resolve("BUCK")));
   }
 
   private SkylarkProjectBuildFileParser createParser(

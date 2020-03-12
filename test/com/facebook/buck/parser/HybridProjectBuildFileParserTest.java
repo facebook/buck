@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
@@ -29,7 +30,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.easymock.EasyMock;
 import org.easymock.EasyMockRunner;
@@ -59,7 +59,7 @@ public class HybridProjectBuildFileParserTest {
   private HybridProjectBuildFileParser parser;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-  private Path buildFile;
+  private AbsPath buildFile;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -69,14 +69,14 @@ public class HybridProjectBuildFileParserTest {
         HybridProjectBuildFileParser.using(
             ImmutableMap.of(Syntax.PYTHON_DSL, pythonDslParser, Syntax.SKYLARK, skylarkParser),
             Syntax.PYTHON_DSL);
-    buildFile = tmp.newFile("BUCK");
+    buildFile = AbsPath.of(tmp.newFile("BUCK"));
   }
 
   @Test
   public void getAllRulesCallsPythonDslParserWhenRequestedExplicitly() throws Exception {
     EasyMock.expect(pythonDslParser.getManifest(buildFile)).andReturn(EMPTY_BUILD_FILE_MANIFEST);
     EasyMock.replay(pythonDslParser);
-    Files.write(buildFile, getParserDirectiveFor(Syntax.PYTHON_DSL).getBytes());
+    Files.write(buildFile.getPath(), getParserDirectiveFor(Syntax.PYTHON_DSL).getBytes());
     parser.getManifest(buildFile);
     EasyMock.verify(pythonDslParser);
   }
@@ -93,7 +93,7 @@ public class HybridProjectBuildFileParserTest {
   public void getAllRulesCallsSkylarkParserByWhenItIsRequestedExplicitly() throws Exception {
     EasyMock.expect(skylarkParser.getManifest(buildFile)).andReturn(EMPTY_BUILD_FILE_MANIFEST);
     EasyMock.replay(skylarkParser);
-    Files.write(buildFile, getParserDirectiveFor(Syntax.SKYLARK).getBytes());
+    Files.write(buildFile.getPath(), getParserDirectiveFor(Syntax.SKYLARK).getBytes());
     parser.getManifest(buildFile);
     EasyMock.verify(skylarkParser);
   }
@@ -103,7 +103,7 @@ public class HybridProjectBuildFileParserTest {
     thrown.expect(BuildFileParseException.class);
     thrown.expectMessage(
         "Unrecognized syntax [SKILARK] requested for build file [" + buildFile + "]");
-    Files.write(buildFile, "# BUILD FILE SYNTAX: SKILARK".getBytes());
+    Files.write(buildFile.getPath(), "# BUILD FILE SYNTAX: SKILARK".getBytes());
     parser.getManifest(buildFile);
   }
 
@@ -114,7 +114,7 @@ public class HybridProjectBuildFileParserTest {
     parser =
         HybridProjectBuildFileParser.using(
             ImmutableMap.of(Syntax.SKYLARK, skylarkParser), Syntax.SKYLARK);
-    Files.write(buildFile, "# BUILD FILE SYNTAX: PYTHON_DSL".getBytes());
+    Files.write(buildFile.getPath(), "# BUILD FILE SYNTAX: PYTHON_DSL".getBytes());
     parser.getManifest(buildFile);
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.parser.api.BuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.Syntax;
@@ -57,7 +58,7 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public BuildFileManifest getManifest(Path buildFile)
+  public BuildFileManifest getManifest(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return getParserForBuildFile(buildFile).getManifest(buildFile);
   }
@@ -70,7 +71,7 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return getParserForBuildFile(buildFile).getIncludedFiles(buildFile);
   }
@@ -79,7 +80,7 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   public boolean globResultsMatchCurrentState(
       Path buildFile, ImmutableList<GlobSpecWithResult> existingGlobsWithResults)
       throws IOException, InterruptedException {
-    return getParserForBuildFile(buildFile)
+    return getParserForBuildFile(AbsPath.of(buildFile))
         .globResultsMatchCurrentState(buildFile, existingGlobsWithResults);
   }
 
@@ -97,7 +98,7 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
    *     <p>Passing an unknown syntax causes {@link BuildFileParseException}, since new versions of
    *     Buck might support new syntax, that does not have to be Python DSL compatible.
    */
-  private ProjectBuildFileParser getParserForBuildFile(Path buildFile)
+  private ProjectBuildFileParser getParserForBuildFile(AbsPath buildFile)
       throws IOException, BuildFileParseException {
     @Nullable
     String firstLine = Files.asCharSource(buildFile.toFile(), Charsets.UTF_8).readFirstLine();

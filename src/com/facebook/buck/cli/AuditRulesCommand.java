@@ -126,14 +126,12 @@ public class AuditRulesCommand extends AbstractCommand {
 
           // Resolve the path specified by the user.
           Path path = Paths.get(pathToBuildFile);
-          if (!path.isAbsolute()) {
-            AbsPath root = projectFilesystem.getRootPath();
-            path = root.resolve(path).getPath();
-          }
+
+          AbsPath absPath = projectFilesystem.getRootPath().resolve(path);
 
           // Parse the rules from the build file.
           TwoArraysImmutableHashMap<String, RawTargetNode> rawRules =
-              parser.getManifest(path).getTargets();
+              parser.getManifest(absPath).getTargets();
 
           // Format and print the rules from the raw data, filtered by type.
           ImmutableSet<String> types = getTypes();

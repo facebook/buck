@@ -41,7 +41,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
@@ -149,7 +148,7 @@ public class ProjectBuildFileParserPoolTest {
 
               ProjectBuildFileParser parser = EasyMock.createMock(ProjectBuildFileParser.class);
               try {
-                EasyMock.expect(parser.getManifest(EasyMock.anyObject(Path.class)))
+                EasyMock.expect(parser.getManifest(EasyMock.anyObject(AbsPath.class)))
                     .andAnswer(
                         () -> {
                           createParserLatch.countDown();
@@ -370,7 +369,7 @@ public class ProjectBuildFileParserPoolTest {
   private ProjectBuildFileParser createMockParser(IAnswer<BuildFileManifest> parseFn) {
     ProjectBuildFileParser mock = EasyMock.createMock(ProjectBuildFileParser.class);
     try {
-      EasyMock.expect(mock.getManifest(EasyMock.anyObject(Path.class)))
+      EasyMock.expect(mock.getManifest(EasyMock.anyObject(AbsPath.class)))
           .andAnswer(parseFn)
           .anyTimes();
       mock.close();

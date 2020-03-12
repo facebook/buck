@@ -18,6 +18,7 @@ package com.facebook.buck.parser.decorators;
 
 import static org.junit.Assert.*;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
@@ -39,7 +40,7 @@ import org.junit.Test;
 
 public class EventReportingProjectBuildFileParserTest {
 
-  private static final Path SOME_PATH = Paths.get("some_path");
+  private final AbsPath somePath = AbsPath.of(Paths.get("some_path").toAbsolutePath());
   private TestProjectBuildFileParser delegate;
 
   private EventReportingProjectBuildFileParser parser;
@@ -81,7 +82,7 @@ public class EventReportingProjectBuildFileParserTest {
     private boolean isClosed;
 
     @Override
-    public BuildFileManifest getManifest(Path buildFile) {
+    public BuildFileManifest getManifest(AbsPath buildFile) {
       return allRulesAndMetadata;
     }
 
@@ -91,7 +92,7 @@ public class EventReportingProjectBuildFileParserTest {
     }
 
     @Override
-    public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
+    public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
         throws BuildFileParseException {
       return ImmutableSortedSet.of();
     }
@@ -124,8 +125,8 @@ public class EventReportingProjectBuildFileParserTest {
   @Test
   public void startEventIsRecordedOnlyOnce() throws Exception {
     assertFalse(listener.isStarted());
-    parser.getManifest(SOME_PATH);
-    parser.getManifest(SOME_PATH);
+    parser.getManifest(somePath);
+    parser.getManifest(somePath);
     assertTrue(listener.isStarted());
     assertThat(listener.getStartedCount(), Matchers.is(1));
   }
@@ -133,7 +134,7 @@ public class EventReportingProjectBuildFileParserTest {
   @Test
   public void getBuildFileManifestFiresStartEvent() throws Exception {
     assertFalse(listener.isStarted());
-    parser.getManifest(SOME_PATH);
+    parser.getManifest(somePath);
     assertTrue(listener.isStarted());
   }
 
@@ -147,7 +148,7 @@ public class EventReportingProjectBuildFileParserTest {
             Optional.empty(),
             ImmutableList.of(),
             ImmutableList.of());
-    assertSame(allRulesAndMetadata, parser.getManifest(SOME_PATH));
+    assertSame(allRulesAndMetadata, parser.getManifest(somePath));
   }
 
   @Test
@@ -159,7 +160,7 @@ public class EventReportingProjectBuildFileParserTest {
 
   @Test
   public void closeReportsFinishedEvent() throws Exception {
-    parser.getManifest(SOME_PATH);
+    parser.getManifest(somePath);
     assertFalse(listener.isFinished());
     parser.close();
     assertTrue(listener.isFinished());

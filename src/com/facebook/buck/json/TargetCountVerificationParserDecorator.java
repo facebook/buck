@@ -16,6 +16,7 @@
 
 package com.facebook.buck.json;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.parser.api.BuildFileManifest;
@@ -68,10 +69,10 @@ public class TargetCountVerificationParserDecorator
   }
 
   @Override
-  public BuildFileManifest getManifest(Path buildFile)
+  public BuildFileManifest getManifest(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     BuildFileManifest targetManifest = delegate.getManifest(buildFile);
-    maybePostWarningAboutTooManyTargets(buildFile, targetManifest.getTargets().size());
+    maybePostWarningAboutTooManyTargets(buildFile.getPath(), targetManifest.getTargets().size());
     return targetManifest;
   }
 }

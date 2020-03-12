@@ -156,7 +156,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   /** @return The parsed result defined in {@code parseFile}. */
-  protected ParseResult parse(Path parseFile)
+  protected ParseResult parse(AbsPath parseFile)
       throws IOException, BuildFileParseException, InterruptedException {
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(parseFile.toString());
 
@@ -166,7 +166,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         loadImplicitExtension(parseFile.getFileSystem().getPath(basePath), containingLabel);
 
     BuildFileAST buildFileAst = parseFile(buildFilePath, containingLabel);
-    Globber globber = getGlobber(parseFile);
+    Globber globber = getGlobber(parseFile.getPath());
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
     ParseContext parseContext = new ParseContext(packageContext);
@@ -199,7 +199,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       loadedPaths.add(buildFilePath.toString());
       loadedPaths.addAll(envData.getLoadedPaths());
 
-      return getParseResult(parseFile, parseContext, globber, loadedPaths.build());
+      return getParseResult(parseFile.getPath(), parseContext, globber, loadedPaths.build());
     }
   }
 
@@ -804,14 +804,14 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     /Users/foo/repo/src/bar/BUCK}, where {@code /Users/foo/repo} is the path to the repo, it
    *     would return {@code src/bar}.
    */
-  private String getBasePath(Path buildFile) {
+  private String getBasePath(AbsPath buildFile) {
     return Optional.ofNullable(options.getProjectRoot().relativize(buildFile).getParent())
         .map(PathFormatter::pathWithUnixSeparators)
         .orElse("");
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(Path parseFile)
+  public ImmutableSortedSet<String> getIncludedFiles(AbsPath parseFile)
       throws BuildFileParseException, InterruptedException, IOException {
     com.google.devtools.build.lib.vfs.Path buildFilePath = fileSystem.getPath(parseFile.toString());
 

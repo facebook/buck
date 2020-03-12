@@ -16,10 +16,10 @@
 
 package com.facebook.buck.parser.api;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
 
 /** Generic file parser, meant to be extended for more specific parsers. */
 public interface FileParser<T extends FileManifest> extends AutoCloseable {
@@ -30,14 +30,15 @@ public interface FileParser<T extends FileManifest> extends AutoCloseable {
    *
    * @param parseFile should be an absolute path to a file. Must have rootPath as its prefix.
    */
-  T getManifest(Path parseFile) throws BuildFileParseException, InterruptedException, IOException;
+  T getManifest(AbsPath parseFile)
+      throws BuildFileParseException, InterruptedException, IOException;
 
   /**
    * Collects the loaded files and extensions when parsing the {@code parseFile} build spec.
    *
    * @param parseFile should be an absolute path to a file. Must have rootPath as its prefix.
    */
-  ImmutableSortedSet<String> getIncludedFiles(Path parseFile)
+  ImmutableSortedSet<String> getIncludedFiles(AbsPath parseFile)
       throws BuildFileParseException, InterruptedException, IOException;
 
   @Override

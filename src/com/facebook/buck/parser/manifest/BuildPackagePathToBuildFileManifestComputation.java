@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.manifest;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -37,7 +38,7 @@ import java.util.Optional;
 public class BuildPackagePathToBuildFileManifestComputation
     implements GraphComputation<BuildPackagePathToBuildFileManifestKey, BuildFileManifest> {
 
-  private final Path root;
+  private final AbsPath root;
   private final ProjectBuildFileParser parser;
   private final Path buildFileName;
   private final boolean throwOnParseError;
@@ -46,7 +47,7 @@ public class BuildPackagePathToBuildFileManifestComputation
       ProjectBuildFileParser parser, Path buildFileName, Path root, boolean throwOnParseError) {
     this.parser = parser;
     this.buildFileName = buildFileName;
-    this.root = root;
+    this.root = AbsPath.of(root);
     this.throwOnParseError = throwOnParseError;
   }
 

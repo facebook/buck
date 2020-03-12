@@ -26,6 +26,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.features.python.PythonBuckConfig;
@@ -81,10 +83,10 @@ public class ResolverIntegrationTest {
   private static HttpdForTests httpd;
   private static PythonDslProjectBuildFileParser buildFileParser;
   private static Path repo;
-  private Path buckRepoRoot;
-  private Path thirdParty;
-  private Path thirdPartyRelative;
-  private Path localRepo;
+  private AbsPath buckRepoRoot;
+  private AbsPath thirdParty;
+  private RelPath thirdPartyRelative;
+  private AbsPath localRepo;
 
   @BeforeClass
   public static void setUpFakeMavenRepo() throws Exception {
@@ -140,10 +142,10 @@ public class ResolverIntegrationTest {
 
   @Before
   public void setUpRepos() throws Exception {
-    buckRepoRoot = temp.newFolder();
-    thirdPartyRelative = Paths.get("third-party").resolve("java");
+    buckRepoRoot = AbsPath.of(temp.newFolder());
+    thirdPartyRelative = RelPath.of(Paths.get("third-party").resolve("java"));
     thirdParty = buckRepoRoot.resolve(thirdPartyRelative);
-    localRepo = temp.newFolder();
+    localRepo = AbsPath.of(temp.newFolder());
   }
 
   private ArtifactConfig newConfig() {
@@ -167,10 +169,10 @@ public class ResolverIntegrationTest {
   @Test
   public void shouldResolveTransitiveDependencyAndIncludeLibraryOnlyOnce() throws Exception {
     resolveWithArtifacts("com.example:A-depends-on-B-and-C:jar:1.0");
-    Path groupDir = thirdParty.resolve("example");
-    assertTrue(Files.exists(groupDir));
-    assertTrue(Files.exists(groupDir.resolve("D-depends-on-none-2.0.jar")));
-    assertFalse(Files.exists(groupDir.resolve("D-depends-on-none-1.0.jar")));
+    AbsPath groupDir = thirdParty.resolve("example");
+    assertTrue(Files.exists(groupDir.getPath()));
+    assertTrue(Files.exists(groupDir.resolve("D-depends-on-none-2.0.jar").getPath()));
+    assertFalse(Files.exists(groupDir.resolve("D-depends-on-none-1.0.jar").getPath()));
   }
 
   @Test
@@ -178,23 +180,23 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts(
         repo.resolve("com/example/A-depends-on-B-and-C/1.0/A-depends-on-B-and-C-1.0.pom")
             .toString());
-    Path groupDir = thirdParty.resolve("example");
-    assertTrue(Files.exists(groupDir));
-    assertTrue(Files.exists(groupDir.resolve("D-depends-on-none-2.0.jar")));
-    assertFalse(Files.exists(groupDir.resolve("D-depends-on-none-1.0.jar")));
+    AbsPath groupDir = thirdParty.resolve("example");
+    assertTrue(Files.exists(groupDir.getPath()));
+    assertTrue(Files.exists(groupDir.resolve("D-depends-on-none-2.0.jar").getPath()));
+    assertFalse(Files.exists(groupDir.resolve("D-depends-on-none-1.0.jar").getPath()));
   }
 
   @Test
   public void shouldSetUpAPrivateLibraryIfGivenAMavenCoordWithoutDeps() throws Exception {
     resolveWithArtifacts("com.example:no-deps:jar:1.0");
 
-    Path groupDir = thirdParty.resolve("example");
-    assertTrue(Files.exists(groupDir));
+    AbsPath groupDir = thirdParty.resolve("example");
+    assertTrue(Files.exists(groupDir.getPath()));
 
     Path original = repo.resolve("com/example/no-deps/1.0/no-deps-1.0.jar");
     HashCode expected = MorePaths.asByteSource(original).hash(Hashing.sha1());
-    Path jarFile = groupDir.resolve("no-deps-1.0.jar");
-    HashCode seen = MorePaths.asByteSource(jarFile).hash(Hashing.sha1());
+    AbsPath jarFile = groupDir.resolve("no-deps-1.0.jar");
+    HashCode seen = MorePaths.asByteSource(jarFile.getPath()).hash(Hashing.sha1());
     assertEquals(expected, seen);
 
     TwoArraysImmutableHashMap<String, RawTargetNode> rules =
@@ -222,7 +224,7 @@ public class ResolverIntegrationTest {
   public void shouldIncludeSourceJarIfOneIsPresent() throws Exception {
     resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
-    Path groupDir = thirdParty.resolve("example");
+    AbsPath groupDir = thirdParty.resolve("example");
     TwoArraysImmutableHashMap<String, RawTargetNode> rules =
         buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
@@ -289,40 +291,41 @@ public class ResolverIntegrationTest {
 
   @Test
   public void shouldNotDownloadOlderJar() throws Exception {
-    Path existingNewerJar = thirdParty.resolve("example/no-deps-1.1.jar");
-    Files.createDirectories(existingNewerJar.getParent());
-    Files.copy(repo.resolve("com/example/no-deps/1.0/no-deps-1.0.jar"), existingNewerJar);
+    AbsPath existingNewerJar = thirdParty.resolve("example/no-deps-1.1.jar");
+    Files.createDirectories(existingNewerJar.getParent().getPath());
+    Files.copy(repo.resolve("com/example/no-deps/1.0/no-deps-1.0.jar"), existingNewerJar.getPath());
 
-    Path groupDir = thirdParty.resolve("example");
-    Path repoOlderJar = groupDir.resolve("no-deps-1.0.jar");
-    assertFalse(Files.exists(repoOlderJar));
+    AbsPath groupDir = thirdParty.resolve("example");
+    AbsPath repoOlderJar = groupDir.resolve("no-deps-1.0.jar");
+    assertFalse(Files.exists(repoOlderJar.getPath()));
 
     resolveWithArtifacts("com.example:no-deps:jar:1.0");
 
-    assertTrue(Files.exists(groupDir));
+    assertTrue(Files.exists(groupDir.getPath()));
 
     // assert newer jar is in the third-party dir
-    assertTrue(Files.exists(existingNewerJar));
-    assertFalse(Files.exists(repoOlderJar));
+    assertTrue(Files.exists(existingNewerJar.getPath()));
+    assertFalse(Files.exists(repoOlderJar.getPath()));
 
     // assert BUCK file was created
-    assertTrue(Files.exists(groupDir.resolve("BUCK")));
+    assertTrue(Files.exists(groupDir.resolve("BUCK").getPath()));
   }
 
   @Test
   public void shouldDetectNewestJar() throws Exception {
-    Path groupDir = thirdParty.resolve("example");
-    Path existingNewerJar = groupDir.resolve("no-deps-1.1.jar");
-    Path existingNewestJar = groupDir.resolve("no-deps-1.2.jar");
-    Files.createDirectories(groupDir);
+    AbsPath groupDir = thirdParty.resolve("example");
+    AbsPath existingNewerJar = groupDir.resolve("no-deps-1.1.jar");
+    AbsPath existingNewestJar = groupDir.resolve("no-deps-1.2.jar");
+    Files.createDirectories(groupDir.getPath());
     Path sourceJar = repo.resolve("com/example/no-deps/1.0/no-deps-1.0.jar");
-    Files.copy(sourceJar, existingNewerJar);
-    Files.copy(sourceJar, existingNewestJar);
+    Files.copy(sourceJar, existingNewerJar.getPath());
+    Files.copy(sourceJar, existingNewestJar.getPath());
 
     Artifact artifact = new DefaultArtifact("com.example", "no-deps", "jar", "1.0");
-    Optional<Path> result = new Resolver(newConfig()).getNewerVersionFile(artifact, groupDir);
+    Optional<Path> result =
+        new Resolver(newConfig()).getNewerVersionFile(artifact, groupDir.getPath());
 
     assertTrue(result.isPresent());
-    assertThat(result.get(), equalTo(existingNewestJar));
+    assertThat(result.get(), equalTo(existingNewestJar.getPath()));
   }
 }

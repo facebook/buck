@@ -80,11 +80,10 @@ abstract class FileParserPool<T extends FileManifest> implements AutoCloseable {
 
     if (shouldUsePoolForCell(cell)) {
       return getResourcePoolForCell(buckEventBus, cell, watchman)
-          .scheduleOperationWithResource(
-              parser -> parser.getManifest(parseFile.getPath()), executorService);
+          .scheduleOperationWithResource(parser -> parser.getManifest(parseFile), executorService);
     }
     FileParser<T> parser = getParserForCell(buckEventBus, cell, watchman);
-    return executorService.submit(() -> parser.getManifest(parseFile.getPath()));
+    return executorService.submit(() -> parser.getManifest(parseFile));
   }
 
   private synchronized ResourcePool<FileParser<T>> getResourcePoolForCell(

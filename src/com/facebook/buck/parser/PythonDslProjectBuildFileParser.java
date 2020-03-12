@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -389,7 +390,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   @Override
-  public BuildFileManifest getManifest(Path buildFile)
+  public BuildFileManifest getManifest(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException {
     LOG.verbose("Started parsing build file %s", buildFile);
     try {
@@ -399,7 +400,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       return manifest;
     } catch (IOException e) {
       MoreThrowables.propagateIfInterrupt(e);
-      throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
+      throw BuildFileParseException.createForBuildFileParseError(buildFile.getPath(), e);
     } catch (BuildFileParseException ex) {
 
       // When buck.py encounters parsing error, it writes diagnostics and then crashes the process
@@ -428,7 +429,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @VisibleForTesting
-  protected BuildFileManifest getAllRulesInternal(Path buildFile)
+  protected BuildFileManifest getAllRulesInternal(AbsPath buildFile)
       throws IOException, BuildFileParseException {
     ensureNotClosed();
     initIfNeeded();
@@ -440,7 +441,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
     ParseBuckFileEvent.Started parseBuckFileStarted =
         ParseBuckFileEvent.started(
-            buildFile, ParseBuckFileEvent.ParserKind.PYTHON_DSL, this.getClass());
+            buildFile.getPath(), ParseBuckFileEvent.ParserKind.PYTHON_DSL, this.getClass());
     buckEventBus.post(parseBuckFileStarted);
 
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
@@ -456,7 +457,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           projectPrefix = projectWatch.getProjectPrefix().get();
         }
       }
-      currentBuildFile.set(buildFile);
+      currentBuildFile.set(buildFile.getPath());
       BuildFilePythonResult resultObject =
           performJsonRequest(
               ImmutableMap.of(
@@ -467,10 +468,11 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
                   "projectPrefix",
                   projectPrefix,
                   "packageImplicitLoad",
-                  packageImplicitIncludeFinder.findIncludeForBuildFile(getBasePath(buildFile))));
+                  packageImplicitIncludeFinder.findIncludeForBuildFile(
+                      getBasePath(buildFile).getPath())));
       Path buckPyPath = getPathToBuckPy(options.getDescriptions());
       handleDiagnostics(
-          buildFile, buckPyPath.getParent(), resultObject.getDiagnostics(), buckEventBus);
+          buildFile.getPath(), buckPyPath.getParent(), resultObject.getDiagnostics(), buckEventBus);
       values = resultObject.getValues();
 
       LOG.verbose("Got rules: %s", values);
@@ -504,9 +506,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    *     /Users/foo/repo/src/bar/BUCK}, where {@code /Users/foo/repo} is the path to the repo, it
    *     would return {@code src/bar}.
    */
-  private Path getBasePath(Path buildFile) {
-    return MorePaths.getParentOrEmpty(
-        MorePaths.relativize(options.getProjectRoot().getPath(), buildFile));
+  private RelPath getBasePath(AbsPath buildFile) {
+    return MorePaths.getParentOrEmpty(MorePaths.relativize(options.getProjectRoot(), buildFile));
   }
 
   @SuppressWarnings("unchecked")
@@ -857,7 +858,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException {
     return getManifest(buildFile).getIncludes();
   }

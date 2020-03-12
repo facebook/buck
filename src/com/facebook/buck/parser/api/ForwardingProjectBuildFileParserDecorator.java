@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.api;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.collect.ImmutableList;
@@ -39,7 +40,7 @@ public abstract class ForwardingProjectBuildFileParserDecorator implements Proje
   }
 
   @Override
-  public BuildFileManifest getManifest(Path buildFile)
+  public BuildFileManifest getManifest(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return delegate.getManifest(buildFile);
   }
@@ -50,7 +51,7 @@ public abstract class ForwardingProjectBuildFileParserDecorator implements Proje
   }
 
   @Override
-  public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
+  public ImmutableSortedSet<String> getIncludedFiles(AbsPath buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     return delegate.getIncludedFiles(buildFile);
   }
