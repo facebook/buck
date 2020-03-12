@@ -41,6 +41,7 @@ import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacPluginJsr199Fields;
 import com.facebook.buck.jvm.java.JavacPluginParams;
 import com.facebook.buck.jvm.java.JavacToJarStepFactory;
+import com.facebook.buck.jvm.java.ResolvedJavacPluginProperties;
 import com.facebook.buck.jvm.kotlin.KotlinLibraryDescription.AnnotationProcessingTool;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
@@ -69,6 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -82,6 +84,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final ImmutableMap<String, String> kaptApOptions;
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
   @AddToRuleKey private final boolean kaptCorrectErrorTypes;
+  @AddToRuleKey private final boolean kaptExplicitlySpecifyAnnotationProcessors;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   private final ImmutableSortedSet<Path> kotlinHomeLibraries;
@@ -92,6 +95,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private static final String X_PLUGIN_ARG = "-Xplugin=";
   private static final String KAPT3_PLUGIN = "plugin:org.jetbrains.kotlin.kapt3:";
   private static final String AP_CLASSPATH_ARG = KAPT3_PLUGIN + "apclasspath=";
+  private static final String AP_PROCESSORS_ARG = KAPT3_PLUGIN + "processors=";
   // output path for generated sources;
   private static final String SOURCES_ARG = KAPT3_PLUGIN + "sources=";
   private static final String CLASSES_ARG = KAPT3_PLUGIN + "classes=";
@@ -120,6 +124,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       AnnotationProcessingTool annotationProcessingTool,
       ImmutableMap<String, String> kaptApOptions,
       boolean kaptCorrectErrorTypes,
+      boolean kaptExplicitlySpecifyAnnotationProcessors,
       ExtraClasspathProvider extraClassPath,
       Javac javac,
       JavacOptions javacOptions) {
@@ -132,6 +137,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.annotationProcessingTool = annotationProcessingTool;
     this.kaptApOptions = kaptApOptions;
     this.kaptCorrectErrorTypes = kaptCorrectErrorTypes;
+    this.kaptExplicitlySpecifyAnnotationProcessors = kaptExplicitlySpecifyAnnotationProcessors;
     this.extraClassPath = extraClassPath;
     this.javac = javac;
     this.javacOptions = Objects.requireNonNull(javacOptions);
@@ -204,6 +210,16 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
       if (generatingCode && annotationProcessingTool.equals(AnnotationProcessingTool.KAPT)) {
         ImmutableList<String> annotationProcessors =
+            !kaptExplicitlySpecifyAnnotationProcessors
+                ? ImmutableList.of()
+                : ImmutableList.copyOf(
+                    javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
+                        .map(ResolvedJavacPluginProperties::getProcessorNames)
+                        .flatMap(Set::stream)
+                        .map(name -> AP_PROCESSORS_ARG + name)
+                        .collect(Collectors.toList()));
+
+        ImmutableList<String> apClassPaths =
             ImmutableList.copyOf(
                 javacOptions.getJavaAnnotationProcessorParams().getPluginProperties().stream()
                     .map(
@@ -221,6 +237,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                     AP_CLASSPATH_ARG
                         + kotlinc.getAnnotationProcessorPath(buildContext.getSourcePathResolver()))
                 .add(AP_CLASSPATH_ARG + kotlinc.getStdlibPath(buildContext.getSourcePathResolver()))
+                .addAll(apClassPaths)
                 .addAll(annotationProcessors)
                 .add(SOURCES_ARG + projectFilesystem.resolve(sourcesOutput))
                 .add(CLASSES_ARG + projectFilesystem.resolve(classesOutput))

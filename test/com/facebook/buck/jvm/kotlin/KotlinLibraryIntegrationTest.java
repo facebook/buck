@@ -110,6 +110,7 @@ public class KotlinLibraryIntegrationTest {
   public void pureTreeOfKotlinCodeWithAnnotationProcessorsShouldNotMakeAnInvalidJavacCall()
       throws Exception {
     overrideToolsJavacInBuckConfig();
+    overrideSpecifyingAnnotationProcessorsInBuckConfig();
     Path jarFile = workspace.buildAndReturnOutput("//com/example/ap/purekotlinap:example");
     assertNotNull(
         new JarFile(jarFile.toString()).getEntry("com/example/ap/purekotlinap/Example_.class"));
@@ -129,6 +130,14 @@ public class KotlinLibraryIntegrationTest {
     workspace.writeContentsToPath(amendedBuckconfig, ".buckconfig");
   }
 
+  private void overrideSpecifyingAnnotationProcessorsInBuckConfig() throws IOException {
+    String buckconfig = workspace.getFileContents(".buckconfig");
+    String amendedBuckconfig =
+        buckconfig + "\n[kotlin]\nkapt_explicitly_specified_annotation_processors = true";
+    workspace.writeContentsToPath(amendedBuckconfig, ".buckconfig");
+  }
+
+  @Test
   public void shouldAnnotationProcessClassesUsingKapt() {
     ProcessResult buildResult =
         workspace.runBuckCommand(

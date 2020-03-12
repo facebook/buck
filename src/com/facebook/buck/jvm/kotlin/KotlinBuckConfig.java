@@ -91,6 +91,11 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(SECTION, "kapt_correct_error_types", false);
   }
 
+  public boolean hasKaptExplicitlySpecifiedAnnotationProcessors() {
+    return delegate.getBooleanValue(
+        SECTION, "kapt_explicitly_specified_annotation_processors", false);
+  }
+
   Path getPathToCompilerBinary() {
     Path compilerPath = getKotlinHome().resolve("kotlinc");
     if (!Files.isExecutable(compilerPath)) {
