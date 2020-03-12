@@ -244,8 +244,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
         versionedDeps = versions.values();
 
       } else {
-        Iterable<BuildTarget> deps =
-            TargetGraphVersionTransformations.getDeps(typeCoercerFactory, targetNode);
+        Iterable<BuildTarget> deps = TargetGraphVersionTransformations.getDeps(targetNode);
         versionedDeps =
             Iterables.filter(
                 deps,

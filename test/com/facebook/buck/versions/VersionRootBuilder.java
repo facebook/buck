@@ -27,13 +27,8 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.AbstractMap;
-import java.util.Arrays;
-import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 public class VersionRootBuilder
     extends AbstractNodeBuilder<
@@ -68,30 +63,9 @@ public class VersionRootBuilder
     return setDeps(builder.build());
   }
 
-  public VersionRootBuilder setVersionedDeps(
-      ImmutableSortedMap<BuildTarget, Optional<Constraint>> deps) {
-    getArgForPopulating().setVersionedDeps(deps);
-    return this;
-  }
-
-  @SafeVarargs
-  public final VersionRootBuilder setVersionedDeps(
-      Map.Entry<BuildTarget, Optional<Constraint>>... deps) {
-    return setVersionedDeps(ImmutableSortedMap.copyOf(Arrays.asList(deps)));
-  }
-
-  public VersionRootBuilder setVersionedDeps(String target, Constraint constraint) {
-    return setVersionedDeps(
-        new AbstractMap.SimpleEntry<>(
-            BuildTargetFactory.newInstance(target), Optional.of(constraint)));
-  }
-
   @RuleArg
   interface AbstractVersionRootDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<String> getVersionUniverse();
-
-    @Value.NaturalOrder
-    ImmutableSortedMap<BuildTarget, Optional<Constraint>> getVersionedDeps();
   }
 
   public static class VersionRootDescription implements VersionRoot<VersionRootDescriptionArg> {

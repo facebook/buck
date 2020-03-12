@@ -20,9 +20,6 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
-import com.facebook.buck.rules.coercer.ParamInfo;
-import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.util.Optional;
 
@@ -45,20 +42,7 @@ class TargetGraphVersionTransformations {
     return TargetNodes.castArg(node, VersionedAliasDescriptionArg.class);
   }
 
-  @SuppressWarnings("unchecked")
-  public static ImmutableMap<BuildTarget, Optional<Constraint>> getVersionedDeps(
-      TypeCoercerFactory typeCoercerFactory, TargetNode<?> node) {
-    ConstructorArg constructorArg = node.getConstructorArg();
-    ParamInfo<?> versionedDepsParam =
-        typeCoercerFactory.paramInfos(constructorArg).get("versioned_deps");
-    if (versionedDepsParam == null) {
-      return ImmutableMap.of();
-    }
-    return (ImmutableMap<BuildTarget, Optional<Constraint>>) versionedDepsParam.get(constructorArg);
-  }
-
-  public static <A extends ConstructorArg> Iterable<BuildTarget> getDeps(
-      TypeCoercerFactory typeCoercerFactory, TargetNode<A> node) {
+  public static <A extends ConstructorArg> Iterable<BuildTarget> getDeps(TargetNode<A> node) {
     return Iterables.concat(
         node.getDeclaredDeps(),
         node.getExtraDeps(),
@@ -67,7 +51,6 @@ class TargetGraphVersionTransformations {
         // at build time, we have to include them here as well.
         // TODO(buck-team): consider adding a separate field to target node to avoid potential
         // confusion.
-        node.getTargetGraphOnlyDeps(),
-        getVersionedDeps(typeCoercerFactory, node).keySet());
+        node.getTargetGraphOnlyDeps());
   }
 }
