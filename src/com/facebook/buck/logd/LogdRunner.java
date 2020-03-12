@@ -16,14 +16,17 @@
 
 package com.facebook.buck.logd;
 
+import com.facebook.buck.logd.client.LogDaemonClient;
 import com.facebook.buck.logd.client.LogdClient;
 import com.facebook.buck.util.BgProcessKiller;
+import com.google.common.annotations.VisibleForTesting;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -32,26 +35,22 @@ import org.apache.logging.log4j.Logger;
 public class LogdRunner implements AutoCloseable {
   private static final Logger LOG = LogManager.getLogger();
   private static final int LOGD_PROCESS_TIMEOUT_MS = 500;
-
-  private ProcessBuilder processBuilder;
-  private Process logdProcess;
-
-  private final boolean isLogdEnabled;
-  private int logdServerPort;
-
   private static final Path PATH_TO_LOGD_PEX =
       Paths.get(
           System.getProperty(
               "buck.path_to_logd_pex", "src/com/facebook/buck/logd/resources/logd.pex"));
 
+  private ProcessBuilder processBuilder;
+  private Process logdProcess;
+  private LogDaemonClient logdClient;
+
   /**
    * Constructor for LogdRunner.
    *
    * @param isLogdEnabled determines whether LogD is used. If set to false, LogdRunner does nothing.
-   * @throws IOException
+   * @throws IOException if logd.pex fails to run
    */
   public LogdRunner(boolean isLogdEnabled) throws IOException {
-    this.isLogdEnabled = isLogdEnabled;
     if (isLogdEnabled) {
       this.processBuilder = new ProcessBuilder(PATH_TO_LOGD_PEX.toString());
       this.processBuilder.redirectErrorStream(true);
@@ -66,27 +65,40 @@ public class LogdRunner implements AutoCloseable {
    */
   private void start() throws IOException {
     LOG.info("Running logd.pex...");
-    logdProcess = BgProcessKiller.startProcess(processBuilder);
+    logdProcess = startProcess();
 
     try (BufferedReader bufferedReader =
         new BufferedReader(
             new InputStreamReader(logdProcess.getInputStream(), StandardCharsets.UTF_8))) {
-      logdServerPort = Integer.parseInt(bufferedReader.readLine());
+      int logdServerPort = Integer.parseInt(bufferedReader.readLine());
+      logdClient = createLogdClient(logdServerPort);
     } catch (Exception e) {
       throw new IOException("Failed to read port info from running logd.pex", e);
     }
   }
 
+  @VisibleForTesting
+  Process startProcess() throws IOException {
+    return BgProcessKiller.startProcess(processBuilder);
+  }
+
+  @VisibleForTesting
+  LogDaemonClient createLogdClient(int port) {
+    return new LogdClient(port);
+  }
+
   @Override
-  public void close() throws Exception {
-    if (isLogdEnabled) {
+  public void close() {
+    if (getLogdClient().isPresent()) {
       LOG.info("Shutting down LogD...");
-      LogdClient logdClient = new LogdClient(logdServerPort);
       logdClient.requestLogdServerShutdown();
       logdClient.shutdown();
 
       try {
         logdProcess.waitFor(LOGD_PROCESS_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+      } catch (InterruptedException e) {
+        LOG.info("LogD process got interrupted...", e);
+        Thread.currentThread().interrupt();
       } finally {
         logdProcess.destroy();
       }
@@ -94,11 +106,11 @@ public class LogdRunner implements AutoCloseable {
   }
 
   /**
-   * Returns the port on which LogD Server is listening.
+   * Returns the logdClient connected to LogD at {@code logdServerPort}
    *
-   * @return the port number on which LogD Server is listening.
+   * @return Returns the logdClient connected to LogD at {@code logdServerPort}
    */
-  public int getLogdServerPort() {
-    return logdServerPort;
+  public Optional<LogDaemonClient> getLogdClient() {
+    return Optional.ofNullable(logdClient);
   }
 }
