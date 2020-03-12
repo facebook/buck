@@ -16,15 +16,25 @@
 
 package com.facebook.buck.skylark.parser.context;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
+import com.google.common.base.Preconditions;
 
 /** Rule representation internal to Starlark parser. */
 @BuckStyleValue
 public abstract class RecordedRule {
+  public abstract ForwardRelativePath getBasePath();
+
+  public abstract String getBuckType();
+
   public abstract TwoArraysImmutableHashMap<String, Object> getRawRule();
 
-  public static RecordedRule of(TwoArraysImmutableHashMap<String, Object> args) {
-    return ImmutableRecordedRule.ofImpl(args);
+  public static RecordedRule of(
+      ForwardRelativePath basePath,
+      String buckType,
+      TwoArraysImmutableHashMap<String, Object> args) {
+    Preconditions.checkArgument(!buckType.isEmpty());
+    return ImmutableRecordedRule.ofImpl(basePath, buckType, args);
   }
 }

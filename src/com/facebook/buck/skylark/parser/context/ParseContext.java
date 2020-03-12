@@ -85,7 +85,8 @@ public class ParseContext {
       throw new EvalException(
           ast.getLocation(),
           String.format(
-              "Cannot register rule %s with content %s again.", name, rawRule.getRawRule()));
+              "Cannot register rule %s:%s of type %s with content %s again.",
+              rawRule.getBasePath(), name, rawRule.getBuckType(), rawRule.getRawRule()));
     }
     rawRules.put(name, rawRule);
   }

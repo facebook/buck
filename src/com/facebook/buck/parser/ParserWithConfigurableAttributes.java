@@ -183,6 +183,11 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         targetNode.getParseDeps().stream()
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()));
+    convertedAttributes.put(
+        InternalTargetAttributeNames.BASE_PATH,
+        targetNode.getBuildTarget().getBaseName().getPath().toString());
+    convertedAttributes.put(
+        InternalTargetAttributeNames.BUCK_TYPE, targetNode.getRuleType().getName());
     return convertedAttributes;
   }
 

@@ -26,6 +26,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -635,10 +636,10 @@ public class SkylarkUserDefinedRulesParserTest {
         ImmutableMap.of(
             "target1",
             RawTargetNode.copyOf(
+                ForwardRelativePath.of("subdir"),
+                "//subdir:foo.bzl:some_rule",
                 ImmutableMap.<String, Object>builder()
                     .put("name", "target1")
-                    .put("buck.base_path", "subdir")
-                    .put("buck.type", "//subdir:foo.bzl:some_rule")
                     .put("attr1", 3)
                     .put("attr2", 2)
                     .put("licenses", ImmutableSortedSet.of())
@@ -666,10 +667,10 @@ public class SkylarkUserDefinedRulesParserTest {
         ImmutableMap.of(
             "target1",
             RawTargetNode.copyOf(
+                ForwardRelativePath.of("subdir"),
+                "//subdir:foo.bzl:some_rule",
                 ImmutableMap.<String, Object>builder()
                     .put("name", "target1")
-                    .put("buck.base_path", "subdir")
-                    .put("buck.type", "//subdir:foo.bzl:some_rule")
                     .put("attr1", 3)
                     .put("attr2", 2)
                     .put("licenses", ImmutableSortedSet.of())
@@ -679,10 +680,10 @@ public class SkylarkUserDefinedRulesParserTest {
                     .build()),
             "target2",
             RawTargetNode.copyOf(
+                ForwardRelativePath.of("subdir"),
+                "//subdir:foo.bzl:some_rule",
                 ImmutableMap.<String, Object>builder()
                     .put("name", "target2")
-                    .put("buck.base_path", "subdir")
-                    .put("buck.type", "//subdir:foo.bzl:some_rule")
                     .put("attr1", 4)
                     .put("attr2", 5)
                     .put("licenses", ImmutableSortedSet.of())

@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanPathEvent;
@@ -105,9 +106,11 @@ public class BuildFileManifestCacheTest {
     ImmutableMap<String, RawTargetNode> targets =
         ImmutableMap.of(
             "target1",
-            RawTargetNode.copyOf(ImmutableMap.of("key1", "val1")),
+            RawTargetNode.copyOf(
+                ForwardRelativePath.EMPTY, "java_library", ImmutableMap.of("key1", "val1")),
             "target2",
-            RawTargetNode.copyOf(ImmutableMap.of("key2", 2)));
+            RawTargetNode.copyOf(
+                ForwardRelativePath.EMPTY, "java_library", ImmutableMap.of("key2", 2)));
     ImmutableSortedSet<String> includes =
         ImmutableSortedSet.of(includesFolder.resolve("include1.bzl").toString());
     ImmutableMap<String, Object> configs = ImmutableMap.of("config1", "cval1");

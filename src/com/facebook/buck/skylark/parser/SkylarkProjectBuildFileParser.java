@@ -151,6 +151,8 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
           rawRules.mapValues(
               (k, r) ->
                   RawTargetNode.of(
+                      r.getBasePath(),
+                      r.getBuckType(),
                       (TwoArraysImmutableHashMap<String, Object>)
                           getBuildFileManifestPojoizer().convertToPojo(r.getRawRule())));
 
@@ -245,8 +247,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   public void loadExtensionsForUserDefinedRules(AbsPath buildFile, BuildFileManifest manifest) {
     ImmutableList<SkylarkImport> extensionsToLoad =
         manifest.getTargets().values().stream()
-            .map(
-                props -> UserDefinedRuleNames.importFromIdentifier((String) props.get("buck.type")))
+            .map(props -> UserDefinedRuleNames.importFromIdentifier(props.getBuckType()))
             .filter(Objects::nonNull)
             .distinct()
             .collect(ImmutableList.toImmutableList());

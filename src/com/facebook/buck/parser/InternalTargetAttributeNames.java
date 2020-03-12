@@ -22,6 +22,9 @@ public class InternalTargetAttributeNames {
   /** Location of the target relative to the root of the repository */
   public static final String BASE_PATH = "buck.base_path";
 
+  /** Rule type. */
+  public static final String BUCK_TYPE = "buck.type";
+
   /** All the dependencies of a target. */
   public static final String DIRECT_DEPENDENCIES = "buck.direct_dependencies";
 

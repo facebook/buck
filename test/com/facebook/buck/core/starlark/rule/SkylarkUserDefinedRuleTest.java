@@ -268,11 +268,7 @@ public class SkylarkUserDefinedRuleTest {
       throws EvalException, LabelSyntaxException, InterruptedException {
     // TODO: Add visibility when that's added to implicit params
     ImmutableMap<String, AttributeHolder> params = ImmutableMap.of();
-    ImmutableMap<String, Object> expected =
-        ImmutableMap.of(
-            "buck.base_path", "some_package/subdir",
-            "buck.type", "@foo//bar:extension.bzl:baz_rule",
-            "name", "some_rule_name");
+    ImmutableMap<String, Object> expected = ImmutableMap.of("name", "some_rule_name");
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
@@ -298,6 +294,8 @@ public class SkylarkUserDefinedRuleTest {
 
       assertEquals(Runtime.NONE, res);
       assertEquals(1, rules.size());
+      assertEquals("@foo//bar:extension.bzl:baz_rule", rules.get("some_rule_name").getBuckType());
+      assertEquals("some_package/subdir", rules.get("some_rule_name").getBasePath().toString());
       assertEquals(expected, rules.get("some_rule_name").getRawRule());
     }
   }
@@ -313,8 +311,6 @@ public class SkylarkUserDefinedRuleTest {
             "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
     ImmutableMap<String, Object> expected =
         ImmutableMap.<String, Object>builder()
-            .put("buck.base_path", "some_package/subdir")
-            .put("buck.type", "@foo//bar:extension.bzl:baz_rule")
             .put("name", "some_rule_name")
             .put("arg1", "some string")
             .put("arg2", "arg2_val")
@@ -349,6 +345,8 @@ public class SkylarkUserDefinedRuleTest {
 
       assertEquals(Runtime.NONE, res);
       assertEquals(1, rules.size());
+      assertEquals("@foo//bar:extension.bzl:baz_rule", rules.get("some_rule_name").getBuckType());
+      assertEquals("some_package/subdir", rules.get("some_rule_name").getBasePath().toString());
       assertEquals(expected, rules.get("some_rule_name").getRawRule());
     }
   }
@@ -435,8 +433,6 @@ public class SkylarkUserDefinedRuleTest {
             "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
     ImmutableMap<String, Object> expected =
         ImmutableMap.<String, Object>builder()
-            .put("buck.base_path", "some_package/subdir")
-            .put("buck.type", "@foo//bar:extension.bzl:baz_rule")
             .put("name", "some_rule_name")
             .put("arg1", "arg1_val")
             .put("arg2", "arg2_val")
@@ -481,6 +477,8 @@ public class SkylarkUserDefinedRuleTest {
 
       assertEquals(Runtime.NONE, res);
       assertEquals(1, rules.size());
+      assertEquals("some_package/subdir", rules.get("some_rule_name").getBasePath().toString());
+      assertEquals("@foo//bar:extension.bzl:baz_rule", rules.get("some_rule_name").getBuckType());
       assertEquals(expected, rules.get("some_rule_name").getRawRule());
     }
   }

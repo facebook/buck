@@ -494,7 +494,7 @@ public class PythonDslProjectBuildFileParserTest {
 
     ImmutableMap<String, Object> returnedTarget =
         ImmutableMap.<String, Object>of(
-            "name", "bar", "buck.type", "//foo:udr.bzl:my_rule", "val", 5);
+            "name", "bar", "buck.type", "//foo:udr.bzl:my_rule", "val", 5, "buck.base_path", "foo");
 
     ImmutableList<String> extensionContents =
         ImmutableList.of(

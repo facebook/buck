@@ -537,22 +537,31 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     TwoArraysImmutableHashMap.Builder<String, RawTargetNode> builder =
         TwoArraysImmutableHashMap.builderWithExpectedSize(targets.size());
     targets.forEach(
-        target ->
-            builder.put(
-                (String) target.get("name"),
-                RawTargetNode.of(convertSelectableAttributes(target))));
+        target -> builder.put((String) target.get("name"), convertSelectableAttributes(target)));
     return builder.build();
   }
 
-  private static TwoArraysImmutableHashMap<String, Object> convertSelectableAttributes(
-      Map<String, Object> values) {
-    return values.entrySet().stream()
-        .collect(
-            TwoArraysImmutableHashMap.toMap(
-                Map.Entry::getKey,
-                e ->
-                    PythonDslProjectBuildFileParser.convertToSelectableAttributeIfNeeded(
-                        e.getValue())));
+  private static RawTargetNode convertSelectableAttributes(Map<String, Object> values) {
+    TwoArraysImmutableHashMap.Builder<String, Object> attrs = TwoArraysImmutableHashMap.builder();
+
+    ForwardRelativePath basePath = null;
+    String type = null;
+    for (Map.Entry<String, Object> entry : values.entrySet()) {
+      if (entry.getKey().equals(InternalTargetAttributeNames.BASE_PATH)) {
+        basePath = ForwardRelativePath.of((String) entry.getValue());
+      } else if (entry.getKey().equals(InternalTargetAttributeNames.BUCK_TYPE)) {
+        type = (String) entry.getValue();
+      } else {
+        attrs.put(
+            entry.getKey(),
+            PythonDslProjectBuildFileParser.convertToSelectableAttributeIfNeeded(entry.getValue()));
+      }
+    }
+
+    Preconditions.checkNotNull(type);
+    Preconditions.checkNotNull(basePath);
+
+    return RawTargetNode.of(basePath, type, attrs.build());
   }
 
   /**

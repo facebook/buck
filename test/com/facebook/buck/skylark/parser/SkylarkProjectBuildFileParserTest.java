@@ -146,7 +146,7 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(
         Type.STRING_LIST.convert(rule.get("visibility"), "PUBLIC"),
         equalTo(ImmutableList.of("PUBLIC")));
-    assertThat(rule.get("buck.base_path"), equalTo("src/test"));
+    assertThat(rule.getBasePath().toString(), equalTo("src/test"));
   }
 
   @Test
@@ -169,7 +169,7 @@ public class SkylarkProjectBuildFileParserTest {
       assertThat(
           event.getMessage(),
           is(
-              "Cannot register rule guava with content {buck.base_path=src, buck.type=prebuilt_jar, name=guava, binaryJar=guava.jar} again."));
+              "Cannot register rule src:guava of type prebuilt_jar with content {name=guava, binaryJar=guava.jar} again."));
     }
   }
 

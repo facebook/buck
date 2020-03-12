@@ -38,22 +38,21 @@ public class UnflavoredBuildTargetFactory {
    */
   public static UnflavoredBuildTarget createFromRawNode(
       Path cellRoot, CanonicalCellName cellName, RawTargetNode map, Path buildFilePath) {
-    @Nullable String basePath = (String) map.get(InternalTargetAttributeNames.BASE_PATH);
+    ForwardRelativePath basePath = map.getBasePath();
     @Nullable String name = (String) map.get("name");
-    if (basePath == null || name == null) {
+    if (name == null) {
       throw new IllegalStateException(
           String.format(
               "Attempting to parse build target from malformed raw data in %s: %s.",
               buildFilePath, Joiner.on(",").withKeyValueSeparator("->").join(map.getAttrs())));
     }
     Path otherBasePath = cellRoot.relativize(MorePaths.getParentOrEmpty(buildFilePath));
-    if (!otherBasePath.equals(otherBasePath.getFileSystem().getPath(basePath))) {
+    if (!otherBasePath.equals(basePath.toPath(otherBasePath.getFileSystem()))) {
       throw new IllegalStateException(
           String.format(
               "Raw data claims to come from [%s], but we tried rooting it at [%s].",
               basePath, otherBasePath));
     }
-    return UnflavoredBuildTarget.of(
-        CellRelativePath.of(cellName, ForwardRelativePath.of(basePath)), name);
+    return UnflavoredBuildTarget.of(CellRelativePath.of(cellName, basePath), name);
   }
 }

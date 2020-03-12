@@ -19,6 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -58,7 +59,7 @@ public class UnflavoredBuildTargetFactoryTest {
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
-        RawTargetNode.copyOf(malformedMap),
+        RawTargetNode.copyOf(ForwardRelativePath.of(base_path), "java_library", malformedMap),
         buildFilePath);
   }
 
@@ -74,7 +75,7 @@ public class UnflavoredBuildTargetFactoryTest {
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
-        RawTargetNode.copyOf(malformedMap),
+        RawTargetNode.copyOf(ForwardRelativePath.EMPTY, "java_library", malformedMap),
         buildFilePath);
   }
 
@@ -93,7 +94,7 @@ public class UnflavoredBuildTargetFactoryTest {
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
-        RawTargetNode.copyOf(malformedMap),
+        RawTargetNode.copyOf(ForwardRelativePath.EMPTY, "java_library", malformedMap),
         buildFilePath);
   }
 }

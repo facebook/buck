@@ -38,6 +38,7 @@ import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.select.TestSelectableResolver;
@@ -88,10 +89,6 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
         ImmutableMap.of(
             "name",
             "target1",
-            "buck.type",
-            "java_library",
-            "buck.base_path",
-            "",
             "deps",
             ImmutableList.of(UnconfiguredBuildTargetParser.parse("//:target2")));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
@@ -110,8 +107,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             Optional.empty(),
             ImmutableList.of());
 
-    ImmutableMap<String, Object> rawAttributes2 =
-        ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "");
+    ImmutableMap<String, Object> rawAttributes2 = ImmutableMap.of("name", "target2");
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         UnconfiguredBuildTarget.of(
             cell.getRootCell().getCanonicalName(),
@@ -132,9 +128,15 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
         BuildFileManifest.of(
             TwoArraysImmutableHashMap.of(
                 "target1",
-                RawTargetNode.of(TwoArraysImmutableHashMap.copyOf(rawAttributes1)),
+                RawTargetNode.of(
+                    ForwardRelativePath.EMPTY,
+                    "java_library",
+                    TwoArraysImmutableHashMap.copyOf(rawAttributes1)),
                 "target2",
-                RawTargetNode.of(TwoArraysImmutableHashMap.copyOf(rawAttributes2))),
+                RawTargetNode.of(
+                    ForwardRelativePath.EMPTY,
+                    "java_library",
+                    TwoArraysImmutableHashMap.copyOf(rawAttributes2))),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),

@@ -19,6 +19,7 @@ package com.facebook.buck.skylark.parser;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
@@ -78,16 +79,14 @@ public class RuleFunctionFactory {
       public Runtime.NoneType invoke(
           Map<String, Object> kwargs, FuncallExpression ast, Environment env) throws EvalException {
         ParseContext parseContext = ParseContext.getParseContext(env, ast);
+        String basePath =
+            parseContext
+                .getPackageContext()
+                .getPackageIdentifier()
+                .getPackageFragment()
+                .getPathString();
         TwoArraysImmutableHashMap.Builder<String, Object> builder =
-            TwoArraysImmutableHashMap.<String, Object>builder()
-                .put(
-                    "buck.base_path",
-                    parseContext
-                        .getPackageContext()
-                        .getPackageIdentifier()
-                        .getPackageFragment()
-                        .getPathString())
-                .put("buck.type", name);
+            TwoArraysImmutableHashMap.builder();
         ImmutableMap<String, ParamInfo<?>> allParamInfo =
             typeCoercerFactory
                 .getNativeConstructorArgDescriptor(
@@ -95,7 +94,8 @@ public class RuleFunctionFactory {
                 .getParamInfos();
         populateAttributes(kwargs, builder, allParamInfo);
         throwOnMissingRequiredAttribute(kwargs, allParamInfo, getName(), ast);
-        parseContext.recordRule(RecordedRule.of(builder.build()), ast);
+        parseContext.recordRule(
+            RecordedRule.of(ForwardRelativePath.of(basePath), name, builder.build()), ast);
         return Runtime.NONE;
       }
     };

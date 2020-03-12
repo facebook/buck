@@ -23,7 +23,6 @@ import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.RawTargetNode;
-import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -161,17 +160,13 @@ public class AuditRulesCommand extends AbstractCommand {
       TwoArraysImmutableHashMap<String, RawTargetNode> rawRules,
       Predicate<String> includeType) {
     rawRules.entrySet().stream()
-        .filter(
-            rawRule -> {
-              String type = (String) rawRule.getValue().get(BuckPyFunction.TYPE_PROPERTY_NAME);
-              return includeType.test(type);
-            })
+        .filter(rawRule -> includeType.test(rawRule.getValue().getBuckType()))
         .sorted(Comparator.comparing(Map.Entry::getKey))
         .forEach(rawRule -> printRuleAsPythonToStdout(stdOut, rawRule.getValue()));
   }
 
   private static void printRuleAsPythonToStdout(PrintStream out, RawTargetNode rawRule) {
-    String type = (String) rawRule.get(BuckPyFunction.TYPE_PROPERTY_NAME);
+    String type = rawRule.getBuckType();
     out.printf("%s(\n", type);
 
     // The properties in the order they should be displayed for this rule.
@@ -184,8 +179,7 @@ public class AuditRulesCommand extends AbstractCommand {
     SortedSet<String> customProperties = new TreeSet<>();
     for (String key : rawRule.getAttrs().keySet()) {
       // Ignore keys that start with "buck.".
-      if (!(key.startsWith(BuckPyFunction.INTERNAL_PROPERTY_NAME_PREFIX)
-          || LAST_PROPERTIES.contains(key))) {
+      if (!LAST_PROPERTIES.contains(key)) {
         customProperties.add(key);
       }
     }

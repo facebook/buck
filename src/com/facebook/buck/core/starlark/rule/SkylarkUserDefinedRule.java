@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.starlark.rule;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -105,16 +106,13 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     Preconditions.checkArgument(
         names.size() == args.length, "Got different number of arguments than expected");
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
-    TwoArraysImmutableHashMap.Builder<String, Object> builder =
-        TwoArraysImmutableHashMap.<String, Object>builder()
-            .put(
-                "buck.base_path",
-                parseContext
-                    .getPackageContext()
-                    .getPackageIdentifier()
-                    .getPackageFragment()
-                    .getPathString())
-            .put("buck.type", this.getName());
+    String basePath =
+        parseContext
+            .getPackageContext()
+            .getPackageIdentifier()
+            .getPackageFragment()
+            .getPathString();
+    TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
     /**
      * We can iterate through linearly because the calling conventions of {@link BaseFunction} are
      * such that it makes an {@link Object} array with arguments in the same order as our signature
@@ -126,7 +124,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       builder.put(name, args[i]);
       i++;
     }
-    parseContext.recordRule(RecordedRule.of(builder.build()), ast);
+    parseContext.recordRule(
+        RecordedRule.of(ForwardRelativePath.of(basePath), this.getName(), builder.build()), ast);
     return Runtime.NONE;
   }
 

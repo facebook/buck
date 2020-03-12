@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.DaemonicCellState.Cache;
@@ -84,9 +85,9 @@ public class DaemonicCellStateTest {
             ImmutableMap.of(
                 target.getShortName(),
                 RawTargetNode.copyOf(
-                    ImmutableMap.of(
-                        "name", target.getShortName(),
-                        "buck.base_path", target.getCellRelativeBasePath().getPath().toString())))),
+                    ForwardRelativePath.of(target.getCellRelativeBasePath().getPath().toString()),
+                    "java_library",
+                    ImmutableMap.of("name", target.getShortName())))),
         ImmutableSet.of(),
         ImmutableMap.of());
   }
@@ -170,9 +171,9 @@ public class DaemonicCellStateTest {
                 "target",
                 // Forms the target "//path/to:target"
                 RawTargetNode.copyOf(
-                    ImmutableMap.of(
-                        "buck.base_path", "path/to",
-                        "name", "target")))),
+                    ForwardRelativePath.of("path/to"),
+                    "java_library",
+                    ImmutableMap.of("name", "target")))),
         ImmutableSet.of(),
         ImmutableMap.of());
     assertEquals("Still only one invalidated node", 1, childState.invalidatePath(targetPath));

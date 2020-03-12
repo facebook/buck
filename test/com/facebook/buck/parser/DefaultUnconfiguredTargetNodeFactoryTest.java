@@ -29,6 +29,7 @@ import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -84,9 +85,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
     ImmutableMap<String, Object> inputAttributes =
         ImmutableMap.<String, Object>builder()
-            .put("buck.type", "java_library")
             .put("name", "c")
-            .put("buck.base_path", "a/b")
             .put("deps", ImmutableList.of("//a/b:d", "//a/b:e"))
             .put(
                 "resources",
@@ -142,7 +141,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
             buildTarget,
             DependencyStack.root(),
-            RawTargetNode.copyOf(inputAttributes),
+            RawTargetNode.copyOf(ForwardRelativePath.of("a/b"), "java_library", inputAttributes),
             getPackage());
 
     assertEquals(

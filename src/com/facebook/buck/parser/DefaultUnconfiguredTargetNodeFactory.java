@@ -33,7 +33,6 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.api.RawTargetNode;
-import com.facebook.buck.parser.function.BuckPyFunction;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
@@ -50,7 +49,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -100,8 +98,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     DataTransferObjectDescriptor<?> constructorDescriptor =
         descriptor.dataTransferObjectDescriptor(typeCoercerFactory);
     for (Map.Entry<String, Object> attr : attrs.getAttrs().entrySet()) {
-      if (attr.getKey().startsWith("buck.")
-          || attr.getKey().equals(VisibilityAttributes.VISIBILITY)
+      if (attr.getKey().equals(VisibilityAttributes.VISIBILITY)
           || attr.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
         continue;
       }
@@ -269,8 +266,6 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
 
   private static RuleDescriptor<?> parseRuleTypeFromRawRule(
       KnownRuleTypes knownRuleTypes, RawTargetNode attributes) {
-    String type =
-        (String) Objects.requireNonNull(attributes.get(BuckPyFunction.TYPE_PROPERTY_NAME));
-    return knownRuleTypes.getDescriptorByName(type);
+    return knownRuleTypes.getDescriptorByName(attributes.getBuckType());
   }
 }

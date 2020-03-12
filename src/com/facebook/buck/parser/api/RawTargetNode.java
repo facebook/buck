@@ -16,14 +16,20 @@
 
 package com.facebook.buck.parser.api;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
+import com.google.common.base.Preconditions;
 import java.util.Map;
 import javax.annotation.Nullable;
 
 /** What we got from Starlark/Python interpreter. */
 @BuckStyleValue
 public abstract class RawTargetNode {
+  public abstract ForwardRelativePath getBasePath();
+
+  public abstract String getBuckType();
+
   public abstract TwoArraysImmutableHashMap<String, Object> getAttrs();
 
   @Nullable
@@ -31,11 +37,16 @@ public abstract class RawTargetNode {
     return getAttrs().get(name);
   }
 
-  public static RawTargetNode of(TwoArraysImmutableHashMap<String, Object> attrs) {
-    return ImmutableRawTargetNode.ofImpl(attrs);
+  public static RawTargetNode of(
+      ForwardRelativePath basePath,
+      String buckType,
+      TwoArraysImmutableHashMap<String, Object> attrs) {
+    Preconditions.checkArgument(!buckType.isEmpty());
+    return ImmutableRawTargetNode.ofImpl(basePath, buckType, attrs);
   }
 
-  public static RawTargetNode copyOf(Map<String, Object> attrs) {
-    return of(TwoArraysImmutableHashMap.copyOf(attrs));
+  public static RawTargetNode copyOf(
+      ForwardRelativePath basePath, String buckType, Map<String, Object> attrs) {
+    return of(basePath, buckType, TwoArraysImmutableHashMap.copyOf(attrs));
   }
 }
