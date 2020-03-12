@@ -74,7 +74,6 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   private final TagSetCounter secondLevelCacheHitTypes;
   private final SamplingCounter secondLevelCacheHitBytes;
   private final IntegerCounter secondLevelCacheMisses;
-  private final SamplingCounter secondLevelHashComputationTimeMs;
 
   public TwoLevelArtifactCacheDecorator(
       ArtifactCache delegate,
@@ -108,16 +107,10 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
         new SamplingCounter(COUNTER_CATEGORY, "second_level_cache_hit_bytes", ImmutableMap.of());
     secondLevelCacheMisses =
         new IntegerCounter(COUNTER_CATEGORY, "second_level_cache_misses", ImmutableMap.of());
-    secondLevelHashComputationTimeMs =
-        new SamplingCounter(
-            COUNTER_CATEGORY, "second_level_hash_computation_time_ms", ImmutableMap.of());
     buckEventBus.post(
         new CounterRegistry.AsyncCounterRegistrationEvent(
             ImmutableList.of(
-                secondLevelCacheHitTypes,
-                secondLevelCacheHitBytes,
-                secondLevelCacheMisses,
-                secondLevelHashComputationTimeMs)));
+                secondLevelCacheHitTypes, secondLevelCacheHitBytes, secondLevelCacheMisses)));
   }
 
   @Override
