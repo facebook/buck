@@ -19,10 +19,25 @@ package com.facebook.buck.logd.client;
 import com.facebook.buck.logd.LogDaemonException;
 import com.facebook.buck.logd.proto.LogMessage;
 import com.facebook.buck.logd.proto.LogType;
+import io.grpc.ManagedChannel;
 import io.grpc.stub.StreamObserver;
 
 /** Interface for LogD Client. */
 public interface LogDaemonClient {
+
+  /**
+   * Returns client grpc channel
+   *
+   * @return client grpc channel
+   */
+  ManagedChannel getChannel();
+
+  /**
+   * Returns port to which channel is connected
+   *
+   * @return port to which channel is connected
+   */
+  int getPort();
 
   /**
    * Client calls this method to request LogD to create a log file in file-system and/or storage.

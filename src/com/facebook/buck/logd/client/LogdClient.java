@@ -44,6 +44,7 @@ public class LogdClient implements LogDaemonClient {
   private static final int TIME_OUT_SECONDS = 5;
   private static final String LOCAL_HOST = "localhost";
 
+  private int port;
   private final ManagedChannel channel;
   private final LogdServiceGrpc.LogdServiceBlockingStub blockingStub;
   private final LogdServiceGrpc.LogdServiceStub asyncStub;
@@ -83,6 +84,7 @@ public class LogdClient implements LogDaemonClient {
    */
   public LogdClient(String host, int port, StreamObserverFactory streamObserverFactory) {
     this(ManagedChannelBuilder.forAddress(host, port).usePlaintext(), streamObserverFactory);
+    this.port = port;
     LOG.info("Channel established to {} at port {}", host, port);
   }
 
@@ -98,6 +100,16 @@ public class LogdClient implements LogDaemonClient {
     blockingStub = LogdServiceGrpc.newBlockingStub(channel);
     asyncStub = LogdServiceGrpc.newStub(channel);
     this.streamObserverFactory = streamObserverFactory;
+  }
+
+  @Override
+  public ManagedChannel getChannel() {
+    return channel;
+  }
+
+  @Override
+  public int getPort() {
+    return port;
   }
 
   @Override
