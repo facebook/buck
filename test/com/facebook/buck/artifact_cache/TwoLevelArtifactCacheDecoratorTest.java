@@ -58,7 +58,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs),
                 fs,
                 eventBus,
                 /* performTwoLevelStores */ true,
@@ -97,7 +97,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs),
                 fs,
                 eventBus,
                 /* performTwoLevelStores */ true,
@@ -125,7 +125,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs),
                 fs,
                 eventBus,
                 /* performTwoLevelStores */ true,
@@ -167,7 +167,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs),
                 fs,
                 eventBus,
                 /* performTwoLevelStores */ true,
@@ -208,7 +208,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs),
                 fs,
                 eventBus,
                 /* performTwoLevelStores */ true,
@@ -217,7 +217,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
         TwoLevelArtifactCacheDecorator twoLevelCacheNoStore =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus),
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs),
                 fs,
                 eventBus,
                 /* performTwoLevelStores */ false,
@@ -246,7 +246,7 @@ public class TwoLevelArtifactCacheDecoratorTest {
         TwoLevelArtifactCacheDecorator twoLevelCache =
             new TwoLevelArtifactCacheDecorator(
                 inMemoryArtifactCache,
-                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs, eventBus) {
+                new SimpleSecondLevelArtifactCache(inMemoryArtifactCache, fs) {
                   @Override
                   public ListenableFuture<CacheResult> fetchAsync(
                       BuildTarget target, String contentKey, LazyPath output) {

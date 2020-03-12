@@ -749,6 +749,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     RemoteExecutionStrategyConfig strategyConfig =
         buckConfig.getDelegate().getView(RemoteExecutionConfig.class).getStrategyConfig();
 
+    Optional<ContentAddressedStorageClient> casClient = Optional.empty();
     if (buckConfig.getArtifactCacheModes().contains(ArtifactCacheMode.hybrid_thrift_grpc)
         && buckConfig.getCasHost().isPresent()
         && buckConfig.getClientTlsCertificate().isPresent()
@@ -773,7 +774,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                         .build())
                 .build();
 
-        Optional<ContentAddressedStorageClient> casClient =
+        casClient =
             Optional.of(
                 new GrpcContentAddressableStorageClient(
                     ContentAddressableStorageGrpc.newFutureStub(channel),
@@ -784,23 +785,18 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                     buckEventBus,
                     metadata,
                     strategyConfig.getOutputMaterializationThreads()));
-
-        return new HybridCASSecondLevelArtifactCache(
-            cache,
-            projectFilesystem,
-            buckEventBus,
-            casClient,
-            buckConfig.getEnableWriteToCas(),
-            buckConfig.getCasWritePercentage());
       } catch (SSLException e) {
-        LOG.error(
-            e,
-            "Exception when creating GRPC SSL context, falling back to SimpleSecondLevelArtifactCache.");
-        return new SimpleSecondLevelArtifactCache(cache, projectFilesystem, buckEventBus);
+        LOG.error(e, "Exception creating GRPC channel, not enabling CAS client.");
       }
     }
 
-    return new SimpleSecondLevelArtifactCache(cache, projectFilesystem, buckEventBus);
+    return new HybridCASSecondLevelArtifactCache(
+        cache,
+        projectFilesystem,
+        buckEventBus,
+        casClient,
+        buckConfig.getEnableWriteToCas(),
+        buckConfig.getCasWritePercentage());
   }
 
   private static String stripNonAscii(String str) {

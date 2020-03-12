@@ -18,14 +18,9 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.counters.CounterRegistry;
-import com.facebook.buck.counters.SamplingCounter;
-import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -40,21 +35,10 @@ import javax.annotation.Nullable;
 public class SimpleSecondLevelArtifactCache implements SecondLevelArtifactCache {
   private final ArtifactCache delegate;
   private final ProjectFilesystem projectFilesystem;
-  private final SamplingCounter secondLevelHashComputationTimeMs;
 
-  SimpleSecondLevelArtifactCache(
-      ArtifactCache delegate, ProjectFilesystem projectFilesystem, BuckEventBus buckEventBus) {
+  SimpleSecondLevelArtifactCache(ArtifactCache delegate, ProjectFilesystem projectFilesystem) {
     this.projectFilesystem = projectFilesystem;
     this.delegate = delegate;
-
-    secondLevelHashComputationTimeMs =
-        new SamplingCounter(
-            TwoLevelArtifactCacheDecorator.COUNTER_CATEGORY,
-            "second_level_hash_computation_time_ms",
-            ImmutableMap.of());
-    buckEventBus.post(
-        new CounterRegistry.AsyncCounterRegistrationEvent(
-            ImmutableList.of(secondLevelHashComputationTimeMs)));
   }
 
   @Override
@@ -89,11 +73,7 @@ public class SimpleSecondLevelArtifactCache implements SecondLevelArtifactCache 
 
   @Nonnull
   private String computeSha1(BorrowablePath output) throws IOException {
-    long hashComputationStart = System.currentTimeMillis();
-    String hashCode = projectFilesystem.computeSha1(output.getPath()) + "2c00";
-    long hashComputationEnd = System.currentTimeMillis();
-    secondLevelHashComputationTimeMs.addSample(hashComputationEnd - hashComputationStart);
-    return hashCode;
+    return projectFilesystem.computeSha1(output.getPath()) + "2c00";
   }
 
   @Override
