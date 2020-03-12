@@ -9,6 +9,7 @@ java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//test/com/facebook/buck/util:testutil",
         "//third-party/java/easymock:easymock",
         "//third-party/java/grpc:grpc-testing",
         "//third-party/java/junit:junit",
