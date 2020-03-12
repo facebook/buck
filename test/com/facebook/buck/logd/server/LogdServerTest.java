@@ -148,11 +148,9 @@ public class LogdServerTest {
 
     requestObserver.onNext(logMessage1);
     expected.append(logMessage1.getLogMessage());
-    expected.append(System.lineSeparator());
 
     requestObserver.onNext(logMessage2);
     expected.append(logMessage2.getLogMessage());
-    expected.append(System.lineSeparator());
 
     // set expectations before client closes stream
     responseObserver.onNext(capture(statusCaptor));

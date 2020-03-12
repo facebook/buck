@@ -125,12 +125,14 @@ public class LogdServer implements LogDaemonServer {
         LOG.info("Shutdown interrupted. Shutting down LogD server forcefully...");
       }
     }
+
+    service.closeAllStreams();
   }
 
   private static class LogdServiceImpl extends LogdServiceGrpc.LogdServiceImplBase {
-    private SettableFuture<Boolean> logdServiceFinished = SettableFuture.create();
-    private Map<Integer, BufferedWriter> logStreams = new ConcurrentHashMap<>();
-    private Map<Integer, String> fileIdToPath = new ConcurrentHashMap<>();
+    private final SettableFuture<Boolean> logdServiceFinished = SettableFuture.create();
+    private final Map<Integer, BufferedWriter> logStreams = new ConcurrentHashMap<>();
+    private final Map<Integer, String> fileIdToPath = new ConcurrentHashMap<>();
     private final LogFileIdGenerator logFileIdGenerator = new LogFileIdGenerator();
 
     /**
@@ -147,7 +149,7 @@ public class LogdServer implements LogDaemonServer {
         responseObserver.onNext(createFile(request));
         LOG.debug("Log file created at {}", logFilePath);
       } catch (LogDaemonException e) {
-        LOG.error("Failed to create log file at " + logFilePath, e);
+        LOG.error("Failed to create log file at {}", logFilePath, e);
         responseObserver.onError(e);
       }
 
@@ -179,7 +181,7 @@ public class LogdServer implements LogDaemonServer {
           try {
             appendLog(logId, logMessage.getLogMessage());
           } catch (IOException e) {
-            LOG.error("Failed to append log file at " + path, e);
+            LOG.error("Failed to append log file at {}", path, e);
             throw new LogDaemonException(e, "Failed to append log file at %s", path);
           }
         }
@@ -193,9 +195,10 @@ public class LogdServer implements LogDaemonServer {
         public void onCompleted() {
           // if client calls onCompleted and closes the stream
           // then close FileOutputStream of corresponding StreamObserver
-          String logFilePath = fileIdToPath.get(logId);
+          String logFilePath = fileIdToPath.remove(logId);
           try {
             logStreams.remove(logId).close();
+            LOG.info("LogD closed stream to log file at {}", logFilePath);
             responseObserver.onNext(
                 Status.newBuilder()
                     .setCode(ExitCode.SUCCESS.getCode())
@@ -210,6 +213,8 @@ public class LogdServer implements LogDaemonServer {
                     .build());
           }
 
+          // TODO(qahoang): silence warning where LogdStream fails to call onCompleted() before
+          // LogD server is shutdown
           responseObserver.onCompleted();
         }
       };
@@ -234,22 +239,23 @@ public class LogdServer implements LogDaemonServer {
         throws LogDaemonException {
       // TODO(qahoang): decide what to do with logType
       String filePath = createLogRequest.getLogFilePath();
-
       Path logFilePath = Paths.get(filePath);
 
       try {
         Files.createDirectories(logFilePath.getParent());
-        Files.createFile(logFilePath);
-        LOG.info("Created new file at {}", logFilePath.toString());
 
         int genFileId = logFileIdGenerator.generateFileId();
         fileIdToPath.put(genFileId, filePath);
-        logStreams.put(genFileId, Files.newBufferedWriter(logFilePath, StandardOpenOption.APPEND));
+        logStreams.put(
+            genFileId,
+            Files.newBufferedWriter(
+                logFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND));
+        LOG.info("LogD opened new writer stream to {}", logFilePath.toString());
 
         return CreateLogResponse.newBuilder().setLogId(genFileId).build();
       } catch (IOException e) {
-        LOG.error("LogD failed to create a file at " + filePath, e);
-        throw new LogDaemonException(e, "LogD failed to create a file at %s", filePath);
+        LOG.error("LogD failed to open a writer stream to {}", filePath, e);
+        throw new LogDaemonException(e, "LogD failed to open a writer stream to %s", filePath);
       }
     }
 
@@ -259,9 +265,20 @@ public class LogdServer implements LogDaemonServer {
 
     private void appendLog(int fileId, String message) throws IOException {
       BufferedWriter writer = logStreams.get(fileId);
-
       writer.write(message);
-      writer.newLine();
+    }
+
+    private void closeAllStreams() {
+      for (Integer logFileId : logStreams.keySet()) {
+        String logFilePath = fileIdToPath.remove(logFileId);
+        BufferedWriter writer = logStreams.remove(logFileId);
+        try {
+          writer.close();
+          LOG.info("LogD closed stream to log file at {}", logFilePath);
+        } catch (IOException e) {
+          LOG.error("LogD failed to close stream to log file at {}", logFilePath, e);
+        }
+      }
     }
   }
 }
