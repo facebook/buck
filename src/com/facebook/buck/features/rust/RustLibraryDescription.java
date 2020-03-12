@@ -306,7 +306,7 @@ public class RustLibraryDescription
                 allDeps.get(graphBuilder, rustPlatform.getCxxPlatform()),
                 args.getNamedDeps());
         SourcePath rlib = rule.getSourcePathToOutput();
-        return new RustLibraryArg(crate, rlib, direct, alias);
+        return RustLibraryArg.of(crate, rlib, direct, alias);
       }
 
       @Override

@@ -63,7 +63,7 @@ public class PrebuiltRustLibraryDescription
           RustPlatform rustPlatform,
           Linker.LinkableDepType depType,
           Optional<String> alias) {
-        return new RustLibraryArg(args.getCrate(), args.getRlib(), direct, alias);
+        return RustLibraryArg.of(args.getCrate(), args.getRlib(), direct, alias);
       }
 
       @Override

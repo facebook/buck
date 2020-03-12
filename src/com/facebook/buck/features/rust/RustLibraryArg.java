@@ -19,6 +19,7 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.HasSourcePath;
 import java.nio.file.Path;
@@ -26,28 +27,39 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /** Generate linker command line for Rust library when used as a dependency. */
-public class RustLibraryArg implements Arg, HasSourcePath {
-  @AddToRuleKey private final String crate;
-  @AddToRuleKey private final SourcePath rlib;
-  @AddToRuleKey private final boolean direct;
-  @AddToRuleKey private final Optional<String> alias;
+@BuckStyleValue
+public abstract class RustLibraryArg implements Arg, HasSourcePath {
+  @AddToRuleKey
+  public abstract String getCrate();
 
-  RustLibraryArg(String crate, SourcePath rlib, boolean direct, Optional<String> alias) {
-    this.crate = crate;
-    this.rlib = rlib;
-    this.direct = direct;
-    this.alias = alias;
+  @AddToRuleKey
+  public abstract SourcePath getRlib();
+
+  @AddToRuleKey
+  public abstract boolean getDirect();
+
+  @AddToRuleKey
+  public abstract Optional<String> getAlias();
+
+  public static RustLibraryArg of(
+      String crate, SourcePath rlib, boolean direct, Optional<String> alias) {
+    return ImmutableRustLibraryArg.ofImpl(crate, rlib, direct, alias);
+  }
+
+  @Override
+  public SourcePath getPath() {
+    return getRlib();
   }
 
   @Override
   public void appendToCommandLine(
       Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     // Use absolute path to make sure cross-cell references work.
-    Path path = pathResolver.getAbsolutePath(rlib);
+    Path path = pathResolver.getAbsolutePath(getRlib());
     // NOTE: each of these logical args must be put on the command line as a single parameter
     // (otherwise dedup might just remove one piece of it)
-    if (direct) {
-      consumer.accept(String.format("--extern=%s=%s", alias.orElse(crate), path));
+    if (getDirect()) {
+      consumer.accept(String.format("--extern=%s=%s", getAlias().orElse(getCrate()), path));
     } else {
       consumer.accept(String.format("-Ldependency=%s", path.getParent()));
     }
@@ -55,40 +67,6 @@ public class RustLibraryArg implements Arg, HasSourcePath {
 
   @Override
   public String toString() {
-    return crate;
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-
-    RustLibraryArg that = (RustLibraryArg) o;
-
-    if (direct != that.direct) {
-      return false;
-    }
-    if (!crate.equals(that.crate)) {
-      return false;
-    }
-    return rlib.equals(that.rlib);
-  }
-
-  @Override
-  public int hashCode() {
-    int result = crate.hashCode();
-    result = 31 * result + crate.hashCode();
-    result = 31 * result + rlib.hashCode();
-    result = 31 * result + (direct ? 1 : 0);
-    return result;
-  }
-
-  @Override
-  public SourcePath getPath() {
-    return rlib;
+    return getCrate();
   }
 }
