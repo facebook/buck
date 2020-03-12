@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
  * An ArtifactCache-lite meant to be used by the TwoLevelArtifactCacheDecorator for second-level
  * artifact caching.
  */
-public interface SecondLevelArtifactCache {
+public interface SecondLevelArtifactCache extends AutoCloseable {
   /**
    * Fetch a cached artifact, save the artifact to path specified by output, and return true on
    * success.
@@ -52,4 +52,7 @@ public interface SecondLevelArtifactCache {
    * @return some content-key to be used for fetching.
    */
   ListenableFuture<String> storeAsync(ArtifactInfo info, BorrowablePath output);
+
+  @Override
+  void close();
 }

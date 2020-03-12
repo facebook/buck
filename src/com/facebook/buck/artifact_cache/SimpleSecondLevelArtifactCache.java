@@ -95,4 +95,9 @@ public class SimpleSecondLevelArtifactCache implements SecondLevelArtifactCache 
     secondLevelHashComputationTimeMs.addSample(hashComputationEnd - hashComputationStart);
     return hashCode;
   }
+
+  @Override
+  public void close() {
+    delegate.close();
+  }
 }

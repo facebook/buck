@@ -224,4 +224,9 @@ public class HybridCASSecondLevelArtifactCache implements SecondLevelArtifactCac
 
     return Digest.newBuilder().setHash(hashCode).setSizeBytes(fileSize).build();
   }
+
+  @Override
+  public void close() {
+    delegate.close();
+  }
 }

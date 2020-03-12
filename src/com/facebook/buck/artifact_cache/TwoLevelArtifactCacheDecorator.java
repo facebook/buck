@@ -278,6 +278,8 @@ public class TwoLevelArtifactCacheDecorator implements ArtifactCache, CacheDecor
   @Override
   public void close() {
     delegate.close();
+    secondLevelDelegate.close();
+
     try {
       projectFilesystem.deleteFileAtPath(emptyFilePath);
     } catch (IOException e) {
