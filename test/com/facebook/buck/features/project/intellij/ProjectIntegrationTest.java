@@ -398,6 +398,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testTwoConfigurations() throws InterruptedException, IOException {
+    runBuckProjectAndVerify("two_configurations");
+  }
+
+  @Test
   public void testOutputDir() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(

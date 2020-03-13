@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+  <exclude-output />
+  <content url="file://$MODULE_DIR$">
+    <sourceFolder url="file://$MODULE_DIR$/bar" isTestSource="false" packagePrefix="bar" />
+    <excludeFolder url="file://$MODULE_DIR$/buck-out" isTestSource="false" />
+    <excludeFolder url="file://$MODULE_DIR$/common-dep" isTestSource="false" />
+    <sourceFolder url="file://$MODULE_DIR$/foo" isTestSource="false" packagePrefix="foo" />
+  </content>
+  <orderEntry type="inheritedJdk" />
+  <orderEntry type="sourceFolder" forTests="false" />
+  <orderEntry type="library" name="//:common-dep (//:foo-p)" scope="COMPILE" level="project" />
+  <orderEntry type="library" name="//:common-dep" scope="COMPILE" level="project" />
+  </component>
+</module>

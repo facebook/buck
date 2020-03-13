@@ -1,0 +1,33 @@
+prebuilt_jar(
+    name = "common-dep",
+    binary_jar = "common-dep.jar",
+)
+
+platform(
+    name = "foo-p",
+)
+
+platform(
+    name = "bar-p",
+)
+
+java_library(
+    name = "foo",
+    default_target_platform = ":foo-p",
+    deps = [
+        ":common-dep",
+    ],
+    srcs = [
+        "foo/Foo.java",
+    ],
+)
+
+java_library(
+    name = "bar",
+    deps = [
+        ":common-dep",
+    ],
+    srcs = [
+        "bar/Bar.java",
+    ],
+)

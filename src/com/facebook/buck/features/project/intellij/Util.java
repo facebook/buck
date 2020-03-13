@@ -17,6 +17,7 @@
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 
 public abstract class Util {
 
@@ -30,7 +31,10 @@ public abstract class Util {
   }
 
   public static String intelliJLibraryName(BuildTarget target) {
-    return target.getFullyQualifiedName();
+    if (target.getTargetConfiguration() instanceof UnconfiguredTargetConfiguration) {
+      return target.getFullyQualifiedName();
+    }
+    return target.toStringWithConfiguration();
   }
 
   public static String normalizeIntelliJName(String name) {
@@ -39,6 +43,8 @@ public abstract class Util {
         .replace(':', '_')
         .replace(' ', '_')
         .replace('/', '_')
-        .replace('#', '_');
+        .replace('#', '_')
+        .replace('(', '_')
+        .replace(')', '_');
   }
 }
