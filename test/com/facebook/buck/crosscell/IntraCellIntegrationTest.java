@@ -157,8 +157,7 @@ public class IntraCellIntegrationTest {
             this, "intracell/visibility", tmp);
     workspace.setUp();
 
-    Map<String, Map<String, String>> childLocalConfigs =
-        ImmutableMap.of("project", ImmutableMap.of("absolute_header_map_paths", "true"));
+    Map<String, Map<String, String>> childLocalConfigs = ImmutableMap.of();
     workspace.writeContentsToPath(
         workspace.convertToBuckConfig(childLocalConfigs), "child-repo/.buckconfig.local");
 

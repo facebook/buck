@@ -3601,13 +3601,7 @@ public class ProjectGenerator {
   private Path getHeaderSymlinkTreePath(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode,
       HeaderVisibility headerVisibility) {
-    Path treeRoot = getAbsolutePathToHeaderSymlinkTree(targetNode, headerVisibility);
-    if (options.shouldUseAbsoluteHeaderMapPaths()) {
-      return treeRoot;
-    } else {
-      return MorePaths.relativizeWithDotDotSupport(
-          projectFilesystem.resolve(outputDirectory), treeRoot);
-    }
+    return getAbsolutePathToHeaderSymlinkTree(targetNode, headerVisibility);
   }
 
   private Path getObjcModulemapVFSOverlayLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
@@ -3629,14 +3623,6 @@ public class ProjectGenerator {
     } else {
       return getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
     }
-  }
-
-  private Path getRelativePathToMergedHeaderMap() {
-    Path treeRoot = getPathToMergedHeaderMap();
-    Path cellRoot =
-        MorePaths.relativize(
-            projectFilesystem.getRootPath().getPath(), getCellPathForTarget(workspaceTarget.get()));
-    return pathRelativizer.outputDirToRootRelative(cellRoot.resolve(treeRoot));
   }
 
   private String getBuiltProductsRelativeTargetOutputPath(TargetNode<?> targetNode) {
@@ -3716,13 +3702,11 @@ public class ProjectGenerator {
       builder.add(
           getHeaderSearchPathFromSymlinkTreeRoot(
               getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
-      if (options.shouldUseAbsoluteHeaderMapPaths()) {
-        Cell workspaceCell = projectCell.getCell(workspaceTarget.get().getCell());
-        Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
-        builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
-      } else {
-        builder.add(getHeaderSearchPathFromSymlinkTreeRoot(getRelativePathToMergedHeaderMap()));
-      }
+
+      Cell workspaceCell = projectCell.getCell(workspaceTarget.get().getCell());
+      Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
+      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
+
       visitRecursivePrivateHeaderSymlinkTreesForTests(
           targetNode,
           (nativeNode, headerVisibility) -> {
@@ -3752,20 +3736,9 @@ public class ProjectGenerator {
       visitRecursiveHeaderSymlinkTrees(
           targetNode,
           (nativeNode, headerVisibility) -> {
-            if (options.shouldUseAbsoluteHeaderMapPaths()) {
-              ProjectFilesystem filesystem = nativeNode.getFilesystem();
-              AbsPath buckOut =
-                  filesystem.resolve(filesystem.getBuckPaths().getConfiguredBuckOut());
-              builder.add(buckOut.getPath().toAbsolutePath().normalize());
-            } else {
-              builder.add(
-                  MorePaths.relativizeWithDotDotSupport(
-                      targetNode.getFilesystem().resolve(outputDirectory),
-                      nativeNode
-                          .getFilesystem()
-                          .resolve(nativeNode.getFilesystem().getBuckPaths().getConfiguredBuckOut())
-                          .getPath()));
-            }
+            ProjectFilesystem filesystem = nativeNode.getFilesystem();
+            AbsPath buckOut = filesystem.resolve(filesystem.getBuckPaths().getConfiguredBuckOut());
+            builder.add(buckOut.getPath().toAbsolutePath().normalize());
           });
     }
     return builder.build();
