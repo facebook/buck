@@ -99,7 +99,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
                   "'buck audit dependencies' is deprecated. Please use 'buck query' instead.\n"
                       + "The equivalent 'buck query' command is:\n$ %s\n\nThe query language is documented at "
                       + "https://buck.build/command/query.html",
-                  QueryCommand.buildAuditDependenciesQueryExpression(
+                  buildEquivalentQueryInvocation(
                       getArguments(),
                       shouldShowTransitiveDependencies(),
                       shouldIncludeTests(),
@@ -135,8 +135,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
       QueryCommand.runMultipleQuery(
           params,
           env,
-          QueryCommand.getAuditDependenciesQueryFormat(
-              shouldShowTransitiveDependencies(), shouldIncludeTests()),
+          getQueryFormat(shouldShowTransitiveDependencies(), shouldIncludeTests()),
           getArgumentsFormattedAsBuildTargets(
               params.getCells().getRootCell(),
               params.getClientWorkingDir(),
@@ -155,6 +154,28 @@ public class AuditDependenciesCommand extends AbstractCommand {
       return ExitCode.BUILD_ERROR;
     }
     return ExitCode.SUCCESS;
+  }
+
+  private static String getQueryFormat(boolean isTransitive, boolean includeTests) {
+    StringBuilder queryBuilder = new StringBuilder();
+    queryBuilder.append(isTransitive ? "deps('%s') " : "deps('%s', 1) ");
+    if (includeTests) {
+      queryBuilder.append(isTransitive ? "union deps(testsof(deps('%s')))" : "union testsof('%s')");
+    }
+    queryBuilder.append(" except set('%s')");
+    return queryBuilder.toString();
+  }
+
+  /** @return The 'buck query' invocation that's equivalent to 'buck audit dependencies'. */
+  private static String buildEquivalentQueryInvocation(
+      List<String> arguments, boolean isTransitive, boolean includeTests, boolean jsonOutput) {
+    StringBuilder queryBuilder = new StringBuilder("buck query ");
+    queryBuilder.append("\"").append(getQueryFormat(isTransitive, includeTests)).append("\" ");
+    queryBuilder.append(AbstractQueryCommand.getEscapedArgumentsListAsString(arguments));
+    if (jsonOutput) {
+      queryBuilder.append(AbstractQueryCommand.getJsonOutputParamDeclaration());
+    }
+    return queryBuilder.toString();
   }
 
   @Override

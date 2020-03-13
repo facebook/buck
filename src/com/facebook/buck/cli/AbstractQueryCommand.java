@@ -759,42 +759,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return arguments.stream().map(arg -> "'" + arg + "'").collect(Collectors.joining(" "));
   }
 
-  static String getAuditDependenciesQueryFormat(boolean isTransitive, boolean includeTests) {
-    StringBuilder queryBuilder = new StringBuilder();
-    queryBuilder.append(isTransitive ? "deps('%s') " : "deps('%s', 1) ");
-    if (includeTests) {
-      queryBuilder.append(isTransitive ? "union deps(testsof(deps('%s')))" : "union testsof('%s')");
-    }
-    queryBuilder.append(" except set('%s')");
-    return queryBuilder.toString();
-  }
-
-  /** @return the equivalent 'buck query' call to 'buck audit dependencies'. */
-  static String buildAuditDependenciesQueryExpression(
-      List<String> arguments, boolean isTransitive, boolean includeTests, boolean jsonOutput) {
-    StringBuilder queryBuilder = new StringBuilder("buck query ");
-    queryBuilder
-        .append("\"")
-        .append(getAuditDependenciesQueryFormat(isTransitive, includeTests))
-        .append("\" ");
-    queryBuilder.append(getEscapedArgumentsListAsString(arguments));
-    if (jsonOutput) {
-      queryBuilder.append(getJsonOutputParamDeclaration());
-    }
-    return queryBuilder.toString();
-  }
-
-  /** @return the equivalent 'buck query' call to 'buck audit owner'. */
-  static String buildAuditOwnerQueryExpression(List<String> arguments, boolean jsonOutput) {
-    StringBuilder queryBuilder = new StringBuilder("buck query \"owner('%s')\" ");
-    queryBuilder.append(getEscapedArgumentsListAsString(arguments));
-    if (jsonOutput) {
-      queryBuilder.append(getJsonOutputParamDeclaration());
-    }
-    return queryBuilder.toString();
-  }
-
-  private static String getJsonOutputParamDeclaration() {
+  public static String getJsonOutputParamDeclaration() {
     return " --output-format json";
   }
 

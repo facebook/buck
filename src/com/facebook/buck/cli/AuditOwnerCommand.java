@@ -55,8 +55,7 @@ public class AuditOwnerCommand extends AbstractCommand {
               ConsoleEvent.info(
                   "'buck audit owner' is deprecated. Please use 'buck query' instead. e.g.\n\t%s\n\n"
                       + "The query language is documented at https://buck.build/command/query.html",
-                  QueryCommand.buildAuditOwnerQueryExpression(
-                      getArguments(), shouldGenerateJsonOutput())));
+                  buildEquivalentQueryInvocation(getArguments(), shouldGenerateJsonOutput())));
     }
 
     try (CommandThreadManager pool =
@@ -104,6 +103,16 @@ public class AuditOwnerCommand extends AbstractCommand {
       return ExitCode.BUILD_ERROR;
     }
     return ExitCode.SUCCESS;
+  }
+
+  /** @return The 'buck query' invocation that's equivalent to 'buck audit owner'. */
+  static String buildEquivalentQueryInvocation(List<String> arguments, boolean jsonOutput) {
+    StringBuilder queryBuilder = new StringBuilder("buck query \"owner('%s')\" ");
+    queryBuilder.append(AbstractQueryCommand.getEscapedArgumentsListAsString(arguments));
+    if (jsonOutput) {
+      queryBuilder.append(AbstractQueryCommand.getJsonOutputParamDeclaration());
+    }
+    return queryBuilder.toString();
   }
 
   @Override
