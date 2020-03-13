@@ -5487,51 +5487,6 @@ public class ProjectGeneratorTest {
   }
 
   @Test
-  public void testAppleLibraryWithoutHeaderMaps() throws IOException {
-    ImmutableSortedMap<String, ImmutableMap<String, String>> configs =
-        ImmutableSortedMap.of("Debug", ImmutableMap.of());
-
-    BuildTarget libraryTarget = BuildTargetFactory.newInstance("//foo", "lib");
-    TargetNode<?> libraryNode =
-        AppleLibraryBuilder.createBuilder(libraryTarget)
-            .setConfigs(configs)
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("foo.m"))))
-            .build();
-
-    BuildTarget testTarget = BuildTargetFactory.newInstance("//foo", "xctest");
-    TargetNode<?> testNode =
-        AppleTestBuilder.createBuilder(testTarget)
-            .setConfigs(configs)
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("fooTest.m"))))
-            .setDeps(ImmutableSortedSet.of(libraryTarget))
-            .build();
-
-    ProjectGenerator projectGenerator =
-        createProjectGenerator(
-            ImmutableSet.of(libraryNode, testNode),
-            ProjectGeneratorOptions.builder().setShouldUseHeaderMaps(false).build());
-
-    projectGenerator.createXcodeProjects();
-
-    PBXTarget target =
-        assertTargetExistsAndReturnTarget(projectGenerator.getGeneratedProject(), "//foo:xctest");
-
-    Path currentDirectory = Paths.get(".").toAbsolutePath();
-    ImmutableMap<String, String> settings = getBuildSettings(testTarget, target, "Debug");
-    assertEquals(
-        "$(inherited) "
-            + currentDirectory.resolve("buck-out/gen/_p/ptQfVNNRRE-priv").normalize()
-            + " "
-            + currentDirectory.resolve("buck-out/gen/_p/ptQfVNNRRE-pub").normalize()
-            + " "
-            + currentDirectory.resolve("buck-out/gen/_p/CwkbTNOBmb-pub").normalize()
-            + " "
-            + currentDirectory.resolve("buck-out").normalize(),
-        settings.get("HEADER_SEARCH_PATHS"));
-  }
-
-  @Test
   public void testFrameworkBundleDepIsNotCopiedToFrameworkBundle() throws IOException {
     BuildTarget framework2Target =
         BuildTargetFactory.newInstance(

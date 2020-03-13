@@ -306,10 +306,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
         path -> delegate.resolvePathThatMayBeOutsideTheProjectFilesystem(Paths.get(path)));
   }
 
-  public boolean shouldUseHeaderMapsInXcodeProject() {
-    return delegate.getBooleanValue(APPLE_SECTION, "use_header_maps_in_xcode", true);
-  }
-
   public boolean shouldMergeHeaderMapsInXcodeProject() {
     return delegate.getBooleanValue(APPLE_SECTION, "merge_header_maps_in_xcode", false);
   }

@@ -58,12 +58,6 @@ interface ProjectGeneratorOptions {
     return false;
   }
 
-  /** Use header maps as header search paths */
-  @Value.Default
-  default boolean shouldUseHeaderMaps() {
-    return true;
-  }
-
   /**
    * Generate one header map containing all the headers it's using and reference only this header
    * map in the header search paths.

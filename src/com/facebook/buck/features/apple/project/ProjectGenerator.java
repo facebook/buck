@@ -423,9 +423,7 @@ public class ProjectGenerator {
   }
 
   private boolean shouldMergeHeaderMaps() {
-    return options.shouldMergeHeaderMaps()
-        && workspaceTarget.isPresent()
-        && options.shouldUseHeaderMaps();
+    return options.shouldMergeHeaderMaps() && workspaceTarget.isPresent();
   }
 
   public ImmutableMap<BuildTarget, PBXTarget> getBuildTargetToGeneratedTargetMap() {
@@ -2030,7 +2028,6 @@ public class ProjectGenerator {
         moduleName,
         getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC),
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled())
-            || !options.shouldUseHeaderMaps()
             || isModularAppleLibrary,
         !shouldMergeHeaderMaps());
     if (isFocusedOnTarget) {
@@ -2040,9 +2037,8 @@ public class ProjectGenerator {
           Optional.empty(),
           getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PRIVATE),
           arg.getXcodePrivateHeadersSymlinks()
-                  .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled())
-              || !options.shouldUseHeaderMaps(),
-          options.shouldUseHeaderMaps());
+              .orElse(cxxBuckConfig.getPrivateHeadersSymlinksEnabled()),
+          true);
     }
 
     Optional<TargetNode<AppleNativeTargetDescriptionArg>> appleTargetNode =
@@ -3617,14 +3613,6 @@ public class ProjectGenerator {
     return headerSymlinkTreeRoot.resolve(".hmap");
   }
 
-  private Path getHeaderSearchPathFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
-    if (!options.shouldUseHeaderMaps()) {
-      return headerSymlinkTreeRoot;
-    } else {
-      return getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreeRoot);
-    }
-  }
-
   private String getBuiltProductsRelativeTargetOutputPath(TargetNode<?> targetNode) {
     if (targetNode.getDescription() instanceof AppleBinaryDescription
         || targetNode.getDescription() instanceof AppleTestDescription
@@ -3700,23 +3688,23 @@ public class ProjectGenerator {
 
     if (shouldMergeHeaderMaps()) {
       builder.add(
-          getHeaderSearchPathFromSymlinkTreeRoot(
+          getHeaderMapLocationFromSymlinkTreeRoot(
               getHeaderSymlinkTreePath(targetNode, HeaderVisibility.PRIVATE)));
 
       Cell workspaceCell = projectCell.getCell(workspaceTarget.get().getCell());
       Path absolutePath = workspaceCell.getFilesystem().resolve(getPathToMergedHeaderMap());
-      builder.add(getHeaderSearchPathFromSymlinkTreeRoot(absolutePath));
+      builder.add(getHeaderMapLocationFromSymlinkTreeRoot(absolutePath));
 
       visitRecursivePrivateHeaderSymlinkTreesForTests(
           targetNode,
           (nativeNode, headerVisibility) -> {
             builder.add(
-                getHeaderSearchPathFromSymlinkTreeRoot(
+                getHeaderMapLocationFromSymlinkTreeRoot(
                     getHeaderSymlinkTreePath(nativeNode, headerVisibility)));
           });
     } else {
       for (Path headerSymlinkTreePath : collectRecursiveHeaderSymlinkTrees(targetNode)) {
-        builder.add(getHeaderSearchPathFromSymlinkTreeRoot(headerSymlinkTreePath));
+        builder.add(getHeaderMapLocationFromSymlinkTreeRoot(headerSymlinkTreePath));
       }
     }
 
