@@ -266,7 +266,10 @@ public abstract class IsolatedBuildableBuilder {
               fs.writeContentsToPath(
                   fs.getRootPath().toString(), configuredPaths.getProjectRootDir());
 
-              if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut())
+              if (!configuredPaths
+                      .getConfiguredBuckOut()
+                      .getPath()
+                      .equals(configuredPaths.getBuckOut())
                   && buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()
                   && Platform.detect() != Platform.WINDOWS) {
                 BuckPaths unconfiguredPaths =
