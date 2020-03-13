@@ -283,10 +283,6 @@ public class UnconfiguredBuildTarget
         getFlavors());
   }
 
-  public UnconfiguredBuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
-    return UnconfiguredBuildTarget.of(target, getFlavors());
-  }
-
   /**
    * Verifies that this build target has no flavors.
    *

@@ -195,12 +195,6 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
     return withAppendedFlavors(ImmutableSet.copyOf(flavors));
   }
 
-  /** Keep flavors and configuration, replace everything else. */
-  public BuildTarget withUnflavoredBuildTarget(UnflavoredBuildTarget target) {
-    return BuildTarget.of(
-        unconfiguredBuildTarget.withUnflavoredBuildTarget(target), targetConfiguration);
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {

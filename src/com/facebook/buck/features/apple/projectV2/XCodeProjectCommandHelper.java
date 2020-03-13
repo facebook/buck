@@ -28,7 +28,6 @@ import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
-import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -38,7 +37,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -421,22 +419,9 @@ public class XCodeProjectCommandHelper {
             .collect(ImmutableSet.toImmutableSet());
     if (!requiredBuildTargets.isEmpty()) {
       ImmutableList<String> arguments =
-          RichStream.from(requiredBuildTargets)
-              .map(
-                  target -> {
-                    // TODO(T47190884): Use our NewCellPathResolver to look up the path.
-                    if (!target.getCell().equals(cell.getCanonicalName())) {
-                      CanonicalCellName cellName = target.getCell();
-
-                      return target.withUnflavoredBuildTarget(
-                          UnflavoredBuildTarget.of(
-                              cellName, target.getBaseName(), target.getShortName()));
-                    } else {
-                      return target;
-                    }
-                  })
+          requiredBuildTargets.stream()
               .map(Object::toString)
-              .toImmutableList();
+              .collect(ImmutableList.toImmutableList());
       exitCode = buildRunner.apply(arguments);
     }
 
