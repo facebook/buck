@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.cli.BuildCommand.BuildRunResult;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -107,7 +106,7 @@ public final class RunCommand extends AbstractCommand {
 
     // Make sure the target is built.
     BuildCommand buildCommand = new BuildCommand(ImmutableList.of(target.toString()));
-    BuildRunResult buildResult;
+    AbstractBuildCommand.BuildRunResult buildResult;
     try (Closeable contextCloser = buildCommand.prepareExecutionContext(params)) {
       buildResult = buildCommand.runWithoutHelpInternal(params);
       if (buildResult.getExitCode() != ExitCode.SUCCESS) {

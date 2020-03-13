@@ -17,7 +17,7 @@
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.artifact_cache.NoopArtifactCache.NoopArtifactCacheFactory;
-import com.facebook.buck.cli.BuildCommand;
+import com.facebook.buck.cli.BuildCommandForProjectGenerators;
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.cli.ProjectGeneratorParameters;
@@ -30,7 +30,6 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -212,10 +211,8 @@ public class IjProjectSubCommand extends ProjectSubCommand {
 
   private ExitCode runBuild(
       CommandRunnerParams params, ImmutableSet<BuildTarget> targets, boolean disableCaching) {
-    // TODO(nga): do not lose configurations
-    BuildCommand buildCommand =
-        new BuildCommand(
-            targets.stream().map(BuildTarget::toString).collect(ImmutableList.toImmutableList()));
+    BuildCommandForProjectGenerators buildCommand =
+        new BuildCommandForProjectGenerators(targets.asList());
     buildCommand.setKeepGoing(true);
     try {
       return buildCommand.run(

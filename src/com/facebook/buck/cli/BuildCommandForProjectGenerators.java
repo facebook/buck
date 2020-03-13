@@ -16,17 +16,17 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.model.BuildTarget;
 import com.google.common.collect.ImmutableList;
 import java.util.List;
 
-/** {@code buck build} command handler. */
-public class BuildCommand extends AbstractBuildCommand {
+/** A build-like command-like object to be used when build targets are given with configurations. */
+// TODO(nga): IDE generators should not use build command, but instead build directly.
+public class BuildCommandForProjectGenerators extends AbstractBuildCommand {
 
-  public BuildCommand() {
-    this(ImmutableList.of());
-  }
-
-  public BuildCommand(List<String> arguments) {
-    this.arguments.addAll(arguments);
+  public BuildCommandForProjectGenerators(List<BuildTarget> arguments) {
+    // TODO(nga): do not lose configurations
+    this.arguments.addAll(
+        arguments.stream().map(BuildTarget::toString).collect(ImmutableList.toImmutableList()));
   }
 }

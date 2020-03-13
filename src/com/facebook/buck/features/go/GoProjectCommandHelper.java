@@ -16,7 +16,7 @@
 
 package com.facebook.buck.features.go;
 
-import com.facebook.buck.cli.BuildCommand;
+import com.facebook.buck.cli.BuildCommandForProjectGenerators;
 import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectTestsMode;
@@ -392,10 +392,8 @@ public class GoProjectCommandHelper {
   }
 
   private ExitCode runBuild(ImmutableSet<BuildTarget> targets) throws Exception {
-    // TODO(nga): do not lose configurations
-    BuildCommand buildCommand =
-        new BuildCommand(
-            targets.stream().map(BuildTarget::toString).collect(ImmutableList.toImmutableList()));
+    BuildCommandForProjectGenerators buildCommand =
+        new BuildCommandForProjectGenerators(targets.asList());
     buildCommand.setKeepGoing(true);
     return buildCommand.run(params);
   }
