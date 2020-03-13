@@ -462,7 +462,6 @@ public class AppleLibraryDescription
         Optional.empty(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
-        swiftBuckConfig.getUseLipoThin(),
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
         Predicates.alwaysTrue());

@@ -33,7 +33,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROJECT_EMBED_RUNTIME = "project_embed_runtime";
   public static final String PROJECT_ADD_AST_PATHS = "project_add_ast_paths";
   public static final String COPY_STDLIB_TO_FRAMEWORKS = "copy_stdlib_to_frameworks";
-  public static final String USE_LIPO_THIN = "use_lipo_thin";
   public static final String EMIT_SWIFTDOCS = "emit_swiftdocs";
   private final BuckConfig delegate;
 
@@ -106,16 +105,6 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getCopyStdlibToFrameworks() {
     return delegate.getBooleanValue(SECTION_NAME, COPY_STDLIB_TO_FRAMEWORKS, false);
-  }
-
-  /**
-   * Uses `lipo -thin` instead of `lipo -extract` when copying the Swift standard libraries.
-   *
-   * <p>Regardless of the value of this config flag, the resulting libraries are then passed to
-   * `lipo -create`.
-   */
-  public boolean getUseLipoThin() {
-    return delegate.getBooleanValue(SECTION_NAME, USE_LIPO_THIN, false);
   }
 
   /**

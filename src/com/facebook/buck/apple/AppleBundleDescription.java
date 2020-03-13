@@ -218,7 +218,6 @@ public class AppleBundleDescription
         args.getIbtoolFlags(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
-        swiftBuckConfig.getUseLipoThin(),
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
         resourceFilter);

@@ -54,7 +54,6 @@ class SwiftStdlibStep implements Step {
   private final AbsPath destinationDirectory;
   private final Iterable<String> swiftStdlibToolCommandPrefix;
   private final Iterable<String> lipoCommandPrefix;
-  private final boolean useLipoThin;
   private final Path binaryPathToScan;
   private final Iterable<Path> additionalFoldersToScan;
 
@@ -67,7 +66,6 @@ class SwiftStdlibStep implements Step {
       Path destinationDirectory,
       Iterable<String> swiftStdlibToolCommandPrefix,
       Iterable<String> lipoCommandPrefix,
-      boolean useLipoThin,
       Path binaryPathToScan,
       Iterable<Path> additionalFoldersToScan,
       Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier) {
@@ -77,7 +75,6 @@ class SwiftStdlibStep implements Step {
     this.temp = workingDirectory.resolve(temp);
     this.swiftStdlibToolCommandPrefix = swiftStdlibToolCommandPrefix;
     this.lipoCommandPrefix = lipoCommandPrefix;
-    this.useLipoThin = useLipoThin;
     this.binaryPathToScan = binaryPathToScan;
     this.additionalFoldersToScan = additionalFoldersToScan;
     this.codeSignIdentitySupplier = codeSignIdentitySupplier;
@@ -108,14 +105,6 @@ class SwiftStdlibStep implements Step {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     command.addAll(lipoCommandPrefix);
     command.add("-archs", lib.toString());
-    return command.build();
-  }
-
-  private ImmutableList<String> getLipoExtractCommand(Path lib, String arch) {
-    ImmutableList.Builder<String> command = ImmutableList.builder();
-    command.addAll(lipoCommandPrefix);
-    command.add("-extract", arch, lib.toString());
-    command.add("-output", lib.toString() + "." + arch);
     return command.build();
   }
 
@@ -227,12 +216,7 @@ class SwiftStdlibStep implements Step {
 
         if (shouldExtractArch) {
           for (String arch : archs) {
-            if (useLipoThin) {
-              lipoCommands.add(makeProcessExecutorParams(context, getLipoThinCommand(lib, arch)));
-            } else {
-              lipoCommands.add(
-                  makeProcessExecutorParams(context, getLipoExtractCommand(lib, arch)));
-            }
+            lipoCommands.add(makeProcessExecutorParams(context, getLipoThinCommand(lib, arch)));
           }
           lipoCommands.add(makeProcessExecutorParams(context, getLipoCreateCommand(lib, archs)));
         } else {
