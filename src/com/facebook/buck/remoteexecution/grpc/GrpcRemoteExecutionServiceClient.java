@@ -163,7 +163,6 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
   public ExecutionHandle execute(
       Digest actionDigest, String ruleName, MetadataProvider metadataProvider)
       throws IOException, InterruptedException {
-    SettableFuture<Operation> future = SettableFuture.create();
 
     StubAndResponseMetadata<ExecutionStub> stubAndMetadata =
         GrpcHeaderHandler.wrapStubToSendAndReceiveMetadata(
@@ -207,7 +206,7 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
                         "Failed execution request with metadata=[%s] and exception=[%s].",
                         stubAndMetadata.getMetadata(), t.toString());
                 LOG.warn(t, msg);
-                future.setException(new IOException(msg, t));
+                state.resultFuture.setException(new IOException(msg, t));
               }
 
               @Override
