@@ -392,9 +392,10 @@ public class GoProjectCommandHelper {
   }
 
   private ExitCode runBuild(ImmutableSet<BuildTarget> targets) throws Exception {
+    // TODO(nga): do not lose configurations
     BuildCommand buildCommand =
         new BuildCommand(
-            targets.stream().map(Object::toString).collect(ImmutableList.toImmutableList()));
+            targets.stream().map(BuildTarget::toString).collect(ImmutableList.toImmutableList()));
     buildCommand.setKeepGoing(true);
     return buildCommand.run(params);
   }

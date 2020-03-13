@@ -23,6 +23,7 @@ import com.facebook.buck.cli.CommandThreadManager;
 import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectSubCommand;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.features.apple.common.Mode;
 import com.facebook.buck.features.apple.common.PrintStreamPathOutputPresenter;
@@ -201,9 +202,12 @@ public class XCodeProjectSubCommand extends ProjectSubCommand {
     }
   }
 
-  private ExitCode runBuild(CommandRunnerParams params, ImmutableList<String> arguments)
+  private ExitCode runBuild(CommandRunnerParams params, ImmutableList<BuildTarget> arguments)
       throws Exception {
-    BuildCommand buildCommand = new BuildCommand(arguments);
+    // TODO(nga): do not lose configurations
+    BuildCommand buildCommand =
+        new BuildCommand(
+            arguments.stream().map(BuildTarget::toString).collect(ImmutableList.toImmutableList()));
     return buildCommand.run(params);
   }
 

@@ -133,7 +133,7 @@ public class XCodeProjectCommandHelper {
   private final ParsingContext parsingContext;
 
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
-  private final Function<ImmutableList<String>, ExitCode> buildRunner;
+  private final Function<ImmutableList<BuildTarget>, ExitCode> buildRunner;
   private final Supplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutorSupplier;
 
   private final FocusedTargetMatcher focusedTargetMatcher;
@@ -168,7 +168,7 @@ public class XCodeProjectCommandHelper {
       boolean readOnly,
       PathOutputPresenter outputPresenter,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
-      Function<ImmutableList<String>, ExitCode> buildRunner,
+      Function<ImmutableList<BuildTarget>, ExitCode> buildRunner,
       List<String> arguments,
       ActionGraphProvider actionGraphProvider) {
     this.buckEventBus = buckEventBus;
@@ -418,11 +418,7 @@ public class XCodeProjectCommandHelper {
             .flatMap(b -> b.getBuildTargets().stream())
             .collect(ImmutableSet.toImmutableSet());
     if (!requiredBuildTargets.isEmpty()) {
-      ImmutableList<String> arguments =
-          requiredBuildTargets.stream()
-              .map(Object::toString)
-              .collect(ImmutableList.toImmutableList());
-      exitCode = buildRunner.apply(arguments);
+      exitCode = buildRunner.apply(requiredBuildTargets.asList());
     }
 
     // Write all output paths to stdout if requested.

@@ -212,9 +212,10 @@ public class IjProjectSubCommand extends ProjectSubCommand {
 
   private ExitCode runBuild(
       CommandRunnerParams params, ImmutableSet<BuildTarget> targets, boolean disableCaching) {
+    // TODO(nga): do not lose configurations
     BuildCommand buildCommand =
         new BuildCommand(
-            targets.stream().map(Object::toString).collect(ImmutableList.toImmutableList()));
+            targets.stream().map(BuildTarget::toString).collect(ImmutableList.toImmutableList()));
     buildCommand.setKeepGoing(true);
     try {
       return buildCommand.run(
