@@ -712,6 +712,7 @@ public class CachingBuildEngineTest {
       recorder.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleToTestKey.toString());
       recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
       recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, "10");
+      recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_HASH, "0123456789");
       recorder.writeMetadataToDisk(true);
 
       // The BuildContext that will be used by the rule's build() method.
@@ -780,6 +781,7 @@ public class CachingBuildEngineTest {
       recorder.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleToTestKey.toString());
       recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
       recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, "10");
+      recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_HASH, "0123456789");
       recorder.writeMetadataToDisk(true);
 
       // Create the build engine.
@@ -862,6 +864,7 @@ public class CachingBuildEngineTest {
       recorder.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, transitiveRuntimeDepKey.toString());
       recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
       recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, "10");
+      recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_HASH, "0123456789");
       recorder.writeMetadataToDisk(true);
 
       // Setup a runtime dependency that is referenced directly by the top-level rule.
@@ -874,6 +877,7 @@ public class CachingBuildEngineTest {
       runtimeDepRec.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, runtimeDepKey.toString());
       runtimeDepRec.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
       runtimeDepRec.addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, "10");
+      runtimeDepRec.addMetadata(BuildInfo.MetadataKey.OUTPUT_HASH, "0123456789");
       runtimeDepRec.writeMetadataToDisk(true);
 
       // Create a dep for the build rule.
@@ -883,6 +887,7 @@ public class CachingBuildEngineTest {
       testRec.addBuildMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleToTestKey.toString());
       testRec.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
       testRec.addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, "10");
+      testRec.addMetadata(BuildInfo.MetadataKey.OUTPUT_HASH, "0123456789");
       testRec.writeMetadataToDisk(true);
 
       // Create the build engine.
@@ -1195,6 +1200,7 @@ public class CachingBuildEngineTest {
           BuildInfo.MetadataKey.RULE_KEY, defaultRuleKeyFactory.build(ruleToTest).toString());
       recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
       recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, "10");
+      recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_HASH, "0123456789");
       recorder.writeMetadataToDisk(true);
 
       // Create the build engine.
@@ -1206,6 +1212,72 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
         assertEquals(BuildRuleSuccessType.MATCHING_RULE_KEY, result.getSuccess());
+      }
+    }
+
+    @Test
+    public void matchingRuleKeyDoesNotContainOutputSize() throws Exception {
+      BuildRule ruleToTest =
+          createRule(
+              filesystem,
+              graphBuilder,
+              /* deps */ ImmutableSortedSet.of(),
+              /* buildSteps */ ImmutableList.of(),
+              /* postBuildSteps */ ImmutableList.of(),
+              /* pathToOutputFile */ null,
+              ImmutableList.of());
+      BuildInfoRecorder recorder = createBuildInfoRecorder(ruleToTest.getBuildTarget());
+
+      // The metadata key is missing OUTPUT_OUT and should fail the integrity check.
+      // So the result should be BUILT_LOCALLY instead of MATCHING_RULE_KEY
+      recorder.addBuildMetadata(
+          BuildInfo.MetadataKey.RULE_KEY, defaultRuleKeyFactory.build(ruleToTest).toString());
+      recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
+      recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_HASH, "0123456789");
+      recorder.writeMetadataToDisk(true);
+
+      // Create the build engine.
+      try (CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build()) {
+        // Run the build.
+        BuildResult result =
+            cachingBuildEngine
+                .build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+                .getResult()
+                .get();
+        assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+      }
+    }
+
+    @Test
+    public void matchingRuleKeyDoesNotContainOutputHash() throws Exception {
+      BuildRule ruleToTest =
+          createRule(
+              filesystem,
+              graphBuilder,
+              /* deps */ ImmutableSortedSet.of(),
+              /* buildSteps */ ImmutableList.of(),
+              /* postBuildSteps */ ImmutableList.of(),
+              /* pathToOutputFile */ null,
+              ImmutableList.of());
+      BuildInfoRecorder recorder = createBuildInfoRecorder(ruleToTest.getBuildTarget());
+
+      // The metadata key is missing OUTPUT_HASH and should fail the integrity check.
+      // So the result should be BUILT_LOCALLY instead of MATCHING_RULE_KEY
+      recorder.addBuildMetadata(
+          BuildInfo.MetadataKey.RULE_KEY, defaultRuleKeyFactory.build(ruleToTest).toString());
+      recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
+      recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, "10");
+      recorder.writeMetadataToDisk(true);
+
+      // Create the build engine.
+      try (CachingBuildEngine cachingBuildEngine = cachingBuildEngineFactory().build()) {
+        // Run the build.
+        BuildResult result =
+            cachingBuildEngine
+                .build(buildContext, TestExecutionContext.newInstance(), ruleToTest)
+                .getResult()
+                .get();
+        assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
       }
     }
 
@@ -3778,6 +3850,7 @@ public class CachingBuildEngineTest {
           BuildInfo.MetadataKey.RULE_KEY, defaultRuleKeyFactory.build(rule).toString());
       recorder.addMetadata(BuildInfo.MetadataKey.RECORDED_PATHS, ImmutableList.of());
       recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_SIZE, "0");
+      recorder.addMetadata(BuildInfo.MetadataKey.OUTPUT_HASH, "0123456789");
       recorder.writeMetadataToDisk(true);
 
       // Create the build engine.
