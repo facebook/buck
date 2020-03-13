@@ -2212,7 +2212,9 @@ public final class MainRunner {
     RuleKeyCheckListenerConfig ruleKeyCheckListenerConfig =
         buckConfig.getView(RuleKeyCheckListenerConfig.class);
     if (ruleKeyCheckListenerConfig.getEndpoint().isPresent()) {
-      buckEventBus.register(new RuleKeyCheckListener(ruleKeyCheckListenerConfig, buckEventBus));
+      buckEventBus.register(
+          new RuleKeyCheckListener(
+              ruleKeyCheckListenerConfig, buckEventBus, executionEnvironment.getUsername()));
     }
     LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
     if (logBuckConfig.isJavaUtilsLoggingEnabled()) {

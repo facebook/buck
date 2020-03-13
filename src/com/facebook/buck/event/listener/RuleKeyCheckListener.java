@@ -42,6 +42,7 @@ import okhttp3.Response;
 public class RuleKeyCheckListener implements BuckEventListener {
   static final Logger LOG = Logger.get(RuleKeyCheckListener.class);
   Optional<String> cleanRevision; // Set when there are no working directory changes and on master.
+  String username;
   boolean isTopLevelResultCalculated;
   Optional<TopLevelRuleKeyCalculatedEvent> topLevelRuleKeyCalculatedEvent;
   RuleKeyCheckListenerConfig ruleKeyCheckListenerConfig;
@@ -82,12 +83,15 @@ public class RuleKeyCheckListener implements BuckEventListener {
   }
 
   public RuleKeyCheckListener(
-      RuleKeyCheckListenerConfig ruleKeyCheckListenerConfig, BuckEventBus buckEventBus) {
+      RuleKeyCheckListenerConfig ruleKeyCheckListenerConfig,
+      BuckEventBus buckEventBus,
+      String username) {
     this.ruleKeyCheckListenerConfig = ruleKeyCheckListenerConfig;
     this.cleanRevision = Optional.empty();
     this.topLevelRuleKeyCalculatedEvent = Optional.empty();
     this.buckEventBus = buckEventBus;
     this.isTopLevelResultCalculated = false;
+    this.username = username;
   }
 
   RuleKeyCheckResult queryEndpoint(String target, String rulekey) {
@@ -95,7 +99,8 @@ public class RuleKeyCheckListener implements BuckEventListener {
         new FormBody.Builder()
             .add("revision", cleanRevision.orElse(""))
             .add("rule_name", target)
-            .add("rule_key", rulekey);
+            .add("rule_key", rulekey)
+            .add("username", username);
     try {
       Request request =
           new Request.Builder()

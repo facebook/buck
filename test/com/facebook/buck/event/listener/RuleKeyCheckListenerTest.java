@@ -68,7 +68,8 @@ public class RuleKeyCheckListenerTest {
 
     @Before
     public void setUp() {
-      ruleKeyCheckListener = new RuleKeyCheckListener(ruleKeyCheckListenerConfig, buckEventBus);
+      ruleKeyCheckListener =
+          new RuleKeyCheckListener(ruleKeyCheckListenerConfig, buckEventBus, "username");
       buckEventBus.register(ruleKeyCheckListener);
       versionControlStatsBuilder =
           FullVersionControlStats.builder()
@@ -137,8 +138,8 @@ public class RuleKeyCheckListenerTest {
 
       ruleKeyCheckListener =
           EasyMock.createMockBuilder(RuleKeyCheckListener.class)
-              .withConstructor(RuleKeyCheckListenerConfig.class, BuckEventBus.class)
-              .withArgs(ruleKeyCheckListenerConfig, buckEventBus)
+              .withConstructor(RuleKeyCheckListenerConfig.class, BuckEventBus.class, String.class)
+              .withArgs(ruleKeyCheckListenerConfig, buckEventBus, "username")
               .addMockedMethod("queryEndpoint")
               .createNiceMock();
     }
@@ -260,7 +261,8 @@ public class RuleKeyCheckListenerTest {
                   "endpoint_url = ")
               .build()
               .getView(RuleKeyCheckListenerConfig.class);
-      RuleKeyCheckListener ruleKeyCheckListener = new RuleKeyCheckListener(config, buckEventBus);
+      RuleKeyCheckListener ruleKeyCheckListener =
+          new RuleKeyCheckListener(config, buckEventBus, "username");
       assertEquals(
           RuleKeyCheckListener.RuleKeyCheckResult.REQUEST_ERROR,
           ruleKeyCheckListener.queryEndpoint("target", "rulekey"));
@@ -276,7 +278,8 @@ public class RuleKeyCheckListenerTest {
                   "endpoint = endpoint")
               .build()
               .getView(RuleKeyCheckListenerConfig.class);
-      RuleKeyCheckListener ruleKeyCheckListener = new RuleKeyCheckListener(config, buckEventBus);
+      RuleKeyCheckListener ruleKeyCheckListener =
+          new RuleKeyCheckListener(config, buckEventBus, "username");
       assertEquals(
           RuleKeyCheckListener.RuleKeyCheckResult.REQUEST_ERROR,
           ruleKeyCheckListener.queryEndpoint("target", "rulekey"));
