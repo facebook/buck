@@ -29,13 +29,11 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.graph.ActionAndTargetGraphs;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.HashedBuckOutLinkMode;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
-import com.facebook.buck.core.parser.buildtargetparser.BuildTargetOutputLabelParser;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -51,9 +49,6 @@ import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
-import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.parser.config.ParserConfig;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -65,11 +60,9 @@ import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ListeningProcessExecutor;
-import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -97,14 +90,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
-import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
 /** Base class for build command and build for IDE command. */
-class AbstractBuildCommand extends AbstractCommand {
+abstract class AbstractBuildCommand extends AbstractCommand {
 
   static final String BUCK_BINARY_STRING_ARG = "--buck-binary";
   private static final String KEEP_GOING_LONG_ARG = "--keep-going";
@@ -142,7 +134,7 @@ class AbstractBuildCommand extends AbstractCommand {
       name = JUST_BUILD_LONG_ARG,
       usage = "For debugging, limits the build to a specific target in the action graph.",
       hidden = true)
-  private String justBuildTarget = null;
+  protected String justBuildTarget = null;
 
   @Option(
       name = DEEP_LONG_ARG,
@@ -218,7 +210,7 @@ class AbstractBuildCommand extends AbstractCommand {
       usage = "Serialize rule dependencies and execution time to the log directory")
   private boolean outputRuleDeps = false;
 
-  private static ActionGraphAndBuilder createActionGraphAndResolver(
+  protected static ActionGraphAndBuilder createActionGraphAndResolver(
       CommandRunnerParams params,
       TargetGraphCreationResult targetGraphAndBuildTargets,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
@@ -376,84 +368,14 @@ class AbstractBuildCommand extends AbstractCommand {
     return started;
   }
 
-  GraphsAndBuildTargets createGraphsAndTargets(
+  abstract GraphsAndBuildTargets createGraphsAndTargets(
       CommandRunnerParams params,
       ListeningExecutorService executorService,
       Function<ImmutableList<TargetNodeSpec>, ImmutableList<TargetNodeSpec>> targetNodeSpecEnhancer,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger)
-      throws ActionGraphCreationException, IOException, InterruptedException {
-    ImmutableList<TargetNodeSpec> specs;
-    try {
-      specs =
-          targetNodeSpecEnhancer.apply(
-              parseArgumentsAsTargetNodeSpecs(
-                  params.getCells().getRootCell(),
-                  params.getClientWorkingDir(),
-                  getArguments(),
-                  params.getBuckConfig()));
-    } catch (BuildTargetException e) {
-      throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
-    }
-    TargetGraphCreationResult unversionedTargetGraph =
-        createUnversionedTargetGraph(params, executorService, specs);
+      throws ActionGraphCreationException, IOException, InterruptedException;
 
-    Optional<TargetGraphCreationResult> versionedTargetGraph = Optional.empty();
-    try {
-      if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
-        versionedTargetGraph = Optional.of(toVersionedTargetGraph(params, unversionedTargetGraph));
-      }
-    } catch (VersionException e) {
-      throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
-    }
-
-    TargetGraphCreationResult targetGraphForLocalBuild =
-        ActionAndTargetGraphs.getTargetGraph(unversionedTargetGraph, versionedTargetGraph);
-    checkSingleBuildTargetSpecifiedForOutBuildMode(targetGraphForLocalBuild);
-    ActionGraphAndBuilder actionGraph =
-        createActionGraphAndResolver(params, targetGraphForLocalBuild, ruleKeyLogger);
-
-    ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs =
-        justBuildTarget == null
-            ? matchBuildTargetsWithLabelsFromSpecs(
-                specs, targetGraphForLocalBuild.getBuildTargets())
-            : getBuildTargetsWithOutputsForJustBuild(params, actionGraph, justBuildTarget);
-
-    ActionAndTargetGraphs actionAndTargetGraphs =
-        ActionAndTargetGraphs.of(unversionedTargetGraph, versionedTargetGraph, actionGraph);
-
-    return ImmutableGraphsAndBuildTargets.ofImpl(actionAndTargetGraphs, buildTargetsWithOutputs);
-  }
-
-  private ImmutableSet<BuildTargetWithOutputs> getBuildTargetsWithOutputsForJustBuild(
-      CommandRunnerParams params,
-      ActionGraphAndBuilder actionGraphAndBuilder,
-      String justBuildTarget)
-      throws ActionGraphCreationException {
-    BuildTargetOutputLabelParser.TargetWithOutputLabel targetWithOutputLabel =
-        BuildTargetOutputLabelParser.getBuildTargetNameWithOutputLabel(justBuildTarget);
-    UnconfiguredBuildTarget explicitTarget =
-        params
-            .getUnconfiguredBuildTargetFactory()
-            .create(
-                targetWithOutputLabel.getTargetName(),
-                params.getCells().getRootCell().getCellNameResolver());
-
-    ImmutableSet<BuildTargetWithOutputs> targets =
-        StreamSupport.stream(actionGraphAndBuilder.getActionGraph().getNodes().spliterator(), false)
-            .map(BuildRule::getBuildTarget)
-            .filter(t -> t.getUnconfiguredBuildTarget().equals(explicitTarget))
-            .map(t -> BuildTargetWithOutputs.of(t, targetWithOutputLabel.getOutputLabel()))
-            .collect(ImmutableSet.toImmutableSet());
-
-    if (targets.isEmpty()) {
-      throw new ActionGraphCreationException(
-          "Targets specified via `--just-build` must be a subset of action graph.");
-    }
-
-    return targets;
-  }
-
-  private void checkSingleBuildTargetSpecifiedForOutBuildMode(
+  protected void checkSingleBuildTargetSpecifiedForOutBuildMode(
       TargetGraphCreationResult targetGraphAndBuildTargets) {
     if (outputPathForSingleBuildTarget != null
         && targetGraphAndBuildTargets.getBuildTargets().size() != 1) {
@@ -817,27 +739,6 @@ class AbstractBuildCommand extends AbstractCommand {
 
   private String getOutputPathToShow(Optional<Path> path) {
     return path.map(p -> p.toString().isEmpty() ? "" : " " + p.toString()).orElse("");
-  }
-
-  private TargetGraphCreationResult createUnversionedTargetGraph(
-      CommandRunnerParams params,
-      ListeningExecutorService executor,
-      ImmutableList<TargetNodeSpec> specs)
-      throws IOException, InterruptedException, ActionGraphCreationException {
-    // Parse the build files to create a ActionGraph.
-    ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
-    try {
-      return params
-          .getParser()
-          .buildTargetGraphWithoutTopLevelConfigurationTargets(
-              createParsingContext(params.getCells().getRootCell(), executor)
-                  .withSpeculativeParsing(SpeculativeParsing.ENABLED)
-                  .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode()),
-              specs,
-              params.getTargetConfiguration());
-    } catch (BuildTargetException e) {
-      throw new ActionGraphCreationException(MoreExceptions.getHumanReadableOrLocalizedMessage(e));
-    }
   }
 
   private ExitCode executeLocalBuild(
