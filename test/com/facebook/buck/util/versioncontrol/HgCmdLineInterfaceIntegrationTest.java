@@ -176,7 +176,7 @@ public class HgCmdLineInterfaceIntegrationTest {
       InputStreamReader diffFileReader = new InputStreamReader(diffFileStream, Charsets.UTF_8);
       String actualDiff = CharStreams.toString(diffFileReader);
       // The output message from FB hg is a bit more than that from open source hg, use contains here.
-      assertTrue(String.join("\n", expectedValue).contains(actualDiff));
+      assertThat(String.join("\n", expectedValue), Matchers.containsString(actualDiff));
     }
   }
 
