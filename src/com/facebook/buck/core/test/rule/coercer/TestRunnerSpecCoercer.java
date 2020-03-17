@@ -37,30 +37,43 @@ public class TestRunnerSpecCoercer {
    * Coerces the given freeform JSON with {@link StringWithMacros} in the {@link TestRunnerSpec} to
    * become a freeform JSON of {@link Arg}s, contained in {@link CoercedTestRunnerSpec}.
    */
-  @SuppressWarnings("unchecked")
   public static CoercedTestRunnerSpec coerce(
       TestRunnerSpec spec, StringWithMacrosConverter converter) {
-    if (spec.getData() instanceof Map) {
-      ImmutableMap.Builder<Arg, CoercedTestRunnerSpec> map = ImmutableMap.builder();
-      for (Map.Entry<StringWithMacros, TestRunnerSpec> entry :
-          ((Map<StringWithMacros, TestRunnerSpec>) spec.getData()).entrySet()) {
-        map.put(converter.convert(entry.getKey()), coerce(entry.getValue(), converter));
-      }
-      return CoercedTestRunnerSpec.of(map.build());
-    }
-    if (spec.getData() instanceof Iterable) {
-      ImmutableList.Builder<CoercedTestRunnerSpec> list = ImmutableList.builder();
-      for (TestRunnerSpec item : (Iterable<TestRunnerSpec>) spec.getData()) {
-        list.add(coerce(item, converter));
-      }
-      return CoercedTestRunnerSpec.of(list.build());
-    }
-    if (spec.getData() instanceof StringWithMacros) {
-      return CoercedTestRunnerSpec.of(converter.convert((StringWithMacros) spec.getData()));
-    }
-    if (spec.getData() instanceof Number || spec.getData() instanceof Boolean) {
-      return CoercedTestRunnerSpec.of(spec.getData());
-    }
-    throw new IllegalStateException();
+    return spec.match(
+        new TestRunnerSpec.Matcher<CoercedTestRunnerSpec>() {
+          @Override
+          public CoercedTestRunnerSpec map(ImmutableMap<StringWithMacros, TestRunnerSpec> map) {
+            ImmutableMap.Builder<Arg, CoercedTestRunnerSpec> mapBuilder = ImmutableMap.builder();
+            for (Map.Entry<StringWithMacros, TestRunnerSpec> entry : map.entrySet()) {
+              mapBuilder.put(
+                  converter.convert(entry.getKey()), coerce(entry.getValue(), converter));
+            }
+            return CoercedTestRunnerSpec.of(mapBuilder.build());
+          }
+
+          @Override
+          public CoercedTestRunnerSpec list(ImmutableList<TestRunnerSpec> iterable) {
+            ImmutableList.Builder<CoercedTestRunnerSpec> list = ImmutableList.builder();
+            for (TestRunnerSpec item : iterable) {
+              list.add(coerce(item, converter));
+            }
+            return CoercedTestRunnerSpec.of(list.build());
+          }
+
+          @Override
+          public CoercedTestRunnerSpec stringWithMacros(StringWithMacros stringWithMacros) {
+            return CoercedTestRunnerSpec.of(converter.convert(stringWithMacros));
+          }
+
+          @Override
+          public CoercedTestRunnerSpec number(Number number) {
+            return CoercedTestRunnerSpec.of(number);
+          }
+
+          @Override
+          public CoercedTestRunnerSpec bool(boolean b) {
+            return CoercedTestRunnerSpec.of(b);
+          }
+        });
   }
 }

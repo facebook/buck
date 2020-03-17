@@ -82,51 +82,39 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
       Object object)
       throws CoerceFailedException {
 
-    return TestRunnerSpec.of(
-        coerceRecursively(
-            cellRoots,
-            filesystem,
-            pathRelativeToProjectRoot,
-            targetConfiguration,
-            hostConfiguration,
-            object));
-  }
-
-  private Object coerceRecursively(
-      CellNameResolver cellNameResolver,
-      ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      Object object)
-      throws CoerceFailedException {
     if (object instanceof Map) {
-      return mapTypeCoercer.coerceBoth(
-          cellNameResolver,
-          filesystem,
-          pathRelativeToProjectRoot,
-          targetConfiguration,
-          hostConfiguration,
-          object);
+      return TestRunnerSpec.ofMap(
+          mapTypeCoercer.coerceBoth(
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     }
     if (object instanceof Iterable) {
-      return listTypeCoercer.coerceBoth(
-          cellNameResolver,
-          filesystem,
-          pathRelativeToProjectRoot,
-          targetConfiguration,
-          hostConfiguration,
-          object);
+      return TestRunnerSpec.ofList(
+          listTypeCoercer.coerceBoth(
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     }
-    if (object instanceof Number || object instanceof Boolean) {
-      return object;
+    if (object instanceof Number) {
+      return TestRunnerSpec.ofNumber((Number) object);
+    } else if (object instanceof Boolean) {
+      return TestRunnerSpec.ofBoolean((Boolean) object);
+    } else {
+      return TestRunnerSpec.ofStringWithMacros(
+          macrosTypeCoercer.coerce(
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     }
-    return macrosTypeCoercer.coerce(
-        cellNameResolver,
-        filesystem,
-        pathRelativeToProjectRoot,
-        targetConfiguration,
-        hostConfiguration,
-        object);
   }
 }

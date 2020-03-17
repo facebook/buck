@@ -64,11 +64,11 @@ public class TestRunnerSpecCoercerTest {
             ImmutableMap.of("$(test arg)", "foo"));
 
     assertEquals(
-        TestRunnerSpec.of(
+        TestRunnerSpec.ofMap(
             ImmutableMap.of(
                 StringWithMacrosUtils.format(
                     "%s", new StringWithMacrosTypeCoercerTest.TestMacro(ImmutableList.of("arg"))),
-                TestRunnerSpec.of(StringWithMacrosUtils.format("foo")))),
+                TestRunnerSpec.ofStringWithMacros(StringWithMacrosUtils.format("foo")))),
         spec);
   }
 
@@ -84,13 +84,13 @@ public class TestRunnerSpecCoercerTest {
             ImmutableList.of("$(test arg)", "foo"));
 
     assertEquals(
-        TestRunnerSpec.of(
+        TestRunnerSpec.ofList(
             ImmutableList.of(
-                TestRunnerSpec.of(
+                TestRunnerSpec.ofStringWithMacros(
                     StringWithMacrosUtils.format(
                         "%s",
                         new StringWithMacrosTypeCoercerTest.TestMacro(ImmutableList.of("arg")))),
-                TestRunnerSpec.of(StringWithMacrosUtils.format("foo")))),
+                TestRunnerSpec.ofStringWithMacros(StringWithMacrosUtils.format("foo")))),
         spec);
   }
 
@@ -106,13 +106,13 @@ public class TestRunnerSpecCoercerTest {
             ImmutableMap.of("a", ImmutableList.of("foo", "some $(test arg2)")));
 
     assertEquals(
-        TestRunnerSpec.of(
+        TestRunnerSpec.ofMap(
             ImmutableMap.of(
                 StringWithMacrosUtils.format("a"),
-                TestRunnerSpec.of(
+                TestRunnerSpec.ofList(
                     ImmutableList.of(
-                        TestRunnerSpec.of(StringWithMacrosUtils.format("foo")),
-                        TestRunnerSpec.of(
+                        TestRunnerSpec.ofStringWithMacros(StringWithMacrosUtils.format("foo")),
+                        TestRunnerSpec.ofStringWithMacros(
                             StringWithMacrosUtils.format(
                                 "some %s",
                                 new StringWithMacrosTypeCoercerTest.TestMacro(
@@ -132,12 +132,12 @@ public class TestRunnerSpecCoercerTest {
             ImmutableMap.of("a", 1.0, "b", 2));
 
     assertEquals(
-        TestRunnerSpec.of(
+        TestRunnerSpec.ofMap(
             ImmutableMap.of(
                 StringWithMacrosUtils.format("a"),
-                TestRunnerSpec.of(1.0),
+                TestRunnerSpec.ofNumber(1.0),
                 StringWithMacrosUtils.format("b"),
-                TestRunnerSpec.of(2))),
+                TestRunnerSpec.ofNumber(2))),
         spec);
   }
 
@@ -153,12 +153,12 @@ public class TestRunnerSpecCoercerTest {
             ImmutableMap.of("bb", true, "bby", false));
 
     assertEquals(
-        TestRunnerSpec.of(
+        TestRunnerSpec.ofMap(
             ImmutableMap.of(
                 StringWithMacrosUtils.format("bb"),
-                TestRunnerSpec.of(true),
+                TestRunnerSpec.ofBoolean(true),
                 StringWithMacrosUtils.format("bby"),
-                TestRunnerSpec.of(false))),
+                TestRunnerSpec.ofBoolean(false))),
         spec);
   }
 

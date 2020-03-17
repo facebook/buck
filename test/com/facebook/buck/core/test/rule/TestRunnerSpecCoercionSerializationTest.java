@@ -62,27 +62,27 @@ public class TestRunnerSpecCoercionSerializationTest {
     RuleWithSupplementaryOutput rule = new RuleWithSupplementaryOutput(buildTarget, filesystem);
     graphBuilder.addToIndex(rule);
 
-    ImmutableTestRunnerSpec spec =
-        ImmutableTestRunnerSpec.ofImpl(
+    TestRunnerSpec spec =
+        TestRunnerSpec.ofMap(
             ImmutableMap.of(
                 StringWithMacrosUtils.format("a"),
-                ImmutableTestRunnerSpec.of(
+                TestRunnerSpec.ofList(
                     ImmutableList.of(
-                        ImmutableTestRunnerSpec.of(StringWithMacrosUtils.format("foo")),
-                        ImmutableTestRunnerSpec.of(
+                        TestRunnerSpec.ofStringWithMacros(StringWithMacrosUtils.format("foo")),
+                        TestRunnerSpec.ofMap(
                             ImmutableMap.of(
                                 StringWithMacrosUtils.format("a_nest"),
-                                ImmutableTestRunnerSpec.of(
+                                TestRunnerSpec.ofStringWithMacros(
                                     StringWithMacrosUtils.format(
                                         "nested %s", AbsoluteOutputMacro.of("bar"))))))),
                 StringWithMacrosUtils.format("some %s", AbsoluteOutputMacro.of("foo")),
-                ImmutableTestRunnerSpec.of(StringWithMacrosUtils.format("faz")),
+                TestRunnerSpec.ofStringWithMacros(StringWithMacrosUtils.format("faz")),
                 StringWithMacrosUtils.format("int"),
-                ImmutableTestRunnerSpec.of(1),
+                TestRunnerSpec.ofNumber(1),
                 StringWithMacrosUtils.format("double"),
-                ImmutableTestRunnerSpec.of(2.4),
+                TestRunnerSpec.ofNumber(2.4),
                 StringWithMacrosUtils.format("boolean"),
-                ImmutableTestRunnerSpec.of(true)));
+                TestRunnerSpec.ofBoolean(true)));
 
     CoercedTestRunnerSpec coercedSpec =
         TestRunnerSpecCoercer.coerce(spec, getConverter(graphBuilder, rule));
