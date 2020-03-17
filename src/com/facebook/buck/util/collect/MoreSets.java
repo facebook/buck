@@ -24,19 +24,33 @@ public class MoreSets {
 
   /** Creates a union of two immutable sets. */
   public static <T> ImmutableSet<T> union(ImmutableSet<T> set1, ImmutableSet<T> set2) {
-    return ImmutableSet.<T>builderWithExpectedSize(set1.size() + set2.size())
-        .addAll(set1)
-        .addAll(set2)
-        .build();
+    if (set1.isEmpty()) {
+      return set2;
+    } else if (set2.isEmpty()) {
+      return set1;
+    } else {
+      return ImmutableSet.<T>builderWithExpectedSize(set1.size() + set2.size())
+          .addAll(set1)
+          .addAll(set2)
+          .build();
+    }
   }
 
   /** Creates a union of three immutable sets. */
   public static <T> ImmutableSet<T> union(
       ImmutableSet<T> set1, ImmutableSet<T> set2, ImmutableSet<T> set3) {
-    return ImmutableSet.<T>builderWithExpectedSize(set1.size() + set2.size() + set3.size())
-        .addAll(set1)
-        .addAll(set2)
-        .addAll(set3)
-        .build();
+    if (set1.isEmpty()) {
+      return union(set2, set3);
+    } else if (set2.isEmpty()) {
+      return union(set1, set3);
+    } else if (set3.isEmpty()) {
+      return union(set1, set2);
+    } else {
+      return ImmutableSet.<T>builderWithExpectedSize(set1.size() + set2.size() + set3.size())
+          .addAll(set1)
+          .addAll(set2)
+          .addAll(set3)
+          .build();
+    }
   }
 }
