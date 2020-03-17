@@ -95,7 +95,7 @@ public class BuildCommandForProjectGenerators extends AbstractBuildCommand {
       return params
           .getParser()
           .buildTargetGraph(
-              createParsingContext(params.getCells().getRootCell(), executor)
+              createParsingContext(params.getCells(), executor)
                   .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                   .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode()),
               ImmutableSet.copyOf(buildTargets));

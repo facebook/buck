@@ -98,8 +98,7 @@ public class UninstallCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphWithTopLevelConfigurationTargets(
-                  createParsingContext(
-                          params.getCells().getRootCell(), pool.getListeningExecutorService())
+                  createParsingContext(params.getCells(), pool.getListeningExecutorService())
                       .withExcludeUnsupportedTargets(false)
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                   parseArgumentsAsTargetNodeSpecs(

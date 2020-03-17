@@ -105,7 +105,7 @@ public class BuckQueryEnvironmentTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
-    Cells cell =
+    Cells cells =
         new TestCellBuilder()
             .setFilesystem(TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()))
             .build();
@@ -116,7 +116,7 @@ public class BuckQueryEnvironmentTest {
 
     ExecutableFinder executableFinder = new ExecutableFinder();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
-    ParserConfig parserConfig = cell.getRootCell().getBuckConfig().getView(ParserConfig.class);
+    ParserConfig parserConfig = cells.getRootCell().getBuckConfig().getView(ParserConfig.class);
     PerBuildStateFactory perBuildStateFactory =
         new PerBuildStateFactory(
             typeCoercerFactory,
@@ -129,32 +129,32 @@ public class BuckQueryEnvironmentTest {
             UnconfiguredTargetConfiguration.INSTANCE);
     Parser parser =
         TestParserFactory.create(
-            depsAwareExecutor.get(), cell.getRootCell(), perBuildStateFactory, eventBus);
+            depsAwareExecutor.get(), cells.getRootCell(), perBuildStateFactory, eventBus);
     parserState =
         perBuildStateFactory.create(
-            ParsingContext.builder(cell.getRootCell(), executor)
+            ParsingContext.builder(cells, executor)
                 .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                 .build(),
             parser.getPermState());
 
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
-            cell.getRootCell(),
-            cell.getRootCell().getRoot().getPath(),
+            cells.getRootCell(),
+            cells.getRootCell().getRoot().getPath(),
             FakeBuckConfig.builder().build(),
             parser,
-            ParsingContext.builder(cell.getRootCell(), executor).build(),
+            ParsingContext.builder(cells, executor).build(),
             Optional.empty());
     OwnersReport.Builder ownersReportBuilder =
         OwnersReport.builder(
-            cell.getRootCell(),
-            cell.getRootCell().getRoot().getPath(),
+            cells.getRootCell(),
+            cells.getRootCell().getRoot().getPath(),
             parser,
             parserState,
             Optional.empty());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
-            cell.getRootCell(),
+            cells.getRootCell(),
             ownersReportBuilder,
             parser,
             parserState,

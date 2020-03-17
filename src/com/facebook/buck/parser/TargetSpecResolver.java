@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.files.DirectoryListCache;
@@ -206,7 +207,7 @@ public class TargetSpecResolver implements AutoCloseable {
    *     corresponding {@link TargetNodeSpec}.
    */
   public <T extends HasBuildTarget> ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
-      Cell rootCell,
+      Cells rootCell,
       Iterable<? extends TargetNodeSpec> specs,
       Optional<TargetConfiguration> targetConfiguration,
       FlavorEnhancer flavorEnhancer,
@@ -218,7 +219,8 @@ public class TargetSpecResolver implements AutoCloseable {
     // when returning results.
     ImmutableList<TargetNodeSpec> orderedSpecs = ImmutableList.copyOf(specs);
 
-    Multimap<AbsPath, Integer> perBuildFileSpecs = groupSpecsByBuildFile(rootCell, orderedSpecs);
+    Multimap<AbsPath, Integer> perBuildFileSpecs =
+        groupSpecsByBuildFile(rootCell.getRootCell(), orderedSpecs);
 
     // Kick off parse futures for each build file.
     ArrayList<ListenableFuture<Map.Entry<Integer, ImmutableSet<BuildTarget>>>> targetFutures =

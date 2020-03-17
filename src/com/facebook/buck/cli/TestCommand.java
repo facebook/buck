@@ -489,7 +489,7 @@ public class TestCommand extends BuildCommand {
       TargetGraphCreationResult targetGraphCreationResult;
       ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
       ParsingContext parsingContext =
-          createParsingContext(params.getCells().getRootCell(), pool.getListeningExecutorService())
+          createParsingContext(params.getCells(), pool.getListeningExecutorService())
               .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
               .withSpeculativeParsing(SpeculativeParsing.ENABLED);
 

@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.google.common.util.concurrent.MoreExecutors;
 
 public class TestPerBuildStateFactory {
@@ -24,7 +25,7 @@ public class TestPerBuildStateFactory {
     return parser
         .getPerBuildStateFactory()
         .create(
-            ParsingContext.builder(cell, MoreExecutors.newDirectExecutorService())
+            ParsingContext.builder(new Cells(cell), MoreExecutors.newDirectExecutorService())
                 .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                 .build(),
             parser.getPermState());

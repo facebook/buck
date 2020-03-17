@@ -58,7 +58,7 @@ public class ParserBenchmark {
 
   private Parser parser;
   private ProjectFilesystem filesystem;
-  private Cells cell;
+  private Cells cells;
   private ListeningExecutorService executorService;
   private DepsAwareExecutor<? super ComputeResult, ?> executor;
 
@@ -110,9 +110,9 @@ public class ParserBenchmark {
             .setSections(configSectionsBuilder.build())
             .build();
 
-    cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(threadCount));
-    parser = TestParserFactory.create(executor, cell.getRootCell());
+    parser = TestParserFactory.create(executor, cells.getRootCell());
   }
 
   @After
@@ -131,14 +131,14 @@ public class ParserBenchmark {
   @Benchmark
   public void parseMultipleTargets() throws Exception {
     parser.buildTargetGraphWithTopLevelConfigurationTargets(
-        ParsingContext.builder(cell.getRootCell(), executorService)
+        ParsingContext.builder(cells, executorService)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
             .build(),
         ImmutableList.of(
             TargetNodePredicateSpec.of(
                 BuildFileSpec.fromRecursivePath(
                     CellRelativePath.of(
-                        cell.getRootCell().getCanonicalName(), ForwardRelativePath.of(""))))),
+                        cells.getRootCell().getCanonicalName(), ForwardRelativePath.of(""))))),
         Optional.empty());
   }
 }

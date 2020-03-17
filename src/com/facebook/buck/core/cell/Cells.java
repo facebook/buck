@@ -17,6 +17,7 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -36,6 +37,11 @@ public class Cells {
 
   public Cell getRootCell() {
     return rootCell;
+  }
+
+  /** Root cell buckconfig. */
+  public BuckConfig getBuckConfig() {
+    return rootCell.getBuckConfig();
   }
 
   public Cell getCell(CanonicalCellName cellName) {

@@ -308,7 +308,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
       ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
           targetSpecResolver.resolveTargetSpecs(
-              parsingContext.getCell(),
+              parsingContext.getCells(),
               specs,
               targetConfiguration,
               (buildTarget, targetNode, targetType) ->
@@ -356,7 +356,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
         targetSpecResolver.resolveTargetSpecs(
-            parsingContext.getCell(),
+            parsingContext.getCells(),
             targetNodeSpecs,
             targetConfiguration,
             (buildTarget, targetNode, targetType) ->

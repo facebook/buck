@@ -90,7 +90,7 @@ public class IjProjectCommandHelper {
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
-  private final Cell cell;
+  private final Cells cells;
   private final IjProjectConfig projectConfig;
   private final Optional<TargetConfiguration> targetConfiguration;
   private final boolean processAnnotations;
@@ -109,7 +109,7 @@ public class IjProjectCommandHelper {
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      Cell cell,
+      Cells cells,
       Optional<TargetConfiguration> targetConfiguration,
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
@@ -128,7 +128,7 @@ public class IjProjectCommandHelper {
     this.buckConfig = buckConfig;
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.typeCoercerFactory = typeCoercerFactory;
-    this.cell = cell;
+    this.cells = cells;
     this.projectConfig = projectConfig;
     this.processAnnotations = processAnnotations;
     this.updateOnly = updateOnly;
@@ -138,7 +138,7 @@ public class IjProjectCommandHelper {
     this.projectGeneratorParameters = projectGeneratorParameters;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.parsingContext =
-        ParsingContext.builder(cell, executor)
+        ParsingContext.builder(cells, executor)
             .setProfilingEnabled(enableParserProfiling)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
             .setApplyDefaultFlavorsMode(
@@ -227,15 +227,15 @@ public class IjProjectCommandHelper {
     if (outputDir != null) {
       AbsPath outputPath = AbsPath.of(Paths.get(outputDir).toAbsolutePath());
       Files.createDirectories(outputPath.getPath());
-      Cell rootCell = this.cell.getCell(CanonicalCellName.rootCell());
+      Cell rootCell = this.cells.getCell(CanonicalCellName.rootCell());
       return new DefaultProjectFilesystemFactory()
           .createProjectFilesystem(
-              this.cell.getCanonicalName(),
+              this.cells.getRootCell().getCanonicalName(),
               outputPath,
               BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(
                   rootCell.getBuckConfig().getConfig()));
     } else {
-      return cell.getFilesystem();
+      return cells.getRootCell().getFilesystem();
     }
   }
 
@@ -249,7 +249,7 @@ public class IjProjectCommandHelper {
             targetGraphCreationResult.getTargetGraph(),
             getJavaPackageFinder(buckConfig),
             JavaFileParser.createJavaFileParser(languageLevelOptions),
-            cell.getFilesystem(),
+            cells.getRootCell().getFilesystem(),
             projectConfig,
             getProjectOutputFilesystem());
 
@@ -372,7 +372,7 @@ public class IjProjectCommandHelper {
               targetGraphCreationResult,
               targetConfiguration,
               buckEventBus,
-              new Cells(cell));
+              cells);
     }
     return targetGraphCreationResult;
   }
@@ -399,7 +399,7 @@ public class IjProjectCommandHelper {
 
     return filterTests(
         tests,
-        cell.getCellPathResolver(),
+        cells.getRootCell().getCellPathResolver(),
         projectConfig.getIncludeTestPatterns(),
         projectConfig.getExcludeTestPatterns());
   }

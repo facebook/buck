@@ -345,7 +345,7 @@ public class InstallCommand extends BuildCommand {
 
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        createParsingContext(params.getCells().getRootCell(), executor)
+        createParsingContext(params.getCells(), executor)
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withExcludeUnsupportedTargets(false);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();

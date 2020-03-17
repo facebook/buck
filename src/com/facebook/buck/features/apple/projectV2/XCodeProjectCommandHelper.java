@@ -113,7 +113,7 @@ public class XCodeProjectCommandHelper {
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
-  private final Cell cell;
+  private final Cells cells;
   private final Optional<TargetConfiguration> targetConfiguration;
   private final ImmutableSet<Flavor> appleCxxFlavors;
   private final RuleKeyConfiguration ruleKeyConfiguration;
@@ -147,7 +147,7 @@ public class XCodeProjectCommandHelper {
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      Cell cell,
+      Cells cells,
       RuleKeyConfiguration ruleKeyConfiguration,
       Optional<TargetConfiguration> targetConfiguration,
       Console console,
@@ -178,7 +178,7 @@ public class XCodeProjectCommandHelper {
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.typeCoercerFactory = typeCoercerFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
-    this.cell = cell;
+    this.cells = cells;
     this.targetConfiguration = targetConfiguration;
     this.depsAwareExecutorSupplier = depsAwareExecutor;
     this.appleCxxFlavors = appleCxxFlavors;
@@ -199,14 +199,15 @@ public class XCodeProjectCommandHelper {
     this.argsParser = argsParser;
     this.buildRunner = buildRunner;
     this.parsingContext =
-        ParsingContext.builder(cell, parsingExecutorService)
+        ParsingContext.builder(cells, parsingExecutorService)
             .setProfilingEnabled(enableParserProfiling)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
             .setApplyDefaultFlavorsMode(
                 buckConfig.getView(ParserConfig.class).getDefaultFlavorsMode())
             .build();
 
-    this.focusedTargetMatcher = new FocusedTargetMatcher(focus, cell.getCellNameResolver());
+    this.focusedTargetMatcher =
+        new FocusedTargetMatcher(focus, cells.getRootCell().getCellNameResolver());
     this.actionGraphProvider = actionGraphProvider;
   }
 
@@ -403,7 +404,7 @@ public class XCodeProjectCommandHelper {
         generateWorkspacesForTargets(
             buckEventBus,
             pluginManager,
-            cell,
+            cells.getRootCell(),
             buckConfig,
             ruleKeyConfiguration,
             executorService,
@@ -622,7 +623,9 @@ public class XCodeProjectCommandHelper {
                         + "[%s]\n"
                         + "  %s = %s\n\n"
                         + "If you would like to always kill Xcode, use '%s'.\n",
-                    cell.getFilesystem()
+                    cells
+                        .getRootCell()
+                        .getFilesystem()
                         .getRootPath()
                         .resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME),
                     getIDEForceKillSectionName(),
@@ -719,7 +722,7 @@ public class XCodeProjectCommandHelper {
               targetGraphCreationResult,
               targetConfiguration,
               buckEventBus,
-              new Cells(cell));
+              cells);
     }
     return targetGraphCreationResult.withBuildTargets(originalBuildTargets);
   }

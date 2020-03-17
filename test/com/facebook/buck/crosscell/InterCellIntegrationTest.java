@@ -33,7 +33,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -401,7 +401,7 @@ public class InterCellIntegrationTest {
     // We could just do a build, but that's a little extreme since all we need is the target graph
     Parser parser = TestParserFactory.create(executor.get(), primary.asCell());
 
-    Cell primaryCell = primary.asCell();
+    Cells primaryCell = new Cells(primary.asCell());
     BuildTarget namedTarget = BuildTargetFactory.newInstance(targetName);
 
     // It's enough that this parses cleanly.

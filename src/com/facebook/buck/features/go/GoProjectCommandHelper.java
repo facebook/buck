@@ -105,7 +105,7 @@ public class GoProjectCommandHelper {
     this.projectGeneratorParameters = projectGeneratorParameters;
     this.targetConfiguration = targetConfiguration;
     this.parsingContext =
-        ParsingContext.builder(cells.getRootCell(), executor)
+        ParsingContext.builder(cells, executor)
             .setProfilingEnabled(enableParserProfiling)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
             .setApplyDefaultFlavorsMode(

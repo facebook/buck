@@ -176,8 +176,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
           params
               .getParser()
               .buildTargetGraph(
-                  createParsingContext(
-                      params.getCells().getRootCell(), pool.getListeningExecutorService()),
+                  createParsingContext(params.getCells(), pool.getListeningExecutorService()),
                   targets);
     } catch (BuildFileParseException e) {
       throw new BuckUncheckedExecutionException(e);

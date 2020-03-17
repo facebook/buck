@@ -94,7 +94,7 @@ public class PerBuildStateFactory {
       DaemonicParserState daemonicParserState,
       Optional<AtomicLong> parseProcessedBytes) {
 
-    Cells cells = new Cells(parsingContext.getCell().getCell(CanonicalCellName.rootCell()));
+    Cells cells = new Cells(parsingContext.getCells().getCell(CanonicalCellName.rootCell()));
     ListeningExecutorService executorService = parsingContext.getExecutor();
     SymlinkCache symlinkCache = new SymlinkCache(eventBus, daemonicParserState);
     CellManager cellManager = new CellManager(cells.getRootCell(), symlinkCache);
@@ -207,7 +207,7 @@ public class PerBuildStateFactory {
             new ThrowingPlatformResolver(),
             new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()),
             hostConfiguration,
-            parsingContext.getCell().getBuckConfig(),
+            parsingContext.getCells().getBuckConfig(),
             Optional.empty());
 
     // This pipeline uses a direct executor instead of pipelineExecutorService to avoid
@@ -257,7 +257,7 @@ public class PerBuildStateFactory {
             new MultiPlatformTargetConfigurationTransformer(
                 configurationRuleRegistry.getTargetPlatformResolver()),
             hostConfiguration,
-            parsingContext.getCell().getBuckConfig(),
+            parsingContext.getCells().getBuckConfig(),
             (parsingContext.excludeUnsupportedTargets()
                     && parsingContext.enableTargetCompatibilityChecks())
                 ? Optional.of(configurationRuleRegistry)

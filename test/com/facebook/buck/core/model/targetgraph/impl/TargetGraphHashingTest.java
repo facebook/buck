@@ -23,7 +23,7 @@ import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
@@ -102,29 +102,31 @@ public class TargetGraphHashingTest {
 
     eventBus = new DefaultBuckEventBus(new IncrementingFakeClock(), new BuildId());
     ruleKeyConfiguration = TestRuleKeyConfigurationFactory.create();
-    Cell cell = workspace.asCell();
-    projectFilesystem = cell.getFilesystem();
+    Cells cells = new Cells(workspace.asCell());
+    projectFilesystem = cells.getRootCell().getFilesystem();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(BuckPluginManagerFactory.createPluginManager());
     Parser parser =
-        TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider, eventBus);
+        TestParserFactory.create(
+            executor.get(), cells.getRootCell(), knownRuleTypesProvider, eventBus);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PerBuildState parserState =
         new PerBuildStateFactory(
                 typeCoercerFactory,
                 new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
+                new ParserPythonInterpreterProvider(cells.getBuckConfig(), new ExecutableFinder()),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)
             .create(
-                ParsingContext.builder(cell, MoreExecutors.newDirectExecutorService()).build(),
+                ParsingContext.builder(cells, MoreExecutors.newDirectExecutorService()).build(),
                 parser.getPermState());
     targetNodeRawAttributesProvider =
         node ->
-            parser.getTargetNodeRawAttributesJob(parserState, cell, node, DependencyStack.root());
+            parser.getTargetNodeRawAttributesJob(
+                parserState, cells.getRootCell(), node, DependencyStack.root());
   }
 
   @Test

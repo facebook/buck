@@ -139,7 +139,7 @@ abstract class AbstractParser implements Parser {
 
     try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
       return getTargetNodeRawAttributes(
-          state, parsingContext.getCell(), targetNode, dependencyStack);
+          state, parsingContext.getCells().getRootCell(), targetNode, dependencyStack);
     }
   }
 

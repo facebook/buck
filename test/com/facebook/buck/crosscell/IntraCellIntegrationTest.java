@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
@@ -75,24 +76,22 @@ public class IntraCellIntegrationTest {
     workspace.setUp();
 
     // We don't need to do a build. It's enough to just parse these things.
-    Cell cell = workspace.asCell();
+    Cells cells = new Cells(workspace.asCell());
 
-    Parser parser = TestParserFactory.create(executor.get(), cell);
+    Parser parser = TestParserFactory.create(executor.get(), cells.getRootCell());
 
     // This parses cleanly
     parser.buildTargetGraph(
         ParsingContext.builder(
-                cell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+                cells, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
             .build(),
         ImmutableSet.of(BuildTargetFactory.newInstance("//just-a-directory:rule")));
-
-    Cell childCell = cell.getCell(BuildTargetFactory.newInstance("child//:child-target").getCell());
 
     try {
       // Whereas, because visibility is limited to the same cell, this won't.
       parser.buildTargetGraph(
           ParsingContext.builder(
-                  childCell, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
+                  cells, MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()))
               .build(),
           ImmutableSet.of(BuildTargetFactory.newInstance("child//:child-target")));
       fail("Didn't expect parsing to work because of visibility");

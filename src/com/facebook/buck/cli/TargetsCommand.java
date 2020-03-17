@@ -361,8 +361,7 @@ public class TargetsCommand extends AbstractCommand {
                 .getParser()
                 .getPerBuildStateFactory()
                 .create(
-                    createParsingContext(
-                            params.getCells().getRootCell(), pool.getListeningExecutorService())
+                    createParsingContext(params.getCells(), pool.getListeningExecutorService())
                         .withExcludeUnsupportedTargets(false)
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
@@ -657,7 +656,7 @@ public class TargetsCommand extends AbstractCommand {
       throws InterruptedException, BuildFileParseException, IOException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        createParsingContext(params.getCells().getRootCell(), executor)
+        createParsingContext(params.getCells(), executor)
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withSpeculativeParsing(SpeculativeParsing.ENABLED);
     if (arguments.isEmpty()) {
@@ -773,7 +772,7 @@ public class TargetsCommand extends AbstractCommand {
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        createParsingContext(params.getCells().getRootCell(), executor)
+        createParsingContext(params.getCells(), executor)
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withSpeculativeParsing(SpeculativeParsing.ENABLED);
     // Parse the entire action graph, or (if targets are specified), only the specified targets and
@@ -1006,7 +1005,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getUnconfiguredBuildTargetFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                createParsingContext(params.getCells().getRootCell(), executor)
+                createParsingContext(params.getCells(), executor)
                     .withExcludeUnsupportedTargets(false),
                 params.getParser().getPermState())) {
 
@@ -1335,7 +1334,7 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  createParsingContext(params.getCells().getRootCell(), executor)
+                  createParsingContext(params.getCells(), executor)
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                       .withExcludeUnsupportedTargets(false),
                   matchingBuildTargetsWithTests)
@@ -1427,7 +1426,7 @@ public class TargetsCommand extends AbstractCommand {
                 params.getUnconfiguredBuildTargetFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                createParsingContext(params.getCells().getRootCell(), executor)
+                createParsingContext(params.getCells(), executor)
                     .withExcludeUnsupportedTargets(false),
                 params.getParser().getPermState())) {
       buildTargetHashes =

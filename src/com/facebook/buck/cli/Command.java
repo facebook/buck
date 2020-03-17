@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
@@ -84,5 +84,5 @@ public interface Command {
   /**
    * Creates a basic {@link ParsingContext} with some options populated from command's arguments.
    */
-  ParsingContext createParsingContext(Cell cell, ListeningExecutorService executor);
+  ParsingContext createParsingContext(Cells cells, ListeningExecutorService executor);
 }

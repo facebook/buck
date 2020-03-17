@@ -58,16 +58,14 @@ public class QueryCommand extends AbstractQueryCommand {
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
-                    createParsingContext(
-                            params.getCells().getRootCell(), pool.getListeningExecutorService())
+                    createParsingContext(params.getCells(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params,
               parserState,
-              createParsingContext(
-                  params.getCells().getRootCell(), pool.getListeningExecutorService()));
+              createParsingContext(params.getCells(), pool.getListeningExecutorService()));
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);

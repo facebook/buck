@@ -178,7 +178,7 @@ public class ParserWithConfigurableAttributesTest {
   private ProjectFilesystem filesystem;
   private AbsPath cellRoot;
   private BuckEventBus eventBus;
-  private Cell cell;
+  private Cells cells;
   private KnownRuleTypesProvider knownRuleTypesProvider;
   private ParseEventStartedCounter counter;
   private ListeningExecutorService executorService;
@@ -206,7 +206,7 @@ public class ParserWithConfigurableAttributesTest {
       Parser parser,
       TypeCoercerFactory typeCoercerFactory,
       BuckEventBus eventBus,
-      Cell cell,
+      Cells cells,
       KnownRuleTypesProvider knownRuleTypesProvider,
       boolean enableProfiling,
       ListeningExecutorService executor,
@@ -218,15 +218,18 @@ public class ParserWithConfigurableAttributesTest {
                 typeCoercerFactory,
                 new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
+                new ParserPythonInterpreterProvider(cells.getBuckConfig(), executableFinder),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)
             .create(
-                ParsingContext.builder(cell, executor).setProfilingEnabled(enableProfiling).build(),
+                ParsingContext.builder(cells, executor)
+                    .setProfilingEnabled(enableProfiling)
+                    .build(),
                 parser.getPermState())) {
-      AbstractParser.getTargetNodeRawAttributes(state, cell, AbsPath.of(buildFile)).getTargets();
+      AbstractParser.getTargetNodeRawAttributes(state, cells.getRootCell(), AbsPath.of(buildFile))
+          .getTargets();
     }
   }
 
@@ -337,13 +340,14 @@ public class ParserWithConfigurableAttributesTest {
             toolchainProviderBuilder.withToolchain(
                 AppleCxxPlatformsProvider.DEFAULT_NAME, provider));
 
-    cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
 
     typeCoercerFactory = new DefaultTypeCoercerFactory();
-    parser = TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider, eventBus);
+    parser =
+        TestParserFactory.create(
+            executor.get(), cells.getRootCell(), knownRuleTypesProvider, eventBus);
 
     counter = new ParseEventStartedCounter();
     eventBus.register(counter);
@@ -351,7 +355,7 @@ public class ParserWithConfigurableAttributesTest {
     executorService =
         MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(parsingThreads));
 
-    parsingContext = ParsingContext.builder(cell, executorService).build();
+    parsingContext = ParsingContext.builder(cells, executorService).build();
   }
 
   @After
@@ -373,7 +377,7 @@ public class ParserWithConfigurableAttributesTest {
 
     TargetGraph targetGraph =
         parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-    ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
+    ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cells.getRootCell());
     BuildRule fooRule = graphBuilder.requireRule(fooTarget);
     assertNotNull(fooRule);
     BuildRule barRule = graphBuilder.requireRule(barTarget);
@@ -736,13 +740,13 @@ public class ParserWithConfigurableAttributesTest {
                     EnvVariablesProvider.getSystemEnv().get("PATH")))
             .build();
 
-    Cells cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     // Call filterAllTargetsInProject to populate the cache.
-    filterAllTargetsInProject(parser, parsingContext.withCell(cell.getRootCell()));
+    filterAllTargetsInProject(parser, parsingContext.withCells(cells));
 
     // Call filterAllTargetsInProject to request cached rules with identical environment.
-    filterAllTargetsInProject(parser, parsingContext.withCell(cell.getRootCell()));
+    filterAllTargetsInProject(parser, parsingContext.withCells(cells));
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
@@ -756,7 +760,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -777,7 +781,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -796,7 +800,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -816,7 +820,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -835,7 +839,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -855,7 +859,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -874,7 +878,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -894,7 +898,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -913,7 +917,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -935,7 +939,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -954,7 +958,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -974,7 +978,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -993,7 +997,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1014,7 +1018,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1033,7 +1037,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1054,7 +1058,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1073,7 +1077,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1094,7 +1098,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1113,7 +1117,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1133,7 +1137,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1152,7 +1156,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1172,7 +1176,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1191,7 +1195,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1211,7 +1215,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1231,7 +1235,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1251,7 +1255,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1284,7 +1288,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell.getRootCell(),
+        cell,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1304,7 +1308,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell.getRootCell(),
+        cell,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1323,7 +1327,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1343,7 +1347,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1363,7 +1367,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1383,7 +1387,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1402,7 +1406,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1422,7 +1426,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1441,7 +1445,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1461,7 +1465,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1480,7 +1484,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1500,7 +1504,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1519,7 +1523,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1537,7 +1541,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1556,7 +1560,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1574,7 +1578,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1593,7 +1597,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1611,7 +1615,7 @@ public class ParserWithConfigurableAttributesTest {
         parser,
         typeCoercerFactory,
         eventBus,
-        cell,
+        cells,
         knownRuleTypesProvider,
         false,
         executorService,
@@ -1637,7 +1641,7 @@ public class ParserWithConfigurableAttributesTest {
             .build();
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    filterAllTargetsInProject(parser, parsingContext.withCell(cell.getRootCell()));
+    filterAllTargetsInProject(parser, parsingContext.withCells(cell));
 
     assertEquals("Should have invalidated cache.", 2, counter.calls);
   }
@@ -1668,7 +1672,7 @@ public class ParserWithConfigurableAttributesTest {
         TestParserFactory.create(
             executor.get(), newCell.getRootCell(), knownRuleTypesProvider, eventBus);
 
-    filterAllTargetsInProject(newParser, parsingContext.withCell(newCell.getRootCell()));
+    filterAllTargetsInProject(newParser, parsingContext.withCells(newCell));
 
     assertEquals("Should not have invalidated cache.", 1, counter.calls);
   }
@@ -1765,7 +1769,7 @@ public class ParserWithConfigurableAttributesTest {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    parser = TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider);
+    parser = TestParserFactory.create(executor.get(), cells.getRootCell(), knownRuleTypesProvider);
     Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
     Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
@@ -1876,7 +1880,7 @@ public class ParserWithConfigurableAttributesTest {
     HashCode libKey = hashes.get(fooLibTarget);
     HashCode lib2Key = hashes.get(fooLib2Target);
 
-    parser = TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider);
+    parser = TestParserFactory.create(executor.get(), cells.getRootCell(), knownRuleTypesProvider);
     Files.write(
         testFooBuckFile,
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\njava_library("
@@ -1931,7 +1935,8 @@ public class ParserWithConfigurableAttributesTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
+      ActionGraphBuilder graphBuilder =
+          buildActionGraph(eventBus, targetGraph, cells.getRootCell());
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
       assertEquals(
@@ -1948,7 +1953,8 @@ public class ParserWithConfigurableAttributesTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
+      ActionGraphBuilder graphBuilder =
+          buildActionGraph(eventBus, targetGraph, cells.getRootCell());
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
       assertEquals(
@@ -1983,7 +1989,8 @@ public class ParserWithConfigurableAttributesTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
+      ActionGraphBuilder graphBuilder =
+          buildActionGraph(eventBus, targetGraph, cells.getRootCell());
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
 
@@ -2003,7 +2010,8 @@ public class ParserWithConfigurableAttributesTest {
     {
       TargetGraph targetGraph =
           parser.buildTargetGraph(parsingContext, buildTargets).getTargetGraph();
-      ActionGraphBuilder graphBuilder = buildActionGraph(eventBus, targetGraph, cell);
+      ActionGraphBuilder graphBuilder =
+          buildActionGraph(eventBus, targetGraph, cells.getRootCell());
 
       JavaLibrary libRule = (JavaLibrary) graphBuilder.requireRule(libTarget);
       assertEquals(
@@ -2028,8 +2036,7 @@ public class ParserWithConfigurableAttributesTest {
             .setFilesystem(filesystem)
             .setSections("[project]", "allow_symlinks = forbid")
             .build();
-    cell =
-        new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem).build().getRootCell();
+    cells = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem).build();
 
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
@@ -2044,7 +2051,7 @@ public class ParserWithConfigurableAttributesTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
-    parser.buildTargetGraph(parsingContext.withCell(cell), buildTargets);
+    parser.buildTargetGraph(parsingContext.withCells(cells), buildTargets);
   }
 
   @Test
@@ -2058,8 +2065,7 @@ public class ParserWithConfigurableAttributesTest {
             .setFilesystem(filesystem)
             .setSections("[project]", "read_only_paths = foo/bar")
             .build();
-    cell =
-        new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem).build().getRootCell();
+    cells = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem).build();
 
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
@@ -2074,14 +2080,14 @@ public class ParserWithConfigurableAttributesTest {
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
 
-    parser.buildTargetGraph(parsingContext.withCell(cell), buildTargets);
+    parser.buildTargetGraph(parsingContext.withCells(cells), buildTargets);
 
     DaemonicParserState permState = parser.getPermState();
     for (BuildTarget target : buildTargets) {
       assertTrue(
           permState
               .getOrCreateNodeCache(DaemonicParserState.TARGET_NODE_CACHE_TYPE)
-              .lookupComputedNode(cell, target, eventBus)
+              .lookupComputedNode(cells.getRootCell(), target, eventBus)
               .isPresent());
     }
   }
@@ -2121,12 +2127,11 @@ public class ParserWithConfigurableAttributesTest {
 
     BuckConfig config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
 
-    Cell cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     TargetNode<GenruleDescriptionArg> node =
         TargetNodes.castArg(
                 parser.getTargetNodeAssertCompatible(
-                    parsingContext.withCell(cell), buildTarget, DependencyStack.root()),
+                    parsingContext.withCells(cells), buildTarget, DependencyStack.root()),
                 GenruleDescriptionArg.class)
             .get();
 
@@ -2151,17 +2156,15 @@ public class ParserWithConfigurableAttributesTest {
             .setFilesystem(filesystem)
             .build();
 
-    Cell cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
 
-    cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated.", 1, counter.calls);
@@ -2187,7 +2190,7 @@ public class ParserWithConfigurableAttributesTest {
     ImmutableSet<BuildTarget> result =
         parser
             .buildTargetGraphWithTopLevelConfigurationTargets(
-                ParsingContext.builder(cell, executorService)
+                ParsingContext.builder(cells, executorService)
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
                 ImmutableList.of(
@@ -2227,13 +2230,12 @@ public class ParserWithConfigurableAttributesTest {
                     ImmutableMap.of("platform", "iphoneos-arm64", "type", "shared")))
             .build();
 
-    cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     ImmutableSet<BuildTarget> result =
         parser
             .buildTargetGraphWithTopLevelConfigurationTargets(
-                ParsingContext.builder(cell, executorService)
+                ParsingContext.builder(cells, executorService)
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
                 ImmutableList.of(
@@ -2274,13 +2276,12 @@ public class ParserWithConfigurableAttributesTest {
                     ImmutableMap.of("platform", "iphoneos-arm64", "type", "shared")))
             .build();
 
-    cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     ImmutableSet<BuildTarget> result =
         parser
             .buildTargetGraphWithTopLevelConfigurationTargets(
-                ParsingContext.builder(cell, executorService)
+                ParsingContext.builder(cells, executorService)
                     .setApplyDefaultFlavorsMode(ApplyDefaultFlavorsMode.SINGLE)
                     .build(),
                 ImmutableList.of(
@@ -2304,7 +2305,7 @@ public class ParserWithConfigurableAttributesTest {
         ("genrule(" + "name='gen'," + "out='generated', " + "cmd='touch ${OUT}')").getBytes(UTF_8);
     Files.write(buckFile.getPath(), bytes);
 
-    cell = new TestCellBuilder().setFilesystem(filesystem).build().getRootCell();
+    cells = new TestCellBuilder().setFilesystem(filesystem).build();
 
     List<ParseEvent.Finished> events = new ArrayList<>();
     class EventListener {
@@ -2316,7 +2317,7 @@ public class ParserWithConfigurableAttributesTest {
     EventListener eventListener = new EventListener();
     eventBus.register(eventListener);
 
-    ParsingContext parsingContext = ParsingContext.builder(cell, executorService).build();
+    ParsingContext parsingContext = ParsingContext.builder(cells, executorService).build();
 
     parser.buildTargetGraphWithTopLevelConfigurationTargets(
         parsingContext,
@@ -2402,11 +2403,10 @@ public class ParserWithConfigurableAttributesTest {
             .setFilesystem(filesystem)
             .build();
 
-    Cell cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
 
     // Call filterAllTargetsInProject to request cached rules.
     config =
@@ -2419,11 +2419,10 @@ public class ParserWithConfigurableAttributesTest {
                     .build())
             .build();
 
-    cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated.", 2, counter.calls);
@@ -2444,11 +2443,10 @@ public class ParserWithConfigurableAttributesTest {
 
     BuckConfig config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
 
-    Cell cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
 
     // Call filterAllTargetsInProject to request cached rules.
     config =
@@ -2461,11 +2459,10 @@ public class ParserWithConfigurableAttributesTest {
                     .build())
             .build();
 
-    cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated.", 2, counter.calls);
@@ -2494,20 +2491,18 @@ public class ParserWithConfigurableAttributesTest {
             .setFilesystem(filesystem)
             .build();
 
-    Cell cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
 
     // Call filterAllTargetsInProject to request cached rules.
     config = FakeBuckConfig.builder().setFilesystem(filesystem).build();
 
-    cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should have invalidated.", 2, counter.calls);
@@ -2537,11 +2532,10 @@ public class ParserWithConfigurableAttributesTest {
             .setFilesystem(filesystem)
             .build();
 
-    Cell cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
 
     // Call filterAllTargetsInProject to request cached rules.
     config =
@@ -2555,11 +2549,10 @@ public class ParserWithConfigurableAttributesTest {
             .setFilesystem(filesystem)
             .build();
 
-    cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
 
     // Test that the second parseBuildFile call repopulated the cache.
     assertEquals("Should not have invalidated.", 1, counter.calls);
@@ -2584,10 +2577,9 @@ public class ParserWithConfigurableAttributesTest {
             .setSections("[parser]", "polyglot_parsing_enabled=true")
             .build();
 
-    Cell cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
     parser.getTargetNodeAssertCompatible(
-        parsingContext.withCell(cell), buildTarget, DependencyStack.root());
+        parsingContext.withCells(cells), buildTarget, DependencyStack.root());
   }
 
   @Test
@@ -2606,12 +2598,11 @@ public class ParserWithConfigurableAttributesTest {
             .setSections("[parser]", "default_build_file_syntax=skylark")
             .build();
 
-    Cell cell =
-        new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build().getRootCell();
+    Cells cells = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
     TargetNode<?> targetNode =
         parser.getTargetNodeAssertCompatible(
-            parsingContext.withCell(cell),
+            parsingContext.withCells(cells),
             BuildTargetFactory.newInstance("//:string"),
             DependencyStack.root());
     // in Skylark the type of str is "string" and in Python DSL it's "<type 'str'>"
@@ -2647,7 +2638,7 @@ public class ParserWithConfigurableAttributesTest {
                         TargetNodePredicateSpec.of(
                             BuildFileSpec.fromRecursivePath(
                                 CellRelativePath.of(
-                                    parsingContext.getCell().getCanonicalName(),
+                                    parsingContext.getCells().getRootCell().getCanonicalName(),
                                     ForwardRelativePath.of(""))))),
                     Optional.empty())
                 .getTargetGraph()
@@ -2669,7 +2660,7 @@ public class ParserWithConfigurableAttributesTest {
             parser,
             typeCoercerFactory,
             eventBus,
-            cell,
+            cells,
             knownRuleTypesProvider,
             parsingContext,
             executorService,
@@ -2690,7 +2681,7 @@ public class ParserWithConfigurableAttributesTest {
       Parser parser,
       TypeCoercerFactory typeCoercerFactory,
       BuckEventBus eventBus,
-      Cell cell,
+      Cells cells,
       KnownRuleTypesProvider knownRuleTypesProvider,
       ParsingContext parsingContext,
       ListeningExecutorService executor,
@@ -2717,19 +2708,19 @@ public class ParserWithConfigurableAttributesTest {
                 typeCoercerFactory,
                 new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
-                new ParserPythonInterpreterProvider(cell.getBuckConfig(), executableFinder),
+                new ParserPythonInterpreterProvider(cells.getBuckConfig(), executableFinder),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 UnconfiguredTargetConfiguration.INSTANCE)
-            .create(ParsingContext.builder(cell, executor).build(), parser.getPermState())) {
+            .create(ParsingContext.builder(cells, executor).build(), parser.getPermState())) {
       for (BuildTarget buildTarget : buildTargets) {
         attributesByTarget.put(
             buildTarget,
             Preconditions.checkNotNull(
                 parser.getTargetNodeRawAttributes(
                     state,
-                    cell,
+                    cells.getRootCell(),
                     parser.getTargetNodeAssertCompatible(
                         parsingContext, buildTarget, DependencyStack.root()),
                     DependencyStack.root())));

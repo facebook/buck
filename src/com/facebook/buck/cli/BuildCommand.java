@@ -111,7 +111,7 @@ public class BuildCommand extends AbstractBuildCommand {
       return params
           .getParser()
           .buildTargetGraphWithoutTopLevelConfigurationTargets(
-              createParsingContext(params.getCells().getRootCell(), executor)
+              createParsingContext(params.getCells(), executor)
                   .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                   .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode()),
               specs,

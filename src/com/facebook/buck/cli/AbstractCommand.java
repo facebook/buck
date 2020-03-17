@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -680,12 +681,12 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   protected void addCommandSpecificConfigOverrides(CellConfig.Builder builder) {}
 
   @Override
-  public ParsingContext createParsingContext(Cell cell, ListeningExecutorService executor) {
-    return ParsingContext.builder(cell, executor)
+  public ParsingContext createParsingContext(Cells cells, ListeningExecutorService executor) {
+    return ParsingContext.builder(cells, executor)
         .setProfilingEnabled(getEnableParserProfiling())
         .setExcludeUnsupportedTargets(getExcludeIncompatibleTargets())
         .setEnableTargetCompatibilityChecks(
-            cell.getBuckConfig().getView(ParserConfig.class).getEnableTargetCompatibilityChecks())
+            cells.getBuckConfig().getView(ParserConfig.class).getEnableTargetCompatibilityChecks())
         .build();
   }
 }

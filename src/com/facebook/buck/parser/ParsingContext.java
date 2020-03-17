@@ -16,7 +16,7 @@
 
 package com.facebook.buck.parser;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.config.ParserConfig.ApplyDefaultFlavorsMode;
@@ -34,8 +34,8 @@ import org.immutables.value.Value;
 @BuckStyleValueWithBuilder
 public abstract class ParsingContext {
 
-  /** Cell for which the parsing request is performed */
-  public abstract Cell getCell();
+  /** Cell for which the parsing request is performed. */
+  public abstract Cells getCells();
 
   /** An executor used during parsing request to perform async computations */
   public abstract ListeningExecutorService getExecutor();
@@ -88,19 +88,15 @@ public abstract class ParsingContext {
     return false;
   }
 
-  public final ParsingContext withCell(Cell value) {
-    if (getCell().equals(value)) {
-      return this;
-    }
-
-    return new Builder().from(this).setCell(value).build();
-  }
-
   public final ParsingContext withSpeculativeParsing(SpeculativeParsing value) {
     if (getSpeculativeParsing().equals(value)) {
       return this;
     }
     return new Builder().from(this).setSpeculativeParsing(value).build();
+  }
+
+  public final ParsingContext withCells(Cells value) {
+    return new Builder().from(this).setCells(value).build();
   }
 
   public final ParsingContext withExcludeUnsupportedTargets(boolean value) {
@@ -118,15 +114,8 @@ public abstract class ParsingContext {
     return new Builder().from(this).setApplyDefaultFlavorsMode(value).build();
   }
 
-  public final ParsingContext withUseUnconfiguredSelectorResolver(boolean value) {
-    if (useUnconfiguredSelectorResolver() == value) {
-      return this;
-    }
-    return new Builder().from(this).setUseUnconfiguredSelectorResolver(value).build();
-  }
-
-  public static Builder builder(Cell cell, ListeningExecutorService executor) {
-    return new Builder().setCell(cell).setExecutor(executor);
+  public static Builder builder(Cells cells, ListeningExecutorService executor) {
+    return new Builder().setCells(cells).setExecutor(executor);
   }
 
   public static class Builder extends ImmutableParsingContext.Builder {}

@@ -126,7 +126,7 @@ public class QueryCommandTest {
                 new ParsingUnconfiguredBuildTargetViewFactory(),
                 params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                ParsingContext.builder(cell.getRootCell(), executorService)
+                ParsingContext.builder(cell, executorService)
                     .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                     .build(),
                 params.getParser().getPermState());
@@ -146,7 +146,7 @@ public class QueryCommandTest {
                 params.getClientWorkingDir(),
                 params.getBuckConfig(),
                 params.getParser(),
-                ParsingContext.builder(params.getCells().getRootCell(), executorService).build(),
+                ParsingContext.builder(params.getCells(), executorService).build(),
                 Optional.empty()),
             eventBus,
             typeCoercerFactory);

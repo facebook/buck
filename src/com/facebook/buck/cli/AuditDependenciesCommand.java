@@ -121,8 +121,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
                     params.getUnconfiguredBuildTargetFactory(),
                     params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
                 .create(
-                    createParsingContext(
-                            params.getCells().getRootCell(), pool.getListeningExecutorService())
+                    createParsingContext(params.getCells(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withExcludeUnsupportedTargets(false),
                     params.getParser().getPermState())) {
@@ -130,8 +129,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
           BuckQueryEnvironment.from(
               params,
               parserState,
-              createParsingContext(
-                  params.getCells().getRootCell(), pool.getListeningExecutorService()));
+              createParsingContext(params.getCells(), pool.getListeningExecutorService()));
       QueryCommand.runMultipleQuery(
           params,
           env,

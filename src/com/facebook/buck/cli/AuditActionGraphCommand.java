@@ -92,8 +92,7 @@ public class AuditActionGraphCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphWithoutTopLevelConfigurationTargets(
-                  createParsingContext(
-                          params.getCells().getRootCell(), pool.getListeningExecutorService())
+                  createParsingContext(params.getCells(), pool.getListeningExecutorService())
                       .withApplyDefaultFlavorsMode(
                           params
                               .getBuckConfig()
