@@ -96,6 +96,10 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
         SECTION, "kapt_explicitly_specified_annotation_processors", false);
   }
 
+  public boolean addJvmTargetToKotlinc() {
+    return delegate.getBooleanValue(SECTION, "add_jvm_target_to_kotlinc", false);
+  }
+
   Path getPathToCompilerBinary() {
     Path compilerPath = getKotlinHome().resolve("kotlinc");
     if (!Files.isExecutable(compilerPath)) {

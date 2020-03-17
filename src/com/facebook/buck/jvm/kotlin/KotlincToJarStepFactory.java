@@ -82,6 +82,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final ImmutableList<SourcePath> friendPaths;
   @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
   @AddToRuleKey private final ImmutableMap<String, String> kaptApOptions;
+  @AddToRuleKey private final Optional<String> jvmTarget;
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
   @AddToRuleKey private final boolean kaptCorrectErrorTypes;
   @AddToRuleKey private final boolean kaptExplicitlySpecifyAnnotationProcessors;
@@ -123,6 +124,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       ImmutableList<SourcePath> friendPaths,
       AnnotationProcessingTool annotationProcessingTool,
       ImmutableMap<String, String> kaptApOptions,
+      Optional<String> jvmTarget,
       boolean kaptCorrectErrorTypes,
       boolean kaptExplicitlySpecifyAnnotationProcessors,
       ExtraClasspathProvider extraClassPath,
@@ -136,6 +138,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.friendPaths = friendPaths;
     this.annotationProcessingTool = annotationProcessingTool;
     this.kaptApOptions = kaptApOptions;
+    this.jvmTarget = jvmTarget;
     this.kaptCorrectErrorTypes = kaptCorrectErrorTypes;
     this.kaptExplicitlySpecifyAnnotationProcessors = kaptExplicitlySpecifyAnnotationProcessors;
     this.extraClassPath = extraClassPath;
@@ -306,6 +309,12 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               .add(moduleName)
               .add(NO_STDLIB)
               .add(NO_REFLECT);
+
+      jvmTarget.ifPresent(
+          target -> {
+            extraArguments.add("-jvm-target");
+            extraArguments.add(target);
+          });
 
       Path tmpSourceAbiFolder;
       if (abiGenerationPlugin != null) {

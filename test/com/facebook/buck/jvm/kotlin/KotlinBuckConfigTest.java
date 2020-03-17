@@ -362,4 +362,16 @@ public class KotlinBuckConfigTest {
 
     assertEquals(AbiGenerationMode.SOURCE, config.getAbiGenerationMode());
   }
+
+  @Test
+  public void addJvmTarget() {
+    KotlinBuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of("kotlin", ImmutableMap.of("add_jvm_target_to_kotlinc", "true")))
+            .build()
+            .getView(KotlinBuckConfig.class);
+
+    assertTrue(config.addJvmTargetToKotlinc());
+  }
 }

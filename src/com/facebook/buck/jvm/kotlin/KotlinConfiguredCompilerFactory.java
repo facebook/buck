@@ -86,6 +86,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         getFriendSourcePaths(buildRuleResolver, kotlinArgs.getFriendPaths(), kotlinBuckConfig),
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         kotlinArgs.getKaptApOptions(),
+        kotlinBuckConfig.addJvmTargetToKotlinc() ? kotlinArgs.getTarget() : Optional.empty(),
         kotlinBuckConfig.hasKaptCorrectErrorTypes(),
         kotlinBuckConfig.hasKaptExplicitlySpecifiedAnnotationProcessors(),
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
