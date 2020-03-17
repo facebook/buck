@@ -99,7 +99,8 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
         throw CoerceFailedException.simple(
             object,
             getOutputType(),
-            "parameter '" + key + "' not found on " + paramsInfo.getParamStarlarkNames());
+            String.format(
+                "parameter '%s' not found on %s", key, paramsInfo.getParamStarlarkNames()));
       }
       try {
         paramInfo.set(
