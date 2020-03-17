@@ -21,7 +21,6 @@ import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import java.util.Map;
 
@@ -29,14 +28,12 @@ import java.util.Map;
 public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeCoercer<Object, T> {
 
   private final DataTransferObjectDescriptor<T> constructorArgDescriptor;
-  private final ImmutableMap<String, ParamInfo<?>> paramInfos;
+  private final ParamsInfo paramsInfo;
 
   ImmutableTypeCoercer(DataTransferObjectDescriptor<T> constructorArgDescriptor) {
     this.constructorArgDescriptor = constructorArgDescriptor;
     // Translate keys from lowerCamel to lower_hyphen
-    this.paramInfos =
-        constructorArgDescriptor.getParamInfos().values().stream()
-            .collect(ImmutableMap.toImmutableMap(ParamInfo::getPythonName, paramInfo -> paramInfo));
+    this.paramsInfo = constructorArgDescriptor.getParamsInfo();
   }
 
   @Override
@@ -51,13 +48,14 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
-    return paramInfos.values().stream().anyMatch(paramInfo -> paramInfo.hasElementTypes(types));
+    return paramsInfo.getParamInfosSorted().stream()
+        .anyMatch(paramInfo -> paramInfo.hasElementTypes(types));
   }
 
   @Override
   public void traverse(CellNameResolver cellRoots, T object, Traversal traversal) {
     traversal.traverse(object);
-    for (ParamInfo<?> paramInfo : paramInfos.values()) {
+    for (ParamInfo<?> paramInfo : paramsInfo.getParamInfosSorted()) {
       @SuppressWarnings("unchecked")
       TypeCoercer<Object, Object> paramTypeCoercer =
           (TypeCoercer<Object, Object>) paramInfo.getTypeCoercer();
@@ -96,10 +94,12 @@ public class ImmutableTypeCoercer<T extends DataTransferObject> implements TypeC
       if (!(key instanceof String)) {
         throw CoerceFailedException.simple(object, getOutputType(), "keys should be strings");
       }
-      ParamInfo<?> paramInfo = paramInfos.get(key);
+      ParamInfo<?> paramInfo = paramsInfo.getByStarlarkName((String) key);
       if (paramInfo == null) {
         throw CoerceFailedException.simple(
-            object, getOutputType(), "parameter '" + key + "' not found on " + paramInfos.keySet());
+            object,
+            getOutputType(),
+            "parameter '" + key + "' not found on " + paramsInfo.getParamStarlarkNames());
       }
       try {
         paramInfo.set(

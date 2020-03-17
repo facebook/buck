@@ -353,11 +353,11 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
   }
 
   @Override
-  public ImmutableMap<String, ParamInfo<?>> paramInfos(ConstructorArg constructorArg) {
+  public ParamsInfo paramInfos(ConstructorArg constructorArg) {
     if (constructorArg instanceof SkylarkDescriptionArgFactory) {
       return ((SkylarkDescriptionArgFactory) constructorArg).getAllParamInfo();
     }
-    return getNativeConstructorArgDescriptor(constructorArg.getClass()).getParamInfos();
+    return getNativeConstructorArgDescriptor(constructorArg.getClass()).getParamsInfo();
   }
 
   @SuppressWarnings("unchecked")

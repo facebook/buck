@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.stringtemplate.v4.AutoIndentWriter;
@@ -80,10 +79,10 @@ public class BuckPyFunction {
     ImmutableList.Builder<StParamInfo> mandatory = ImmutableList.builder();
     ImmutableList.Builder<StParamInfo> optional = ImmutableList.builder();
     for (ParamInfo<?> param :
-        typeCoercerFactory.getNativeConstructorArgDescriptor(dtoClass).getParamInfos().values()
-            .stream()
-            .sorted(Comparator.comparing(ParamInfo::getName))
-            .collect(ImmutableList.toImmutableList())) {
+        typeCoercerFactory
+            .getNativeConstructorArgDescriptor(dtoClass)
+            .getParamsInfo()
+            .getParamInfosSorted()) {
       if (isSkippable(param)) {
         continue;
       }

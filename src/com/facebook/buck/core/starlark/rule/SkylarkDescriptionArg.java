@@ -25,12 +25,11 @@ import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgFactory;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
-import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
@@ -142,8 +141,8 @@ public class SkylarkDescriptionArg
   }
 
   @Override
-  public ImmutableMap<String, ParamInfo<?>> getAllParamInfo() {
-    return rule.getAllParamInfo();
+  public ParamsInfo getAllParamInfo() {
+    return rule.getParamsInfo();
   }
 
   public BaseFunction getImplementation() {
@@ -199,7 +198,7 @@ public class SkylarkDescriptionArg
     return DataTransferObjectDescriptor.of(
         SkylarkDescriptionArg.class,
         () -> new SkylarkDescriptionArg(rule),
-        rule.getAllParamInfo(),
+        rule.getParamsInfo(),
         args -> ((SkylarkDescriptionArg) args).build());
   }
 

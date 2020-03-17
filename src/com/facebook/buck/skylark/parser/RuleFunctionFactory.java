@@ -91,7 +91,8 @@ public class RuleFunctionFactory {
             typeCoercerFactory
                 .getNativeConstructorArgDescriptor(
                     (Class<? extends ConstructorArg>) ruleClass.getConstructorArgType())
-                .getParamInfos();
+                .getParamsInfo()
+                .getParamInfosByCamelCaseName();
         populateAttributes(kwargs, builder, allParamInfo);
         throwOnMissingRequiredAttribute(kwargs, allParamInfo, getName(), ast);
         parseContext.recordRule(
@@ -127,6 +128,7 @@ public class RuleFunctionFactory {
               + " requires "
               + missingAttributes.stream()
                   .map(ParamInfo::getPythonName)
+                  .sorted(ParamInfo.NAME_COMPARATOR)
                   .collect(Collectors.joining(" and "))
               + " but they are not provided.",
           BUCK_RULE_DOC_URL_PREFIX + name);

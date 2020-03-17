@@ -255,7 +255,7 @@ public abstract class TargetNodeTranslator {
       Object newConstructorArgOrBuilder) {
     boolean modified = false;
 
-    for (ParamInfo<?> param : typeCoercerFactory.paramInfos(constructorArg).values()) {
+    for (ParamInfo<?> param : typeCoercerFactory.paramInfos(constructorArg).getParamInfosSorted()) {
       Object value = param.get(constructorArg);
       Optional<Object> newValue = translate(cellNameResolver, targetBaseName, value);
       modified |= newValue.isPresent();

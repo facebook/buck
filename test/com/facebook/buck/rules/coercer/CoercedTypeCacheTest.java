@@ -75,7 +75,10 @@ public class CoercedTypeCacheTest {
             "nonInput",
             "required"),
         ImmutableSortedSet.copyOf(
-            coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).keySet()));
+            coercedTypeCache
+                .extractForImmutableBuilder(Dto.Builder.class)
+                .getParamInfosByCamelCaseName()
+                .keySet()));
   }
 
   @Test
@@ -95,7 +98,8 @@ public class CoercedTypeCacheTest {
             "non_dep",
             "non_input",
             "required"),
-        coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).values().stream()
+        coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).getParamInfosSorted()
+            .stream()
             .map(ParamInfo::getPythonName)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
@@ -188,6 +192,6 @@ public class CoercedTypeCacheTest {
   }
 
   private ParamInfo<?> getParamInfo(String name) {
-    return coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).get(name);
+    return coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).getByCamelCaseName(name);
   }
 }

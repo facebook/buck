@@ -25,7 +25,7 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.attr.impl.IntAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
-import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
@@ -498,12 +498,13 @@ public class SkylarkUserDefinedRuleTest {
             false,
             false);
 
-    ImmutableMap<String, ParamInfo<?>> paramInfos = rule.getAllParamInfo();
+    ParamsInfo paramsInfo = rule.getParamsInfo();
 
-    assertEquals(ImmutableSet.of("name", "arg1"), paramInfos.keySet());
+    assertEquals(
+        ImmutableSet.of("name", "arg1"), paramsInfo.getParamInfosByCamelCaseName().keySet());
 
-    SkylarkParamInfo name = (SkylarkParamInfo) paramInfos.get("name");
-    SkylarkParamInfo arg1 = (SkylarkParamInfo) paramInfos.get("arg1");
+    SkylarkParamInfo name = (SkylarkParamInfo) paramsInfo.getByCamelCaseName("name");
+    SkylarkParamInfo arg1 = (SkylarkParamInfo) paramsInfo.getByCamelCaseName("arg1");
 
     assertEquals("name", name.getName());
     assertEquals(

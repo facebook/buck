@@ -102,7 +102,8 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
           || attr.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
         continue;
       }
-      ParamInfo<?> paramInfo = constructorDescriptor.getParamInfos().get(attr.getKey());
+      ParamInfo<?> paramInfo =
+          constructorDescriptor.getParamsInfo().getByCamelCaseName(attr.getKey());
       Preconditions.checkNotNull(
           paramInfo, "cannot find param info for arg %s of target %s", attr.getKey(), target);
       result.put(

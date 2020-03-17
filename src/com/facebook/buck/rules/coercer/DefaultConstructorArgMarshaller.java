@@ -32,7 +32,6 @@ import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -74,13 +73,13 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       Map<String, ?> attributes)
       throws CoerceFailedException {
 
-    ImmutableMap<String, ParamInfo<?>> allParamInfo = constructorArgDescriptor.getParamInfos();
+    ParamsInfo allParamInfo = constructorArgDescriptor.getParamsInfo();
 
     boolean isConfigurationRule =
         ConfigurationRuleArg.class.isAssignableFrom(constructorArgDescriptor.objectClass());
 
     Object builder = constructorArgDescriptor.getBuilderFactory().get();
-    for (ParamInfo<?> info : allParamInfo.values()) {
+    for (ParamInfo<?> info : allParamInfo.getParamInfosSorted()) {
       Object attribute = attributes.get(info.getName());
       if (attribute == null) {
         /**
@@ -156,7 +155,8 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       }
     }
     T dto = constructorArgDescriptor.build(builder, buildTarget);
-    collectDeclaredDeps(cellNameResolver, allParamInfo.get("deps"), declaredDeps, dto);
+    collectDeclaredDeps(
+        cellNameResolver, allParamInfo.getByCamelCaseName("deps"), declaredDeps, dto);
     return dto;
   }
 

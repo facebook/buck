@@ -18,8 +18,7 @@ package com.facebook.buck.core.starlark.coercer;
 
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
-import com.facebook.buck.rules.coercer.ParamInfo;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.rules.coercer.ParamsInfo;
 
 /**
  * Shim interface to get around circular dependencies between {@link
@@ -37,5 +36,5 @@ public interface SkylarkDescriptionArgFactory {
       Class<T> dtoClass);
 
   /** Get all of the parameter information */
-  ImmutableMap<String, ParamInfo<?>> getAllParamInfo();
+  ParamsInfo getAllParamInfo();
 }

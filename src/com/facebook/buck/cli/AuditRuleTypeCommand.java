@@ -19,13 +19,12 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.rules.knowntypes.RuleDescriptor;
 import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
-import com.google.common.collect.ImmutableMap;
 import java.io.PrintStream;
-import java.util.Comparator;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
@@ -63,17 +62,15 @@ public class AuditRuleTypeCommand extends AbstractCommand {
   static void printPythonFunction(
       Console console, RuleDescriptor<?> descriptor, TypeCoercerFactory typeCoercerFactory) {
     PrintStream printStream = console.getStdOut();
-    ImmutableMap<String, ParamInfo<?>> allParamInfo =
-        descriptor.getDtoDescriptor().apply(typeCoercerFactory).getParamInfos();
+    ParamsInfo allParamInfo =
+        descriptor.getDtoDescriptor().apply(typeCoercerFactory).getParamsInfo();
     String name = descriptor.getRuleType().getName();
     printStream.println("def " + name + " (");
-    allParamInfo.values().stream()
+    allParamInfo.getParamInfosSorted().stream()
         .filter(param -> !param.isOptional())
-        .sorted(Comparator.comparing(ParamInfo::getName))
         .forEach(formatPythonFunction(printStream));
-    allParamInfo.values().stream()
+    allParamInfo.getParamInfosSorted().stream()
         .filter(ParamInfo::isOptional)
-        .sorted(Comparator.comparing(ParamInfo::getName))
         .forEach(formatPythonFunction(printStream));
     printStream.println("):");
     printStream.println(INDENT + "...");

@@ -22,7 +22,7 @@ import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
-import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
@@ -66,7 +66,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   private final Set<String> hiddenImplicitAttributes;
   private final boolean shouldInferRunInfo;
   private final boolean shouldBeTestRule;
-  private final ImmutableMap<String, ParamInfo<?>> params;
+  private final ParamsInfo params;
 
   private SkylarkUserDefinedRule(
       FunctionSignature.WithValues<Object, SkylarkType> signature,
@@ -87,10 +87,10 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     this.shouldInferRunInfo = shouldInferRunInfo;
     this.shouldBeTestRule = shouldBeTestRule;
     this.params =
-        getAttrs().entrySet().stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    Map.Entry::getKey, e -> new SkylarkParamInfo<>(e.getKey(), e.getValue())));
+        ParamsInfo.of(
+            getAttrs().entrySet().stream()
+                .map(e -> new SkylarkParamInfo<>(e.getKey(), e.getValue()))
+                .collect(ImmutableList.toImmutableList()));
   }
 
   @Override
@@ -342,7 +342,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   /** Get ParamInfo objects for all of the {@link Attribute}s provided to this instance */
-  public ImmutableMap<String, ParamInfo<?>> getAllParamInfo() {
+  public ParamsInfo getParamsInfo() {
     return params;
   }
 

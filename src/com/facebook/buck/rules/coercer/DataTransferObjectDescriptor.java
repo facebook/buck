@@ -19,8 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
-import com.google.common.collect.ImmutableMap;
-import java.util.Map;
 import java.util.function.Supplier;
 
 /** Class that contains the values needed to build a DescriptionArg */
@@ -39,7 +37,7 @@ public abstract class DataTransferObjectDescriptor<T extends DataTransferObject>
   public abstract Supplier<Object> getBuilderFactory();
 
   /** The param infos needed to populate this object */
-  public abstract ImmutableMap<String, ParamInfo<?>> getParamInfos();
+  public abstract ParamsInfo getParamsInfo();
 
   /**
    * A function that takes the result of {@link #getBuilderFactory()}}, and calls its 'build'
@@ -84,9 +82,9 @@ public abstract class DataTransferObjectDescriptor<T extends DataTransferObject>
   public static <T extends DataTransferObject> DataTransferObjectDescriptor<T> of(
       Class<T> objectClass,
       Supplier<Object> builderFactory,
-      Map<String, ? extends ParamInfo<?>> paramInfos,
+      ParamsInfo paramsInfo,
       DataTransferObjectDescriptor.BuilderBuildFunction<T> buildFunction) {
     return ImmutableDataTransferObjectDescriptor.ofImpl(
-        objectClass, builderFactory, paramInfos, buildFunction);
+        objectClass, builderFactory, paramsInfo, buildFunction);
   }
 }

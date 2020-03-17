@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.DataTransferObject;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 
 public interface TypeCoercerFactory {
@@ -29,7 +28,7 @@ public interface TypeCoercerFactory {
    * Get the {@code ParamInfo} mapping for a given constructor arg. This should handle both UDRs and
    * native constructor arguments
    */
-  ImmutableMap<String, ParamInfo<?>> paramInfos(ConstructorArg constructorArg);
+  ParamsInfo paramInfos(ConstructorArg constructorArg);
 
   /**
    * Returns a DTO descriptor to build unpopulated DTO objects for built-in rules.

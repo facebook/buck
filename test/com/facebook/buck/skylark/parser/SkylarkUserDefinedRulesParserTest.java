@@ -772,8 +772,8 @@ public class SkylarkUserDefinedRulesParserTest {
     assertNotNull(rule2);
     assertEquals(rule1Identifier, rule1.getName());
     assertEquals(rule2Identifier, rule2.getName());
-    assertEquals(Integer.class, rule1.getAllParamInfo().get("attr1").getResultClass());
-    assertEquals(Integer.class, rule2.getAllParamInfo().get("attr2").getResultClass());
+    assertEquals(Integer.class, rule1.getParamsInfo().getByCamelCaseName("attr1").getResultClass());
+    assertEquals(Integer.class, rule2.getParamsInfo().getByCamelCaseName("attr2").getResultClass());
   }
 
   @Test

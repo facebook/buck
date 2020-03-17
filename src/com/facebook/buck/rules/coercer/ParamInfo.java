@@ -22,10 +22,15 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
+import java.util.Comparator;
 import javax.annotation.Nullable;
 
 /** Represents a single field that can be represented in buck build files. */
 public interface ParamInfo<T> {
+
+  Comparator<String> NAME_COMPARATOR =
+      Comparator.comparing((String a) -> !a.equals("name"))
+          .thenComparing(Comparator.naturalOrder());
 
   /** @return the user-facing name of this parameter */
   String getName();

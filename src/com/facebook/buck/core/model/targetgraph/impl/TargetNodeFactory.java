@@ -39,11 +39,11 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerificationMode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.collect.MoreSets;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -162,12 +162,12 @@ public class TargetNodeFactory implements NodeCopier {
     ImmutableSet.Builder<ForwardRelativePath> filePathsBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<ForwardRelativePath> dirPathsBuilder = ImmutableSet.builder();
 
-    ImmutableMap<String, ParamInfo<?>> paramInfos = typeCoercerFactory.paramInfos(constructorArg);
+    ParamsInfo paramInfos = typeCoercerFactory.paramInfos(constructorArg);
 
     CellNameResolver cellNameResolver = cellNames.cellNameResolverForCell(buildTarget.getCell());
 
     // Scan the input to find possible BuildTargetPaths, necessary for loading dependent rules.
-    for (ParamInfo<?> info : paramInfos.values()) {
+    for (ParamInfo<?> info : paramInfos.getParamInfosSorted()) {
       if (info.isDep()
           && info.isInput()
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)

@@ -8,6 +8,7 @@ INTERFACE_SRCS = [
     "DataTransferObjectDescriptor.java",
     "ParamInfo.java",
     "ParamInfoException.java",
+    "ParamsInfo.java",
     "ReflectionParamInfo.java",
     "TypeCoercer.java",
     "TypeCoercerFactory.java",
