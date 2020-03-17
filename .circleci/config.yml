@@ -92,7 +92,7 @@ install_rust: &install_rust
   command: |
     curl https://sh.rustup.rs -sSf -o install_rust.sh
     chmod +x install_rust.sh
-    install_rust.sh -q -y
+    ./install_rust.sh -q -y
     rm install_rust.sh
     export PATH="${HOME}/.cargo/bin:${PATH}"
     rustc -V
