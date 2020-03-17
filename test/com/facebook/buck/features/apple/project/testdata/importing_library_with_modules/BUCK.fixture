@@ -1,0 +1,12 @@
+apple_library(
+    name = "Library",
+    exported_headers = ["Library.h"],
+    modular = True,
+)
+
+apple_library(
+    name = "Test",
+    deps = [":Library"],
+    compiler_flags = ["-fmodules"],
+    srcs = ["Test.m"],
+)

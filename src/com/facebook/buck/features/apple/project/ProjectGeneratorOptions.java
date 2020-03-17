@@ -59,6 +59,15 @@ interface ProjectGeneratorOptions {
   }
 
   /**
+   * When adding search paths for modular libraries, avoid using header maps, and instead use
+   * symlink tree.
+   */
+  @Value.Default
+  default boolean shouldAvoidHeaderMapsForModularLibraries() {
+    return false;
+  }
+
+  /**
    * Generate one header map containing all the headers it's using and reference only this header
    * map in the header search paths.
    */

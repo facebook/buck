@@ -1823,7 +1823,7 @@ public class ProjectGenerator {
                       recursivePublicIncludeDirectories,
                       includeDirectories)));
       if (hasSwiftVersionArg && isFocusedOnTarget) {
-        ImmutableSet<Path> swiftIncludePaths = collectRecursiveSwiftIncludePaths(targetNode);
+        ImmutableSet<Path> swiftIncludePaths = collectRecursiveModularSearchPaths(targetNode);
         Stream<String> allValues =
             Streams.concat(
                 Stream.of("$BUILT_PRODUCTS_DIR"),
@@ -3686,6 +3686,10 @@ public class ProjectGenerator {
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
 
+    if (options.shouldAvoidHeaderMapsForModularLibraries()) {
+      builder.addAll(collectRecursiveModularSearchPaths(targetNode));
+    }
+
     if (shouldMergeHeaderMaps()) {
       builder.add(
           getHeaderMapLocationFromSymlinkTreeRoot(
@@ -3809,7 +3813,7 @@ public class ProjectGenerator {
     return builder.build();
   }
 
-  private ImmutableSet<Path> collectRecursiveSwiftIncludePaths(
+  private ImmutableSet<Path> collectRecursiveModularSearchPaths(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
     visitRecursiveHeaderSymlinkTrees(

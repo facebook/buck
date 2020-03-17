@@ -583,6 +583,23 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testBuckProjectWithLibraryUsingModularImports()
+      throws IOException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "importing_library_with_modules", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("project", "//:Test");
+    result.assertSuccess();
+
+    runXcodebuild(workspace, "Test.xcworkspace", "Test");
+  }
+
+  @Test
   public void testBuckProjectWithBidirectionalObjCAndSwiftInSameLibrary()
       throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS);

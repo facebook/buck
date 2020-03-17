@@ -1,0 +1,9 @@
+[apple]
+  avoid_header_maps_for_modular_libraries_in_xcode=true
+  merge_header_maps_in_xcode=true
+
+[cxx]
+  default_platform = iphonesimulator-x86_64
+
+[project]
+  ide=xcode
