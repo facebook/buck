@@ -57,6 +57,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -65,6 +66,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -148,6 +150,29 @@ public class CxxLibraryFactory {
               configuredDelegate);
       return CxxCompilationDatabase.createCompilationDatabase(
           buildTarget, projectFilesystem, objects.keySet());
+    } else if (buildTarget.getFlavors().contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)) {
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> configuredDelegate =
+          delegate.requireDelegate(buildTarget, platform.get(), graphBuilder);
+      ImmutableList<NativeLinkableGroup> delegateNativeLinkableGroups =
+          configuredDelegate
+              .flatMap(d -> d.getNativeLinkableExportedDeps())
+              .orElse(ImmutableList.of());
+      ImmutableList<NativeLinkable> allNativeLinkables =
+          RichStream.from(cxxDeps.get(graphBuilder, platform.get()))
+              .filter(NativeLinkableGroup.class)
+              .concat(RichStream.from(delegateNativeLinkableGroups))
+              .map(g -> g.getNativeLinkable(platform.get(), graphBuilder))
+              .toImmutableList();
+      Collection<BuildTarget> targets =
+          Collections2.transform(
+              CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
+                  graphBuilder,
+                  linkableDepType.orElse(Linker.LinkableDepType.SHARED),
+                  makeLinkableListFilter(args, targetGraph),
+                  allNativeLinkables,
+                  blacklist),
+              linkable -> linkable.getBuildTarget());
+      return new CxxLinkGroupMapDatabase(buildTarget, projectFilesystem, graphBuilder, targets);
     } else if (buildTarget
         .getFlavors()
         .contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {

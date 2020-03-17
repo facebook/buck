@@ -44,6 +44,9 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -52,9 +55,11 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.test.config.TestBuckConfig;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -66,6 +71,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
 import org.immutables.value.Value;
@@ -190,6 +196,33 @@ public class CxxTestDescription
               flavoredLinkerMapMode);
       return CxxCompilationDatabase.createCompilationDatabase(
           buildTarget, projectFilesystem, cxxLinkAndCompileRules.compileRules);
+    }
+
+    if (buildTarget.getFlavors().contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)) {
+      BuildTarget targetWithPlatform =
+          getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
+                  .getUnresolvedCxxPlatforms()
+                  .getValue(buildTarget)
+                  .isPresent()
+              ? buildTarget
+              : buildTarget.withAppendedFlavors(cxxPlatform.getFlavor());
+      CxxDeps cxxDeps = CxxDeps.builder().addDeps(args.getCxxDeps()).build();
+      ImmutableList<NativeLinkable> allNativeLinkables =
+          RichStream.from(cxxDeps.get(graphBuilder, cxxPlatform))
+              .filter(NativeLinkableGroup.class)
+              .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+              .toImmutableList();
+      Collection<BuildTarget> targets =
+          Collections2.transform(
+              CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
+                  graphBuilder,
+                  Linker.LinkableDepType.SHARED,
+                  LinkableListFilterFactory.from(cxxBuckConfig, args, context.getTargetGraph()),
+                  allNativeLinkables,
+                  ImmutableSet.of()),
+              linkable -> linkable.getBuildTarget());
+      return new CxxLinkGroupMapDatabase(
+          targetWithPlatform, projectFilesystem, graphBuilder, targets);
     }
 
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
@@ -372,6 +405,10 @@ public class CxxTestDescription
       ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
 
     if (flavors.isEmpty()) {
+      return true;
+    }
+
+    if (flavors.contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)) {
       return true;
     }
 

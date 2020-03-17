@@ -260,10 +260,8 @@ public class CxxLinkableEnhancer {
         graphBuilder
             .getParallelizer()
             .maybeParallelizeTransform(
-                Collections2.filter(
-                    NativeLinkables.getNativeLinkables(
-                        graphBuilder, nativeLinkableDeps, depType, linkableListFilter),
-                    linkable -> !blacklist.contains(linkable.getBuildTarget())),
+                getTransitiveNativeLinkablesForLinkableDeps(
+                    graphBuilder, depType, linkableListFilter, nativeLinkableDeps, blacklist),
                 nativeLinkable -> {
                   Linkage link = nativeLinkable.getPreferredLinkage();
                   NativeLinkableInput input =
@@ -331,6 +329,28 @@ public class CxxLinkableEnhancer {
     }
 
     return argsBuilder.build();
+  }
+
+  /**
+   * Return the {@link NativeLinkable}
+   *
+   * @param graphBuilder used to get all the libraries which must be considered for linking
+   * @param depType how dependencies should be linked
+   * @param linkableListFilter filter to decide which linkables to include in result
+   * @param nativeLinkableDeps libraries to return transitive native linkables for
+   * @param blacklist targets to exclude from final result
+   * @return
+   */
+  public static Collection<? extends NativeLinkable> getTransitiveNativeLinkablesForLinkableDeps(
+      ActionGraphBuilder graphBuilder,
+      LinkableDepType depType,
+      Optional<LinkableListFilter> linkableListFilter,
+      Iterable<? extends NativeLinkable> nativeLinkableDeps,
+      ImmutableSet<BuildTarget> blacklist) {
+    return Collections2.filter(
+        NativeLinkables.getNativeLinkables(
+            graphBuilder, nativeLinkableDeps, depType, linkableListFilter),
+        linkable -> !blacklist.contains(linkable.getBuildTarget()));
   }
 
   /**

@@ -59,6 +59,7 @@ public class CxxLibraryFlavored implements Flavored {
             .containsAnyOf(flavors)
         || flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)
         || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
+        || flavors.contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)
         || CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)
         || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor())
         || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())

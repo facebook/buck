@@ -62,6 +62,7 @@ import com.facebook.buck.cxx.CxxLibraryFactory;
 import com.facebook.buck.cxx.CxxLibraryFlavored;
 import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
 import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
+import com.facebook.buck.cxx.CxxLinkGroupMapDatabase;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.CxxStrip;
@@ -123,6 +124,7 @@ public class AppleLibraryDescription
   @SuppressWarnings("PMD") // PMD doesn't understand method references
   private static final Set<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(
+          CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE,
           CxxCompilationDatabase.COMPILATION_DATABASE,
           CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
           CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,
