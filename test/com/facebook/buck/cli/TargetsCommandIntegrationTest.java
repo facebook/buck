@@ -28,7 +28,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
@@ -329,33 +328,6 @@ public class TargetsCommandIntegrationTest {
             .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs")
             .assertSuccess();
     assertOutputPaths("{\"DEFAULT\" : [\"<OUTPUT_PREFIX>out1.txt\"]}", result);
-  }
-
-  @Test
-  public void showOutputsWithJsonForEmptyDefaultOutputs() throws IOException {
-    // We don't want this behavior anymore. default_outs should be specified if outs is present, and
-    // default_outs shouldn't be empty. But we keep this test here for now to make sure there are no
-    // regressions with not specifying default_outs, since repo usages aren't currently specifying
-    // default_outs.
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace
-            .runBuckCommand("targets", "--show-outputs", "--json", "//:no_defaults")
-            .assertSuccess();
-    JsonNode observed =
-        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
-
-    assertTrue(observed.isArray());
-    JsonNode targetNode = observed.get(0);
-
-    // Empty outputs should not print output paths
-    JsonNode cellPath = targetNode.get("buck.outputPath");
-    assertNull(cellPath);
-    cellPath = targetNode.get("buck.outputPaths");
-    assertNull(cellPath);
   }
 
   @Test

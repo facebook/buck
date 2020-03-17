@@ -394,23 +394,6 @@ public class GenruleBuildableTest {
   }
 
   @Test
-  public void defaultOutsIsEmpty() {
-    BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
-
-    GenruleBuildable buildable =
-        ImmutableGenruleBuildableBuilder.builder()
-            .setBuildTarget(target)
-            .setFilesystem(new FakeProjectFilesystem())
-            .setBash("echo something > $OUT")
-            .setOuts(
-                Optional.of(ImmutableMap.of(OutputLabel.of("label1"), ImmutableSet.of("output1a"))))
-            .build()
-            .toBuildable();
-
-    assertThat(buildable.getOutputs(OutputLabel.defaultLabel()), Matchers.empty());
-  }
-
-  @Test
   public void canGetSingleNamedOutput() {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
@@ -430,6 +413,7 @@ public class GenruleBuildableTest {
                         ImmutableSet.of("output1a", "output1b"),
                         OutputLabel.of("label2"),
                         ImmutableSet.of("output2a"))))
+            .setDefaultOuts(Optional.of(ImmutableSet.of()))
             .build()
             .toBuildable();
 
@@ -461,6 +445,7 @@ public class GenruleBuildableTest {
                         ImmutableSet.of("output1a", "output1b"),
                         OutputLabel.of("label2"),
                         ImmutableSet.of("output2a"))))
+            .setDefaultOuts(Optional.of(ImmutableSet.of()))
             .build()
             .toBuildable();
 
@@ -492,6 +477,7 @@ public class GenruleBuildableTest {
                         ImmutableSet.of("output1a", "output1b"),
                         OutputLabel.of("label2"),
                         ImmutableSet.of("output2a"))))
+            .setDefaultOuts(Optional.of(ImmutableSet.of()))
             .build()
             .toBuildable();
 
@@ -564,6 +550,7 @@ public class GenruleBuildableTest {
             .setOuts(
                 Optional.of(
                     ImmutableMap.of(OutputLabel.of("named"), ImmutableSet.of("output.txt"))))
+            .setDefaultOuts(Optional.of(ImmutableSet.of()))
             .build()
             .toBuildable();
 
@@ -673,6 +660,7 @@ public class GenruleBuildableTest {
             .setOuts(
                 Optional.of(
                     ImmutableMap.of(OutputLabel.of("named"), ImmutableSet.of("output.txt"))))
+            .setDefaultOuts(Optional.of(ImmutableSet.of()))
             .build()
             .toBuildable();
     AbstractGenruleStep step =
@@ -772,6 +760,7 @@ public class GenruleBuildableTest {
             .setCmd("echo something")
             .setOuts(
                 Optional.of(ImmutableMap.of(OutputLabel.of("label"), ImmutableSet.of("output1"))))
+            .setDefaultOuts(Optional.of(ImmutableSet.of()))
             .build()
             .toBuildable();
 
@@ -814,6 +803,7 @@ public class GenruleBuildableTest {
                         ImmutableSet.of("output1a"),
                         OutputLabel.of("label2"),
                         ImmutableSet.of("output2a"))))
+            .setDefaultOuts(Optional.of(ImmutableSet.of()))
             .build()
             .toBuildable();
 
@@ -841,6 +831,7 @@ public class GenruleBuildableTest {
                         ImmutableSet.of("output1a"),
                         OutputLabel.of("label2"),
                         ImmutableSet.of("output2a"))))
+            .setDefaultOuts(Optional.of(ImmutableSet.of()))
             .build()
             .toBuildable();
 
@@ -848,7 +839,7 @@ public class GenruleBuildableTest {
   }
 
   @Test
-  public void doesNotOverwriteDefaultOutputsIfDefaultOutputsWereGiven() {
+  public void canGetDefaultOuts() {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
 
     GenruleBuildable buildable =

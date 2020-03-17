@@ -296,6 +296,7 @@ public class SourcePathResolverTest {
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
             .setOuts(
                 ImmutableMap.of("name", ImmutableSet.of(out), "other", ImmutableSet.of("wrong")))
+            .setDefaultOuts(ImmutableSet.of())
             .build(graphBuilder);
     DefaultBuildTargetSourcePath buildTargetSourcePath =
         DefaultBuildTargetSourcePath.of(

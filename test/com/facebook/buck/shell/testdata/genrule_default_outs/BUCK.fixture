@@ -1,0 +1,10 @@
+genrule(
+    name = "target_without_default_outs",
+    outs = {
+        "output1": [
+            "out.txt",
+        ],
+    },
+    bash = "echo something> $OUT/out.txt",
+    cmd_exe = "echo something> %OUT%\\out.txt",
+)

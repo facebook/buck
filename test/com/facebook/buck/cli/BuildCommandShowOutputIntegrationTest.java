@@ -121,21 +121,6 @@ public class BuildCommandShowOutputIntegrationTest {
   }
 
   @Test
-  public void showOutputsForEmptyDefaultOutputs() throws IOException {
-    // We don't want this behavior anymore. default_outs should be specified if outs is present, and
-    // default_outs shouldn't be empty. But we keep this test here for now to make sure there are no
-    // regressions with not specifying default_outs, since repo usages aren't currently specifying
-    // default_outs.
-    workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckBuild("--show-output", "//:no_defaults").assertSuccess();
-    assertThat(result.getStdout(), Matchers.containsString("//:no_defaults"));
-    assertThat(result.getStdout(), Matchers.not(Matchers.containsString("buck-out")));
-  }
-
-  @Test
   public void showFullOutput() throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();

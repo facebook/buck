@@ -86,8 +86,6 @@ import java.util.stream.Collectors;
  * extending the functionality of a bare Genrule.
  */
 public class GenruleBuildable implements Buildable {
-  private static final ImmutableSet<String> DEFAULT_OUTS = ImmutableSet.of();
-
   /**
    * Name of the "srcs" subdirectory in the gen directory tree. GenruleBuildable symlinks all source
    * files into this directory and sets this directory to be the working directory of the command.
@@ -273,7 +271,11 @@ public class GenruleBuildable implements Buildable {
       }
       // TODO(irenewchen): Should add a Preconditions check here to enforce that default_outs must
       // be present if outs is present after repo usages have been changed to meet this requirement
-      ImmutableSet<String> defaults = defaultOuts.isPresent() ? defaultOuts.get() : DEFAULT_OUTS;
+      Preconditions.checkState(
+          defaultOuts.isPresent(),
+          "default_outs must be present if outs is present in genrule target %s",
+          buildTarget);
+      ImmutableSet<String> defaults = defaultOuts.get();
       outsBuilder.put(OutputLabel.defaultLabel(), defaults);
       outputPathsBuilder.put(
           OutputLabel.defaultLabel(),

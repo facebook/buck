@@ -589,6 +589,24 @@ public class GenruleIntegrationTest {
   }
 
   @Test
+  public void defaultOutsMustBePresentIfNamedOutputsArePresent() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "genrule_default_outs", temporaryFolder);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckBuild("//:target_without_default_outs[output1]")
+            .assertExitCode(ExitCode.FATAL_GENERIC);
+    assertTrue(
+        result
+            .getStderr()
+            .contains(
+                "default_outs must be present if outs is present in genrule target //:target_without_default_outs"));
+  }
+
+  @Test
   public void canUseGenruleOutputLabelInSrcs() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
