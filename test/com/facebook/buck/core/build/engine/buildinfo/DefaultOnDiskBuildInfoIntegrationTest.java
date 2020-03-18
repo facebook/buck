@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -42,8 +43,20 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
 
   public DefaultOnDiskBuildInfoIntegrationTest() {}
 
-  @Test
-  public void testPathsAndMetadataForArtifactAreCorrect() throws IOException {
+  private Path metadataDirectory;
+  private Path filePath;
+  private Path dirPath;
+  private Path subDir;
+  private Path emptySubDir;
+  private Path fileWithinDirPath;
+  private Path otherPathWithinDir;
+  private Path symlinkPath;
+  private Path fileViaSymlinkPath;
+
+  private DefaultOnDiskBuildInfo onDiskBuildInfo;
+
+  @Before
+  public void setUp() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
 
     ProjectFilesystem projectFilesystem =
@@ -63,17 +76,17 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
     recorder.addMetadata("artifact_key0", "value0");
     recorder.addMetadata("artifact_key1", "value1");
 
-    Path filePath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/some.file");
-    Path dirPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/some_dir");
-    Path subDir = dirPath.resolve("sub_dir");
-    Path emptySubDir = dirPath.resolve("empty_sub_dir");
-    Path fileWithinDirPath = subDir.resolve("some_inner.path");
-    Path otherPathWithinDir = subDir.resolve("other.file");
+    filePath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/some.file");
+    dirPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/some_dir");
+    subDir = dirPath.resolve("sub_dir");
+    emptySubDir = dirPath.resolve("empty_sub_dir");
+    fileWithinDirPath = subDir.resolve("some_inner.path");
+    otherPathWithinDir = subDir.resolve("other.file");
     Path symlinkedDirPath =
         BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "%s/symlinked_dir");
-    Path symlinkPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink");
+    symlinkPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink");
     Path fileInSymlinkedDirPath = symlinkedDirPath.resolve("file_in_symlink");
-    Path fileViaSymlinkPath = symlinkPath.resolve("file_in_symlink");
+    fileViaSymlinkPath = symlinkPath.resolve("file_in_symlink");
 
     recorder.recordArtifact(filePath);
     recorder.recordArtifact(dirPath);
@@ -102,12 +115,14 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
 
     recorder.writeMetadataToDisk(true);
 
-    DefaultOnDiskBuildInfo onDiskBuildInfo =
-        new DefaultOnDiskBuildInfo(buildTarget, projectFilesystem, buildInfoStore);
+    onDiskBuildInfo = new DefaultOnDiskBuildInfo(buildTarget, projectFilesystem, buildInfoStore);
 
-    Path metadataDirectory =
+    metadataDirectory =
         BuildInfo.getPathToArtifactMetadataDirectory(buildTarget, projectFilesystem);
+  }
 
+  @Test
+  public void testPathsAndMetadataForArtifactAreCorrect() throws IOException {
     assertEquals(
         ImmutableSortedSet.of(
             metadataDirectory,
