@@ -48,6 +48,7 @@ import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
+import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
@@ -55,6 +56,8 @@ import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
@@ -307,7 +310,21 @@ public class GoProjectCommandHelper {
             .collect(Collectors.toList()));
     constructorArg
         .getHeaders()
-        .getUnnamedSources()
+        .match(
+            new SourceSortedSet.Matcher<Optional<ImmutableSortedSet<SourcePath>>>() {
+              @Override
+              public Optional<ImmutableSortedSet<SourcePath>> named(
+                  ImmutableSortedMap<String, SourcePath> named) {
+                // TODO(nga): explain why we ignore named sources
+                return Optional.empty();
+              }
+
+              @Override
+              public Optional<ImmutableSortedSet<SourcePath>> unnamed(
+                  ImmutableSortedSet<SourcePath> unnamed) {
+                return Optional.of(unnamed);
+              }
+            })
         .ifPresent(
             headers -> targets.addAll(filterBuildTargets(headers).collect(Collectors.toList())));
     return targets.stream();

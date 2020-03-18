@@ -22,9 +22,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -35,7 +35,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import org.immutables.value.Value;
 
 /**
  * A group of sources, stored as either a {@link SortedSet} of unnamed {@link SourcePath}s or a
@@ -43,8 +42,51 @@ import org.immutables.value.Value;
  * <code>srcs</code> parameter of rules where source "names" may be important (e.g. to control
  * layout of C++ headers).
  */
-@BuckStyleValue
 public abstract class SourceSortedSet implements TargetTranslatable<SourceSortedSet> {
+
+  private SourceSortedSet() {}
+
+  /** Named sources. */
+  @BuckStyleValue
+  abstract static class SourceSortedSetNamed extends SourceSortedSet {
+    public abstract ImmutableSortedMap<String, SourcePath> getNamedSources();
+
+    @Override
+    public Type getType() {
+      return Type.NAMED;
+    }
+
+    @Override
+    public <R> R match(Matcher<R> matcher) {
+      return matcher.named(getNamedSources());
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return getNamedSources().isEmpty();
+    }
+  }
+
+  /** Unnamed sources. */
+  @BuckStyleValue
+  abstract static class SourceSortedSetUnnamed extends SourceSortedSet {
+    public abstract ImmutableSortedSet<SourcePath> getUnnamedSources();
+
+    @Override
+    public Type getType() {
+      return Type.UNNAMED;
+    }
+
+    @Override
+    public <R> R match(Matcher<R> matcher) {
+      return matcher.unnamed(getUnnamedSources());
+    }
+
+    @Override
+    public boolean isEmpty() {
+      return getUnnamedSources().isEmpty();
+    }
+  }
 
   public static final SourceSortedSet EMPTY =
       SourceSortedSet.ofUnnamedSources(ImmutableSortedSet.of());
@@ -56,43 +98,26 @@ public abstract class SourceSortedSet implements TargetTranslatable<SourceSorted
 
   public abstract Type getType();
 
-  public abstract Optional<ImmutableSortedSet<SourcePath>> getUnnamedSources();
+  /** Callbacks for {@link #match(Matcher)}. */
+  public interface Matcher<R> {
+    R named(ImmutableSortedMap<String, SourcePath> named);
 
-  public abstract Optional<ImmutableSortedMap<String, SourcePath>> getNamedSources();
-
-  @Value.Check
-  protected void check() {
-    switch (getType()) {
-      case UNNAMED:
-        Preconditions.checkArgument(getUnnamedSources().isPresent());
-        Preconditions.checkArgument(!getNamedSources().isPresent());
-        break;
-      case NAMED:
-        Preconditions.checkArgument(!getUnnamedSources().isPresent());
-        Preconditions.checkArgument(getNamedSources().isPresent());
-        break;
-    }
+    R unnamed(ImmutableSortedSet<SourcePath> unnamed);
   }
 
+  /** Invoke a different callback depending on this subclass. */
+  public abstract <R> R match(Matcher<R> matcher);
+
   public static SourceSortedSet ofUnnamedSources(ImmutableSortedSet<SourcePath> unnamedSources) {
-    return SourceSortedSet.of(Type.UNNAMED, Optional.of(unnamedSources), Optional.empty());
+    return ImmutableSourceSortedSetUnnamed.ofImpl(unnamedSources);
   }
 
   public static SourceSortedSet ofNamedSources(
       ImmutableSortedMap<String, SourcePath> namedSources) {
-    return SourceSortedSet.of(Type.NAMED, Optional.empty(), Optional.of(namedSources));
+    return ImmutableSourceSortedSetNamed.ofImpl(namedSources);
   }
 
-  public boolean isEmpty() {
-    switch (getType()) {
-      case UNNAMED:
-        return getUnnamedSources().get().isEmpty();
-      case NAMED:
-        return getNamedSources().get().isEmpty();
-      default:
-        throw new IllegalStateException("unexpected type: " + getType());
-    }
-  }
+  public abstract boolean isEmpty();
 
   public ImmutableMap<String, SourcePath> toNameMap(
       BuildTarget buildTarget,
@@ -101,23 +126,29 @@ public abstract class SourceSortedSet implements TargetTranslatable<SourceSorted
       Predicate<SourcePath> filter,
       Function<SourcePath, SourcePath> transform) {
 
-    ImmutableMap.Builder<String, SourcePath> sources = ImmutableMap.builder();
-    switch (getType()) {
-      case NAMED:
-        for (Map.Entry<String, SourcePath> ent : getNamedSources().get().entrySet()) {
-          if (filter.test(ent.getValue())) {
-            sources.put(ent.getKey(), transform.apply(ent.getValue()));
+    return match(
+        new Matcher<ImmutableMap<String, SourcePath>>() {
+          @Override
+          public ImmutableMap<String, SourcePath> named(
+              ImmutableSortedMap<String, SourcePath> named) {
+            ImmutableMap.Builder<String, SourcePath> sources = ImmutableMap.builder();
+            for (Map.Entry<String, SourcePath> ent : named.entrySet()) {
+              if (filter.test(ent.getValue())) {
+                sources.put(ent.getKey(), transform.apply(ent.getValue()));
+              }
+            }
+            return sources.build();
           }
-        }
-        break;
-      case UNNAMED:
-        pathResolver
-            .getSourcePathNames(
-                buildTarget, parameterName, getUnnamedSources().get(), filter, transform)
-            .forEach((name, path) -> sources.put(name, transform.apply(path)));
-        break;
-    }
-    return sources.build();
+
+          @Override
+          public ImmutableMap<String, SourcePath> unnamed(ImmutableSortedSet<SourcePath> unnamed) {
+            ImmutableMap.Builder<String, SourcePath> sources = ImmutableMap.builder();
+            pathResolver
+                .getSourcePathNames(buildTarget, parameterName, unnamed, filter, transform)
+                .forEach((name, path) -> sources.put(name, transform.apply(path)));
+            return sources.build();
+          }
+        });
   }
 
   public ImmutableMap<String, SourcePath> toNameMap(
@@ -126,34 +157,40 @@ public abstract class SourceSortedSet implements TargetTranslatable<SourceSorted
   }
 
   public ImmutableList<SourcePath> getPaths() {
-    ImmutableList.Builder<SourcePath> sources = ImmutableList.builder();
-    switch (getType()) {
-      case NAMED:
-        sources.addAll(getNamedSources().get().values());
-        break;
-      case UNNAMED:
-        sources.addAll(getUnnamedSources().get());
-        break;
-    }
-    return sources.build();
+    return match(
+        new Matcher<ImmutableList<SourcePath>>() {
+          @Override
+          public ImmutableList<SourcePath> named(ImmutableSortedMap<String, SourcePath> named) {
+            return ImmutableList.copyOf(named.values());
+          }
+
+          @Override
+          public ImmutableList<SourcePath> unnamed(ImmutableSortedSet<SourcePath> unnamed) {
+            return ImmutableList.copyOf(unnamed);
+          }
+        });
   }
 
   @Override
   public Optional<SourceSortedSet> translateTargets(
       CellNameResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
-    Optional<Optional<ImmutableSortedMap<String, SourcePath>>> namedSources =
-        translator.translate(cellPathResolver, targetBaseName, getNamedSources());
-    Optional<Optional<ImmutableSortedSet<SourcePath>>> unNamedSources =
-        translator.translate(cellPathResolver, targetBaseName, getUnnamedSources());
-    if (!namedSources.isPresent() && !unNamedSources.isPresent()) {
-      return Optional.empty();
-    }
-    SourceSortedSet set =
-        of(
-            getType(),
-            unNamedSources.orElse(getUnnamedSources()),
-            namedSources.orElse(getNamedSources()));
-    return Optional.of(set);
+
+    return match(
+        new Matcher<Optional<SourceSortedSet>>() {
+          @Override
+          public Optional<SourceSortedSet> named(ImmutableSortedMap<String, SourcePath> named) {
+            return translator
+                .translate(cellPathResolver, targetBaseName, named)
+                .map(SourceSortedSet::ofNamedSources);
+          }
+
+          @Override
+          public Optional<SourceSortedSet> unnamed(ImmutableSortedSet<SourcePath> unnamed) {
+            return translator
+                .translate(cellPathResolver, targetBaseName, unnamed)
+                .map(SourceSortedSet::ofUnnamedSources);
+          }
+        });
   }
 
   /** Concatenates elements of the given lists into a single list. */
@@ -167,13 +204,6 @@ public abstract class SourceSortedSet implements TargetTranslatable<SourceSorted
     }
   }
 
-  public static SourceSortedSet of(
-      SourceSortedSet.Type type,
-      Optional<? extends ImmutableSortedSet<SourcePath>> unnamedSources,
-      Optional<? extends ImmutableSortedMap<String, SourcePath>> namedSources) {
-    return ImmutableSourceSortedSet.ofImpl(type, unnamedSources, namedSources);
-  }
-
   private static Type findType(Iterable<SourceSortedSet> elements) {
     if (!elements.iterator().hasNext()) {
       return Type.UNNAMED;
@@ -185,11 +215,19 @@ public abstract class SourceSortedSet implements TargetTranslatable<SourceSorted
     SortedSet<SourcePath> unnamedSources = new TreeSet<>();
 
     for (SourceSortedSet element : elements) {
-      Preconditions.checkState(
-          element.getType().equals(Type.UNNAMED),
-          "Expected unnamed source list, got: %s",
-          element.getType());
-      element.getUnnamedSources().ifPresent(unnamedSources::addAll);
+      element.match(
+          new Matcher<Unit>() {
+            @Override
+            public Unit named(ImmutableSortedMap<String, SourcePath> named) {
+              throw new IllegalStateException("Expected unnamed source list");
+            }
+
+            @Override
+            public Unit unnamed(ImmutableSortedSet<SourcePath> unnamed) {
+              unnamedSources.addAll(unnamed);
+              return Unit.UNIT;
+            }
+          });
     }
 
     return ofUnnamedSources(ImmutableSortedSet.copyOf(unnamedSources));
@@ -199,11 +237,19 @@ public abstract class SourceSortedSet implements TargetTranslatable<SourceSorted
     ImmutableSortedMap.Builder<String, SourcePath> namedSources = ImmutableSortedMap.naturalOrder();
 
     for (SourceSortedSet element : elements) {
-      Preconditions.checkState(
-          element.getType().equals(Type.NAMED),
-          "Expected named source list, got: %s",
-          element.getType());
-      element.getNamedSources().ifPresent(namedSources::putAll);
+      element.match(
+          new Matcher<Unit>() {
+            @Override
+            public Unit named(ImmutableSortedMap<String, SourcePath> named) {
+              namedSources.putAll(named);
+              return Unit.UNIT;
+            }
+
+            @Override
+            public Unit unnamed(ImmutableSortedSet<SourcePath> unnamed) {
+              throw new IllegalStateException("Expected named source list");
+            }
+          });
     }
 
     return ofNamedSources(namedSources.build());

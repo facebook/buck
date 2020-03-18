@@ -223,30 +223,47 @@ public class AppleDescriptions {
       Function<SourcePath, Path> pathResolver,
       Path headerPathPrefix,
       SourceSortedSet headers) {
-    if (headers.getUnnamedSources().isPresent()) {
-      // The user specified a set of header files. For use from other targets, prepend their names
-      // with the header path prefix.
-      return convertToFlatCxxHeaders(
-          buildTarget, headerPathPrefix, pathResolver, headers.getUnnamedSources().get());
-    } else {
-      // The user specified a map from include paths to header files. Just use the specified map.
-      return headers.getNamedSources().get();
-    }
+    return headers.match(
+        new SourceSortedSet.Matcher<ImmutableSortedMap<String, SourcePath>>() {
+          @Override
+          public ImmutableSortedMap<String, SourcePath> named(
+              ImmutableSortedMap<String, SourcePath> named) {
+            // The user specified a map from include paths to header files.
+            // Just use the specified map.
+            return named;
+          }
+
+          @Override
+          public ImmutableSortedMap<String, SourcePath> unnamed(
+              ImmutableSortedSet<SourcePath> unnamed) {
+            // The user specified a set of header files. For use from other targets,
+            // prepend their names with the header path prefix.
+            return convertToFlatCxxHeaders(buildTarget, headerPathPrefix, pathResolver, unnamed);
+          }
+        });
   }
 
   @VisibleForTesting
   static ImmutableSortedMap<String, SourcePath> parseAppleHeadersForUseFromTheSameTarget(
       BuildTarget buildTarget, Function<SourcePath, Path> pathResolver, SourceSortedSet headers) {
-    if (headers.getUnnamedSources().isPresent()) {
-      // The user specified a set of header files. Headers can be included from the same target
-      // using only their file name without a prefix.
-      return convertToFlatCxxHeaders(
-          buildTarget, Paths.get(""), pathResolver, headers.getUnnamedSources().get());
-    } else {
-      // The user specified a map from include paths to header files. There is nothing we need to
-      // add on top of the exported headers.
-      return ImmutableSortedMap.of();
-    }
+    return headers.match(
+        new SourceSortedSet.Matcher<ImmutableSortedMap<String, SourcePath>>() {
+          @Override
+          public ImmutableSortedMap<String, SourcePath> named(
+              ImmutableSortedMap<String, SourcePath> named) {
+            // The user specified a map from include paths to header files. There is nothing we need
+            // to add on top of the exported headers.
+            return ImmutableSortedMap.of();
+          }
+
+          @Override
+          public ImmutableSortedMap<String, SourcePath> unnamed(
+              ImmutableSortedSet<SourcePath> unnamed) {
+            // The user specified a set of header files. Headers can be included from the same
+            // target using only their file name without a prefix.
+            return convertToFlatCxxHeaders(buildTarget, Paths.get(""), pathResolver, unnamed);
+          }
+        });
   }
 
   /**

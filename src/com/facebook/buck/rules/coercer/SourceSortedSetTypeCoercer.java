@@ -22,6 +22,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -63,14 +64,20 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
 
   @Override
   public void traverse(CellNameResolver cellRoots, SourceSortedSet object, Traversal traversal) {
-    switch (object.getType()) {
-      case UNNAMED:
-        unnamedHeadersTypeCoercer.traverse(cellRoots, object.getUnnamedSources().get(), traversal);
-        break;
-      case NAMED:
-        namedHeadersTypeCoercer.traverse(cellRoots, object.getNamedSources().get(), traversal);
-        break;
-    }
+    object.match(
+        new SourceSortedSet.Matcher<Unit>() {
+          @Override
+          public Unit named(ImmutableSortedMap<String, SourcePath> named) {
+            namedHeadersTypeCoercer.traverse(cellRoots, named, traversal);
+            return Unit.UNIT;
+          }
+
+          @Override
+          public Unit unnamed(ImmutableSortedSet<SourcePath> unnamed) {
+            unnamedHeadersTypeCoercer.traverse(cellRoots, unnamed, traversal);
+            return Unit.UNIT;
+          }
+        });
   }
 
   @Override

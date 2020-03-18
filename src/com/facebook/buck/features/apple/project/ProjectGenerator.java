@@ -2831,11 +2831,18 @@ public class ProjectGenerator {
 
   @VisibleForTesting
   static Iterable<SourcePath> getHeaderSourcePaths(SourceSortedSet headers) {
-    if (headers.getUnnamedSources().isPresent()) {
-      return headers.getUnnamedSources().get();
-    } else {
-      return headers.getNamedSources().get().values();
-    }
+    return headers.match(
+        new SourceSortedSet.Matcher<Iterable<SourcePath>>() {
+          @Override
+          public Iterable<SourcePath> named(ImmutableSortedMap<String, SourcePath> named) {
+            return named.values();
+          }
+
+          @Override
+          public Iterable<SourcePath> unnamed(ImmutableSortedSet<SourcePath> unnamed) {
+            return unnamed;
+          }
+        });
   }
 
   /**

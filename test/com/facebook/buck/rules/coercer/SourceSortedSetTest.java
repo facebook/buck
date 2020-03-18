@@ -133,7 +133,7 @@ public class SourceSortedSetTest {
     try {
       SourceSortedSet.concat(Arrays.asList(unnamedList, namedList));
     } catch (IllegalStateException e) {
-      assertEquals("Expected unnamed source list, got: NAMED", e.getMessage());
+      assertEquals("Expected unnamed source list", e.getMessage());
     }
   }
 
@@ -150,7 +150,7 @@ public class SourceSortedSetTest {
     try {
       SourceSortedSet.concat(Arrays.asList(namedList, unnamedList));
     } catch (IllegalStateException e) {
-      assertEquals("Expected named source list, got: UNNAMED", e.getMessage());
+      assertEquals("Expected named source list", e.getMessage());
     }
   }
 
@@ -168,9 +168,24 @@ public class SourceSortedSetTest {
     SourceSortedSet result = SourceSortedSet.concat(Arrays.asList(unnamedList1, unnamedList2));
 
     assertEquals(SourceSortedSet.Type.UNNAMED, result.getType());
-    assertEquals(2, result.getUnnamedSources().get().size());
-    assertEquals(sourcePath1, result.getUnnamedSources().get().first());
-    assertEquals(sourcePath2, result.getUnnamedSources().get().last());
+    ImmutableSortedSet<SourcePath> unnamed =
+        result.match(
+            new SourceSortedSet.Matcher<ImmutableSortedSet<SourcePath>>() {
+              @Override
+              public ImmutableSortedSet<SourcePath> named(
+                  ImmutableSortedMap<String, SourcePath> named) {
+                throw new AssertionError();
+              }
+
+              @Override
+              public ImmutableSortedSet<SourcePath> unnamed(
+                  ImmutableSortedSet<SourcePath> unnamed) {
+                return unnamed;
+              }
+            });
+    assertEquals(2, unnamed.size());
+    assertEquals(sourcePath1, unnamed.first());
+    assertEquals(sourcePath2, unnamed.last());
   }
 
   @Test
@@ -188,8 +203,23 @@ public class SourceSortedSetTest {
     SourceSortedSet result = SourceSortedSet.concat(Arrays.asList(namedList1, namedList2));
 
     assertEquals(SourceSortedSet.Type.NAMED, result.getType());
-    assertEquals(2, result.getNamedSources().get().size());
-    assertEquals(sourcePath1, result.getNamedSources().get().get("name1"));
-    assertEquals(sourcePath2, result.getNamedSources().get().get("name2"));
+    ImmutableMap<String, SourcePath> named =
+        result.match(
+            new SourceSortedSet.Matcher<ImmutableMap<String, SourcePath>>() {
+              @Override
+              public ImmutableMap<String, SourcePath> named(
+                  ImmutableSortedMap<String, SourcePath> named) {
+                return named;
+              }
+
+              @Override
+              public ImmutableMap<String, SourcePath> unnamed(
+                  ImmutableSortedSet<SourcePath> unnamed) {
+                throw new AssertionError();
+              }
+            });
+    assertEquals(2, named.size());
+    assertEquals(sourcePath1, named.get("name1"));
+    assertEquals(sourcePath2, named.get("name2"));
   }
 }

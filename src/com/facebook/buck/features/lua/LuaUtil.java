@@ -25,6 +25,7 @@ import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.util.Collection;
@@ -44,13 +45,21 @@ public class LuaUtil {
     ImmutableMap.Builder<String, SourcePath> moduleNamesAndSourcePaths = ImmutableMap.builder();
 
     for (SourceSortedSet input : inputs) {
-      ImmutableMap<String, SourcePath> namesAndSourcePaths;
-      if (input.getUnnamedSources().isPresent()) {
-        namesAndSourcePaths =
-            resolver.getSourcePathNames(target, parameter, input.getUnnamedSources().get());
-      } else {
-        namesAndSourcePaths = input.getNamedSources().get();
-      }
+      ImmutableMap<String, SourcePath> namesAndSourcePaths =
+          input.match(
+              new SourceSortedSet.Matcher<ImmutableMap<String, SourcePath>>() {
+                @Override
+                public ImmutableMap<String, SourcePath> named(
+                    ImmutableSortedMap<String, SourcePath> named) {
+                  return named;
+                }
+
+                @Override
+                public ImmutableMap<String, SourcePath> unnamed(
+                    ImmutableSortedSet<SourcePath> unnamed) {
+                  return resolver.getSourcePathNames(target, parameter, unnamed);
+                }
+              });
       for (ImmutableMap.Entry<String, SourcePath> entry : namesAndSourcePaths.entrySet()) {
         String name = entry.getKey();
         if (!baseModule.isEmpty()) {

@@ -243,15 +243,23 @@ public class PythonUtil {
       BiConsumer<Path, SourcePath> consumer) {
 
     for (SourceSortedSet input : inputs) {
-      ImmutableMap<String, SourcePath> namesAndSourcePaths;
-      if (input.getUnnamedSources().isPresent()) {
-        namesAndSourcePaths =
-            actionGraphBuilder
-                .getSourcePathResolver()
-                .getSourcePathNames(target, parameter, input.getUnnamedSources().get());
-      } else {
-        namesAndSourcePaths = input.getNamedSources().get();
-      }
+      ImmutableMap<String, SourcePath> namesAndSourcePaths =
+          input.match(
+              new SourceSortedSet.Matcher<ImmutableMap<String, SourcePath>>() {
+                @Override
+                public ImmutableMap<String, SourcePath> named(
+                    ImmutableSortedMap<String, SourcePath> named) {
+                  return named;
+                }
+
+                @Override
+                public ImmutableMap<String, SourcePath> unnamed(
+                    ImmutableSortedSet<SourcePath> unnamed) {
+                  return actionGraphBuilder
+                      .getSourcePathResolver()
+                      .getSourcePathNames(target, parameter, unnamed);
+                }
+              });
       for (ImmutableMap.Entry<String, SourcePath> entry : namesAndSourcePaths.entrySet()) {
         consumer.accept(
             baseModule.resolve(entry.getKey()),
