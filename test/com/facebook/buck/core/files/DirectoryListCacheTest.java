@@ -243,4 +243,94 @@ public class DirectoryListCacheTest {
     dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir")));
     assertFalse(dlist.isPresent());
   }
+
+  @Test
+  public void whenNestedFolderIsCreatedInvalidateParents() throws Exception {
+    Path root = tmp.getRoot().resolve("root");
+    DirectoryListCache cache = DirectoryListCache.of(root);
+
+    // directory structure:
+    //  root
+    //   \
+    //    + dir1
+    //    |
+    //    + dir2
+    //    \
+    //     foo
+    //     \
+    //      bar
+    //      \
+    //       baz.txt
+
+    Files.createDirectory(root);
+    Files.createDirectory(root.resolve("dir1"));
+    Files.createDirectory(root.resolve("dir2"));
+    Files.createDirectory(root.resolve("dir2").resolve("foo"));
+    Files.createDirectory(root.resolve("dir2").resolve("foo").resolve("bar"));
+    Files.createFile(root.resolve("dir2").resolve("foo").resolve("bar").resolve("baz.txt"));
+
+    cache.put(
+        ImmutableDirectoryListKey.of(Paths.get("")),
+        ImmutableDirectoryList.ofImpl(
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(Paths.get("dir1"), Paths.get("dir2")),
+            ImmutableSortedSet.of()));
+
+    cache.put(
+        ImmutableDirectoryListKey.of(Paths.get("dir1")),
+        ImmutableDirectoryList.ofImpl(
+            ImmutableSortedSet.of(), ImmutableSortedSet.of(), ImmutableSortedSet.of()));
+
+    cache.put(
+        ImmutableDirectoryListKey.of(Paths.get("dir2")),
+        ImmutableDirectoryList.ofImpl(
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(Paths.get("dir2/foo")),
+            ImmutableSortedSet.of()));
+
+    cache.put(
+        ImmutableDirectoryListKey.of(Paths.get("dir2/foo")),
+        ImmutableDirectoryList.ofImpl(
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(Paths.get("dir2/foo/bar")),
+            ImmutableSortedSet.of()));
+
+    cache.put(
+        ImmutableDirectoryListKey.of(Paths.get("dir2/foo/bar")),
+        ImmutableDirectoryList.ofImpl(
+            ImmutableSortedSet.of(Paths.get("dir2/foo/bar/baz.txt")),
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of()));
+
+    // Copy the contents of bar into quux, a new child directory of foo.
+    Files.createDirectory(root.resolve("dir2").resolve("foo").resolve("quux"));
+    Files.createFile(root.resolve("dir2").resolve("foo").resolve("quux").resolve("baz.txt"));
+
+    // Watchman fires a Create event for baz.txt
+    WatchmanPathEvent event =
+        WatchmanPathEvent.of(
+            AbsPath.of(root), Kind.CREATE, RelPath.of(Paths.get("dir2/foo/quux/baz.txt")));
+
+    // Invalidate caches accordingly
+    FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
+    cache.getInvalidator().onInvalidationStart(started);
+    cache.getInvalidator().onFileSystemChange(event);
+    cache.getInvalidator().onInvalidationFinish(FileHashCacheEvent.invalidationFinished(started));
+
+    // The root should not be invalidated
+    Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("")));
+    assertTrue(dlist.isPresent());
+
+    // dir2 should not be invalidated
+    dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir2")));
+    assertTrue(dlist.isPresent());
+
+    // dir2/foo should be invalidated
+    dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir2/foo")));
+    assertFalse(dlist.isPresent());
+
+    // dir2/foo/bar should not be invalidated
+    dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir2/foo/bar")));
+    assertTrue(dlist.isPresent());
+  }
 }

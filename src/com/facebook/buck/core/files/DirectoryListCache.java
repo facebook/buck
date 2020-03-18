@@ -18,6 +18,7 @@ package com.facebook.buck.core.files;
 
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.FileHashCacheEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
@@ -33,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /** Stores a list of files and subfolders per each folder */
 public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, DirectoryList> {
+  private static final Logger LOG = Logger.get(DirectoryListCache.class);
 
   private ConcurrentHashMap<DirectoryListKey, DirectoryList> cache = new ConcurrentHashMap<>();
   private final Invalidator invalidator;
@@ -157,8 +159,41 @@ public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, Di
 
       // for CREATE and DELETE, invalidate containing folder
       RelPath folderPath = MorePaths.getParentOrEmpty(event.getPath());
-      DirectoryListKey key = ImmutableDirectoryListKey.of(folderPath.getPath());
-      dirListCache.cache.remove(key);
+      dirListCache.cache.remove(ImmutableDirectoryListKey.of(folderPath.getPath()));
+
+      // When a new folder is created via recursive copy, Watchmen informs us of the files that
+      // got created and not the creation of the directory. Invalidating just the containing
+      // directory is not sufficient, since it may be the case that the containing directory is new
+      // and isn't represented by the cached DirectoryList of its parent.
+      //
+      // For creation, we'll invalidate our cache by walking up the path that Watchman has reported,
+      // invalidating all entries along the way that weren't previously aware of a directory
+      // represented in the new (or deleted) path.
+      if (event.getKind() == Kind.CREATE) {
+        while (!MorePaths.isEmpty(folderPath.getPath())) {
+          RelPath parentPath = MorePaths.getParentOrEmpty(folderPath);
+          DirectoryListKey parentKey = ImmutableDirectoryListKey.of(parentPath.getPath());
+
+          // Does our parent directory exist in the cache?
+          if (dirListCache.cache.containsKey(parentKey)) {
+            // Does the parent directory cache entry know about folderPath? In other words, is this
+            // directory new?
+            DirectoryList knownPaths = dirListCache.cache.get(parentKey);
+            if (knownPaths.getDirectories().contains(folderPath.getPath())) {
+              // No need to proceed if this path has been recorded already.
+              break;
+            }
+
+            // Invalidate the parent - this directory was created and the cache is now invalid.
+            LOG.debug(
+                "invalidating %s due to creation of new directory %s",
+                parentPath.getPath(), folderPath.getPath());
+            dirListCache.cache.remove(parentKey);
+          }
+
+          folderPath = MorePaths.getParentOrEmpty(folderPath);
+        }
+      }
 
       if (event.getKind() == Kind.DELETE) {
         // Watchman does not report when a folder is deleted, it reports deletions of all the files
