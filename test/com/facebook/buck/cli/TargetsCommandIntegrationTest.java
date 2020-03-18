@@ -166,7 +166,7 @@ public class TargetsCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result =
-        workspace.runBuckCommand("targets", "--show-outputs", "//:test", "//:another-test");
+        workspace.runBuckCommand("targets", "--show-output", "//:test", "//:another-test");
     result.assertSuccess();
     assertEquals(
         linesToText(
@@ -187,7 +187,7 @@ public class TargetsCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result =
-        workspace.runBuckCommand("targets", "--show-outputs", "//:test_multiple_outputs[out2]");
+        workspace.runBuckCommand("targets", "--show-output", "//:test_multiple_outputs[out2]");
     result.assertSuccess();
     assertEquals(
         linesToText(
@@ -197,8 +197,7 @@ public class TargetsCommandIntegrationTest {
             ""),
         result.getStdout());
 
-    result =
-        workspace.runBuckCommand("targets", "--show-outputs", "//:test_multiple_outputs[out1]");
+    result = workspace.runBuckCommand("targets", "--show-output", "//:test_multiple_outputs[out1]");
     result.assertSuccess();
     assertEquals(
         linesToText(
@@ -216,8 +215,7 @@ public class TargetsCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result =
-        workspace.runBuckCommand(
-            "targets", "--show-full-outputs", "//:test_multiple_outputs[out2]");
+        workspace.runBuckCommand("targets", "--show-full-output", "//:test_multiple_outputs[out2]");
     result.assertSuccess();
     assertEquals(
         linesToText(
@@ -232,8 +230,7 @@ public class TargetsCommandIntegrationTest {
     assertFalse(result.getStdout().contains("out1"));
 
     result =
-        workspace.runBuckCommand(
-            "targets", "--show-full-outputs", "//:test_multiple_outputs[out1]");
+        workspace.runBuckCommand("targets", "--show-full-output", "//:test_multiple_outputs[out1]");
     result.assertSuccess();
     assertEquals(
         linesToText(
@@ -257,7 +254,7 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "targets",
-            "--show-full-outputs",
+            "--show-full-output",
             "//:test_multiple_outputs",
             "//:test_multiple_outputs[out2]");
     result.assertSuccess();
@@ -287,13 +284,13 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result =
         workspace
-            .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs[out2]")
+            .runBuckCommand("targets", "--show-output", "--json", "//:test_multiple_outputs[out2]")
             .assertSuccess();
     assertOutputPaths("{\"out2\" : [\"<OUTPUT_PREFIX>out2.txt\"]}", result);
 
     result =
         workspace
-            .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs[out1]")
+            .runBuckCommand("targets", "--show-output", "--json", "//:test_multiple_outputs[out1]")
             .assertSuccess();
     assertOutputPaths("{\"out1\" : [\"<OUTPUT_PREFIX>out1.txt\"]}", result);
   }
@@ -306,7 +303,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result =
         workspace
-            .runBuckCommand("targets", "--show-outputs", "//:test_multiple_outputs")
+            .runBuckCommand("targets", "--show-output", "//:test_multiple_outputs")
             .assertSuccess();
     assertEquals(
         linesToText(
@@ -325,7 +322,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result =
         workspace
-            .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs")
+            .runBuckCommand("targets", "--show-output", "--json", "//:test_multiple_outputs")
             .assertSuccess();
     assertOutputPaths("{\"DEFAULT\" : [\"<OUTPUT_PREFIX>out1.txt\"]}", result);
   }
@@ -421,7 +418,7 @@ public class TargetsCommandIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
-    ProcessResult result = workspace.runBuckCommand("targets", "--show-full-outputs", "//:");
+    ProcessResult result = workspace.runBuckCommand("targets", "--show-full-output", "//:");
     result.assertSuccess();
 
     verifyTestConfigurationRulesWithAnnotationProcessorOutput(
@@ -1038,7 +1035,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
     ProcessResult result =
-        workspace.runBuckCommand("targets", "--json", "--show-outputs", "//:test").assertSuccess();
+        workspace.runBuckCommand("targets", "--json", "--show-output", "//:test").assertSuccess();
     assertOutputPaths("{\"DEFAULT\" : [\"<OUTPUT_PREFIX>test-output\"]}", result);
   }
 
@@ -1109,7 +1106,7 @@ public class TargetsCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
     workspace.setUp();
     ProcessResult result =
-        workspace.runBuckCommand("targets", "--json", "--show-full-outputs", "//:test");
+        workspace.runBuckCommand("targets", "--json", "--show-full-output", "//:test");
 
     JsonNode observed =
         ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
@@ -1135,7 +1132,7 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "targets", "--json", "--show-full-outputs", "//:test_multiple_outputs[out2]");
+            "targets", "--json", "--show-full-output", "//:test_multiple_outputs[out2]");
     result.assertSuccess();
 
     JsonNode observed =
@@ -1156,7 +1153,7 @@ public class TargetsCommandIntegrationTest {
 
     result =
         workspace.runBuckCommand(
-            "targets", "--json", "--show-full-outputs", "//:test_multiple_outputs[out1]");
+            "targets", "--json", "--show-full-output", "//:test_multiple_outputs[out1]");
     result.assertSuccess();
 
     observed = ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
