@@ -25,6 +25,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
@@ -212,8 +213,9 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     return getRecursivePaths(getOutputPaths());
   }
 
-  private ImmutableSortedSet<Path> getRecursivePaths(ImmutableSortedSet<Path> paths)
-      throws IOException {
+  @VisibleForTesting
+  static ImmutableSortedSet<Path> getRecursivePaths(
+      ImmutableSortedSet<Path> paths, ProjectFilesystem projectFilesystem) throws IOException {
     ImmutableSortedSet.Builder<Path> allPaths = ImmutableSortedSet.naturalOrder();
     for (Path path : paths) {
       allPaths.add(path);
@@ -237,6 +239,11 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
           false);
     }
     return allPaths.build();
+  }
+
+  private ImmutableSortedSet<Path> getRecursivePaths(ImmutableSortedSet<Path> paths)
+      throws IOException {
+    return getRecursivePaths(paths, projectFilesystem);
   }
 
   @Override
@@ -340,7 +347,9 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
     }
   }
 
-  private long getOutputSize(SortedSet<Path> paths) throws IOException {
+  @VisibleForTesting
+  static long getOutputSize(SortedSet<Path> paths, ProjectFilesystem projectFilesystem)
+      throws IOException {
     long size = 0;
     for (Path path : paths) {
       if (projectFilesystem.isFile(path)
@@ -353,6 +362,10 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
       }
     }
     return size;
+  }
+
+  private long getOutputSize(SortedSet<Path> paths) throws IOException {
+    return getOutputSize(paths, projectFilesystem);
   }
 
   private String toJson(Object value) {

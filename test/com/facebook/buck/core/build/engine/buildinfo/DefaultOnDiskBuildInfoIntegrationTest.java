@@ -30,6 +30,7 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -111,6 +112,10 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
         recorder.getRecordedPaths().stream()
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()));
+    ImmutableSortedSet<Path> recursivePaths =
+        DefaultOnDiskBuildInfo.getRecursivePaths(recorder.getRecordedPaths(), projectFilesystem);
+    long outputSize = DefaultOnDiskBuildInfo.getOutputSize(recursivePaths, projectFilesystem);
+    recorder.addMetadata(MetadataKey.OUTPUT_SIZE, Long.toString(outputSize));
     recorder.addBuildMetadata(MetadataKey.ORIGIN_BUILD_ID, "build-id");
 
     recorder.writeMetadataToDisk(true);
@@ -147,5 +152,12 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
             "build_key1",
             "value1"),
         ImmutableSortedMap.copyOf(onDiskBuildInfo.getMetadataForArtifact()));
+  }
+
+  @Test
+  public void testSuccessfulValidation() throws IOException {
+    onDiskBuildInfo.validateArtifact(
+        /** unused */
+        ImmutableSet.of());
   }
 }
