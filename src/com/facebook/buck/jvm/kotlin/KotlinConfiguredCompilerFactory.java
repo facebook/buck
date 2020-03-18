@@ -89,6 +89,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         kotlinBuckConfig.addJvmTargetToKotlinc() ? kotlinArgs.getTarget() : Optional.empty(),
         kotlinBuckConfig.hasKaptCorrectErrorTypes(),
         kotlinBuckConfig.hasKaptExplicitlySpecifiedAnnotationProcessors(),
+        kotlinBuckConfig.hasKaptUseAnnotationProcessorParams(),
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
         getJavac(buildRuleResolver, args, targetConfiguration),
         javacOptions);

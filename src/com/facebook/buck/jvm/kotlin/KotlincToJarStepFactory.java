@@ -50,6 +50,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.zip.ZipCompressionLevel;
 import com.facebook.buck.zip.ZipStep;
 import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
@@ -86,6 +87,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final ExtraClasspathProvider extraClassPath;
   @AddToRuleKey private final boolean kaptCorrectErrorTypes;
   @AddToRuleKey private final boolean kaptExplicitlySpecifyAnnotationProcessors;
+  @AddToRuleKey private final boolean kaptUseAnnotationProcessorParams;
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   private final ImmutableSortedSet<Path> kotlinHomeLibraries;
@@ -127,6 +129,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Optional<String> jvmTarget,
       boolean kaptCorrectErrorTypes,
       boolean kaptExplicitlySpecifyAnnotationProcessors,
+      boolean kaptUseAnnotationProcessorParams,
       ExtraClasspathProvider extraClassPath,
       Javac javac,
       JavacOptions javacOptions) {
@@ -141,6 +144,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.jvmTarget = jvmTarget;
     this.kaptCorrectErrorTypes = kaptCorrectErrorTypes;
     this.kaptExplicitlySpecifyAnnotationProcessors = kaptExplicitlySpecifyAnnotationProcessors;
+    this.kaptUseAnnotationProcessorParams = kaptUseAnnotationProcessorParams;
     this.extraClassPath = extraClassPath;
     this.javac = javac;
     this.javacOptions = Objects.requireNonNull(javacOptions);
@@ -234,6 +238,18 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                     .map(url -> AP_CLASSPATH_ARG + urlToFile(url))
                     .collect(Collectors.toList()));
 
+        ImmutableMap.Builder<String, String> apOptions =
+            new ImmutableMap.Builder<String, String>().putAll(kaptApOptions);
+        if (kaptUseAnnotationProcessorParams) {
+          ImmutableSortedSet<String> javacAnnotationProcessorParams =
+              javacOptions.getJavaAnnotationProcessorParams().getParameters();
+          for (String param : javacAnnotationProcessorParams) {
+            String[] splitParam = param.split("=");
+            Preconditions.checkState(splitParam.length == 2);
+            apOptions.put(splitParam[0], splitParam[1]);
+          }
+        }
+
         ImmutableList<String> kaptPluginOptions =
             ImmutableList.<String>builder()
                 .add(
@@ -248,7 +264,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
                 .add(
                     AP_OPTIONS
                         + encodeKaptApOptions(
-                            kaptApOptions,
+                            apOptions.build(),
                             projectFilesystem.resolve(kaptGeneratedOutput).toString()))
                 .add(JAVAC_ARG + encodeOptions(Collections.emptyMap()))
                 .add(LIGHT_ANALYSIS + "true") // TODO: Provide value as argument

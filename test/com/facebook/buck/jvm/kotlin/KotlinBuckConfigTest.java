@@ -374,4 +374,17 @@ public class KotlinBuckConfigTest {
 
     assertTrue(config.addJvmTargetToKotlinc());
   }
+
+  @Test
+  public void useAnnotationProcessorParams() {
+    KotlinBuckConfig config =
+        FakeBuckConfig.builder()
+            .setSections(
+                ImmutableMap.of(
+                    "kotlin", ImmutableMap.of("kapt_use_annotation_processor_params", "true")))
+            .build()
+            .getView(KotlinBuckConfig.class);
+
+    assertTrue(config.hasKaptUseAnnotationProcessorParams());
+  }
 }

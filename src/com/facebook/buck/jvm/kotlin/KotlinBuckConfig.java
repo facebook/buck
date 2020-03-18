@@ -96,6 +96,10 @@ public class KotlinBuckConfig implements ConfigView<BuckConfig> {
         SECTION, "kapt_explicitly_specified_annotation_processors", false);
   }
 
+  public boolean hasKaptUseAnnotationProcessorParams() {
+    return delegate.getBooleanValue(SECTION, "kapt_use_annotation_processor_params", false);
+  }
+
   public boolean addJvmTargetToKotlinc() {
     return delegate.getBooleanValue(SECTION, "add_jvm_target_to_kotlinc", false);
   }
