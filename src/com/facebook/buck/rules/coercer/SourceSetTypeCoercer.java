@@ -22,6 +22,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
@@ -61,14 +62,20 @@ public class SourceSetTypeCoercer extends SourceSetConcatable
 
   @Override
   public void traverse(CellNameResolver cellRoots, SourceSet object, Traversal traversal) {
-    switch (object.getType()) {
-      case UNNAMED:
-        unnamedHeadersTypeCoercer.traverse(cellRoots, object.getUnnamedSources().get(), traversal);
-        break;
-      case NAMED:
-        namedHeadersTypeCoercer.traverse(cellRoots, object.getNamedSources().get(), traversal);
-        break;
-    }
+    object.match(
+        new SourceSet.Matcher<Unit>() {
+          @Override
+          public Unit named(ImmutableMap<String, SourcePath> named) {
+            namedHeadersTypeCoercer.traverse(cellRoots, named, traversal);
+            return Unit.UNIT;
+          }
+
+          @Override
+          public Unit unnamed(ImmutableSet<SourcePath> unnamed) {
+            unnamedHeadersTypeCoercer.traverse(cellRoots, unnamed, traversal);
+            return Unit.UNIT;
+          }
+        });
   }
 
   @Override

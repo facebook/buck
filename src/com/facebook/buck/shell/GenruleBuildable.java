@@ -56,6 +56,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.worker.WorkerJobParams;
 import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
@@ -460,16 +461,22 @@ public class GenruleBuildable implements Buildable {
 
     Map<Path, Path> linksBuilder = new HashMap<>();
     // Symlink all sources into the temp directory so that they can be used in the genrule.
-    srcs.getNamedSources()
-        .ifPresent(
-            srcs ->
-                addLinksForNamedSources(
-                    context.getSourcePathResolver(), filesystem, srcs, linksBuilder));
-    srcs.getUnnamedSources()
-        .ifPresent(
-            srcs ->
-                addLinksForAnonymousSources(
-                    context.getSourcePathResolver(), filesystem, srcs, linksBuilder));
+    srcs.match(
+        new SourceSet.Matcher<Unit>() {
+          @Override
+          public Unit named(ImmutableMap<String, SourcePath> named) {
+            addLinksForNamedSources(
+                context.getSourcePathResolver(), filesystem, named, linksBuilder);
+            return Unit.UNIT;
+          }
+
+          @Override
+          public Unit unnamed(ImmutableSet<SourcePath> unnamed) {
+            addLinksForAnonymousSources(
+                context.getSourcePathResolver(), filesystem, unnamed, linksBuilder);
+            return Unit.UNIT;
+          }
+        });
     commands.add(
         new SymlinkTreeStep(
             "genrule_srcs",
