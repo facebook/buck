@@ -30,7 +30,7 @@ import com.google.common.reflect.TypeToken;
 import java.util.List;
 
 public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
-    implements TypeCoercer<Object, SourceSortedSet> {
+    implements TypeCoercer<UnconfiguredSourceSortedSet, SourceSortedSet> {
   private final TypeCoercer<ImmutableList<UnconfiguredSourcePath>, ImmutableSortedSet<SourcePath>>
       unnamedHeadersTypeCoercer;
   private final TypeCoercer<
@@ -52,8 +52,8 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<UnconfiguredSourceSortedSet> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredSourceSortedSet.class);
   }
 
   @Override
@@ -81,13 +81,22 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public UnconfiguredSourceSortedSet coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    return object;
+    if (object instanceof List) {
+      return UnconfiguredSourceSortedSet.ofUnnamedSources(
+          ImmutableSortedSet.copyOf(
+              unnamedHeadersTypeCoercer.coerceToUnconfigured(
+                  cellRoots, filesystem, pathRelativeToProjectRoot, object)));
+    } else {
+      return UnconfiguredSourceSortedSet.ofNamedSources(
+          namedHeadersTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
+    }
   }
 
   @Override
@@ -97,26 +106,35 @@ public class SourceSortedSetTypeCoercer extends SourceSortedSetConcatable
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      UnconfiguredSourceSortedSet object)
       throws CoerceFailedException {
-    if (object instanceof List) {
-      return SourceSortedSet.ofUnnamedSources(
-          unnamedHeadersTypeCoercer.coerceBoth(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object));
-    } else {
-      return SourceSortedSet.ofNamedSources(
-          namedHeadersTypeCoercer.coerceBoth(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object));
-    }
+    return object.match(
+        new UnconfiguredSourceSortedSet.Matcher<SourceSortedSet, CoerceFailedException>() {
+          @Override
+          public SourceSortedSet named(ImmutableSortedMap<String, UnconfiguredSourcePath> named)
+              throws CoerceFailedException {
+            return SourceSortedSet.ofNamedSources(
+                namedHeadersTypeCoercer.coerce(
+                    cellRoots,
+                    filesystem,
+                    pathRelativeToProjectRoot,
+                    targetConfiguration,
+                    hostConfiguration,
+                    named));
+          }
+
+          @Override
+          public SourceSortedSet unnamed(ImmutableSortedSet<UnconfiguredSourcePath> unnamed)
+              throws CoerceFailedException {
+            return SourceSortedSet.ofUnnamedSources(
+                unnamedHeadersTypeCoercer.coerce(
+                    cellRoots,
+                    filesystem,
+                    pathRelativeToProjectRoot,
+                    targetConfiguration,
+                    hostConfiguration,
+                    unnamed.asList()));
+          }
+        });
   }
 }

@@ -27,7 +27,7 @@ import com.google.common.base.Preconditions;
  * Like {@link com.facebook.buck.core.sourcepath.SourcePath} but when configuration is not yet
  * available.
  */
-public abstract class UnconfiguredSourcePath {
+public abstract class UnconfiguredSourcePath implements Comparable<UnconfiguredSourcePath> {
 
   private UnconfiguredSourcePath() {}
 
@@ -133,5 +133,23 @@ public abstract class UnconfiguredSourcePath {
             return DefaultBuildTargetSourcePath.of(target.configure(targetConfiguration));
           }
         });
+  }
+
+  @Override
+  public int compareTo(UnconfiguredSourcePath o) {
+    if (this.getClass() != o.getClass()) {
+      return this.getClass().getName().compareTo(o.getClass().getName());
+    }
+    if (this instanceof BuildTarget) {
+      BuildTarget thisBuildTarget = (BuildTarget) this;
+      BuildTarget thatBuildTarget = (BuildTarget) o;
+      return thisBuildTarget.target.compareTo(thatBuildTarget.target);
+    } else if (this instanceof Path) {
+      Path thisPath = (Path) this;
+      Path thatPath = (Path) o;
+      return thisPath.path.compareTo(thatPath.path);
+    } else {
+      throw new AssertionError();
+    }
   }
 }
