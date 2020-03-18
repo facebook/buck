@@ -30,7 +30,7 @@ import java.util.List;
 
 /** Coerce to {@link com.facebook.buck.rules.coercer.SourceSet}. */
 public class SourceSetTypeCoercer extends SourceSetConcatable
-    implements TypeCoercer<Object, SourceSet> {
+    implements TypeCoercer<UnconfiguredSourceSet, SourceSet> {
   private final TypeCoercer<ImmutableSet<UnconfiguredSourcePath>, ImmutableSet<SourcePath>>
       unnamedHeadersTypeCoercer;
   private final TypeCoercer<
@@ -50,8 +50,8 @@ public class SourceSetTypeCoercer extends SourceSetConcatable
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<UnconfiguredSourceSet> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredSourceSet.class);
   }
 
   @Override
@@ -79,13 +79,21 @@ public class SourceSetTypeCoercer extends SourceSetConcatable
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public UnconfiguredSourceSet coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    return object;
+    if (object instanceof List) {
+      return UnconfiguredSourceSet.ofUnnamedSources(
+          unnamedHeadersTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
+    } else {
+      return UnconfiguredSourceSet.ofNamedSources(
+          namedHeadersTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
+    }
   }
 
   @Override
@@ -95,26 +103,35 @@ public class SourceSetTypeCoercer extends SourceSetConcatable
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      UnconfiguredSourceSet object)
       throws CoerceFailedException {
-    if (object instanceof List) {
-      return SourceSet.ofUnnamedSources(
-          unnamedHeadersTypeCoercer.coerceBoth(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object));
-    } else {
-      return SourceSet.ofNamedSources(
-          namedHeadersTypeCoercer.coerceBoth(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object));
-    }
+    return object.match(
+        new UnconfiguredSourceSet.Matcher<SourceSet, CoerceFailedException>() {
+          @Override
+          public SourceSet named(ImmutableMap<String, UnconfiguredSourcePath> named)
+              throws CoerceFailedException {
+            return SourceSet.ofNamedSources(
+                namedHeadersTypeCoercer.coerce(
+                    cellRoots,
+                    filesystem,
+                    pathRelativeToProjectRoot,
+                    targetConfiguration,
+                    hostConfiguration,
+                    named));
+          }
+
+          @Override
+          public SourceSet unnamed(ImmutableSet<UnconfiguredSourcePath> unnamed)
+              throws CoerceFailedException {
+            return SourceSet.ofUnnamedSources(
+                unnamedHeadersTypeCoercer.coerce(
+                    cellRoots,
+                    filesystem,
+                    pathRelativeToProjectRoot,
+                    targetConfiguration,
+                    hostConfiguration,
+                    unnamed));
+          }
+        });
   }
 }

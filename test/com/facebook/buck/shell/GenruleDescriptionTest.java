@@ -31,6 +31,8 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -43,6 +45,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
@@ -52,6 +55,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.UnconfiguredSourceSet;
 import com.facebook.buck.rules.macros.ClasspathMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
@@ -92,7 +96,16 @@ public class GenruleDescriptionTest {
             "name",
             buildTarget.getShortName(),
             "srcs",
-            ImmutableList.of(":baz", "//biz:baz"),
+            UnconfiguredSourceSet.ofUnnamedSources(
+                ImmutableSet.of(
+                    new UnconfiguredSourcePath.BuildTarget(
+                        UnconfiguredBuildTargetWithOutputs.of(
+                            UnconfiguredBuildTargetFactoryForTests.newInstance("//foo:baz"),
+                            OutputLabel.defaultLabel())),
+                    new UnconfiguredSourcePath.BuildTarget(
+                        UnconfiguredBuildTargetWithOutputs.of(
+                            UnconfiguredBuildTargetFactoryForTests.newInstance("//biz:baz"),
+                            OutputLabel.defaultLabel())))),
             "out",
             Optional.of("AndroidManifest.xml"),
             "cmd",

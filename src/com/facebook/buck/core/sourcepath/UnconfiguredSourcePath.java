@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
 
 /**
@@ -32,6 +33,7 @@ public abstract class UnconfiguredSourcePath implements Comparable<UnconfiguredS
   private UnconfiguredSourcePath() {}
 
   /** {@link CellRelativePath} variant of source path. */
+  @JsonSerialize
   public static class Path extends UnconfiguredSourcePath {
     private final CellRelativePath path;
 
@@ -67,6 +69,7 @@ public abstract class UnconfiguredSourcePath implements Comparable<UnconfiguredS
   }
 
   /** {@link UnconfiguredBuildTargetWithOutputs} variant of source path. */
+  @JsonSerialize
   public static class BuildTarget extends UnconfiguredSourcePath {
     private final UnconfiguredBuildTargetWithOutputs target;
 
