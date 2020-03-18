@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -38,11 +39,15 @@ import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class DefaultOnDiskBuildInfoIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public ExpectedException exceptionRule = ExpectedException.none();
 
   public DefaultOnDiskBuildInfoIntegrationTest() {}
+
+  private ProjectFilesystem projectFilesystem;
 
   private Path metadataDirectory;
   private Path filePath;
@@ -60,8 +65,7 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
   public void setUp() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo/bar:baz");
 
-    ProjectFilesystem projectFilesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
+    projectFilesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     Clock clock = FakeClock.doNotCare();
     BuildId buildId = new BuildId("cat");
@@ -112,6 +116,10 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
         recorder.getRecordedPaths().stream()
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()));
+    recorder.addMetadata(
+        MetadataKey.RECORDED_PATH_HASHES,
+        ObjectMappers.WRITER.writeValueAsString(
+            ImmutableMap.of(otherPathWithinDir.toString(), "random-hash")));
     ImmutableSortedSet<Path> recursivePaths =
         DefaultOnDiskBuildInfo.getRecursivePaths(recorder.getRecordedPaths(), projectFilesystem);
     long outputSize = DefaultOnDiskBuildInfo.getOutputSize(recursivePaths, projectFilesystem);
@@ -156,6 +164,20 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
 
   @Test
   public void testSuccessfulValidation() throws IOException {
+    onDiskBuildInfo.validateArtifact(
+        /** unused */
+        ImmutableSet.of());
+  }
+
+  @Test
+  public void testUnsuccessfulValidationDueToMissingRecordedPath() throws IOException {
+    // Delete a path from RECORDED_PATH_HASHES which will be expected by the validation logic.
+    // We're specifically not deleting a path from RECORDED_PATHS because that will throw
+    // an exception much earlier when trying to compute output size, using a path from
+    // RECORDED_PATH_HASHES means we're testing for additional failures.
+    projectFilesystem.deleteFileAtPathIfExists(otherPathWithinDir);
+
+    exceptionRule.expect(IllegalStateException.class);
     onDiskBuildInfo.validateArtifact(
         /** unused */
         ImmutableSet.of());

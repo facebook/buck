@@ -42,10 +42,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -344,6 +347,43 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
       LOG.warn(
           "Target (%s) Artifact output size (%s) doesn't match artifactMetadata OUTPUT_SIZE (%s).",
           buildTarget.getFullyQualifiedName(), realSize, outputSize);
+    }
+
+    validateExistenceOfPaths(artifactMetadata);
+  }
+
+  private void validateExistenceOfPaths(ImmutableMap<String, String> artifactMetadata)
+      throws IOException {
+    Set<String> pathsToCheckForExistence = new HashSet<>();
+
+    List<String> recordedPaths =
+        ObjectMappers.readValue(
+            artifactMetadata.get(BuildInfo.MetadataKey.RECORDED_PATHS),
+            new TypeReference<List<String>>() {});
+    pathsToCheckForExistence.addAll(recordedPaths);
+
+    if (artifactMetadata.containsKey(BuildInfo.MetadataKey.RECORDED_PATH_HASHES)) {
+      // RECORDED_PATH_HASHES would usually have more entries, as a recorded path can be a dir
+      // but the hashes will go recursively and include every containing file.
+      //
+      // As RECORDED_PATH_HASHES is optional depending on input rule key sizes, we need to rely
+      // on both RECORDED_PATHS and RECORDED_PATH_HASHES.
+      ImmutableMap<String, String> pathToHashMap =
+          ObjectMappers.readValue(
+              artifactMetadata.get(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
+              new TypeReference<ImmutableMap<String, String>>() {});
+      pathsToCheckForExistence.addAll(pathToHashMap.keySet());
+    }
+
+    for (String recordedPath : pathsToCheckForExistence) {
+      boolean pathExists =
+          projectFilesystem.exists(Paths.get(recordedPath), LinkOption.NOFOLLOW_LINKS);
+      if (!pathExists) {
+        throw new IllegalStateException(
+            String.format(
+                "Target (%s) cache entry is corrupted/malformed and contains reference to non-existent path (%s)",
+                buildTarget.getFullyQualifiedName(), recordedPath));
+      }
     }
   }
 
