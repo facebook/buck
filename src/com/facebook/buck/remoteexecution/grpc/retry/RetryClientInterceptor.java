@@ -73,7 +73,7 @@ public class RetryClientInterceptor implements ClientInterceptor {
               public void onClose(Status status, Metadata trailers) {
                 cancelAttempt();
 
-                if (status.getCode() != Code.UNAVAILABLE
+                if ((status.getCode() != Code.UNAVAILABLE && status.getCode() != Code.UNKNOWN)
                     || (receivedAResponse && !retryPolicy.getRestartAllStreamingCalls())
                     || attemptNumber >= retryPolicy.getMaxRetries()) {
                   super.onClose(status, trailers);
