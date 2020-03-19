@@ -270,8 +270,6 @@ public class GenruleBuildable implements Buildable {
                     })
                 .collect(ImmutableSet.toImmutableSet()));
       }
-      // TODO(irenewchen): Should add a Preconditions check here to enforce that default_outs must
-      // be present if outs is present after repo usages have been changed to meet this requirement
       Preconditions.checkState(
           defaultOuts.isPresent(),
           "default_outs must be present if outs is present in genrule target %s",
