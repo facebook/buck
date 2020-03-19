@@ -1125,13 +1125,20 @@ class CachingBuildRuleBuilder {
     if (defaultKey.equals(cachedRuleKey.orElse(null))) {
 
       // Check the integrity of ARTIFACT_METADATA file
-      if (onDiskBuildInfo.getValue(MetadataKey.OUTPUT_SIZE).isRight()) {
+      Either<String, Exception> outputSizeString =
+          onDiskBuildInfo.getValue(MetadataKey.OUTPUT_SIZE);
+
+      if (outputSizeString.isRight()) {
         LOG.warn("Could not find OUTPUT_SIZE from ARTIFACT_METADATA file");
         return Optional.empty();
-      }
-      if (onDiskBuildInfo.getValue(MetadataKey.OUTPUT_HASH).isRight()) {
-        LOG.warn("Could not find OUTPUT_HASH from ARTIFACT_METADATA file");
-        return Optional.empty();
+      } else {
+        long outputSizeValue = Long.parseLong(outputSizeString.getLeft());
+
+        if (shouldWriteOutputHashes(outputSizeValue)
+            && onDiskBuildInfo.getValue(MetadataKey.OUTPUT_HASH).isRight()) {
+          LOG.warn("Could not find OUTPUT_HASH from ARTIFACT_METADATA file");
+          return Optional.empty();
+        }
       }
 
       return Optional.of(
