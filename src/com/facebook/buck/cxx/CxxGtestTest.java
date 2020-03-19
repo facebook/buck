@@ -65,8 +65,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nonnull;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
@@ -212,7 +212,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
     Set<String> seenTests = new HashSet<>();
     NodeList testcases = doc.getElementsByTagName("testcase");
     for (int index = 0; index < testcases.getLength(); index++) {
-      Node testcase = testcases.item(index);
+      Element testcase = (Element) testcases.item(index);
       NamedNodeMap attributes = testcase.getAttributes();
       String testCase = attributes.getNamedItem("classname").getNodeValue();
       String testName = attributes.getNamedItem("name").getNodeValue();
@@ -222,10 +222,10 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
       // Prepare the result message and type
       ResultType type = ResultType.SUCCESS;
       String message = "";
-      if (testcase.getChildNodes().getLength() > 0) {
-        Node failure = testcase.getChildNodes().item(1);
+      NodeList failures = testcase.getElementsByTagName("failure");
+      if (failures.getLength() > 0) {
         type = ResultType.FAILURE;
-        message = failure.getAttributes().getNamedItem("message").getNodeValue();
+        message = failures.item(0).getAttributes().getNamedItem("message").getNodeValue();
       } else if (attributes.getNamedItem("status").getNodeValue().equals(NOTRUN)) {
         type = ResultType.ASSUMPTION_VIOLATION;
         message = "DISABLED";

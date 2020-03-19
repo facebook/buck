@@ -83,6 +83,7 @@ public class CxxGtestTestTest {
             "simple_success",
             "simple_failure",
             "simple_failure_with_output",
+            "simple_failure_with_properties",
             "simple_disabled",
             "missing_test");
 
