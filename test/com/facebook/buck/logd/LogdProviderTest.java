@@ -41,7 +41,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-public class LogdRunnerTest {
+public class LogdProviderTest {
   @Rule public final TemporaryFolder tempFolder = new TemporaryFolder();
   @Rule public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
 
@@ -60,8 +60,8 @@ public class LogdRunnerTest {
   }
 
   @Test
-  public void runLogdRunnerWithLogdEnabled() {
-    // This tests LogD mock server is up and running and that LogdRunner has a client that is
+  public void runLogdProviderWithLogdEnabled() {
+    // This tests LogD mock server is up and running and that LogdProvider has a client that is
     // connected to this mock server and has correct connectivity states
 
     // Setting up mock grpc service
@@ -85,9 +85,9 @@ public class LogdRunnerTest {
     serviceRegistry.addService(createLogFileImpl);
 
     ManagedChannel channel;
-    try (TestLogdRunner logdRunner = new TestLogdRunner(true)) {
-      assertTrue(logdRunner.getLogdClient().isPresent());
-      LogDaemonClient logdClient = logdRunner.getLogdClient().get();
+    try (TestLogdProvider logdProvider = new TestLogdProvider(true)) {
+      assertTrue(logdProvider.getLogdClient().isPresent());
+      LogDaemonClient logdClient = logdProvider.getLogdClient().get();
       channel = logdClient.getChannel();
 
       assertEquals(ConnectivityState.IDLE, channel.getState(true));
@@ -101,9 +101,9 @@ public class LogdRunnerTest {
   }
 
   @Test
-  public void runLogdRunnerWithLogdDisabled() {
-    try (TestLogdRunner logdRunner = new TestLogdRunner(false)) {
-      assertFalse(logdRunner.getLogdClient().isPresent());
+  public void runLogdProviderWithLogdDisabled() {
+    try (TestLogdProvider logdProvider = new TestLogdProvider(false)) {
+      assertFalse(logdProvider.getLogdClient().isPresent());
     } catch (IOException e) {
       fail("There should not be any exception raised");
     }
@@ -113,21 +113,21 @@ public class LogdRunnerTest {
     return tempFolder.getRoot().getAbsolutePath() + "/logs/buck.log";
   }
 
-  private class TestLogdRunner extends LogdRunner {
+  private class TestLogdProvider extends LogdProvider {
     /**
-     * Constructor for LogdRunner.
+     * Constructor for LogdProvider.
      *
-     * @param isLogdEnabled determines whether LogD is used. If set to false, LogdRunner does
+     * @param isLogdEnabled determines whether LogD is used. If set to false, LogdProvider does
      *     nothing.
      * @throws IOException if process fails to run
      */
-    public TestLogdRunner(boolean isLogdEnabled) throws IOException {
+    public TestLogdProvider(boolean isLogdEnabled) throws IOException {
       super(isLogdEnabled);
     }
 
     @Override
     Process startProcess() {
-      // must print a number to stdout or stderr or else LogdRunner.start() will be hung
+      // must print a number to stdout or stderr or else LogdProvider.start() will be hung
       // although this port will not be used in our mock LogdClient
       return new FakeProcess(0, "8980", "");
     }

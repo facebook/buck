@@ -32,7 +32,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 /** Starts LogD when buck process runs and shuts down LogD when buck process ends. */
-public class LogdRunner implements AutoCloseable {
+public class LogdProvider implements AutoCloseable {
   private static final Logger LOG = LogManager.getLogger();
   private static final int LOGD_PROCESS_TIMEOUT_MS = 500;
   private static final Path PATH_TO_LOGD_PEX =
@@ -45,12 +45,13 @@ public class LogdRunner implements AutoCloseable {
   private LogDaemonClient logdClient;
 
   /**
-   * Constructor for LogdRunner.
+   * Constructor for LogdProvider.
    *
-   * @param isLogdEnabled determines whether LogD is used. If set to false, LogdRunner does nothing.
-   * @throws IOException if logd.pex fails to run
+   * @param isLogdEnabled determines whether LogD is used. If set to false, LogdProvider does
+   *     nothing.
+   * @throws IOException if fails to run the external logd process
    */
-  public LogdRunner(boolean isLogdEnabled) throws IOException {
+  public LogdProvider(boolean isLogdEnabled) throws IOException {
     if (isLogdEnabled) {
       this.processBuilder = new ProcessBuilder(PATH_TO_LOGD_PEX.toString());
       this.processBuilder.redirectErrorStream(true);
@@ -59,12 +60,12 @@ public class LogdRunner implements AutoCloseable {
   }
 
   /**
-   * Runs logd.pex and reads the port number that LogD server is listening on.
+   * Runs external logd process and reads the port number that LogD server is listening on.
    *
-   * @throws IOException if ProcessBuilder fails to run logd.pex
+   * @throws IOException if ProcessBuilder fails to run the external logd process
    */
   private void start() throws IOException {
-    LOG.info("Running logd.pex...");
+    LOG.info("Running external logd process...");
     logdProcess = startProcess();
 
     try (BufferedReader bufferedReader =
@@ -73,7 +74,7 @@ public class LogdRunner implements AutoCloseable {
       int logdServerPort = Integer.parseInt(bufferedReader.readLine());
       logdClient = createLogdClient(logdServerPort);
     } catch (Exception e) {
-      throw new IOException("Failed to read port info from running logd.pex", e);
+      throw new IOException("Failed to read port info from running external logd process", e);
     }
   }
 
