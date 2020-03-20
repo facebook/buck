@@ -46,6 +46,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
+import com.facebook.buck.logd.client.LogStreamFactory;
+import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
@@ -67,8 +69,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import java.io.BufferedOutputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -124,8 +124,9 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       Path logFilePath,
       Path logDirectoryPath,
       BuildId buildId,
-      TaskManagerCommandScope managerScope)
-      throws FileNotFoundException {
+      TaskManagerCommandScope managerScope,
+      LogStreamFactory logStreamFactory)
+      throws IOException {
     this.info = info;
     this.filesystem = filesystem;
     this.executor = executor;
@@ -149,7 +150,8 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
     this.outputStream =
         new BufferedOutputStream(
-            new FileOutputStream(getLogFilePath().toFile(), /* append */ true));
+            logStreamFactory.createLogStream(
+                getLogFilePath().toString(), LogType.BUCK_MACHINE_LOG));
 
     writeToLog(PREFIX_INVOCATION_INFO, info);
   }

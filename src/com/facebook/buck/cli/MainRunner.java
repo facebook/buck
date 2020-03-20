@@ -2335,7 +2335,8 @@ public final class MainRunner {
                 invocationInfo.getLogFilePath(),
                 invocationInfo.getLogDirectoryPath(),
                 invocationInfo.getBuildId(),
-                managerScope));
+                managerScope,
+                logStreamFactory));
       } catch (FileNotFoundException e) {
         LOG.warn("Unable to open stream for machine readable log file.");
       }
