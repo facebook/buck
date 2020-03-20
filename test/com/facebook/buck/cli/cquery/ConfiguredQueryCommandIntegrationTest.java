@@ -16,8 +16,10 @@
 
 package com.facebook.buck.cli.cquery;
 
+import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.testutil.OutputHelper;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -30,6 +32,24 @@ import org.junit.Test;
 public class ConfiguredQueryCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  /**
+   * Asserts that the result succeeded and that the lines printed to stdout are the same as those in
+   * the specified file. Note that sort order is not guaranteed by {@code buck query} unless it is
+   * specified explicitly via {@code --sort-output}.
+   */
+  private void assertLinesMatch(
+      String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
+      throws IOException {
+    result.assertSuccess();
+
+    // All lines in expected output files are sorted so sort the output from `buck query` before
+    // comparing. Although query/--sort-output claims to sort labels by default, this does not
+    // appear to be honored, in practice.
+    assertEquals(
+        normalizeNewlines(workspace.getFileContents(expectedOutputFile)),
+        OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())));
+  }
 
   @Test
   @Ignore
@@ -87,5 +107,39 @@ public class ConfiguredQueryCommandIntegrationTest {
         workspace.runBuckCommand(
             "cquery", "owner(lib/maconly.m)", "--target-universe", "//bin:tvos-bin");
     assertEquals("", result.getStdout());
+  }
+
+  @Test
+  @Ignore
+  public void multipleLinesPrintedForOneTargetInMulitpleConfigurations() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "set(config(//lib:foo, //config/platform:ios) config(//lib:foo, //config/platform:macos))");
+    assertLinesMatch(
+        "stdout-multiple-lines-printed-for-one-target-in-multiple-configurations",
+        result,
+        workspace);
+  }
+
+  @Test
+  @Ignore
+  public void twoTargetsInTargetUniverseCausesOverlapToBePrintedInBothConfigurations()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "set(//lib/...)", "--target-universe", "//bin:ios-bin,//bin:tvos-bin");
+    assertLinesMatch(
+        "stdout-two-targets-in-target-universe-causes-overlap-to-be-printed-in-both-configurations",
+        result,
+        workspace);
   }
 }

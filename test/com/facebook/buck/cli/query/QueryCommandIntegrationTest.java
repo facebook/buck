@@ -26,7 +26,6 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -38,6 +37,7 @@ import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.testutil.JsonMatcher;
+import com.facebook.buck.testutil.OutputHelper;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -75,9 +75,6 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class QueryCommandIntegrationTest {
 
-  private static final Splitter NEWLINE_SPLITTER = Splitter.on('\n');
-  private static final Joiner NEWLINE_JOINER = Joiner.on('\n');
-
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   /**
@@ -95,19 +92,7 @@ public class QueryCommandIntegrationTest {
     // appear to be honored, in practice.
     assertEquals(
         normalizeNewlines(workspace.getFileContents(expectedOutputFile)),
-        normalizeContents(result.getStdout()));
-  }
-
-  /** @param contents lines from a text file to normalize via sorting */
-  private String normalizeContents(String contents) {
-    List<String> unsortedLines = NEWLINE_SPLITTER.splitToList(normalizeNewlines(contents));
-    assertFalse("Output should have at least one blank line.", unsortedLines.isEmpty());
-    assertEquals("", unsortedLines.get(unsortedLines.size() - 1));
-    // Note that splitToList() returns an immutable list, so we must copy it to an ArrayList so we
-    // can sort it. We ignore the "" entry at the end of the list.
-    List<String> lines = new ArrayList<>(unsortedLines.subList(0, unsortedLines.size() - 1));
-    lines.sort(String::compareTo);
-    return NEWLINE_JOINER.join(lines) + "\n";
+        OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())));
   }
 
   @Test
@@ -1133,12 +1118,14 @@ public class QueryCommandIntegrationTest {
 
     result.assertSuccess();
     assertEquals(
-        normalizeContents(
+        OutputHelper.normalizeOutputLines(
             String.format(
-                "%s%n%s%n",
+                // Technically we should use %n instead of \n, but the call to normalizeNewlines
+                // below will normalize the output to `\n` no matter what.
+                "%s\n%s\n",
                 MorePaths.pathWithPlatformSeparators("example/4-test.txt"),
                 MorePaths.pathWithPlatformSeparators("example/1.txt"))),
-        normalizeContents(result.getStdout()));
+        OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())));
   }
 
   @Test

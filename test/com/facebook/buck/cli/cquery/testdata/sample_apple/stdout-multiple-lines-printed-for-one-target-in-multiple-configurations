@@ -1,0 +1,2 @@
+//lib:foo (//config/platform:ios)
+//lib:foo (//config/platform:macos)

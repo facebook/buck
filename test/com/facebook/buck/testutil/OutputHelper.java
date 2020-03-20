@@ -16,7 +16,13 @@
 
 package com.facebook.buck.testutil;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+
 import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.hamcrest.Matcher;
@@ -35,6 +41,9 @@ public class OutputHelper {
    * com.facebook.buck.util.TimeFormat}
    */
   public static final String BUCK_TIME_OUTPUT_FORMAT = "<?(\\d|\\.)+m?s";
+
+  private static final Splitter NEWLINE_SPLITTER = Splitter.on('\n');
+  private static final Joiner NEWLINE_JOINER = Joiner.on('\n');
 
   /**
    * Generates a regular expression that should match a buck test output line in following format:
@@ -100,5 +109,23 @@ public class OutputHelper {
     return RegexMatcher.containsRegex(
         createBuckTestOutputLineRegex(
             status, passedCount, skippedCount, failedCount, testClassName));
+  }
+
+  /**
+   * Takes output lines that may come in a nondeterministic order and normalizes them (via sorting)
+   * so they can be matched against static expected data.
+   *
+   * @param contents - The nondeterministic output we want to normalize.
+   * @return String containing the sorted lines of `contents`.
+   */
+  public static String normalizeOutputLines(String contents) {
+    List<String> unsortedLines = NEWLINE_SPLITTER.splitToList(contents);
+    assertFalse("Output should have at least one blank line.", unsortedLines.isEmpty());
+    assertEquals("", unsortedLines.get(unsortedLines.size() - 1));
+    // Note that splitToList() returns an immutable list, so we must copy it to an ArrayList so we
+    // can sort it. We ignore the "" entry at the end of the list.
+    List<String> lines = new ArrayList<>(unsortedLines.subList(0, unsortedLines.size() - 1));
+    lines.sort(String::compareTo);
+    return NEWLINE_JOINER.join(lines) + "\n";
   }
 }
