@@ -445,7 +445,7 @@ public class AndroidNdkResolverTest {
             "ndk-dir-r20",
             "Pkg.Desc = Android NDK\nPkg.Revision = 20.0.5594570",
             "ndk-dir-r21-xxx",
-            "Pkg.Desc = Android NDK\nPkg.Revision = 21.0.5000000")[1];
+            "Pkg.Desc = Android NDK\nPkg.Revision = 21.0.5000000")[0];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
