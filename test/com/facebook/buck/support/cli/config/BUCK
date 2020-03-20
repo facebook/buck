@@ -4,6 +4,7 @@ standard_java_test(
     name = "config",
     with_test_data = True,
     deps = [
+        "//src/com/facebook/buck/logd:logd",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/support/cli/config:config",
         "//src/com/facebook/buck/util/json:json",

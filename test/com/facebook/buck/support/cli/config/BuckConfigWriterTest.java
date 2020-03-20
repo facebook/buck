@@ -23,6 +23,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.logd.client.FileOutputStreamFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -63,7 +64,7 @@ public class BuckConfigWriterTest {
         ObjectMappers.READER.readTree(
             "{\"settings\": {\"test\":{\"excluded_labels\":\"windows, linux\"},\"foo\":{\"bar\":\"baz\"}}}");
 
-    BuckConfigWriter.writeConfig(tmp.getRoot(), info, config);
+    BuckConfigWriter.writeConfig(tmp.getRoot(), info, config, new FileOutputStreamFactory());
 
     assertTrue(Files.exists(expectedPath));
     try (Reader actualReader = Files.newBufferedReader(expectedPath)) {

@@ -1026,7 +1026,7 @@ public final class MainRunner {
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           ) {
         BuckConfigWriter.writeConfig(
-            filesystem.getRootPath().getPath(), invocationInfo, buckConfig);
+            filesystem.getRootPath().getPath(), invocationInfo, buckConfig, logStreamFactory);
 
         CommonThreadFactoryState commonThreadFactoryState =
             GlobalStateManager.singleton().getThreadToCommandRegister();
