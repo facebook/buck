@@ -71,8 +71,7 @@ public class OutOfProcessIsolatedBuilder {
 
       @Override
       protected Console createConsole() {
-        return new Console(
-            Verbosity.STANDARD_INFORMATION, System.out, System.err, Ansi.withoutTty());
+        return new Console(Verbosity.STANDARD_INFORMATION, System.out, System.err, Ansi.forceTty());
       }
 
       @Override
