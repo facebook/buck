@@ -2253,7 +2253,8 @@ public final class MainRunner {
                 chromeTraceConfig,
                 managerScope,
                 reStatsProvider,
-                criticalPathEventListener);
+                criticalPathEventListener,
+                logStreamFactory);
         eventListenersBuilder.add(chromeTraceBuildListener);
       } catch (IOException e) {
         LOG.error("Unable to create ChromeTrace listener!");

@@ -50,6 +50,8 @@ import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.logd.client.LogStreamFactory;
+import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.parser.ParseEvent;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
@@ -142,7 +144,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ChromeTraceBuckConfig config,
       TaskManagerCommandScope managerScope,
       Optional<RemoteExecutionStatsProvider> reStatsProvider,
-      CriticalPathEventListener criticalPathEventListener)
+      CriticalPathEventListener criticalPathEventListener,
+      LogStreamFactory logStreamFactory)
       throws IOException {
     this(
         projectFilesystem,
@@ -154,7 +157,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         config,
         managerScope,
         reStatsProvider,
-        criticalPathEventListener);
+        criticalPathEventListener,
+        logStreamFactory);
   }
 
   @VisibleForTesting
@@ -168,7 +172,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ChromeTraceBuckConfig config,
       TaskManagerCommandScope managerScope,
       Optional<RemoteExecutionStatsProvider> reStatsProvider,
-      CriticalPathEventListener criticalPathEventListener)
+      CriticalPathEventListener criticalPathEventListener,
+      LogStreamFactory logStreamFactory)
       throws IOException {
     this.logDirectoryPath = invocationInfo.getLogDirectoryPath();
     this.projectFilesystem = projectFilesystem;
@@ -192,7 +197,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         MostExecutors.newSingleThreadExecutor(
             new CommandThreadFactory(
                 getClass().getName(), GlobalStateManager.singleton().getThreadToCommandRegister()));
-    TracePathAndStream tracePathAndStream = createPathAndStream(invocationInfo.getBuildId());
+    TracePathAndStream tracePathAndStream =
+        createPathAndStream(invocationInfo.getBuildId(), logStreamFactory);
     this.tracePath = tracePathAndStream.getPath();
     this.traceStream = tracePathAndStream.getStream();
     this.chromeTraceWriter = new ChromeTraceWriter(this.traceStream);
@@ -230,7 +236,16 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         "ProjectFilesystemDelegate", projectFilesystem.getDelegateDetails());
   }
 
-  private TracePathAndStream createPathAndStream(BuildId buildId) {
+  /**
+   * Resolves trace name with suffix .gz if compressed and return corresponding path and stream
+   *
+   * @param buildId buildId
+   * @param logStreamFactory log stream factory implementation depending on whether logd is enabled
+   * @return {@code TracePathAndStream} encapsulating path and stream information. Path info is only
+   *     used for debugging in {@code ChromeTraceBuildListenerCloseAction}.
+   */
+  private TracePathAndStream createPathAndStream(
+      BuildId buildId, LogStreamFactory logStreamFactory) {
     String filenameTime = dateFormat.get().format(new Date(clock.currentTimeMillis()));
     String traceName = String.format("build.%s.%s.trace", filenameTime, buildId);
     if (config.getCompressTraces()) {
@@ -239,7 +254,9 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     Path tracePath = logDirectoryPath.resolve(traceName);
     try {
       projectFilesystem.createParentDirs(tracePath);
-      OutputStream stream = projectFilesystem.newFileOutputStream(tracePath);
+      tracePath = projectFilesystem.createNewFile(tracePath);
+      OutputStream stream =
+          logStreamFactory.createLogStream(tracePath.toString(), LogType.CHROME_TRACE_LOG);
       if (config.getCompressTraces()) {
         stream = new BestCompressionGZIPOutputStream(stream, true);
       }
@@ -1045,6 +1062,12 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     private final Path path;
     private final OutputStream stream;
 
+    /**
+     * Encapsulates tracePath and corresponding stream
+     *
+     * @param path path to trace file
+     * @param stream stream to trace file
+     */
     public TracePathAndStream(Path path, OutputStream stream) {
       this.path = path;
       this.stream = stream;

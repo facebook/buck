@@ -158,7 +158,8 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(1, false),
             managerScope,
             Optional.empty(),
-            criticalPathEventListener);
+            criticalPathEventListener,
+            new FileOutputStreamFactory());
     FakeBuckEvent event = new FakeBuckEvent();
     eventBus.post(event); // Populates it with a timestamp
 
@@ -198,7 +199,8 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(1, false),
             managerScope,
             Optional.empty(),
-            criticalPathEventListener);
+            criticalPathEventListener,
+            new FileOutputStreamFactory());
     listener.writeChromeTraceMetadataEvent("test", ImmutableMap.of());
     listener.close();
     managerScope.close();
@@ -237,7 +239,8 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(42, false),
             managerScope,
             Optional.empty(),
-            criticalPathEventListener);
+            criticalPathEventListener,
+            new FileOutputStreamFactory());
     eventBus.register(listener);
 
     LeafEvents.scope(eventBus, "testing_scope", false).close();
@@ -271,7 +274,8 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(3, false),
             managerScope,
             Optional.empty(),
-            criticalPathEventListener);
+            criticalPathEventListener,
+            new FileOutputStreamFactory());
 
     FakeBuckEvent event = new FakeBuckEvent();
     int threadId = 1;
@@ -327,7 +331,8 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(3, false),
             managerScope,
             Optional.empty(),
-            criticalPathEventListener);
+            criticalPathEventListener,
+            new FileOutputStreamFactory());
 
     listener.close();
     managerScope.close();
@@ -366,7 +371,8 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(42, false),
             managerScope,
             Optional.of(reStats),
-            criticalPathEventListener);
+            criticalPathEventListener,
+            new FileOutputStreamFactory());
 
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock, buildId);
@@ -443,7 +449,8 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(42, false),
             managerScope,
             Optional.empty(),
-            criticalPathEventListener);
+            criticalPathEventListener,
+            new FileOutputStreamFactory());
 
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
 
@@ -837,7 +844,8 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(3, false),
             managerScope,
             Optional.empty(),
-            criticalPathEventListener);
+            criticalPathEventListener,
+            new FileOutputStreamFactory());
     listener.close();
     TestBackgroundTaskManager manager = (TestBackgroundTaskManager) managerScope.getManager();
     managerScope.close();
@@ -863,7 +871,8 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(1, false),
             managerScope,
             Optional.empty(),
-            criticalPathEventListener);
+            criticalPathEventListener,
+            new FileOutputStreamFactory());
     listener.close();
     managerScope.close();
     assertTrue(
@@ -887,7 +896,8 @@ public class ChromeTraceBuildListenerTest {
             chromeTraceConfig(1, true),
             managerScope,
             Optional.empty(),
-            criticalPathEventListener);
+            criticalPathEventListener,
+            new FileOutputStreamFactory());
     listener.close();
     managerScope.close();
 
