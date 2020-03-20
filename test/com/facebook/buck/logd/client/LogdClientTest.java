@@ -31,6 +31,7 @@ import com.facebook.buck.logd.proto.CreateLogResponse;
 import com.facebook.buck.logd.proto.LogMessage;
 import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.logd.proto.LogdServiceGrpc;
+import com.google.common.base.Charsets;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -38,6 +39,7 @@ import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import io.grpc.util.MutableHandlerRegistry;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -127,7 +129,7 @@ public class LogdClientTest {
   }
 
   @Test
-  public void openLog() {
+  public void openLog() throws IOException {
     // This tests if messages are processed by StreamObserver when client streams messages
     List<LogMessage> messagesDelivered = new ArrayList<>();
     com.google.rpc.Status fakeResponse =
@@ -160,35 +162,34 @@ public class LogdClientTest {
 
     int logFileId = 1;
 
-    LogMessage logMessage1 =
-        LogMessage.newBuilder().setLogId(logFileId).setLogMessage("Hello").build();
-    LogMessage logMessage2 =
-        LogMessage.newBuilder().setLogId(logFileId).setLogMessage("Hello again").build();
-    LogMessage logMessage3 =
-        LogMessage.newBuilder().setLogId(logFileId).setLogMessage("Hello again again").build();
+    String logMessage1 = "Hello";
+    String logMessage2 = "Hello again";
+    String logMessage3 = "Hello again again";
 
-    List<LogMessage> messages = Arrays.asList(logMessage1, logMessage2, logMessage3);
-
-    StreamObserver<LogMessage> logStream = client.openLog(logFileId, logMessage1.getLogMessage());
-    logStream.onNext(logMessage2);
-    logStream.onNext(logMessage3);
-
-    // assert above messages were indeed sent
-    for (int i = 0; i < messages.size(); i++) {
-      assertEquals(messages.get(i).getLogMessage(), messagesDelivered.get(i).getLogMessage());
-    }
+    List<String> messages = Arrays.asList(logMessage1, logMessage2, logMessage3);
+    StringBuilder sb = new StringBuilder();
 
     // set mock expectations
     testHelper.onMessage(fakeResponse);
     expectLastCall();
     replay(testHelper);
 
-    logStream.onCompleted();
+    try (LogdStream logdStream = client.openLog(logFileId)) {
+      for (String message : messages) {
+        sb.append(message);
+        logdStream.write(message.getBytes(Charsets.UTF_8));
+      }
+    }
+
+    // assert above messages were indeed sent
+    // all 3 messages are concatenated because logd stream is buffered
+    assertEquals(sb.toString(), messagesDelivered.get(0).getLogMessage());
+
     verify(testHelper);
   }
 
   @Test
-  public void openLog_error() {
+  public void openLog_error() throws IOException {
     // This tests if an rpc error is thrown and caught properly
     StatusRuntimeException fakeError = new StatusRuntimeException(Status.CANCELLED);
 
@@ -222,9 +223,9 @@ public class LogdClientTest {
     replay(testHelper);
 
     int logFileId = 1;
-    LogMessage logMessage =
-        LogMessage.newBuilder().setLogId(logFileId).setLogMessage("Hello").build();
-    client.openLog(logFileId, logMessage.getLogMessage());
+    try (LogdStream logdStream = client.openLog(logFileId); ) {
+      logdStream.write("Hello".getBytes(Charsets.UTF_8));
+    }
 
     verify(testHelper);
     assertEquals(fakeError.getStatus(), Status.fromThrowable(errorCaptor.getValue()));

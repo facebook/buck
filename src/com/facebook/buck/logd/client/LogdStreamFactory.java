@@ -37,7 +37,8 @@ public class LogdStreamFactory implements LogStreamFactory {
   @Override
   public OutputStream createLogStream(String path, LogType logType) throws IOException {
     try {
-      return new LogdStream(logdClient, path, logType);
+      int fileId = logdClient.createLogFile(path, logType);
+      return logdClient.openLog(fileId);
     } catch (LogDaemonException e) {
       throw new IOException("Failed to create a LogD stream", e);
     }

@@ -19,7 +19,6 @@ package com.facebook.buck.logd.client;
 import com.facebook.buck.logd.LogDaemonException;
 import com.facebook.buck.logd.proto.CreateLogRequest;
 import com.facebook.buck.logd.proto.CreateLogResponse;
-import com.facebook.buck.logd.proto.LogMessage;
 import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.logd.proto.LogdServiceGrpc;
 import com.facebook.buck.logd.proto.ShutdownRequest;
@@ -40,7 +39,7 @@ import org.apache.logging.log4j.Logger;
  * server
  */
 public class LogdClient implements LogDaemonClient {
-  private static final Logger LOG = LogManager.getLogger();
+  private static final Logger LOG = LogManager.getLogger(LogdClient.class);
   private static final int TIME_OUT_SECONDS = 5;
   private static final String LOCAL_HOST = "localhost";
 
@@ -49,11 +48,10 @@ public class LogdClient implements LogDaemonClient {
   private final LogdServiceGrpc.LogdServiceBlockingStub blockingStub;
   private final LogdServiceGrpc.LogdServiceStub asyncStub;
 
-  private Map<Integer, StreamObserver<Status>> responseObservers = new ConcurrentHashMap<>();
-  private Map<Integer, StreamObserver<LogMessage>> requestObservers = new ConcurrentHashMap<>();
-  private Map<Integer, String> fileIdToPath = new ConcurrentHashMap<>();
-
-  private StreamObserverFactory streamObserverFactory;
+  private final Map<Integer, LogdStream> fileIdToLogdStream = new ConcurrentHashMap<>();
+  private final Map<Integer, StreamObserver<Status>> responseObservers = new ConcurrentHashMap<>();
+  private final Map<Integer, String> fileIdToPath = new ConcurrentHashMap<>();
+  private final StreamObserverFactory streamObserverFactory;
 
   /**
    * Constructs a LogdClient that is connected to localhost at provided port number.
@@ -114,6 +112,7 @@ public class LogdClient implements LogDaemonClient {
 
   @Override
   public void shutdown() {
+    closeAllStreams();
     try {
       LOG.info(
           "Awaiting termination of channel to logD server. Waiting for up to {} seconds...",
@@ -152,32 +151,20 @@ public class LogdClient implements LogDaemonClient {
   }
 
   @Override
-  public StreamObserver<LogMessage> openLog(int logFileId, String logContent)
-      throws LogDaemonException {
-    // Client calls this method with the returned generated id from calling createLogFile
-    //   logD server will then return the client with a requestObserver which observes and processes
+  public LogdStream openLog(int logFileId) {
+    // Client calls this method with the returned generated id from calling createLogFile.
+    // LogD server will then return the client with a requestObserver which observes and processes
     //   incoming logs from client i.e. subsequent logs are sent via requestObserver.onNext(...)
-    // Upon receiving a client's request to close the requestObserver, logD server will send a
-    //   response back via a responseObserver confirming that logs have been written and close
-    //   the responseObserver.
+    // The returned requestObserver will be wrapped in a LogdStream and returned to the caller
     responseObservers.computeIfAbsent(
         logFileId,
         newLogFileId -> streamObserverFactory.createStreamObserver(fileIdToPath.get(newLogFileId)));
 
-    StreamObserver<LogMessage> requestObserver =
-        requestObservers.computeIfAbsent(
-            logFileId, newLogFileId -> asyncStub.openLog(responseObservers.get(newLogFileId)));
-
-    try {
-      LogMessage logMessage =
-          LogMessage.newBuilder().setLogId(logFileId).setLogMessage(logContent).build();
-      requestObserver.onNext(logMessage);
-      return requestObserver;
-    } catch (Exception e) {
-      requestObserver.onError(e);
-      throw new LogDaemonException(
-          e, "Failed to establish a log stream to logD at %s", fileIdToPath.get(logFileId));
-    }
+    LOG.info("Opening a logd stream to {}", fileIdToPath.get(logFileId));
+    return fileIdToLogdStream.computeIfAbsent(
+        logFileId,
+        newLogFileId ->
+            new LogdStream(asyncStub.openLog(responseObservers.get(newLogFileId)), newLogFileId));
   }
 
   @Override
@@ -189,6 +176,13 @@ public class LogdClient implements LogDaemonClient {
     } catch (StatusRuntimeException e) {
       LOG.error("LogD failed to return a response: {}", e.getStatus(), e);
       throw new LogDaemonException(e, "LogD failed to return a response: %s", e.getStatus());
+    }
+  }
+
+  private void closeAllStreams() {
+    LOG.info("Force closing all logd streams before client shutdown...");
+    for (LogdStream logdStream : fileIdToLogdStream.values()) {
+      logdStream.close();
     }
   }
 }

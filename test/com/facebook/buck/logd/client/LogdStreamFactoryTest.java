@@ -110,10 +110,8 @@ public class LogdStreamFactoryTest {
       throw new AssertionError("Failed to stream message via logd", e);
     }
 
-    // 2 messages because streaming starts after sending the first empty message request
-    assertEquals(2, messagesDelivered.size());
-    assertEquals("", messagesDelivered.get(0).getLogMessage());
-    assertEquals(message, messagesDelivered.get(1).getLogMessage());
+    assertEquals(1, messagesDelivered.size());
+    assertEquals(message, messagesDelivered.get(0).getLogMessage());
   }
 
   private String getTestFilePath() {
