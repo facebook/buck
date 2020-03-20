@@ -1,0 +1,18 @@
+java_library(
+    name = "namedpipes",
+    srcs = glob(["**/*.java"]),
+    tests = [
+        "//test/com/facebook/buck/io/namedpipes:unit",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/io/file:file",
+        "//src/com/facebook/buck/io/watchman:transport",
+        "//src/com/facebook/buck/io/windowspipe:windowspipe",
+        "//src/com/facebook/buck/util/environment:platform",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jna:jna",
+        "//third-party/java/jsr:jsr305",
+    ],
+)
