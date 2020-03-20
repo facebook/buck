@@ -132,6 +132,7 @@ import com.facebook.buck.log.LogConfig;
 import com.facebook.buck.logd.LogdProvider;
 import com.facebook.buck.logd.client.LogStreamFactory;
 import com.facebook.buck.logd.client.LogStreamProvider;
+import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -246,6 +247,7 @@ import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.nio.channels.ClosedByInterruptException;
@@ -1037,7 +1039,11 @@ public final class MainRunner {
                 .getLogDirectoryPath()
                 .resolve(BuckConstant.BUCK_SIMPLE_CONSOLE_LOG_FILE_NAME);
 
-        PrintStream simpleConsolePrintStream = new PrintStream(simpleConsoleLog.toFile());
+        OutputStream simpleConsoleLogOutputStream =
+            logStreamFactory.createLogStream(
+                simpleConsoleLog.toString(), LogType.SIMPLE_CONSOLE_LOG);
+        PrintStream simpleConsolePrintStream = new PrintStream(simpleConsoleLogOutputStream);
+
         Console simpleLogConsole =
             new Console(
                 Verbosity.STANDARD_INFORMATION,
