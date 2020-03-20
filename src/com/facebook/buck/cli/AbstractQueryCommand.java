@@ -192,15 +192,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     }
     if (queryFormat.contains("%s")) {
       try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
-        runMultipleQuery(
-            params,
-            env,
-            queryFormat,
-            formatArgs,
-            // generateJsonOutput is deprecated and have to be set as outputFormat parameter
-            outputFormat == OutputFormat.JSON,
-            outputAttributes(),
-            printStreamWrapper.get());
+        runMultipleQuery(params, env, queryFormat, formatArgs, printStreamWrapper.get());
       }
       return;
     }
@@ -214,14 +206,15 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   /**
    * Evaluate multiple queries in a single `buck query` run. Usage: buck query <query format>
    * <input1> <input2> <...> <inputN>
+   *
+   * <p>NOTE: This should really be private, but we have some CLI commands which are just wrappers
+   * around common queries and those use `runMultipleQuery` to function.
    */
-  static void runMultipleQuery(
+  void runMultipleQuery(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       String queryFormat,
       List<String> inputsFormattedAsBuildTargets,
-      boolean generateJsonOutput,
-      ImmutableSet<String> attributesFilter,
       PrintStream printStream)
       throws IOException, InterruptedException, QueryException {
     if (inputsFormattedAsBuildTargets.isEmpty()) {
@@ -251,6 +244,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
     LOG.debug("Printing out %d targets", queryResultMap.size());
 
+    ImmutableSet<String> attributesFilter = outputAttributes();
     if (attributesFilter.size() > 0) {
       collectAndPrintAttributesAsJson(
           params,
@@ -260,7 +254,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
               .collect(ImmutableSet.toImmutableSet()),
           attributesFilter,
           printStream);
-    } else if (generateJsonOutput) {
+    } else if (outputFormat == OutputFormat.JSON) {
       CommandHelper.printJsonOutput(queryResultMap, printStream);
     } else {
       CommandHelper.print(queryResultMap, printStream);
@@ -320,7 +314,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
   /** @return set as {@link QueryBuildTarget}s or throw {@link IllegalArgumentException} */
   @SuppressWarnings("unchecked")
-  public static Set<QueryBuildTarget> asQueryBuildTargets(Set<? extends QueryTarget> set) {
+  public Set<QueryBuildTarget> asQueryBuildTargets(Set<? extends QueryTarget> set) {
     // It is probably rare that there is a QueryTarget that is not a QueryBuildTarget.
     boolean hasInvalidItem = set.stream().anyMatch(item -> !(item instanceof QueryBuildTarget));
     if (hasInvalidItem) {
@@ -496,7 +490,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
         mergedNodes.stream()
             .collect(
                 Collectors.toMap(
-                    AbstractQueryCommand::toPresentationForm,
+                    this::toPresentationForm,
                     node -> {
                       String label = toPresentationForm(node);
                       // NOTE: for resiliency in case attributes cannot be resolved a map with only
@@ -552,7 +546,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return ranks;
   }
 
-  private static void collectAndPrintAttributesAsJson(
+  private void collectAndPrintAttributesAsJson(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult,
@@ -562,7 +556,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     printAttributesAsJson(collectAttributes(params, env, queryResult, attributes), printStream);
   }
 
-  private static <T extends SortedMap<String, Object>> void printAttributesAsJson(
+  private <T extends SortedMap<String, Object>> void printAttributesAsJson(
       ImmutableSortedMap<String, T> result, PrintStream printStream) throws IOException {
     ObjectMappers.WRITER
         .with(
@@ -576,7 +570,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     printStream.println();
   }
 
-  private static ImmutableSortedMap<String, SortedMap<String, Object>> collectAttributes(
+  private ImmutableSortedMap<String, SortedMap<String, Object>> collectAttributes(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult,
@@ -608,7 +602,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return ImmutableSortedMap.copyOf(attributesMap);
   }
 
-  private static ImmutableList<TargetNode<?>> queryResultToTargetNodes(
+  private ImmutableList<TargetNode<?>> queryResultToTargetNodes(
       BuckQueryEnvironment env, Collection<QueryTarget> queryResult) throws QueryException {
     ImmutableList.Builder<TargetNode<?>> builder = ImmutableList.builder();
     for (QueryTarget target : queryResult) {
@@ -621,7 +615,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return builder.build();
   }
 
-  private static Optional<SortedMap<String, Object>> getAttributes(
+  private Optional<SortedMap<String, Object>> getAttributes(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       PatternsMatcher patternsMatcher,
@@ -665,7 +659,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return Optional.of(attributes);
   }
 
-  private static SortedMap<String, Object> updateWithComputedAttributes(
+  private SortedMap<String, Object> updateWithComputedAttributes(
       SortedMap<String, Object> rawAttributes, MergedTargetNode node) {
     SortedMap<String, Object> computedAttributes = new TreeMap<>(rawAttributes);
 
@@ -696,11 +690,11 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return computedAttributes;
   }
 
-  private static String toPresentationForm(MergedTargetNode node) {
+  private String toPresentationForm(MergedTargetNode node) {
     return toPresentationForm(node.getBuildTarget());
   }
 
-  private static String toPresentationForm(UnflavoredBuildTarget unflavoredBuildTarget) {
+  private String toPresentationForm(UnflavoredBuildTarget unflavoredBuildTarget) {
     return unflavoredBuildTarget.getFullyQualifiedName();
   }
 

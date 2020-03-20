@@ -41,6 +41,15 @@ import org.kohsuke.args4j.Option;
  */
 public class QueryCommand extends AbstractQueryCommand {
 
+  public QueryCommand() {
+    this(OutputFormat.LIST);
+  }
+
+  public QueryCommand(OutputFormat outputFormat) {
+    super();
+    this.outputFormat = outputFormat;
+  }
+
   /**
    * Example usage:
    *

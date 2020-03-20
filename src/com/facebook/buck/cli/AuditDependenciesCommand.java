@@ -130,7 +130,12 @@ public class AuditDependenciesCommand extends AbstractCommand {
               params,
               parserState,
               createParsingContext(params.getCells(), pool.getListeningExecutorService()));
-      QueryCommand.runMultipleQuery(
+      QueryCommand command =
+          new QueryCommand(
+              shouldGenerateJsonOutput()
+                  ? AbstractQueryCommand.OutputFormat.JSON
+                  : AbstractQueryCommand.OutputFormat.LIST);
+      command.runMultipleQuery(
           params,
           env,
           getQueryFormat(shouldShowTransitiveDependencies(), shouldIncludeTests()),
@@ -138,8 +143,6 @@ public class AuditDependenciesCommand extends AbstractCommand {
               params.getCells().getRootCell(),
               params.getClientWorkingDir(),
               params.getBuckConfig()),
-          shouldGenerateJsonOutput(),
-          ImmutableSet.of(),
           params.getConsole().getStdOut());
     } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
