@@ -191,9 +191,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       return;
     }
     if (queryFormat.contains("%s")) {
-      try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
-        runMultipleQuery(params, env, queryFormat, formatArgs, printStreamWrapper.get());
-      }
+      runMultipleQuery(params, env, queryFormat, formatArgs);
       return;
     }
     if (formatArgs.size() > 0) {
@@ -214,8 +212,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       String queryFormat,
-      List<String> inputsFormattedAsBuildTargets,
-      PrintStream printStream)
+      List<String> inputsFormattedAsBuildTargets)
       throws IOException, InterruptedException, QueryException {
     if (inputsFormattedAsBuildTargets.isEmpty()) {
       throw new CommandLineException(
@@ -244,20 +241,24 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
     LOG.debug("Printing out %d targets", queryResultMap.size());
 
-    ImmutableSet<String> attributesFilter = outputAttributes();
-    if (attributesFilter.size() > 0) {
-      collectAndPrintAttributesAsJson(
-          params,
-          env,
-          queryResultMap.asMap().values().stream()
-              .flatMap(Collection::stream)
-              .collect(ImmutableSet.toImmutableSet()),
-          attributesFilter,
-          printStream);
-    } else if (outputFormat == OutputFormat.JSON) {
-      CommandHelper.printJsonOutput(queryResultMap, printStream);
-    } else {
-      CommandHelper.print(queryResultMap, printStream);
+    try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
+      PrintStream printStream = printStreamWrapper.get();
+
+      ImmutableSet<String> attributesFilter = outputAttributes();
+      if (attributesFilter.size() > 0) {
+        collectAndPrintAttributesAsJson(
+            params,
+            env,
+            queryResultMap.asMap().values().stream()
+                .flatMap(Collection::stream)
+                .collect(ImmutableSet.toImmutableSet()),
+            attributesFilter,
+            printStream);
+      } else if (outputFormat == OutputFormat.JSON) {
+        CommandHelper.printJsonOutput(queryResultMap, printStream);
+      } else {
+        CommandHelper.print(queryResultMap, printStream);
+      }
     }
   }
 

@@ -86,8 +86,7 @@ public class AuditOwnerCommand extends AbstractCommand {
               shouldGenerateJsonOutput()
                   ? AbstractQueryCommand.OutputFormat.JSON
                   : AbstractQueryCommand.OutputFormat.LIST);
-      command.runMultipleQuery(
-          params, env, "owner('%s')", getArguments(), params.getConsole().getStdOut());
+      command.runMultipleQuery(params, env, "owner('%s')", getArguments());
     } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();

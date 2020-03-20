@@ -142,8 +142,7 @@ public class AuditDependenciesCommand extends AbstractCommand {
           getArgumentsFormattedAsBuildTargets(
               params.getCells().getRootCell(),
               params.getClientWorkingDir(),
-              params.getBuckConfig()),
-          params.getConsole().getStdOut());
+              params.getBuckConfig()));
     } catch (Exception e) {
       if (e.getCause() instanceof InterruptedException) {
         throw (InterruptedException) e.getCause();
