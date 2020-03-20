@@ -138,6 +138,10 @@ private static final long serialVersionUID = 0L;
      * <code>ANDROID_EMULATOR = 1;</code>
      */
     ANDROID_EMULATOR(1),
+    /**
+     * <code>LINUX_GPU = 2;</code>
+     */
+    LINUX_GPU(2),
     UNRECOGNIZED(-1),
     ;
 
@@ -149,6 +153,10 @@ private static final long serialVersionUID = 0L;
      * <code>ANDROID_EMULATOR = 1;</code>
      */
     public static final int ANDROID_EMULATOR_VALUE = 1;
+    /**
+     * <code>LINUX_GPU = 2;</code>
+     */
+    public static final int LINUX_GPU_VALUE = 2;
 
 
     public final int getNumber() {
@@ -171,6 +179,7 @@ private static final long serialVersionUID = 0L;
       switch (value) {
         case 0: return LINUX;
         case 1: return ANDROID_EMULATOR;
+        case 2: return LINUX_GPU;
         default: return null;
       }
     }
