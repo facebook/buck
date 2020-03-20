@@ -28,6 +28,8 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.logd.client.LogStreamFactory;
+import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
@@ -59,6 +61,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
   private final ProjectFilesystem projectFilesystem;
   private final TaskManagerCommandScope managerScope;
   private final Optional<RuleKeyLogFileUploader> ruleKeyLogFileUploader;
+  private final LogStreamFactory logStreamFactory;
 
   private final Object lock;
 
@@ -70,13 +73,15 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       InvocationInfo info,
       ExecutorService outputExecutor,
       TaskManagerCommandScope managerScope,
-      Optional<RuleKeyLogFileUploader> ruleKeyLogFileUploader) {
+      Optional<RuleKeyLogFileUploader> ruleKeyLogFileUploader,
+      LogStreamFactory logStreamFactory) {
     this(
         projectFilesystem,
         info,
         outputExecutor,
         managerScope,
         ruleKeyLogFileUploader,
+        logStreamFactory,
         DEFAULT_MIN_LINES_FOR_AUTO_FLUSH);
   }
 
@@ -87,6 +92,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
       ExecutorService outputExecutor,
       TaskManagerCommandScope managerScope,
       Optional<RuleKeyLogFileUploader> ruleKeyLogFileUploader,
+      LogStreamFactory logStreamFactory,
       int minLinesForAutoFlush) {
     this.projectFilesystem = projectFilesystem;
     this.minLinesForAutoFlush = minLinesForAutoFlush;
@@ -96,6 +102,7 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     this.logLines = new ArrayList<>();
     this.managerScope = managerScope;
     this.ruleKeyLogFileUploader = ruleKeyLogFileUploader;
+    this.logStreamFactory = logStreamFactory;
   }
 
   @Subscribe
@@ -145,7 +152,8 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     return String.format("target\t%s\t%s", target.toString(), ruleKey.toString());
   }
 
-  public Path getLogFilePath() {
+  @VisibleForTesting
+  Path getLogFilePath() {
     Path logDir = projectFilesystem.resolve(info.getLogDirectoryPath());
     return logDir.resolve(BuckConstant.RULE_KEY_LOGGER_FILE_NAME);
   }
@@ -172,7 +180,8 @@ public class RuleKeyLoggerListener implements BuckEventListener {
     Path path = getLogFilePath();
     try {
       projectFilesystem.createParentDirs(path);
-      try (OutputStream os = projectFilesystem.newUnbufferedFileOutputStream(path, true);
+      try (OutputStream os =
+              logStreamFactory.createLogStream(path.toString(), LogType.RULE_KEY_LOG);
           ThrowingPrintWriter out = new ThrowingPrintWriter(os, StandardCharsets.UTF_8)) {
         for (String line : linesToFlush) {
           out.println(line);

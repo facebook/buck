@@ -33,6 +33,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.logd.client.FileOutputStreamFactory;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.util.concurrent.CommandThreadFactory;
@@ -157,6 +158,7 @@ public class RuleKeyLoggerListenerTest {
         outputExecutor,
         managerScope,
         Optional.empty(),
+        new FileOutputStreamFactory(),
         minLinesForAutoFlush);
   }
 }

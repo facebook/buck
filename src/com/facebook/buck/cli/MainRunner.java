@@ -2307,7 +2307,8 @@ public final class MainRunner {
               MostExecutors.newSingleThreadExecutor(
                   new CommandThreadFactory(getClass().getName(), commonThreadFactoryState)),
               managerScope,
-              keyLogFileUploader));
+              keyLogFileUploader,
+              logStreamFactory));
     }
 
     Optional<BuildReportFileUploader> buildReportFileUploader =
