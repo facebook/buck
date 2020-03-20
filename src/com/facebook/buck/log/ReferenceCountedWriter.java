@@ -89,6 +89,25 @@ public class ReferenceCountedWriter extends Writer {
     return innerWriter.append(c);
   }
 
+  /**
+   * Flush and close writer only if currentCount == 0. This method was created to avoid instances
+   * where we might attempt to flush a closed stream.
+   *
+   * @throws IOException if an I/O error occurs
+   */
+  public void flushAndClose() throws IOException {
+    // Avoid decrementing more than once from the same ReferenceCounted instance.
+    if (hasBeenClosed.getAndSet(true)) {
+      return;
+    }
+
+    int currentCount = counter.decrementAndGet();
+    if (currentCount == 0) {
+      innerWriter.flush();
+      innerWriter.close();
+    }
+  }
+
   @Override
   public void close() throws IOException {
     // Avoid decrementing more than once from the same ReferenceCounted instance.
@@ -99,9 +118,6 @@ public class ReferenceCountedWriter extends Writer {
     int currentCount = counter.decrementAndGet();
     if (currentCount == 0) {
       innerWriter.close();
-    } else {
-      // Close implies flush, so if we're not actually closing we should at least flush
-      innerWriter.flush();
     }
   }
 

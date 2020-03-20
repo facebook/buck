@@ -20,6 +20,9 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.windowsfs.WindowsFS;
+import com.facebook.buck.logd.client.FileOutputStreamFactory;
+import com.facebook.buck.logd.client.LogStreamFactory;
+import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.CommonThreadFactoryState;
@@ -28,8 +31,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import java.io.Closeable;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -81,6 +82,7 @@ public class GlobalStateManager {
 
     ReferenceCountedWriter defaultWriter =
         createReferenceCountedWriter(
+            new FileOutputStreamFactory(),
             InvocationInfo.of(
                     new BuildId(),
                     false,
@@ -100,13 +102,15 @@ public class GlobalStateManager {
       InvocationInfo info,
       OutputStream consoleHandlerStream,
       OutputStream consoleHandlerOriginalStream,
-      Verbosity consoleHandlerVerbosity) {
+      Verbosity consoleHandlerVerbosity,
+      LogStreamFactory logStreamFactory) {
     long threadId = Thread.currentThread().getId();
     String commandId = info.getCommandId();
 
     repository = info.getRepository();
 
-    ReferenceCountedWriter defaultWriter = createReferenceCountedWriter(info.getLogFilePath());
+    ReferenceCountedWriter defaultWriter =
+        createReferenceCountedWriter(logStreamFactory, info.getLogFilePath());
     ReferenceCountedWriter newWriter = defaultWriter.newReference();
     // Put defaultWriter to map only after newWriter has been created. Otherwise defaultWriter may
     // get closed before newWriter was created due to concurrency.
@@ -198,21 +202,26 @@ public class GlobalStateManager {
         oldWriter = commandIdToLogFileHandlerWriter.put(commandId, newWriter);
       }
       if (oldWriter != null) {
-        oldWriter.close();
+        if (oldWriter instanceof ReferenceCountedWriter) {
+          ((ReferenceCountedWriter) oldWriter).flushAndClose();
+        } else {
+          oldWriter.close();
+        }
       }
     } catch (IOException e) {
       throw new RuntimeException(String.format("Exception closing writer [%s].", commandId), e);
     }
   }
 
-  private ReferenceCountedWriter createReferenceCountedWriter(Path logFilePath) {
+  private ReferenceCountedWriter createReferenceCountedWriter(
+      LogStreamFactory logStreamFactory, Path logFilePath) {
     try {
       Files.createDirectories(logFilePath.getParent());
+
       return new ReferenceCountedWriter(
           new OutputStreamWriter(
-              new FileOutputStream(logFilePath.toString()), StandardCharsets.UTF_8));
-    } catch (FileNotFoundException e) {
-      throw new RuntimeException(String.format("Could not create file [%s].", logFilePath), e);
+              logStreamFactory.createLogStream(logFilePath.toString(), LogType.BUCK_LOG),
+              StandardCharsets.UTF_8));
     } catch (IOException e) {
       throw new RuntimeException(String.format("Exception wrapping file [%s].", logFilePath), e);
     }
