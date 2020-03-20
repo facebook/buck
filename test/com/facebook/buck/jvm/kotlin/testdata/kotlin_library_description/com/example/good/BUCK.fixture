@@ -5,3 +5,12 @@ kotlin_library(
         "PUBLIC",
     ],
 )
+
+kotlin_library(
+    name = "example_with_target",
+    srcs = ["Example.kt"],
+    target = "8",
+    visibility = [
+        "PUBLIC",
+    ],
+)

@@ -222,4 +222,15 @@ public class KotlinLibraryIntegrationTest {
             "kotlin.kapt_use_annotation_processor_params=true");
     buildResult.assertSuccess("Build should have succeeded.");
   }
+
+  @Test
+  public void shouldCompileKotlinClassWithTarget8() {
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build",
+            "//com/example/good:example_with_target",
+            "-c",
+            "kotlin.add_jvm_target_to_kotlinc=true");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
 }

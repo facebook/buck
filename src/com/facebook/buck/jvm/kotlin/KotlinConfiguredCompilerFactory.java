@@ -86,7 +86,9 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         getFriendSourcePaths(buildRuleResolver, kotlinArgs.getFriendPaths(), kotlinBuckConfig),
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         kotlinArgs.getKaptApOptions(),
-        kotlinBuckConfig.addJvmTargetToKotlinc() ? kotlinArgs.getTarget() : Optional.empty(),
+        kotlinBuckConfig.addJvmTargetToKotlinc()
+            ? kotlinArgs.getTarget().map(target -> getKotlincCompatibleTarget(target))
+            : Optional.empty(),
         kotlinBuckConfig.hasKaptCorrectErrorTypes(),
         kotlinBuckConfig.hasKaptExplicitlySpecifiedAnnotationProcessors(),
         kotlinBuckConfig.hasKaptUseAnnotationProcessorParams(),
@@ -164,5 +166,17 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     }
 
     return sourcePaths.build();
+  }
+
+  private String getKotlincCompatibleTarget(String target) {
+    if (target.equals("6")) {
+      return "1.6";
+    }
+
+    if (target.equals("8")) {
+      return "1.8";
+    }
+
+    return target;
   }
 }
