@@ -37,6 +37,10 @@ public enum LogType
    * <code>RULE_KEY_LOG = 5;</code>
    */
   RULE_KEY_LOG(5),
+  /**
+   * <code>BUCK_CONFIG_LOG = 6;</code>
+   */
+  BUCK_CONFIG_LOG(6),
   UNRECOGNIZED(-1),
   ;
 
@@ -64,6 +68,10 @@ public enum LogType
    * <code>RULE_KEY_LOG = 5;</code>
    */
   public static final int RULE_KEY_LOG_VALUE = 5;
+  /**
+   * <code>BUCK_CONFIG_LOG = 6;</code>
+   */
+  public static final int BUCK_CONFIG_LOG_VALUE = 6;
 
 
   public final int getNumber() {
@@ -90,6 +98,7 @@ public enum LogType
       case 3: return SIMPLE_CONSOLE_LOG;
       case 4: return CRITICAL_PATH_LOG;
       case 5: return RULE_KEY_LOG;
+      case 6: return BUCK_CONFIG_LOG;
       default: return null;
     }
   }

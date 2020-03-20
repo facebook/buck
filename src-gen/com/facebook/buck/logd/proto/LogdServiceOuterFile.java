@@ -51,17 +51,18 @@ public final class LogdServiceOuterFile {
       "logType\030\002 \001(\0162\020.logd.v1.LogType\"\"\n\021Creat" +
       "eLogResponse\022\r\n\005logId\030\001 \001(\005\"/\n\nLogMessag" +
       "e\022\r\n\005logId\030\001 \001(\005\022\022\n\nlogMessage\030\002 \001(\t\"\021\n\017" +
-      "ShutdownRequest*\204\001\n\007LogType\022\014\n\010BUCK_LOG\020" +
+      "ShutdownRequest*\231\001\n\007LogType\022\014\n\010BUCK_LOG\020" +
       "\000\022\024\n\020BUCK_MACHINE_LOG\020\001\022\024\n\020CHROME_TRACE_" +
       "LOG\020\002\022\026\n\022SIMPLE_CONSOLE_LOG\020\003\022\025\n\021CRITICA" +
-      "L_PATH_LOG\020\004\022\020\n\014RULE_KEY_LOG\020\0052\321\001\n\013LogdS" +
-      "ervice\022H\n\rCreateLogFile\022\031.logd.v1.Create" +
-      "LogRequest\032\032.logd.v1.CreateLogResponse\"\000" +
-      "\0226\n\007OpenLog\022\023.logd.v1.LogMessage\032\022.googl" +
-      "e.rpc.Status\"\000(\001\022@\n\016ShutdownServer\022\030.log" +
-      "d.v1.ShutdownRequest\032\022.google.rpc.Status" +
-      "\"\000B6\n\034com.facebook.buck.logd.protoB\024Logd" +
-      "ServiceOuterFileP\001b\006proto3"
+      "L_PATH_LOG\020\004\022\020\n\014RULE_KEY_LOG\020\005\022\023\n\017BUCK_C" +
+      "ONFIG_LOG\020\0062\321\001\n\013LogdService\022H\n\rCreateLog" +
+      "File\022\031.logd.v1.CreateLogRequest\032\032.logd.v" +
+      "1.CreateLogResponse\"\000\0226\n\007OpenLog\022\023.logd." +
+      "v1.LogMessage\032\022.google.rpc.Status\"\000(\001\022@\n" +
+      "\016ShutdownServer\022\030.logd.v1.ShutdownReques" +
+      "t\032\022.google.rpc.Status\"\000B6\n\034com.facebook." +
+      "buck.logd.protoB\024LogdServiceOuterFileP\001b" +
+      "\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {

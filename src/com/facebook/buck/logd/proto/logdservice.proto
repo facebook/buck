@@ -59,6 +59,7 @@ enum LogType {
     SIMPLE_CONSOLE_LOG = 3;
     CRITICAL_PATH_LOG = 4;
     RULE_KEY_LOG = 5;
+    BUCK_CONFIG_LOG = 6;
 }
 
 // Manages LogdService APIs
