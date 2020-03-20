@@ -80,35 +80,6 @@ import org.kohsuke.args4j.spi.FileOptionHandler;
 public abstract class AbstractQueryCommand extends AbstractCommand {
   private static final Logger LOG = Logger.get(AbstractCommand.class);
 
-  /**
-   * Example usage:
-   *
-   * <pre>
-   * buck query "allpaths('//path/to:target', '//path/to:other')" --output-format dot --output-file /tmp/graph.dot
-   * dot -Tpng /tmp/graph.dot -o /tmp/graph.png
-   * </pre>
-   */
-  @Deprecated
-  @Option(
-      name = "--dot",
-      usage = "Deprecated (use `--output-format dot`): Print result as Dot graph",
-      forbids = {"--json", "--output-format"})
-  private boolean generateDotOutput;
-
-  @Deprecated
-  @Option(
-      name = "--bfs",
-      usage = "Deprecated (use `--output-format dot_bfs`): Sort the dot output in bfs order",
-      depends = {"--dot"})
-  private boolean generateBFSOutput;
-
-  @Deprecated
-  @Option(
-      name = "--json",
-      usage = "Deprecated (use `--output-format json`): Output in JSON format",
-      forbids = {"--dot", "--output-format"})
-  protected boolean generateJsonOutput;
-
   /** Enum with values for `--output-format` CLI parameter */
   protected enum OutputFormat {
     /** Format output as list */
@@ -177,19 +148,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
               + "respectively. This does not apply to --output-format equals to dot, dot_bfs, json and thrift.")
   private QueryCommand.SortOutputFormat sortOutputFormat = QueryCommand.SortOutputFormat.LABEL;
 
-  @Deprecated
-  @Option(
-      name = "--output-attributes",
-      usage =
-          "Deprecated: List of attributes to output, --output-attributes attr1 att2 ... attrN. "
-              + "Attributes can be regular expressions. The preferred replacement is "
-              + "--output-attribute.",
-      handler = StringSetOptionHandler.class,
-      forbids = {"--output-attribute"})
-  private Supplier<ImmutableSet<String>> outputAttributesDeprecated =
-      Suppliers.ofInstance(ImmutableSet.of());
-
-  // Two options are kept to not break the UI and scripts
+  // Use the `outputAttributes()` function to access this data instead. See the comment on the top
+  // of that function for the reason why.
   @Option(
       name = "--output-attribute",
       usage =
@@ -199,13 +159,13 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       handler = SingleStringSetOptionHandler.class,
       forbids = {"--output-attributes"})
   @VisibleForTesting
-  Supplier<ImmutableSet<String>> outputAttributesSane = Suppliers.ofInstance(ImmutableSet.of());
+  Supplier<ImmutableSet<String>> outputAttributesDoNotUseDirectly =
+      Suppliers.ofInstance(ImmutableSet.of());
 
-  private ImmutableSet<String> outputAttributes() {
-    // There's no easy way apparently to ensure that an option has not been set
-    ImmutableSet<String> deprecated = outputAttributesDeprecated.get();
-    ImmutableSet<String> sane = outputAttributesSane.get();
-    return sane.size() > deprecated.size() ? sane : deprecated;
+  // NOTE: Use this rather than accessing the data directly because subclasses (looking at you,
+  // {@link QueryCommand}) override this to support other ways of specifying output attributes.
+  protected ImmutableSet<String> outputAttributes() {
+    return outputAttributesDoNotUseDirectly.get();
   }
 
   protected boolean shouldOutputAttributes() {
@@ -223,12 +183,6 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   @VisibleForTesting
   void formatAndRunQuery(CommandRunnerParams params, BuckQueryEnvironment env)
       throws IOException, InterruptedException, QueryException {
-
-    if (generateJsonOutput) {
-      outputFormat = OutputFormat.JSON;
-    } else if (generateDotOutput) {
-      outputFormat = generateBFSOutput ? OutputFormat.DOT_BFS : OutputFormat.DOT;
-    }
 
     String queryFormat = arguments.get(0);
     List<String> formatArgs = arguments.subList(1, arguments.size());

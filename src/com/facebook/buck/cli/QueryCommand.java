@@ -26,6 +26,10 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
+import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableSet;
+import java.util.function.Supplier;
+import org.kohsuke.args4j.Option;
 
 /**
  * Buck subcommand which relies on the configured target graph, whose nodes' selects are evaluated
@@ -37,10 +41,66 @@ import com.facebook.buck.util.ExitCode;
  */
 public class QueryCommand extends AbstractQueryCommand {
 
+  /**
+   * Example usage:
+   *
+   * <pre>
+   * buck query "allpaths('//path/to:target', '//path/to:other')" --output-format dot --output-file /tmp/graph.dot
+   * dot -Tpng /tmp/graph.dot -o /tmp/graph.png
+   * </pre>
+   */
+  @Deprecated
+  @Option(
+      name = "--dot",
+      usage = "Deprecated (use `--output-format dot`): Print result as Dot graph",
+      forbids = {"--json", "--output-format"})
+  private boolean generateDotOutput;
+
+  @Deprecated
+  @Option(
+      name = "--bfs",
+      usage = "Deprecated (use `--output-format dot_bfs`): Sort the dot output in bfs order",
+      depends = {"--dot"})
+  private boolean generateBFSOutput;
+
+  @Deprecated
+  @Option(
+      name = "--json",
+      usage = "Deprecated (use `--output-format json`): Output in JSON format",
+      forbids = {"--dot", "--output-format"})
+  protected boolean generateJsonOutput;
+
+  @Deprecated
+  @Option(
+      name = "--output-attributes",
+      usage =
+          "Deprecated: List of attributes to output, --output-attributes attr1 att2 ... attrN. "
+              + "Attributes can be regular expressions. The preferred replacement is "
+              + "--output-attribute.",
+      handler = StringSetOptionHandler.class,
+      forbids = {"--output-attribute"})
+  private Supplier<ImmutableSet<String>> outputAttributesDeprecated =
+      Suppliers.ofInstance(ImmutableSet.of());
+
+  @Override
+  protected ImmutableSet<String> outputAttributes() {
+    // There's no easy way apparently to ensure that an option has not been set
+    ImmutableSet<String> deprecated = outputAttributesDeprecated.get();
+    ImmutableSet<String> sane = super.outputAttributes();
+    return sane.size() > deprecated.size() ? sane : deprecated;
+  }
+
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
     if (arguments.isEmpty()) {
       throw new CommandLineException("must specify at least the query expression");
+    }
+
+    // Take the deprecated way of specifying output format and map it to the new way.
+    if (generateJsonOutput) {
+      outputFormat = OutputFormat.JSON;
+    } else if (generateDotOutput) {
+      outputFormat = generateBFSOutput ? OutputFormat.DOT_BFS : OutputFormat.DOT;
     }
 
     try (CommandThreadManager pool =

@@ -98,7 +98,7 @@ public class QueryCommandTest {
     BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
     queryCommand = new QueryCommand();
-    queryCommand.outputAttributesSane = Suppliers.ofInstance(ImmutableSet.of());
+    queryCommand.outputAttributesDoNotUseDirectly = Suppliers.ofInstance(ImmutableSet.of());
     params =
         CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
             executor.get(),
