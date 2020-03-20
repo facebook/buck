@@ -1,0 +1,23 @@
+apple_binary(
+    name = "ios-bin",
+    default_target_platform = "//config/platform:ios",
+    deps = [
+        "//lib:foo",
+    ],
+)
+
+apple_binary(
+    name = "mac-bin",
+    default_target_platform = "//config/platform:macos",
+    deps = [
+        "//lib:foo",
+    ],
+)
+
+apple_binary(
+    name = "tvos-bin",
+    default_target_platform = "//config/platform:tvos",
+    deps = [
+        "//lib:foo",
+    ],
+)

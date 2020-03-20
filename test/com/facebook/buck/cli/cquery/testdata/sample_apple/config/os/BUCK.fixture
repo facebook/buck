@@ -1,0 +1,20 @@
+config_setting(
+    name = "ios",
+    constraint_values = [
+        "//config/os/constraints:ios",
+    ],
+)
+
+config_setting(
+    name = "macos",
+    constraint_values = [
+        "//config/os/constraints:macos",
+    ],
+)
+
+config_setting(
+    name = "tvos",
+    constraint_values = [
+        "//config/os/constraints:tvos",
+    ],
+)

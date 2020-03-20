@@ -1,0 +1,30 @@
+apple_library(
+    name = "foo",
+    default_target_platform = "//config/platform:ios",
+    srcs = select({
+        "//config/os:ios": ["foo-ios.m"],
+        "//config/os:macos": ["foo-macos.m"],
+        "//config/os:tvos": ["foo-tvos.m"],
+    }),
+    deps = select({
+        "//config/os:macos": [":maconly"],
+        "DEFAULT": [],
+    }) + [
+        ":bar",
+    ],
+)
+
+apple_library(
+    name = "bar",
+    srcs = select({
+        "//config/os:ios": ["bar-ios.m"],
+        "//config/os:tvos": ["bar-tvos.m"],
+    }),
+    default_target_platform = "//config/platform:tvos",
+)
+
+apple_library(
+    name = "maconly",
+    srcs = ["maconly.m"],
+    default_target_platform = "//config/platform:macos",
+)
