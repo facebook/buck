@@ -24,6 +24,8 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
+import com.facebook.buck.logd.client.LogStreamFactory;
+import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.remoteexecution.event.RemoteBuildRuleExecutionEvent;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
@@ -34,6 +36,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -59,6 +62,7 @@ public class CriticalPathEventListener implements BuckEventListener {
   private final DecimalFormat decimalFormat = new DecimalFormat("#0.00");
 
   private final Path outputPath;
+  private final LogStreamFactory logStreamFactory;
   @Nullable private BuildTarget longestPathSoFar;
   public long longestTimeSoFar;
   /**
@@ -71,7 +75,14 @@ public class CriticalPathEventListener implements BuckEventListener {
 
   private final Map<BuildTarget, ExecutionTimeInfo> buildTargetToExecutionTimeMap = new HashMap<>();
 
-  public CriticalPathEventListener(Path outputPath) {
+  /**
+   * Constructor for CriticalPathEventListener
+   *
+   * @param logStreamFactory log stream factory implementation depending on whether logd is enabled
+   * @param outputPath path to critical path log file
+   */
+  public CriticalPathEventListener(LogStreamFactory logStreamFactory, Path outputPath) {
+    this.logStreamFactory = logStreamFactory;
     this.outputPath = Objects.requireNonNull(outputPath);
   }
 
@@ -172,7 +183,11 @@ public class CriticalPathEventListener implements BuckEventListener {
 
   /** Dumps critical path into the given {@code outputPath} */
   private void dumpCriticalPath() throws IOException {
-    try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
+    try (BufferedWriter writer =
+        new BufferedWriter(
+            new OutputStreamWriter(
+                logStreamFactory.createLogStream(
+                    outputPath.toString(), LogType.CRITICAL_PATH_LOG)))) {
       for (Pair<BuildTarget, CriticalPathNode> pair : getCriticalPath()) {
         writer.write(convertToLine(pair));
         writer.newLine();

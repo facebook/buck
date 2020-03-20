@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.event.listener.CriticalPathEventListener.CriticalPathNode;
+import com.facebook.buck.logd.client.FileOutputStreamFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableSortedSet;
@@ -44,7 +45,7 @@ public class CriticalPathEventListenerTest {
 
   @Before
   public void setUp() throws Exception {
-    listener = new CriticalPathEventListener(tmp.getRoot());
+    listener = new CriticalPathEventListener(new FileOutputStreamFactory(), tmp.getRoot());
   }
 
   /**

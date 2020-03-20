@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.watchman.WatchmanWatcher;
+import com.facebook.buck.logd.client.FileOutputStreamFactory;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
@@ -184,6 +185,7 @@ public class DaemonIntegrationTest {
         MainRunner mainRunner = main.prepareMainRunner(manager);
         ExitCode exitCode =
             mainRunner.runMainWithExitCode(
+                new FileOutputStreamFactory(),
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),
                 ImmutableList.copyOf(args));

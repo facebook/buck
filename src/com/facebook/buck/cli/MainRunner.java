@@ -129,6 +129,9 @@ import com.facebook.buck.log.ConsoleHandlerState;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.LogConfig;
+import com.facebook.buck.logd.LogdProvider;
+import com.facebook.buck.logd.client.LogStreamFactory;
+import com.facebook.buck.logd.client.LogStreamProvider;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -465,7 +468,10 @@ public final class MainRunner {
 
     ExitCode exitCode = ExitCode.SUCCESS;
 
-    try {
+    try (LogdProvider logdProvider = new LogdProvider(BuckConstant.IS_LOGD_ENABLED)) {
+      LogStreamFactory logStreamFactory =
+          LogStreamProvider.of(logdProvider.getLogdClient()).getLogStreamFactory();
+
       installUncaughtExceptionHandler(context);
 
       // Only post an overflow event if Watchman indicates a fresh instance event
@@ -477,7 +483,10 @@ public final class MainRunner {
 
       exitCode =
           runMainWithExitCode(
-              watchmanFreshInstanceAction, initTimestamp, ImmutableList.copyOf(args));
+              logStreamFactory,
+              watchmanFreshInstanceAction,
+              initTimestamp,
+              ImmutableList.copyOf(args));
     } catch (Throwable t) {
       try {
         HumanReadableExceptionAugmentor augmentor;
@@ -620,12 +629,14 @@ public final class MainRunner {
   }
 
   /**
+   * @param logStreamFactory log stream factory implementation depending on whether logd is enabled
    * @param initTimestamp Value of System.nanoTime() when process got main()/nailMain() invoked.
    * @param unexpandedCommandLineArgs command line arguments
    * @return an ExitCode representing the result of the command
    */
   @SuppressWarnings("PMD.PrematureDeclaration")
   public ExitCode runMainWithExitCode(
+      LogStreamFactory logStreamFactory,
       WatchmanWatcher.FreshInstanceAction watchmanFreshInstanceAction,
       long initTimestamp,
       ImmutableList<String> unexpandedCommandLineArgs)
@@ -1288,7 +1299,8 @@ public final class MainRunner {
                   remoteExecutionListener.isPresent()
                       ? Optional.of(remoteExecutionListener.get())
                       : Optional.empty(),
-                  managerScope);
+                  managerScope,
+                  logStreamFactory);
           consoleListener.register(buildEventBus);
           fileLoggerConsoleListener.register(buildEventBus);
 
@@ -2205,7 +2217,8 @@ public final class MainRunner {
       CounterRegistry counterRegistry,
       Iterable<BuckEventListener> commandSpecificEventListeners,
       Optional<RemoteExecutionStatsProvider> reStatsProvider,
-      TaskManagerCommandScope managerScope)
+      TaskManagerCommandScope managerScope,
+      LogStreamFactory logStreamFactory)
       throws IOException {
     ImmutableList.Builder<BuckEventListener> eventListenersBuilder =
         ImmutableList.<BuckEventListener>builder().add(new LoggingBuildListener());
@@ -2226,7 +2239,7 @@ public final class MainRunner {
     Path criticalPathLog = criticalPathDir.resolve(CRITICAL_PATH_FILE_NAME);
     projectFilesystem.mkdirs(criticalPathDir);
     CriticalPathEventListener criticalPathEventListener =
-        new CriticalPathEventListener(criticalPathLog);
+        new CriticalPathEventListener(logStreamFactory, criticalPathLog);
     buckEventBus.register(criticalPathEventListener);
 
     ChromeTraceBuckConfig chromeTraceConfig = buckConfig.getView(ChromeTraceBuckConfig.class);

@@ -58,6 +58,7 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.AnnotationProcessingEvent;
 import com.facebook.buck.jvm.java.tracing.JavacPhaseEvent;
 import com.facebook.buck.log.InvocationInfo;
+import com.facebook.buck.logd.client.FileOutputStreamFactory;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionSessionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
 import com.facebook.buck.remoteexecution.event.listener.TestRemoteExecutionStatsProvider;
@@ -140,7 +141,8 @@ public class ChromeTraceBuildListenerTest {
     durationTracker = new BuildRuleDurationTracker();
     eventBus = new DefaultBuckEventBus(FAKE_CLOCK, BUILD_ID);
     managerScope = TestBackgroundTaskManager.of().getNewScope(invocationInfo.getBuildId());
-    criticalPathEventListener = new CriticalPathEventListener(tmpPath.getRoot());
+    criticalPathEventListener =
+        new CriticalPathEventListener(new FileOutputStreamFactory(), tmpPath.getRoot());
   }
 
   @Test

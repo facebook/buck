@@ -183,6 +183,7 @@ java_library(
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/logd:logd",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/query:query",

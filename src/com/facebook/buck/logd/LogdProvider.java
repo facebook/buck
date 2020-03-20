@@ -33,7 +33,7 @@ import org.apache.logging.log4j.Logger;
 
 /** Starts LogD when buck process runs and shuts down LogD when buck process ends. */
 public class LogdProvider implements AutoCloseable {
-  private static final Logger LOG = LogManager.getLogger();
+  private static final Logger LOG = LogManager.getLogger(LogdProvider.class);
   private static final int LOGD_PROCESS_TIMEOUT_MS = 500;
   private static final Path PATH_TO_LOGD_PEX =
       Paths.get(

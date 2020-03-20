@@ -57,6 +57,7 @@ import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.jvm.java.version.JavaVersion;
+import com.facebook.buck.logd.client.FileOutputStreamFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
@@ -627,6 +628,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
       try {
         exitCode =
             mainRunner.runMainWithExitCode(
+                new FileOutputStreamFactory(),
                 WatchmanWatcher.FreshInstanceAction.NONE,
                 System.nanoTime(),
                 ImmutableList.copyOf(args));

@@ -395,6 +395,7 @@ java_test(
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
         "//src/com/facebook/buck/log:log",
+        "//src/com/facebook/buck/logd:logd",
         "//src/com/facebook/buck/maven:maven",
         "//src/com/facebook/buck/maven/aether:aether",
         "//src/com/facebook/buck/parser:parser",
