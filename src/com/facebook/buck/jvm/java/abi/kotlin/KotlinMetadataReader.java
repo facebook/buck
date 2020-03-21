@@ -20,11 +20,13 @@ import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 import kotlinx.metadata.Flag;
 import kotlinx.metadata.KmDeclarationContainer;
 import kotlinx.metadata.KmProperty;
 import kotlinx.metadata.jvm.JvmExtensionsKt;
+import kotlinx.metadata.jvm.JvmMethodSignature;
 import kotlinx.metadata.jvm.KotlinClassHeader;
 import kotlinx.metadata.jvm.KotlinClassMetadata;
 import org.objectweb.asm.tree.AnnotationNode;
@@ -53,7 +55,9 @@ public class KotlinMetadataReader {
     ImmutableList<String> inlineFunctions =
         container.getFunctions().stream()
             .filter(it -> Flag.Function.IS_INLINE.invoke(it.getFlags()))
-            .map(it -> JvmExtensionsKt.getSignature(it).getName())
+            .map(JvmExtensionsKt::getSignature)
+            .filter(Objects::nonNull)
+            .map(JvmMethodSignature::getName)
             .collect(ImmutableList.toImmutableList());
 
     ImmutableList<String> inlineProperties =
@@ -65,13 +69,17 @@ public class KotlinMetadataReader {
     ImmutableList<String> inlineGetters =
         container.getProperties().stream()
             .filter(it -> Flag.PropertyAccessor.IS_INLINE.invoke(it.getGetterFlags()))
-            .map(it -> JvmExtensionsKt.getGetterSignature(it).getName())
+            .map(JvmExtensionsKt::getGetterSignature)
+            .filter(Objects::nonNull)
+            .map(JvmMethodSignature::getName)
             .collect(ImmutableList.toImmutableList());
 
     ImmutableList<String> inlineSetters =
         container.getProperties().stream()
             .filter(it -> Flag.PropertyAccessor.IS_INLINE.invoke(it.getSetterFlags()))
-            .map(it -> JvmExtensionsKt.getSetterSignature(it).getName())
+            .map(JvmExtensionsKt::getSetterSignature)
+            .filter(Objects::nonNull)
+            .map(JvmMethodSignature::getName)
             .collect(ImmutableList.toImmutableList());
 
     return Stream.of(inlineFunctions, inlineProperties, inlineGetters, inlineSetters)
