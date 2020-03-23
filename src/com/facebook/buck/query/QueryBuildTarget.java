@@ -17,7 +17,6 @@
 package com.facebook.buck.query;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.QueryTarget;
 import javax.annotation.Nullable;
 
 /** Implementation of {@link QueryTarget} that wraps a {@link BuildTarget}. */

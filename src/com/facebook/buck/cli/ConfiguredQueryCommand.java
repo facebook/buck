@@ -16,8 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.query.QueryException;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.Multimap;

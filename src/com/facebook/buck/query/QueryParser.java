@@ -33,7 +33,6 @@ package com.facebook.buck.query;
 import static com.facebook.buck.query.Lexer.BINARY_OPERATORS;
 import static com.facebook.buck.query.Lexer.TokenKind;
 
-import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;

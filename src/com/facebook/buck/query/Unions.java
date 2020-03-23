@@ -16,7 +16,6 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.core.model.QueryTarget;
 import com.google.common.collect.Iterables;
 import java.util.Collection;
 import java.util.Collections;

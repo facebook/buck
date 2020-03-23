@@ -16,7 +16,6 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.core.model.QueryTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Set;

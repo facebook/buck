@@ -30,7 +30,6 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.core.model.QueryTarget;
 import java.util.Collection;
 import java.util.Set;
 

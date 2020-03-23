@@ -16,7 +16,6 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.core.model.QueryTarget;
 import java.util.Set;
 import javax.annotation.Nullable;
 

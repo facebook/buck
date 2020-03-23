@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.model;
+package com.facebook.buck.query;
 
 /**
  * Currently, this is a marker interface, but given the actual implementations of this interface, it

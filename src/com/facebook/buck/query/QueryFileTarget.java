@@ -16,7 +16,6 @@
 
 package com.facebook.buck.query;
 
-import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import javax.annotation.Nullable;
 

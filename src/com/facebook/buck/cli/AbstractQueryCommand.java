@@ -16,12 +16,12 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryNormalizer;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.google.common.annotations.VisibleForTesting;

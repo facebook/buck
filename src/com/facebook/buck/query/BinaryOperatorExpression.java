@@ -31,7 +31,6 @@ package com.facebook.buck.query;
 
 import static com.facebook.buck.query.Lexer.TokenKind;
 
-import com.facebook.buck.core.model.QueryTarget;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.util.LinkedHashSet;

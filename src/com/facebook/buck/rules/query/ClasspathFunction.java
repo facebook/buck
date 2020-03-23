@@ -16,13 +16,13 @@
 
 package com.facebook.buck.rules.query;
 
-import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEvaluator;
 import com.facebook.buck.query.QueryException;
+import com.facebook.buck.query.QueryTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
