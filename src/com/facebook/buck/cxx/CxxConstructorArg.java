@@ -115,7 +115,6 @@ public interface CxxConstructorArg
    *
    * @return a list of private include paths for this cxx target.
    */
-  @Hint(pathsMustBe = Hint.PathsMustBe.DIRECTORY)
   @Value.Default
   default ImmutableSortedSet<String> getIncludeDirectories() {
     return ImmutableSortedSet.of();
