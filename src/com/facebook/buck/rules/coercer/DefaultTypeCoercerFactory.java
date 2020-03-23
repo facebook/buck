@@ -122,7 +122,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<Integer, Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);
     TypeCoercer<Double, Double> doubleTypeCoercer = new NumberTypeCoercer<>(Double.class);
     TypeCoercer<Boolean, Boolean> booleanTypeCoercer = new IdentityTypeCoercer<>(Boolean.class);
-    TypeCoercer<Object, NeededCoverageSpec> neededCoverageSpecTypeCoercer =
+    TypeCoercer<UnconfiguredNeededCoverageSpec, NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
     TypeCoercer<Object, Query> queryTypeCoercer =
