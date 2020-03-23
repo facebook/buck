@@ -77,6 +77,7 @@ public class RuleKeyCheckListener implements BuckEventListener {
   public enum RuleKeyCheckResult {
     TOP_LEVEL_RULEKEY_MATCH,
     TARGET_BUILT_NO_RULEKEY_MATCH,
+    TARGET_BUILT_RULEKEY_NOT_FOUND,
     TARGET_NOT_BUILT,
     BACKEND_ERROR,
     REQUEST_ERROR
