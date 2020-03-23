@@ -16,12 +16,9 @@
 
 package com.facebook.buck.log;
 
-import static org.junit.Assert.fail;
-
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import org.easymock.EasyMock;
-import org.easymock.IAnswer;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,24 +47,7 @@ public class ReferenceCountedWriterTest {
 
   @Test
   public void testWithDoubleReference() throws IOException {
-    mockWriter.flush();
-    EasyMock.expectLastCall()
-        .andAnswer(
-            (IAnswer)
-                () -> {
-                  fail("Do not expect any call to flush here");
-                  return null;
-                })
-        .anyTimes();
-    mockWriter.close();
-    EasyMock.expectLastCall()
-        .andAnswer(
-            (IAnswer)
-                () -> {
-                  fail("Do not expect any call to close here");
-                  return null;
-                })
-        .anyTimes();
+    mockWriter.flush(); // Mock will throw if anything else is called.
     EasyMock.replay(mockWriter);
 
     ReferenceCountedWriter ref1 = new ReferenceCountedWriter(mockWriter);

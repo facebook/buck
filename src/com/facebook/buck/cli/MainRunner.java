@@ -1024,8 +1024,7 @@ public final class MainRunner {
                       invocationInfo,
                       printConsole.getStdErr(),
                       printConsole.getStdErr().getRawStream(),
-                      verbosity,
-                      logStreamFactory);
+                      verbosity);
           DefaultBuckEventBus buildEventBus = new DefaultBuckEventBus(clock, buildId);
           ) {
         BuckConfigWriter.writeConfig(
