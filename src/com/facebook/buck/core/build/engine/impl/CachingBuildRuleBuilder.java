@@ -1124,27 +1124,38 @@ class CachingBuildRuleBuilder {
     Optional<RuleKey> cachedRuleKey = onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.RULE_KEY);
     if (defaultKey.equals(cachedRuleKey.orElse(null))) {
 
-      // Check the integrity of ARTIFACT_METADATA file
-      Either<String, Exception> outputSizeString =
-          onDiskBuildInfo.getValue(MetadataKey.OUTPUT_SIZE);
-
-      if (outputSizeString.isRight()) {
-        LOG.warn("Could not find OUTPUT_SIZE from ARTIFACT_METADATA file");
-        return Optional.empty();
-      } else {
-        long outputSizeValue = Long.parseLong(outputSizeString.getLeft());
-
-        if (shouldWriteOutputHashes(outputSizeValue)
-            && onDiskBuildInfo.getValue(MetadataKey.OUTPUT_HASH).isRight()) {
-          LOG.warn("Could not find OUTPUT_HASH from ARTIFACT_METADATA file");
-          return Optional.empty();
+      if (!checkArtifactMetadataFileIntegrity()) {
+        try {
+          onDiskBuildInfo.deleteExistingMetadata();
+        } catch (IOException e) {
+          throw new BuckUncheckedExecutionException(e);
         }
+        return Optional.empty();
       }
 
       return Optional.of(
           success(BuildRuleSuccessType.MATCHING_RULE_KEY, CacheResult.localKeyUnchangedHit()));
     }
     return Optional.empty();
+  }
+
+  private boolean checkArtifactMetadataFileIntegrity() {
+    // Check the integrity of ARTIFACT_METADATA file
+    Either<String, Exception> outputSizeString = onDiskBuildInfo.getValue(MetadataKey.OUTPUT_SIZE);
+
+    if (outputSizeString.isRight()) {
+      LOG.warn("Could not find OUTPUT_SIZE from ARTIFACT_METADATA file");
+      return false;
+    } else {
+      long outputSizeValue = Long.parseLong(outputSizeString.getLeft());
+
+      if (shouldWriteOutputHashes(outputSizeValue)
+          && onDiskBuildInfo.getValue(MetadataKey.OUTPUT_HASH).isRight()) {
+        LOG.warn("Could not find OUTPUT_HASH from ARTIFACT_METADATA file");
+        return false;
+      }
+    }
+    return true;
   }
 
   private ListenableFuture<CacheResult> performRuleKeyCacheCheck(boolean cacheHitExpected) {
