@@ -6,6 +6,9 @@ orbs:
 install_dlang: &install_dlang
   name: Install Dlang
   command: |
+    if [ "${PLATFORM}" == "macos" ]; then
+      brew install gpg
+    fi
     curl https://dlang.org/install.sh | bash -s dmd-2.091.0
     source ~/dlang/dmd-2.091.0/activate
     dmd --version
