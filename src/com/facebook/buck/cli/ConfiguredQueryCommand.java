@@ -16,8 +16,14 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.model.QueryTarget;
+import com.facebook.buck.query.QueryException;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
+import com.google.common.collect.Multimap;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Set;
 import org.apache.commons.lang.NotImplementedException;
 
 /** Buck subcommand which facilitates querying information about the configured target graph. */
@@ -34,5 +40,25 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
     }
 
     throw new NotImplementedException("cquery is not currently implemented.");
+  }
+
+  @Override
+  protected void printSingleQueryOutput(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Set<QueryTarget> queryResult,
+      PrintStream printStream)
+      throws QueryException, IOException {
+    throw new QueryException("cquery is not yet capable of printing results");
+  }
+
+  @Override
+  protected void printMultipleQueryOutput(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Multimap<String, QueryTarget> queryResultMap,
+      PrintStream printStream)
+      throws QueryException, IOException {
+    throw new QueryException("cquery is not yet capable of printing results");
   }
 }
