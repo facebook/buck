@@ -49,7 +49,7 @@ import javax.annotation.Nullable;
  */
 @JsonDeserialize
 public class UnconfiguredBuildTarget
-    implements Comparable<UnconfiguredBuildTarget>, QueryTarget, DependencyStack.Element {
+    implements Comparable<UnconfiguredBuildTarget>, DependencyStack.Element {
 
   private final UnflavoredBuildTarget unflavoredBuildTarget;
   private final FlavorSet flavors;
