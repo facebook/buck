@@ -16,84 +16,16 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.core.model.QueryTarget;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.util.Ansi;
-import com.facebook.buck.util.json.ObjectMappers;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
-import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Objects;
-import java.util.Set;
 
 /** Utility class with print methods */
 public final class CommandHelper {
 
   private CommandHelper() {}
-
-  /**
-   * Prints target and result map's json representation into printStream.
-   *
-   * @param targetsAndResults input to query result multi map
-   * @param printStream print stream for output
-   * @throws IOException in case of IO exception during json writing operation
-   */
-  public static void printJsonOutput(
-      Multimap<String, QueryTarget> targetsAndResults, PrintStream printStream) throws IOException {
-    Multimap<String, String> targetsAndResultsNames =
-        Multimaps.transformValues(
-            targetsAndResults, input -> stringify(Objects.requireNonNull(input)));
-    ObjectMappers.WRITER.writeValue(printStream, targetsAndResultsNames.asMap());
-  }
-
-  /**
-   * Prints targets set json representation into printStream.
-   *
-   * @param targets set of query result
-   * @param printStream print stream for output
-   * @throws IOException in case of IO exception during json writing operation
-   */
-  public static void printJsonOutput(Set<QueryTarget> targets, PrintStream printStream)
-      throws IOException {
-    Set<String> targetsNames =
-        targets.stream()
-            .peek(Objects::requireNonNull)
-            .map(CommandHelper::stringify)
-            .collect(ImmutableSet.toImmutableSet());
-
-    ObjectMappers.WRITER.writeValue(printStream, targetsNames);
-  }
-
-  /**
-   * Prints target and dependencies map into printStream.
-   *
-   * @param targetsAndDependencies input to query result multi map
-   * @param printStream print stream for output
-   */
-  public static void print(
-      Multimap<String, QueryTarget> targetsAndDependencies, PrintStream printStream) {
-    ImmutableSortedSet.copyOf(QueryTarget::compare, targetsAndDependencies.values()).stream()
-        .map(CommandHelper::stringify)
-        .forEach(printStream::println);
-  }
-
-  /**
-   * Prints target set into printStream.
-   *
-   * @param targets set of query result
-   * @param printStream print stream for output
-   */
-  public static void print(Set<QueryTarget> targets, PrintStream printStream) {
-    targets.stream().map(CommandHelper::stringify).forEach(printStream::println);
-  }
 
   /**
    * Prints short description of a given command into printStream.
@@ -120,18 +52,5 @@ public final class CommandHelper {
                   + "--show-outputs, multiple files may be printed for each individual build "
                   + "target."));
     }
-  }
-
-  private static String stringify(QueryTarget target) {
-    if (target instanceof QueryFileTarget) {
-      QueryFileTarget fileTarget = (QueryFileTarget) target;
-      SourcePath path = fileTarget.getPath();
-      if (path instanceof PathSourcePath) {
-        PathSourcePath psp = (PathSourcePath) path;
-        return psp.getRelativePath().toString();
-      }
-    }
-
-    return target.toString();
   }
 }
