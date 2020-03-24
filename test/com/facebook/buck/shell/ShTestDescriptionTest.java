@@ -18,8 +18,10 @@ package com.facebook.buck.shell;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -28,11 +30,14 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.test.TestRunningOptions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -102,5 +107,88 @@ public class ShTestDescriptionTest {
             .build();
     assertThat(
         shTestWithResources.getInputs(), Matchers.hasItem(ForwardRelativePath.ofPath(resource)));
+  }
+
+  @Test
+  public void externalTestSpecArgLocationMacroInRequiredPaths() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    TargetNode<?> genrule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
+            .setOut("foo.txt")
+            .build();
+    TargetNode<?> test =
+        new ShTestBuilder(BuildTargetFactory.newInstance("//:test"))
+            .setArgs(
+                ImmutableList.of(
+                    StringWithMacrosUtils.format(
+                        "--foo=%s", LocationMacro.of(genrule.getBuildTarget()))))
+            .build();
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(genrule, test), filesystem);
+    ShTest shTest = (ShTest) graphBuilder.requireRule(test.getBuildTarget());
+    ExternalTestRunnerTestSpec spec =
+        shTest.getExternalTestRunnerSpec(
+            TestExecutionContext.newInstance(),
+            TestRunningOptions.builder().build(),
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+    assertThat(
+        spec.getRequiredPaths(),
+        Matchers.hasItem(
+            graphBuilder
+                .getSourcePathResolver()
+                .getAbsolutePath(
+                    graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())));
+  }
+
+  @Test
+  public void externalTestSpecEnvLocationMacroInRequiredPaths() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    TargetNode<?> genrule =
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:gen"))
+            .setOut("foo.txt")
+            .build();
+    TargetNode<?> test =
+        new ShTestBuilder(BuildTargetFactory.newInstance("//:test"))
+            .setEnv(
+                ImmutableMap.of(
+                    "FOO",
+                    StringWithMacrosUtils.format("%s", LocationMacro.of(genrule.getBuildTarget()))))
+            .build();
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(genrule, test), filesystem);
+    ShTest shTest = (ShTest) graphBuilder.requireRule(test.getBuildTarget());
+    ExternalTestRunnerTestSpec spec =
+        shTest.getExternalTestRunnerSpec(
+            TestExecutionContext.newInstance(),
+            TestRunningOptions.builder().build(),
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+    assertThat(
+        spec.getRequiredPaths(),
+        Matchers.hasItem(
+            graphBuilder
+                .getSourcePathResolver()
+                .getAbsolutePath(
+                    graphBuilder.requireRule(genrule.getBuildTarget()).getSourcePathToOutput())));
+  }
+
+  @Test
+  public void externalTestSpecResourcesInRequiredPaths() {
+    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    TargetNode<?> test =
+        new ShTestBuilder(BuildTargetFactory.newInstance("//:test"))
+            .setResources(
+                ImmutableSortedSet.of(FakeSourcePath.of(filesystem.getPath("foo", "resource.dat"))))
+            .build();
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(test), filesystem);
+    ShTest shTest = (ShTest) graphBuilder.requireRule(test.getBuildTarget());
+    ExternalTestRunnerTestSpec spec =
+        shTest.getExternalTestRunnerSpec(
+            TestExecutionContext.newInstance(),
+            TestRunningOptions.builder().build(),
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+    assertThat(
+        spec.getRequiredPaths(),
+        Matchers.hasItem(filesystem.resolve(filesystem.getPath("foo", "resource.dat"))));
   }
 }

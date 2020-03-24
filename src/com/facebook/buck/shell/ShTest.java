@@ -25,13 +25,13 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
-import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
@@ -50,7 +50,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -194,10 +197,25 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public ExternalTestSpec getExternalTestRunnerSpec(
+  public ExternalTestRunnerTestSpec getExternalTestRunnerSpec(
       ExecutionContext executionContext,
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
+
+    List<Path> requiredPaths = new ArrayList<>();
+
+    // Extract any required paths from args and env vars.
+    for (Arg arg : Iterables.concat(args, getEnv().values())) {
+      BuildableSupport.deriveInputs(arg)
+          .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+          .forEach(requiredPaths::add);
+    }
+
+    // Add resources to required paths.
+    resources.stream()
+        .map(buildContext.getSourcePathResolver()::getAbsolutePath)
+        .forEach(requiredPaths::add);
+
     return ExternalTestRunnerTestSpec.builder()
         .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
@@ -206,6 +224,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
         .setEnv(Arg.stringify(env, buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
+        .setRequiredPaths(requiredPaths)
         .build();
   }
 
