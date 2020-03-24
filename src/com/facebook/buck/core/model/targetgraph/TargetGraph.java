@@ -159,8 +159,10 @@ public class TargetGraph extends DirectedAcyclicGraph<TargetNode<?>> {
         MoreMaps.putCheckEquals(index, node.getBuildTarget(), node);
         if (node.getBuildTarget().isFlavored()) {
           BuildTarget unflavoredBuildTarget = node.getBuildTarget().withoutFlavors();
-          MoreMaps.putCheckEquals(
-              index, unflavoredBuildTarget, targetsToNodes.get(unflavoredBuildTarget));
+          if (targetsToNodes.containsKey(unflavoredBuildTarget)) {
+            MoreMaps.putCheckEquals(
+                index, unflavoredBuildTarget, targetsToNodes.get(unflavoredBuildTarget));
+          }
         }
         ImmutableSet<TargetNode<?>> dependencies = ImmutableSet.copyOf(getAll(node.getParseDeps()));
         for (TargetNode<?> dependency : dependencies) {
