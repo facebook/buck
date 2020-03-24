@@ -16,11 +16,11 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -41,15 +41,15 @@ public class TestBinWriterTest {
     expectedOutputBuilder.add("sys.exit(1)");
     List<String> expectedOutput = expectedOutputBuilder.build();
 
-    Path path = temporaryPaths.newFile("test.out");
-    TestBinWriter writer = new TestBinWriter(path);
+    AbsPath path = temporaryPaths.newFile("test.out");
+    TestBinWriter writer = new TestBinWriter(path.getPath());
     String[] lines = new String[3];
     lines[0] = "line1";
     lines[1] = "  line2";
     lines[2] = "line3";
     writer.writeLineEchoer(lines, 1);
 
-    Assert.assertEquals(expectedOutput, Files.readAllLines(path));
+    Assert.assertEquals(expectedOutput, Files.readAllLines(path.getPath()));
   }
 
   @Test
@@ -72,10 +72,10 @@ public class TestBinWriterTest {
     expectedOutputBuilder.add("sys.exit(1)");
     List<String> expectedOutput = expectedOutputBuilder.build();
 
-    Path path = temporaryPaths.newFile("test.out");
-    TestBinWriter writer = new TestBinWriter(path);
+    AbsPath path = temporaryPaths.newFile("test.out");
+    TestBinWriter writer = new TestBinWriter(path.getPath());
     writer.writeArgEchoer(1);
 
-    Assert.assertEquals(expectedOutput, Files.readAllLines(path));
+    Assert.assertEquals(expectedOutput, Files.readAllLines(path.getPath()));
   }
 }

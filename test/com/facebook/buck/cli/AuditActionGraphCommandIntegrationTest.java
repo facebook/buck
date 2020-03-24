@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -172,7 +173,7 @@ public class AuditActionGraphCommandIntegrationTest {
     Assert.assertThat(json, Matchers.endsWith("}" + System.lineSeparator()));
   }
 
-  private Path getLegacyGenPathForTarget(
+  private AbsPath getLegacyGenPathForTarget(
       String buildTarget, ProjectWorkspace workspace, String suffix) throws IOException {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path genDir =

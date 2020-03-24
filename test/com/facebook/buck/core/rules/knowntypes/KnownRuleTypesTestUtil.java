@@ -81,7 +81,7 @@ public final class KnownRuleTypesTestUtil {
   }
 
   static ProcessExecutor createExecutor(TemporaryPaths temporaryFolder) throws IOException {
-    Path javac = temporaryFolder.newExecutableFile();
+    Path javac = temporaryFolder.newExecutableFile().getPath();
     return createExecutor(javac.toString(), "");
   }
 

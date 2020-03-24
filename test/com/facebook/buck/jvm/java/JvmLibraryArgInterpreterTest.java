@@ -25,6 +25,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -166,7 +167,7 @@ public class JvmLibraryArgInterpreterTest {
   public void returnsExternalCompilerIfCompilerArgHasPath() throws IOException {
     // newExecutableFile cannot be executed on windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    Path externalJavac = tmp.newExecutableFile();
+    AbsPath externalJavac = tmp.newExecutableFile();
     SourcePath sourcePath = FakeSourcePath.of(externalJavac.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 
@@ -184,7 +185,7 @@ public class JvmLibraryArgInterpreterTest {
   public void compilerArgTakesPrecedenceOverJavacPathArg() throws IOException {
     // newExecutableFile cannot be executed on windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    Path externalJavacPath = tmp.newExecutableFile();
+    AbsPath externalJavacPath = tmp.newExecutableFile();
     SourcePath sourcePath = FakeSourcePath.of(externalJavacPath.toString());
     Either<BuiltInJavac, SourcePath> either = Either.ofRight(sourcePath);
 

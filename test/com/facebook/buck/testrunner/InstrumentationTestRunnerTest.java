@@ -64,7 +64,7 @@ public class InstrumentationTestRunnerTest {
             pushedFilePaths.add(remote);
           }
         };
-    Path rootFolder = tmp.newFolder("dummy_exo_contents");
+    Path rootFolder = tmp.newFolder("dummy_exo_contents").getPath();
     // Set up the files to be written, including the metadata file which specifies the base
     // directory
     Files.write(

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.facebook.buck.tools.consistency.TargetHashFileParser.ParsedTargetsFile;
@@ -35,15 +36,15 @@ public class TargetHashFileParserTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  private Path logPath;
+  private AbsPath logPath;
 
   @Before
   public void setUp() throws IOException {
-    logPath = temporaryFolder.newFile("out.bin.log").toAbsolutePath();
+    logPath = temporaryFolder.newFile("out.bin.log");
   }
 
   private void writeLines(String... lines) throws IOException {
-    try (BufferedWriter writer = Files.newBufferedWriter(logPath)) {
+    try (BufferedWriter writer = Files.newBufferedWriter(logPath.getPath())) {
       for (String line : lines) {
         writer.write(line);
         writer.newLine();
@@ -53,7 +54,7 @@ public class TargetHashFileParserTest {
 
   @Test
   public void failsIfFileDoesNotExist() throws ParseException {
-    Path invalidLogPath = logPath.resolveSibling("invalid_path");
+    Path invalidLogPath = logPath.getPath().resolveSibling("invalid_path");
     expectedException.expectMessage(String.format("%s: Error reading file:", invalidLogPath));
     expectedException.expect(ParseException.class);
     TargetHashFileParser parser = new TargetHashFileParser();
@@ -72,7 +73,7 @@ public class TargetHashFileParserTest {
         "Invalid line goes here");
 
     TargetHashFileParser parser = new TargetHashFileParser();
-    parser.parseFile(logPath);
+    parser.parseFile(logPath.getPath());
   }
 
   @Test
@@ -89,7 +90,7 @@ public class TargetHashFileParserTest {
         "//:target5 d48528295847c0bb6856e6f62c2872f9d8e44b9d");
 
     TargetHashFileParser parser = new TargetHashFileParser();
-    parser.parseFile(logPath);
+    parser.parseFile(logPath.getPath());
   }
 
   @Test
@@ -105,7 +106,7 @@ public class TargetHashFileParserTest {
         "//:target5 d48528295847c0bb6856e6f62c2872f9d8e44b9d");
 
     TargetHashFileParser parser = new TargetHashFileParser();
-    parser.parseFile(logPath);
+    parser.parseFile(logPath.getPath());
   }
 
   @Test
@@ -118,9 +119,9 @@ public class TargetHashFileParserTest {
         "//:target5 d48528295847c0bb6856e6f62c2872f9d8e44b9d");
 
     TargetHashFileParser parser = new TargetHashFileParser();
-    ParsedTargetsFile parsedFile = parser.parseFile(logPath);
+    ParsedTargetsFile parsedFile = parser.parseFile(logPath.getPath());
 
-    Assert.assertEquals(logPath, parsedFile.filename);
+    Assert.assertEquals(logPath.getPath(), parsedFile.filename);
     Assert.assertEquals(5, parsedFile.targetsToHash.size());
     Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
     Assert.assertEquals(

@@ -75,6 +75,7 @@ import com.facebook.buck.core.build.stats.BuildRuleDurationTracker;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -1937,7 +1938,7 @@ public class CachingBuildEngineTest {
               ImmutableList.of(BuildInfo.MetadataKey.RECORDED_PATHS, outputPath.toString())),
           BuildInfo.getPathToArtifactMetadataFile(target, filesystem));
 
-      Path artifact = tmp.newFile("artifact.zip");
+      AbsPath artifact = tmp.newFile("artifact.zip");
       writeEntriesToArchive(
           artifact,
           ImmutableMap.of(
@@ -1961,7 +1962,7 @@ public class CachingBuildEngineTest {
               .putMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleKey.toString())
               .putMetadata(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.toString())
               .build(),
-          BorrowablePath.notBorrowablePath(artifact));
+          BorrowablePath.notBorrowablePath(artifact.getPath()));
 
       FakeRuleKeyFactory fakeInputRuleKeyFactory =
           new FakeRuleKeyFactory(
@@ -2067,7 +2068,7 @@ public class CachingBuildEngineTest {
           metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
 
       // Prepopulate the cache with an artifact indexed by the input-based rule key.
-      Path artifact = tmp.newFile("artifact.zip");
+      AbsPath artifact = tmp.newFile("artifact.zip");
       writeEntriesToArchive(
           artifact,
           ImmutableMap.of(
@@ -2096,7 +2097,7 @@ public class CachingBuildEngineTest {
               .putMetadata(BuildInfo.MetadataKey.RULE_KEY, new RuleKey("bbbb").toString())
               .putMetadata(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY, inputRuleKey.toString())
               .build(),
-          BorrowablePath.notBorrowablePath(artifact));
+          BorrowablePath.notBorrowablePath(artifact.getPath()));
 
       // Create the build engine.
       try (CachingBuildEngine cachingBuildEngine =
@@ -2126,7 +2127,7 @@ public class CachingBuildEngineTest {
             equalTo(Optional.of(inputRuleKey)));
 
         // Verify that the artifact is re-cached correctly under the main rule key.
-        Path fetchedArtifact = tmp.newFile("fetched_artifact.zip");
+        AbsPath fetchedArtifact = tmp.newFile("fetched_artifact.zip");
         assertThat(
             Futures.getUnchecked(
                     cache.fetchAsync(
@@ -2558,7 +2559,7 @@ public class CachingBuildEngineTest {
           equalTo(Optional.of(ImmutableList.of(fileToDepFileEntryString(input)))));
 
       // Verify that the dep file rule key and dep file were written to the cached artifact.
-      Path fetchedArtifact = tmp.newFile("fetched_artifact.zip");
+      AbsPath fetchedArtifact = tmp.newFile("fetched_artifact.zip");
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
@@ -3109,7 +3110,7 @@ public class CachingBuildEngineTest {
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY).get();
 
       // Verify that the manifest written to the cache is correct.
-      Path fetchedManifest = tmp.newFile("manifest");
+      AbsPath fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
@@ -3130,7 +3131,7 @@ public class CachingBuildEngineTest {
                       input.toString(), fileHashCache.get(filesystem.resolve(input))))));
 
       // Verify that the artifact is also cached via the dep file rule key.
-      Path fetchedArtifact = tmp.newFile("artifact");
+      AbsPath fetchedArtifact = tmp.newFile("artifact");
       cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(null, depFileRuleKey, LazyPath.ofInstance(fetchedArtifact)));
@@ -3232,7 +3233,7 @@ public class CachingBuildEngineTest {
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY).get();
 
       // Verify that the manifest written to the cache is correct.
-      Path fetchedManifest = tmp.newFile("manifest");
+      AbsPath fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
@@ -3252,7 +3253,7 @@ public class CachingBuildEngineTest {
                   ImmutableMap.of("some/path.h", HashCode.fromInt(12)))));
 
       // Verify that the artifact is also cached via the dep file rule key.
-      Path fetchedArtifact = tmp.newFile("artifact");
+      AbsPath fetchedArtifact = tmp.newFile("artifact");
       cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(null, depFileRuleKey, LazyPath.ofInstance(fetchedArtifact)));
@@ -3356,7 +3357,7 @@ public class CachingBuildEngineTest {
           onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.DEP_FILE_RULE_KEY).get();
 
       // Verify that the manifest is truncated and now only contains the newly written entry.
-      Path fetchedManifest = tmp.newFile("manifest");
+      AbsPath fetchedManifest = tmp.newFile("manifest");
       CacheResult cacheResult =
           Futures.getUnchecked(
               cache.fetchAsync(
@@ -3457,7 +3458,7 @@ public class CachingBuildEngineTest {
                       .get())
               .build(),
           byteArrayOutputStream.toByteArray());
-      Path artifact = tmp.newFile("artifact.zip");
+      AbsPath artifact = tmp.newFile("artifact.zip");
       writeEntriesToArchive(
           artifact,
           ImmutableMap.of(
@@ -3491,7 +3492,7 @@ public class CachingBuildEngineTest {
                           .map(pathResolver::getRelativePath)
                           .collect(ImmutableList.toImmutableList())))
               .build(),
-          BorrowablePath.notBorrowablePath(artifact));
+          BorrowablePath.notBorrowablePath(artifact.getPath()));
 
       // Run the build.
       BuildResult result =
@@ -3616,7 +3617,7 @@ public class CachingBuildEngineTest {
               cache.fetchAsync(
                   null, depFilefactory.buildManifestKey(rule).getRuleKey(), fetchedManifest));
       assertTrue(cacheResult.getType().isSuccess());
-      Manifest cachedManifest = loadManifest(fetchedManifest.get());
+      Manifest cachedManifest = loadManifest(AbsPath.of(fetchedManifest.get()));
       assertThat(
           ManifestUtil.toMap(cachedManifest).keySet(), Matchers.not(hasItem(staleDepFileRuleKey)));
     }
@@ -4194,9 +4195,9 @@ public class CachingBuildEngineTest {
     return rule;
   }
 
-  private static Manifest loadManifest(Path path) throws IOException {
+  private static Manifest loadManifest(AbsPath path) throws IOException {
     try (InputStream inputStream =
-        new GZIPInputStream(new BufferedInputStream(Files.newInputStream(path)))) {
+        new GZIPInputStream(new BufferedInputStream(Files.newInputStream(path.getPath())))) {
       return new Manifest(inputStream);
     }
   }
@@ -4360,7 +4361,7 @@ public class CachingBuildEngineTest {
         BuildTarget target, RuleKey ruleKey, LazyPath output) {
       try {
         writeEntriesToArchive(
-            output.get(), ImmutableMap.copyOf(desiredEntries), ImmutableList.of());
+            AbsPath.of(output.get()), ImmutableMap.copyOf(desiredEntries), ImmutableList.of());
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
@@ -4502,9 +4503,9 @@ public class CachingBuildEngineTest {
   }
 
   private static void writeEntriesToArchive(
-      Path file, ImmutableMap<Path, String> entries, ImmutableList<Path> directories)
+      AbsPath file, ImmutableMap<Path, String> entries, ImmutableList<Path> directories)
       throws IOException {
-    try (OutputStream o = new BufferedOutputStream(Files.newOutputStream(file));
+    try (OutputStream o = new BufferedOutputStream(Files.newOutputStream(file.getPath()));
         OutputStream z = new ZstdCompressorOutputStream(o);
         TarArchiveOutputStream archive = new TarArchiveOutputStream(z)) {
       archive.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);

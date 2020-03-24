@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.MoreStringsForTests;
 import com.google.common.base.Charsets;
@@ -55,6 +56,10 @@ public class ZipInspector {
       }
     }
     this.zipFileEntries = builder.build();
+  }
+
+  public ZipInspector(AbsPath zip) throws IOException {
+    this(zip.getPath());
   }
 
   public void assertFileExists(String pathRelativeToRoot) {

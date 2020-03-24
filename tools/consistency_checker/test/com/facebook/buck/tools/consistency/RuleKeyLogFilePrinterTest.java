@@ -16,13 +16,13 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,14 +39,14 @@ public class RuleKeyLogFilePrinterTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  private Path logPath;
+  private AbsPath logPath;
   private RuleKeyLogFileReader reader = new RuleKeyLogFileReader();
   private List<FullRuleKey> ruleKeys = new ArrayList<>();
   private TestPrintStream stream = TestPrintStream.create();
 
   @Before
   public void setUp() throws IOException {
-    logPath = temporaryFolder.newFile("out.bin.log").toAbsolutePath();
+    logPath = temporaryFolder.newFile("out.bin.log");
 
     ruleKeys.add(new FullRuleKey("hash1", "//this/is/a:test", "rule_type", ImmutableMap.of()));
     ruleKeys.add(
@@ -54,7 +54,7 @@ public class RuleKeyLogFilePrinterTest {
     ruleKeys.add(new FullRuleKey("hash3", "//some:rule", "rule_type", ImmutableMap.of()));
     ruleKeys.add(new FullRuleKey("hash3", "//:final_testing_rule", "rule_type", ImmutableMap.of()));
 
-    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       for (FullRuleKey key : ruleKeys) {
         logger.write(key);
       }
@@ -77,7 +77,7 @@ public class RuleKeyLogFilePrinterTest {
             Optional.of(Pattern.compile("//.*test.*")),
             Optional.empty(),
             Integer.MAX_VALUE);
-    printer.printFile(logPath);
+    printer.printFile(logPath.getPath());
 
     String[] lines = stream.getOutputLines();
     Assert.assertEquals(9, lines.length);
@@ -91,7 +91,7 @@ public class RuleKeyLogFilePrinterTest {
     RuleKeyLogFilePrinter printer =
         new RuleKeyLogFilePrinter(
             stream, reader, Optional.empty(), Optional.of("hash3"), Integer.MAX_VALUE);
-    printer.printFile(logPath);
+    printer.printFile(logPath.getPath());
 
     String[] lines = stream.getOutputLines();
     Assert.assertEquals(6, lines.length);
@@ -104,7 +104,7 @@ public class RuleKeyLogFilePrinterTest {
     RuleKeyLogFilePrinter printer =
         new RuleKeyLogFilePrinter(
             stream, reader, Optional.empty(), Optional.empty(), Integer.MAX_VALUE);
-    printer.printFile(logPath);
+    printer.printFile(logPath.getPath());
 
     String[] lines = stream.getOutputLines();
     Assert.assertEquals(12, lines.length);
@@ -119,7 +119,7 @@ public class RuleKeyLogFilePrinterTest {
     RuleKeyLogFilePrinter printer =
         new RuleKeyLogFilePrinter(
             stream, reader, Optional.of(Pattern.compile("//.*test.*")), Optional.empty(), 2);
-    printer.printFile(logPath);
+    printer.printFile(logPath.getPath());
 
     String[] lines = stream.getOutputLines();
     Assert.assertEquals(6, lines.length);
@@ -131,7 +131,7 @@ public class RuleKeyLogFilePrinterTest {
   public void stopsPrintingWhenKeyMatchesMaxLines() throws ParseException {
     RuleKeyLogFilePrinter printer =
         new RuleKeyLogFilePrinter(stream, reader, Optional.empty(), Optional.of("hash3"), 1);
-    printer.printFile(logPath);
+    printer.printFile(logPath.getPath());
 
     String[] lines = stream.getOutputLines();
     Assert.assertEquals(3, lines.length);
@@ -142,7 +142,7 @@ public class RuleKeyLogFilePrinterTest {
   public void stopsPrintingWhenNoFilterMatchesMaxLines() throws ParseException {
     RuleKeyLogFilePrinter printer =
         new RuleKeyLogFilePrinter(stream, reader, Optional.empty(), Optional.empty(), 2);
-    printer.printFile(logPath);
+    printer.printFile(logPath.getPath());
 
     String[] lines = stream.getOutputLines();
     Assert.assertEquals(6, lines.length);

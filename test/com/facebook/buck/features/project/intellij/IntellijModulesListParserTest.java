@@ -19,6 +19,7 @@ package com.facebook.buck.features.project.intellij;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.features.project.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableSet;
@@ -138,8 +139,8 @@ public class IntellijModulesListParserTest {
 
   private void validateModulesList(String xml, Set<String> expectedModuleFilePaths)
       throws IOException {
-    final Path modulesPath = temporaryPaths.newFile();
-    Files.write(modulesPath, xml.getBytes(Charset.forName("UTF-8")));
+    final AbsPath modulesPath = temporaryPaths.newFile();
+    Files.write(modulesPath.getPath(), xml.getBytes(Charset.forName("UTF-8")));
     IntellijModulesListParser parser = new IntellijModulesListParser();
     final ImmutableSortedSet<String> parsedModulePaths =
         parser.getAllModules(new FileInputStream(modulesPath.toFile())).stream()

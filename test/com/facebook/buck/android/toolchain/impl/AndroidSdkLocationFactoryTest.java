@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -33,7 +34,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -78,7 +78,7 @@ public class AndroidSdkLocationFactoryTest {
   public void testAndroidSdkLocationIsPresent() throws Exception {
     AndroidSdkLocationFactory factory = new AndroidSdkLocationFactory();
 
-    Path sdkPath = temporaryFolder.newFolder("android_sdk");
+    AbsPath sdkPath = temporaryFolder.newFolder("android_sdk");
 
     ToolchainProvider toolchainProvider = new ToolchainProviderBuilder().build();
 
@@ -94,6 +94,6 @@ public class AndroidSdkLocationFactoryTest {
                 TestRuleKeyConfigurationFactory.create()),
             UnconfiguredTargetConfiguration.INSTANCE);
 
-    assertEquals(sdkPath, toolchain.get().getSdkRootPath());
+    assertEquals(sdkPath.getPath(), toolchain.get().getSdkRootPath());
   }
 }

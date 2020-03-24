@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.features.project.intellij.lang.android.AndroidManifestParser;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -79,10 +80,11 @@ public class AndroidManifestParserTest {
 
   @Test
   public void testEmptyMinSdkVersionWhenFileMissing() throws IOException {
-    Path outDir = temp.newFolder().toAbsolutePath();
-    Path manifestPath = outDir.resolve("AndroidManifest.xml");
+    AbsPath outDir = temp.newFolder();
+    AbsPath manifestPath = outDir.resolve("AndroidManifest.xml");
 
-    Optional<String> minSdkVersion = androidManifestParser.parseMinSdkVersion(manifestPath);
+    Optional<String> minSdkVersion =
+        androidManifestParser.parseMinSdkVersion(manifestPath.getPath());
     Assert.assertFalse(minSdkVersion.isPresent());
   }
 
@@ -128,9 +130,9 @@ public class AndroidManifestParserTest {
 
   @Test
   public void testEmptyPackageWhenFileMissing() throws IOException {
-    Path outDir = temp.newFolder().toAbsolutePath();
-    Path manifestPath = outDir.resolve("AndroidManifest.xml");
-    Optional<String> packageName = androidManifestParser.parsePackage(manifestPath);
+    AbsPath outDir = temp.newFolder();
+    AbsPath manifestPath = outDir.resolve("AndroidManifest.xml");
+    Optional<String> packageName = androidManifestParser.parsePackage(manifestPath.getPath());
 
     Assert.assertFalse(packageName.isPresent());
   }

@@ -52,8 +52,8 @@ public class FileFinderTest {
 
   @Test
   public void firstMatchInPath() throws IOException {
-    Path fee = tmp.newFolder("fee");
-    Path fie = tmp.newFolder("fie");
+    Path fee = tmp.newFolder("fee").getPath();
+    Path fie = tmp.newFolder("fie").getPath();
     tmp.newFile("fee/foo");
     tmp.newFile("fie/foo");
     ImmutableList<Path> searchPath = ImmutableList.of(fie, fee);
@@ -65,9 +65,9 @@ public class FileFinderTest {
 
   @Test
   public void matchAny() throws IOException {
-    Path fee = tmp.newFolder("fee");
+    Path fee = tmp.newFolder("fee").getPath();
     tmp.newFile("fee/foo");
-    Path fie = tmp.newFolder("fie");
+    Path fie = tmp.newFolder("fie").getPath();
     tmp.newFile("fie/bar");
 
     ImmutableSet<String> names = ImmutableSet.of("foo", "bar", "baz");
@@ -83,9 +83,9 @@ public class FileFinderTest {
 
   @Test
   public void noMatch() throws IOException {
-    Path fee = tmp.newFolder("fee");
+    Path fee = tmp.newFolder("fee").getPath();
     tmp.newFile("fee/foo");
-    Path fie = tmp.newFolder("fie");
+    Path fie = tmp.newFolder("fie").getPath();
     tmp.newFile("fie/bar");
 
     Optional<Path> result =

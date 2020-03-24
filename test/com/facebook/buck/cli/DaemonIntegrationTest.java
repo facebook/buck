@@ -178,7 +178,7 @@ public class DaemonIntegrationTest {
             new MainForTests(
                 new TestConsole(),
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
-                tmp.getRoot(),
+                tmp.getRoot().getPath(),
                 env,
                 Optional.of(new TestContext()));
 

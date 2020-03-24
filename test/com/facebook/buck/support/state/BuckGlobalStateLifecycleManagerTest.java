@@ -246,7 +246,7 @@ public class BuckGlobalStateLifecycleManagerTest {
             .getFirst();
     assertEquals("Apple SDK should still be not found", buckGlobalState1, buckGlobalState2);
 
-    Path appleDeveloperDirectoryPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Path appleDeveloperDirectoryPath = tmp.newFolder("android-sdk").getPath();
 
     BuckConfig buckConfigWithDeveloperDirectory =
         FakeBuckConfig.builder()
@@ -340,7 +340,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     assertEquals(
         "Android SDK should be the same initial location", buckGlobalState1, buckGlobalState2);
 
-    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Path androidSdkPath = tmp.newFolder("android-sdk").getPath();
 
     Cells cell = createCellWithAndroidSdk(androidSdkPath);
 
@@ -426,7 +426,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     assertEquals(
         "Android SDK should be the same initial location", buckGlobalState1, buckGlobalState2);
 
-    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Path androidSdkPath = tmp.newFolder("android-sdk").getPath();
 
     Cells cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getRootCell()
@@ -475,7 +475,7 @@ public class BuckGlobalStateLifecycleManagerTest {
   public void testParserInvalidatedWhenToolchainFailsToCreateFirstTime() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
-    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Path androidSdkPath = tmp.newFolder("android-sdk").getPath();
     Files.deleteIfExists(androidSdkPath);
 
     Cells cell = createCellWithAndroidSdk(androidSdkPath);
@@ -520,7 +520,7 @@ public class BuckGlobalStateLifecycleManagerTest {
       throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
-    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Path androidSdkPath = tmp.newFolder("android-sdk").getPath();
 
     Cells cell = createCellWithAndroidSdk(androidSdkPath);
     cell.getRootCell()
@@ -563,7 +563,7 @@ public class BuckGlobalStateLifecycleManagerTest {
   public void testParserNotInvalidatedWhenToolchainFailsWithTheSameProblem() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
-    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Path androidSdkPath = tmp.newFolder("android-sdk").getPath();
     Files.deleteIfExists(androidSdkPath);
 
     Cells cell = createCellWithAndroidSdk(androidSdkPath);
@@ -612,7 +612,7 @@ public class BuckGlobalStateLifecycleManagerTest {
       throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
-    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Path androidSdkPath = tmp.newFolder("android-sdk").getPath();
     Files.deleteIfExists(androidSdkPath);
 
     Cells cell = createCellWithAndroidSdk(androidSdkPath);
@@ -654,7 +654,7 @@ public class BuckGlobalStateLifecycleManagerTest {
   public void testParserInvalidatedWhenToolchainFailsWithDifferentProblem() throws IOException {
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
-    Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
+    Path androidSdkPath = tmp.newFolder("android-sdk").getPath();
     Files.deleteIfExists(androidSdkPath);
 
     Cells cell = createCellWithAndroidSdk(androidSdkPath);

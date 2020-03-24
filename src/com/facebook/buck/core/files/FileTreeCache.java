@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.files;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.io.file.MorePaths;
@@ -47,6 +48,10 @@ public class FileTreeCache implements GraphEngineCache<FileTreeKey, FileTree> {
    */
   public static FileTreeCache of(Path rootPath) {
     return new FileTreeCache(rootPath);
+  }
+
+  public static FileTreeCache of(AbsPath rootPath) {
+    return of(rootPath.getPath());
   }
 
   @Override

@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.util.environment.Platform;
@@ -26,14 +27,16 @@ import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 
 class TestUtils {
 
   static void assertBuildReport(
-      ProjectWorkspace workspace, TemporaryPaths tmp, Path buildReportPath, String expectedFileName)
+      ProjectWorkspace workspace,
+      TemporaryPaths tmp,
+      AbsPath buildReportPath,
+      String expectedFileName)
       throws IOException {
-    assertTrue(Files.exists(buildReportPath));
+    assertTrue(Files.exists(buildReportPath.getPath()));
     String randomNumberPlaceholder = "<RANDOM_NUMBER>";
     String outputPrefixPlaceholder = "<OUTPUT_PREFIX>";
     String extension = "sh";
@@ -42,7 +45,8 @@ class TestUtils {
       extension = "cmd";
       fileSeparator = "\\\\";
     }
-    String buildReportContents = new String(Files.readAllBytes(buildReportPath), Charsets.UTF_8);
+    String buildReportContents =
+        new String(Files.readAllBytes(buildReportPath.getPath()), Charsets.UTF_8);
     String buildReportContentsToReplaceWithOutputPrefix = buildReportContents;
     String buildReportContentsToReplaceWithRandomNumber = buildReportContents;
 

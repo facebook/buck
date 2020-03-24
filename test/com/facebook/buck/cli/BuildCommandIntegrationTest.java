@@ -28,6 +28,8 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -111,8 +113,8 @@ public class BuildCommandIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
     workspace.setUp();
 
-    Path externalOutputs = tmp.newFolder("into-output");
-    Path output = externalOutputs.resolve("the_example.jar");
+    AbsPath externalOutputs = tmp.newFolder("into-output");
+    AbsPath output = externalOutputs.resolve("the_example.jar");
     assertFalse(output.toFile().exists());
     workspace.runBuckBuild("//:example", "--out", output.toString()).assertSuccess();
     assertTrue(output.toFile().exists());
@@ -127,12 +129,12 @@ public class BuildCommandIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
     workspace.setUp();
 
-    Path outputDir = tmp.newFolder("into-output");
-    assertEquals(0, MoreFiles.listFiles(outputDir).size());
+    AbsPath outputDir = tmp.newFolder("into-output");
+    assertEquals(0, MoreFiles.listFiles(outputDir.getPath()).size());
     workspace.runBuckBuild("//:example", "--out", outputDir.toString()).assertSuccess();
     assertTrue(outputDir.toFile().isDirectory());
-    assertEquals(1, MoreFiles.listFiles(outputDir).size());
-    assertTrue(Files.isRegularFile(outputDir.resolve("example.jar")));
+    assertEquals(1, MoreFiles.listFiles(outputDir.getPath()).size());
+    assertTrue(Files.isRegularFile(outputDir.resolve("example.jar").getPath()));
   }
 
   @Test
@@ -140,8 +142,8 @@ public class BuildCommandIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
     workspace.setUp();
 
-    Path externalOutputs = tmp.newFolder("into-output");
-    Path output = externalOutputs.resolve("pylib.zip");
+    AbsPath externalOutputs = tmp.newFolder("into-output");
+    AbsPath output = externalOutputs.resolve("pylib.zip");
     assertFalse(output.toFile().exists());
     ProcessResult result = workspace.runBuckBuild("//:example_py", "--out", output.toString());
     result.assertFailure();
@@ -157,13 +159,13 @@ public class BuildCommandIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "build_into", tmp);
     workspace.setUp();
 
-    Path outputDir = tmp.newFolder("into-output");
-    assertEquals(0, MoreFiles.listFiles(outputDir).size());
+    AbsPath outputDir = tmp.newFolder("into-output");
+    assertEquals(0, MoreFiles.listFiles(outputDir.getPath()).size());
     workspace.runBuckBuild("//:example_dir", "--out", outputDir.toString()).assertSuccess();
-    assertTrue(Files.isDirectory(outputDir));
-    assertEquals(2, MoreFiles.listFiles(outputDir).size());
-    assertTrue(Files.isRegularFile(outputDir.resolve("example.jar")));
-    assertTrue(Files.isRegularFile(outputDir.resolve("example-2.jar")));
+    assertTrue(Files.isDirectory(outputDir.getPath()));
+    assertEquals(2, MoreFiles.listFiles(outputDir.getPath()).size());
+    assertTrue(Files.isRegularFile(outputDir.resolve("example.jar").getPath()));
+    assertTrue(Files.isRegularFile(outputDir.resolve("example-2.jar").getPath()));
 
     // File in gen dir must be preserved after `--out` invocation
     Path exampleJarInGenDir =
@@ -209,12 +211,12 @@ public class BuildCommandIntegrationTest {
 
   @Test
   public void writesBinaryRuleKeysToDisk() throws IOException, TException {
-    Path logFile = tmp.newFile("out.bin");
+    AbsPath logFile = tmp.newFile("out.bin");
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
         workspace.runBuckBuild(
-            "--show-rulekey", "--rulekeys-log-path", logFile.toAbsolutePath().toString(), "//:bar");
+            "--show-rulekey", "--rulekeys-log-path", logFile.toString(), "//:bar");
     runBuckResult.assertSuccess();
 
     List<FullRuleKey> ruleKeys = ThriftRuleKeyDeserializer.readRuleKeys(logFile);
@@ -304,12 +306,12 @@ public class BuildCommandIntegrationTest {
     assertFalse(tmp.getRoot().startsWith(tmp2.getRoot()));
     assertFalse(tmp2.getRoot().startsWith(tmp.getRoot()));
 
-    Path dest = tmp2.getRoot().resolve("symlink_subdir").toAbsolutePath();
-    Path relativeDest = tmp.getRoot().relativize(dest);
+    AbsPath dest = tmp2.getRoot().resolve("symlink_subdir");
+    RelPath relativeDest = tmp.getRoot().relativize(dest);
 
-    MorePaths.createSymLink(new WindowsFS(), dest, tmp.getRoot());
+    MorePaths.createSymLink(new WindowsFS(), dest, tmp.getRoot().getPath());
 
-    workspace.setRelativeWorkingDirectory(relativeDest);
+    workspace.setRelativeWorkingDirectory(relativeDest.getPath());
 
     Path absolutePath = workspace.buildAndReturnOutput("//subdir1/subdir2:bar");
 
@@ -333,7 +335,7 @@ public class BuildCommandIntegrationTest {
     String expectedWhenNotExists = "%s references non-existent directory subdir1/subdir4";
 
     workspace.setRelativeWorkingDirectory(Paths.get("subdir1"));
-    Files.createDirectories(tmp.getRoot().resolve("subdir3").resolve("something"));
+    Files.createDirectories(tmp.getRoot().resolve("subdir3").resolve("something").getPath());
 
     String recursiveTarget = workspace.runBuckBuild("subdir3/...").assertFailure().getStderr();
     String packageTarget = workspace.runBuckBuild("subdir3:").assertFailure().getStderr();

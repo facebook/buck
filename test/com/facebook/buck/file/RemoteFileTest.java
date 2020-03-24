@@ -575,8 +575,7 @@ public class RemoteFileTest {
           };
     }
 
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(tmp.getRoot().toAbsolutePath());
+    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     BuildTarget target = BuildTargetFactory.newInstance("//cake:walk");
     BuildRuleParams params = TestBuildRuleParams.create();

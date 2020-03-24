@@ -31,6 +31,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
@@ -944,9 +945,9 @@ public class QueryCommandIntegrationTest {
         workspace.runBuckCommand("query", "deps(//example:one)", "--profile-buck-parser");
     result.assertSuccess();
 
-    Path logPath = tmp.getRoot().resolve("buck-out").resolve("log");
+    AbsPath logPath = tmp.getRoot().resolve("buck-out").resolve("log");
     ParserProfileFinder parserProfileFinder = new ParserProfileFinder();
-    Files.walkFileTree(logPath, parserProfileFinder);
+    Files.walkFileTree(logPath.getPath(), parserProfileFinder);
 
     assertNotNull("Profiler log not found", parserProfileFinder.getProfilerPath());
 
@@ -963,13 +964,13 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    Path skylarkProfile = tmp.newFile("skylark-profile");
+    AbsPath skylarkProfile = tmp.newFile("skylark-profile");
     ProcessResult result =
         workspace.runBuckCommand(
             "query", "deps(//example:one)", "--skylark-profile-output=" + skylarkProfile);
     result.assertSuccess();
 
-    byte[] content = Files.readAllBytes(skylarkProfile);
+    byte[] content = Files.readAllBytes(skylarkProfile.getPath());
     assertTrue("Profile should not be empty", content.length > 0);
   }
 
@@ -1555,7 +1556,7 @@ public class QueryCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
     workspace.setUp();
 
-    Path outputFile = tmp.newFile();
+    AbsPath outputFile = tmp.newFile();
 
     // Print all of the inputs to the rule.
     ProcessResult result =
@@ -1574,7 +1575,7 @@ public class QueryCommandIntegrationTest {
             "//example:six");
     result.assertSuccess();
 
-    String outputFileContent = new String(Files.readAllBytes(outputFile));
+    String outputFileContent = new String(Files.readAllBytes(outputFile.getPath()));
 
     assertThat(
         parseJSON(outputFileContent),

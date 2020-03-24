@@ -18,6 +18,7 @@ package com.facebook.buck.support.fix;
 
 import static org.junit.Assert.*;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -25,7 +26,6 @@ import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,15 +51,15 @@ public class BuckFixSpecWriterTest {
             "repository",
             "");
 
-    BuckFixSpecWriter.writeSpecToLogDir(tmp.getRoot(), info, specWithPaths);
+    BuckFixSpecWriter.writeSpecToLogDir(tmp.getRoot().getPath(), info, specWithPaths);
 
-    Path fixSpecPath =
+    AbsPath fixSpecPath =
         tmp.getRoot().resolve(info.getLogDirectoryPath()).resolve("buck_fix_spec.json");
 
-    assertTrue(Files.exists(fixSpecPath));
+    assertTrue(Files.exists(fixSpecPath.getPath()));
 
     Either<BuckFixSpec, BuckFixSpecParser.FixSpecFailure> parsedFixSpec =
-        BuckFixSpecParser.parseFromFixSpecFile(fixSpecPath);
+        BuckFixSpecParser.parseFromFixSpecFile(fixSpecPath.getPath());
 
     assertEquals(specWithPaths, parsedFixSpec.getLeft());
   }

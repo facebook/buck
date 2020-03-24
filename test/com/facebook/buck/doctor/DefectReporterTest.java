@@ -83,7 +83,7 @@ public class DefectReporterTest {
             ImmutableMap.of(
                 Paths.get(".buckconfig.local"),
                 "data",
-                temporaryFolder.newFile("experiments"),
+                temporaryFolder.newFile("experiments").getPath(),
                 "[foo]\nbar = baz\n"),
             ImmutableMap.of("config_key", "config_value"));
 

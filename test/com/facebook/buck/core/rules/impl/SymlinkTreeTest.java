@@ -23,6 +23,7 @@ import static org.junit.Assert.assertNotEquals;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -94,13 +95,13 @@ public class SymlinkTreeTest {
 
     // Get the first file we're symlinking
     Path link1 = Paths.get("file");
-    Path file1 = tmpDir.newFile();
-    Files.write(file1, "hello world".getBytes(Charsets.UTF_8));
+    AbsPath file1 = tmpDir.newFile();
+    Files.write(file1.getPath(), "hello world".getBytes(Charsets.UTF_8));
 
     // Get the second file we're symlinking
     Path link2 = Paths.get("directory", "then", "file");
-    Path file2 = tmpDir.newFile();
-    Files.write(file2, "hello world".getBytes(Charsets.UTF_8));
+    AbsPath file2 = tmpDir.newFile();
+    Files.write(file2.getPath(), "hello world".getBytes(Charsets.UTF_8));
 
     // Setup the map representing the link tree.
     links =
@@ -156,8 +157,8 @@ public class SymlinkTreeTest {
 
     // Also create a new BuildRule based around a SymlinkTree buildable with a different
     // link map.
-    Path aFile = tmpDir.newFile();
-    Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
+    AbsPath aFile = tmpDir.newFile();
+    Files.write(aFile.getPath(), "hello world".getBytes(Charsets.UTF_8));
     SymlinkTree modifiedSymlinkTreeBuildRule =
         new SymlinkTree(
             "link_tree",

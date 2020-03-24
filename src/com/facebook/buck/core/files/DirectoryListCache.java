@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.files;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.core.util.log.Logger;
@@ -50,6 +51,10 @@ public class DirectoryListCache implements GraphEngineCache<DirectoryListKey, Di
    */
   public static DirectoryListCache of(Path rootPath) {
     return new DirectoryListCache(rootPath);
+  }
+
+  public static DirectoryListCache of(AbsPath rootPath) {
+    return of(rootPath.getPath());
   }
 
   @Override

@@ -40,9 +40,9 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsFileFoundReturnsPath() throws IOException {
-    Path dir1 = tmp.newFolder("foo");
-    Path dir2 = tmp.newFolder("bar");
-    Path dir3 = tmp.newFolder("baz");
+    Path dir1 = tmp.newFolder("foo").getPath();
+    Path dir2 = tmp.newFolder("bar").getPath();
+    Path dir3 = tmp.newFolder("baz").getPath();
     Path file = createExecutable("bar/blech");
 
     assertEquals(
@@ -57,11 +57,11 @@ public class ExecutableFinderTest {
     // file.canExecute() always true for Windows
     Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
 
-    Path dir1 = tmp.newFolder("foo");
+    Path dir1 = tmp.newFolder("foo").getPath();
     // Note this is not executable.
     tmp.newFile("foo/blech");
-    Path dir2 = tmp.newFolder("bar");
-    Path dir3 = tmp.newFolder("baz");
+    Path dir2 = tmp.newFolder("bar").getPath();
+    Path dir3 = tmp.newFolder("baz").getPath();
     Path file = createExecutable("bar/blech");
 
     assertEquals(
@@ -73,10 +73,10 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsDirAndFileFoundReturnsFileNotDir() throws IOException {
-    Path dir1 = tmp.newFolder("foo");
+    Path dir1 = tmp.newFolder("foo").getPath();
     // We don't want to find this folder.
     tmp.newFolder("foo", "foo");
-    Path dir2 = tmp.newFolder("bar");
+    Path dir2 = tmp.newFolder("bar").getPath();
     Path file = createExecutable("bar/foo");
 
     assertEquals(
@@ -88,9 +88,9 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsMultipleFileFoundReturnsFirstPath() throws IOException {
-    Path dir1 = tmp.newFolder("foo");
-    Path dir2 = tmp.newFolder("bar");
-    Path dir3 = tmp.newFolder("baz");
+    Path dir1 = tmp.newFolder("foo").getPath();
+    Path dir2 = tmp.newFolder("bar").getPath();
+    Path dir3 = tmp.newFolder("baz").getPath();
     Path file1 = createExecutable("bar/blech");
     createExecutable("baz/blech");
 
@@ -103,7 +103,7 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsSymlinkToExecutableInsidePathReturnsPath() throws IOException {
-    Path dir2 = tmp.newFolder("bar");
+    Path dir2 = tmp.newFolder("bar").getPath();
     createExecutable("bar/blech_target");
     Path file1 = dir2.resolve("blech");
     CreateSymlinksForTests.createSymLink(file1, Paths.get("blech_target"));
@@ -116,9 +116,9 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsSymlinkToExecutableOutsideSearchPathReturnsPath() throws IOException {
-    Path dir1 = tmp.newFolder("foo");
-    Path dir2 = tmp.newFolder("bar");
-    Path dir3 = tmp.newFolder("baz");
+    Path dir1 = tmp.newFolder("foo").getPath();
+    Path dir2 = tmp.newFolder("bar").getPath();
+    Path dir3 = tmp.newFolder("baz").getPath();
     tmp.newFolder("unsearched");
     Path binary = createExecutable("unsearched/binary");
     Path file1 = dir2.resolve("blech");
@@ -133,9 +133,9 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsFileNotFoundReturnsAbsent() throws IOException {
-    Path dir1 = tmp.newFolder("foo");
-    Path dir2 = tmp.newFolder("bar");
-    Path dir3 = tmp.newFolder("baz");
+    Path dir1 = tmp.newFolder("foo").getPath();
+    Path dir2 = tmp.newFolder("bar").getPath();
+    Path dir3 = tmp.newFolder("baz").getPath();
 
     assertEquals(
         Optional.empty(),
@@ -157,7 +157,7 @@ public class ExecutableFinderTest {
     Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
 
     // Path to search
-    Path baz = tmp.newFolder("baz");
+    Path baz = tmp.newFolder("baz").getPath();
 
     // Unexecutable "executable"
     Path bar = baz.resolve("bar");
@@ -172,7 +172,7 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsWithExtensions() throws IOException {
-    Path dir = tmp.newFolder("foo");
+    Path dir = tmp.newFolder("foo").getPath();
     Path file = createExecutable("foo/bar.EXE");
 
     assertEquals(
@@ -184,7 +184,7 @@ public class ExecutableFinderTest {
 
   @Test
   public void testSearchPathsWithExtensionsNoMatch() throws IOException {
-    Path dir = tmp.newFolder("foo");
+    Path dir = tmp.newFolder("foo").getPath();
     createExecutable("foo/bar.COM");
 
     assertEquals(
@@ -196,7 +196,7 @@ public class ExecutableFinderTest {
 
   @Test
   public void testThatADirectoryIsNotConsideredAnExecutable() throws IOException {
-    Path dir = tmp.newFolder();
+    Path dir = tmp.newFolder().getPath();
     Path exe = dir.resolve("exe");
     Files.createDirectories(exe);
 
@@ -207,7 +207,7 @@ public class ExecutableFinderTest {
 
   @Test
   public void testThatDirectoryWithSwiftExecutableDoesHaveSwiftTool() throws IOException {
-    Path dir = tmp.newFolder("foo");
+    Path dir = tmp.newFolder("foo").getPath();
     createExecutable("foo/swift");
 
     assertEquals(
@@ -222,7 +222,7 @@ public class ExecutableFinderTest {
   }
 
   private Path createExecutable(String executablePath) throws IOException {
-    Path file = tmp.newFile(executablePath);
+    Path file = tmp.newFile(executablePath).getPath();
     MostFiles.makeExecutable(file);
     return file;
   }

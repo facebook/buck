@@ -142,7 +142,7 @@ public class ChromeTraceBuildListenerTest {
     eventBus = new DefaultBuckEventBus(FAKE_CLOCK, BUILD_ID);
     managerScope = TestBackgroundTaskManager.of().getNewScope(invocationInfo.getBuildId());
     criticalPathEventListener =
-        new CriticalPathEventListener(new FileOutputStreamFactory(), tmpPath.getRoot());
+        new CriticalPathEventListener(new FileOutputStreamFactory(), tmpPath.getRoot().getPath());
   }
 
   @Test

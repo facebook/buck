@@ -250,7 +250,7 @@ public class NdkCxxPlatformIntegrationTest {
     NdkCxxToolchainPaths ndkCxxToolchainPaths =
         createNdkCxxToolchainPaths(workspace, projectFilesystem);
     Path arToolPath = ndkCxxToolchainPaths.getToolchainBinPath().resolve("ar");
-    Path extractedLibraryPath = tmp.newFolder("extracted-library");
+    Path extractedLibraryPath = tmp.newFolder("extracted-library").getPath();
 
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableMap;
@@ -38,6 +39,10 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
 
   public DefaultProjectFilesystemDelegate(Path root) {
     this.root = root;
+  }
+
+  public DefaultProjectFilesystemDelegate(AbsPath root) {
+    this(root.getPath());
   }
 
   @Override

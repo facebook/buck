@@ -18,11 +18,11 @@ package com.facebook.buck.util.nio;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,16 +32,16 @@ public class ByteBufferUnmapperTest {
 
   @Test
   public void testByteBufferUnmapper() throws IOException {
-    Path tempFile = temporaryDir.getRoot().resolve("newFile");
-    Files.write(tempFile, new byte[] {10, 20, 30, 40});
+    AbsPath tempFile = temporaryDir.getRoot().resolve("newFile");
+    Files.write(tempFile.getPath(), new byte[] {10, 20, 30, 40});
     try (FileChannel channel =
-        FileChannel.open(tempFile, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+        FileChannel.open(tempFile.getPath(), StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       try (ByteBufferUnmapper unmapper =
           ByteBufferUnmapper.createUnsafe(
               channel.map(FileChannel.MapMode.READ_WRITE, 0, channel.size()))) {
         assertEquals(4, unmapper.getByteBuffer().remaining());
       }
     }
-    Files.write(tempFile, new byte[] {42, 31, 22});
+    Files.write(tempFile.getPath(), new byte[] {42, 31, 22});
   }
 }

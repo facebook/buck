@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.OutputLabel;
@@ -116,11 +117,11 @@ public class ExternalJavacTest extends EasyMockSupport {
       throws IOException {
     // TODO(cjhopman): This test name implies we should be hashing the external file not just
     // adding its path.
-    Path javac = root.newExecutableFile();
+    AbsPath javac = root.newExecutableFile();
 
     Javac compiler = createExternalJavac(javac, "");
     Javac otherCompiler = createExternalJavac(javac, "");
-    Path otherJavac = root.newExecutableFile();
+    AbsPath otherJavac = root.newExecutableFile();
     Javac otherPathCompiler = createExternalJavac(otherJavac, "");
 
     assertEquals(computeRuleKey(compiler), computeRuleKey(otherCompiler));
@@ -131,11 +132,9 @@ public class ExternalJavacTest extends EasyMockSupport {
   public void externalJavacWillUseTheToolFromABinaryBuildRule() throws IOException {
     // TODO(cjhopman): This test name implies we should be hashing the external file not just
     // adding its path.
-    Path javac = root.newExecutableFile();
+    AbsPath javac = root.newExecutableFile();
     ProcessExecutorParams javacExe =
-        ProcessExecutorParams.builder()
-            .addCommand(javac.toAbsolutePath().toString(), "-version")
-            .build();
+        ProcessExecutorParams.builder().addCommand(javac.toString(), "-version").build();
     FakeProcess javacProc = new FakeProcess(0, "", "");
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
 
@@ -217,11 +216,11 @@ public class ExternalJavacTest extends EasyMockSupport {
 
   @Test
   public void externalJavacWillHashTheJavacVersionIfPresent() throws IOException {
-    Path javac = root.newExecutableFile();
+    AbsPath javac = root.newExecutableFile();
 
     Javac compiler = createExternalJavac(javac, "mozzarella");
     Javac otherCompiler = createExternalJavac(javac, "brie");
-    Path otherJavac = root.newExecutableFile();
+    AbsPath otherJavac = root.newExecutableFile();
     Javac otherPathCompiler = createExternalJavac(otherJavac, "mozzarella");
 
     assertEquals(computeRuleKey(compiler), computeRuleKey(otherPathCompiler));
@@ -235,11 +234,9 @@ public class ExternalJavacTest extends EasyMockSupport {
     return result.diagKey;
   }
 
-  public Javac createExternalJavac(Path javac, String reportedJavacVersion) {
+  public Javac createExternalJavac(AbsPath javac, String reportedJavacVersion) {
     ProcessExecutorParams javacExe =
-        ProcessExecutorParams.builder()
-            .addCommand(javac.toAbsolutePath().toString(), "-version")
-            .build();
+        ProcessExecutorParams.builder().addCommand(javac.toString(), "-version").build();
     FakeProcess javacProc = new FakeProcess(0, "", reportedJavacVersion);
     FakeProcessExecutor executor = new FakeProcessExecutor(ImmutableMap.of(javacExe, javacProc));
 

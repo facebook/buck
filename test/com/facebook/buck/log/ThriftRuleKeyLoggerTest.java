@@ -16,6 +16,7 @@
 
 package com.facebook.buck.log;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.log.thrift.rulekeys.Value;
@@ -25,7 +26,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import org.apache.thrift.TDeserializer;
 import org.apache.thrift.protocol.TCompactProtocol;
 import org.junit.Assert;
@@ -37,7 +37,7 @@ public class ThriftRuleKeyLoggerTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  private Path logDir;
+  private AbsPath logDir;
 
   @Before
   public void setUp() throws IOException {
@@ -46,8 +46,8 @@ public class ThriftRuleKeyLoggerTest {
 
   @Test
   public void testWritesToGivenFileAndCreatesDirectories() throws Exception {
-    Path logPath = logDir.resolve("logs").resolve("out.log").toAbsolutePath();
-    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+    AbsPath logPath = logDir.resolve("logs").resolve("out.log");
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       Assert.assertNotNull(logger);
       logger.write(
           new FullRuleKey(

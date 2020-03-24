@@ -51,7 +51,7 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "symlink_files_into_directory", tmp);
     workspace.setUp();
 
-    Path outputFolder = tmp.newFolder("output");
+    Path outputFolder = tmp.newFolder("output").getPath();
 
     ProjectFilesystem projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
@@ -59,7 +59,7 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
     SymlinkFilesIntoDirectoryStep symlinkStep =
         new SymlinkFilesIntoDirectoryStep(
             projectFilesystem,
-            tmp.getRoot(),
+            tmp.getRoot().getPath(),
             ImmutableSet.of(Paths.get("a.txt"), Paths.get("foo/b.txt"), Paths.get("foo/bar/c.txt")),
             outputFolder);
     int exitCode = symlinkStep.execute(executionContext).getExitCode();
@@ -68,18 +68,18 @@ public class SymlinkFilesIntoDirectoryStepIntegrationTest {
     // The remainder of the checks assert that we've created symlinks, which we may not have done
     // on certain operating systems.
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
-    Path symlinkToADotTxt = tmp.getRoot().resolve("output/a.txt");
+    Path symlinkToADotTxt = tmp.getRoot().resolve("output/a.txt").getPath();
     assertTrue(Files.isSymbolicLink(symlinkToADotTxt));
     assertEquals(
         projectFilesystem.resolve(Paths.get("a.txt")), Files.readSymbolicLink(symlinkToADotTxt));
 
-    Path symlinkToBDotTxt = tmp.getRoot().resolve("output/foo/b.txt");
+    Path symlinkToBDotTxt = tmp.getRoot().resolve("output/foo/b.txt").getPath();
     assertTrue(Files.isSymbolicLink(symlinkToBDotTxt));
     assertEquals(
         projectFilesystem.resolve(Paths.get("foo/b.txt")),
         Files.readSymbolicLink(symlinkToBDotTxt));
 
-    Path symlinkToCDotTxt = tmp.getRoot().resolve("output/foo/bar/c.txt");
+    Path symlinkToCDotTxt = tmp.getRoot().resolve("output/foo/bar/c.txt").getPath();
     assertTrue(Files.isSymbolicLink(symlinkToCDotTxt));
     assertEquals(
         projectFilesystem.resolve(Paths.get("foo/bar/c.txt")),

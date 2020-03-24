@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -226,11 +227,12 @@ public class PrebuiltAppleFrameworkIntegrationTest {
       assertEquals("xcodebuild should succeed", 0, result.getExitCode());
     }
 
-    Path appBundlePath =
+    AbsPath appBundlePath =
         tmp.getRoot().resolve("xcode-out/Build/Products/Debug-iphonesimulator/TestAppBundle.app");
     assertTrue(
         "Framework is copied into bundle.",
-        Files.isRegularFile(appBundlePath.resolve("Frameworks/BuckTest.framework/BuckTest")));
+        Files.isRegularFile(
+            appBundlePath.resolve("Frameworks/BuckTest.framework/BuckTest").getPath()));
 
     {
       ProcessExecutor.Result result =
@@ -288,11 +290,12 @@ public class PrebuiltAppleFrameworkIntegrationTest {
       assertEquals("xcodebuild should succeed", 0, result.getExitCode());
     }
 
-    Path appBundlePath =
+    AbsPath appBundlePath =
         tmp.getRoot().resolve("xcode-out/Build/Products/Debug-iphonesimulator/test.xctest");
     assertTrue(
         "Framework is copied into bundle.",
-        Files.isRegularFile(appBundlePath.resolve("Frameworks/BuckTest.framework/BuckTest")));
+        Files.isRegularFile(
+            appBundlePath.resolve("Frameworks/BuckTest.framework/BuckTest").getPath()));
 
     {
       ProcessExecutor.Result result =

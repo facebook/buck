@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.cxx.toolchain.objectfile.LcUuidContentsScrubber;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -31,7 +32,6 @@ import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -52,9 +52,9 @@ public class LcUuidContentsScrubberTest {
   private static final Pattern DWARFDUMP_UUID_PATTERN =
       Pattern.compile("UUID: (?<uuid>(?:[A-Z0-9]|-)+) \\([a-z0-9_]+\\) .*", Pattern.DOTALL);
 
-  private Path testDataDir;
+  private AbsPath testDataDir;
 
-  private Path getHelloLibDylibPath() {
+  private AbsPath getHelloLibDylibPath() {
     return testDataDir.resolve("uuid_contents_scrubber").resolve("libHelloLib.dylib");
   }
 
@@ -64,22 +64,22 @@ public class LcUuidContentsScrubberTest {
 
   @Before
   public void setUp() throws IOException {
-    testDataDir = TestDataHelper.getTestDataDirectory(this);
+    testDataDir = AbsPath.of(TestDataHelper.getTestDataDirectory(this));
     workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "uuid_contents_scrubber", tmp);
     workspace.setUp();
   }
 
-  private static void scrubUuidOf(Path path, boolean scrubConcurrently)
+  private static void scrubUuidOf(AbsPath path, boolean scrubConcurrently)
       throws IOException, FileScrubber.ScrubException {
     try (FileChannel file =
-        FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE)) {
+        FileChannel.open(path.getPath(), StandardOpenOption.READ, StandardOpenOption.WRITE)) {
       LcUuidContentsScrubber scrubber = new LcUuidContentsScrubber(scrubConcurrently);
       scrubber.scrubFile(file);
     }
   }
 
-  private Optional<String> getUuidOf(Path path) throws IOException, InterruptedException {
+  private Optional<String> getUuidOf(AbsPath path) throws IOException, InterruptedException {
     String uuidOutput =
         workspace.runCommand("dwarfdump", "--uuid", path.toString()).getStdout().get();
     Matcher matcher = DWARFDUMP_UUID_PATTERN.matcher(uuidOutput);
@@ -98,14 +98,14 @@ public class LcUuidContentsScrubberTest {
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
     // Copy the source dylib, so we can scrub the temporary copy
-    Path srcDylibPath = getHelloLibDylibPath();
+    AbsPath srcDylibPath = getHelloLibDylibPath();
     Optional<String> uuid = getUuidOf(srcDylibPath);
     assertTrue(uuid.isPresent());
     assertEquals(uuid.get(), LIB_HELLO_DYLIB_UUID);
 
-    Path destFolder = tmp.newFolder();
-    Path destDylibPath = destFolder.resolve(srcDylibPath.getFileName());
-    destDylibPath = Files.copy(srcDylibPath, destDylibPath);
+    AbsPath destFolder = tmp.newFolder();
+    AbsPath destDylibPath = destFolder.resolve(srcDylibPath.getPath().getFileName());
+    destDylibPath = AbsPath.of(Files.copy(srcDylibPath.getPath(), destDylibPath.getPath()));
 
     scrubUuidOf(destDylibPath, false);
     Optional<String> destUuid = getUuidOf(destDylibPath);
@@ -135,14 +135,16 @@ public class LcUuidContentsScrubberTest {
   private void testScrubberDeterminism(
       boolean scrubFirstCopyConcurrently, boolean scrubSecondCopyConcurrently)
       throws IOException, FileScrubber.ScrubException, InterruptedException {
-    Path srcDylibPath = getHelloLibDylibPath();
+    AbsPath srcDylibPath = getHelloLibDylibPath();
 
-    final Path destFolder = tmp.newFolder();
-    Path firstCopyDylibPath = destFolder.resolve(srcDylibPath.getFileName() + "1");
-    Path secondCopyDylibPath = destFolder.resolve(srcDylibPath.getFileName() + "2");
+    final AbsPath destFolder = tmp.newFolder();
+    AbsPath firstCopyDylibPath = destFolder.resolve(srcDylibPath.getPath().getFileName() + "1");
+    AbsPath secondCopyDylibPath = destFolder.resolve(srcDylibPath.getPath().getFileName() + "2");
 
-    firstCopyDylibPath = Files.copy(srcDylibPath, firstCopyDylibPath);
-    secondCopyDylibPath = Files.copy(srcDylibPath, secondCopyDylibPath);
+    firstCopyDylibPath =
+        AbsPath.of(Files.copy(srcDylibPath.getPath(), firstCopyDylibPath.getPath()));
+    secondCopyDylibPath =
+        AbsPath.of(Files.copy(srcDylibPath.getPath(), secondCopyDylibPath.getPath()));
 
     scrubUuidOf(firstCopyDylibPath, scrubFirstCopyConcurrently);
     Optional<String> firstUuid = getUuidOf(firstCopyDylibPath);

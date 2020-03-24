@@ -21,10 +21,10 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.FakeAndroidBuckConfig;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -49,7 +49,7 @@ public class AndroidSdkDirectoryResolverTest {
 
   @Test
   public void throwAtSdkPathIsNotDirectory() throws IOException {
-    Path file = tmpDir.getRoot().resolve(tmpDir.newFile("file"));
+    AbsPath file = tmpDir.newFile("file");
     AndroidSdkDirectoryResolver resolver =
         new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -65,19 +65,19 @@ public class AndroidSdkDirectoryResolverTest {
 
   @Test
   public void testGetSdkFromBuckconfig() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     AndroidSdkDirectoryResolver resolver =
         new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of(),
             FakeAndroidBuckConfig.builder().setSdkPath(sdkDir.toString()).build());
 
-    assertEquals(sdkDir, resolver.getSdkOrThrow());
+    assertEquals(sdkDir.getPath(), resolver.getSdkOrThrow());
   }
 
   @Test
   public void testSdkFromEnvironmentSupercedesBuckconfig() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     AndroidSdkDirectoryResolver resolver =
         new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -94,8 +94,8 @@ public class AndroidSdkDirectoryResolverTest {
 
   @Test
   public void testBuckConfigEntryInSdkPathSearchOrderIsUsed() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
-    Path envDir = tmpDir2.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
+    AbsPath envDir = tmpDir2.newFolder("sdk");
     AndroidSdkDirectoryResolver resolver =
         new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -104,24 +104,24 @@ public class AndroidSdkDirectoryResolverTest {
                 .setSdkPath(sdkDir.toString())
                 .setSdkPathSearchOrder("<CONFIG>, ANDROID_SDK")
                 .build());
-    assertEquals(sdkDir, resolver.getSdkOrThrow());
+    assertEquals(sdkDir.getPath(), resolver.getSdkOrThrow());
   }
 
   @Test
   public void testEnvVariableInSdkPathSearchOrderIsUsed() throws IOException {
-    Path envDir = tmpDir.newFolder("sdk");
+    AbsPath envDir = tmpDir.newFolder("sdk");
     AndroidSdkDirectoryResolver resolver =
         new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_SDK", envDir.toString()),
             FakeAndroidBuckConfig.builder().setSdkPathSearchOrder("<CONFIG>, ANDROID_SDK").build());
-    assertEquals(envDir, resolver.getSdkOrThrow());
+    assertEquals(envDir.getPath(), resolver.getSdkOrThrow());
   }
 
   @Test
   public void testFirstEnvVariableInSdkPathSearchOrderIsUsed() throws IOException {
-    Path env1Dir = tmpDir.newFolder("sdk");
-    Path env2Dir = tmpDir2.newFolder("sdk");
+    AbsPath env1Dir = tmpDir.newFolder("sdk");
+    AbsPath env2Dir = tmpDir2.newFolder("sdk");
     AndroidSdkDirectoryResolver resolver =
         new AndroidSdkDirectoryResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -129,6 +129,6 @@ public class AndroidSdkDirectoryResolverTest {
             FakeAndroidBuckConfig.builder()
                 .setSdkPathSearchOrder("ANDROID_SDK, ANDROID_HOME")
                 .build());
-    assertEquals(env1Dir, resolver.getSdkOrThrow());
+    assertEquals(env1Dir.getPath(), resolver.getSdkOrThrow());
   }
 }

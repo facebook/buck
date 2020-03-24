@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.clang.HeaderMap;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -96,11 +97,11 @@ public class CxxCompilationDatabaseIntegrationTest {
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     assertEquals(
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(), target, "__%s/compile_commands.json"),
-        rootPath.relativize(compilationDatabase));
+        rootPath.relativize(compilationDatabase).getPath());
 
     Path binaryHeaderSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(
@@ -108,7 +109,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             target.withFlavors(
                 InternalFlavor.of("default"), CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
-    assertTrue(Files.exists(rootPath.resolve(binaryHeaderSymlinkTreeFolder)));
+    assertTrue(Files.exists(rootPath.resolve(binaryHeaderSymlinkTreeFolder).getPath()));
 
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:library_with_header");
     Path libraryExportedHeaderSymlinkTreeFolder =
@@ -116,11 +117,13 @@ public class CxxCompilationDatabaseIntegrationTest {
             filesystem,
             libraryTarget,
             HeaderVisibility.PUBLIC,
-            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
+            CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot().getPath()).getFlavor());
 
     // Verify that symlink folders for headers are created and header file is linked.
-    assertTrue(Files.exists(rootPath.resolve(libraryExportedHeaderSymlinkTreeFolder)));
-    assertTrue(Files.exists(rootPath.resolve(libraryExportedHeaderSymlinkTreeFolder + "/bar.h")));
+    assertTrue(Files.exists(rootPath.resolve(libraryExportedHeaderSymlinkTreeFolder).getPath()));
+    assertTrue(
+        Files.exists(
+            rootPath.resolve(libraryExportedHeaderSymlinkTreeFolder + "/bar.h").getPath()));
 
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
@@ -175,10 +178,10 @@ public class CxxCompilationDatabaseIntegrationTest {
     BuildTarget target =
         BuildTargetFactory.newInstance("//:library_with_header#default,compilation-database");
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     assertEquals(
         BuildTargetPaths.getGenPath(filesystem, target, "__%s/compile_commands.json"),
-        rootPath.relativize(compilationDatabase));
+        rootPath.relativize(compilationDatabase).getPath());
 
     Path headerSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(
@@ -195,8 +198,8 @@ public class CxxCompilationDatabaseIntegrationTest {
     System.out.println(workspace.getBuildLog().getAllTargets());
 
     // Verify that symlink folders for headers are created.
-    assertTrue(Files.exists(rootPath.resolve(headerSymlinkTreeFolder)));
-    assertTrue(Files.exists(rootPath.resolve(exportedHeaderSymlinkTreeFolder)));
+    assertTrue(Files.exists(rootPath.resolve(headerSymlinkTreeFolder).getPath()));
+    assertTrue(Files.exists(rootPath.resolve(exportedHeaderSymlinkTreeFolder).getPath()));
 
     Map<String, CxxCompilationDatabaseEntry> fileToEntry =
         CxxCompilationDatabaseUtils.parseCompilationDatabaseJsonFile(compilationDatabase);
@@ -258,11 +261,11 @@ public class CxxCompilationDatabaseIntegrationTest {
   public void testCompilationDatabase() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:test#default,compilation-database");
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     assertEquals(
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(), target, "__%s/compile_commands.json"),
-        rootPath.relativize(compilationDatabase));
+        rootPath.relativize(compilationDatabase).getPath());
 
     Path binaryHeaderSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(
@@ -313,11 +316,11 @@ public class CxxCompilationDatabaseIntegrationTest {
         BuildTargetFactory.newInstance("//:test#default,uber-compilation-database");
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     assertEquals(
         BuildTargetPaths.getGenPath(
             filesystem, target, "uber-compilation-database-%s/compile_commands.json"),
-        rootPath.relativize(compilationDatabase));
+        rootPath.relativize(compilationDatabase).getPath());
 
     Path binaryHeaderSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(

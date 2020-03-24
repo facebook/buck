@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -148,12 +149,12 @@ public class WatchedFileHashCacheTest {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, fileHashCacheMode);
     tmp.newFolder("foo", "bar");
-    Path inputFile = tmp.newFile("foo/bar/baz");
-    Files.write(inputFile, "Hello world".getBytes(Charsets.UTF_8));
+    AbsPath inputFile = tmp.newFile("foo/bar/baz");
+    Files.write(inputFile.getPath(), "Hello world".getBytes(Charsets.UTF_8));
 
     Path dir = Paths.get("foo/bar");
     HashCode dirHash = cache.get(dir);
-    Files.write(inputFile, "Goodbye world".getBytes(Charsets.UTF_8));
+    Files.write(inputFile.getPath(), "Goodbye world".getBytes(Charsets.UTF_8));
     cache.onFileSystemChange(
         WatchmanPathEvent.of(
             filesystem.getRootPath(), Kind.MODIFY, RelPath.of(dir.resolve("baz"))));

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.logd.client.FileOutputStreamFactory;
@@ -32,7 +33,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,7 +58,7 @@ public class BuckConfigWriterTest {
             "repository",
             "");
 
-    Path expectedPath =
+    AbsPath expectedPath =
         tmp.getRoot().resolve(info.getLogDirectoryPath()).resolve("buckconfig.json");
     JsonNode expected =
         ObjectMappers.READER.readTree(
@@ -66,8 +66,8 @@ public class BuckConfigWriterTest {
 
     BuckConfigWriter.writeConfig(tmp.getRoot(), info, config, new FileOutputStreamFactory());
 
-    assertTrue(Files.exists(expectedPath));
-    try (Reader actualReader = Files.newBufferedReader(expectedPath)) {
+    assertTrue(Files.exists(expectedPath.getPath()));
+    try (Reader actualReader = Files.newBufferedReader(expectedPath.getPath())) {
       assertEquals(expected, ObjectMappers.READER.readTree(actualReader));
     }
   }

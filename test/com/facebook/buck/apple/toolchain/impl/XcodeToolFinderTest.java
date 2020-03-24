@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -47,8 +48,8 @@ public class XcodeToolFinderTest {
 
   @Test
   public void doesNotMatchDirectories() throws Exception {
-    Path searchRoot = tempPath.newFolder("SEARCH_ROOT");
-    Path directory = searchRoot.resolve("clang");
+    AbsPath searchRoot = tempPath.newFolder("SEARCH_ROOT");
+    Path directory = searchRoot.resolve("clang").getPath();
     Files.createDirectory(directory);
 
     XcodeToolFinder finder =
@@ -57,25 +58,25 @@ public class XcodeToolFinderTest {
     assertTrue("Directory should look like something executable.", Files.isExecutable(directory));
     assertFalse(
         "But the finder still should not select it.",
-        finder.getToolPath(ImmutableList.of(searchRoot), "clang").isPresent());
+        finder.getToolPath(ImmutableList.of(searchRoot.getPath()), "clang").isPresent());
   }
 
   @Test
   public void doesNotMatchNonExecutableFiles() throws Exception {
-    Path searchRoot = tempPath.newFolder("SEARCH_ROOT");
-    Path file = searchRoot.resolve("clang");
+    AbsPath searchRoot = tempPath.newFolder("SEARCH_ROOT");
+    Path file = searchRoot.resolve("clang").getPath();
     Files.createFile(file);
 
     XcodeToolFinder finder =
         new XcodeToolFinder(FakeBuckConfig.builder().build().getView(AppleConfig.class));
     assertFalse("Created file should not be accessible", Files.isExecutable(file));
-    assertFalse(finder.getToolPath(ImmutableList.of(searchRoot), "clang").isPresent());
+    assertFalse(finder.getToolPath(ImmutableList.of(searchRoot.getPath()), "clang").isPresent());
   }
 
   @Test
   public void matchesExecutableFiles() throws Exception {
-    Path searchRoot = tempPath.newFolder("SEARCH_ROOT");
-    Path file = searchRoot.resolve("clang");
+    AbsPath searchRoot = tempPath.newFolder("SEARCH_ROOT");
+    Path file = searchRoot.resolve("clang").getPath();
     Files.createFile(
         file,
         PosixFilePermissions.asFileAttribute(
@@ -84,84 +85,86 @@ public class XcodeToolFinderTest {
     XcodeToolFinder finder =
         new XcodeToolFinder(FakeBuckConfig.builder().build().getView(AppleConfig.class));
     assertEquals(
-        Optional.of(searchRoot.resolve("clang")),
-        finder.getToolPath(ImmutableList.of(searchRoot), "clang"));
+        Optional.of(searchRoot.resolve("clang").getPath()),
+        finder.getToolPath(ImmutableList.of(searchRoot.getPath()), "clang"));
   }
 
   @Test
   public void picksFirstMatchingEntry() throws Exception {
-    Path searchRoot1 = tempPath.newFolder("SEARCH_ROOT1");
+    AbsPath searchRoot1 = tempPath.newFolder("SEARCH_ROOT1");
     Files.createFile(
-        searchRoot1.resolve("clang"),
+        searchRoot1.resolve("clang").getPath(),
         PosixFilePermissions.asFileAttribute(
             EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
-    Path searchRoot2 = tempPath.newFolder("SEARCH_ROOT2");
+    AbsPath searchRoot2 = tempPath.newFolder("SEARCH_ROOT2");
     Files.createFile(
-        searchRoot2.resolve("clang"),
+        searchRoot2.resolve("clang").getPath(),
         PosixFilePermissions.asFileAttribute(
             EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
 
     XcodeToolFinder finder =
         new XcodeToolFinder(FakeBuckConfig.builder().build().getView(AppleConfig.class));
     assertEquals(
-        Optional.of(searchRoot1.resolve("clang")),
-        finder.getToolPath(ImmutableList.of(searchRoot1, searchRoot2), "clang"));
+        Optional.of(searchRoot1.resolve("clang").getPath()),
+        finder.getToolPath(
+            ImmutableList.of(searchRoot1.getPath(), searchRoot2.getPath()), "clang"));
     assertEquals(
-        Optional.of(searchRoot2.resolve("clang")),
-        finder.getToolPath(ImmutableList.of(searchRoot2, searchRoot1), "clang"));
+        Optional.of(searchRoot2.resolve("clang").getPath()),
+        finder.getToolPath(
+            ImmutableList.of(searchRoot2.getPath(), searchRoot1.getPath()), "clang"));
   }
 
   @Test
   public void rejectsInvalidPathsUsingCache() throws Exception {
-    Path searchRoot = tempPath.newFolder("SEARCH_ROOT");
+    AbsPath searchRoot = tempPath.newFolder("SEARCH_ROOT");
     XcodeToolFinder finder =
         new XcodeToolFinder(FakeBuckConfig.builder().build().getView(AppleConfig.class));
     assertFalse(
         "First search should not find the executable.",
-        finder.getToolPath(ImmutableList.of(searchRoot), "exe").isPresent());
+        finder.getToolPath(ImmutableList.of(searchRoot.getPath()), "exe").isPresent());
     Files.createFile(
-        searchRoot.resolve("exe"),
+        searchRoot.resolve("exe").getPath(),
         PosixFilePermissions.asFileAttribute(
             EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
     assertFalse(
         "Second search should still not find the executable, since it's cached.",
-        finder.getToolPath(ImmutableList.of(searchRoot), "exe").isPresent());
+        finder.getToolPath(ImmutableList.of(searchRoot.getPath()), "exe").isPresent());
     Files.createFile(
-        searchRoot.resolve("bob"),
+        searchRoot.resolve("bob").getPath(),
         PosixFilePermissions.asFileAttribute(
             EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
     assertFalse(
         "The entire directory is cached, any other executables would also be not found.",
-        finder.getToolPath(ImmutableList.of(searchRoot), "bob").isPresent());
+        finder.getToolPath(ImmutableList.of(searchRoot.getPath()), "bob").isPresent());
     assertTrue(
         "A new instance would find the entries again.",
         new XcodeToolFinder(FakeBuckConfig.builder().build().getView(AppleConfig.class))
-            .getToolPath(ImmutableList.of(searchRoot), "bob")
+            .getToolPath(ImmutableList.of(searchRoot.getPath()), "bob")
             .isPresent());
   }
 
   @Test
   public void matchesReplacementTool() throws Exception {
-    Path searchRoot = tempPath.newFolder("SEARCH_ROOT");
-    Path outsideRoot = tempPath.newFolder("OUTSIDE_ROOT");
+    AbsPath searchRoot = tempPath.newFolder("SEARCH_ROOT");
+    AbsPath outsideRoot = tempPath.newFolder("OUTSIDE_ROOT");
     Files.createFile(
-        searchRoot.resolve("clang"),
+        searchRoot.resolve("clang").getPath(),
         PosixFilePermissions.asFileAttribute(
             EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
     Files.createFile(
-        searchRoot.resolve("my_clang"),
+        searchRoot.resolve("my_clang").getPath(),
         PosixFilePermissions.asFileAttribute(
             EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
     Files.createFile(
-        outsideRoot.resolve("clang"),
+        outsideRoot.resolve("clang").getPath(),
         PosixFilePermissions.asFileAttribute(
             EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
     assertEquals(
-        Optional.of(searchRoot.resolve("clang")),
+        Optional.of(searchRoot.resolve("clang").getPath()),
         new XcodeToolFinder(FakeBuckConfig.builder().build().getView(AppleConfig.class))
-            .getToolPath(ImmutableList.of(searchRoot), "clang"));
+            .getToolPath(ImmutableList.of(searchRoot.getPath()), "clang"));
     assertEquals(
-        Optional.of(outsideRoot.resolve("clang")),
+        Optional.of(outsideRoot.resolve("clang").getPath()),
         new XcodeToolFinder(
                 FakeBuckConfig.builder()
                     .setSections(
@@ -170,31 +173,31 @@ public class XcodeToolFinderTest {
                         "clang_replacement=" + outsideRoot.resolve("clang"))
                     .build()
                     .getView(AppleConfig.class))
-            .getToolPath(ImmutableList.of(searchRoot), "clang"));
+            .getToolPath(ImmutableList.of(searchRoot.getPath()), "clang"));
   }
 
   @Test
   public void matchesRenamedToolName() throws Exception {
-    Path searchRoot = tempPath.newFolder("SEARCH_ROOT");
+    AbsPath searchRoot = tempPath.newFolder("SEARCH_ROOT");
     Files.createFile(
-        searchRoot.resolve("clang"),
+        searchRoot.resolve("clang").getPath(),
         PosixFilePermissions.asFileAttribute(
             EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
     Files.createFile(
-        searchRoot.resolve("my_clang"),
+        searchRoot.resolve("my_clang").getPath(),
         PosixFilePermissions.asFileAttribute(
             EnumSet.of(PosixFilePermission.OWNER_EXECUTE, PosixFilePermission.OWNER_READ)));
     assertEquals(
-        Optional.of(searchRoot.resolve("clang")),
+        Optional.of(searchRoot.resolve("clang").getPath()),
         new XcodeToolFinder(FakeBuckConfig.builder().build().getView(AppleConfig.class))
-            .getToolPath(ImmutableList.of(searchRoot), "clang"));
+            .getToolPath(ImmutableList.of(searchRoot.getPath()), "clang"));
     assertEquals(
-        Optional.of(searchRoot.resolve("my_clang")),
+        Optional.of(searchRoot.resolve("my_clang").getPath()),
         new XcodeToolFinder(
                 FakeBuckConfig.builder()
                     .setSections("[apple]", "clang_xcode_tool_name_override=my_clang")
                     .build()
                     .getView(AppleConfig.class))
-            .getToolPath(ImmutableList.of(searchRoot), "clang"));
+            .getToolPath(ImmutableList.of(searchRoot.getPath()), "clang"));
   }
 }

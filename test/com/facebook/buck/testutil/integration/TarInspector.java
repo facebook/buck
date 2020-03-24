@@ -16,13 +16,13 @@
 
 package com.facebook.buck.testutil.integration;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Optional;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -41,12 +41,12 @@ public class TarInspector {
    * <p>The returned map is a freshly created one, and changes to the byte[] in it do not affect the
    * underlying archive.
    */
-  public static ImmutableMap<String, byte[]> readTarZst(Path tar)
+  public static ImmutableMap<String, byte[]> readTarZst(AbsPath tar)
       throws IOException, CompressorException {
     return readTar(Optional.of(CompressorStreamFactory.ZSTANDARD), tar);
   }
 
-  private static ImmutableMap<String, byte[]> readTar(Optional<String> compressorType, Path tar)
+  private static ImmutableMap<String, byte[]> readTar(Optional<String> compressorType, AbsPath tar)
       throws IOException, CompressorException {
 
     HashMap<String, byte[]> result = new HashMap<>();
@@ -64,8 +64,8 @@ public class TarInspector {
   }
 
   private static TarArchiveInputStream getArchiveInputStream(
-      Optional<String> compressorType, Path tar) throws IOException, CompressorException {
-    BufferedInputStream inputStream = new BufferedInputStream(Files.newInputStream(tar));
+      Optional<String> compressorType, AbsPath tar) throws IOException, CompressorException {
+    BufferedInputStream inputStream = new BufferedInputStream(Files.newInputStream(tar.getPath()));
     if (compressorType.isPresent()) {
       return new TarArchiveInputStream(
           new CompressorStreamFactory()

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java.runner;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.TemporaryPaths;
 import java.io.IOException;
@@ -74,7 +75,7 @@ public class FileClassPathRunnerTest {
 
   @Test
   public void getClassPathWithoutClassPathFile() throws IOException {
-    Path testRunnerPath = temporaryPaths.newFolder("testrunner");
+    AbsPath testRunnerPath = temporaryPaths.newFolder("testrunner");
     System.setProperty(FileClassPathRunner.TESTRUNNER_CLASSES_PROPERTY, testRunnerPath.toString());
     final String expectedClassPathProperty = testRunnerPath.toString();
     final URL[] expectedResult = new URL[] {testRunnerPath.toUri().toURL()};
@@ -146,7 +147,8 @@ public class FileClassPathRunnerTest {
 
   private Path[] expectedClassPathEntries() {
     return new Path[] {
-      temporaryPaths.getRoot().resolve("lib1.jar"), temporaryPaths.getRoot().resolve("lib2.jar")
+      temporaryPaths.getRoot().resolve("lib1.jar").getPath(),
+      temporaryPaths.getRoot().resolve("lib2.jar").getPath()
     };
   }
 
@@ -155,12 +157,12 @@ public class FileClassPathRunnerTest {
     List<String> classPathEntries = new ArrayList<>();
     classPathEntries.add(temporaryPaths.newFile("lib1.jar").toString());
     classPathEntries.add(temporaryPaths.newFile("lib2.jar").toString());
-    Path classpathFile = temporaryPaths.newFile("classpathFile");
+    AbsPath classpathFile = temporaryPaths.newFile("classpathFile");
     if (fakeClassPathEntries != null) {
       classPathEntries.addAll(Arrays.asList(fakeClassPathEntries));
     }
-    Files.write(classpathFile, classPathEntries);
-    return classpathFile;
+    Files.write(classpathFile.getPath(), classPathEntries);
+    return classpathFile.getPath();
   }
 
   @Test

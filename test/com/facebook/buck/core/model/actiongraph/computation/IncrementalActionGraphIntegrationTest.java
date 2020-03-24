@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.actiongraph.computation;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.cli.TestWithBuckd;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -27,7 +28,6 @@ import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import org.junit.Before;
@@ -46,8 +46,8 @@ public class IncrementalActionGraphIntegrationTest {
   public void setUp() throws IOException {
     incrementalActionGraphGeneratorLogger = Logger.get(IncrementalActionGraphGenerator.class);
     incrementalActionGraphGeneratorLogger.setLevel(Level.FINER);
-    Path fullLogFilePath = tmp.getRoot().resolve(getLogFilePath());
-    Files.createDirectories(fullLogFilePath.getParent());
+    AbsPath fullLogFilePath = getLogFilePath();
+    Files.createDirectories(fullLogFilePath.getParent().getPath());
     FileHandler handler = new FileHandler(fullLogFilePath.toString());
     handler.setFormatter(new LogFormatter());
     incrementalActionGraphGeneratorLogger.addHandler(handler);
@@ -86,7 +86,7 @@ public class IncrementalActionGraphIntegrationTest {
     }
   }
 
-  private Path getLogFilePath() {
+  private AbsPath getLogFilePath() {
     return tmp.getRoot().resolve("buck.test.log");
   }
 }

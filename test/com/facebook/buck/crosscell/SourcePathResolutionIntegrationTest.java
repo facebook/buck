@@ -20,6 +20,7 @@ import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -104,7 +105,7 @@ public class SourcePathResolutionIntegrationTest {
   }
 
   private ProjectWorkspace createWorkspace(String scenarioName) throws IOException {
-    Path tmpSubfolder = tmp.newFolder();
+    AbsPath tmpSubfolder = tmp.newFolder();
     ProjectWorkspace projectWorkspace =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, scenarioName, tmpSubfolder);

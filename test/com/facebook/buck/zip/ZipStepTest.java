@@ -25,6 +25,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -78,13 +79,13 @@ public class ZipStepTest {
 
   @Test
   public void shouldCreateANewZipFileFromScratch() throws Exception {
-    Path parent = tmp.newFolder("zipstep");
-    Path out = parent.resolve("output.zip");
+    AbsPath parent = tmp.newFolder("zipstep");
+    AbsPath out = parent.resolve("output.zip");
 
-    Path toZip = tmp.newFolder("zipdir");
-    Files.createFile(toZip.resolve("file1.txt"));
-    Files.createFile(toZip.resolve("file2.txt"));
-    Files.createFile(toZip.resolve("file3.txt"));
+    AbsPath toZip = tmp.newFolder("zipdir");
+    Files.createFile(toZip.resolve("file1.txt").getPath());
+    Files.createFile(toZip.resolve("file2.txt").getPath());
+    Files.createFile(toZip.resolve("file3.txt").getPath());
 
     ZipStep step =
         new ZipStep(
@@ -104,12 +105,12 @@ public class ZipStepTest {
 
   @Test(timeout = 600000)
   public void handlesLargeFiles() throws Exception {
-    Path parent = tmp.newFolder("zipstep");
-    Path out = parent.resolve("output.zip");
+    AbsPath parent = tmp.newFolder("zipstep");
+    AbsPath out = parent.resolve("output.zip");
 
-    Path toZip = tmp.newFolder("zipdir");
+    AbsPath toZip = tmp.newFolder("zipdir");
     long entrySize = 4_500_000_000L; // More than 2**32 so zip64 extension needs to be used.
-    try (OutputStream outputStream = Files.newOutputStream(toZip.resolve("file1.bin"))) {
+    try (OutputStream outputStream = Files.newOutputStream(toZip.resolve("file1.bin").getPath())) {
       byte[] writeBuffer = new byte[64_000];
       long written = 0;
       while (written != entrySize) {
@@ -118,7 +119,7 @@ public class ZipStepTest {
         written += toWrite;
       }
     }
-    Files.createFile(toZip.resolve("file2.bin")); // To test file offset > 2**32.
+    Files.createFile(toZip.resolve("file2.bin").getPath()); // To test file offset > 2**32.
 
     ZipStep step =
         new ZipStep(
@@ -130,7 +131,7 @@ public class ZipStepTest {
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(out))) {
+    try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(out.getPath()))) {
       ZipEntry entry = zipInputStream.getNextEntry();
       assertEquals("file1.bin", entry.getName());
       assertEquals(entrySize, ByteStreams.exhaust(zipInputStream));
@@ -153,14 +154,14 @@ public class ZipStepTest {
 
   @Test
   public void willOnlyIncludeEntriesInThePathsArgumentIfAnyAreSet() throws Exception {
-    Path parent = tmp.newFolder("zipstep");
-    Path out = parent.resolve("output.zip");
+    AbsPath parent = tmp.newFolder("zipstep");
+    AbsPath out = parent.resolve("output.zip");
 
-    Path toZip = tmp.newFolder("zipdir");
+    AbsPath toZip = tmp.newFolder("zipdir");
 
-    Files.createFile(toZip.resolve("file1.txt"));
-    Files.createFile(toZip.resolve("file2.txt"));
-    Files.createFile(toZip.resolve("file3.txt"));
+    Files.createFile(toZip.resolve("file1.txt").getPath());
+    Files.createFile(toZip.resolve("file2.txt").getPath());
+    Files.createFile(toZip.resolve("file3.txt").getPath());
 
     ZipStep step =
         new ZipStep(
@@ -179,13 +180,13 @@ public class ZipStepTest {
 
   @Test
   public void willRecurseIntoSubdirectories() throws Exception {
-    Path parent = tmp.newFolder("zipstep");
-    Path out = parent.resolve("output.zip");
+    AbsPath parent = tmp.newFolder("zipstep");
+    AbsPath out = parent.resolve("output.zip");
 
-    Path toZip = tmp.newFolder("zipdir");
-    Files.createFile(toZip.resolve("file1.txt"));
-    Files.createDirectories(toZip.resolve("child"));
-    Files.createFile(toZip.resolve("child/file2.txt"));
+    AbsPath toZip = tmp.newFolder("zipdir");
+    Files.createFile(toZip.resolve("file1.txt").getPath());
+    Files.createDirectories(toZip.resolve("child").getPath());
+    Files.createFile(toZip.resolve("child/file2.txt").getPath());
 
     ZipStep step =
         new ZipStep(
@@ -213,13 +214,13 @@ public class ZipStepTest {
     // Symlinks on Windows are _hard_. Let's go shopping.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    Path parent = tmp.newFolder("zipstep");
-    Path out = parent.resolve("output.zip");
-    Path target = parent.resolve("target");
-    Files.write(target, "example content".getBytes(UTF_8));
+    AbsPath parent = tmp.newFolder("zipstep");
+    AbsPath out = parent.resolve("output.zip");
+    AbsPath target = parent.resolve("target");
+    Files.write(target.getPath(), "example content".getBytes(UTF_8));
 
-    Path toZip = tmp.newFolder("zipdir");
-    Path path = toZip.resolve("file.txt");
+    AbsPath toZip = tmp.newFolder("zipdir");
+    AbsPath path = toZip.resolve("file.txt");
     CreateSymlinksForTests.createSymLink(path, target);
 
     ZipStep step =
@@ -242,8 +243,8 @@ public class ZipStepTest {
 
   @Test
   public void overwritingAnExistingZipFileIsAnError() throws Exception {
-    Path parent = tmp.newFolder("zipstep");
-    Path out = parent.resolve("output.zip");
+    AbsPath parent = tmp.newFolder("zipstep");
+    AbsPath out = parent.resolve("output.zip");
 
     try (ZipArchive zipArchive = new ZipArchive(out, true)) {
       zipArchive.add("file1.txt", "");
@@ -262,12 +263,12 @@ public class ZipStepTest {
 
   @Test
   public void shouldBeAbleToJunkPaths() throws Exception {
-    Path parent = tmp.newFolder("zipstep");
-    Path out = parent.resolve("output.zip");
+    AbsPath parent = tmp.newFolder("zipstep");
+    AbsPath out = parent.resolve("output.zip");
 
-    Path toZip = tmp.newFolder("zipdir");
-    Files.createDirectories(toZip.resolve("child"));
-    Files.createFile(toZip.resolve("child/file1.txt"));
+    AbsPath toZip = tmp.newFolder("zipdir");
+    Files.createDirectories(toZip.resolve("child").getPath());
+    Files.createFile(toZip.resolve("child/file1.txt").getPath());
 
     ZipStep step =
         new ZipStep(
@@ -286,8 +287,8 @@ public class ZipStepTest {
 
   @Test
   public void zipWithEmptyDir() throws Exception {
-    Path parent = tmp.newFolder("zipstep");
-    Path out = parent.resolve("output.zip");
+    AbsPath parent = tmp.newFolder("zipstep");
+    AbsPath out = parent.resolve("output.zip");
 
     tmp.newFolder("zipdir");
     tmp.newFolder("zipdir/foo/");
@@ -323,14 +324,14 @@ public class ZipStepTest {
    */
   @Test
   public void minCompressionWritesCorrectZipFile() throws Exception {
-    Path parent = tmp.newFolder("zipstep");
-    Path out = parent.resolve("output.zip");
+    AbsPath parent = tmp.newFolder("zipstep");
+    AbsPath out = parent.resolve("output.zip");
 
-    Path toZip = tmp.newFolder("zipdir");
+    AbsPath toZip = tmp.newFolder("zipdir");
     byte[] contents = "hello world".getBytes();
-    Files.write(toZip.resolve("file1.txt"), contents);
-    Files.write(toZip.resolve("file2.txt"), contents);
-    Files.write(toZip.resolve("file3.txt"), contents);
+    Files.write(toZip.resolve("file1.txt").getPath(), contents);
+    Files.write(toZip.resolve("file2.txt").getPath(), contents);
+    Files.write(toZip.resolve("file3.txt").getPath(), contents);
 
     ZipStep step =
         new ZipStep(
@@ -357,17 +358,17 @@ public class ZipStepTest {
 
   @Test
   public void timesAreSanitized() throws Exception {
-    Path parent = tmp.newFolder("zipstep");
+    AbsPath parent = tmp.newFolder("zipstep");
 
     // Create a zip file with a file and a directory.
-    Path toZip = tmp.newFolder("zipdir");
-    Files.createDirectories(toZip.resolve("child"));
-    Files.createFile(toZip.resolve("child/file.txt"));
-    Path outputZip = parent.resolve("output.zip");
+    AbsPath toZip = tmp.newFolder("zipdir");
+    Files.createDirectories(toZip.resolve("child").getPath());
+    Files.createFile(toZip.resolve("child/file.txt").getPath());
+    AbsPath outputZip = parent.resolve("output.zip");
     ZipStep step =
         new ZipStep(
             filesystem,
-            outputZip,
+            outputZip.getPath(),
             ImmutableSet.of(),
             false,
             ZipCompressionLevel.DEFAULT,
@@ -375,7 +376,7 @@ public class ZipStepTest {
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
-    assertTrue(Files.exists(outputZip));
+    assertTrue(Files.exists(outputZip.getPath()));
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
     try (ZipInputStream is = new ZipInputStream(new FileInputStream(outputZip.toFile()))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
@@ -388,9 +389,9 @@ public class ZipStepTest {
   public void zipMaintainsExecutablePermissions() throws InterruptedException, IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    Path parent = tmp.newFolder("zipstep");
-    Path toZip = tmp.newFolder("zipdir");
-    Path file = toZip.resolve("foo.sh");
+    AbsPath parent = tmp.newFolder("zipstep");
+    AbsPath toZip = tmp.newFolder("zipdir");
+    AbsPath file = toZip.resolve("foo.sh");
     ImmutableSet<PosixFilePermission> filePermissions =
         ImmutableSet.of(
             PosixFilePermission.OWNER_READ,
@@ -398,28 +399,28 @@ public class ZipStepTest {
             PosixFilePermission.OWNER_EXECUTE,
             PosixFilePermission.GROUP_READ,
             PosixFilePermission.OTHERS_READ);
-    Files.createFile(file, PosixFilePermissions.asFileAttribute(filePermissions));
-    Path outputZip = parent.resolve("output.zip");
+    Files.createFile(file.getPath(), PosixFilePermissions.asFileAttribute(filePermissions));
+    AbsPath outputZip = parent.resolve("output.zip");
     ZipStep step =
         new ZipStep(
             filesystem,
-            outputZip,
+            outputZip.getPath(),
             ImmutableSet.of(),
             false,
             ZipCompressionLevel.NONE,
             Paths.get("zipdir"));
     assertEquals(0, step.execute(TestExecutionContext.newInstance()).getExitCode());
 
-    Path destination = tmp.newFolder("output");
+    AbsPath destination = tmp.newFolder("output");
 
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            outputZip,
-            destination,
+            outputZip.getPath(),
+            destination.getPath(),
             ExistingFileMode.OVERWRITE);
-    assertTrue(Files.isExecutable(destination.resolve("foo.sh")));
+    assertTrue(Files.isExecutable(destination.resolve("foo.sh").getPath()));
   }
 
   @Test

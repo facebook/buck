@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.ProcessListeners.CapturingListener;
 import com.facebook.buck.util.ProcessListeners.StdinWritingListener;
@@ -30,7 +31,6 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.concurrent.TimeUnit;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
@@ -69,10 +69,10 @@ public class ListeningProcessExecutorTest {
       paramsBuilder.addCommand("cat");
     }
     paramsBuilder.addCommand("hello-world.txt");
-    paramsBuilder.setDirectory(tmp.getRoot());
-    Path helloWorldPath = tmp.getRoot().resolve("hello-world.txt");
+    paramsBuilder.setDirectory(tmp.getRoot().getPath());
+    AbsPath helloWorldPath = tmp.getRoot().resolve("hello-world.txt");
     String fileContents = "Hello, world!";
-    Files.write(helloWorldPath, fileContents.getBytes(StandardCharsets.UTF_8));
+    Files.write(helloWorldPath.getPath(), fileContents.getBytes(StandardCharsets.UTF_8));
     ListeningProcessExecutor executor = new ListeningProcessExecutor();
     CapturingListener listener = new CapturingListener();
     ListeningProcessExecutor.LaunchedProcess process =

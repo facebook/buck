@@ -37,6 +37,7 @@ import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -1088,7 +1089,7 @@ public class TargetsCommandIntegrationTest {
     JsonNode outputPath = targetNode.get("buck.outputPath");
     assertNotNull(outputPath);
 
-    Path expectedPath =
+    AbsPath expectedPath =
         tmp.getRoot()
             .resolve(getLegacyGenDir("//:test", workspace).resolve("test-output").toString());
     String expectedRootPath = MorePaths.pathWithPlatformSeparators(expectedPath);
@@ -1393,13 +1394,13 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void writesBinaryRuleKeysToDisk() throws IOException, TException {
-    Path logFile = tmp.newFile("out.bin");
+    AbsPath logFile = tmp.newFile("out.bin");
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     ProcessResult runBuckResult =
         workspace.runBuckBuild(
-            "--show-rulekey", "--rulekeys-log-path", logFile.toAbsolutePath().toString(), "//:bar");
+            "--show-rulekey", "--rulekeys-log-path", logFile.toString(), "//:bar");
     runBuckResult.assertSuccess();
 
     List<FullRuleKey> ruleKeys = ThriftRuleKeyDeserializer.readRuleKeys(logFile);

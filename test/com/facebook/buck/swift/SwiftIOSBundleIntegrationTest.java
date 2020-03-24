@@ -28,6 +28,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.AppleDescriptions;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -189,12 +190,12 @@ public class SwiftIOSBundleIntegrationTest {
         workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
         not(containsString("libdep1.dylib")));
 
-    Path dep1Output =
+    AbsPath dep1Output =
         tmp.getRoot()
             .resolve(filesystem.getBuckPaths().getGenDir())
             .resolve("iosdep1#iphonesimulator-x86_64,swift-compile")
             .resolve("libiosdep1.dylib");
-    assertThat(Files.notExists(dep1Output), CoreMatchers.is(true));
+    assertThat(Files.notExists(dep1Output.getPath()), CoreMatchers.is(true));
   }
 
   @Test
@@ -231,7 +232,7 @@ public class SwiftIOSBundleIntegrationTest {
         workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),
         containsString("libiosdep1.dylib"));
 
-    Path parentOutput =
+    AbsPath parentOutput =
         tmp.getRoot()
             .resolve(
                 BuildTargetPaths.getGenPath(
@@ -240,7 +241,7 @@ public class SwiftIOSBundleIntegrationTest {
                         "//:ios-parent-dynamic#iphonesimulator-x86_64,swift-compile"),
                     "%s"))
             .resolve("ios_parent_dynamic.swiftmodule");
-    assertThat(Files.exists(parentOutput), CoreMatchers.is(true));
+    assertThat(Files.exists(parentOutput.getPath()), CoreMatchers.is(true));
 
     BuildTarget iosdep1Target =
         BuildTargetFactory.newInstance("//:iosdep1")
@@ -267,7 +268,7 @@ public class SwiftIOSBundleIntegrationTest {
             "build", ":dep1-soname#iphonesimulator-x86_64,shared", "--config", "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path binaryOutput =
+    AbsPath binaryOutput =
         tmp.getRoot()
             .resolve(
                 BuildTargetPaths.getGenPath(
@@ -275,7 +276,7 @@ public class SwiftIOSBundleIntegrationTest {
                     BuildTargetFactory.newInstance("//:dep1-soname#iphonesimulator-x86_64"),
                     "%s"))
             .resolve("custom-soname");
-    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+    assertThat(Files.exists(binaryOutput.getPath()), CoreMatchers.is(true));
 
     assertThat(
         workspace.runCommand("file", binaryOutput.toString()).getStdout().get(),
@@ -312,21 +313,21 @@ public class SwiftIOSBundleIntegrationTest {
             "build", ":ios-parent-dynamic#iphonesimulator-x86_64", "--config", "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path binaryOutput =
+    AbsPath binaryOutput =
         tmp.getRoot()
             .resolve(
                 BuildTargetPaths.getGenPath(
                     filesystem,
                     BuildTargetFactory.newInstance("//:ios-parent-dynamic#iphonesimulator-x86_64"),
                     "%s"));
-    assertThat(Files.exists(binaryOutput), CoreMatchers.is(true));
+    assertThat(Files.exists(binaryOutput.getPath()), CoreMatchers.is(true));
 
-    Path dep1Output =
+    AbsPath dep1Output =
         tmp.getRoot()
             .resolve(filesystem.getBuckPaths().getGenDir())
             .resolve("iosdep1#iphonesimulator-x86_64")
             .resolve("libiosdep1.dylib");
-    assertThat(Files.exists(dep1Output), CoreMatchers.is(false));
+    assertThat(Files.exists(dep1Output.getPath()), CoreMatchers.is(false));
 
     assertThat(
         workspace.runCommand("otool", "-L", binaryOutput.toString()).getStdout().get(),

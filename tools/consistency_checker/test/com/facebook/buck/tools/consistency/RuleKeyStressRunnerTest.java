@@ -16,6 +16,7 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.log.thrift.rulekeys.RuleKeyHash;
@@ -48,12 +49,12 @@ public class RuleKeyStressRunnerTest {
   Callable<RuleKeyDiffer> differFactory;
   TestPrintStream stream = TestPrintStream.create();
   private TestBinWriter binWriter;
-  private Path tempBinPath;
+  private AbsPath tempBinPath;
 
   @Before
   public void setUp() throws IOException {
     tempBinPath = temporaryPaths.newFile("buck_bin.py");
-    binWriter = new TestBinWriter(tempBinPath);
+    binWriter = new TestBinWriter(tempBinPath.getPath());
     differFactory =
         () -> {
           DifferState differState = new DifferState(DifferState.INFINITE_DIFFERENCES);
@@ -73,7 +74,7 @@ public class RuleKeyStressRunnerTest {
     List<String> expectedOutput1 =
         ImmutableList.of(
             System.getProperty("user.dir"),
-            tempBinPath.toAbsolutePath().toString(),
+            tempBinPath.toString(),
             "targets",
             String.format("--rulekeys-log-path=%s", temporaryPaths.getRoot().resolve("0.bin.log")),
             "--show-rulekey",
@@ -87,7 +88,7 @@ public class RuleKeyStressRunnerTest {
     List<String> expectedOutput2 =
         ImmutableList.of(
             System.getProperty("user.dir"),
-            tempBinPath.toAbsolutePath().toString(),
+            tempBinPath.toString(),
             "targets",
             String.format("--rulekeys-log-path=%s", temporaryPaths.getRoot().resolve("1.bin.log")),
             "--show-rulekey",
@@ -102,12 +103,12 @@ public class RuleKeyStressRunnerTest {
         new RuleKeyStressRunner(
             differFactory,
             Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
+            tempBinPath.toString(),
             ImmutableList.of(),
             ImmutableList.of("//:test1", "//:test2"));
 
     List<BuckRunner> commands =
-        runner.getBuckRunners(2, temporaryPaths.getRoot(), Optional.empty());
+        runner.getBuckRunners(2, temporaryPaths.getRoot().getPath(), Optional.empty());
 
     Assert.assertEquals(2, commands.size());
 
@@ -140,9 +141,9 @@ public class RuleKeyStressRunnerTest {
   public void throwsExceptionIfDifferencesFound()
       throws IOException, RuleKeyStressRunException, MaxDifferencesException,
           GraphTraversalException, ParseException {
-    Path binLog1 = temporaryPaths.newFile("0.log.bin");
-    Path binLog2 = temporaryPaths.newFile("1.log.bin");
-    Path binLog3 = temporaryPaths.newFile("2.log.bin");
+    Path binLog1 = temporaryPaths.newFile("0.log.bin").getPath();
+    Path binLog2 = temporaryPaths.newFile("1.log.bin").getPath();
+    Path binLog3 = temporaryPaths.newFile("2.log.bin").getPath();
 
     expectedException.expect(RuleKeyStressRunException.class);
     expectedException.expectMessage(
@@ -188,7 +189,7 @@ public class RuleKeyStressRunnerTest {
         new RuleKeyStressRunner(
             differFactory,
             Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
+            tempBinPath.toString(),
             ImmutableList.of(),
             ImmutableList.of("//:target1"));
     runner.verifyNoChanges(binLog1, ImmutableList.of(binLog2, binLog3));
@@ -200,8 +201,8 @@ public class RuleKeyStressRunnerTest {
           GraphTraversalException, ParseException {
     expectedException.expect(ParseException.class);
 
-    Path binLog1 = temporaryPaths.newFile("0.log.bin");
-    Path binLog2 = temporaryPaths.newFile("1.log.bin");
+    Path binLog1 = temporaryPaths.newFile("0.log.bin").getPath();
+    Path binLog2 = temporaryPaths.newFile("1.log.bin").getPath();
     FullRuleKey key = new FullRuleKey("key1", "//:target1", "DEFAULT", ImmutableMap.of());
     try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(binLog1)) {
       logger.write(key);
@@ -211,7 +212,7 @@ public class RuleKeyStressRunnerTest {
         new RuleKeyStressRunner(
             differFactory,
             Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
+            tempBinPath.toString(),
             ImmutableList.of(),
             ImmutableList.of("//:not_target1"));
 
@@ -222,9 +223,9 @@ public class RuleKeyStressRunnerTest {
   public void runsSuccessfullyIfNoErrorsFound()
       throws RuleKeyStressRunException, MaxDifferencesException, GraphTraversalException,
           ParseException, IOException {
-    Path binLog1 = temporaryPaths.newFile("0.log.bin");
-    Path binLog2 = temporaryPaths.newFile("1.log.bin");
-    Path binLog3 = temporaryPaths.newFile("2.log.bin");
+    Path binLog1 = temporaryPaths.newFile("0.log.bin").getPath();
+    Path binLog2 = temporaryPaths.newFile("1.log.bin").getPath();
+    Path binLog3 = temporaryPaths.newFile("2.log.bin").getPath();
 
     FullRuleKey key1 =
         new FullRuleKey(
@@ -254,7 +255,7 @@ public class RuleKeyStressRunnerTest {
         new RuleKeyStressRunner(
             differFactory,
             Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
+            tempBinPath.toString(),
             ImmutableList.of(),
             ImmutableList.of("//:target1"));
     runner.verifyNoChanges(binLog1, ImmutableList.of(binLog2, binLog3));

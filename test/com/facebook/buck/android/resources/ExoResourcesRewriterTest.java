@@ -20,6 +20,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -42,21 +43,22 @@ public class ExoResourcesRewriterTest {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
   private ProjectFilesystem filesystem;
-  private Path apkPath;
+  private AbsPath apkPath;
 
   @Before
   public void setUp() {
     filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             TestDataHelper.getTestDataDirectory(this).resolve("aapt_dump"));
-    apkPath = filesystem.resolve(filesystem.getPath(APK_NAME));
+    apkPath = AbsPath.of(filesystem.resolve(filesystem.getPath(APK_NAME)));
   }
 
   @Test
   public void testRewriteResources() throws IOException {
-    Path primaryOutput = tmpFolder.getRoot().resolve("primary.apk");
-    Path exoOutput = tmpFolder.getRoot().resolve("exo.apk");
-    ExoResourcesRewriter.rewriteResources(apkPath, primaryOutput, exoOutput);
+    AbsPath primaryOutput = tmpFolder.getRoot().resolve("primary.apk");
+    AbsPath exoOutput = tmpFolder.getRoot().resolve("exo.apk");
+    ExoResourcesRewriter.rewriteResources(
+        apkPath.getPath(), primaryOutput.getPath(), exoOutput.getPath());
 
     ZipInspector primaryApkInspector = new ZipInspector(primaryOutput);
     assertEquals(
@@ -104,7 +106,7 @@ public class ExoResourcesRewriterTest {
   @Test
   public void testRewriteRTxt() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
-    Path inputRTxt = tmpFolder.getRoot().resolve("input.R.txt");
+    AbsPath inputRTxt = tmpFolder.getRoot().resolve("input.R.txt");
     String rtxtContent =
         "int style Widget_AppCompat_Light_PopupMenu 0x7f0b0025\n"
             + "int style Widget_AppCompat_Light_PopupMenu_Overflow 0x7f0b0023\n"
@@ -127,7 +129,7 @@ public class ExoResourcesRewriterTest {
             + "int styleable ActionMode_titleTextStyle 3\n";
     filesystem.writeContentsToPath(rtxtContent, inputRTxt);
 
-    Path outputRTxt = tmpFolder.getRoot().resolve("output.R.txt");
+    AbsPath outputRTxt = tmpFolder.getRoot().resolve("output.R.txt");
     ExoResourcesRewriter.rewriteRDotTxt(
         new ReferenceMapper() {
           @Override
@@ -148,8 +150,8 @@ public class ExoResourcesRewriterTest {
             throw new UnsupportedOperationException();
           }
         },
-        inputRTxt,
-        outputRTxt);
+        inputRTxt.getPath(),
+        outputRTxt.getPath());
 
     assertEquals(expectedOutput, filesystem.readFileIfItExists(outputRTxt).get());
   }

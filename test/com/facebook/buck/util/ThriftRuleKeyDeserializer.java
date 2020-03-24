@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -54,5 +55,9 @@ public class ThriftRuleKeyDeserializer {
       }
       return ret;
     }
+  }
+
+  public static List<FullRuleKey> readRuleKeys(AbsPath logPath) throws IOException, TException {
+    return readRuleKeys(logPath.getPath());
   }
 }

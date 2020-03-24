@@ -262,7 +262,7 @@ public class ShBinaryRuleIntegrationTest {
 
     // symlink the buck-out to be outside the project root
     Path tempBuckOut = Files.createTempDirectory("buck-out");
-    Files.createSymbolicLink(temporaryFolder.getRoot().resolve("buck-out"), tempBuckOut);
+    Files.createSymbolicLink(temporaryFolder.getRoot().resolve("buck-out").getPath(), tempBuckOut);
 
     workspace.buildAndReturnOutput("//:run_example");
   }

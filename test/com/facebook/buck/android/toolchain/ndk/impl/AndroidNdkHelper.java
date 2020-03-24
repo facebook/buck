@@ -31,6 +31,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -221,10 +222,10 @@ public class AndroidNdkHelper {
   public static SymbolGetter getSymbolGetter(ProjectFilesystem filesystem, TemporaryPaths tmp)
       throws IOException {
     NdkCxxPlatform platform = getNdkCxxPlatform(filesystem);
-    Path tmpDir = tmp.newFolder("symbols_tmp");
+    AbsPath tmpDir = tmp.newFolder("symbols_tmp");
     return new SymbolGetter(
         new DefaultProcessExecutor(new TestConsole()),
-        tmpDir,
+        tmpDir.getPath(),
         platform.getObjdump(),
         new TestActionGraphBuilder().getSourcePathResolver());
   }

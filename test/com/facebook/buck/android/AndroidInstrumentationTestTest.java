@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -36,7 +37,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -149,9 +149,9 @@ public class AndroidInstrumentationTestTest {
 
   @Test
   public void testReadSummariesFromPath_CanParseSummary() throws Exception {
-    Path resultsPath = tmp.newFile("Results.xml");
+    AbsPath resultsPath = tmp.newFile("Results.xml");
     Files.write(
-        resultsPath,
+        resultsPath.getPath(),
         ImmutableList.of(
             "<?xml version='1.0' encoding='UTF-8' ?>",
             "<testsuite name=\"com.example.foo\" tests=\"1\" failures=\"0\" errors=\"0\" skipped=\"0\" time=\"3.14159\" timestamp=\"2019-04-11T22:31:04\" hostname=\"localhost\">",
@@ -160,7 +160,9 @@ public class AndroidInstrumentationTestTest {
             "</testsuite>"));
     List<TestCaseSummary> testCaseSummaries =
         AndroidInstrumentationTest.readSummariesFromPath(
-            "//foo:foo", resultsPath, new TestAndroidDevice(null, null, "FakeDevice", null));
+            "//foo:foo",
+            resultsPath.getPath(),
+            new TestAndroidDevice(null, null, "FakeDevice", null));
     assertEquals(1, testCaseSummaries.size());
     assertEquals(
         "[PASS   1.1s com.example.foo.FooTest (FakeDevice)#FooTest()]",

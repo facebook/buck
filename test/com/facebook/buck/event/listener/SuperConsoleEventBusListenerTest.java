@@ -2655,7 +2655,7 @@ public class SuperConsoleEventBusListenerTest {
   }
 
   private Path getStorageForTest() throws IOException {
-    return tmp.newFile();
+    return tmp.newFile().getPath();
   }
 
   private void compareOutput(

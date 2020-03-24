@@ -24,11 +24,11 @@ import com.facebook.buck.android.FakeAndroidBuckConfig;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,7 +50,7 @@ public class AndroidBuildToolsResolverTest {
 
   @Test
   public void buildToolsFallsBacktoPlatformTools() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "platform-tools");
     AndroidBuildToolsResolver resolver =
         new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
@@ -59,7 +59,7 @@ public class AndroidBuildToolsResolverTest {
 
   @Test
   public void buildToolsAPIVersionFound() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/android-4.2.2");
     AndroidBuildToolsResolver resolver =
         new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
@@ -69,7 +69,7 @@ public class AndroidBuildToolsResolverTest {
 
   @Test
   public void buildToolsWithBuildToolsPrefix() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/build-tools-17.2.2");
     AndroidBuildToolsResolver resolver =
         new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
@@ -80,7 +80,7 @@ public class AndroidBuildToolsResolverTest {
 
   @Test
   public void buildToolsInvalidPrefixThrows() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/foobar-17.2.2");
     AndroidBuildToolsResolver resolver =
         new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
@@ -92,11 +92,11 @@ public class AndroidBuildToolsResolverTest {
 
   @Test
   public void buildToolsEmptyDirectoryThrows() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     sdkDir.resolve("build-tools").toFile().mkdir();
     sdkDir.resolve("tools").toFile().mkdir();
-    Path toolsDir = sdkDir.resolve("tools").toAbsolutePath();
-    Path buildToolsDir = sdkDir.resolve("build-tools").toAbsolutePath();
+    AbsPath toolsDir = sdkDir.resolve("tools");
+    AbsPath buildToolsDir = sdkDir.resolve("build-tools");
     AndroidBuildToolsResolver resolver =
         new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
 
@@ -113,7 +113,7 @@ public class AndroidBuildToolsResolverTest {
 
   @Test
   public void buildToolsRCVersionsFound() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/23.0.0_rc1");
     AndroidBuildToolsResolver resolver =
         new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
@@ -123,7 +123,7 @@ public class AndroidBuildToolsResolverTest {
 
   @Test
   public void buildToolsRCAndNonRCMix() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/22.0.0", "build-tools/23.0.0_rc1");
     AndroidBuildToolsResolver resolver =
         new AndroidBuildToolsResolver(androidBuckConfig, AndroidSdkLocation.of(sdkDir));
@@ -133,7 +133,7 @@ public class AndroidBuildToolsResolverTest {
 
   @Test
   public void preferBuildToolsVersionedFoldersOverAPIFolders() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(
         sdkDir,
         "build-tools/android-4.2.2",
@@ -150,7 +150,7 @@ public class AndroidBuildToolsResolverTest {
 
   @Test
   public void targettedBuildToolsVersionIsSelected() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(
         sdkDir, "build-tools/16.0.0", "build-tools/17.0.0", "build-tools/18.0.0");
     AndroidBuildToolsResolver resolver =
@@ -163,7 +163,7 @@ public class AndroidBuildToolsResolverTest {
 
   @Test
   public void targettedBuildToolsVersionNotAvailableThrows() throws IOException {
-    Path sdkDir = tmpDir.newFolder("sdk");
+    AbsPath sdkDir = tmpDir.newFolder("sdk");
     createBuildToolsVersions(sdkDir, "build-tools/18.0.0");
     AndroidBuildToolsResolver resolver =
         new AndroidBuildToolsResolver(
@@ -175,7 +175,7 @@ public class AndroidBuildToolsResolverTest {
     resolver.getBuildToolsPath();
   }
 
-  private void createBuildToolsVersions(Path sdkDir, String... directoryNames) {
+  private void createBuildToolsVersions(AbsPath sdkDir, String... directoryNames) {
     for (int i = 0; i < directoryNames.length; i++) {
       File folder = sdkDir.resolve(directoryNames[i]).toFile();
       assertThat(folder.mkdirs(), Matchers.is(true));

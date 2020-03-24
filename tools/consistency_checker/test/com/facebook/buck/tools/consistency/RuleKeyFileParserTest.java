@@ -16,6 +16,7 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.log.thrift.rulekeys.Value;
@@ -27,7 +28,6 @@ import com.google.common.collect.ImmutableSet;
 import java.io.DataOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -40,12 +40,12 @@ public class RuleKeyFileParserTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  private Path logPath;
+  private AbsPath logPath;
   private RuleKeyLogFileReader reader = new RuleKeyLogFileReader();
 
   @Before
   public void setUp() throws IOException {
-    logPath = temporaryFolder.newFile("out.bin.log").toAbsolutePath();
+    logPath = temporaryFolder.newFile("out.bin.log");
   }
 
   @Test
@@ -54,7 +54,7 @@ public class RuleKeyFileParserTest {
     FullRuleKey ruleKey2 = new FullRuleKey("key2", "//:name1", "other_type", ImmutableMap.of());
     FullRuleKey ruleKey3 = new FullRuleKey("key3", "//:name2", "OTHER", ImmutableMap.of());
     FullRuleKey ruleKey4 = new FullRuleKey("key4", "//:name4", "DEFAULT", ImmutableMap.of());
-    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       logger.write(ruleKey1);
       logger.write(ruleKey2);
       logger.write(ruleKey3);
@@ -63,11 +63,11 @@ public class RuleKeyFileParserTest {
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
     ParsedRuleKeyFile parsedFile =
-        parser.parseFile(logPath, ImmutableSet.of("//:name1", "//:name4"));
+        parser.parseFile(logPath.getPath(), ImmutableSet.of("//:name1", "//:name4"));
 
     Assert.assertEquals("key1", parsedFile.rootNodes.get("//:name1").ruleKey.key);
     Assert.assertEquals("key4", parsedFile.rootNodes.get("//:name4").ruleKey.key);
-    Assert.assertEquals(logPath, parsedFile.filename);
+    Assert.assertEquals(logPath.getPath(), parsedFile.filename);
     Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
     Assert.assertEquals(4, parsedFile.rules.size());
     Assert.assertEquals(ruleKey1, parsedFile.rules.get("key1").ruleKey);
@@ -82,12 +82,12 @@ public class RuleKeyFileParserTest {
     expectedException.expect(ParseException.class);
 
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
-    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       logger.write(ruleKey1);
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    parser.parseFile(logPath, ImmutableSet.of("//:name1", "//:invalid_name"));
+    parser.parseFile(logPath.getPath(), ImmutableSet.of("//:name1", "//:invalid_name"));
   }
 
   @Test
@@ -96,7 +96,7 @@ public class RuleKeyFileParserTest {
     expectedException.expect(ParseException.class);
 
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
-    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       logger.write(ruleKey1);
     }
     try (DataOutputStream outputStream =
@@ -107,7 +107,7 @@ public class RuleKeyFileParserTest {
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    parser.parseFile(logPath, ImmutableSet.of("//:name1"));
+    parser.parseFile(logPath.getPath(), ImmutableSet.of("//:name1"));
   }
 
   @Test
@@ -116,7 +116,7 @@ public class RuleKeyFileParserTest {
     expectedException.expect(ParseException.class);
 
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
-    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       logger.write(ruleKey1);
     }
     try (DataOutputStream outputStream =
@@ -128,21 +128,21 @@ public class RuleKeyFileParserTest {
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    parser.parseFile(logPath, ImmutableSet.of("//:name1"));
+    parser.parseFile(logPath.getPath(), ImmutableSet.of("//:name1"));
   }
 
   @Test
   public void doesNotThrowOnDuplicateKeyOfSameValue() throws ParseException, IOException {
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "//:name1", "DEFAULT", ImmutableMap.of());
-    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       logger.write(ruleKey1);
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, ImmutableSet.of("//:name1"));
+    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath.getPath(), ImmutableSet.of("//:name1"));
 
     Assert.assertEquals("key1", parsedFile.rootNodes.get("//:name1").ruleKey.key);
-    Assert.assertEquals(logPath, parsedFile.filename);
+    Assert.assertEquals(logPath.getPath(), parsedFile.filename);
     Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
     Assert.assertEquals(1, parsedFile.rules.size());
     Assert.assertEquals(ruleKey1, parsedFile.rules.get("key1").ruleKey);
@@ -157,13 +157,13 @@ public class RuleKeyFileParserTest {
     FullRuleKey ruleKey2 =
         new FullRuleKey(
             "key1", "//:name1", "DEFAULT", ImmutableMap.of("value", Value.stringValue("string")));
-    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       logger.write(ruleKey1);
       logger.write(ruleKey2);
     }
 
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
-    ParsedRuleKeyFile parsedFile = parser.parseFile(logPath, ImmutableSet.of("//:name1"));
+    parser.parseFile(logPath.getPath(), ImmutableSet.of("//:name1"));
   }
 
   @Test
@@ -173,7 +173,7 @@ public class RuleKeyFileParserTest {
     FullRuleKey ruleKey3 =
         new FullRuleKey("key3", "//test/foo:name3", "DEFAULT", ImmutableMap.of());
     FullRuleKey ruleKey4 = new FullRuleKey("key4", "//:name4", "DEFAULT", ImmutableMap.of());
-    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath)) {
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       logger.write(ruleKey1);
       logger.write(ruleKey2);
       logger.write(ruleKey3);
@@ -183,13 +183,13 @@ public class RuleKeyFileParserTest {
     RuleKeyFileParser parser = new RuleKeyFileParser(reader);
     ParsedRuleKeyFile parsedFile =
         parser.parseFile(
-            logPath,
+            logPath.getPath(),
             ImmutableSet.of("//src/...", "//test:", "//non_existent:", "//non_existent2/..."));
 
     Assert.assertEquals(2, parsedFile.rootNodes.size());
     Assert.assertEquals("key1", parsedFile.rootNodes.get("//src:name1").ruleKey.key);
     Assert.assertEquals("key2", parsedFile.rootNodes.get("//test:name2").ruleKey.key);
-    Assert.assertEquals(logPath, parsedFile.filename);
+    Assert.assertEquals(logPath.getPath(), parsedFile.filename);
     Assert.assertTrue(parsedFile.parseTime.toNanos() > 0);
     Assert.assertEquals(4, parsedFile.rules.size());
     Assert.assertEquals(ruleKey1, parsedFile.rules.get("key1").ruleKey);

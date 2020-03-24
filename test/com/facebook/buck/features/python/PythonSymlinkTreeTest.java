@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -94,13 +95,13 @@ public class PythonSymlinkTreeTest {
 
     // Get the first file we're symlinking
     Path link1 = Paths.get("file");
-    Path file1 = tmpDir.newFile();
-    Files.write(file1, "hello world".getBytes(Charsets.UTF_8));
+    AbsPath file1 = tmpDir.newFile();
+    Files.write(file1.getPath(), "hello world".getBytes(Charsets.UTF_8));
 
     // Get the second file we're symlinking
     Path link2 = Paths.get("directory", "then", "file");
-    Path file2 = tmpDir.newFile();
-    Files.write(file2, "hello world".getBytes(Charsets.UTF_8));
+    AbsPath file2 = tmpDir.newFile();
+    Files.write(file2.getPath(), "hello world".getBytes(Charsets.UTF_8));
 
     // Setup the map representing the link tree.
     links =
@@ -162,8 +163,8 @@ public class PythonSymlinkTreeTest {
     // Create a BuildRule wrapping the stock SymlinkTree buildable.
     // BuildRule rule1 = symlinkTreeBuildable;
 
-    Path file1 = tmpDir.newFile();
-    Files.write(file1, "hello world".getBytes(Charsets.UTF_8));
+    AbsPath file1 = tmpDir.newFile();
+    Files.write(file1.getPath(), "hello world".getBytes(Charsets.UTF_8));
 
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
     BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");

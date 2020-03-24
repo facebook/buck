@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -36,7 +37,6 @@ import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -55,7 +55,7 @@ public class SwiftNativeLinkableGroupTest {
   private AppleSdkPaths macosxSdkPaths;
 
   private void setUpAppleSdks() {
-    Path developerDir;
+    AbsPath developerDir;
     try {
       developerDir = tmp.newFolder("Developer");
     } catch (IOException e) {
@@ -70,10 +70,12 @@ public class SwiftNativeLinkableGroupTest {
             .build();
     iphoneSdkPaths =
         AppleSdkPaths.builder()
-            .setDeveloperPath(developerDir)
-            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setDeveloperPath(developerDir.getPath())
+            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform").getPath())
             .setSdkPath(
-                developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"))
+                developerDir
+                    .resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")
+                    .getPath())
             .build();
     macosxSdk =
         AppleSdk.builder()
@@ -84,10 +86,12 @@ public class SwiftNativeLinkableGroupTest {
             .build();
     macosxSdkPaths =
         AppleSdkPaths.builder()
-            .setDeveloperPath(developerDir)
-            .setPlatformPath(developerDir.resolve("Platforms/MacOSX.platform"))
+            .setDeveloperPath(developerDir.getPath())
+            .setPlatformPath(developerDir.resolve("Platforms/MacOSX.platform").getPath())
             .setSdkPath(
-                developerDir.resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14sdk"))
+                developerDir
+                    .resolve("Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14sdk")
+                    .getPath())
             .build();
   }
 

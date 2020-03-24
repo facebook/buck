@@ -110,10 +110,10 @@ public class ResolverIntegrationTest {
 
   @Before
   public void setUpRepos() throws Exception {
-    buckRepoRoot = AbsPath.of(temp.newFolder());
+    buckRepoRoot = temp.newFolder();
     thirdPartyRelative = RelPath.of(Paths.get("third-party").resolve("java"));
     thirdParty = buckRepoRoot.resolve(thirdPartyRelative);
-    localRepo = AbsPath.of(temp.newFolder());
+    localRepo = temp.newFolder();
 
     ProjectFilesystem filesystem =
         new FakeProjectFilesystem(CanonicalCellName.rootCell(), buckRepoRoot);

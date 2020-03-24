@@ -21,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -64,7 +65,11 @@ public class WorkerProcessProtocolZeroTest {
     ByteArrayOutputStream jsonSentToWorkerProcess = new ByteArrayOutputStream();
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            jsonSentToWorkerProcess, dummyJsonReader, newTempFile(), () -> {}, () -> true);
+            jsonSentToWorkerProcess,
+            dummyJsonReader,
+            newTempFile().getPath(),
+            () -> {},
+            () -> true);
 
     protocol.handshake(handshakeID);
     assertThat(jsonSentToWorkerProcess.toString(), Matchers.containsString(expectedJson));
@@ -74,7 +79,7 @@ public class WorkerProcessProtocolZeroTest {
   public void testSendCommand() throws IOException {
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, dummyInputStream, newTempFile(), () -> {}, () -> true);
+            dummyOutputStream, dummyInputStream, newTempFile().getPath(), () -> {}, () -> true);
 
     int messageID = 123;
     Path argsPath = Paths.get("args");
@@ -106,7 +111,7 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, jsonReader, newTempFile(), () -> {}, () -> true);
+            dummyOutputStream, jsonReader, newTempFile().getPath(), () -> {}, () -> true);
 
     protocol.handshake(handshakeID);
   }
@@ -125,7 +130,7 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, jsonReader, newTempFile(), () -> {}, () -> true);
+            dummyOutputStream, jsonReader, newTempFile().getPath(), () -> {}, () -> true);
 
     protocol.receiveCommandResponse(messageID);
   }
@@ -139,7 +144,11 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, inputStream(malformedJson), newTempFile(), () -> {}, () -> true);
+            dummyOutputStream,
+            inputStream(malformedJson),
+            newTempFile().getPath(),
+            () -> {},
+            () -> true);
 
     protocol.receiveCommandResponse(123);
   }
@@ -157,7 +166,7 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, jsonReader, newTempFile(), () -> {}, () -> true);
+            dummyOutputStream, jsonReader, newTempFile().getPath(), () -> {}, () -> true);
 
     protocol.receiveCommandResponse(messageID);
   }
@@ -173,7 +182,7 @@ public class WorkerProcessProtocolZeroTest {
 
     WorkerProcessProtocol.CommandSender protocol =
         new WorkerProcessProtocolZero.CommandSender(
-            dummyOutputStream, jsonReader, newTempFile(), () -> {}, () -> true);
+            dummyOutputStream, jsonReader, newTempFile().getPath(), () -> {}, () -> true);
 
     protocol.receiveCommandResponse(messageID);
   }
@@ -185,7 +194,7 @@ public class WorkerProcessProtocolZeroTest {
         new WorkerProcessProtocolZero.CommandSender(
             dummyOutputStream,
             inputStream("[]"),
-            newTempFile(),
+            newTempFile().getPath(),
             () -> cleanedUp.set(true),
             () -> true);
 
@@ -211,7 +220,7 @@ public class WorkerProcessProtocolZeroTest {
         new WorkerProcessProtocolZero.CommandSender(
             dummyOutputStream,
             inputStream("invalid JSON"),
-            newTempFile(),
+            newTempFile().getPath(),
             () -> cleanedUp.set(true),
             () -> true);
 
@@ -229,7 +238,7 @@ public class WorkerProcessProtocolZeroTest {
     }
   }
 
-  private Path newTempFile() throws IOException {
+  private AbsPath newTempFile() throws IOException {
     return temporaryPaths.newFile();
   }
 

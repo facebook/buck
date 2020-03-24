@@ -19,6 +19,7 @@ package com.facebook.buck.artifact_cache;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -35,7 +36,6 @@ import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import org.junit.Before;
@@ -56,9 +56,9 @@ public class HybridCASSecondLevelArtifactCacheTest {
     buckEventBus = BuckEventBusForTests.newInstance();
   }
 
-  private void writeString(Path p, String s) throws IOException {
+  private void writeString(AbsPath p, String s) throws IOException {
     Files.write(
-        p,
+        p.getPath(),
         s.getBytes(Charset.defaultCharset()),
         StandardOpenOption.CREATE,
         StandardOpenOption.TRUNCATE_EXISTING);
@@ -70,14 +70,15 @@ public class HybridCASSecondLevelArtifactCacheTest {
         new HybridCASSecondLevelArtifactCache(
             baseCache, projectFilesystem, buckEventBus, Optional.empty(), false, 0);
     String testContents = "hi, i am a test file.";
-    Path testFile = tmp.newFile();
+    AbsPath testFile = tmp.newFile();
 
     writeString(testFile, testContents);
 
     String ck =
         Futures.getUnchecked(
             cache.storeAsync(
-                ArtifactInfo.builder().build(), BorrowablePath.notBorrowablePath(testFile)));
+                ArtifactInfo.builder().build(),
+                BorrowablePath.notBorrowablePath(testFile.getPath())));
 
     writeString(testFile, "");
     CacheResult result =
@@ -85,25 +86,27 @@ public class HybridCASSecondLevelArtifactCacheTest {
 
     assertEquals(1, baseCache.getArtifactCount());
     assertEquals(CacheResultType.HIT, result.getType());
-    assertEquals(testContents, new String(Files.readAllBytes(testFile)));
+    assertEquals(testContents, new String(Files.readAllBytes(testFile.getPath())));
   }
 
   @Test
   public void casStoreFetch() throws IOException {
     ContentAddressedStorageClient casClient =
-        new LocalContentAddressedStorage(tmp.newFolder(), new GrpcProtocol(), buckEventBus);
+        new LocalContentAddressedStorage(
+            tmp.newFolder().getPath(), new GrpcProtocol(), buckEventBus);
     HybridCASSecondLevelArtifactCache cache =
         new HybridCASSecondLevelArtifactCache(
             baseCache, projectFilesystem, buckEventBus, Optional.of(casClient), true, 100);
 
     String testContents = "hi, i am a CAS test file. O__O";
-    Path testFile = tmp.newFile();
+    AbsPath testFile = tmp.newFile();
     writeString(testFile, testContents);
 
     String ck =
         Futures.getUnchecked(
             cache.storeAsync(
-                ArtifactInfo.builder().build(), BorrowablePath.notBorrowablePath(testFile)));
+                ArtifactInfo.builder().build(),
+                BorrowablePath.notBorrowablePath(testFile.getPath())));
 
     writeString(testFile, "");
     CacheResult result =
@@ -111,13 +114,14 @@ public class HybridCASSecondLevelArtifactCacheTest {
 
     assertEquals(0, baseCache.getArtifactCount());
     assertEquals(CacheResultType.HIT, result.getType());
-    assertEquals(testContents, new String(Files.readAllBytes(testFile)));
+    assertEquals(testContents, new String(Files.readAllBytes(testFile.getPath())));
   }
 
   @Test(expected = HumanReadableException.class)
   public void badDigestFetch() throws IOException {
     ContentAddressedStorageClient casClient =
-        new LocalContentAddressedStorage(tmp.newFolder(), new GrpcProtocol(), buckEventBus);
+        new LocalContentAddressedStorage(
+            tmp.newFolder().getPath(), new GrpcProtocol(), buckEventBus);
     HybridCASSecondLevelArtifactCache cache =
         new HybridCASSecondLevelArtifactCache(
             baseCache, projectFilesystem, buckEventBus, Optional.of(casClient), true, 100);
@@ -128,7 +132,8 @@ public class HybridCASSecondLevelArtifactCacheTest {
   @Test(expected = Exception.class)
   public void missingDigestFetch() throws IOException {
     ContentAddressedStorageClient casClient =
-        new LocalContentAddressedStorage(tmp.newFolder(), new GrpcProtocol(), buckEventBus);
+        new LocalContentAddressedStorage(
+            tmp.newFolder().getPath(), new GrpcProtocol(), buckEventBus);
     HybridCASSecondLevelArtifactCache cache =
         new HybridCASSecondLevelArtifactCache(
             baseCache, projectFilesystem, buckEventBus, Optional.of(casClient), true, 100);
@@ -143,7 +148,8 @@ public class HybridCASSecondLevelArtifactCacheTest {
   @Test(expected = RuntimeException.class)
   public void unhashablePathStore() throws IOException {
     ContentAddressedStorageClient casClient =
-        new LocalContentAddressedStorage(tmp.newFolder(), new GrpcProtocol(), buckEventBus);
+        new LocalContentAddressedStorage(
+            tmp.newFolder().getPath(), new GrpcProtocol(), buckEventBus);
     HybridCASSecondLevelArtifactCache cache =
         new HybridCASSecondLevelArtifactCache(
             baseCache,
@@ -155,7 +161,8 @@ public class HybridCASSecondLevelArtifactCacheTest {
 
     Futures.getUnchecked(
         cache.storeAsync(
-            ArtifactInfo.builder().build(), BorrowablePath.notBorrowablePath(tmp.newFile())));
+            ArtifactInfo.builder().build(),
+            BorrowablePath.notBorrowablePath(tmp.newFile().getPath())));
   }
 
   @Test
@@ -164,15 +171,15 @@ public class HybridCASSecondLevelArtifactCacheTest {
         new HybridCASSecondLevelArtifactCache(
             baseCache, projectFilesystem, buckEventBus, Optional.empty(), false, 0);
     String testContents = "hi, i am a test file.";
-    Path testFile = tmp.newFile();
+    AbsPath testFile = tmp.newFile();
 
     writeString(testFile, testContents);
 
-    String digest = projectFilesystem.computeSha1(testFile) + "2c00";
+    String digest = projectFilesystem.computeSha1(testFile.getPath()) + "2c00";
     Futures.getUnchecked(
         baseCache.store(
             ArtifactInfo.builder().addRuleKeys(new RuleKey(digest)).build(),
-            BorrowablePath.notBorrowablePath(testFile)));
+            BorrowablePath.notBorrowablePath(testFile.getPath())));
 
     writeString(testFile, "");
     CacheResult result =
@@ -180,6 +187,6 @@ public class HybridCASSecondLevelArtifactCacheTest {
 
     assertEquals(1, baseCache.getArtifactCount());
     assertEquals(CacheResultType.HIT, result.getType());
-    assertEquals(testContents, new String(Files.readAllBytes(testFile)));
+    assertEquals(testContents, new String(Files.readAllBytes(testFile.getPath())));
   }
 }

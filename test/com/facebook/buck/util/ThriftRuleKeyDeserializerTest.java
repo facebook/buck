@@ -16,12 +16,12 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import org.apache.thrift.TException;
 import org.junit.Assert;
@@ -33,18 +33,18 @@ public class ThriftRuleKeyDeserializerTest {
 
   @Test
   public void returnsEmptyListFromEmptyFile() throws IOException, TException {
-    Path logPath = temp.newFile("log.bin");
+    AbsPath logPath = temp.newFile("log.bin");
     List<FullRuleKey> keys = ThriftRuleKeyDeserializer.readRuleKeys(logPath);
     Assert.assertEquals(0, keys.size());
   }
 
   @Test
   public void deserializesSerializedData() throws IOException, TException {
-    Path logPath = temp.newFile("log.bin");
+    AbsPath logPath = temp.newFile("log.bin");
 
     FullRuleKey ruleKey1 = new FullRuleKey("key1", "name1", "type1", ImmutableMap.of());
     FullRuleKey ruleKey2 = new FullRuleKey("key2", "name2", "type2", ImmutableMap.of());
-    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.toAbsolutePath())) {
+    try (ThriftRuleKeyLogger logger = ThriftRuleKeyLogger.create(logPath.getPath())) {
       logger.write(ruleKey1);
       logger.write(ruleKey2);
     }

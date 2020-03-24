@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -57,7 +58,7 @@ public class UnzipTest {
 
   @Rule public TemporaryPaths tmpFolder = new TemporaryPaths();
 
-  private Path zipFile;
+  private AbsPath zipFile;
 
   @Before
   public void setUp() {
@@ -72,20 +73,20 @@ public class UnzipTest {
       zipArchive.addDir("emptydir");
     }
 
-    Path extractFolder = tmpFolder.newFolder();
+    AbsPath extractFolder = tmpFolder.newFolder();
     ImmutableList<Path> result =
         ArchiveFormat.ZIP
             .getUnarchiver()
             .extractArchive(
                 new DefaultProjectFilesystemFactory(),
-                zipFile.toAbsolutePath(),
-                extractFolder.toAbsolutePath(),
+                zipFile.getPath(),
+                extractFolder.getPath(),
                 ExistingFileMode.OVERWRITE);
-    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("1.bin")));
-    Path bin2 = extractFolder.toAbsolutePath().resolve("subdir/2.bin");
-    assertTrue(Files.exists(bin2));
-    assertTrue(Files.isDirectory(extractFolder.toAbsolutePath().resolve("emptydir")));
-    try (InputStream input = Files.newInputStream(bin2)) {
+    assertTrue(Files.exists(extractFolder.resolve("1.bin").getPath()));
+    AbsPath bin2 = extractFolder.resolve("subdir/2.bin");
+    assertTrue(Files.exists(bin2.getPath()));
+    assertTrue(Files.isDirectory(extractFolder.resolve("emptydir").getPath()));
+    try (InputStream input = Files.newInputStream(bin2.getPath())) {
       byte[] buffer = new byte[DUMMY_FILE_CONTENTS.length];
       int bytesRead = input.read(buffer, 0, DUMMY_FILE_CONTENTS.length);
       assertEquals(DUMMY_FILE_CONTENTS.length, bytesRead);
@@ -94,7 +95,9 @@ public class UnzipTest {
       }
     }
     assertEquals(
-        ImmutableList.of(extractFolder.resolve("1.bin"), extractFolder.resolve("subdir/2.bin")),
+        ImmutableList.of(
+            extractFolder.resolve("1.bin").getPath(),
+            extractFolder.resolve("subdir/2.bin").getPath()),
         result);
   }
 
@@ -120,20 +123,20 @@ public class UnzipTest {
     }
 
     // Now run `Unzip.extractZipFile` on our test zip and verify that the file is executable.
-    Path extractFolder = tmpFolder.newFolder();
+    AbsPath extractFolder = tmpFolder.newFolder();
     ImmutableList<Path> result =
         ArchiveFormat.ZIP
             .getUnarchiver()
             .extractArchive(
                 new DefaultProjectFilesystemFactory(),
-                zipFile.toAbsolutePath(),
-                extractFolder.toAbsolutePath(),
+                zipFile.getPath(),
+                extractFolder.getPath(),
                 ExistingFileMode.OVERWRITE);
-    Path exe = extractFolder.toAbsolutePath().resolve("test.exe");
-    assertTrue(Files.exists(exe));
-    assertThat(Files.getLastModifiedTime(exe).toMillis(), Matchers.equalTo(time));
-    assertTrue(Files.isExecutable(exe));
-    assertEquals(ImmutableList.of(extractFolder.resolve("test.exe")), result);
+    AbsPath exe = extractFolder.resolve("test.exe");
+    assertTrue(Files.exists(exe.getPath()));
+    assertThat(Files.getLastModifiedTime(exe.getPath()).toMillis(), Matchers.equalTo(time));
+    assertTrue(Files.isExecutable(exe.getPath()));
+    assertEquals(ImmutableList.of(extractFolder.resolve("test.exe").getPath()), result);
   }
 
   @Test
@@ -152,18 +155,18 @@ public class UnzipTest {
       zip.closeArchiveEntry();
     }
 
-    Path extractFolder = tmpFolder.newFolder();
+    AbsPath extractFolder = tmpFolder.newFolder();
 
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            zipFile.toAbsolutePath(),
-            extractFolder.toAbsolutePath(),
+            zipFile.getPath(),
+            extractFolder.getPath(),
             ExistingFileMode.OVERWRITE);
-    Path link = extractFolder.toAbsolutePath().resolve("link.txt");
-    assertTrue(Files.isSymbolicLink(link));
-    assertThat(Files.readSymbolicLink(link).toString(), Matchers.equalTo("target.txt"));
+    AbsPath link = extractFolder.resolve("link.txt");
+    assertTrue(Files.isSymbolicLink(link.getPath()));
+    assertThat(Files.readSymbolicLink(link.getPath()).toString(), Matchers.equalTo("target.txt"));
   }
 
   @Test
@@ -191,18 +194,18 @@ public class UnzipTest {
       zip.closeArchiveEntry();
     }
 
-    Path extractFolder = tmpFolder.newFolder();
+    AbsPath extractFolder = tmpFolder.newFolder();
 
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            zipFile.toAbsolutePath(),
-            extractFolder.toAbsolutePath(),
+            zipFile.getPath(),
+            extractFolder.getPath(),
             ExistingFileMode.OVERWRITE);
-    Path link = extractFolder.toAbsolutePath().resolve("link.txt");
-    assertTrue(Files.isSymbolicLink(link));
-    assertThat(Files.readSymbolicLink(link).toString(), Matchers.equalTo("target.txt"));
+    AbsPath link = extractFolder.resolve("link.txt");
+    assertTrue(Files.isSymbolicLink(link.getPath()));
+    assertThat(Files.readSymbolicLink(link.getPath()).toString(), Matchers.equalTo("target.txt"));
   }
 
   @Test
@@ -218,19 +221,19 @@ public class UnzipTest {
       zip.closeArchiveEntry();
     }
 
-    Path extractFolder = tmpFolder.newFolder();
+    AbsPath extractFolder = tmpFolder.newFolder();
     ImmutableList<Path> result =
         ArchiveFormat.ZIP
             .getUnarchiver()
             .extractArchive(
                 new DefaultProjectFilesystemFactory(),
-                zipFile.toAbsolutePath(),
-                extractFolder.toAbsolutePath(),
+                zipFile.getPath(),
+                extractFolder.getPath(),
                 ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo")));
-    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo/bar/baz")));
+    assertTrue(Files.exists(extractFolder.resolve("foo").getPath()));
+    assertTrue(Files.exists(extractFolder.resolve("foo/bar/baz").getPath()));
 
-    assertEquals(ImmutableList.of(extractFolder.resolve("foo/bar/baz")), result);
+    assertEquals(ImmutableList.of(extractFolder.resolve("foo/bar/baz").getPath()), result);
   }
 
   @Test
@@ -246,27 +249,27 @@ public class UnzipTest {
       }
     }
 
-    Path extractFolder = tmpFolder.newFolder();
+    AbsPath extractFolder = tmpFolder.newFolder();
 
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            zipFile.toAbsolutePath(),
-            extractFolder.toAbsolutePath(),
+            zipFile.getPath(),
+            extractFolder.getPath(),
             ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     for (String name : names) {
-      assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve(name)));
+      assertTrue(Files.exists(extractFolder.resolve(name).getPath()));
     }
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            zipFile.toAbsolutePath(),
-            extractFolder.toAbsolutePath(),
+            zipFile.getPath(),
+            extractFolder.getPath(),
             ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
     for (String name : names) {
-      assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve(name)));
+      assertTrue(Files.exists(extractFolder.resolve(name).getPath()));
     }
   }
 
@@ -281,17 +284,17 @@ public class UnzipTest {
       zip.closeArchiveEntry();
     }
 
-    Path extractFolder = tmpFolder.newFolder();
+    AbsPath extractFolder = tmpFolder.newFolder();
 
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            zipFile.toAbsolutePath(),
-            extractFolder.toAbsolutePath(),
+            zipFile.getPath(),
+            extractFolder.getPath(),
             ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo")));
-    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo/bar")));
+    assertTrue(Files.exists(extractFolder.resolve("foo").getPath()));
+    assertTrue(Files.exists(extractFolder.resolve("foo/bar").getPath()));
   }
 
   @Test
@@ -302,18 +305,18 @@ public class UnzipTest {
       zip.closeArchiveEntry();
     }
 
-    Path extractFolder = tmpFolder.newFolder();
-    Files.write(extractFolder.resolve("foo"), ImmutableList.of("whatever"));
+    AbsPath extractFolder = tmpFolder.newFolder();
+    Files.write(extractFolder.resolve("foo").getPath(), ImmutableList.of("whatever"));
 
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
             new DefaultProjectFilesystemFactory(),
-            zipFile.toAbsolutePath(),
-            extractFolder.toAbsolutePath(),
+            zipFile.getPath(),
+            extractFolder.getPath(),
             ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
-    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo")));
-    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("foo/bar")));
+    assertTrue(Files.exists(extractFolder.resolve("foo").getPath()));
+    assertTrue(Files.exists(extractFolder.resolve("foo/bar").getPath()));
   }
 
   @Test
@@ -350,7 +353,7 @@ public class UnzipTest {
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
-            zipFile,
+            zipFile.getPath(),
             filesystem,
             extractFolder,
             Optional.of(Paths.get("foo")),
@@ -383,19 +386,19 @@ public class UnzipTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
 
-    Path extractFolder = tmpFolder.newFolder();
+    AbsPath extractFolder = tmpFolder.newFolder();
     ImmutableSet<Path> result =
         ArchiveFormat.ZIP
             .getUnarchiver()
             .extractArchive(
-                zipFile.toAbsolutePath(),
+                zipFile.getPath(),
                 filesystem,
-                extractFolder,
+                extractFolder.getPath(),
                 Optional.empty(),
                 new PatternsMatcher(ImmutableSet.of("subdir/2.bin")),
                 ExistingFileMode.OVERWRITE);
-    assertTrue(Files.exists(extractFolder.toAbsolutePath().resolve("1.bin")));
-    assertTrue(Files.isDirectory(extractFolder.toAbsolutePath().resolve("emptydir")));
-    assertEquals(ImmutableSet.of(extractFolder.resolve("1.bin")), result);
+    assertTrue(Files.exists(extractFolder.resolve("1.bin").getPath()));
+    assertTrue(Files.isDirectory(extractFolder.resolve("emptydir").getPath()));
+    assertEquals(ImmutableSet.of(extractFolder.resolve("1.bin").getPath()), result);
   }
 }

@@ -156,7 +156,7 @@ public class GrpcRemoteExecutionClientsTest {
   @Test
   public void testStorage() throws Exception {
     Protocol protocol = new GrpcProtocol();
-    Path root = temporaryPaths.getRoot();
+    Path root = temporaryPaths.getRoot().getPath();
     Path cacheDir = root.resolve("cache");
     Files.createDirectories(cacheDir);
     Path workDir = root.resolve("work");
@@ -191,7 +191,7 @@ public class GrpcRemoteExecutionClientsTest {
             ImmutableList.of(), ImmutableList.of(), new FilesystemFileMaterializer(workDir))
         .get();
 
-    assertEquals(ImmutableMap.of(), getDirectoryContents(workDir));
+    assertEquals(ImmutableMap.<Path, String>of(), getDirectoryContents(workDir));
 
     Path out1 = Paths.get("out1");
     Path out2 = Paths.get("out2");

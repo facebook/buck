@@ -117,6 +117,11 @@ public final class MostFiles {
     copyRecursively(fromPath, toPath, Functions.identity());
   }
 
+  /** Recursively copies all files under {@code fromPath} to {@code toPath}. */
+  public static void copyRecursively(AbsPath fromPath, AbsPath toPath) throws IOException {
+    copyRecursively(fromPath.getPath(), toPath.getPath());
+  }
+
   /**
    * Recursively copies all files under {@code fromPath} to {@code toPath}. The {@code transform}
    * will be applied after the destination path for a file has been relativized. This will remove
@@ -173,6 +178,10 @@ public final class MostFiles {
 
   public static void deleteRecursively(Path path) throws IOException {
     deleteRecursivelyWithOptions(path, EnumSet.noneOf(DeleteRecursivelyOptions.class));
+  }
+
+  public static void deleteRecursively(AbsPath path) throws IOException {
+    deleteRecursively(path.getPath());
   }
 
   public static void deleteRecursivelyWithOptions(
@@ -329,6 +338,11 @@ public final class MostFiles {
         throw new IOException("The file could not be made executable");
       }
     }
+  }
+
+  /** Abs-path version of {@link #makeExecutable(Path)}. */
+  public static void makeExecutable(AbsPath file) throws IOException {
+    makeExecutable(file.getPath());
   }
 
   /**

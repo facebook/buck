@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -486,10 +487,10 @@ public class GoBinaryIntegrationTest {
     workspace.runBuckBuild("//:bin").assertSuccess();
   }
 
-  private ImmutableSortedSet<Path> findFiles(Path root, PathMatcher matcher) throws IOException {
+  private ImmutableSortedSet<Path> findFiles(AbsPath root, PathMatcher matcher) throws IOException {
     ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();
     Files.walkFileTree(
-        root,
+        root.getPath(),
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {

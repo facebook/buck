@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.cxx.toolchain.objectfile.DylibStubContentsScrubber;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoDyldInfoCommand;
 import com.facebook.buck.cxx.toolchain.objectfile.MachoDyldInfoCommandReader;
@@ -73,12 +74,13 @@ public class DylibStubContentsScrubberTest {
 
     // Copy the source dylib, so we can scrub the temporary copy
     Path srcDylibPath = getHelloLibDylibPath();
-    Path destFolder = tmp.newFolder();
-    Path destDylibPath = destFolder.resolve(srcDylibPath.getFileName());
-    Files.copy(srcDylibPath, destDylibPath);
+    AbsPath destFolder = tmp.newFolder();
+    AbsPath destDylibPath = destFolder.resolve(srcDylibPath.getFileName());
+    Files.copy(srcDylibPath, destDylibPath.getPath());
 
     FileChannel dylibChannel =
-        FileChannel.open(destDylibPath, StandardOpenOption.READ, StandardOpenOption.WRITE);
+        FileChannel.open(
+            destDylibPath.getPath(), StandardOpenOption.READ, StandardOpenOption.WRITE);
     DylibStubContentsScrubber scrubber = new DylibStubContentsScrubber();
     scrubber.scrubFile(dylibChannel);
 

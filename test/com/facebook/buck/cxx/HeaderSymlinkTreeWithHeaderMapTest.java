@@ -77,21 +77,20 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
   @Before
   public void setUp() throws Exception {
-    projectFilesystem =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(tmpDir.getRoot()));
+    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmpDir.getRoot());
 
     // Create a build target to use when building the symlink tree.
     buildTarget = BuildTargetFactory.newInstance("//test:test");
 
     // Get the first file we're symlinking
     Path link1 = Paths.get("file");
-    Path file1 = tmpDir.newFile();
-    Files.write(file1, "hello world".getBytes(Charsets.UTF_8));
+    AbsPath file1 = tmpDir.newFile();
+    Files.write(file1.getPath(), "hello world".getBytes(Charsets.UTF_8));
 
     // Get the second file we're symlinking
     Path link2 = Paths.get("directory", "then", "file");
-    Path file2 = tmpDir.newFile();
-    Files.write(file2, "hello world".getBytes(Charsets.UTF_8));
+    AbsPath file2 = tmpDir.newFile();
+    Files.write(file2.getPath(), "hello world".getBytes(Charsets.UTF_8));
 
     // Setup the map representing the link tree.
     links =
@@ -158,8 +157,8 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
 
   @Test
   public void testSymlinkTreeRuleKeyChangesIfLinkMapChanges() throws Exception {
-    Path aFile = tmpDir.newFile();
-    Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
+    AbsPath aFile = tmpDir.newFile();
+    Files.write(aFile.getPath(), "hello world".getBytes(Charsets.UTF_8));
     HeaderSymlinkTreeWithHeaderMap modifiedSymlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
             buildTarget,

@@ -70,12 +70,12 @@ public class MorePathsTest {
 
   @Test
   public void testFilterForSubpaths() {
-    Path root = tmp.getRoot();
+    AbsPath root = tmp.getRoot();
     ImmutableSet<Path> paths =
         RichStream.of(
                 ".buckd",
                 "foo/bar",
-                root.toAbsolutePath() + "/buck-cache",
+                root + "/buck-cache",
                 Paths.get("/root/not/in/test").toAbsolutePath().toString())
             .map(Paths::get)
             .toImmutableSet();
@@ -83,7 +83,7 @@ public class MorePathsTest {
     assertEquals(
         "Set should have been filtered down to paths contained under root.",
         ImmutableSet.of(Paths.get(".buckd"), Paths.get("foo/bar"), Paths.get("buck-cache")),
-        MorePaths.filterForSubpaths(paths, root));
+        MorePaths.filterForSubpaths(paths, root.getPath()));
   }
 
   @Test

@@ -81,7 +81,7 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileContents(
         "res/values/values.xml", workspace.getFileContents("res/values/A.xml").trim());
 
-    Path contents = tmp.getRoot().resolve("aar-contents");
+    Path contents = tmp.getRoot().resolve("aar-contents").getPath();
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
@@ -116,7 +116,7 @@ public class AndroidAarIntegrationTest {
     zipInspector.assertFileContents(
         "res/values/values.xml", workspace.getFileContents("res/values/A.xml").trim());
 
-    Path contents = tmp.getRoot().resolve("aar-contents");
+    Path contents = tmp.getRoot().resolve("aar-contents").getPath();
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
@@ -141,7 +141,7 @@ public class AndroidAarIntegrationTest {
                 BuildTargetFactory.newInstance(target),
                 AndroidAar.AAR_FORMAT));
 
-    Path contents = tmp.getRoot().resolve("aar-contents");
+    Path contents = tmp.getRoot().resolve("aar-contents").getPath();
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(
@@ -167,7 +167,7 @@ public class AndroidAarIntegrationTest {
     String target = "//apps/aar_build_config:app_with_build_config";
     Path aarLocation = workspace.buildAndReturnOutput(target);
 
-    Path contents = tmp.getRoot().resolve("aar-contents");
+    Path contents = tmp.getRoot().resolve("aar-contents").getPath();
     ArchiveFormat.ZIP
         .getUnarchiver()
         .extractArchive(

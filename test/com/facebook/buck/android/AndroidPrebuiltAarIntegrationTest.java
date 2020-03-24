@@ -62,7 +62,7 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
     workspace.addBuckConfigLocalOption("android", "sdk_path", badSdkPath);
     workspace
         .runBuckCommandWithEnvironmentOverridesAndContext(
-            tmp.getRoot(),
+            tmp.getRoot().getPath(),
             Optional.empty(),
             ImmutableMap.of("ANDROID_SDK", badSdkPath, "ANDROID_HOME", badSdkPath),
             "targets",

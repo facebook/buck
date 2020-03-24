@@ -170,7 +170,7 @@ public class ServedCacheIntegrationTest {
     ArtifactCache serverBackedCache =
         createArtifactCache(createMockLocalHttpCacheConfig(webServer.getPort()));
 
-    Path fetchedContents = tmpDir.newFile();
+    AbsPath fetchedContents = tmpDir.newFile();
     CacheResult cacheResult =
         Futures.getUnchecked(
             serverBackedCache.fetchAsync(
@@ -219,7 +219,7 @@ public class ServedCacheIntegrationTest {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
             CanonicalCellName.rootCell(),
-            AbsPath.of(tmpDir.getRoot()),
+            tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance(),
             TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
@@ -259,7 +259,7 @@ public class ServedCacheIntegrationTest {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
             CanonicalCellName.rootCell(),
-            AbsPath.of(tmpDir.getRoot()),
+            tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance(),
             TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
@@ -294,7 +294,7 @@ public class ServedCacheIntegrationTest {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
             CanonicalCellName.rootCell(),
-            AbsPath.of(tmpDir.getRoot()),
+            tmpDir.getRoot(),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
             DefaultProjectFilesystemFactory.getWindowsFSInstance(),
             TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
@@ -410,9 +410,9 @@ public class ServedCacheIntegrationTest {
 
     RuleKey ruleKey = new RuleKey("00111222333444");
     ImmutableMap<String, String> metadata = ImmutableMap.of("some key", "some value");
-    Path originalDataPath = tmpDir.newFile();
+    AbsPath originalDataPath = tmpDir.newFile();
     String data = "you won't believe this!";
-    projectFilesystem.writeContentsToPath(data, originalDataPath);
+    projectFilesystem.writeContentsToPath(data, originalDataPath.getPath());
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult =
@@ -421,7 +421,7 @@ public class ServedCacheIntegrationTest {
 
     serverBackedCache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
-        BorrowablePath.notBorrowablePath(originalDataPath));
+        BorrowablePath.notBorrowablePath(originalDataPath.getPath()));
 
     cacheResult =
         Futures.getUnchecked(serverBackedCache.fetchAsync(null, ruleKey, fetchedContents));
@@ -450,9 +450,9 @@ public class ServedCacheIntegrationTest {
 
     RuleKey ruleKey = new RuleKey("00111222333444");
     ImmutableMap<String, String> metadata = ImmutableMap.of("some key", "some value");
-    Path originalDataPath = tmpDir.newFile();
+    AbsPath originalDataPath = tmpDir.newFile();
     String data = "you won't believe this!";
-    projectFilesystem.writeContentsToPath(data, originalDataPath);
+    projectFilesystem.writeContentsToPath(data, originalDataPath.getPath());
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult =
@@ -461,7 +461,7 @@ public class ServedCacheIntegrationTest {
 
     serverBackedCache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
-        BorrowablePath.borrowablePath(originalDataPath));
+        BorrowablePath.borrowablePath(originalDataPath.getPath()));
 
     cacheResult =
         Futures.getUnchecked(serverBackedCache.fetchAsync(null, ruleKey, fetchedContents));
@@ -490,9 +490,9 @@ public class ServedCacheIntegrationTest {
 
     RuleKey ruleKey = new RuleKey("00111222333444");
     ImmutableMap<String, String> metadata = ImmutableMap.of("some key", "some value");
-    Path originalDataPath = tmpDir.newFile();
+    AbsPath originalDataPath = tmpDir.newFile();
     String data = "you won't believe this!";
-    projectFilesystem.writeContentsToPath(data, originalDataPath);
+    projectFilesystem.writeContentsToPath(data, originalDataPath.getPath());
 
     LazyPath fetchedContents = LazyPath.ofInstance(tmpDir.newFile());
     CacheResult cacheResult =
@@ -501,7 +501,7 @@ public class ServedCacheIntegrationTest {
 
     serverBackedCache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
-        BorrowablePath.notBorrowablePath(originalDataPath));
+        BorrowablePath.notBorrowablePath(originalDataPath.getPath()));
 
     cacheResult =
         Futures.getUnchecked(serverBackedCache.fetchAsync(null, ruleKey, fetchedContents));
@@ -543,16 +543,16 @@ public class ServedCacheIntegrationTest {
 
     RuleKey ruleKey = new RuleKey("00111222333444");
     ImmutableMap<String, String> metadata = ImmutableMap.of("some key", "some value");
-    Path originalDataPath = tmpDir.newFile();
+    AbsPath originalDataPath = tmpDir.newFile();
     String data = "you won't believe this!";
-    projectFilesystem.writeContentsToPath(data, originalDataPath);
+    projectFilesystem.writeContentsToPath(data, originalDataPath.getPath());
 
     assertFalse(containsKey(serverBackedCache, ruleKey));
 
     serverBackedCache
         .store(
             ArtifactInfo.builder().addRuleKeys(ruleKey).setMetadata(metadata).build(),
-            BorrowablePath.borrowablePath(originalDataPath))
+            BorrowablePath.borrowablePath(originalDataPath.getPath()))
         .get();
 
     assertTrue(containsKey(serverBackedCache, ruleKey));
@@ -560,7 +560,7 @@ public class ServedCacheIntegrationTest {
   }
 
   private boolean containsKey(ArtifactCache cache, RuleKey ruleKey) throws Exception {
-    Path fetchedContents = tmpDir.newFile();
+    AbsPath fetchedContents = tmpDir.newFile();
     CacheResult cacheResult =
         Futures.getUnchecked(cache.fetchAsync(null, ruleKey, LazyPath.ofInstance(fetchedContents)));
     assertThat(cacheResult.getType(), Matchers.oneOf(CacheResultType.HIT, CacheResultType.MISS));

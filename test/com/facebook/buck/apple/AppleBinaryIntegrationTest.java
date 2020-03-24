@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -876,17 +877,18 @@ public class AppleBinaryIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = tmp.getRoot().toRealPath();
+    AbsPath projectRoot = tmp.getRoot().toRealPath();
 
-    Path inputPath =
+    AbsPath inputPath =
         projectRoot.resolve(
             buildTarget.getCellRelativeBasePath().getPath().toPath(projectRoot.getFileSystem()));
-    Path outputPath =
+    AbsPath outputPath =
         projectRoot.resolve(
             BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), buildTarget, "%s"));
 
-    assertIsSymbolicLink(outputPath.resolve("Header.h"), inputPath.resolve("Header.h"));
-    assertIsSymbolicLink(outputPath.resolve("TestApp/Header.h"), inputPath.resolve("Header.h"));
+    assertIsSymbolicLink(outputPath.resolve("Header.h"), inputPath.resolve("Header.h").getPath());
+    assertIsSymbolicLink(
+        outputPath.resolve("TestApp/Header.h"), inputPath.resolve("Header.h").getPath());
   }
 
   @Test
@@ -1099,11 +1101,12 @@ public class AppleBinaryIntegrationTest {
         target.withAppendedFlavors(AppleDebugFormat.DWARF_AND_DSYM.getFlavor());
     BuildTarget dsymTarget = target.withAppendedFlavors(AppleDsym.RULE_FLAVOR);
     workspace.runBuckCommand("build", targetToBuild.getFullyQualifiedName()).assertSuccess();
-    Path output =
-        workspace.getPath(
-            AppleDsym.getDsymOutputPath(
-                dsymTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
-                workspace.getProjectFileSystem()));
+    AbsPath output =
+        AbsPath.of(
+            workspace.getPath(
+                AppleDsym.getDsymOutputPath(
+                    dsymTarget.withoutFlavors(LinkerMapMode.NO_LINKER_MAP.getFlavor()),
+                    workspace.getProjectFileSystem())));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
         workspace, output, Optional.of(ImmutableList.of("i386", "x86_64")));
   }
@@ -1131,13 +1134,14 @@ public class AppleBinaryIntegrationTest {
         target.withFlavors(
             AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
-    Path output =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
-                .resolve(target.getShortName() + ".app.dSYM")
-                .resolve("Contents/Resources/DWARF")
-                .resolve(target.getShortName()));
-    assertThat(Files.exists(output), equalTo(true));
+    AbsPath output =
+        AbsPath.of(
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
+                    .resolve(target.getShortName() + ".app.dSYM")
+                    .resolve("Contents/Resources/DWARF")
+                    .resolve(target.getShortName())));
+    assertThat(Files.exists(output.getPath()), equalTo(true));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolForMain(workspace, output);
 
     Path binaryOutput =
@@ -1442,13 +1446,14 @@ public class AppleBinaryIntegrationTest {
         target.withFlavors(
             AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
-    Path dwarfPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
-                .resolve(appTarget.getShortName() + ".app.dSYM")
-                .resolve("Contents/Resources/DWARF")
-                .resolve(appTarget.getShortName()));
-    assertThat(Files.exists(dwarfPath), equalTo(true));
+    AbsPath dwarfPath =
+        AbsPath.of(
+            workspace.getPath(
+                BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), appTarget, "%s")
+                    .resolve(appTarget.getShortName() + ".app.dSYM")
+                    .resolve("Contents/Resources/DWARF")
+                    .resolve(appTarget.getShortName())));
+    assertThat(Files.exists(dwarfPath.getPath()), equalTo(true));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolForMain(workspace, dwarfPath);
   }
 
@@ -1596,7 +1601,7 @@ public class AppleBinaryIntegrationTest {
         BuildTargetFactory.newInstance("//:TestApp#iphonesimulator-x86_64,no-linkermap");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
-    Path frameworks =
+    AbsPath frameworks =
         tmp.getRoot()
             .resolve(
                 BuildTargetPaths.getGenPath(
@@ -1609,12 +1614,12 @@ public class AppleBinaryIntegrationTest {
 
     assertTrue(
         "the Frameworks directory should be created within the app bundle",
-        Files.exists(frameworks));
+        Files.exists(frameworks.getPath()));
 
-    Path libSwiftCore = frameworks.resolve("libswiftCore.dylib");
+    AbsPath libSwiftCore = frameworks.resolve("libswiftCore.dylib");
     assertTrue(
         "the Swift stdlibs should be copied to the Frameworks directory",
-        Files.exists(libSwiftCore));
+        Files.exists(libSwiftCore.getPath()));
   }
 
   @Test
@@ -1635,8 +1640,8 @@ public class AppleBinaryIntegrationTest {
     assertThat(contents, not(emptyString()));
   }
 
-  private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
-    assertTrue(Files.isSymbolicLink(link));
-    assertEquals(target, Files.readSymbolicLink(link));
+  private static void assertIsSymbolicLink(AbsPath link, Path target) throws IOException {
+    assertTrue(Files.isSymbolicLink(link.getPath()));
+    assertEquals(target, Files.readSymbolicLink(link.getPath()));
   }
 }

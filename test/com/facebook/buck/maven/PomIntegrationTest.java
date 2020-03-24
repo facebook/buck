@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -83,11 +84,11 @@ public class PomIntegrationTest {
     MavenPublishable item =
         createMavenPublishable("//example:has-deps", "com.example:with-deps:1.0", null, dep);
 
-    Path pomPath = tmp.getRoot().resolve("pom.xml");
-    assertFalse(Files.exists(pomPath));
+    AbsPath pomPath = tmp.getRoot().resolve("pom.xml");
+    assertFalse(Files.exists(pomPath.getPath()));
 
     // Basic case
-    Pom.generatePomFile(pathResolver, item, pomPath);
+    Pom.generatePomFile(pathResolver, item, pomPath.getPath());
 
     Model pomModel = parse(pomPath);
     assertEquals("com.example", pomModel.getGroupId());
@@ -103,14 +104,14 @@ public class PomIntegrationTest {
     // Corrupt dependency data and ensure buck restores that
     removeDependencies(pomModel, pomPath);
 
-    Pom.generatePomFile(pathResolver, item, pomPath);
+    Pom.generatePomFile(pathResolver, item, pomPath.getPath());
     pomModel = parse(pomPath);
 
     // Add extra pom data and ensure buck preserves that
     pomModel.setUrl(URL);
     serializePom(pomModel, pomPath);
 
-    Pom.generatePomFile(pathResolver, item, pomPath);
+    Pom.generatePomFile(pathResolver, item, pomPath.getPath());
 
     pomModel = parse(pomPath);
     assertEquals(URL, pomModel.getUrl());
@@ -155,15 +156,20 @@ public class PomIntegrationTest {
         new PublishedViaMaven(target, filesystem, mavenCoords, pomTemplate, deps));
   }
 
-  private static void serializePom(Model pomModel, Path destination) throws IOException {
-    try (BufferedWriter writer = Files.newBufferedWriter(destination, StandardCharsets.UTF_8)) {
+  private static void serializePom(Model pomModel, AbsPath destination) throws IOException {
+    try (BufferedWriter writer =
+        Files.newBufferedWriter(destination.getPath(), StandardCharsets.UTF_8)) {
       MAVEN_XPP_3_WRITER.write(writer, pomModel);
     }
   }
 
-  private static void removeDependencies(Model model, Path pomFile) throws IOException {
+  private static void removeDependencies(Model model, AbsPath pomFile) throws IOException {
     model.setDependencies(Collections.emptyList());
     serializePom(model, pomFile);
+  }
+
+  private static Model parse(AbsPath pomFile) throws Exception {
+    return parse(pomFile.getPath());
   }
 
   private static Model parse(Path pomFile) throws Exception {

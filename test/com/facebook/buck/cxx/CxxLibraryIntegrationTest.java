@@ -28,6 +28,7 @@ import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -305,7 +306,7 @@ public class CxxLibraryIntegrationTest {
     workspace.runBuckBuild("//:lib_header#default,shared").assertSuccess();
   }
 
-  private void assumeSymLinkTreeWithHeaderMap(Path rootPath) throws IOException {
+  private void assumeSymLinkTreeWithHeaderMap(AbsPath rootPath) throws IOException {
     // We can only disable symlink trees if header map is supported.
     HeaderMode headerMode = CxxPlatformUtils.getHeaderModeForDefaultPlatform(rootPath);
     assumeTrue(headerMode == HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP);
@@ -317,7 +318,7 @@ public class CxxLibraryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "headers_symlinks", tmp);
     workspace.setUp();
     workspace.runBuckBuild("-v=3", "//:main#default").assertSuccess();
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
@@ -332,8 +333,8 @@ public class CxxLibraryIntegrationTest {
         BuildPaths.getGenDir(
             filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
-    assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h"))));
-    assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h"))));
+    assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h")).getPath()));
+    assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h")).getPath()));
   }
 
   @Test
@@ -345,7 +346,7 @@ public class CxxLibraryIntegrationTest {
         .runBuckBuild(
             "-c", "cxx.exported_headers_symlinks_enabled=false", "-v=3", "//:main#default")
         .assertSuccess();
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
@@ -360,8 +361,8 @@ public class CxxLibraryIntegrationTest {
         BuildPaths.getGenDir(
             filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
-    assertFalse(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h"))));
-    assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h"))));
+    assertFalse(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h")).getPath()));
+    assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h")).getPath()));
   }
 
   @Test
@@ -372,7 +373,7 @@ public class CxxLibraryIntegrationTest {
     workspace
         .runBuckBuild("-c", "cxx.headers_symlinks_enabled=false", "-v=3", "//:main#default")
         .assertSuccess();
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
@@ -387,8 +388,9 @@ public class CxxLibraryIntegrationTest {
         BuildPaths.getGenDir(
             filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
-    assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h"))));
-    assertFalse(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h"))));
+    assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h")).getPath()));
+    assertFalse(
+        Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h")).getPath()));
   }
 
   @Test
@@ -400,7 +402,7 @@ public class CxxLibraryIntegrationTest {
     workspace
         .runBuckBuild("-c", "cxx.header_mode=symlink_tree_only", "-v=3", "//:main#default")
         .assertSuccess();
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
@@ -413,8 +415,8 @@ public class CxxLibraryIntegrationTest {
         BuildPaths.getGenDir(
             filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
-    assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h"))));
-    assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h"))));
+    assertTrue(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h")).getPath()));
+    assertTrue(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h")).getPath()));
   }
 
   @Test
@@ -431,7 +433,7 @@ public class CxxLibraryIntegrationTest {
             "-v=3",
             "//:main#default")
         .assertSuccess();
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     assumeSymLinkTreeWithHeaderMap(rootPath);
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
@@ -446,8 +448,9 @@ public class CxxLibraryIntegrationTest {
         BuildPaths.getGenDir(
             filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
-    assertFalse(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h"))));
-    assertFalse(Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h"))));
+    assertFalse(Files.exists(rootPath.resolve(publicGenDir.resolve("foobar/public.h")).getPath()));
+    assertFalse(
+        Files.exists(rootPath.resolve(privateGenDir.resolve("foobar/private.h")).getPath()));
   }
 
   @Test
@@ -503,8 +506,8 @@ public class CxxLibraryIntegrationTest {
     Path genDir =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:foo#default,static"));
 
-    Path rootPath = tmp.getRoot();
-    assertTrue(Files.exists(rootPath.resolve(genDir.resolve("libfoo-Z2_rLdsOWS.a"))));
+    AbsPath rootPath = tmp.getRoot();
+    assertTrue(Files.exists(rootPath.resolve(genDir.resolve("libfoo-Z2_rLdsOWS.a")).getPath()));
   }
 
   @Test

@@ -25,6 +25,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
@@ -418,8 +419,8 @@ public class FakeProjectFilesystemTest {
     filesystem.mkdirs(dir);
     filesystem.writeBytesToPath(contents, dir.resolve("file"));
 
-    Path output = tmp.newFile("output.zip");
-    Zip.create(filesystem, ImmutableList.of(file, dir, dir.resolve("file")), output);
+    AbsPath output = tmp.newFile("output.zip");
+    Zip.create(filesystem, ImmutableList.of(file, dir, dir.resolve("file")), output.getPath());
 
     try (ZipArchive zipArchive = new ZipArchive(output, /* forWriting */ false)) {
       assertEquals(ImmutableSet.of("", "dir"), zipArchive.getDirNames());

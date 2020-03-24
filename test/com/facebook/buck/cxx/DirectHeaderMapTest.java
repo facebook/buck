@@ -72,13 +72,12 @@ public class DirectHeaderMapTest {
   private ImmutableMap<Path, SourcePath> links;
   private Path symlinkTreeRoot;
   private Path headerMapPath;
-  private Path file1;
-  private Path file2;
+  private AbsPath file1;
+  private AbsPath file2;
 
   @Before
   public void setUp() throws Exception {
-    projectFilesystem =
-        new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(tmpDir.getRoot()));
+    projectFilesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmpDir.getRoot());
 
     // Create a build target to use when building the symlink tree.
     buildTarget = BuildTargetFactory.newInstance("//test:test");
@@ -86,12 +85,12 @@ public class DirectHeaderMapTest {
     // Get the first file we're symlinking
     Path link1 = Paths.get("file");
     file1 = tmpDir.newFile();
-    Files.write(file1, "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file1.getPath(), "hello world".getBytes(Charsets.UTF_8));
 
     // Get the second file we're symlinking
     Path link2 = Paths.get("directory", "then", "file");
     file2 = tmpDir.newFile();
-    Files.write(file2, "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file2.getPath(), "hello world".getBytes(Charsets.UTF_8));
 
     // Setup the map representing the link tree.
     links =
@@ -121,7 +120,7 @@ public class DirectHeaderMapTest {
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
-    Path includeRoot = projectFilesystem.resolve(buildRule.getIncludeRoot());
+    AbsPath includeRoot = AbsPath.of(projectFilesystem.resolve(buildRule.getIncludeRoot()));
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
             RmStep.of(
@@ -143,8 +142,8 @@ public class DirectHeaderMapTest {
                 projectFilesystem,
                 headerMapPath,
                 ImmutableMap.of(
-                    Paths.get("file"), includeRoot.relativize(file1),
-                    Paths.get("directory/then/file"), includeRoot.relativize(file2)),
+                    Paths.get("file"), includeRoot.relativize(file1).getPath(),
+                    Paths.get("directory/then/file"), includeRoot.relativize(file2).getPath()),
                 buildableContext));
     ImmutableList<Step> actualBuildSteps = buildRule.getBuildSteps(buildContext, buildableContext);
     assertEquals(expectedBuildSteps, actualBuildSteps.subList(1, actualBuildSteps.size()));
@@ -152,11 +151,11 @@ public class DirectHeaderMapTest {
 
   @Test
   public void testSymlinkTreeRuleKeysChangeIfLinkMapChanges() throws Exception {
-    Path aFile = tmpDir.newFile();
-    Files.write(aFile, "hello world".getBytes(Charsets.UTF_8));
+    AbsPath aFile = tmpDir.newFile();
+    Files.write(aFile.getPath(), "hello world".getBytes(Charsets.UTF_8));
     ImmutableMap.Builder<Path, SourcePath> modifiedLinksBuilder = ImmutableMap.builder();
     for (Path p : links.keySet()) {
-      modifiedLinksBuilder.put(tmpDir.getRoot().resolve("modified-" + p), links.get(p));
+      modifiedLinksBuilder.put(tmpDir.getRoot().resolve("modified-" + p).getPath(), links.get(p));
     }
     DirectHeaderMap modifiedBuildRule =
         new DirectHeaderMap(
@@ -195,7 +194,7 @@ public class DirectHeaderMapTest {
     RuleKey defaultKey1 = new TestDefaultRuleKeyFactory(hashLoader, ruleFinder).build(buildRule);
     RuleKey inputKey1 = new TestInputBasedRuleKeyFactory(hashLoader, ruleFinder).build(buildRule);
 
-    Files.write(file1, "hello other world".getBytes());
+    Files.write(file1.getPath(), "hello other world".getBytes());
     hashCache.invalidateAll();
 
     RuleKey defaultKey2 = new TestDefaultRuleKeyFactory(hashLoader, ruleFinder).build(buildRule);

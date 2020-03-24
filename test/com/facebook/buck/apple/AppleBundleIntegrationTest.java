@@ -34,6 +34,7 @@ import com.dd.plist.NSNumber;
 import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -633,17 +634,19 @@ public class AppleBundleIntegrationTest {
             target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
 
-    Path bundlePath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                    filesystem,
-                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-                    "%s")
+    AbsPath bundlePath =
+        AbsPath.of(
+            workspace
+                .getPath(
+                    BuildTargetPaths.getGenPath(
+                        filesystem,
+                        target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                        "%s"))
                 .resolve(target.getShortName() + ".app"));
-    Path dwarfPath =
+    AbsPath dwarfPath =
         bundlePath.getParent().resolve("DemoApp.app.dSYM/Contents/Resources/DWARF/DemoApp");
-    Path binaryPath = bundlePath.resolve("DemoApp");
-    assertTrue(Files.exists(dwarfPath));
+    AbsPath binaryPath = bundlePath.resolve("DemoApp");
+    assertTrue(Files.exists(dwarfPath.getPath()));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbolForMain(workspace, dwarfPath);
 
     ProcessExecutor.Result result =

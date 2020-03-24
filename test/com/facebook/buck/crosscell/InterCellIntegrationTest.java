@@ -36,6 +36,7 @@ import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -668,11 +669,11 @@ public class InterCellIntegrationTest {
 
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
     TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    Path tmpDir = tmp.newFolder("merging_tmp");
+    AbsPath tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
             new DefaultProcessExecutor(new TestConsole()),
-            tmpDir,
+            tmpDir.getPath(),
             platform.getObjdump(),
             graphBuilder.getSourcePathResolver());
     SymbolsAndDtNeeded info;
@@ -712,11 +713,11 @@ public class InterCellIntegrationTest {
 
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(primary.asCell().getFilesystem());
     TestActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    Path tmpDir = tmp.newFolder("merging_tmp");
+    AbsPath tmpDir = tmp.newFolder("merging_tmp");
     SymbolGetter syms =
         new SymbolGetter(
             new DefaultProcessExecutor(new TestConsole()),
-            tmpDir,
+            tmpDir.getPath(),
             platform.getObjdump(),
             graphBuilder.getSourcePathResolver());
     SymbolsAndDtNeeded info;
@@ -951,7 +952,7 @@ public class InterCellIntegrationTest {
   }
 
   private ProjectWorkspace createWorkspace(String scenarioName) throws IOException {
-    Path tmpSubfolder = tmp.newFolder();
+    AbsPath tmpSubfolder = tmp.newFolder();
     ProjectWorkspace projectWorkspace =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             this, scenarioName, tmpSubfolder);

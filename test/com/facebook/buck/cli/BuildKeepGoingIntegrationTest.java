@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.testutil.ProcessResult;
@@ -135,11 +136,11 @@ public class BuildKeepGoingIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "keep_going", tmp).setUp();
 
-    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
+    AbsPath buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
     workspace
         .runBuckBuild(
             "--build-report",
-            buildReport.toAbsolutePath().toString(),
+            buildReport.toString(),
             "--keep-going",
             "//:rule_with_output",
             "//:failing_rule")

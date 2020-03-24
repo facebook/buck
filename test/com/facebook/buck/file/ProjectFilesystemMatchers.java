@@ -16,6 +16,7 @@
 
 package com.facebook.buck.file;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import java.nio.file.Path;
 import org.hamcrest.Matcher;
@@ -25,6 +26,10 @@ public class ProjectFilesystemMatchers {
 
   public static Matcher<ProjectFilesystem> pathExists(Path pathToCheck) {
     return new PathExistsOnProjectFilesystem(pathToCheck);
+  }
+
+  public static Matcher<ProjectFilesystem> pathExists(AbsPath pathToCheck) {
+    return new PathExistsOnProjectFilesystem(pathToCheck.getPath());
   }
 
   public static Matcher<ProjectFilesystem> pathDoesNotExist(Path pathToCheck) {

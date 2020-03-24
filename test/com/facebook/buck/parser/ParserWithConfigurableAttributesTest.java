@@ -169,10 +169,10 @@ public class ParserWithConfigurableAttributesTest {
   public boolean parallelParsing;
 
   private BuildTarget buildTarget;
-  private Path defaultIncludeFile;
-  private Path includedByIncludeFile;
-  private Path includedByBuildFile;
-  private Path testBuildFile;
+  private AbsPath defaultIncludeFile;
+  private AbsPath includedByIncludeFile;
+  private AbsPath includedByBuildFile;
+  private AbsPath testBuildFile;
   private Parser parser;
   private TypeCoercerFactory typeCoercerFactory;
   private ProjectFilesystem filesystem;
@@ -211,7 +211,7 @@ public class ParserWithConfigurableAttributesTest {
       boolean enableProfiling,
       ListeningExecutorService executor,
       ExecutableFinder executableFinder,
-      Path buildFile)
+      AbsPath buildFile)
       throws BuildFileParseException {
     try (PerBuildState state =
         new PerBuildStateFactory(
@@ -228,8 +228,7 @@ public class ParserWithConfigurableAttributesTest {
                     .setProfilingEnabled(enableProfiling)
                     .build(),
                 parser.getPermState())) {
-      AbstractParser.getTargetNodeRawAttributes(state, cells.getRootCell(), AbsPath.of(buildFile))
-          .getTargets();
+      AbstractParser.getTargetNodeRawAttributes(state, cells.getRootCell(), buildFile).getTargets();
     }
   }
 
@@ -238,19 +237,19 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFolder("java", "com", "facebook");
 
     defaultIncludeFile = tempDir.newFile("java/com/facebook/defaultIncludeFile").toRealPath();
-    Files.write(defaultIncludeFile, "\n".getBytes(UTF_8));
+    Files.write(defaultIncludeFile.getPath(), "\n".getBytes(UTF_8));
 
     includedByIncludeFile = tempDir.newFile("java/com/facebook/includedByIncludeFile").toRealPath();
-    Files.write(includedByIncludeFile, "\n".getBytes(UTF_8));
+    Files.write(includedByIncludeFile.getPath(), "\n".getBytes(UTF_8));
 
     includedByBuildFile = tempDir.newFile("java/com/facebook/includedByBuildFile").toRealPath();
     Files.write(
-        includedByBuildFile,
+        includedByBuildFile.getPath(),
         "include_defs('//java/com/facebook/includedByIncludeFile')\n".getBytes(UTF_8));
 
     testBuildFile = tempDir.newFile("java/com/facebook/BUCK").toRealPath();
     Files.write(
-        testBuildFile,
+        testBuildFile.getPath(),
         ("include_defs('//java/com/facebook/includedByBuildFile')\n"
                 + "java_library(name = 'foo')\n"
                 + "java_library(name = 'bar')\n"
@@ -260,7 +259,7 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFile("bar.py");
 
     // Create a temp directory with some build files.
-    Path root = tempDir.getRoot().toRealPath();
+    AbsPath root = tempDir.getRoot().toRealPath();
     filesystem =
         TestProjectFilesystems.createProjectFilesystem(
             root, ConfigBuilder.createFromText("[project]", "ignore = **/*.swp"));
@@ -479,10 +478,11 @@ public class ParserWithConfigurableAttributesTest {
   @Test
   public void shouldAllowAccessingBuiltInRulesViaNative() throws Exception {
     Files.write(
-        includedByBuildFile,
+        includedByBuildFile.getPath(),
         "def foo(name): native.export_file(name=name)\n".getBytes(UTF_8),
         StandardOpenOption.APPEND);
-    Files.write(testBuildFile, "foo(name='BUCK')\n".getBytes(UTF_8), StandardOpenOption.APPEND);
+    Files.write(
+        testBuildFile.getPath(), "foo(name='BUCK')\n".getBytes(UTF_8), StandardOpenOption.APPEND);
     parser.getTargetNodeAssertCompatible(
         parsingContext,
         BuildTargetFactory.newInstance("//java/com/facebook:foo"),
@@ -560,9 +560,9 @@ public class ParserWithConfigurableAttributesTest {
     // Execute buildTargetGraphForBuildTargets() with a target in a valid file but a bad rule name.
     tempDir.newFolder("java", "com", "facebook", "invalid");
 
-    Path testInvalidBuildFile = tempDir.newFile("java/com/facebook/invalid/BUCK");
+    AbsPath testInvalidBuildFile = tempDir.newFile("java/com/facebook/invalid/BUCK");
     Files.write(
-        testInvalidBuildFile,
+        testInvalidBuildFile.getPath(),
         ("java_library(name = 'foo', deps = ['//java/com/facebook/invalid/lib:missing_rule'])\n"
                 + "java_library(name = 'bar')\n")
             .getBytes(UTF_8));
@@ -636,15 +636,15 @@ public class ParserWithConfigurableAttributesTest {
       throws BuildFileParseException, IOException {
 
     tempDir.newFolder("config");
-    Path configBuckFile = tempDir.newFile("config/BUCK");
+    AbsPath configBuckFile = tempDir.newFile("config/BUCK");
     Files.write(
-        configBuckFile,
+        configBuckFile.getPath(),
         ("config_setting(name = 'config', values = {})").getBytes(UTF_8),
         StandardOpenOption.APPEND);
 
-    Path buckFile = tempDir.newFile("BUCK");
+    AbsPath buckFile = tempDir.newFile("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         ("java_library("
                 + "  name = 'cake',"
                 + "  target = select({"
@@ -664,7 +664,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), configBuckFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), configBuckFile));
     parser.getPermState().invalidateBasedOn(event);
 
     parser.getTargetNodeAssertCompatible(parsingContext, buildTarget, DependencyStack.root());
@@ -678,15 +678,15 @@ public class ParserWithConfigurableAttributesTest {
       throws BuildFileParseException, IOException {
 
     tempDir.newFolder("config");
-    Path configBuckFile = tempDir.newFile("config/BUCK");
+    AbsPath configBuckFile = tempDir.newFile("config/BUCK");
     Files.write(
-        configBuckFile,
+        configBuckFile.getPath(),
         ("load('//config:defs.bzl', 'java_lib')\nconfig_setting(name = 'config', values = {})")
             .getBytes(UTF_8),
         StandardOpenOption.APPEND);
-    Path defsFile = tempDir.newFile("config/defs.bzl");
+    AbsPath defsFile = tempDir.newFile("config/defs.bzl");
     Files.write(
-        defsFile,
+        defsFile.getPath(),
         ("def java_lib(name, **kwargs):\n"
                 + "    return native.java_library(\n"
                 + "        name = name,\n"
@@ -695,9 +695,9 @@ public class ParserWithConfigurableAttributesTest {
             .getBytes(UTF_8),
         StandardOpenOption.APPEND);
 
-    Path buckFile = tempDir.newFile("BUCK");
+    AbsPath buckFile = tempDir.newFile("BUCK");
     Files.write(
-        buckFile,
+        buckFile.getPath(),
         ("java_library("
                 + "  name = 'cake',"
                 + "  target = select({"
@@ -717,7 +717,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), defsFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), defsFile));
     parser.getPermState().invalidateBasedOn(event);
 
     parser.getTargetNodeAssertCompatible(parsingContext, buildTarget, DependencyStack.root());
@@ -774,7 +774,7 @@ public class ParserWithConfigurableAttributesTest {
             WatchmanPathEvent.of(
                 filesystem.getRootPath(),
                 Kind.CREATE,
-                RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile))));
+                MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile)));
 
     // Call parseBuildFile to request cached rules.
     getRawTargetNodes(
@@ -812,7 +812,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -851,7 +851,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.DELETE,
-            RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), testBuildFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -890,7 +890,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.CREATE,
-            RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -931,7 +931,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -970,7 +970,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.DELETE,
-            RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByBuildFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1009,8 +1009,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.CREATE,
-            RelPath.of(
-                MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1049,8 +1048,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            RelPath.of(
-                MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1089,8 +1087,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.DELETE,
-            RelPath.of(
-                MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), includedByIncludeFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1129,7 +1126,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.CREATE,
-            RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1168,7 +1165,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.MODIFY,
-            RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1207,7 +1204,7 @@ public class ParserWithConfigurableAttributesTest {
         WatchmanPathEvent.of(
             filesystem.getRootPath(),
             Kind.DELETE,
-            RelPath.of(MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile)));
+            MorePaths.relativize(tempDir.getRoot().toRealPath(), defaultIncludeFile));
     parser.getPermState().invalidateBasedOn(event);
 
     // Call parseBuildFile to request cached rules.
@@ -1280,8 +1277,8 @@ public class ParserWithConfigurableAttributesTest {
             .build();
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).setBuckConfig(config).build();
 
-    Path testAncestorBuildFile = tempDir.newFile("java/BUCK").toRealPath();
-    Files.write(testAncestorBuildFile, "java_library(name = 'root')\n".getBytes(UTF_8));
+    AbsPath testAncestorBuildFile = tempDir.newFile("java/BUCK").toRealPath();
+    Files.write(testAncestorBuildFile.getPath(), "java_library(name = 'root')\n".getBytes(UTF_8));
 
     // Call parseBuildFile to populate the cache.
     getRawTargetNodes(
@@ -1654,8 +1651,8 @@ public class ParserWithConfigurableAttributesTest {
     assertEquals("Should have parsed once.", 1, counter.calls);
 
     // create subcell
-    Path newTempDir = tempDir.newFolder("subcell");
-    Files.createFile(newTempDir.resolve("bar.py"));
+    AbsPath newTempDir = tempDir.newFolder("subcell");
+    Files.createFile(newTempDir.resolve("bar.py").getPath());
     ProjectFilesystem newFilesystem = TestProjectFilesystems.createProjectFilesystem(newTempDir);
     BuckConfig newConfig =
         FakeBuckConfig.builder()
@@ -1702,13 +1699,14 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFolder("foo");
     tempDir.newFolder("bar");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
-        testFooBuckFile, "java_library(name = 'foo', visibility=['PUBLIC'])\n".getBytes(UTF_8));
+        testFooBuckFile.getPath(),
+        "java_library(name = 'foo', visibility=['PUBLIC'])\n".getBytes(UTF_8));
 
-    Path testBarBuckFile = tempDir.newFile("bar/BUCK");
+    AbsPath testBarBuckFile = tempDir.newFile("bar/BUCK");
     Files.write(
-        testBarBuckFile,
+        testBarBuckFile.getPath(),
         ("java_library(name = 'bar',\n" + "  deps = ['//foo:foo'])\n").getBytes(UTF_8));
 
     // Fetch //bar:bar#src to put it in cache.
@@ -1721,8 +1719,8 @@ public class ParserWithConfigurableAttributesTest {
     // Rewrite //bar:bar so it doesn't depend on //foo:foo any more.
     // Delete foo/BUCK and invalidate the cache, which should invalidate
     // the cache entry for //bar:bar#src.
-    Files.delete(testFooBuckFile);
-    Files.write(testBarBuckFile, "java_library(name = 'bar')\n".getBytes(UTF_8));
+    Files.delete(testFooBuckFile.getPath());
+    Files.write(testBarBuckFile.getPath(), "java_library(name = 'bar')\n".getBytes(UTF_8));
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
             filesystem.getRootPath(), Kind.DELETE, RelPath.of(Paths.get("foo").resolve("BUCK")));
@@ -1740,13 +1738,14 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFolder("foo");
     tempDir.newFolder("bar");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
-        testFooBuckFile, "java_library(name = 'foo', visibility=['PUBLIC'])\n".getBytes(UTF_8));
+        testFooBuckFile.getPath(),
+        "java_library(name = 'foo', visibility=['PUBLIC'])\n".getBytes(UTF_8));
 
-    Path testBarBuckFile = tempDir.newFile("bar/BUCK");
+    AbsPath testBarBuckFile = tempDir.newFile("bar/BUCK");
     Files.write(
-        testBarBuckFile,
+        testBarBuckFile.getPath(),
         ("java_library(name = 'bar',\n" + "  deps = depset(['//foo:foo']))\n").getBytes(UTF_8));
 
     // Fetch //bar:bar#src to put it in cache.
@@ -1761,17 +1760,17 @@ public class ParserWithConfigurableAttributesTest {
   public void targetWithSourceFileChangesHash() throws Exception {
     tempDir.newFolder("foo");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
-        testFooBuckFile,
+        testFooBuckFile.getPath(),
         "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n"
             .getBytes(UTF_8));
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
     HashCode original = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     parser = TestParserFactory.create(executor.get(), cells.getRootCell(), knownRuleTypesProvider);
-    Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
-    Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
+    AbsPath testFooJavaFile = tempDir.newFile("foo/Foo.java");
+    Files.write(testFooJavaFile.getPath(), "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
     HashCode updated = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
     assertNotEquals(original, updated);
@@ -1781,22 +1780,22 @@ public class ParserWithConfigurableAttributesTest {
   public void deletingSourceFileChangesHash() throws Exception {
     tempDir.newFolder("foo");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
-        testFooBuckFile,
+        testFooBuckFile.getPath(),
         "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n"
             .getBytes(UTF_8));
 
-    Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
-    Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
+    AbsPath testFooJavaFile = tempDir.newFile("foo/Foo.java");
+    Files.write(testFooJavaFile.getPath(), "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
 
-    Path testBarJavaFile = tempDir.newFile("foo/Bar.java");
-    Files.write(testBarJavaFile, "// Seriously, no Java here\n".getBytes(UTF_8));
+    AbsPath testBarJavaFile = tempDir.newFile("foo/Bar.java");
+    Files.write(testBarJavaFile.getPath(), "// Seriously, no Java here\n".getBytes(UTF_8));
 
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
     HashCode originalHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    Files.delete(testBarJavaFile);
+    Files.delete(testBarJavaFile.getPath());
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
             filesystem.getRootPath(), Kind.DELETE, RelPath.of(Paths.get("foo/Bar.java")));
@@ -1811,20 +1810,20 @@ public class ParserWithConfigurableAttributesTest {
   public void renamingSourceFileChangesHash() throws Exception {
     tempDir.newFolder("foo");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
-        testFooBuckFile,
+        testFooBuckFile.getPath(),
         "java_library(name = 'lib', srcs=glob(['*.java']), visibility=['PUBLIC'])\n"
             .getBytes(UTF_8));
 
-    Path testFooJavaFile = tempDir.newFile("foo/Foo.java");
-    Files.write(testFooJavaFile, "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
+    AbsPath testFooJavaFile = tempDir.newFile("foo/Foo.java");
+    Files.write(testFooJavaFile.getPath(), "// Ceci n'est pas une Javafile\n".getBytes(UTF_8));
 
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     HashCode originalHash = buildTargetGraphAndGetHashCodes(parser, fooLibTarget).get(fooLibTarget);
 
-    Files.move(testFooJavaFile, testFooJavaFile.resolveSibling("Bar.java"));
+    Files.move(testFooJavaFile.getPath(), testFooJavaFile.getPath().resolveSibling("Bar.java"));
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
             filesystem.getRootPath(), Kind.DELETE, RelPath.of(Paths.get("foo/Foo.java")));
@@ -1843,9 +1842,9 @@ public class ParserWithConfigurableAttributesTest {
   public void twoBuildTargetHashCodesPopulatesCorrectly() throws Exception {
     tempDir.newFolder("foo");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
-        testFooBuckFile,
+        testFooBuckFile.getPath(),
         ("java_library(name = 'lib', visibility=['PUBLIC'])\n"
                 + "java_library(name = 'lib2', visibility=['PUBLIC'])\n")
             .getBytes(UTF_8));
@@ -1866,9 +1865,9 @@ public class ParserWithConfigurableAttributesTest {
   public void addingDepToTargetChangesHashOfDependingTargetOnly() throws Exception {
     tempDir.newFolder("foo");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
-        testFooBuckFile,
+        testFooBuckFile.getPath(),
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\n"
                 + "java_library(name = 'lib2', deps = [], visibility=['PUBLIC'])\n")
             .getBytes(UTF_8));
@@ -1882,7 +1881,7 @@ public class ParserWithConfigurableAttributesTest {
 
     parser = TestParserFactory.create(executor.get(), cells.getRootCell(), knownRuleTypesProvider);
     Files.write(
-        testFooBuckFile,
+        testFooBuckFile.getPath(),
         ("java_library(name = 'lib', deps = [], visibility=['PUBLIC'])\njava_library("
                 + "name = 'lib2', deps = [':lib'], visibility=['PUBLIC'])\n")
             .getBytes(UTF_8));
@@ -1897,8 +1896,8 @@ public class ParserWithConfigurableAttributesTest {
   public void getOrLoadTargetNodeRules() throws IOException, BuildFileParseException {
     tempDir.newFolder("foo");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
-    Files.write(testFooBuckFile, "java_library(name = 'lib')\n".getBytes(UTF_8));
+    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK");
+    Files.write(testFooBuckFile.getPath(), "java_library(name = 'lib')\n".getBytes(UTF_8));
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
 
     TargetNode<?> targetNode =
@@ -1921,12 +1920,13 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
     tempDir.newFolder("foo");
-    Path rootPath = tempDir.getRoot().toRealPath();
+    AbsPath rootPath = tempDir.getRoot().toRealPath();
     CreateSymlinksForTests.createSymLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
-    Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
+    AbsPath testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
-        testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
+        testBuckFile.getPath(),
+        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
     // Fetch //:lib to put it in cache.
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
@@ -1974,13 +1974,14 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
     tempDir.newFolder("foo");
-    Path bazSourceFile = tempDir.newFile("bar/Baz.java");
-    Path rootPath = tempDir.getRoot().toRealPath();
+    AbsPath bazSourceFile = tempDir.newFile("bar/Baz.java");
+    AbsPath rootPath = tempDir.getRoot().toRealPath();
     CreateSymlinksForTests.createSymLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
-    Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
+    AbsPath testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
-        testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
+        testBuckFile.getPath(),
+        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
     // Fetch //:lib to put it in cache.
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
@@ -2001,7 +2002,7 @@ public class ParserWithConfigurableAttributesTest {
           libRule.getJavaSrcs());
     }
 
-    Files.delete(bazSourceFile);
+    Files.delete(bazSourceFile.getPath());
     WatchmanPathEvent deleteEvent =
         WatchmanPathEvent.of(
             filesystem.getRootPath(), Kind.DELETE, RelPath.of(Paths.get("bar/Baz.java")));
@@ -2041,12 +2042,13 @@ public class ParserWithConfigurableAttributesTest {
     tempDir.newFolder("bar");
     tempDir.newFile("bar/Bar.java");
     tempDir.newFolder("foo");
-    Path rootPath = tempDir.getRoot().toRealPath();
+    AbsPath rootPath = tempDir.getRoot().toRealPath();
     CreateSymlinksForTests.createSymLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
-    Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
+    AbsPath testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
-        testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
+        testBuckFile.getPath(),
+        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
@@ -2059,7 +2061,7 @@ public class ParserWithConfigurableAttributesTest {
     // This test depends on creating symbolic links which we cannot do on Windows.
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
-    Path rootPath = tempDir.getRoot().toRealPath();
+    AbsPath rootPath = tempDir.getRoot().toRealPath();
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem)
@@ -2073,9 +2075,10 @@ public class ParserWithConfigurableAttributesTest {
 
     CreateSymlinksForTests.createSymLink(rootPath.resolve("foo/bar"), rootPath.resolve("bar"));
 
-    Path testBuckFile = rootPath.resolve("foo").resolve("BUCK");
+    AbsPath testBuckFile = rootPath.resolve("foo").resolve("BUCK");
     Files.write(
-        testBuckFile, "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
+        testBuckFile.getPath(),
+        "java_library(name = 'lib', srcs=glob(['bar/*.java']))\n".getBytes(UTF_8));
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
     ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(libTarget);
@@ -2096,9 +2099,10 @@ public class ParserWithConfigurableAttributesTest {
   public void buildTargetHashCodePopulatesCorrectly() throws Exception {
     tempDir.newFolder("foo");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK");
+    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK");
     Files.write(
-        testFooBuckFile, "java_library(name = 'lib', visibility=['PUBLIC'])\n".getBytes(UTF_8));
+        testFooBuckFile.getPath(),
+        "java_library(name = 'lib', visibility=['PUBLIC'])\n".getBytes(UTF_8));
 
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "lib");
 

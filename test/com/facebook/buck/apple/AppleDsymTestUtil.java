@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
@@ -32,20 +33,20 @@ public class AppleDsymTestUtil {
 
   private AppleDsymTestUtil() {}
 
-  public static void checkDsymFileHasDebugSymbolForMain(ProjectWorkspace workspace, Path dwarfPath)
-      throws IOException, InterruptedException {
+  public static void checkDsymFileHasDebugSymbolForMain(
+      ProjectWorkspace workspace, AbsPath dwarfPath) throws IOException, InterruptedException {
     checkDsymFileHasDebugSymbol(MAIN, workspace, dwarfPath);
   }
 
   public static void checkDsymFileHasDebugSymbol(
-      String symbolName, ProjectWorkspace workspace, Path dwarfPath)
+      String symbolName, ProjectWorkspace workspace, AbsPath dwarfPath)
       throws IOException, InterruptedException {
     checkDsymFileHasDebugSymbolForConcreteArchitectures(
         symbolName, workspace, dwarfPath, Optional.empty());
   }
 
   public static void checkDsymFileHasDebugSymbolsForMainForConcreteArchitectures(
-      ProjectWorkspace workspace, Path dwarfPath, Optional<ImmutableList<String>> architectures)
+      ProjectWorkspace workspace, AbsPath dwarfPath, Optional<ImmutableList<String>> architectures)
       throws IOException, InterruptedException {
     checkDsymFileHasDebugSymbolForConcreteArchitectures(MAIN, workspace, dwarfPath, architectures);
   }
@@ -53,7 +54,7 @@ public class AppleDsymTestUtil {
   public static void checkDsymFileHasDebugSymbolForConcreteArchitectures(
       String symbolName,
       ProjectWorkspace workspace,
-      Path dwarfPath,
+      AbsPath dwarfPath,
       Optional<ImmutableList<String>> architectures)
       throws IOException, InterruptedException {
     String dwarfdumpMainStdout =

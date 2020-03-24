@@ -78,13 +78,13 @@ public class Jsr199JavacIntegrationTest {
 
   @Before
   public void setUp() {
-    pathToSrcsList = tmp.getRoot().resolve("srcs_list");
+    pathToSrcsList = tmp.getRoot().resolve("srcs_list").getPath();
   }
 
   @Test
   public void testGetDescription() throws IOException {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
-    String pathToOutputDir = tmp.getRoot().resolve("out").toAbsolutePath().toString();
+    String pathToOutputDir = tmp.getRoot().resolve("out").toString();
 
     assertEquals(
         String.format(
@@ -327,7 +327,7 @@ public class Jsr199JavacIntegrationTest {
   private Jsr199Javac createJavac(boolean withSyntaxError, Optional<Path> javacJar)
       throws IOException {
 
-    Path exampleJava = tmp.newFile("Example.java");
+    Path exampleJava = tmp.newFile("Example.java").getPath();
     Files.write(
         exampleJava,
         Joiner.on('\n')

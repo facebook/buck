@@ -29,6 +29,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -44,7 +45,6 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -244,13 +244,14 @@ public class ArtifactCacheBuckConfigTest {
 
   @Test
   public void testServedCacheInheritsDirAndSizeFromDirCache() throws IOException {
-    Path cacheDir = tmpDir.getRoot();
+    AbsPath cacheDir = tmpDir.getRoot();
     ArtifactCacheBuckConfig config =
         createFromText("[cache]", "serve_local_cache = true", "dir = " + cacheDir);
     assertThat(
         config.getServedLocalCache(),
         Matchers.equalTo(
-            Optional.of(DirCacheEntry.of(cacheDir, Optional.empty(), CacheReadMode.READONLY))));
+            Optional.of(
+                DirCacheEntry.of(cacheDir.getPath(), Optional.empty(), CacheReadMode.READONLY))));
 
     config =
         createFromText(
@@ -262,12 +263,13 @@ public class ArtifactCacheBuckConfigTest {
     assertThat(
         config.getServedLocalCache(),
         Matchers.equalTo(
-            Optional.of(DirCacheEntry.of(cacheDir, Optional.of(42L), CacheReadMode.READONLY))));
+            Optional.of(
+                DirCacheEntry.of(cacheDir.getPath(), Optional.of(42L), CacheReadMode.READONLY))));
   }
 
   @Test
   public void testServedCacheMode() throws IOException {
-    Path cacheDir = tmpDir.getRoot();
+    AbsPath cacheDir = tmpDir.getRoot();
     ArtifactCacheBuckConfig config =
         createFromText(
             "[cache]",
@@ -277,7 +279,8 @@ public class ArtifactCacheBuckConfigTest {
     assertThat(
         config.getServedLocalCache(),
         Matchers.equalTo(
-            Optional.of(DirCacheEntry.of(cacheDir, Optional.empty(), CacheReadMode.READWRITE))));
+            Optional.of(
+                DirCacheEntry.of(cacheDir.getPath(), Optional.empty(), CacheReadMode.READWRITE))));
   }
 
   @Test

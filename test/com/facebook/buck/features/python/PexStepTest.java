@@ -132,8 +132,8 @@ public class PexStepTest {
   @Test
   @SuppressWarnings("unchecked")
   public void testCommandStdin() throws IOException {
-    Path realDir1 = tmpDir.getRoot().resolve("dir1.whl");
-    Path realDir2 = tmpDir.getRoot().resolve("dir2.whl");
+    Path realDir1 = tmpDir.getRoot().resolve("dir1.whl").getPath();
+    Path realDir2 = tmpDir.getRoot().resolve("dir2.whl").getPath();
     Path file1 = realDir1.resolve("file1.py");
     Path file2 = realDir2.resolve("subdir").resolve("file2.py");
     Path childFile = realDir1.resolve("some_dir").resolve("child.py");

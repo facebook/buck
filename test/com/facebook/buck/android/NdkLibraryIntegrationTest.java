@@ -25,6 +25,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolGetter;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper.SymbolsAndDtNeeded;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -178,10 +179,10 @@ public class NdkLibraryIntegrationTest {
   private SymbolGetter getSymbolGetter(ProjectFilesystem filesystem, TemporaryPaths tempLocation)
       throws IOException {
     NdkCxxPlatform platform = AndroidNdkHelper.getNdkCxxPlatform(filesystem);
-    Path tmpDir = tempLocation.newFolder("symbols_tmp");
+    AbsPath tmpDir = tempLocation.newFolder("symbols_tmp");
     return new SymbolGetter(
         new DefaultProcessExecutor(new TestConsole()),
-        tmpDir,
+        tmpDir.getPath(),
         platform.getObjdump(),
         new TestActionGraphBuilder().getSourcePathResolver());
   }

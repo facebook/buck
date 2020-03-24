@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android.toolchain;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.toolchain.ComparableToolchain;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
@@ -34,5 +35,9 @@ public interface AndroidSdkLocation extends ComparableToolchain {
 
   static AndroidSdkLocation of(Path sdkRootPath) {
     return ImmutableAndroidSdkLocation.ofImpl(sdkRootPath);
+  }
+
+  static AndroidSdkLocation of(AbsPath sdkRootPath) {
+    return of(sdkRootPath.getPath());
   }
 }

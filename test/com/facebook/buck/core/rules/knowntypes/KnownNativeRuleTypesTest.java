@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.Description;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -39,7 +40,6 @@ import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -86,7 +86,7 @@ public class KnownNativeRuleTypesTest {
         TestKnownRuleTypesFactory.create(
             buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
 
-    Path javac = temporaryFolder.newExecutableFile();
+    AbsPath javac = temporaryFolder.newExecutableFile();
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of("tools", ImmutableMap.of("javac", javac.toString()));
     buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).setSections(sections).build();

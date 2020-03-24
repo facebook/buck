@@ -18,6 +18,7 @@ package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -35,7 +36,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,11 +65,11 @@ public class SQLiteArtifactCacheBenchmark {
   private List<RuleKey> contentHashes;
   private List<ArtifactInfo> metadataInfo;
   private List<ArtifactInfo> contentInfo;
-  private Path emptyFile;
-  private Path inlinedFile;
-  private Path largeFile;
+  private AbsPath emptyFile;
+  private AbsPath inlinedFile;
+  private AbsPath largeFile;
 
-  private Path cacheDir;
+  private AbsPath cacheDir;
   private LazyPath output;
   private SQLiteArtifactCache artifactCache;
   private ListeningExecutorService executor;
@@ -81,9 +81,9 @@ public class SQLiteArtifactCacheBenchmark {
     emptyFile = tmpDir.newFile(".empty");
     inlinedFile = tmpDir.newFile(".inlined");
     largeFile = tmpDir.newFile(".large");
-    Files.write(inlinedFile, new byte[] {'a', 'r', 't', 'i', 'f', 'a', 'c', 't'});
+    Files.write(inlinedFile.getPath(), new byte[] {'a', 'r', 't', 'i', 'f', 'a', 'c', 't'});
     for (int i = 0; i < MAX_INLINED_BYTES; i++) {
-      Files.write(largeFile, new byte[] {'b', 'i', 'g'});
+      Files.write(largeFile.getPath(), new byte[] {'b', 'i', 'g'});
     }
 
     cacheDir = tmpDir.newFolder();
@@ -133,7 +133,7 @@ public class SQLiteArtifactCacheBenchmark {
     return new SQLiteArtifactCache(
         "sqlite",
         filesystem,
-        cacheDir,
+        cacheDir.getPath(),
         BuckEventBusForTests.newInstance(),
         maxCacheSizeBytes,
         Optional.of(MAX_INLINED_BYTES),
@@ -164,7 +164,7 @@ public class SQLiteArtifactCacheBenchmark {
   @Benchmark
   private void benchMetadataStore() {
     for (ArtifactInfo info : metadataInfo) {
-      artifactCache.store(info, BorrowablePath.notBorrowablePath(emptyFile));
+      artifactCache.store(info, BorrowablePath.notBorrowablePath(emptyFile.getPath()));
     }
   }
 
@@ -178,11 +178,13 @@ public class SQLiteArtifactCacheBenchmark {
   @Benchmark
   private void benchArtifactStore() {
     for (int i = 0; i < contentInfo.size() / 2; i++) {
-      artifactCache.store(contentInfo.get(i), BorrowablePath.notBorrowablePath(inlinedFile));
+      artifactCache.store(
+          contentInfo.get(i), BorrowablePath.notBorrowablePath(inlinedFile.getPath()));
     }
 
     for (int i = contentInfo.size() / 2; i < contentInfo.size(); i++) {
-      artifactCache.store(contentInfo.get(i), BorrowablePath.notBorrowablePath(largeFile));
+      artifactCache.store(
+          contentInfo.get(i), BorrowablePath.notBorrowablePath(largeFile.getPath()));
     }
   }
 

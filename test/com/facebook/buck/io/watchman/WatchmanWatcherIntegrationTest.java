@@ -21,7 +21,6 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -65,12 +64,12 @@ public class WatchmanWatcherIntegrationTest {
   @Before
   public void setUp() throws InterruptedException, IOException {
     // Create an empty watchman config file.
-    Files.write(tmp.getRoot().resolve(".watchmanconfig"), new byte[0]);
+    Files.write(tmp.getRoot().resolve(".watchmanconfig").getPath(), new byte[0]);
 
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     watchman =
         watchmanFactory.build(
-            ImmutableSet.of(AbsPath.of(tmp.getRoot())),
+            ImmutableSet.of(tmp.getRoot()),
             EnvVariablesProvider.getSystemEnv(),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
             new DefaultClock(),
@@ -88,8 +87,8 @@ public class WatchmanWatcherIntegrationTest {
 
     // Create a dot-file which should be ignored by the above glob.
     Path path = tmp.getRoot().getFileSystem().getPath("foo/bar/.hello.swp");
-    Files.createDirectories(tmp.getRoot().resolve(path).getParent());
-    Files.write(tmp.getRoot().resolve(path), new byte[0]);
+    Files.createDirectories(tmp.getRoot().resolve(path).getParent().getPath());
+    Files.write(tmp.getRoot().resolve(path).getPath(), new byte[0]);
 
     // Verify we don't get an event for the path.
     watcher.postEvents(
@@ -104,8 +103,8 @@ public class WatchmanWatcherIntegrationTest {
 
     // Create a dot-file which should be ignored by the above glob.
     RelPath path = RelPath.of(tmp.getRoot().getFileSystem().getPath("foo/bar/hello.txt"));
-    Files.createDirectories(tmp.getRoot().resolve(path.getPath()).getParent());
-    Files.write(tmp.getRoot().resolve(path.getPath()), new byte[0]);
+    Files.createDirectories(tmp.getRoot().resolve(path.getPath()).getParent().getPath());
+    Files.write(tmp.getRoot().resolve(path.getPath()).getPath(), new byte[0]);
 
     // Verify we still get an event for the created path.
     watcher.postEvents(
@@ -127,8 +126,7 @@ public class WatchmanWatcherIntegrationTest {
             watchman,
             eventBus,
             ImmutableSet.copyOf(ignorePaths),
-            ImmutableMap.of(
-                AbsPath.of(tmp.getRoot()), new WatchmanCursor("n:buckd" + UUID.randomUUID())),
+            ImmutableMap.of(tmp.getRoot(), new WatchmanCursor("n:buckd" + UUID.randomUUID())),
             /* numThreads */ 1);
 
     // Clear out the initial overflow event.

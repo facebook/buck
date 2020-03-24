@@ -290,12 +290,12 @@ public class ArtifactCachesIntegrationTest {
     bgTaskManager = TestBackgroundTaskManager.of();
     managerScope = bgTaskManager.getNewScope(BUILD_ID);
 
-    clientIntermediateIdentityPath = tempDir.newFile("client_intermediate.pem");
-    clientCertPath = tempDir.newFile("client.crt");
-    clientKeyPath = tempDir.newFile("client.key");
-    serverCertPath = tempDir.newFile("server.crt");
-    serverKeyPath = tempDir.newFile("server.key");
-    caCertPath = tempDir.newFile("ca.crt");
+    clientIntermediateIdentityPath = tempDir.newFile("client_intermediate.pem").getPath();
+    clientCertPath = tempDir.newFile("client.crt").getPath();
+    clientKeyPath = tempDir.newFile("client.key").getPath();
+    serverCertPath = tempDir.newFile("server.crt").getPath();
+    serverKeyPath = tempDir.newFile("server.key").getPath();
+    caCertPath = tempDir.newFile("ca.crt").getPath();
 
     Files.write(
         clientIntermediateIdentityPath,

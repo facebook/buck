@@ -22,12 +22,12 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -36,27 +36,23 @@ public class ParserPythonInterpreterProviderTest {
 
   @Test
   public void whenParserPythonIsExecutableFileThenItIsUsed() throws IOException {
-    Path configPythonFile = temporaryFolder.newExecutableFile("python");
+    AbsPath configPythonFile = temporaryFolder.newExecutableFile("python");
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(
                 ImmutableMap.of(
-                    "parser",
-                    ImmutableMap.of(
-                        "python_interpreter", configPythonFile.toAbsolutePath().toString())))
+                    "parser", ImmutableMap.of("python_interpreter", configPythonFile.toString())))
             .build();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     ParserPythonInterpreterProvider provider =
         new ParserPythonInterpreterProvider(parserConfig, new ExecutableFinder());
     assertEquals(
-        "Should return path to temp file.",
-        configPythonFile.toAbsolutePath().toString(),
-        provider.getOrFail());
+        "Should return path to temp file.", configPythonFile.toString(), provider.getOrFail());
   }
 
   @Test
   public void whenParserPythonDoesNotExistThenItIsNotUsed() {
-    String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
+    String invalidPath = temporaryFolder.getRoot() + "DoesNotExist";
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(

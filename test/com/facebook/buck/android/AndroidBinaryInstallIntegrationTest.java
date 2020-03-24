@@ -25,6 +25,7 @@ import com.android.common.SdkConstants;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -133,7 +134,7 @@ public class AndroidBinaryInstallIntegrationTest {
     this.testDevice =
         new TestAndroidDevice(
             (apk) -> new TestAndroidDevice.ApkInfo(FAKE_PACKAGE_NAME, apkVersionCode),
-            deviceStateDirectory.getRoot(),
+            deviceStateDirectory.getRoot().getPath(),
             "fake.serial",
             abi);
     this.installLimiter =
@@ -654,17 +655,19 @@ public class AndroidBinaryInstallIntegrationTest {
     installResult.assertSuccess();
     installLimiter.assertExpectedInstallsAreConsumed();
 
-    Path installRoot =
+    AbsPath installRoot =
         deviceStateDirectory.getRoot().resolve(INSTALL_ROOT.getRoot().relativize(INSTALL_ROOT));
 
     List<String> dexDevicePaths = Lists.newArrayList("secondary-dex", "modular-dex");
 
     for (String dexDevicePath : dexDevicePaths) {
-      Path metadataPath = installRoot.resolve(dexDevicePath).resolve("metadata.txt");
-      List<String> metadataLines = Files.readAllLines(metadataPath, Charsets.UTF_8);
+      AbsPath metadataPath = installRoot.resolve(dexDevicePath).resolve("metadata.txt");
+      List<String> metadataLines = Files.readAllLines(metadataPath.getPath(), Charsets.UTF_8);
       List<DexTestUtils.DexMetadata> dexMetadata = DexTestUtils.moduleMetadata(metadataLines);
       Set<Path> dexDirContents =
-          Files.list(metadataPath.getParent()).map(Path::getFileName).collect(Collectors.toSet());
+          Files.list(metadataPath.getParent().getPath())
+              .map(Path::getFileName)
+              .collect(Collectors.toSet());
       for (DexTestUtils.DexMetadata metadata : dexMetadata) {
         assertThat(dexDirContents, hasItem(metadata.dexFile));
       }

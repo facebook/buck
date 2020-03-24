@@ -36,6 +36,7 @@ import com.facebook.buck.apple.toolchain.impl.ProvisioningProfileStoreFactory;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -64,7 +65,7 @@ import org.junit.rules.ExpectedException;
 
 public class ProvisioningProfileCopyStepTest {
   private Path testdataDir;
-  private Path outputFile;
+  private AbsPath outputFile;
   private Path xcentFile;
   private Path dryRunResultFile;
   private Path entitlementsFile;
@@ -93,7 +94,7 @@ public class ProvisioningProfileCopyStepTest {
             return FileVisitResult.CONTINUE;
           }
         });
-    Path tempOutputDir = tmp.getRoot();
+    AbsPath tempOutputDir = tmp.getRoot();
     outputFile = tempOutputDir.resolve("embedded.mobileprovision");
     xcentFile = Paths.get("test.xcent");
     dryRunResultFile = Paths.get("test_dry_run_results.plist");
@@ -117,7 +118,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.of(testdataDir.resolve("Invalid.plist")),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());
@@ -140,7 +141,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());
@@ -167,7 +168,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, emptyDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());
@@ -190,7 +191,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, emptyDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.of(dryRunResultFile));
@@ -222,7 +223,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());
@@ -246,7 +247,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());
@@ -283,7 +284,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.of(entitlementsFile),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());
@@ -320,7 +321,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.of(entitlementsFile),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());
@@ -356,7 +357,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.of(entitlementsFile),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());
@@ -383,7 +384,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());
@@ -408,7 +409,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());
@@ -432,7 +433,7 @@ public class ProvisioningProfileCopyStepTest {
             Optional.empty(),
             ProvisioningProfileStoreFactory.fromSearchPath(
                 new DefaultProcessExecutor(new TestConsole()), FAKE_READ_COMMAND, testdataDir),
-            outputFile,
+            outputFile.getPath(),
             xcentFile,
             codeSignIdentitiesSupplier,
             Optional.empty());

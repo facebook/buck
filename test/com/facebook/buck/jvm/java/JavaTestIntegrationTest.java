@@ -46,15 +46,14 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Ordering;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Comparator;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -349,9 +348,9 @@ public class JavaTestIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("audit", "classpath", "//:top");
     result.assertSuccess();
     ImmutableSortedSet<Path> actualPaths =
-        FluentIterable.from(Arrays.asList(result.getStdout().split("\\s+")))
-            .transform(input -> temp.getRoot().relativize(Paths.get(input)))
-            .toSortedSet(Ordering.natural());
+        Arrays.stream(result.getStdout().split("\\s+"))
+            .map(input -> temp.getRoot().relativize(Paths.get(input)).getPath())
+            .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     ImmutableSortedSet<Path> expectedPaths =
         ImmutableSortedSet.of(
             BuildTargetPaths.getGenPath(

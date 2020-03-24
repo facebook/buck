@@ -107,7 +107,7 @@ public class ExopackageInstallerIntegrationTest {
     this.testDevice =
         new TestAndroidDevice(
             (apk) -> new TestAndroidDevice.ApkInfo(FAKE_PACKAGE_NAME, apkVersionCode),
-            deviceStateDirectory.getRoot(),
+            deviceStateDirectory.getRoot().getPath(),
             "fake.serial",
             abi);
     this.device =

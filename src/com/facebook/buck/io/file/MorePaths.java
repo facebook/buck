@@ -66,6 +66,10 @@ public class MorePaths {
     }
   }
 
+  public static String pathWithPlatformSeparators(PathWrapper path) {
+    return pathWithPlatformSeparators(path.getPath());
+  }
+
   public static Path getParentOrEmpty(Path path) {
     Path parent = path.getParent();
     if (parent == null) {
@@ -458,6 +462,11 @@ public class MorePaths {
         throw e;
       }
     }
+  }
+
+  public static void createSymLink(@Nullable WindowsFS winFS, AbsPath symLink, Path target)
+      throws IOException {
+    createSymLink(winFS, symLink.getPath(), target);
   }
 
   /**

@@ -36,6 +36,7 @@ import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -174,6 +175,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
   @VisibleForTesting
   ProjectWorkspace(Path templateDir, Path targetFolder) {
     this(templateDir, targetFolder, true);
+  }
+
+  @VisibleForTesting
+  ProjectWorkspace(AbsPath templateDir, AbsPath targetFolder) {
+    this(templateDir.getPath(), targetFolder.getPath());
   }
 
   private ProjectFilesystemAndConfig getProjectFilesystemAndConfig() throws IOException {
@@ -1019,5 +1025,13 @@ public class ProjectWorkspace extends AbstractWorkspace {
           }
         });
     return envBuilder.build();
+  }
+
+  /**
+   * Add the correct environment variable to emulate executing buck wrapper from a working directory
+   */
+  public static ImmutableMap<String, String> setAbsoluteClientWorkingDir(
+      AbsPath workingDir, ImmutableMap<String, String> existingEnv) {
+    return setAbsoluteClientWorkingDir(workingDir.getPath(), existingEnv);
   }
 }

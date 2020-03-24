@@ -21,6 +21,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.environment.Platform;
@@ -28,7 +29,6 @@ import com.google.common.base.Joiner;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,48 +47,50 @@ public class MostFilesIntegrationTest {
     Platform platform = Platform.detect();
     Assume.assumeTrue(platform == Platform.LINUX || platform == Platform.MACOS);
 
-    Path root = tmp.newFolder();
+    AbsPath root = tmp.newFolder();
 
-    Path srcDir = root.resolve("src");
-    Files.createDirectory(srcDir);
-    Path sourceFile = srcDir.resolve("file.txt");
-    Files.write(sourceFile, "contents\n".getBytes(UTF_8));
+    AbsPath srcDir = root.resolve("src");
+    Files.createDirectory(srcDir.getPath());
+    AbsPath sourceFile = srcDir.resolve("file.txt");
+    Files.write(sourceFile.getPath(), "contents\n".getBytes(UTF_8));
 
     CreateSymlinksForTests.createSymLink(srcDir.resolve("link.txt"), srcDir.relativize(sourceFile));
 
     MostFiles.copyRecursively(root.resolve("src"), root.resolve("out"));
-    assertTrue(Files.isSymbolicLink(root.resolve("src/link.txt")));
-    assertTrue(Files.isSymbolicLink(root.resolve("out/link.txt")));
+    assertTrue(Files.isSymbolicLink(root.resolve("src/link.txt").getPath()));
+    assertTrue(Files.isSymbolicLink(root.resolve("out/link.txt").getPath()));
 
-    byte[] bytes = Files.readAllBytes(root.resolve("out/link.txt"));
+    byte[] bytes = Files.readAllBytes(root.resolve("out/link.txt").getPath());
     assertArrayEquals("contents\n".getBytes(), bytes);
 
     assertEquals(
         "link.txt should point to file.txt in the same directory.",
         Paths.get("file.txt"),
-        Files.readSymbolicLink(root.resolve("out/link.txt")));
+        Files.readSymbolicLink(root.resolve("out/link.txt").getPath()));
 
-    Files.write(root.resolve("src/link.txt"), "replacement\n".getBytes());
+    Files.write(root.resolve("src/link.txt").getPath(), "replacement\n".getBytes());
 
-    assertArrayEquals("replacement\n".getBytes(), Files.readAllBytes(root.resolve("src/file.txt")));
+    assertArrayEquals(
+        "replacement\n".getBytes(), Files.readAllBytes(root.resolve("src/file.txt").getPath()));
     assertArrayEquals(
         "The replacement bytes should be reflected in the symlink.",
         "replacement\n".getBytes(),
-        Files.readAllBytes(root.resolve("src/link.txt")));
-    assertArrayEquals("contents\n".getBytes(), Files.readAllBytes(root.resolve("out/file.txt")));
+        Files.readAllBytes(root.resolve("src/link.txt").getPath()));
+    assertArrayEquals(
+        "contents\n".getBytes(), Files.readAllBytes(root.resolve("out/file.txt").getPath()));
     assertArrayEquals(
         "The copied symlink should be unaffected.",
         "contents\n".getBytes(),
-        Files.readAllBytes(root.resolve("out/link.txt")));
+        Files.readAllBytes(root.resolve("out/link.txt").getPath()));
   }
 
   @Test
   public void testDiffFileContents() throws IOException {
-    Path inputFile = tmp.newFolder().resolve("MostFiles.txt");
-    Files.write(inputFile, Joiner.on("\n").join("AAA", "BBB", "CCC").getBytes(UTF_8));
+    AbsPath inputFile = tmp.newFolder().resolve("MostFiles.txt");
+    Files.write(inputFile.getPath(), Joiner.on("\n").join("AAA", "BBB", "CCC").getBytes(UTF_8));
 
     List<String> diffLines;
-    String testPath = inputFile.toAbsolutePath().toString();
+    String testPath = inputFile.toString();
     File testFile = new File(testPath);
 
     diffLines = MostFiles.diffFileContents(Arrays.asList("AAA", "BBB", "CCC"), testFile);

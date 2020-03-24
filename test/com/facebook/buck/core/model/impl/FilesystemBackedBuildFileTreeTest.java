@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -40,14 +41,14 @@ public class FilesystemBackedBuildFileTreeTest {
 
   @Test
   public void testCanConstructBuildFileTreeFromFilesystem() throws IOException {
-    Path tempDir = tmp.getRoot();
+    AbsPath tempDir = tmp.getRoot();
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir);
 
-    Path command = tempDir.resolve("src/com/example/build/command");
-    Files.createDirectories(command);
-    Path notbuck = tempDir.resolve("src/com/example/build/notbuck");
-    Files.createDirectories(notbuck);
-    Files.createDirectories(tempDir.resolve("src/com/example/some/directory"));
+    AbsPath command = tempDir.resolve("src/com/example/build/command");
+    Files.createDirectories(command.getPath());
+    AbsPath notbuck = tempDir.resolve("src/com/example/build/notbuck");
+    Files.createDirectories(notbuck.getPath());
+    Files.createDirectories(tempDir.resolve("src/com/example/some/directory").getPath());
 
     touch(tempDir.resolve("src/com/example/BUCK"));
     touch(tempDir.resolve("src/com/example/build/BUCK"));
@@ -72,12 +73,12 @@ public class FilesystemBackedBuildFileTreeTest {
 
   @Test
   public void respectsIgnorePaths() throws IOException {
-    Path tempDir = tmp.getRoot();
-    Path fooBuck = tempDir.resolve("foo/BUCK");
-    Path fooBarBuck = tempDir.resolve("foo/bar/BUCK");
-    Path fooBazBuck = tempDir.resolve("foo/baz/BUCK");
-    Files.createDirectories(fooBarBuck.getParent());
-    Files.createDirectories(fooBazBuck.getParent());
+    AbsPath tempDir = tmp.getRoot();
+    AbsPath fooBuck = tempDir.resolve("foo/BUCK");
+    AbsPath fooBarBuck = tempDir.resolve("foo/bar/BUCK");
+    AbsPath fooBazBuck = tempDir.resolve("foo/baz/BUCK");
+    Files.createDirectories(fooBarBuck.getParent().getPath());
+    Files.createDirectories(fooBazBuck.getParent().getPath());
     touch(fooBuck);
     touch(fooBarBuck);
     touch(fooBazBuck);
@@ -92,10 +93,10 @@ public class FilesystemBackedBuildFileTreeTest {
 
   @Test
   public void rootBasePath() throws IOException {
-    Path root = tmp.getRoot();
-    Files.createFile(root.resolve("BUCK"));
-    Files.createDirectory(root.resolve("foo"));
-    Files.createFile(root.resolve("foo/BUCK"));
+    AbsPath root = tmp.getRoot();
+    Files.createFile(root.resolve("BUCK").getPath());
+    Files.createDirectory(root.resolve("foo").getPath());
+    Files.createFile(root.resolve("foo/BUCK").getPath());
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(root);
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
@@ -106,9 +107,9 @@ public class FilesystemBackedBuildFileTreeTest {
 
   @Test
   public void missingBasePath() throws IOException {
-    Path root = tmp.getRoot();
-    Files.createDirectory(root.resolve("foo"));
-    Files.createFile(root.resolve("foo/BUCK"));
+    AbsPath root = tmp.getRoot();
+    Files.createDirectory(root.resolve("foo").getPath());
+    Files.createFile(root.resolve("foo/BUCK").getPath());
 
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(root);
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
@@ -119,14 +120,14 @@ public class FilesystemBackedBuildFileTreeTest {
 
   @Test
   public void shouldIgnoreBuckOutputDirectoriesByDefault() throws IOException {
-    Path root = tmp.getRoot();
+    AbsPath root = tmp.getRoot();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(root, new Config());
 
-    Path buckOut = root.resolve(filesystem.getBuckPaths().getBuckOut());
-    Files.createDirectories(buckOut);
+    AbsPath buckOut = root.resolve(filesystem.getBuckPaths().getBuckOut());
+    Files.createDirectories(buckOut.getPath());
     touch(buckOut.resolve("BUCK"));
-    Path sibling = buckOut.resolve("someFile");
+    AbsPath sibling = buckOut.resolve("someFile");
     touch(sibling);
 
     // Config doesn't set any "ignore" entries.
@@ -140,10 +141,10 @@ public class FilesystemBackedBuildFileTreeTest {
 
   @Test
   public void shouldIgnoreBuckCacheDirectoriesByDefault() throws IOException {
-    Path root = tmp.getRoot();
+    AbsPath root = tmp.getRoot();
 
     RelPath cacheDir = RelPath.get("buck-out/cache");
-    Files.createDirectories(tmp.getRoot().resolve(cacheDir.getPath()));
+    Files.createDirectories(tmp.getRoot().resolve(cacheDir.getPath()).getPath());
     touch(tmp.getRoot().resolve(cacheDir.resolve("BUCK")));
     Path sibling = cacheDir.resolve("someFile");
     touch(tmp.getRoot().resolve(sibling));
@@ -158,7 +159,7 @@ public class FilesystemBackedBuildFileTreeTest {
     assertFalse(ancestor.isPresent());
   }
 
-  private void touch(Path path) throws IOException {
-    Files.write(path, "".getBytes(UTF_8));
+  private void touch(AbsPath path) throws IOException {
+    Files.write(path.getPath(), "".getBytes(UTF_8));
   }
 }

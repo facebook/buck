@@ -30,7 +30,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.MoreFiles;
 import com.google.common.io.RecursiveDeleteOption;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import junitparams.JUnitParamsRunner;
@@ -82,14 +81,13 @@ public class DirectoryListCacheTest {
 
     // should not invalidate
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(tmp.getRoot()), kind, RelPath.of(Paths.get("dir1/file")));
+        WatchmanPathEvent.of(tmp.getRoot(), kind, RelPath.of(Paths.get("dir1/file")));
     cache.getInvalidator().onFileSystemChange(event);
     Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir")));
     assertTrue(dlist.isPresent());
 
     // should invalidate
-    event =
-        WatchmanPathEvent.of(AbsPath.of(tmp.getRoot()), kind, RelPath.of(Paths.get("dir/file1")));
+    event = WatchmanPathEvent.of(tmp.getRoot(), kind, RelPath.of(Paths.get("dir/file1")));
     cache.getInvalidator().onFileSystemChange(event);
 
     dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir")));
@@ -108,7 +106,7 @@ public class DirectoryListCacheTest {
             ImmutableSortedSet.of()));
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(tmp.getRoot()), kind, RelPath.of(Paths.get("file1")));
+        WatchmanPathEvent.of(tmp.getRoot(), kind, RelPath.of(Paths.get("file1")));
     cache.getInvalidator().onFileSystemChange(event);
     Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("")));
     assertFalse(dlist.isPresent());
@@ -126,8 +124,7 @@ public class DirectoryListCacheTest {
 
     // should not invalidate
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(
-            AbsPath.of(tmp.getRoot()), Kind.MODIFY, RelPath.of(Paths.get("dir/file")));
+        WatchmanPathEvent.of(tmp.getRoot(), Kind.MODIFY, RelPath.of(Paths.get("dir/file")));
     cache.getInvalidator().onFileSystemChange(event);
     Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir")));
     assertTrue(dlist.isPresent());
@@ -151,7 +148,7 @@ public class DirectoryListCacheTest {
             ImmutableSortedSet.of()));
 
     // should not invalidate
-    WatchmanOverflowEvent event = WatchmanOverflowEvent.of(AbsPath.of(tmp.getRoot()), "Test");
+    WatchmanOverflowEvent event = WatchmanOverflowEvent.of(tmp.getRoot(), "Test");
     cache.getInvalidator().onFileSystemChange(event);
     Optional<DirectoryList> dlist = cache.get(ImmutableDirectoryListKey.of(Paths.get("dir")));
     assertFalse(dlist.isPresent());
@@ -162,14 +159,14 @@ public class DirectoryListCacheTest {
 
   @Test
   public void whenFolderIsDeletedThenInvalidateParent() throws Exception {
-    Path root = tmp.getRoot();
+    AbsPath root = tmp.getRoot();
     DirectoryListCache cache = DirectoryListCache.of(root);
-    Path dir1 = root.resolve("dir1");
-    Files.createDirectory(dir1);
-    Files.createFile(dir1.resolve("file1"));
-    Path dir2 = dir1.resolve("dir2");
-    Files.createDirectory(dir2);
-    Files.createFile(dir2.resolve("file2"));
+    AbsPath dir1 = root.resolve("dir1");
+    Files.createDirectory(dir1.getPath());
+    Files.createFile(dir1.resolve("file1").getPath());
+    AbsPath dir2 = dir1.resolve("dir2");
+    Files.createDirectory(dir2.getPath());
+    Files.createFile(dir2.resolve("file2").getPath());
 
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("dir1")),
@@ -185,11 +182,10 @@ public class DirectoryListCacheTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of()));
 
-    MoreFiles.deleteRecursively(dir2, RecursiveDeleteOption.ALLOW_INSECURE);
+    MoreFiles.deleteRecursively(dir2.getPath(), RecursiveDeleteOption.ALLOW_INSECURE);
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(
-            AbsPath.of(root), Kind.DELETE, RelPath.of(Paths.get("dir1/dir2/file2")));
+        WatchmanPathEvent.of(root, Kind.DELETE, RelPath.of(Paths.get("dir1/dir2/file2")));
     FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
     cache.getInvalidator().onInvalidationStart(started);
     cache.getInvalidator().onFileSystemChange(event);
@@ -205,13 +201,13 @@ public class DirectoryListCacheTest {
 
   @Test
   public void whenRootFolderIsDeletedThenInvalidateAll() throws Exception {
-    Path root = tmp.getRoot().resolve("root");
-    Files.createDirectory(root);
+    AbsPath root = tmp.getRoot().resolve("root");
+    Files.createDirectory(root.getPath());
 
     DirectoryListCache cache = DirectoryListCache.of(root);
-    Path dir = root.resolve("dir");
-    Files.createDirectory(dir);
-    Files.createFile(dir.resolve("file"));
+    AbsPath dir = root.resolve("dir");
+    Files.createDirectory(dir.getPath());
+    Files.createFile(dir.resolve("file").getPath());
 
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("")),
@@ -227,10 +223,10 @@ public class DirectoryListCacheTest {
             ImmutableSortedSet.of(),
             ImmutableSortedSet.of()));
 
-    MoreFiles.deleteRecursively(root, RecursiveDeleteOption.ALLOW_INSECURE);
+    MoreFiles.deleteRecursively(root.getPath(), RecursiveDeleteOption.ALLOW_INSECURE);
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(root), Kind.DELETE, RelPath.of(Paths.get("dir/file")));
+        WatchmanPathEvent.of(root, Kind.DELETE, RelPath.of(Paths.get("dir/file")));
     FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();
     cache.getInvalidator().onInvalidationStart(started);
     cache.getInvalidator().onFileSystemChange(event);
@@ -246,7 +242,7 @@ public class DirectoryListCacheTest {
 
   @Test
   public void whenNestedFolderIsCreatedInvalidateParents() throws Exception {
-    Path root = tmp.getRoot().resolve("root");
+    AbsPath root = tmp.getRoot().resolve("root");
     DirectoryListCache cache = DirectoryListCache.of(root);
 
     // directory structure:
@@ -262,12 +258,13 @@ public class DirectoryListCacheTest {
     //      \
     //       baz.txt
 
-    Files.createDirectory(root);
-    Files.createDirectory(root.resolve("dir1"));
-    Files.createDirectory(root.resolve("dir2"));
-    Files.createDirectory(root.resolve("dir2").resolve("foo"));
-    Files.createDirectory(root.resolve("dir2").resolve("foo").resolve("bar"));
-    Files.createFile(root.resolve("dir2").resolve("foo").resolve("bar").resolve("baz.txt"));
+    Files.createDirectory(root.getPath());
+    Files.createDirectory(root.resolve("dir1").getPath());
+    Files.createDirectory(root.resolve("dir2").getPath());
+    Files.createDirectory(root.resolve("dir2").resolve("foo").getPath());
+    Files.createDirectory(root.resolve("dir2").resolve("foo").resolve("bar").getPath());
+    Files.createFile(
+        root.resolve("dir2").resolve("foo").resolve("bar").resolve("baz.txt").getPath());
 
     cache.put(
         ImmutableDirectoryListKey.of(Paths.get("")),
@@ -303,13 +300,13 @@ public class DirectoryListCacheTest {
             ImmutableSortedSet.of()));
 
     // Copy the contents of bar into quux, a new child directory of foo.
-    Files.createDirectory(root.resolve("dir2").resolve("foo").resolve("quux"));
-    Files.createFile(root.resolve("dir2").resolve("foo").resolve("quux").resolve("baz.txt"));
+    Files.createDirectory(root.resolve("dir2").resolve("foo").resolve("quux").getPath());
+    Files.createFile(
+        root.resolve("dir2").resolve("foo").resolve("quux").resolve("baz.txt").getPath());
 
     // Watchman fires a Create event for baz.txt
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(
-            AbsPath.of(root), Kind.CREATE, RelPath.of(Paths.get("dir2/foo/quux/baz.txt")));
+        WatchmanPathEvent.of(root, Kind.CREATE, RelPath.of(Paths.get("dir2/foo/quux/baz.txt")));
 
     // Invalidate caches accordingly
     FileHashCacheEvent.InvalidationStarted started = FileHashCacheEvent.invalidationStarted();

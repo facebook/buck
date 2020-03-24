@@ -131,8 +131,8 @@ public class WorkerProcessTest {
                 .setDirectory(workspace.getDestPath())
                 .build(),
             projectFilesystem,
-            temporaryPaths.newFile("stderr"),
-            temporaryPaths.newFolder())) {
+            temporaryPaths.newFile("stderr").getPath(),
+            temporaryPaths.newFolder().getPath())) {
       workerProcess.ensureLaunchAndHandshake();
       fail("Handshake should have failed");
     } catch (HumanReadableException e) {

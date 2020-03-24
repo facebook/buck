@@ -42,7 +42,7 @@ public class XmlTestResultParserTest {
             + "<testcase name='com.facebook.buck.test.XmlTestResultParserTest'>\n"
             + "  <test name='testParseMalformedXml' success='true' time='too meta'/>\n"
             + "</testcase>\n";
-    Path xmlFile = tmp.newFile("result.xml");
+    Path xmlFile = tmp.newFile("result.xml").getPath();
     Files.write(xmlFile, xml.getBytes(UTF_8));
 
     try {
@@ -74,7 +74,7 @@ public class XmlTestResultParserTest {
             + "  <testcase name='c' classname='Foo' time='3.2'/>\n"
             + "</testsuite>\n";
 
-    Path xmlFile = tmp.newFile("result.xml");
+    Path xmlFile = tmp.newFile("result.xml").getPath();
     Files.write(xmlFile, xml.getBytes(UTF_8));
 
     List<TestCaseSummary> summary = XmlTestResultParser.parseAndroid(xmlFile, "android-5554");
@@ -98,7 +98,7 @@ public class XmlTestResultParserTest {
             + "  </testcase>\n"
             + "</testsuite>\n";
 
-    Path xmlFile = tmp.newFile("result.xml");
+    Path xmlFile = tmp.newFile("result.xml").getPath();
     Files.write(xmlFile, xml.getBytes(UTF_8));
 
     List<TestCaseSummary> summary = XmlTestResultParser.parseAndroid(xmlFile, "android-5554");
@@ -116,7 +116,7 @@ public class XmlTestResultParserTest {
             + "  </testcase>\n"
             + "</testsuite>\n";
 
-    Path xmlFile = tmp.newFile("result.xml");
+    Path xmlFile = tmp.newFile("result.xml").getPath();
     Files.write(xmlFile, xml.getBytes(UTF_8));
 
     List<TestCaseSummary> summary = XmlTestResultParser.parseAndroid(xmlFile, "android-5554");
@@ -134,7 +134,7 @@ public class XmlTestResultParserTest {
             + "  </testcase>\n"
             + "</testsuite>\n";
 
-    Path xmlFile = tmp.newFile("result.xml");
+    Path xmlFile = tmp.newFile("result.xml").getPath();
     Files.write(xmlFile, xml.getBytes(UTF_8));
 
     List<TestCaseSummary> summary = XmlTestResultParser.parseAndroid(xmlFile, "android-5554");
@@ -151,7 +151,7 @@ public class XmlTestResultParserTest {
             + "  <failure>Instrumentation failed with RuntimeException</failure>\n"
             + "</testsuite>\n";
 
-    Path xmlFile = tmp.newFile("result.xml");
+    Path xmlFile = tmp.newFile("result.xml").getPath();
     Files.write(xmlFile, xml.getBytes(UTF_8));
 
     try {

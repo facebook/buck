@@ -25,6 +25,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.apple.toolchain.AppleToolchain;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
@@ -33,7 +34,6 @@ import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,10 +43,10 @@ public class SwiftPlatformFactoryIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private AppleToolchain createAppleToolchain(Path toolchainPath) {
+  private AppleToolchain createAppleToolchain(AbsPath toolchainPath) {
     return AppleToolchain.builder()
         .setIdentifier("com.apple.dt.toolchain.XcodeDefault")
-        .setPath(toolchainPath)
+        .setPath(toolchainPath.getPath())
         .setVersion("1")
         .build();
   }
@@ -61,15 +61,17 @@ public class SwiftPlatformFactoryIntegrationTest {
     return appleSdkBuilder.build();
   }
 
-  private AppleSdkPaths createAppleSdkPaths(Path developerDir, Path... toolchainPaths) {
+  private AppleSdkPaths createAppleSdkPaths(AbsPath developerDir, AbsPath... toolchainPaths) {
     AppleSdkPaths.Builder appleSdkPathsBuilder =
         AppleSdkPaths.builder()
-            .setDeveloperPath(developerDir)
-            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform"))
+            .setDeveloperPath(developerDir.getPath())
+            .setPlatformPath(developerDir.resolve("Platforms/iPhoneOS.platform").getPath())
             .setSdkPath(
-                developerDir.resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk"));
-    for (Path toolchainPath : toolchainPaths) {
-      appleSdkPathsBuilder.addToolchainPaths(toolchainPath);
+                developerDir
+                    .resolve("Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS8.0.sdk")
+                    .getPath());
+    for (AbsPath toolchainPath : toolchainPaths) {
+      appleSdkPathsBuilder.addToolchainPaths(toolchainPath.getPath());
     }
     return appleSdkPathsBuilder.build();
   }
@@ -85,7 +87,7 @@ public class SwiftPlatformFactoryIntegrationTest {
 
   @Test
   public void testBuildSwiftPlatformWithEmptyToolchainPaths() throws IOException {
-    Path developerDir = tmp.newFolder("Developer");
+    AbsPath developerDir = tmp.newFolder("Developer");
     SwiftTargetTriple triple = SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3");
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
@@ -104,8 +106,8 @@ public class SwiftPlatformFactoryIntegrationTest {
 
   @Test
   public void testBuildSwiftPlatformWithNonEmptyLookupPathWithoutTools() throws IOException {
-    Path developerDir = tmp.newFolder("Developer");
-    Path toolchainDir = tmp.newFolder("foo");
+    AbsPath developerDir = tmp.newFolder("Developer");
+    AbsPath toolchainDir = tmp.newFolder("foo");
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
             createAppleSdk(createAppleToolchain(toolchainDir)),
@@ -120,7 +122,7 @@ public class SwiftPlatformFactoryIntegrationTest {
 
   @Test
   public void testBuildSwiftPlatformWithNonEmptyLookupPathWithTools() throws IOException {
-    Path developerDir = tmp.newFolder("Developer");
+    AbsPath developerDir = tmp.newFolder("Developer");
     tmp.newFolder("foo/usr/lib/swift/iphoneos");
     tmp.newFile("foo/usr/lib/swift/iphoneos/libswiftCore.dylib");
     tmp.newFolder("foo2/usr/lib/swift_static/iphoneos");

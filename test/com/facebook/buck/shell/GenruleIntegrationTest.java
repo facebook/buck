@@ -29,6 +29,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -674,7 +675,7 @@ public class GenruleIntegrationTest {
     }
   }
 
-  private Sha1HashCode buildAndGetRuleKey(String scenario, Path temporaryFolder, String target)
+  private Sha1HashCode buildAndGetRuleKey(String scenario, AbsPath temporaryFolder, String target)
       throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, scenario, temporaryFolder);

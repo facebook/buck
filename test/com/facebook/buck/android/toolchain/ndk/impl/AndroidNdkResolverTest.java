@@ -24,12 +24,12 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.android.FakeAndroidBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -65,7 +65,7 @@ public class AndroidNdkResolverTest {
 
   @Test
   public void throwAtNdkPathIsNotDirectory() throws IOException {
-    Path file = tmpDir.getRoot().resolve(tmpDir.newFile("file"));
+    AbsPath file = tmpDir.newFile("file");
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -80,7 +80,7 @@ public class AndroidNdkResolverTest {
 
   @Test
   public void throwAtGetNdkDirectoryIsEmpty() throws IOException {
-    Path ndkDir = tmpDir.newFolder("ndk-dir");
+    AbsPath ndkDir = tmpDir.newFolder("ndk-dir");
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -89,15 +89,13 @@ public class AndroidNdkResolverTest {
 
     expectedException.expect(HumanReadableException.class);
     expectedException.expectMessage(
-        ndkDir.toAbsolutePath()
-            + " does not contain a valid "
-            + "properties file for Android NDK.");
+        ndkDir + " does not contain a valid " + "properties file for Android NDK.");
     resolver.getNdkOrThrow();
   }
 
   @Test
   public void throwAtGetNdkIsUnsupportedVersion() throws IOException {
-    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9q")[0];
+    AbsPath ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9q")[0];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -143,14 +141,15 @@ public class AndroidNdkResolverTest {
 
   @Test
   public void getNdkSpecificVersion() throws IOException {
-    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d (64-bit)")[0];
+    AbsPath ndkDir =
+        createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d (64-bit)")[0];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
             FakeAndroidBuckConfig.builder().setNdkVersion("r9d").build());
 
-    assertEquals(ndkDir, resolver.getNdkOrThrow());
+    assertEquals(ndkDir.getPath(), resolver.getNdkOrThrow());
 
     ndkDir =
         createTmpNdkVersions(
@@ -164,19 +163,20 @@ public class AndroidNdkResolverTest {
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
             FakeAndroidBuckConfig.builder().setNdkVersion("11.2").build());
 
-    assertEquals(ndkDir, resolver.getNdkOrThrow());
+    assertEquals(ndkDir.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void getNdkInexactMatchVersion() throws IOException {
-    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d (64-bit)")[0];
+    AbsPath ndkDir =
+        createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d (64-bit)")[0];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
             FakeAndroidBuckConfig.builder().setNdkVersion("r9").build());
 
-    assertEquals(ndkDir, resolver.getNdkOrThrow());
+    assertEquals(ndkDir.getPath(), resolver.getNdkOrThrow());
 
     ndkDir =
         createTmpNdkVersions(
@@ -189,19 +189,19 @@ public class AndroidNdkResolverTest {
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
             FakeAndroidBuckConfig.builder().setNdkVersion("11").build());
 
-    assertEquals(ndkDir, resolver.getNdkOrThrow());
+    assertEquals(ndkDir.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void getNdkNewestVersion() throws IOException {
-    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-old", "r9e")[0];
+    AbsPath ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir-old", "r9e")[0];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
             AndroidNdkHelper.DEFAULT_CONFIG);
 
-    assertEquals(ndkDir, resolver.getNdkOrThrow());
+    assertEquals(ndkDir.getPath(), resolver.getNdkOrThrow());
 
     ndkDir =
         createTmpNdkVersions(
@@ -214,12 +214,12 @@ public class AndroidNdkResolverTest {
             ImmutableMap.of("ANDROID_NDK", ndkDir.toString()),
             AndroidNdkHelper.DEFAULT_CONFIG);
 
-    assertEquals(ndkDir, resolver.getNdkOrThrow());
+    assertEquals(ndkDir.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void scanNdkSpecificVersion() throws IOException {
-    Path expectedPath =
+    AbsPath expectedPath =
         createTmpNdkVersions(
             NDK_PRE_R11_VERSION_FILENAME,
             "ndk-dir-r9a",
@@ -234,7 +234,7 @@ public class AndroidNdkResolverTest {
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
             FakeAndroidBuckConfig.builder().setNdkVersion("r9b").build());
 
-    assertEquals(expectedPath, resolver.getNdkOrThrow());
+    assertEquals(expectedPath.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
@@ -262,7 +262,7 @@ public class AndroidNdkResolverTest {
 
   @Test
   public void scanNdkInexactMatchVersion() throws IOException {
-    Path expectedPath =
+    AbsPath expectedPath =
         createTmpNdkVersions(
             NDK_POST_R11_VERSION_FILENAME,
             "ndk-dir-r11",
@@ -277,12 +277,12 @@ public class AndroidNdkResolverTest {
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
             FakeAndroidBuckConfig.builder().setNdkVersion("13").build());
 
-    assertEquals(expectedPath, resolver.getNdkOrThrow());
+    assertEquals(expectedPath.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void scanNdkNewestVersion() throws IOException {
-    Path expectedPath =
+    AbsPath expectedPath =
         createTmpNdkVersions(
             NDK_POST_R11_VERSION_FILENAME,
             "ndk-dir-r11",
@@ -297,12 +297,12 @@ public class AndroidNdkResolverTest {
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
             AndroidNdkHelper.DEFAULT_CONFIG);
 
-    assertEquals(expectedPath, resolver.getNdkOrThrow());
+    assertEquals(expectedPath.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void testFindAndroidNdkDirThrowOnUnsupportedVersion() throws IOException {
-    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9q")[0];
+    AbsPath ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9q")[0];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -352,7 +352,7 @@ public class AndroidNdkResolverTest {
 
   @Test
   public void testGetNdkFromBuckconfig() throws IOException {
-    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
+    AbsPath ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -362,7 +362,7 @@ public class AndroidNdkResolverTest {
                 .setNdkPath(ndkDir.toString())
                 .build());
 
-    assertEquals(ndkDir, resolver.getNdkOrThrow());
+    assertEquals(ndkDir.getPath(), resolver.getNdkOrThrow());
 
     resolver =
         new AndroidNdkResolver(
@@ -372,12 +372,12 @@ public class AndroidNdkResolverTest {
                 .setNdkVersion("r9d")
                 .setNdkRepositoryPath(tmpDir.getRoot().toString())
                 .build());
-    assertEquals(ndkDir, resolver.getNdkOrThrow());
+    assertEquals(ndkDir.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void testErrorMessageFromBuckconfigNdk() throws IOException {
-    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
+    AbsPath ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -413,7 +413,7 @@ public class AndroidNdkResolverTest {
 
   @Test
   public void testEnvironmentVariableOverridesNdkConfig() throws IOException {
-    Path ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
+    AbsPath ndkDir = createTmpNdkVersions(NDK_PRE_R11_VERSION_FILENAME, "ndk-dir", "r9d")[0];
     AndroidNdkResolver resolver =
         new AndroidNdkResolver(
             tmpDir.getRoot().getFileSystem(),
@@ -437,7 +437,7 @@ public class AndroidNdkResolverTest {
 
   @Test
   public void testUnsupportedVersionNotUsed() throws IOException {
-    Path expectedPath =
+    AbsPath expectedPath =
         createTmpNdkVersions(
             NDK_POST_R11_VERSION_FILENAME,
             "ndk-dir-r19b",
@@ -452,12 +452,12 @@ public class AndroidNdkResolverTest {
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
             AndroidNdkHelper.DEFAULT_CONFIG);
 
-    assertEquals(expectedPath, resolver.getNdkOrThrow());
+    assertEquals(expectedPath.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void testExactMatchBeforePrefixMatch() throws IOException {
-    Path expectedPath =
+    AbsPath expectedPath =
         createTmpNdkVersions(
             NDK_POST_R11_VERSION_FILENAME,
             "ndk-dir-r17c1",
@@ -472,12 +472,12 @@ public class AndroidNdkResolverTest {
             ImmutableMap.of("ANDROID_NDK_REPOSITORY", tmpDir.getRoot().toString()),
             FakeAndroidBuckConfig.builder().setNdkVersion("17.2.4988734").build());
 
-    assertEquals(expectedPath, resolver.getNdkOrThrow());
+    assertEquals(expectedPath.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void repoConfigEntryInNdkSearchOrderIsUsed() throws IOException {
-    Path configDir =
+    AbsPath configDir =
         createTmpNdkVersions(
             tmpDir,
             NDK_POST_R11_VERSION_FILENAME,
@@ -496,18 +496,18 @@ public class AndroidNdkResolverTest {
                 .setNdkRepositoryPath(tmpDir.getRoot().toString())
                 .setNdkSearchOrder("<NDK_REPOSITORY_CONFIG>, ANDROID_NDK_REPOSITORY")
                 .build());
-    assertEquals(configDir, resolver.getNdkOrThrow());
+    assertEquals(configDir.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void rootConfigEntryInNdkSearchOrderIsUsed() throws IOException {
-    Path configDir =
+    AbsPath configDir =
         createTmpNdkVersions(
             tmpDir,
             NDK_POST_R11_VERSION_FILENAME,
             "ndk-dir-r17c1",
             "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
-    Path envDir =
+    AbsPath envDir =
         createTmpNdkVersions(
             tmpDir2,
             NDK_POST_R11_VERSION_FILENAME,
@@ -521,12 +521,12 @@ public class AndroidNdkResolverTest {
                 .setNdkPath(configDir.toString())
                 .setNdkSearchOrder("<NDK_DIRECTORY_CONFIG>, NDK_HOME")
                 .build());
-    assertEquals(configDir, resolver.getNdkOrThrow());
+    assertEquals(configDir.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void envRepoVariableInNdkSearchOrderIsUsed() throws IOException {
-    Path envDir =
+    AbsPath envDir =
         createTmpNdkVersions(
             NDK_POST_R11_VERSION_FILENAME,
             "ndk-dir-r17c1",
@@ -538,12 +538,12 @@ public class AndroidNdkResolverTest {
             FakeAndroidBuckConfig.builder()
                 .setNdkSearchOrder("<NDK_REPOSITORY_CONFIG>, ANDROID_NDK_REPOSITORY")
                 .build());
-    assertEquals(envDir, resolver.getNdkOrThrow());
+    assertEquals(envDir.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void envRootVariableInNdkSearchOrderIsUsed() throws IOException {
-    Path envDir =
+    AbsPath envDir =
         createTmpNdkVersions(
             NDK_POST_R11_VERSION_FILENAME,
             "ndk-dir-r17c1",
@@ -555,18 +555,18 @@ public class AndroidNdkResolverTest {
             FakeAndroidBuckConfig.builder()
                 .setNdkSearchOrder("<NDK_REPOSITORY_CONFIG>, ANDROID_NDK")
                 .build());
-    assertEquals(envDir, resolver.getNdkOrThrow());
+    assertEquals(envDir.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void firstConfigSettingInNdkSearchOrderIsUsed() throws IOException {
-    Path config1Dir =
+    AbsPath config1Dir =
         createTmpNdkVersions(
             tmpDir,
             NDK_POST_R11_VERSION_FILENAME,
             "ndk-dir-r17c1",
             "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
-    Path config2Dir =
+    AbsPath config2Dir =
         createTmpNdkVersions(
             tmpDir2,
             NDK_POST_R11_VERSION_FILENAME,
@@ -581,18 +581,18 @@ public class AndroidNdkResolverTest {
                 .setNdkRepositoryPath(config2Dir.toString())
                 .setNdkSearchOrder("<NDK_DIRECTORY_CONFIG>, <NDK_REPOSITORY_CONFIG>")
                 .build());
-    assertEquals(config1Dir, resolver.getNdkOrThrow());
+    assertEquals(config1Dir.getPath(), resolver.getNdkOrThrow());
   }
 
   @Test
   public void firstEnvVariableInNdkSearchOrderIsUsed() throws IOException {
-    Path env1Dir =
+    AbsPath env1Dir =
         createTmpNdkVersions(
             tmpDir,
             NDK_POST_R11_VERSION_FILENAME,
             "ndk-dir-r17c1",
             "Pkg.Desc = Android NDK\nPkg.Revision = 17.2.4988734.1")[0];
-    Path env2Dir =
+    AbsPath env2Dir =
         createTmpNdkVersions(
             tmpDir2,
             NDK_POST_R11_VERSION_FILENAME,
@@ -603,24 +603,24 @@ public class AndroidNdkResolverTest {
             tmpDir.getRoot().getFileSystem(),
             ImmutableMap.of("ANDROID_NDK", env1Dir.toString(), "NDK_HOME", env2Dir.toString()),
             FakeAndroidBuckConfig.builder().setNdkSearchOrder("NDK_HOME, ANDROID_NDK").build());
-    assertEquals(env2Dir, resolver.getNdkOrThrow());
+    assertEquals(env2Dir.getPath(), resolver.getNdkOrThrow());
   }
 
-  private Path[] createTmpNdkVersions(
+  private AbsPath[] createTmpNdkVersions(
       TemporaryPaths tmpDir, String filename, String... directoryNamesAndVersionStrings)
       throws IOException {
-    Path[] ret = new Path[directoryNamesAndVersionStrings.length / 2];
+    AbsPath[] ret = new AbsPath[directoryNamesAndVersionStrings.length / 2];
     for (int i = 0; i < directoryNamesAndVersionStrings.length / 2; i++) {
       String folderName = directoryNamesAndVersionStrings[i * 2];
       String version = directoryNamesAndVersionStrings[(i * 2) + 1];
       ret[i] = tmpDir.newFolder(folderName);
-      Path releaseFile = tmpDir.newFile(folderName + "/" + filename);
+      AbsPath releaseFile = tmpDir.newFile(folderName + "/" + filename);
       MostFiles.writeLinesToFile(ImmutableList.of(version), releaseFile);
     }
     return ret;
   }
 
-  private Path[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)
+  private AbsPath[] createTmpNdkVersions(String filename, String... directoryNamesAndVersionStrings)
       throws IOException {
     return createTmpNdkVersions(tmpDir, filename, directoryNamesAndVersionStrings);
   }

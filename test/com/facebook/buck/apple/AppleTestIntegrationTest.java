@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -151,16 +152,17 @@ public class AppleTestIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("build", buildTarget.getFullyQualifiedName());
     result.assertSuccess();
 
-    Path projectRoot = tmp.getRoot().toRealPath();
+    AbsPath projectRoot = tmp.getRoot().toRealPath();
 
-    Path inputPath =
+    AbsPath inputPath =
         projectRoot.resolve(
             buildTarget.getCellRelativeBasePath().getPath().toPath(projectRoot.getFileSystem()));
-    Path outputPath =
+    AbsPath outputPath =
         projectRoot.resolve(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s"));
 
-    assertIsSymbolicLink(outputPath.resolve("Header.h"), inputPath.resolve("Header.h"));
-    assertIsSymbolicLink(outputPath.resolve("Test/Header.h"), inputPath.resolve("Header.h"));
+    assertIsSymbolicLink(outputPath.resolve("Header.h"), inputPath.resolve("Header.h").getPath());
+    assertIsSymbolicLink(
+        outputPath.resolve("Test/Header.h"), inputPath.resolve("Header.h").getPath());
   }
 
   @Test
@@ -612,7 +614,7 @@ public class AppleTestIntegrationTest {
 
     assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   AppTest"));
 
-    Path appTestDsym =
+    AbsPath appTestDsym =
         tmp.getRoot()
             .resolve(filesystem.getBuckPaths().getGenDir())
             .resolve("AppTest#apple-test-bundle,dwarf-and-dsym,no-include-frameworks,no-linkermap")
@@ -620,7 +622,7 @@ public class AppleTestIntegrationTest {
     AppleDsymTestUtil.checkDsymFileHasDebugSymbol(
         "-[AppTest testMagicValue]", workspace, appTestDsym);
 
-    Path hostAppDsym =
+    AbsPath hostAppDsym =
         tmp.getRoot()
             .resolve(filesystem.getBuckPaths().getGenDir())
             .resolve("TestHostApp#dwarf-and-dsym,no-include-frameworks")
@@ -864,9 +866,8 @@ public class AppleTestIntegrationTest {
     BuildTarget libraryTarget =
         target.withAppendedFlavors(
             AppleTestDescription.LIBRARY_FLAVOR, CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR);
-    Path output =
-        workspace
-            .getDestPath()
+    AbsPath output =
+        AbsPath.of(workspace.getDestPath())
             .resolve(
                 BuildTargetPaths.getGenPath(
                     filesystem,
@@ -984,8 +985,8 @@ public class AppleTestIntegrationTest {
     assertThat(result.getStderr(), containsString("1 Passed   0 Skipped   0 Failed   LibTest"));
   }
 
-  private static void assertIsSymbolicLink(Path link, Path target) throws IOException {
-    assertTrue(Files.isSymbolicLink(link));
-    assertTrue(Files.isSameFile(target, Files.readSymbolicLink(link)));
+  private static void assertIsSymbolicLink(AbsPath link, Path target) throws IOException {
+    assertTrue(Files.isSymbolicLink(link.getPath()));
+    assertTrue(Files.isSameFile(target, Files.readSymbolicLink(link.getPath())));
   }
 }

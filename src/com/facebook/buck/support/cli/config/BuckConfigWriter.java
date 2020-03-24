@@ -17,6 +17,7 @@
 package com.facebook.buck.support.cli.config;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.logd.client.LogStreamFactory;
 import com.facebook.buck.logd.proto.LogType;
@@ -99,5 +100,14 @@ public class BuckConfigWriter {
           .writeValue(
               jsonOut, ImmutableMap.of("settings", config.getConfig().getRawConfig().getValues()));
     }
+  }
+
+  /**
+   * Abs-path version of {@link #writeConfig(Path, InvocationInfo, BuckConfig, LogStreamFactory)}.
+   */
+  public static void writeConfig(
+      AbsPath rootPath, InvocationInfo info, BuckConfig config, LogStreamFactory logStreamFactory)
+      throws IOException {
+    writeConfig(rootPath.getPath(), info, config, logStreamFactory);
   }
 }

@@ -30,6 +30,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -588,9 +589,9 @@ public class PythonBinaryIntegrationTest {
     workspace.addBuckConfigLocalOption("python", "inplace_interpreter_flags", "-EsB");
     workspace.runBuckCommand("run", "//:bin").assertSuccess();
 
-    ImmutableList<Path> pycFiles =
+    ImmutableList<RelPath> pycFiles =
         Files.find(
-                tmp.getRoot(),
+                tmp.getRoot().getPath(),
                 Integer.MAX_VALUE,
                 (path, attr) -> path.getFileName().toString().endsWith(".pyc"))
             .map(path -> tmp.getRoot().relativize(path))
@@ -603,7 +604,7 @@ public class PythonBinaryIntegrationTest {
     // Fall back to using the defaults (-Es), which should write out bytecode
     pycFiles =
         Files.find(
-                tmp.getRoot(),
+                tmp.getRoot().getPath(),
                 Integer.MAX_VALUE,
                 (path, attr) -> path.getFileName().toString().endsWith(".pyc"))
             .map(path -> tmp.getRoot().relativize(path))

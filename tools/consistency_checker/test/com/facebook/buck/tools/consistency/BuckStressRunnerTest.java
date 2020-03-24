@@ -16,6 +16,7 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.tools.consistency.BuckStressRunner.StressorException;
 import com.google.common.collect.ImmutableList;
@@ -39,13 +40,13 @@ public class BuckStressRunnerTest {
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   @Rule public ExpectedException expectedException = ExpectedException.none();
-  private Path binPath;
+  private AbsPath binPath;
   private TestBinWriter binWriter;
 
   @Before
   public void setUp() throws IOException {
     binPath = temporaryFolder.newFile("test.py");
-    binWriter = new TestBinWriter(binPath);
+    binWriter = new TestBinWriter(binPath.getPath());
   }
 
   @Test
@@ -69,7 +70,7 @@ public class BuckStressRunnerTest {
                 i ->
                     new BuckRunner(
                         Optional.of("python"),
-                        binPath.toAbsolutePath().toString(),
+                        binPath.toString(),
                         "targets",
                         ImmutableList.of(),
                         ImmutableList.of(),
@@ -79,7 +80,7 @@ public class BuckStressRunnerTest {
             .collect(Collectors.toList());
     BuckStressRunner stressRunner = new BuckStressRunner();
 
-    stressRunner.run(runner, temporaryFolder.getRoot(), 1);
+    stressRunner.run(runner, temporaryFolder.getRoot().getPath(), 1);
   }
 
   @Test
@@ -100,14 +101,14 @@ public class BuckStressRunnerTest {
     expectedException.expect(StressorException.class);
 
     binWriter.writeArgEchoer(0);
-    Path dummyFile = temporaryFolder.newFile("0.log");
+    temporaryFolder.newFile("0.log");
     List<BuckRunner> runners =
         IntStream.range(0, 5)
             .mapToObj(
                 i ->
                     new BuckRunner(
                         Optional.of("python"),
-                        binPath.toAbsolutePath().toString(),
+                        binPath.toString(),
                         "targets",
                         ImmutableList.of(),
                         ImmutableList.of(),
@@ -117,7 +118,7 @@ public class BuckStressRunnerTest {
             .collect(Collectors.toList());
     BuckStressRunner stressRunner = new BuckStressRunner();
 
-    stressRunner.run(runners, temporaryFolder.getRoot(), 1);
+    stressRunner.run(runners, temporaryFolder.getRoot().getPath(), 1);
   }
 
   @Test
@@ -131,10 +132,10 @@ public class BuckStressRunnerTest {
     BuckStressRunner stressRunner = new BuckStressRunner();
     List<Path> expectedPaths =
         IntStream.range(0, 5)
-            .mapToObj(i -> temporaryFolder.getRoot().resolve(String.format("%s.log", i)))
+            .mapToObj(i -> temporaryFolder.getRoot().resolve(String.format("%s.log", i)).getPath())
             .collect(Collectors.toList());
 
-    List<Path> paths = stressRunner.run(runners, temporaryFolder.getRoot(), 1);
+    List<Path> paths = stressRunner.run(runners, temporaryFolder.getRoot().getPath(), 1);
 
     Assert.assertEquals(expectedPaths, paths);
     Assert.assertEquals(expectedOutput.get(0), readFile(paths.get(0)));
@@ -148,17 +149,17 @@ public class BuckStressRunnerTest {
     return IntStream.range(0, size)
         .mapToObj(
             i -> {
-              Path tempPath = null;
+              AbsPath tempPath = null;
               try {
                 tempPath = temporaryFolder.newFile(Integer.toString(i));
-                TestBinWriter writer = new TestBinWriter(tempPath);
+                TestBinWriter writer = new TestBinWriter(tempPath.getPath());
                 writer.writeLineEchoer(new String[] {String.format(formatString, i)}, 0);
               } catch (IOException e) {
                 throw new RuntimeException(e);
               }
               return new BuckRunner(
                   Optional.of("python"),
-                  tempPath.toAbsolutePath().toString(),
+                  tempPath.toString(),
                   "targets",
                   ImmutableList.of(),
                   ImmutableList.of(),

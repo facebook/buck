@@ -45,6 +45,11 @@ public final class Configs {
     return createDefaultConfig(root, RawConfig.of(ImmutableMap.of()));
   }
 
+  /** Convienence constructor */
+  public static Config createDefaultConfig(AbsPath root) throws IOException {
+    return createDefaultConfig(root.getPath());
+  }
+
   /**
    * Generates a Buck config by merging configs from specified locations on disk.
    *
@@ -71,6 +76,12 @@ public final class Configs {
     ImmutableList<Path> configFiles = getDefaultConfigurationFiles(root);
 
     return createDefaultConfig(root, configFiles, configOverrides);
+  }
+
+  /** Abs-path version of {@link #createDefaultConfig(Path, RawConfig)}. */
+  public static Config createDefaultConfig(AbsPath root, RawConfig configOverrides)
+      throws IOException {
+    return createDefaultConfig(root.getPath(), configOverrides);
   }
 
   /**

@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import java.io.IOException;
@@ -37,5 +39,16 @@ public class CreateSymlinksForTests {
    */
   public static void createSymLink(Path symLink, Path realFile) throws IOException {
     MorePaths.createSymLink(winFS, symLink, realFile);
+  }
+
+  /**
+   * Creates a symlink using platform specific implementations, if there are some.
+   *
+   * @param symLink symlink to create.
+   * @param realFile target of the symlink.
+   * @throws IOException
+   */
+  public static void createSymLink(AbsPath symLink, PathWrapper realFile) throws IOException {
+    createSymLink(symLink.getPath(), realFile.getPath());
   }
 }

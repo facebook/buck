@@ -56,7 +56,7 @@ public class KotlinBuckConfigTest {
     tmp.newExecutableFile("faux_kotlin_home/libexec/lib/kotlin-compiler.jar");
     tmp.newExecutableFile("faux_kotlin_home/libexec/lib/kotlin-stdlib.jar");
 
-    testDataDirectory = tmp.getRoot();
+    testDataDirectory = tmp.getRoot().getPath();
   }
 
   @Test

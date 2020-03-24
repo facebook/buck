@@ -624,7 +624,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
         ExternalTestRunnerTestSpec.builder()
             .setTarget(target)
             .setType("json")
-            .setCwd(tmp.getRoot())
+            .setCwd(tmp.getRoot().getPath())
             .setEnv(ImmutableMap.of("CUSTOM_ENV", "some-string", "EXIT_CODE", "0"))
             .setCommand(
                 ImmutableList.of(

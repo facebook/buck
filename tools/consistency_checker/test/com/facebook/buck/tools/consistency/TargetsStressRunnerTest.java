@@ -16,6 +16,7 @@
 
 package com.facebook.buck.tools.consistency;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.tools.consistency.DifferState.MaxDifferencesException;
 import com.facebook.buck.tools.consistency.RuleKeyLogFileReader.ParseException;
@@ -44,12 +45,12 @@ public class TargetsStressRunnerTest {
   Callable<TargetsDiffer> differFactory;
   TestPrintStream stream = TestPrintStream.create();
   private TestBinWriter binWriter;
-  private Path tempBinPath;
+  private AbsPath tempBinPath;
 
   @Before
   public void setUp() throws IOException {
     tempBinPath = temporaryPaths.newFile("buck_bin.py");
-    binWriter = new TestBinWriter(tempBinPath);
+    binWriter = new TestBinWriter(tempBinPath.getPath());
     differFactory =
         () -> {
           DifferState differState = new DifferState(DifferState.INFINITE_DIFFERENCES);
@@ -68,14 +69,14 @@ public class TargetsStressRunnerTest {
         new TargetsStressRunner(
             differFactory,
             Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
+            tempBinPath.toString(),
             ImmutableList.of("-c", "config=value"),
             ImmutableList.of("//:target1", "//:target2"));
 
     List<String> expectedCommand =
         ImmutableList.of(
             System.getProperty("user.dir"),
-            tempBinPath.toAbsolutePath().toString(),
+            tempBinPath.toString(),
             "targets",
             "-c",
             "config=value",
@@ -123,9 +124,9 @@ public class TargetsStressRunnerTest {
   public void throwsExceptionIfDifferenceIsFound()
       throws IOException, ParseException, TargetsStressRunException, MaxDifferencesException {
 
-    Path file1 = temporaryPaths.newFile("1");
-    Path file2 = temporaryPaths.newFile("2");
-    Path file3 = temporaryPaths.newFile("3");
+    Path file1 = temporaryPaths.newFile("1").getPath();
+    Path file2 = temporaryPaths.newFile("2").getPath();
+    Path file3 = temporaryPaths.newFile("3").getPath();
 
     expectedException.expect(TargetsStressRunException.class);
     expectedException.expectMessage(
@@ -154,7 +155,7 @@ public class TargetsStressRunnerTest {
         new TargetsStressRunner(
             differFactory,
             Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
+            tempBinPath.toString(),
             ImmutableList.of("-c", "config=value"),
             ImmutableList.of("//:target1", "//:target2"));
     runner.verifyNoChanges(file1, ImmutableList.of(file2, file3));
@@ -164,9 +165,9 @@ public class TargetsStressRunnerTest {
   public void returnsNormallyIfNoChanges()
       throws IOException, ParseException, TargetsStressRunException, MaxDifferencesException {
 
-    Path file1 = temporaryPaths.newFile("1");
-    Path file2 = temporaryPaths.newFile("2");
-    Path file3 = temporaryPaths.newFile("3");
+    Path file1 = temporaryPaths.newFile("1").getPath();
+    Path file2 = temporaryPaths.newFile("2").getPath();
+    Path file3 = temporaryPaths.newFile("3").getPath();
 
     try (BufferedWriter output1 = Files.newBufferedWriter(file1);
         BufferedWriter output2 = Files.newBufferedWriter(file2);
@@ -190,7 +191,7 @@ public class TargetsStressRunnerTest {
         new TargetsStressRunner(
             differFactory,
             Optional.of("python"),
-            tempBinPath.toAbsolutePath().toString(),
+            tempBinPath.toString(),
             ImmutableList.of("-c", "config=value"),
             ImmutableList.of("//:target1", "//:target2"));
     runner.verifyNoChanges(file1, ImmutableList.of(file2, file3));

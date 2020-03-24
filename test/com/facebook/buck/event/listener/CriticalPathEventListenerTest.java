@@ -45,7 +45,8 @@ public class CriticalPathEventListenerTest {
 
   @Before
   public void setUp() throws Exception {
-    listener = new CriticalPathEventListener(new FileOutputStreamFactory(), tmp.getRoot());
+    listener =
+        new CriticalPathEventListener(new FileOutputStreamFactory(), tmp.getRoot().getPath());
   }
 
   /**

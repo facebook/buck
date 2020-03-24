@@ -95,7 +95,7 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   /** Sets up TemporaryPaths for the test, and sets the Workspace's root to that path */
   public void setup() throws Throwable {
     this.tempPath.before();
-    this.destPath = tempPath.getRoot();
+    this.destPath = tempPath.getRoot().getPath();
     System.out.println("EndToEndWorkspace created");
   }
 

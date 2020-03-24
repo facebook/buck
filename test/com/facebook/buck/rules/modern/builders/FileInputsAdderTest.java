@@ -109,7 +109,7 @@ public class FileInputsAdderTest {
 
               Directory computeDirectory(Path path) {
                 Directory dir = rootDirectory;
-                Path working = tmp.getRoot().relativize(path);
+                Path working = tmp.getRoot().relativize(path).getPath();
                 while (working.getNameCount() > 1) {
                   Path segment = working.getName(0);
                   dir =
@@ -119,12 +119,12 @@ public class FileInputsAdderTest {
                 return dir;
               }
             },
-            tmp.getRoot());
+            tmp.getRoot().getPath());
   }
 
   @Test
   public void testAddFile() throws IOException {
-    Path file = tmp.newFile("file");
+    Path file = tmp.newFile("file").getPath();
     fileHashes.put(file, HashCode.fromInt(1));
     adder.addInput(file);
 
@@ -136,7 +136,7 @@ public class FileInputsAdderTest {
   @Test
   public void testAddFileInSubdir() throws IOException {
     tmp.newFolder("subdir1");
-    Path file = tmp.newFile("subdir1/file");
+    Path file = tmp.newFile("subdir1/file").getPath();
     fileHashes.put(file, HashCode.fromInt(1));
     adder.addInput(file);
 
@@ -146,9 +146,9 @@ public class FileInputsAdderTest {
 
   @Test
   public void testAddDirectory() throws IOException {
-    Path subdir = tmp.newFolder("subdir1");
-    Path file1 = tmp.newFile("subdir1/file1");
-    Path file2 = tmp.newFile("subdir1/file2");
+    Path subdir = tmp.newFolder("subdir1").getPath();
+    Path file1 = tmp.newFile("subdir1/file1").getPath();
+    Path file2 = tmp.newFile("subdir1/file2").getPath();
 
     fileHashes.put(file1, HashCode.fromInt(1));
     fileHashes.put(file2, HashCode.fromInt(2));
@@ -163,8 +163,8 @@ public class FileInputsAdderTest {
 
   @Test
   public void testAddSymlink() throws IOException {
-    Path subdir = tmp.newFolder("subdir1");
-    Path file1 = tmp.newFile("file1");
+    Path subdir = tmp.newFolder("subdir1").getPath();
+    Path file1 = tmp.newFile("file1").getPath();
     Path link1 = subdir.resolve("link1");
     CreateSymlinksForTests.createSymLink(link1, file1);
 
@@ -181,8 +181,8 @@ public class FileInputsAdderTest {
 
   @Test
   public void testAddExternalLink() throws IOException {
-    Path link1 = tmp.getRoot().resolve("link1");
-    Path absoluteTarget = tmp.getRoot().getParent().resolve("other_random_place");
+    Path link1 = tmp.getRoot().resolve("link1").getPath();
+    Path absoluteTarget = tmp.getRoot().getParent().resolve("other_random_place").getPath();
     CreateSymlinksForTests.createSymLink(link1, absoluteTarget);
 
     adder.addInput(link1);
@@ -194,9 +194,9 @@ public class FileInputsAdderTest {
 
   @Test
   public void testAddFileWithSymlinkParent() throws IOException {
-    Path subdir = tmp.newFolder("subdir1");
-    Path file1 = tmp.newFile("subdir1/file1");
-    Path link1 = tmp.getRoot().resolve("link1");
+    Path subdir = tmp.newFolder("subdir1").getPath();
+    Path file1 = tmp.newFile("subdir1/file1").getPath();
+    Path link1 = tmp.getRoot().resolve("link1").getPath();
 
     CreateSymlinksForTests.createSymLink(link1, subdir);
     fileHashes.put(file1, HashCode.fromInt(1));
@@ -211,11 +211,11 @@ public class FileInputsAdderTest {
 
   @Test
   public void testAddSymlinkChain() throws IOException {
-    Path file1 = tmp.newFile("file1");
+    Path file1 = tmp.newFile("file1").getPath();
 
-    Path link1 = tmp.getRoot().resolve("link1");
-    Path link2 = tmp.getRoot().resolve("link2");
-    Path link3 = tmp.getRoot().resolve("link3");
+    Path link1 = tmp.getRoot().resolve("link1").getPath();
+    Path link2 = tmp.getRoot().resolve("link2").getPath();
+    Path link3 = tmp.getRoot().resolve("link3").getPath();
 
     Files.createSymbolicLink(link1, link2);
     Files.createSymbolicLink(link2, link3);

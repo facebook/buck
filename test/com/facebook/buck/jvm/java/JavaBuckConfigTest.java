@@ -98,8 +98,8 @@ public class JavaBuckConfigTest {
 
   @Test
   public void whenJavaExistsAndIsExecutableThenItIsReturned() throws IOException {
-    Path java = temporaryFolder.newExecutableFile();
-    Path javaForTests = temporaryFolder.newExecutableFile();
+    Path java = temporaryFolder.newExecutableFile().getPath();
+    Path javaForTests = temporaryFolder.newExecutableFile().getPath();
     String javaCommand = java.toString();
     String javaForTestsCommand = javaForTests.toString();
     JavaBuckConfig config =
@@ -131,7 +131,7 @@ public class JavaBuckConfigTest {
 
   @Test
   public void whenJavaExistsAndIsRelativePathThenItsAbsolutePathIsReturned() throws IOException {
-    Path java = temporaryFolder.newExecutableFile();
+    Path java = temporaryFolder.newExecutableFile().getPath();
     String javaFilename = java.getFileName().toString();
     JavaBuckConfig config =
         FakeBuckConfig.builder()
@@ -150,7 +150,7 @@ public class JavaBuckConfigTest {
 
   @Test
   public void whenJavaForTestsIsNotSetThenJavaIsReturned() throws IOException {
-    Path java = temporaryFolder.newExecutableFile();
+    Path java = temporaryFolder.newExecutableFile().getPath();
     String javaCommand = java.toString();
     JavaBuckConfig config =
         FakeBuckConfig.builder()
@@ -175,7 +175,7 @@ public class JavaBuckConfigTest {
 
   @Test
   public void whenJavacExistsAndIsExecutableThenCorrectPathIsReturned() throws IOException {
-    Path javac = temporaryFolder.newExecutableFile();
+    Path javac = temporaryFolder.newExecutableFile().getPath();
 
     Reader reader =
         new StringReader(
@@ -202,7 +202,7 @@ public class JavaBuckConfigTest {
 
   @Test
   public void whenJavacDoesNotExistThenHumanReadableExceptionIsThrown() throws IOException {
-    String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
+    String invalidPath = temporaryFolder.getRoot() + "DoesNotExist";
     Reader reader =
         new StringReader(
             Joiner.on('\n').join("[tools]", "    javac = " + invalidPath.replace("\\", "\\\\")));
@@ -223,7 +223,7 @@ public class JavaBuckConfigTest {
         "Files on Windows are executable by default.",
         Platform.detect(),
         is(not(Platform.WINDOWS)));
-    Path javac = temporaryFolder.newFile();
+    Path javac = temporaryFolder.newFile().getPath();
 
     Reader reader = new StringReader(Joiner.on('\n').join("[tools]", "    javac = " + javac));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
@@ -240,7 +240,7 @@ public class JavaBuckConfigTest {
 
   @Test
   public void whenJavacJarDoesNotExistThenHumanReadableExceptionIsThrown() throws IOException {
-    String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
+    String invalidPath = temporaryFolder.getRoot() + "DoesNotExist";
     Reader reader =
         new StringReader(
             Joiner.on('\n')

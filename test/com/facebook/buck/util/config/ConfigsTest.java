@@ -18,6 +18,7 @@ package com.facebook.buck.util.config;
 
 import static org.junit.Assert.*;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -36,13 +37,13 @@ public class ConfigsTest {
   @Test
   public void configCreationGeneratesConfigMap() throws IOException {
 
-    Path root = tmp.getRoot();
+    AbsPath root = tmp.getRoot();
 
-    Path buckConfig = tmp.newFile(".buckconfig");
+    AbsPath buckConfig = tmp.newFile(".buckconfig");
     MostFiles.writeLinesToFile(
         ImmutableList.of("[test_section]", "test_field = value2"), buckConfig);
 
-    Path buckConfigLocal = tmp.newFile(".buckconfig.local");
+    AbsPath buckConfigLocal = tmp.newFile(".buckconfig.local");
     MostFiles.writeLinesToFile(
         ImmutableList.of("[test_section]", "test_field = value1"), buckConfigLocal);
 
@@ -50,7 +51,7 @@ public class ConfigsTest {
 
     ImmutableSet<Path> addedPaths =
         Stream.of(".buckconfig", ".buckconfig.local")
-            .map(root::resolve)
+            .map(path -> root.resolve(path).getPath())
             .collect(ImmutableSet.toImmutableSet());
 
     /** not using assertEqual because more configs can be added by {@code createDefaultConfig} */
@@ -60,11 +61,11 @@ public class ConfigsTest {
   @Test
   public void configOverrideOtherSources() throws IOException {
 
-    Path buckConfig = tmp.newFile(".buckconfig");
+    AbsPath buckConfig = tmp.newFile(".buckconfig");
     MostFiles.writeLinesToFile(
         ImmutableList.of("[test_section]", "test_field = value2"), buckConfig);
 
-    Path buckConfigLocal = tmp.newFile(".buckconfig.local");
+    AbsPath buckConfigLocal = tmp.newFile(".buckconfig.local");
     MostFiles.writeLinesToFile(
         ImmutableList.of("[test_section]", "test_field = value1"), buckConfigLocal);
 
@@ -82,9 +83,9 @@ public class ConfigsTest {
     // ordered in increasing priority (top is least important, bottom is the most)
     // only tests files that could be inside the project's directory.
 
-    Path root = tmp.getRoot();
+    AbsPath root = tmp.getRoot();
 
-    Path buckConfig = tmp.newFile(".buckconfig");
+    AbsPath buckConfig = tmp.newFile(".buckconfig");
     MostFiles.writeLinesToFile(
         ImmutableList.of("[test_section]", "test_field = value2"), buckConfig);
 
@@ -92,7 +93,7 @@ public class ConfigsTest {
 
     assertEquals("value2", config.get("test_section", "test_field").get());
 
-    Path buckConfigLocal = tmp.newFile(".buckconfig.local");
+    AbsPath buckConfigLocal = tmp.newFile(".buckconfig.local");
     MostFiles.writeLinesToFile(
         ImmutableList.of("[test_section]", "test_field = value1"), buckConfigLocal);
 

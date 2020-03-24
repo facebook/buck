@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -34,7 +35,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Collection;
 import org.junit.Rule;
 import org.junit.Test;
@@ -46,17 +46,18 @@ import org.junit.Test;
 public class DBuckConfigTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private Path makeFakeExecutable(Path directory, String baseName) throws IOException {
-    Path dmd = directory.resolve(baseName + (Platform.detect() == Platform.WINDOWS ? ".exe" : ""));
-    Files.createFile(dmd);
-    MostFiles.makeExecutable(dmd);
+  private AbsPath makeFakeExecutable(AbsPath directory, String baseName) throws IOException {
+    AbsPath dmd =
+        directory.resolve(baseName + (Platform.detect() == Platform.WINDOWS ? ".exe" : ""));
+    Files.createFile(dmd.getPath());
+    MostFiles.makeExecutable(dmd.getPath());
     return dmd;
   }
 
   @Test
   public void testCompilerInPath() throws IOException {
-    Path yooserBeen = tmp.newFolder("yooser", "been");
-    Path dmd = makeFakeExecutable(yooserBeen, "dmd");
+    AbsPath yooserBeen = tmp.newFolder("yooser", "been");
+    AbsPath dmd = makeFakeExecutable(yooserBeen, "dmd");
     BuckConfig delegate =
         FakeBuckConfig.builder()
             .setEnvironment(ImmutableMap.of("PATH", yooserBeen.toRealPath().toString()))
@@ -67,8 +68,8 @@ public class DBuckConfigTest {
 
   @Test
   public void testCompilerNotInPath() throws IOException {
-    Path yooserBeen = tmp.newFolder("yooser", "been");
-    Path userBean = tmp.newFolder("user", "bean").toRealPath();
+    AbsPath yooserBeen = tmp.newFolder("yooser", "been");
+    AbsPath userBean = tmp.newFolder("user", "bean").toRealPath();
     makeFakeExecutable(yooserBeen, "dmd");
     BuckConfig delegate =
         FakeBuckConfig.builder()
@@ -99,9 +100,9 @@ public class DBuckConfigTest {
 
   @Test
   public void testCompilerOverridden() throws IOException {
-    Path yooserBeen = tmp.newFolder("yooser", "been");
+    AbsPath yooserBeen = tmp.newFolder("yooser", "been");
     makeFakeExecutable(yooserBeen, "dmd");
-    Path ldc = makeFakeExecutable(yooserBeen, "ldc");
+    AbsPath ldc = makeFakeExecutable(yooserBeen, "ldc");
     BuckConfig delegate =
         FakeBuckConfig.builder()
             .setEnvironment(ImmutableMap.of("PATH", yooserBeen.toRealPath().toString()))
@@ -123,11 +124,11 @@ public class DBuckConfigTest {
 
   @Test
   public void testDLinkerFlagsOverridden() throws IOException {
-    Path yooserBin = tmp.newFolder("yooser", "bin");
-    Path yooserLib = tmp.newFolder("yooser", "lib");
+    AbsPath yooserBin = tmp.newFolder("yooser", "bin");
+    AbsPath yooserLib = tmp.newFolder("yooser", "lib");
     makeFakeExecutable(yooserBin, "dmd");
-    Path phobos2So = yooserLib.resolve("libphobos2.so");
-    Files.createFile(phobos2So);
+    AbsPath phobos2So = yooserLib.resolve("libphobos2.so");
+    Files.createFile(phobos2So.getPath());
     BuckConfig delegate =
         FakeBuckConfig.builder()
             .setEnvironment(ImmutableMap.of("PATH", yooserBin.toRealPath().toString()))
@@ -143,11 +144,11 @@ public class DBuckConfigTest {
 
   @Test
   public void testDRuntimeNearCompiler() throws IOException {
-    Path yooserBin = tmp.newFolder("yooser", "bin");
-    Path yooserLib = tmp.newFolder("yooser", "lib");
+    AbsPath yooserBin = tmp.newFolder("yooser", "bin");
+    AbsPath yooserLib = tmp.newFolder("yooser", "lib");
     makeFakeExecutable(yooserBin, "dmd");
-    Path phobos2So = yooserLib.resolve("libphobos2.so");
-    Files.createFile(phobos2So);
+    AbsPath phobos2So = yooserLib.resolve("libphobos2.so");
+    Files.createFile(phobos2So.getPath());
     BuckConfig delegate =
         FakeBuckConfig.builder()
             .setEnvironment(ImmutableMap.of("PATH", yooserBin.toRealPath().toString()))

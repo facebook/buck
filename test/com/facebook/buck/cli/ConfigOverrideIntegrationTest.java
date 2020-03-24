@@ -93,7 +93,8 @@ public class ConfigOverrideIntegrationTest {
     workspace.setUp();
 
     Files.write(
-        tmp.newFile("buckconfig"), ImmutableList.of("[buildfile]", "  includes = //includes.py"));
+        tmp.newFile("buckconfig").getPath(),
+        ImmutableList.of("[buildfile]", "  includes = //includes.py"));
 
     workspace.runBuckCommand("targets", "--config-file", "buckconfig", "//...").assertSuccess();
     workspace.runBuckCommand("targets", "--config-file", "//buckconfig", "//...").assertSuccess();
@@ -117,7 +118,8 @@ public class ConfigOverrideIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "includes_override", tmp);
     Files.write(
-        tmp.newFile("buckconfig"), ImmutableList.of("[buildfile]", "  includes = //includes.py"));
+        tmp.newFile("buckconfig").getPath(),
+        ImmutableList.of("[buildfile]", "  includes = //includes.py"));
     workspace.setUp();
 
     ProcessResult processResult =
@@ -135,8 +137,12 @@ public class ConfigOverrideIntegrationTest {
     String myServer = "//:my_server";
     String myClient = "//:my_client";
 
-    Files.write(tmp.newFile("buckconfig1"), ImmutableList.of("[alias]", "  server = " + myServer));
-    Files.write(tmp.newFile("buckconfig2"), ImmutableList.of("[alias]", "  client = " + myClient));
+    Files.write(
+        tmp.newFile("buckconfig1").getPath(),
+        ImmutableList.of("[alias]", "  server = " + myServer));
+    Files.write(
+        tmp.newFile("buckconfig2").getPath(),
+        ImmutableList.of("[alias]", "  client = " + myClient));
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -170,10 +176,11 @@ public class ConfigOverrideIntegrationTest {
     workspace.setUp();
 
     Files.write(
-        tmp.newFile("buckconfig1"),
+        tmp.newFile("buckconfig1").getPath(),
         ImmutableList.of("[buildfile]", "  includes = //invalid_includes.py"));
     Files.write(
-        tmp.newFile("buckconfig2"), ImmutableList.of("[buildfile]", "  includes = //includes.py"));
+        tmp.newFile("buckconfig2").getPath(),
+        ImmutableList.of("[buildfile]", "  includes = //includes.py"));
 
     workspace
         .runBuckCommand(

@@ -18,6 +18,7 @@ package com.facebook.buck.rules.modern.builders;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
@@ -49,14 +50,15 @@ import org.junit.Test;
 public class LocalContentAddressedStorageTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private LocalContentAddressedStorage storage;
-  private Path storageDir;
+  private AbsPath storageDir;
   private final Protocol protocol = new GrpcProtocol();
 
   @Before
   public void setUp() {
     storageDir = tmp.getRoot().resolve("__storage__");
     storage =
-        new LocalContentAddressedStorage(storageDir, protocol, BuckEventBusForTests.newInstance());
+        new LocalContentAddressedStorage(
+            storageDir.getPath(), protocol, BuckEventBusForTests.newInstance());
   }
 
   @Test
@@ -138,11 +140,11 @@ public class LocalContentAddressedStorageTest {
 
     Futures.getUnchecked(storage.addMissing(requiredData.build()));
 
-    Path inputsDir = tmp.getRoot().resolve("inputs");
-    storage.materializeInputs(inputsDir, rootDigest, Optional.empty());
+    AbsPath inputsDir = tmp.getRoot().resolve("inputs");
+    storage.materializeInputs(inputsDir.getPath(), rootDigest, Optional.empty());
 
-    assertDataEquals(someData, Files.readAllBytes(inputsDir.resolve(somePath)));
-    assertDataEquals(otherData, Files.readAllBytes(inputsDir.resolve(otherPath)));
+    assertDataEquals(someData, Files.readAllBytes(inputsDir.resolve(somePath).getPath()));
+    assertDataEquals(otherData, Files.readAllBytes(inputsDir.resolve(otherPath).getPath()));
   }
 
   private FileNode newFileNode(byte[] bytes, Path path, boolean isExecutable) {

@@ -36,7 +36,7 @@ public class FileTreeComputationTest {
 
   @Test
   public void canBuildTree() throws Exception {
-    Path dir = tmp.getRoot().resolve("dir");
+    Path dir = tmp.getRoot().resolve("dir").getPath();
     Path file = dir.resolve("file");
     Path dir1 = dir.resolve("dir1");
     Path file1 = dir1.resolve("file1");

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.file;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.google.common.base.Throwables;
 import java.io.IOException;
@@ -46,6 +47,10 @@ public abstract class LazyPath {
         };
     instance.path = path;
     return instance;
+  }
+
+  public static LazyPath ofInstance(AbsPath path) {
+    return ofInstance(path.getPath());
   }
 
   /**

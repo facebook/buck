@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil.integration;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -39,7 +40,7 @@ public class InferHelper {
   }
 
   public static ProjectWorkspace setupWorkspace(
-      Object testCase, Path workspaceRoot, String scenarioName) throws IOException {
+      Object testCase, AbsPath workspaceRoot, String scenarioName) throws IOException {
     ProjectWorkspace projectWorkspace =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             testCase, scenarioName, workspaceRoot);
@@ -56,25 +57,27 @@ public class InferHelper {
 
   public static ProjectWorkspace setupCxxInferWorkspace(
       Object testCase,
-      Path temporaryFolder,
+      AbsPath temporaryFolder,
       Optional<String> rawBlacklistRegex,
       String scenarioName,
-      Optional<Path> fakeInferRootPathOpt)
+      Optional<AbsPath> fakeInferRootPathOpt)
       throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
             testCase, scenarioName, temporaryFolder);
 
-    Path fakeInferRootPath = fakeInferRootPathOpt.orElse(workspace.getPath("fake-infer"));
+    AbsPath fakeInferRootPath =
+        fakeInferRootPathOpt.orElse(AbsPath.of(workspace.getPath("fake-infer")));
 
-    Path inferBin = fakeInferRootPath.resolve("fake-bin");
-    Path facebookClangPluginsRoot = fakeInferRootPath.resolve("fake-clang");
+    AbsPath inferBin = fakeInferRootPath.resolve("fake-bin");
+    AbsPath facebookClangPluginsRoot = fakeInferRootPath.resolve("fake-clang");
 
     // create .buckconfig with the right path to the tools
     workspace.setUp();
 
     workspace.writeContentsToPath(
-        new InferConfigGenerator(inferBin, facebookClangPluginsRoot, rawBlacklistRegex)
+        new InferConfigGenerator(
+                inferBin.getPath(), facebookClangPluginsRoot.getPath(), rawBlacklistRegex)
             .toBuckConfigLines(),
         ".buckconfig");
 

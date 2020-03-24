@@ -39,6 +39,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -321,7 +322,7 @@ public class NdkCxxPlatformTest {
   @Test
   public void testNdkFlags() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    Path ndkRoot = tmp.newFolder("android-ndk-r10b");
+    AbsPath ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
@@ -335,7 +336,7 @@ public class NdkCxxPlatformTest {
             filesystem,
             InternalFlavor.of("android-x86"),
             Platform.detect(),
-            ndkRoot,
+            ndkRoot.getPath(),
             targetConfiguration,
             NdkCxxRuntime.GNUSTL,
             NdkCxxRuntimeType.DYNAMIC,
@@ -354,7 +355,7 @@ public class NdkCxxPlatformTest {
   @Test
   public void testExtraNdkFlags() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    Path ndkRoot = tmp.newFolder("android-ndk-r10b");
+    AbsPath ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
@@ -383,7 +384,7 @@ public class NdkCxxPlatformTest {
                 filesystem,
                 InternalFlavor.of("android-x86"),
                 Platform.detect(),
-                ndkRoot,
+                ndkRoot.getPath(),
                 targetConfiguration,
                 NdkCxxRuntime.GNUSTL,
                 NdkCxxRuntimeType.DYNAMIC,
@@ -456,7 +457,7 @@ public class NdkCxxPlatformTest {
   public void testExtraNdkFlagsLiterally() throws IOException {
     Assume.assumeThat(Platform.detect(), is(Matchers.not(Platform.WINDOWS)));
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    Path ndkRoot = tmp.newFolder("android-ndk-r10b");
+    AbsPath ndkRoot = tmp.newFolder("android-ndk-r10b");
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             TargetCpuType.X86,
@@ -486,7 +487,7 @@ public class NdkCxxPlatformTest {
                 filesystem,
                 InternalFlavor.of("android-x86"),
                 Platform.detect(),
-                ndkRoot,
+                ndkRoot.getPath(),
                 targetConfiguration,
                 NdkCxxRuntime.GNUSTL,
                 NdkCxxRuntimeType.DYNAMIC,
@@ -564,14 +565,14 @@ public class NdkCxxPlatformTest {
       for (String dir : ImmutableList.of("android-ndk-r9c", "android-ndk-r10b")) {
         for (Platform platform :
             ImmutableList.of(Platform.LINUX, Platform.MACOS, Platform.WINDOWS)) {
-          Path root = tmp.newFolder(dir);
+          AbsPath root = tmp.newFolder(dir);
           MostFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
           ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
                   CxxPlatformUtils.DEFAULT_CONFIG,
                   new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
                   filesystem,
-                  root,
+                  root.getPath(),
                   NdkCxxPlatformCompiler.of(config.getFirst(), "gcc-version", "clang-version"),
                   NdkCxxRuntime.GNUSTL,
                   NdkCxxRuntimeType.DYNAMIC,
@@ -613,14 +614,14 @@ public class NdkCxxPlatformTest {
   public void headerVerificationWhitelistsNdkRoot() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     String dir = "android-ndk-r9c";
-    Path root = tmp.newFolder(dir);
+    AbsPath root = tmp.newFolder(dir);
     MostFiles.writeLinesToFile(ImmutableList.of("r9c"), root.resolve("RELEASE.TXT"));
     ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> platforms =
         NdkCxxPlatforms.getPlatforms(
             CxxPlatformUtils.DEFAULT_CONFIG,
             new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
             filesystem,
-            root,
+            root.getPath(),
             NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),
             NdkCxxRuntime.GNUSTL,
             NdkCxxRuntimeType.DYNAMIC,

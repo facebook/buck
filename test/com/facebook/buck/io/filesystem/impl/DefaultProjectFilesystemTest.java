@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.BuckPaths;
@@ -110,7 +111,7 @@ public class DefaultProjectFilesystemTest {
     // view should be relative to root
     assertEquals(Paths.get(""), view.projectRoot);
     assertEquals(filesystem.getRootPath().getPath(), view.getRootPath());
-    assertEquals(Paths.get(""), view.relativize(tmp.getRoot()));
+    assertEquals(Paths.get(""), view.relativize(tmp.getRoot().getPath()));
 
     // view should have no ignores
     assertTrue(view.ignoredPaths.isEmpty());
@@ -129,15 +130,15 @@ public class DefaultProjectFilesystemTest {
 
   @Test
   public void testSetLastModifiedTime() throws IOException {
-    Path path = tmp.newFile("somefile");
+    AbsPath path = tmp.newFile("somefile");
     filesystem.setLastModifiedTime(path, FileTime.fromMillis(0));
-    assertEquals(Files.getLastModifiedTime(path).toMillis(), 0);
+    assertEquals(Files.getLastModifiedTime(path.getPath()).toMillis(), 0);
   }
 
   @Test
   public void testIsDirectory() throws IOException {
-    Path dir = tmp.newFolder("src");
-    Path file = tmp.newFile("BUCK");
+    AbsPath dir = tmp.newFolder("src");
+    AbsPath file = tmp.newFile("BUCK");
     assertTrue(filesystem.isDirectory(dir));
     assertFalse(filesystem.isDirectory(file));
   }
@@ -145,25 +146,25 @@ public class DefaultProjectFilesystemTest {
   @Test
   public void testMkdirsCanCreateNestedFolders() throws IOException {
     filesystem.mkdirs(new File("foo/bar/baz").toPath());
-    assertTrue(Files.isDirectory(tmp.getRoot().resolve("foo/bar/baz")));
+    assertTrue(Files.isDirectory(tmp.getRoot().resolve("foo/bar/baz").getPath()));
   }
 
   @Test
   public void mkdirsAllowsSymlinksToDirs() throws IOException {
     Assume.assumeTrue("System supports symlinks", !Platform.detect().equals(Platform.WINDOWS));
-    Files.createDirectory(tmp.getRoot().resolve("real_dir"));
+    Files.createDirectory(tmp.getRoot().resolve("real_dir").getPath());
     // Create a relative symbolic link.
     CreateSymlinksForTests.createSymLink(
-        tmp.getRoot().resolve("symlinked_dir"), filesystem.getPath("real_dir"));
+        tmp.getRoot().resolve("symlinked_dir"), RelPath.of(filesystem.getPath("real_dir")));
     filesystem.mkdirs(filesystem.getPath("symlinked_dir"));
   }
 
   @Test
   public void testSymlinkForceCanDeleteDirectory() throws IOException {
-    Path realFileDir = Files.createDirectory(tmp.getRoot().resolve("realfile"));
+    Path realFileDir = Files.createDirectory(tmp.getRoot().resolve("realfile").getPath());
     Files.createFile(realFileDir.resolve("file"));
     Files.createFile(realFileDir.resolve("file2"));
-    Path symlinkDir = Files.createDirectory(tmp.getRoot().resolve("symlink"));
+    Path symlinkDir = Files.createDirectory(tmp.getRoot().resolve("symlink").getPath());
     Files.createFile(symlinkDir.resolve("junk"));
 
     filesystem.createSymLink(symlinkDir, realFileDir, true);
@@ -179,18 +180,18 @@ public class DefaultProjectFilesystemTest {
   public void testCreateNewFile() throws IOException {
     Path path = Paths.get("somefile");
     filesystem.createNewFile(path);
-    assertTrue(Files.exists(tmp.getRoot().toAbsolutePath().resolve(path)));
+    assertTrue(Files.exists(tmp.getRoot().resolve(path).getPath()));
   }
 
   @Test
   public void testCreateParentDirs() throws IOException {
     Path pathRelativeToProjectRoot = Paths.get("foo/bar/baz.txt");
     filesystem.createParentDirs(pathRelativeToProjectRoot);
-    assertTrue(Files.isDirectory(tmp.getRoot().resolve("foo")));
-    assertTrue(Files.isDirectory(tmp.getRoot().resolve("foo/bar")));
+    assertTrue(Files.isDirectory(tmp.getRoot().resolve("foo").getPath()));
+    assertTrue(Files.isDirectory(tmp.getRoot().resolve("foo/bar").getPath()));
     assertFalse(
         "createParentDirs() should create directories, but not the leaf/file part of the path.",
-        Files.exists(tmp.getRoot().resolve("foo/bar/baz.txt")));
+        Files.exists(tmp.getRoot().resolve("foo/bar/baz.txt").getPath()));
   }
 
   @Test(expected = NullPointerException.class)
@@ -210,24 +211,24 @@ public class DefaultProjectFilesystemTest {
 
   @Test
   public void testReadFirstLineWithEmptyFile() throws IOException {
-    Path emptyFile = tmp.newFile("foo.txt");
-    Files.write(emptyFile, new byte[0]);
-    assertTrue(Files.isRegularFile(emptyFile));
+    AbsPath emptyFile = tmp.newFile("foo.txt");
+    Files.write(emptyFile.getPath(), new byte[0]);
+    assertTrue(Files.isRegularFile(emptyFile.getPath()));
     assertEquals(Optional.empty(), filesystem.readFirstLine("foo.txt"));
   }
 
   @Test
   public void testReadFirstLineFromMultiLineFile() throws IOException {
-    Path multiLineFile = tmp.newFile("foo.txt");
-    Files.write(multiLineFile, "foo\nbar\nbaz\n".getBytes(UTF_8));
+    AbsPath multiLineFile = tmp.newFile("foo.txt");
+    Files.write(multiLineFile.getPath(), "foo\nbar\nbaz\n".getBytes(UTF_8));
     assertEquals(Optional.of("foo"), filesystem.readFirstLine("foo.txt"));
   }
 
   @Test
   public void testGetFileSize() throws IOException {
-    Path wordsFile = tmp.newFile("words.txt");
+    AbsPath wordsFile = tmp.newFile("words.txt");
     String content = "Here\nare\nsome\nwords.\n";
-    Files.write(wordsFile, content.getBytes(UTF_8));
+    Files.write(wordsFile.getPath(), content.getBytes(UTF_8));
 
     assertEquals(content.length(), filesystem.getFileSize(Paths.get("words.txt")));
   }
@@ -242,7 +243,8 @@ public class DefaultProjectFilesystemTest {
     Iterable<String> lines = ImmutableList.of("foo", "bar", "baz");
     filesystem.writeLinesToPath(lines, Paths.get("lines.txt"));
 
-    String contents = new String(Files.readAllBytes(tmp.getRoot().resolve("lines.txt")), UTF_8);
+    String contents =
+        new String(Files.readAllBytes(tmp.getRoot().resolve("lines.txt").getPath()), UTF_8);
     assertEquals("foo\nbar\nbaz\n", contents);
   }
 
@@ -252,7 +254,8 @@ public class DefaultProjectFilesystemTest {
     byte[] bytes = content.getBytes(UTF_8);
     filesystem.writeBytesToPath(bytes, Paths.get("hello.txt"));
     assertEquals(
-        content, new String(Files.readAllBytes(tmp.getRoot().resolve("hello.txt")), UTF_8));
+        content,
+        new String(Files.readAllBytes(tmp.getRoot().resolve("hello.txt").getPath()), UTF_8));
   }
 
   @Test
@@ -263,7 +266,7 @@ public class DefaultProjectFilesystemTest {
     assertEquals(
         "The bytes on disk should match those from the InputStream.",
         "Hello, world!",
-        new String(Files.readAllBytes(tmp.getRoot().resolve("bytes.txt")), UTF_8));
+        new String(Files.readAllBytes(tmp.getRoot().resolve("bytes.txt").getPath()), UTF_8));
   }
 
   @Test
@@ -278,7 +281,7 @@ public class DefaultProjectFilesystemTest {
     assertEquals(
         "The bytes on disk should match those from the second InputStream.",
         "hello again!",
-        new String(Files.readAllBytes(tmp.getRoot().resolve("replace_me.txt")), UTF_8));
+        new String(Files.readAllBytes(tmp.getRoot().resolve("replace_me.txt").getPath()), UTF_8));
   }
 
   @Test
@@ -298,10 +301,10 @@ public class DefaultProjectFilesystemTest {
     tmp.newFolder("dest");
     filesystem.copyFolder(Paths.get("src"), Paths.get("dest"));
 
-    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/foo/Foo.java")));
-    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/foo/package.html")));
-    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/bar/Bar.java")));
-    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/bar/package.html")));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/foo/Foo.java").getPath()));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/foo/package.html").getPath()));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/bar/Bar.java").getPath()));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/com/example/bar/package.html").getPath()));
   }
 
   @Test
@@ -321,31 +324,34 @@ public class DefaultProjectFilesystemTest {
     tmp.newFolder("dest");
     filesystem.copy(Paths.get("src"), Paths.get("dest"), CopySourceMode.DIRECTORY_AND_CONTENTS);
 
-    assertTrue(Files.exists(tmp.getRoot().resolve("dest/src/com/example/foo/Foo.java")));
-    assertTrue(Files.exists(tmp.getRoot().resolve("dest/src/com/example/foo/package.html")));
-    assertTrue(Files.exists(tmp.getRoot().resolve("dest/src/com/example/bar/Bar.java")));
-    assertTrue(Files.exists(tmp.getRoot().resolve("dest/src/com/example/bar/package.html")));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/src/com/example/foo/Foo.java").getPath()));
+    assertTrue(
+        Files.exists(tmp.getRoot().resolve("dest/src/com/example/foo/package.html").getPath()));
+    assertTrue(Files.exists(tmp.getRoot().resolve("dest/src/com/example/bar/Bar.java").getPath()));
+    assertTrue(
+        Files.exists(tmp.getRoot().resolve("dest/src/com/example/bar/package.html").getPath()));
   }
 
   @Test
   public void testCopyFile() throws IOException {
     tmp.newFolder("foo");
-    Path file = tmp.newFile("foo/bar.txt");
+    AbsPath file = tmp.newFile("foo/bar.txt");
     String content = "Hello, World!";
-    Files.write(file, content.getBytes(UTF_8));
+    Files.write(file.getPath(), content.getBytes(UTF_8));
 
     filesystem.copyFile(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt"));
     assertEquals(
-        content, new String(Files.readAllBytes(tmp.getRoot().resolve("foo/baz.txt")), UTF_8));
+        content,
+        new String(Files.readAllBytes(tmp.getRoot().resolve("foo/baz.txt").getPath()), UTF_8));
   }
 
   @Test
   public void testDeleteFileAtPath() throws IOException {
     Path path = Paths.get("foo.txt");
-    Path file = tmp.newFile(path.toString());
-    assertTrue(Files.exists(file));
+    AbsPath file = tmp.newFile(path.toString());
+    assertTrue(Files.exists(file.getPath()));
     filesystem.deleteFileAtPath(path);
-    assertFalse(Files.exists(file));
+    assertFalse(Files.exists(file.getPath()));
   }
 
   @Test
@@ -449,12 +455,12 @@ public class DefaultProjectFilesystemTest {
   public void testCreateZipPreservesExecutablePermissions() throws IOException {
 
     // Create a empty executable file.
-    Path exe = tmp.newFile("test.exe");
+    AbsPath exe = tmp.newFile("test.exe");
     MostFiles.makeExecutable(exe);
 
     // Archive it into a zipfile using `Zip.create`.
-    Path zipFile = tmp.getRoot().resolve("test.zip");
-    Zip.create(filesystem, ImmutableList.of(exe), zipFile);
+    AbsPath zipFile = tmp.getRoot().resolve("test.zip");
+    Zip.create(filesystem, ImmutableList.of(exe.getPath()), zipFile.getPath());
 
     // Now unpack the archive (using apache's common-compress, as it preserves
     // executable permissions) and verify that the archive entry has executable
@@ -474,15 +480,15 @@ public class DefaultProjectFilesystemTest {
   public void testCreateZipIgnoresMtimes() throws IOException {
 
     // Create a empty executable file.
-    Path exe = tmp.newFile("foo");
+    AbsPath exe = tmp.newFile("foo");
 
     // Archive it into a zipfile using `Zip.create`.
-    Path zipFile = tmp.getRoot().resolve("test.zip");
-    Zip.create(filesystem, ImmutableList.of(exe), zipFile);
+    AbsPath zipFile = tmp.getRoot().resolve("test.zip");
+    Zip.create(filesystem, ImmutableList.of(exe.getPath()), zipFile.getPath());
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.
     Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
-    try (ZipInputStream is = new ZipInputStream(Files.newInputStream(zipFile))) {
+    try (ZipInputStream is = new ZipInputStream(Files.newInputStream(zipFile.getPath()))) {
       for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
         assertEquals(entry.getName(), dosEpoch, new Date(entry.getTime()));
       }
@@ -515,10 +521,12 @@ public class DefaultProjectFilesystemTest {
     tmp.newFile("foo/bar.txt");
     tmp.newFile("foo/baz.txt");
 
-    Path output = tmp.newFile("out.zip");
+    AbsPath output = tmp.newFile("out.zip");
 
     Zip.create(
-        filesystem, ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), output);
+        filesystem,
+        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
+        output.getPath());
 
     ZipInspector zipInspector = new ZipInspector(output);
     assertEquals(ImmutableList.of("foo/bar.txt", "foo/baz.txt"), zipInspector.getZipFileEntries());
@@ -531,12 +539,12 @@ public class DefaultProjectFilesystemTest {
     tmp.newFile("foo/baz.txt");
     tmp.newFolder("empty");
 
-    Path output = tmp.newFile("out.zip");
+    AbsPath output = tmp.newFile("out.zip");
 
     Zip.create(
         filesystem,
         ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt"), Paths.get("empty")),
-        output);
+        output.getPath());
 
     ZipInspector zipInspector = new ZipInspector(output);
     assertEquals(
@@ -549,20 +557,22 @@ public class DefaultProjectFilesystemTest {
     tmp.newFile("foo/bar.txt");
     tmp.newFile("foo/baz.txt");
 
-    Path output = tmp.newFile("out.zip");
+    AbsPath output = tmp.newFile("out.zip");
 
     Zip.create(
-        filesystem, ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), output);
+        filesystem,
+        ImmutableList.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")),
+        output.getPath());
 
     ImmutableCollection<Path> actualContents =
-        ImmutableSortedSet.copyOf(Unzip.getZipMembers(filesystem.resolve(output)));
+        ImmutableSortedSet.copyOf(Unzip.getZipMembers(filesystem.resolve(output.getPath())));
     assertEquals(
         ImmutableSortedSet.of(Paths.get("foo/bar.txt"), Paths.get("foo/baz.txt")), actualContents);
   }
 
   @Test
   public void testIsSymLinkReturnsTrueForSymLink() throws IOException {
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     CreateSymlinksForTests.createSymLink(rootPath.resolve("foo"), rootPath.resolve("bar"));
     assertTrue(filesystem.isSymLink(Paths.get("foo")));
   }
@@ -581,16 +591,16 @@ public class DefaultProjectFilesystemTest {
   @Test
   public void testSortedDirectoryContents() throws IOException {
     tmp.newFolder("foo");
-    Path a = tmp.newFile("foo/a.txt");
-    Files.setLastModifiedTime(a, FileTime.fromMillis(1000));
-    Path b = tmp.newFile("foo/b.txt");
-    Files.setLastModifiedTime(b, FileTime.fromMillis(2000));
-    Path c = tmp.newFile("foo/c.txt");
-    Files.setLastModifiedTime(c, FileTime.fromMillis(3000));
+    AbsPath a = tmp.newFile("foo/a.txt");
+    Files.setLastModifiedTime(a.getPath(), FileTime.fromMillis(1000));
+    AbsPath b = tmp.newFile("foo/b.txt");
+    Files.setLastModifiedTime(b.getPath(), FileTime.fromMillis(2000));
+    AbsPath c = tmp.newFile("foo/c.txt");
+    Files.setLastModifiedTime(c.getPath(), FileTime.fromMillis(3000));
     tmp.newFile("foo/non-matching");
 
     assertEquals(
-        ImmutableSet.of(c, b, a),
+        ImmutableSet.of(c.getPath(), b.getPath(), a.getPath()),
         filesystem.getMtimeSortedMatchingDirectoryContents(Paths.get("foo"), "*.txt"));
   }
 
@@ -598,7 +608,7 @@ public class DefaultProjectFilesystemTest {
   public void testExtractIgnorePaths() {
     Config config =
         ConfigBuilder.createFromText("[project]", "ignore = .git, foo, bar/, baz//, a/b/c");
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(rootPath, config);
     ImmutableSet<Path> ignorePaths =
         FluentIterable.from(filesystem.getIgnorePaths())
@@ -626,7 +636,7 @@ public class DefaultProjectFilesystemTest {
   @Test
   public void testExtractIgnorePathsWithCacheDir() {
     Config config = ConfigBuilder.createFromText("[cache]", "dir = cache_dir");
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     ImmutableSet<Path> ignorePaths =
         FluentIterable.from(
                 TestProjectFilesystems.createProjectFilesystem(rootPath, config).getIgnorePaths())
@@ -645,14 +655,14 @@ public class DefaultProjectFilesystemTest {
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot(), config);
-    Files.createDirectories(tmp.getRoot().resolve("foo/bar"));
+    Files.createDirectories(tmp.getRoot().resolve("foo/bar").getPath());
     filesystem.touch(Paths.get("foo/bar/cake.txt"));
     filesystem.touch(Paths.get("foo/bar/cake.txt.orig"));
 
     ImmutableSet.Builder<String> allPaths = ImmutableSet.builder();
 
     filesystem.walkRelativeFileTree(
-        tmp.getRoot(),
+        tmp.getRoot().getPath(),
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
@@ -669,19 +679,19 @@ public class DefaultProjectFilesystemTest {
   @Test
   public void twoProjectFilesystemsWithSameIgnoreGlobsShouldBeEqual() {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = **/*.orig");
-    Path rootPath = tmp.getRoot();
+    AbsPath rootPath = tmp.getRoot();
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
     assertThat(
         "Two ProjectFilesystems with same glob in ignore should be equal",
         projectFilesystemFactory.createProjectFilesystem(
             CanonicalCellName.rootCell(),
-            AbsPath.of(rootPath),
+            rootPath,
             config,
             BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config)),
         equalTo(
             projectFilesystemFactory.createProjectFilesystem(
                 CanonicalCellName.rootCell(),
-                AbsPath.of(rootPath),
+                rootPath,
                 config,
                 BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config))));
   }
@@ -706,7 +716,7 @@ public class DefaultProjectFilesystemTest {
     expected.expect(IOException.class);
 
     tmp.newFolder("dir1");
-    Files.write(tmp.newFile("dir1/file1"), "new file 1".getBytes(Charsets.UTF_8));
+    Files.write(tmp.newFile("dir1/file1").getPath(), "new file 1".getBytes(Charsets.UTF_8));
 
     tmp.newFolder("dir2");
     tmp.newFile("dir2/file1");
@@ -719,7 +729,7 @@ public class DefaultProjectFilesystemTest {
     expected.expect(IOException.class);
 
     tmp.newFolder("dir1");
-    Files.write(tmp.newFile("dir1/file1"), "new file 1".getBytes(Charsets.UTF_8));
+    Files.write(tmp.newFile("dir1/file1").getPath(), "new file 1".getBytes(Charsets.UTF_8));
 
     tmp.newFolder("dir2");
     tmp.newFolder("dir2/file1");
@@ -731,21 +741,23 @@ public class DefaultProjectFilesystemTest {
 
   @Test
   public void moveChildrenMergesOneDirectoryIntoAnother() throws IOException {
-    Path srcDir = tmp.newFolder("dir1");
-    Files.write(tmp.newFile("dir1/file1"), "new file 1".getBytes(Charsets.UTF_8));
+    AbsPath srcDir = tmp.newFolder("dir1");
+    Files.write(tmp.newFile("dir1/file1").getPath(), "new file 1".getBytes(Charsets.UTF_8));
 
     tmp.newFolder("dir1/subdir1");
-    Files.write(tmp.newFile("dir1/subdir1/file2"), "new file 2".getBytes(Charsets.UTF_8));
+    Files.write(tmp.newFile("dir1/subdir1/file2").getPath(), "new file 2".getBytes(Charsets.UTF_8));
 
     tmp.newFolder("dir1/subdir1/subdir2");
-    Files.write(tmp.newFile("dir1/subdir1/subdir2/file3"), "new file 3".getBytes(Charsets.UTF_8));
+    Files.write(
+        tmp.newFile("dir1/subdir1/subdir2/file3").getPath(), "new file 3".getBytes(Charsets.UTF_8));
 
     tmp.newFolder("dir1/subdir1/subdir2/subdir3");
 
     tmp.newFolder("dir2");
-    Path destRoot = tmp.newFolder("dir2/dir3");
-    Files.write(tmp.newFile("dir2/dir3/file1"), "old file 1".getBytes(Charsets.UTF_8));
-    Files.write(tmp.newFile("dir2/dir3/file1_1"), "old file 1_1".getBytes(Charsets.UTF_8));
+    AbsPath destRoot = tmp.newFolder("dir2/dir3");
+    Files.write(tmp.newFile("dir2/dir3/file1").getPath(), "old file 1".getBytes(Charsets.UTF_8));
+    Files.write(
+        tmp.newFile("dir2/dir3/file1_1").getPath(), "old file 1_1".getBytes(Charsets.UTF_8));
 
     tmp.newFolder("dir2/dir3/dir4");
     tmp.newFolder("dir2/dir3/subdir1");
@@ -753,25 +765,29 @@ public class DefaultProjectFilesystemTest {
     filesystem.mergeChildren(
         Paths.get("dir1"), Paths.get("dir2/dir3"), StandardCopyOption.REPLACE_EXISTING);
 
-    assertTrue(Files.isDirectory(srcDir));
-    assertEquals("new file 1", Files.readAllLines(destRoot.resolve("file1")).get(0));
-    assertEquals("old file 1_1", Files.readAllLines(destRoot.resolve("file1_1")).get(0));
+    assertTrue(Files.isDirectory(srcDir.getPath()));
+    assertEquals("new file 1", Files.readAllLines(destRoot.resolve("file1").getPath()).get(0));
+    assertEquals("old file 1_1", Files.readAllLines(destRoot.resolve("file1_1").getPath()).get(0));
 
-    assertTrue(Files.isDirectory(destRoot.resolve("dir4")));
-    assertTrue(Files.isDirectory(destRoot.resolve("subdir1")));
+    assertTrue(Files.isDirectory(destRoot.resolve("dir4").getPath()));
+    assertTrue(Files.isDirectory(destRoot.resolve("subdir1").getPath()));
     assertEquals(
-        "new file 2", Files.readAllLines(destRoot.resolve("subdir1").resolve("file2")).get(0));
+        "new file 2",
+        Files.readAllLines(destRoot.resolve("subdir1").resolve("file2").getPath()).get(0));
 
-    assertTrue(Files.isDirectory(destRoot.resolve("subdir1").resolve("subdir2")));
+    assertTrue(Files.isDirectory(destRoot.resolve("subdir1").resolve("subdir2").getPath()));
     assertEquals(
         "new file 3",
-        Files.readAllLines(destRoot.resolve("subdir1").resolve("subdir2").resolve("file3")).get(0));
+        Files.readAllLines(
+                destRoot.resolve("subdir1").resolve("subdir2").resolve("file3").getPath())
+            .get(0));
 
     assertTrue(
-        Files.isDirectory(destRoot.resolve("subdir1").resolve("subdir2").resolve("subdir3")));
+        Files.isDirectory(
+            destRoot.resolve("subdir1").resolve("subdir2").resolve("subdir3").getPath()));
 
-    assertFalse(Files.exists(srcDir.resolve("subdir1")));
-    assertFalse(Files.exists(srcDir.resolve("file1")));
+    assertFalse(Files.exists(srcDir.resolve("subdir1").getPath()));
+    assertFalse(Files.exists(srcDir.resolve("file1").getPath()));
   }
 
   @Test

@@ -378,7 +378,7 @@ public class RemoteExecutionStrategyTest {
 
     @Override
     public Path getCellPathPrefix() {
-      return tmp.getRoot();
+      return tmp.getRoot().getPath();
     }
   };
 

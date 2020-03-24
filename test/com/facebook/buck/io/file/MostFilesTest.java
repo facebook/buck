@@ -25,6 +25,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.BuckFileSystem;
 import com.facebook.buck.testutil.BuckFSProviderDeleteError;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -205,32 +206,32 @@ public class MostFilesTest {
 
   @Test
   public void testWriteLinesToFile() throws IOException {
-    Path outputFile = tmp.newFile("output.txt");
+    AbsPath outputFile = tmp.newFile("output.txt");
     ImmutableList<String> lines =
         ImmutableList.of("The", "quick brown fox", "jumps over", "the lazy dog.");
     MostFiles.writeLinesToFile(lines, outputFile);
 
-    List<String> observedLines = Files.readAllLines(outputFile, Charsets.UTF_8);
+    List<String> observedLines = Files.readAllLines(outputFile.getPath(), Charsets.UTF_8);
     assertEquals(lines, observedLines);
   }
 
   @Test
   public void testSortFilesByAccessTime() throws IOException {
-    Path dir = tmp.newFolder();
-    Path fileW = dir.resolve("w");
-    Path fileX = dir.resolve("x");
-    Path fileY = dir.resolve("y");
-    Path fileZ = dir.resolve("z");
+    AbsPath dir = tmp.newFolder();
+    AbsPath fileW = dir.resolve("w");
+    AbsPath fileX = dir.resolve("x");
+    AbsPath fileY = dir.resolve("y");
+    AbsPath fileZ = dir.resolve("z");
 
-    Files.write(fileW, "w".getBytes(UTF_8));
-    Files.write(fileX, "x".getBytes(UTF_8));
-    Files.write(fileY, "y".getBytes(UTF_8));
-    Files.write(fileZ, "z".getBytes(UTF_8));
+    Files.write(fileW.getPath(), "w".getBytes(UTF_8));
+    Files.write(fileX.getPath(), "x".getBytes(UTF_8));
+    Files.write(fileY.getPath(), "y".getBytes(UTF_8));
+    Files.write(fileZ.getPath(), "z".getBytes(UTF_8));
 
-    Files.setAttribute(fileW, "lastAccessTime", FileTime.fromMillis(9000));
-    Files.setAttribute(fileX, "lastAccessTime", FileTime.fromMillis(0));
-    Files.setAttribute(fileY, "lastAccessTime", FileTime.fromMillis(1000));
-    Files.setAttribute(fileZ, "lastAccessTime", FileTime.fromMillis(2000));
+    Files.setAttribute(fileW.getPath(), "lastAccessTime", FileTime.fromMillis(9000));
+    Files.setAttribute(fileX.getPath(), "lastAccessTime", FileTime.fromMillis(0));
+    Files.setAttribute(fileY.getPath(), "lastAccessTime", FileTime.fromMillis(1000));
+    Files.setAttribute(fileZ.getPath(), "lastAccessTime", FileTime.fromMillis(2000));
 
     File[] files = dir.toFile().listFiles();
     MostFiles.sortFilesByAccessTime(files);
@@ -242,7 +243,7 @@ public class MostFilesTest {
 
   @Test
   public void testMakeExecutable() throws IOException {
-    Path file = tmp.newFile();
+    AbsPath file = tmp.newFile();
 
     // If the file system does not support the executable permission, skip the test
     assumeTrue(file.toFile().setExecutable(false));
@@ -251,72 +252,72 @@ public class MostFilesTest {
     assertTrue("File should be executable", file.toFile().canExecute());
 
     assumeTrue(file.toFile().setExecutable(true));
-    assertTrue("File should be executable", Files.isExecutable(file));
+    assertTrue("File should be executable", Files.isExecutable(file.getPath()));
     MostFiles.makeExecutable(file);
-    assertTrue("File should be executable", Files.isExecutable(file));
+    assertTrue("File should be executable", Files.isExecutable(file.getPath()));
   }
 
   @Test
   public void testMakeExecutableOnPosix() throws IOException {
     assumeTrue(FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
 
-    Path file = tmp.newFile();
+    AbsPath file = tmp.newFile();
 
-    Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("r--------"));
+    Files.setPosixFilePermissions(file.getPath(), PosixFilePermissions.fromString("r--------"));
     MostFiles.makeExecutable(file);
     assertEquals(
         "Owner's execute permission should have been set",
         "r-x------",
-        PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+        PosixFilePermissions.toString(Files.getPosixFilePermissions(file.getPath())));
 
-    Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("---r-----"));
+    Files.setPosixFilePermissions(file.getPath(), PosixFilePermissions.fromString("---r-----"));
     MostFiles.makeExecutable(file);
     assertEquals(
         "Group's execute permission should have been set",
         "---r-x---",
-        PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+        PosixFilePermissions.toString(Files.getPosixFilePermissions(file.getPath())));
 
-    Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("------r--"));
+    Files.setPosixFilePermissions(file.getPath(), PosixFilePermissions.fromString("------r--"));
     MostFiles.makeExecutable(file);
     assertEquals(
         "Others' execute permission should have been set",
         "------r-x",
-        PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+        PosixFilePermissions.toString(Files.getPosixFilePermissions(file.getPath())));
 
-    Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("r--r--r--"));
+    Files.setPosixFilePermissions(file.getPath(), PosixFilePermissions.fromString("r--r--r--"));
     MostFiles.makeExecutable(file);
     assertEquals(
         "All execute permissions should have been set",
         "r-xr-xr-x",
-        PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+        PosixFilePermissions.toString(Files.getPosixFilePermissions(file.getPath())));
 
-    Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("r-xrw-rwx"));
+    Files.setPosixFilePermissions(file.getPath(), PosixFilePermissions.fromString("r-xrw-rwx"));
     MostFiles.makeExecutable(file);
     assertEquals(
         "Only group's execute permission should have been set",
         "r-xrwxrwx",
-        PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+        PosixFilePermissions.toString(Files.getPosixFilePermissions(file.getPath())));
 
-    Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("-w---x-wx"));
+    Files.setPosixFilePermissions(file.getPath(), PosixFilePermissions.fromString("-w---x-wx"));
     MostFiles.makeExecutable(file);
     assertEquals(
         "No permissions should have been changed",
         "-w---x-wx",
-        PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+        PosixFilePermissions.toString(Files.getPosixFilePermissions(file.getPath())));
 
-    Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("---------"));
+    Files.setPosixFilePermissions(file.getPath(), PosixFilePermissions.fromString("---------"));
     MostFiles.makeExecutable(file);
     assertEquals(
         "No permissions should have been changed",
         "---------",
-        PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+        PosixFilePermissions.toString(Files.getPosixFilePermissions(file.getPath())));
 
-    Files.setPosixFilePermissions(file, PosixFilePermissions.fromString("rwxrwxrwx"));
+    Files.setPosixFilePermissions(file.getPath(), PosixFilePermissions.fromString("rwxrwxrwx"));
     MostFiles.makeExecutable(file);
     assertEquals(
         "No permissions should have been changed",
         "rwxrwxrwx",
-        PosixFilePermissions.toString(Files.getPosixFilePermissions(file)));
+        PosixFilePermissions.toString(Files.getPosixFilePermissions(file.getPath())));
   }
 
   @Test

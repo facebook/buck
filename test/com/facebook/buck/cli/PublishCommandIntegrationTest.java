@@ -161,7 +161,7 @@ public class PublishCommandIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "publish_scala", tmp);
     workspace.setUp();
 
-    Path publishPath = tmp.newFolder();
+    Path publishPath = tmp.newFolder().getPath();
 
     ProcessResult result =
         workspace.runBuckCommand(

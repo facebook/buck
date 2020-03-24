@@ -135,7 +135,7 @@ public class PerBuildStateTest {
       throws IOException, BuildFileParseException {
     tempDir.newFolder("foo");
 
-    AbsPath testFooBuckFile = AbsPath.of(tempDir.newFile("foo/BUCK").toRealPath());
+    AbsPath testFooBuckFile = tempDir.newFile("foo/BUCK").toRealPath();
     Files.write(
         testFooBuckFile.getPath(),
         "java_library(name = 'lib1')\njava_library(name = 'lib2')\n".getBytes(UTF_8));

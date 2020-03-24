@@ -52,9 +52,9 @@ public class BuildFileManifestCacheTest {
   private BuildFileManifestCache cache;
   private BuildFileManifest manifestCell1Root;
   private BuildFileManifest manifestCell1Folder;
-  private Path rootCellPath;
-  private Path cell1Path;
-  private Path cell2Path;
+  private AbsPath rootCellPath;
+  private AbsPath cell1Path;
+  private AbsPath cell2Path;
 
   @Before
   public void setUp() throws IOException {
@@ -62,44 +62,44 @@ public class BuildFileManifestCacheTest {
     cell1Path = tmp.newFolder("cell1");
     cell2Path = tmp.newFolder("cell2");
 
-    Files.createFile(cell1Path.resolve("BUCK"));
-    Files.createFile(cell1Path.resolve("1.java"));
-    Files.createFile(cell1Path.resolve("2.java"));
+    Files.createFile(cell1Path.resolve("BUCK").getPath());
+    Files.createFile(cell1Path.resolve("1.java").getPath());
+    Files.createFile(cell1Path.resolve("2.java").getPath());
 
     // No build file between two packages
-    Path folder1 = cell1Path.resolve("folder1");
-    Files.createDirectory(folder1);
-    Files.createFile(folder1.resolve("1.java"));
-    Files.createFile(folder1.resolve("2.java"));
+    AbsPath folder1 = cell1Path.resolve("folder1");
+    Files.createDirectory(folder1.getPath());
+    Files.createFile(folder1.resolve("1.java").getPath());
+    Files.createFile(folder1.resolve("2.java").getPath());
 
-    Path cell1SubPackage = folder1.resolve("folder2");
-    Files.createDirectory(cell1SubPackage);
-    Files.createFile(cell1SubPackage.resolve("BUCK"));
-    Files.createFile(cell1SubPackage.resolve("1.java"));
-    Files.createFile(cell1SubPackage.resolve("2.java"));
+    AbsPath cell1SubPackage = folder1.resolve("folder2");
+    Files.createDirectory(cell1SubPackage.getPath());
+    Files.createFile(cell1SubPackage.resolve("BUCK").getPath());
+    Files.createFile(cell1SubPackage.resolve("1.java").getPath());
+    Files.createFile(cell1SubPackage.resolve("2.java").getPath());
 
-    Path includesFolder = cell1Path.resolve("includes");
-    Files.createDirectory(includesFolder);
-    Files.createFile(includesFolder.resolve("BUCK"));
-    Files.createFile(includesFolder.resolve("include1.bzl"));
-    Files.createFile(includesFolder.resolve("include2.bzl"));
-    Files.createFile(includesFolder.resolve("noninclude.bzl"));
+    AbsPath includesFolder = cell1Path.resolve("includes");
+    Files.createDirectory(includesFolder.getPath());
+    Files.createFile(includesFolder.resolve("BUCK").getPath());
+    Files.createFile(includesFolder.resolve("include1.bzl").getPath());
+    Files.createFile(includesFolder.resolve("include2.bzl").getPath());
+    Files.createFile(includesFolder.resolve("noninclude.bzl").getPath());
 
     // setup second cell
-    Files.createFile(cell2Path.resolve("1.java"));
-    Files.createFile(cell2Path.resolve("2.java"));
+    Files.createFile(cell2Path.resolve("1.java").getPath());
+    Files.createFile(cell2Path.resolve("2.java").getPath());
 
-    Path cell2IncludesFolder = cell2Path.resolve("includes");
-    Files.createDirectory(cell2IncludesFolder);
-    Files.createFile(cell2IncludesFolder.resolve("BUCK"));
-    Files.createFile(cell2IncludesFolder.resolve("include1.bzl"));
-    Files.createFile(cell2IncludesFolder.resolve("include2.bzl"));
-    Files.createFile(cell2IncludesFolder.resolve("noninclude.bzl"));
+    AbsPath cell2IncludesFolder = cell2Path.resolve("includes");
+    Files.createDirectory(cell2IncludesFolder.getPath());
+    Files.createFile(cell2IncludesFolder.resolve("BUCK").getPath());
+    Files.createFile(cell2IncludesFolder.resolve("include1.bzl").getPath());
+    Files.createFile(cell2IncludesFolder.resolve("include2.bzl").getPath());
+    Files.createFile(cell2IncludesFolder.resolve("noninclude.bzl").getPath());
 
     cache =
         BuildFileManifestCache.of(
-            rootCellPath,
-            cell1Path,
+            rootCellPath.getPath(),
+            cell1Path.getPath(),
             Paths.get("BUCK"),
             TestProjectFilesystems.createProjectFilesystem(cell1Path).asView());
 
@@ -164,7 +164,7 @@ public class BuildFileManifestCacheTest {
   @Test
   public void whenRootBuildFileIsModifiedThenInvalidateOnlyRootPackage() {
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.MODIFY, RelPath.of(Paths.get("BUCK")));
+        WatchmanPathEvent.of(cell1Path, Kind.MODIFY, RelPath.of(Paths.get("BUCK")));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, true);
@@ -173,8 +173,7 @@ public class BuildFileManifestCacheTest {
   @Test
   public void whenNonRootBuildFileIsModifiedThenInvalidateOnlyNonRootPackage() {
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(
-            AbsPath.of(cell1Path), Kind.MODIFY, RelPath.of(Paths.get("folder1/folder2/BUCK")));
+        WatchmanPathEvent.of(cell1Path, Kind.MODIFY, RelPath.of(Paths.get("folder1/folder2/BUCK")));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -183,7 +182,7 @@ public class BuildFileManifestCacheTest {
   @Test
   public void whenBuildFileIsModifiedInAnotherCellThenDoNotInvalidate() {
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell2Path), Kind.MODIFY, RelPath.of(Paths.get("BUCK")));
+        WatchmanPathEvent.of(cell2Path, Kind.MODIFY, RelPath.of(Paths.get("BUCK")));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, true);
@@ -192,10 +191,10 @@ public class BuildFileManifestCacheTest {
   @Test
   public void whenRootBuildFileIsDeletedThenOnlyRootPackageInvalidated() throws Exception {
     Path buckFilePath = Paths.get("BUCK");
-    Files.delete(cell1Path.resolve(buckFilePath));
+    Files.delete(cell1Path.resolve(buckFilePath).getPath());
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.DELETE, RelPath.of(buckFilePath));
+        WatchmanPathEvent.of(cell1Path, Kind.DELETE, RelPath.of(buckFilePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, true);
@@ -205,10 +204,10 @@ public class BuildFileManifestCacheTest {
   public void whenBuildFileIsDeletedThenContainingAndParentPackagesAreInvalidated()
       throws Exception {
     Path buckFilePath = Paths.get("folder1/folder2/BUCK");
-    Files.delete(cell1Path.resolve(buckFilePath));
+    Files.delete(cell1Path.resolve(buckFilePath).getPath());
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.DELETE, RelPath.of(buckFilePath));
+        WatchmanPathEvent.of(cell1Path, Kind.DELETE, RelPath.of(buckFilePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, false);
@@ -219,7 +218,7 @@ public class BuildFileManifestCacheTest {
     Path modifiedFilePath = Paths.get("folder1/folder2/1.java");
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.MODIFY, RelPath.of(modifiedFilePath));
+        WatchmanPathEvent.of(cell1Path, Kind.MODIFY, RelPath.of(modifiedFilePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, true);
@@ -228,10 +227,10 @@ public class BuildFileManifestCacheTest {
   @Test
   public void whenRegularFileIsDeletedThenContainingPackageIsInvalidated() throws Exception {
     Path buckFilePath = Paths.get("folder1/folder2/1.java");
-    Files.delete(cell1Path.resolve(buckFilePath));
+    Files.delete(cell1Path.resolve(buckFilePath).getPath());
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.DELETE, RelPath.of(buckFilePath));
+        WatchmanPathEvent.of(cell1Path, Kind.DELETE, RelPath.of(buckFilePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -240,10 +239,9 @@ public class BuildFileManifestCacheTest {
   @Test
   public void whenRegularFileIsCreatedThenContainingPackageIsInvalidated() throws Exception {
     Path newFilePath = Paths.get("folder1/folder2/3.java");
-    Files.createFile(cell1Path.resolve(newFilePath));
+    Files.createFile(cell1Path.resolve(newFilePath).getPath());
 
-    WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.CREATE, RelPath.of(newFilePath));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.CREATE, RelPath.of(newFilePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -253,10 +251,9 @@ public class BuildFileManifestCacheTest {
   public void whenRegularFileIsCreatedInNonPackageRootFolderThenContainingPackageIsInvalidated()
       throws Exception {
     Path newFilePath = Paths.get("folder1/3.java");
-    Files.createFile(cell1Path.resolve(newFilePath));
+    Files.createFile(cell1Path.resolve(newFilePath).getPath());
 
-    WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.CREATE, RelPath.of(newFilePath));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.CREATE, RelPath.of(newFilePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, true);
@@ -266,10 +263,9 @@ public class BuildFileManifestCacheTest {
   public void whenRegularFileIsDeletedInNonPackageRootFolderThenContainingPackageIsInvalidated()
       throws Exception {
     Path filePath = Paths.get("folder1/1.java");
-    Files.delete(cell1Path.resolve(filePath));
+    Files.delete(cell1Path.resolve(filePath).getPath());
 
-    WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.DELETE, RelPath.of(filePath));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.DELETE, RelPath.of(filePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, true);
@@ -279,8 +275,7 @@ public class BuildFileManifestCacheTest {
   public void whenBzlFileIsModifiedThenReferencingPackageIsInvalidated() {
     Path filePath = Paths.get("includes/include2.bzl");
 
-    WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.MODIFY, RelPath.of(filePath));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.MODIFY, RelPath.of(filePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -290,8 +285,7 @@ public class BuildFileManifestCacheTest {
   public void whenBzlFileIsModifiedAndPackageIsRootThenReferencingPackageIsInvalidated() {
     Path filePath = Paths.get("includes/include1.bzl");
 
-    WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.MODIFY, RelPath.of(filePath));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.MODIFY, RelPath.of(filePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(false, true);
@@ -300,10 +294,9 @@ public class BuildFileManifestCacheTest {
   @Test
   public void whenBzlFileIsDeletedThenReferencingPackageIsInvalidated() throws Exception {
     Path filePath = Paths.get("includes/include2.bzl");
-    Files.delete(cell1Path.resolve(filePath));
+    Files.delete(cell1Path.resolve(filePath).getPath());
 
-    WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.DELETE, RelPath.of(filePath));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.DELETE, RelPath.of(filePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -312,10 +305,9 @@ public class BuildFileManifestCacheTest {
   @Test
   public void whenBzlFileIsCreatedThenNothingHappens() throws Exception {
     Path filePath = Paths.get("includes/include3.bzl");
-    Files.createFile(cell1Path.resolve(filePath));
+    Files.createFile(cell1Path.resolve(filePath).getPath());
 
-    WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.CREATE, RelPath.of(filePath));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.CREATE, RelPath.of(filePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, true);
@@ -325,8 +317,7 @@ public class BuildFileManifestCacheTest {
   public void whenBzlFileIsNotReferencedAndModifiedThenNothingHappens() {
     Path filePath = Paths.get("includes/noninclude.bzl");
 
-    WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.MODIFY, RelPath.of(filePath));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.MODIFY, RelPath.of(filePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, true);
@@ -336,8 +327,7 @@ public class BuildFileManifestCacheTest {
   public void whenBzlFileFromAnotherCellIsModifiedThenPackageIsInvalidated() {
     Path filePath = Paths.get("includes/include2.bzl");
 
-    WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell2Path), Kind.MODIFY, RelPath.of(filePath));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell2Path, Kind.MODIFY, RelPath.of(filePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, false);
@@ -346,10 +336,9 @@ public class BuildFileManifestCacheTest {
   @Test
   public void whenSomeFileFromFromUnloadedPackageIsCreatedNothingChanges() throws Exception {
     Path filePath = Paths.get("includes/somefile.java");
-    Files.createFile(cell1Path.resolve(filePath));
+    Files.createFile(cell1Path.resolve(filePath).getPath());
 
-    WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(cell1Path), Kind.CREATE, RelPath.of(filePath));
+    WatchmanPathEvent event = WatchmanPathEvent.of(cell1Path, Kind.CREATE, RelPath.of(filePath));
     cache.getInvalidator().onFileSystemChange(event);
 
     assertPackages(true, true);

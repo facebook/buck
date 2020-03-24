@@ -22,6 +22,7 @@ import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryProvider;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -32,7 +33,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -42,7 +42,7 @@ public class AppleDeveloperDirectoryForTestsProviderFactoryTest {
 
   @Test
   public void testAppleDeveloperDirectoryForTests() throws IOException {
-    Path developerDir = tmp.newFolder();
+    AbsPath developerDir = tmp.newFolder();
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(
@@ -81,13 +81,14 @@ public class AppleDeveloperDirectoryForTestsProviderFactoryTest {
             .get();
 
     assertEquals(
-        developerDir, appleDeveloperDirectoryForTestsProvider.getAppleDeveloperDirectoryForTests());
+        developerDir.getPath(),
+        appleDeveloperDirectoryForTestsProvider.getAppleDeveloperDirectoryForTests());
   }
 
   @Test
   public void getSpecifiedAppleDeveloperDirectorySupplierForTests() throws IOException {
-    Path developerDir = tmp.newFolder();
-    Path developerDirForTests = tmp.newFolder();
+    AbsPath developerDir = tmp.newFolder();
+    AbsPath developerDirForTests = tmp.newFolder();
     BuckConfig buckConfig =
         FakeBuckConfig.builder()
             .setSections(
@@ -127,7 +128,7 @@ public class AppleDeveloperDirectoryForTestsProviderFactoryTest {
             .get();
 
     assertEquals(
-        developerDirForTests,
+        developerDirForTests.getPath(),
         appleDeveloperDirectoryForTestsProvider.getAppleDeveloperDirectoryForTests());
   }
 }

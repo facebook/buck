@@ -69,7 +69,7 @@ public class HybridProjectBuildFileParserTest {
         HybridProjectBuildFileParser.using(
             ImmutableMap.of(Syntax.PYTHON_DSL, pythonDslParser, Syntax.SKYLARK, skylarkParser),
             Syntax.PYTHON_DSL);
-    buildFile = AbsPath.of(tmp.newFile("BUCK"));
+    buildFile = tmp.newFile("BUCK");
   }
 
   @Test

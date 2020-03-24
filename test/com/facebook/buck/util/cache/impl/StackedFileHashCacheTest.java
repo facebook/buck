@@ -19,6 +19,7 @@ package com.facebook.buck.util.cache.impl;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -140,7 +141,7 @@ public class StackedFileHashCacheTest {
   @Test
   public void usesSecondCacheAbsolutePath() throws IOException {
     Path path = Paths.get("world.txt");
-    Path fullPath = tmp2.getRoot().resolve(path);
+    AbsPath fullPath = tmp2.getRoot().resolve(path);
 
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(
@@ -154,7 +155,7 @@ public class StackedFileHashCacheTest {
 
     StackedFileHashCache cache =
         new StackedFileHashCache(ImmutableList.of(innerCache, innerCache2));
-    cache.get(fullPath);
+    cache.get(fullPath.getPath());
     assertTrue(innerCache2.willGet(path));
   }
 
@@ -180,7 +181,7 @@ public class StackedFileHashCacheTest {
   @Test
   public void usesSecondCacheForArchivePathAbsolutePath() throws IOException {
     Path path = Paths.get("world.jar");
-    Path fullPath = tmp2.getRoot().resolve(path);
+    AbsPath fullPath = tmp2.getRoot().resolve(path);
 
     ProjectFileHashCache innerCache =
         DefaultFileHashCache.createDefaultFileHashCache(
@@ -190,7 +191,7 @@ public class StackedFileHashCacheTest {
     ProjectFilesystem filesystem2 = TestProjectFilesystems.createProjectFilesystem(tmp2.getRoot());
     ProjectFileHashCache innerCache2 =
         DefaultFileHashCache.createDefaultFileHashCache(filesystem2, fileHashCacheMode);
-    writeJarWithHashes(filesystem2, fullPath);
+    writeJarWithHashes(filesystem2, fullPath.getPath());
 
     ArchiveMemberPath archiveMemberPath =
         ArchiveMemberPath.of(path, Paths.get(SOME_FILE_INSIDE_JAR));
@@ -290,7 +291,7 @@ public class StackedFileHashCacheTest {
   public void skipsFirstCacheBecauseIgnoredAbsolutePath() throws IOException {
     Config config = ConfigBuilder.createFromText("[project]", "ignore = world.txt");
     Path path = Paths.get("world.txt");
-    Path fullPath = tmp.getRoot().resolve(path);
+    AbsPath fullPath = tmp.getRoot().resolve(path);
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot(), config);
     filesystem.touch(path);
@@ -298,7 +299,7 @@ public class StackedFileHashCacheTest {
         DefaultFileHashCache.createDefaultFileHashCache(filesystem, fileHashCacheMode);
     StackedFileHashCache cache = new StackedFileHashCache(ImmutableList.of(innerCache));
     expectedException.expect(NoSuchFileException.class);
-    cache.get(filesystem.resolve(fullPath));
+    cache.get(fullPath.getPath());
   }
 
   @Test

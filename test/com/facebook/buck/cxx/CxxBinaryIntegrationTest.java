@@ -648,12 +648,12 @@ public class CxxBinaryIntegrationTest {
   @Test
   public void inferShouldBeAbleToUseMultipleXCell() throws IOException {
 
-    Path rootWorkspacePath = tmp.getRoot();
+    AbsPath rootWorkspacePath = tmp.getRoot();
     // create infertest workspace
     InferHelper.setupWorkspace(this, rootWorkspacePath, "infertest");
 
     // create infertest/inter-cell/multi-cell/primary sub-workspace as infer-configured one
-    Path primaryRootPath = tmp.newFolder().toRealPath().normalize();
+    AbsPath primaryRootPath = tmp.newFolder().toRealPath().normalize();
     ProjectWorkspace primary =
         InferHelper.setupCxxInferWorkspace(
             this,
@@ -663,7 +663,7 @@ public class CxxBinaryIntegrationTest {
             Optional.of(rootWorkspacePath.resolve("fake-infer")));
 
     // create infertest/inter-cell/multi-cell/secondary sub-workspace
-    Path secondaryRootPath = tmp.newFolder().toRealPath().normalize();
+    AbsPath secondaryRootPath = tmp.newFolder().toRealPath().normalize();
     ProjectWorkspace secondary =
         InferHelper.setupWorkspace(
             this, secondaryRootPath, "infertest/inter-cell/multi-cell/secondary");
@@ -679,7 +679,9 @@ public class CxxBinaryIntegrationTest {
     ProcessResult result =
         primary.runBuckBuild(
             InferHelper.getCxxCLIConfigurationArgs(
-                rootWorkspacePath.resolve("fake-infer"), Optional.empty(), inputBuildTarget));
+                rootWorkspacePath.resolve("fake-infer").getPath(),
+                Optional.empty(),
+                inputBuildTarget));
 
     result.assertSuccess();
 
@@ -1352,21 +1354,21 @@ public class CxxBinaryIntegrationTest {
             .orElse(Paths.get("/usr/bin", executable));
 
     // Write script as faux clang++/g++ binary
-    Path firstCompilerPath = tmp.newFolder("path1");
-    Path firstCompiler = firstCompilerPath.resolve(executable);
+    AbsPath firstCompilerPath = tmp.newFolder("path1");
+    AbsPath firstCompiler = firstCompilerPath.resolve(executable);
     filesystem.writeContentsToPath(
-        "#!/bin/sh\n" + "exec " + executableLocation + " \"$@\"\n", firstCompiler);
+        "#!/bin/sh\n" + "exec " + executableLocation + " \"$@\"\n", firstCompiler.getPath());
 
     // Write script as slightly different faux clang++/g++ binary
-    Path secondCompilerPath = tmp.newFolder("path2");
-    Path secondCompiler = secondCompilerPath.resolve(executable);
+    AbsPath secondCompilerPath = tmp.newFolder("path2");
+    AbsPath secondCompiler = secondCompilerPath.resolve(executable);
     filesystem.writeContentsToPath(
         "#!/bin/sh\n"
             + "exec "
             + executableLocation
             + " \"$@\"\n"
             + "# Comment to make hash different.\n",
-        secondCompiler);
+        secondCompiler.getPath());
 
     // Make the second faux clang++/g++ binary executable
     MostFiles.makeExecutable(secondCompiler);
@@ -2593,10 +2595,10 @@ public class CxxBinaryIntegrationTest {
     workspace.runBuckCommand("run", "//bin:bin1").assertSuccess("run //bin:bin1");
   }
 
-  private ImmutableSortedSet<Path> findFiles(Path root, PathMatcher matcher) throws IOException {
+  private ImmutableSortedSet<Path> findFiles(AbsPath root, PathMatcher matcher) throws IOException {
     ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();
     Files.walkFileTree(
-        root,
+        root.getPath(),
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {

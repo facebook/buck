@@ -104,7 +104,7 @@ public class ArtifactUploaderTest {
             // Unarchive file.
             final ImmutableMap<String, byte[]> archiveContents;
             try {
-              archiveContents = TarInspector.readTarZst(output.getPath());
+              archiveContents = TarInspector.readTarZst(AbsPath.of(output.getPath()));
             } catch (IOException | CompressorException e) {
               fail(e.getMessage());
               return Futures.immediateFuture(Unit.UNIT);

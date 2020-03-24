@@ -195,8 +195,8 @@ public class ClientCertificateHandlerTest {
 
   @Before
   public void setUp() throws IOException {
-    clientCertPath = temporaryPaths.newFile("client.crt");
-    clientKeyPath = temporaryPaths.newFile("client.key");
+    clientCertPath = temporaryPaths.newFile("client.crt").getPath();
+    clientKeyPath = temporaryPaths.newFile("client.key").getPath();
     Files.write(clientCertPath, SAMPLE_CLIENT_CERT.getBytes(Charsets.UTF_8));
     Files.write(clientKeyPath, SAMPLE_CLIENT_KEY.getBytes(Charsets.UTF_8));
     config_required =
@@ -364,8 +364,8 @@ public class ClientCertificateHandlerTest {
 
   @Test
   public void handlesCombinedKeyAndCertAndIntermediateCA() throws IOException {
-    Path identityPath = temporaryPaths.newFile("client.pem");
-    Path identityPathReverse = temporaryPaths.newFile("client_reverse.pem");
+    Path identityPath = temporaryPaths.newFile("client.pem").getPath();
+    Path identityPathReverse = temporaryPaths.newFile("client_reverse.pem").getPath();
     Files.write(
         identityPath,
         (SAMPLE_CLIENT_INTERMEDIATE_CERT

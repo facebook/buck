@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -40,7 +41,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import org.junit.After;
@@ -72,26 +72,26 @@ public class ParserBenchmark {
   @BeforeExperiment
   private void setUpBenchmark() throws Exception {
     tempDir.before();
-    Path root = tempDir.getRoot();
-    Files.createDirectories(root);
+    AbsPath root = tempDir.getRoot();
+    Files.createDirectories(root.getPath());
     filesystem = TestProjectFilesystems.createProjectFilesystem(root);
 
-    Path fbJavaRoot = root.resolve(root.resolve("java/com/facebook"));
-    Files.createDirectories(fbJavaRoot);
+    AbsPath fbJavaRoot = root.resolve("java/com/facebook");
+    Files.createDirectories(fbJavaRoot.getPath());
 
     for (int i = 0; i < targetCount; i++) {
-      Path targetRoot = fbJavaRoot.resolve(String.format("target_%d", i));
-      Files.createDirectories(targetRoot);
-      Path buckFile = targetRoot.resolve("BUCK");
-      Files.createFile(buckFile);
+      AbsPath targetRoot = fbJavaRoot.resolve(String.format("target_%d", i));
+      Files.createDirectories(targetRoot.getPath());
+      AbsPath buckFile = targetRoot.resolve("BUCK");
+      Files.createFile(buckFile.getPath());
       Files.write(
-          buckFile,
+          buckFile.getPath(),
           ("java_library(name = 'foo', srcs = ['A.java'])\n" + "genrule(name = 'baz', out = '.')\n")
               .getBytes(StandardCharsets.UTF_8));
-      Path javaFile = targetRoot.resolve("A.java");
-      Files.createFile(javaFile);
+      AbsPath javaFile = targetRoot.resolve("A.java");
+      Files.createFile(javaFile.getPath());
       Files.write(
-          javaFile,
+          javaFile.getPath(),
           String.format("package com.facebook.target_%d; class A {}", i)
               .getBytes(StandardCharsets.UTF_8));
     }

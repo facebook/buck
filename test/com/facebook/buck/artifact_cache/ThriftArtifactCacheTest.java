@@ -39,6 +39,7 @@ import com.facebook.buck.artifact_cache.thrift.PayloadInfo;
 import com.facebook.buck.artifact_cache.thrift.RuleKey;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -157,7 +158,7 @@ public class ThriftArtifactCacheTest {
             false,
             "test://",
             "hostname")) {
-      Path artifactPath = tempPaths.newFile().toAbsolutePath();
+      AbsPath artifactPath = tempPaths.newFile();
       CacheResult result =
           Futures.getUnchecked(
               cache.fetchAsync(

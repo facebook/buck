@@ -24,6 +24,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -76,8 +77,8 @@ public class ProGuardObfuscateStepTest {
 
   @Test
   public void testCreateEmptyZip() throws Exception {
-    Path tmpFile = tmpDir.newFile();
-    ProGuardObfuscateStep.createEmptyZip(tmpFile);
+    AbsPath tmpFile = tmpDir.newFile();
+    ProGuardObfuscateStep.createEmptyZip(tmpFile.getPath());
 
     // Try to read it.
     try (ZipFile zipFile = new ZipFile(tmpFile.toFile())) {

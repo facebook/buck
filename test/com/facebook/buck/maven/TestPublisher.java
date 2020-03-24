@@ -34,7 +34,7 @@ public class TestPublisher extends Publisher implements AutoCloseable {
   private HttpdForTests.DummyPutRequestsHandler putRequestsHandler;
 
   public static TestPublisher create(TemporaryPaths tmpDir) throws Exception {
-    return create(tmpDir.newFolder());
+    return create(tmpDir.newFolder().getPath());
   }
 
   /** @param pseudoLocalRepo typically {@link org.junit.rules.TemporaryFolder#newFolder} */

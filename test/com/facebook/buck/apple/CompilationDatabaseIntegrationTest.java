@@ -212,7 +212,7 @@ public class CompilationDatabaseIntegrationTest {
       Map<String, CxxCompilationDatabaseEntry> fileToEntry,
       Iterable<String> includes)
       throws IOException {
-    Path tmpRoot = tmp.getRoot().toRealPath();
+    Path tmpRoot = tmp.getRoot().toRealPath().getPath();
     String key = tmpRoot.resolve(source).toString();
     CxxCompilationDatabaseEntry entry = fileToEntry.get(key);
     assertNotNull("There should be an entry for " + key + ".", entry);

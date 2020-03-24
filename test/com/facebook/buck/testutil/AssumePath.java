@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -46,6 +47,10 @@ public class AssumePath {
     } catch (IOException e) {
       Assume.assumeNoException(e);
     }
+  }
+
+  public static void assumeNamesAreCaseInsensitive(AbsPath pathInFileSystem) {
+    assumeNamesAreCaseInsensitive(pathInFileSystem.getPath());
   }
 
   public static boolean areNamesCaseSensitive(Path pathInFileSystem) throws IOException {

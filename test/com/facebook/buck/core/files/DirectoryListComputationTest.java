@@ -45,7 +45,7 @@ public class DirectoryListComputationTest {
 
   @Test
   public void canListDirectory() throws Exception {
-    Path dir = tmp.getRoot().resolve("dir");
+    Path dir = tmp.getRoot().resolve("dir").getPath();
     Path dir1 = dir.resolve("dir1");
     Path file1 = dir.resolve("file1");
     Path file2 = dir.resolve("file2");

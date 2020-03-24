@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.BuckPaths;
@@ -54,16 +55,16 @@ public class BuildReportIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_report", tmp).setUp();
 
-    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
+    AbsPath buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
     workspace
         .runBuckBuild(
             "--build-report",
-            buildReport.toAbsolutePath().toString(),
+            buildReport.toString(),
             "//:rule_with_output",
             "//:rule_without_output")
         .assertSuccess();
 
-    assertTrue(Files.exists(buildReport));
+    assertTrue(Files.exists(buildReport.getPath()));
 
     TestUtils.assertBuildReport(
         workspace, tmp, buildReport, "expected_successful_build_report.json");
@@ -74,13 +75,10 @@ public class BuildReportIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_report", tmp).setUp();
 
-    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
+    AbsPath buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
     workspace
         .runBuckBuild(
-            "--build-report",
-            buildReport.toAbsolutePath().toString(),
-            "//:rule_with_output",
-            "//:failing_rule")
+            "--build-report", buildReport.toString(), "//:rule_with_output", "//:failing_rule")
         .assertFailure();
 
     TestUtils.assertBuildReport(workspace, tmp, buildReport, "expected_failed_build_report.json");
@@ -92,15 +90,14 @@ public class BuildReportIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_report", tmp).setUp();
 
-    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
+    AbsPath buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
     workspace
-        .runBuckBuild(
-            "--build-report", buildReport.toAbsolutePath().toString(), "//:failing_c_rule")
+        .runBuckBuild("--build-report", buildReport.toString(), "//:failing_c_rule")
         .assertFailure();
 
-    assertTrue(Files.exists(buildReport));
+    assertTrue(Files.exists(buildReport.getPath()));
     String buildReportContents =
-        new String(Files.readAllBytes(buildReport), Charsets.UTF_8).replace("\r\n", "\n");
+        new String(Files.readAllBytes(buildReport.getPath()), Charsets.UTF_8).replace("\r\n", "\n");
     assertThat(buildReportContents, Matchers.containsString("stderr: failure.c"));
     assertThat(buildReportContents, Matchers.containsString("failure.c:2:3"));
   }
@@ -114,19 +111,16 @@ public class BuildReportIntegrationTest {
     workspace.setUp();
 
     Path cell1Root = workspace.getPath("cell1");
-    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
+    AbsPath buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
 
     ProcessResult buildResult =
         workspace.runBuckCommand(
-            cell1Root,
-            "build",
-            "--build-report",
-            buildReport.toAbsolutePath().toString(),
-            "cell2//:bar");
+            cell1Root, "build", "--build-report", buildReport.toString(), "cell2//:bar");
     buildResult.assertSuccess();
 
-    assertTrue(Files.exists(buildReport));
-    JsonNode reportRoot = ObjectMappers.READER.readTree(ObjectMappers.createParser(buildReport));
+    assertTrue(Files.exists(buildReport.getPath()));
+    JsonNode reportRoot =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(buildReport.getPath()));
 
     assertEquals(
         "buck-out/cells/cell2/gen/"
@@ -148,16 +142,14 @@ public class BuildReportIntegrationTest {
             workspace.getProjectFileSystem(),
             BuildTargetFactory.newInstance("//:rule_with_multiple_outputs"),
             "%s__");
-    Path buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
+    AbsPath buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
     workspace
-        .runBuckBuild(
-            "--build-report",
-            buildReport.toAbsolutePath().toString(),
-            "//:rule_with_multiple_outputs")
+        .runBuckBuild("--build-report", buildReport.toString(), "//:rule_with_multiple_outputs")
         .assertSuccess();
 
-    assertTrue(Files.exists(buildReport));
-    JsonNode reportRoot = ObjectMappers.READER.readTree(ObjectMappers.createParser(buildReport));
+    assertTrue(Files.exists(buildReport.getPath()));
+    JsonNode reportRoot =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(buildReport.getPath()));
 
     Map<String, List<String>> outputs =
         new ObjectMapper()

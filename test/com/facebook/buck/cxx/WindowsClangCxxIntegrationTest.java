@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.testutil.MoreAsserts;
@@ -455,10 +456,10 @@ public class WindowsClangCxxIntegrationTest {
     assertThat(workspace.getFileContents(outputPath), Matchers.containsString("a + (a * b)"));
   }
 
-  private ImmutableSortedSet<Path> findFiles(Path root, PathMatcher matcher) throws IOException {
+  private ImmutableSortedSet<Path> findFiles(AbsPath root, PathMatcher matcher) throws IOException {
     ImmutableSortedSet.Builder<Path> files = ImmutableSortedSet.naturalOrder();
     Files.walkFileTree(
-        root,
+        root.getPath(),
         new SimpleFileVisitor<Path>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {

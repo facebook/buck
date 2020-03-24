@@ -21,6 +21,7 @@ import static java.nio.file.StandardOpenOption.WRITE;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -71,6 +72,10 @@ public class ZipArchive implements AutoCloseable {
 
     root = Iterables.getFirst(fs.getRootDirectories(), null);
     assertNotNull("Unable to determine root of file system: " + fs, root);
+  }
+
+  public ZipArchive(AbsPath zip, boolean forWriting) throws IOException {
+    this(zip.getPath(), forWriting);
   }
 
   public void add(String fileName, byte[] contents) throws IOException {

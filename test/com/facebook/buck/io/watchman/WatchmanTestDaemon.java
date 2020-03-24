@@ -17,6 +17,7 @@
 package com.facebook.buck.io.watchman;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.log.LogConfig;
@@ -65,7 +66,7 @@ public class WatchmanTestDaemon implements Closeable {
     this.watchmanLogFile = watchmanLogFile;
   }
 
-  public static WatchmanTestDaemon start(Path watchmanBaseDir, ListeningProcessExecutor executor)
+  public static WatchmanTestDaemon start(AbsPath watchmanBaseDir, ListeningProcessExecutor executor)
       throws IOException, InterruptedException, WatchmanNotFoundException {
     Path watchmanExe;
     try {
@@ -78,12 +79,12 @@ public class WatchmanTestDaemon implements Closeable {
       throw exception;
     }
 
-    Path watchmanCfgFile = watchmanBaseDir.resolve("config.json");
+    AbsPath watchmanCfgFile = watchmanBaseDir.resolve("config.json");
     // default config
-    Files.write(watchmanCfgFile, "{}".getBytes());
+    Files.write(watchmanCfgFile.getPath(), "{}".getBytes());
 
-    Path watchmanLogFile = watchmanBaseDir.resolve("log");
-    Path watchmanPidFile = watchmanBaseDir.resolve("pid");
+    AbsPath watchmanLogFile = watchmanBaseDir.resolve("log");
+    AbsPath watchmanPidFile = watchmanBaseDir.resolve("pid");
 
     Path watchmanSockFile;
     if (Platform.detect() == Platform.WINDOWS) {
@@ -91,10 +92,10 @@ public class WatchmanTestDaemon implements Closeable {
       UUID uuid = new UUID(random.nextLong(), random.nextLong());
       watchmanSockFile = Paths.get("\\\\.\\pipe\\watchman-test-" + uuid);
     } else {
-      watchmanSockFile = watchmanBaseDir.resolve("sock");
+      watchmanSockFile = watchmanBaseDir.resolve("sock").getPath();
     }
 
-    Path watchmanStateFile = watchmanBaseDir.resolve("state");
+    AbsPath watchmanStateFile = watchmanBaseDir.resolve("state");
 
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
@@ -117,7 +118,7 @@ public class WatchmanTestDaemon implements Closeable {
             executor,
             executor.launchProcess(params, new ProcessListeners.CapturingListener()),
             watchmanSockFile,
-            watchmanLogFile);
+            watchmanLogFile.getPath());
     try {
       daemon.waitUntilReady();
       return daemon;

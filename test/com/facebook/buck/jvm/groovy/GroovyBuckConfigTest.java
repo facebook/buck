@@ -56,7 +56,7 @@ public class GroovyBuckConfigTest {
 
   @Test
   public void refuseToContinueWhenInformationResultsInANonExistentGroovycPath() {
-    String invalidPath = temporaryFolder.getRoot().toAbsolutePath() + "DoesNotExist";
+    String invalidPath = temporaryFolder.getRoot() + "DoesNotExist";
     Path invalidDir = Paths.get(invalidPath);
     Path invalidGroovyc = invalidDir.resolve(MorePaths.pathWithPlatformSeparators("bin/groovyc"));
     thrown.expectMessage(containsString("Unable to locate " + invalidGroovyc + " on PATH"));

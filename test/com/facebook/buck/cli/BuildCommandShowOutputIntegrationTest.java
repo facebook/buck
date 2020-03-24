@@ -40,7 +40,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
@@ -129,7 +128,7 @@ public class BuildCommandShowOutputIntegrationTest {
     ProcessResult runBuckResult = workspace.runBuckBuild(args);
 
     runBuckResult.assertSuccess();
-    Path expectedRootDirectory = tmp.getRoot();
+    AbsPath expectedRootDirectory = tmp.getRoot();
     String expectedOutputDirectory = expectedRootDirectory.resolve("buck-out/").toString();
     String stdout = runBuckResult.getStdout();
     assertThat(stdout, Matchers.containsString("//:bar "));
@@ -141,11 +140,11 @@ public class BuildCommandShowOutputIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     AbsPath expectedPath1 =
-        AbsPath.of(tmp.getRoot())
+        tmp.getRoot()
             .resolve(
                 getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar"));
     AbsPath expectedPath2 =
-        AbsPath.of(tmp.getRoot())
+        tmp.getRoot()
             .resolve(
                 getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz"));
 
@@ -238,7 +237,7 @@ public class BuildCommandShowOutputIntegrationTest {
     ProcessResult runBuckResult = workspace.runBuckBuild(args);
 
     runBuckResult.assertSuccess();
-    Path expectedRootDirectory = tmp.getRoot();
+    AbsPath expectedRootDirectory = tmp.getRoot();
     assertThat(
         runBuckResult.getStdout(),
         Matchers.containsString(
@@ -260,11 +259,11 @@ public class BuildCommandShowOutputIntegrationTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
     workspace.setUp();
     AbsPath expectedPath1 =
-        AbsPath.of(tmp.getRoot())
+        tmp.getRoot()
             .resolve(
                 getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "bar"));
     AbsPath expectedPath2 =
-        AbsPath.of(tmp.getRoot())
+        tmp.getRoot()
             .resolve(
                 getExpectedOutputPathRelativeToProjectRoot("//:bar_with_multiple_outputs", "baz"));
 

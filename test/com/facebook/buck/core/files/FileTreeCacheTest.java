@@ -20,7 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
@@ -102,7 +101,7 @@ public class FileTreeCacheTest {
     cache.put(ImmutableFileTreeKey.of(Paths.get("dir1/dir2")), ftree3);
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(tmp.getRoot()), kind, RelPath.of(Paths.get("dir1/file2")));
+        WatchmanPathEvent.of(tmp.getRoot(), kind, RelPath.of(Paths.get("dir1/file2")));
     cache.getInvalidator().onFileSystemChange(event);
 
     // all trees up should be invalidated
@@ -131,7 +130,7 @@ public class FileTreeCacheTest {
             ImmutableMap.of()));
 
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(tmp.getRoot()), kind, RelPath.of(Paths.get("file1")));
+        WatchmanPathEvent.of(tmp.getRoot(), kind, RelPath.of(Paths.get("file1")));
     cache.getInvalidator().onFileSystemChange(event);
     Optional<FileTree> ftree = cache.get(ImmutableFileTreeKey.of(Paths.get("")));
     assertFalse(ftree.isPresent());
@@ -152,7 +151,7 @@ public class FileTreeCacheTest {
 
     // should not invalidate
     WatchmanPathEvent event =
-        WatchmanPathEvent.of(AbsPath.of(tmp.getRoot()), Kind.MODIFY, RelPath.of(Paths.get("file")));
+        WatchmanPathEvent.of(tmp.getRoot(), Kind.MODIFY, RelPath.of(Paths.get("file")));
     cache.getInvalidator().onFileSystemChange(event);
     Optional<FileTree> ftree = cache.get(ImmutableFileTreeKey.of(Paths.get("")));
     assertTrue(ftree.isPresent());
@@ -172,7 +171,7 @@ public class FileTreeCacheTest {
             ImmutableMap.of()));
 
     // should not invalidate
-    WatchmanOverflowEvent event = WatchmanOverflowEvent.of(AbsPath.of(tmp.getRoot()), "Test");
+    WatchmanOverflowEvent event = WatchmanOverflowEvent.of(tmp.getRoot(), "Test");
     cache.getInvalidator().onFileSystemChange(event);
     Optional<FileTree> ftree = cache.get(ImmutableFileTreeKey.of(Paths.get("")));
     assertFalse(ftree.isPresent());

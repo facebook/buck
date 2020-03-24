@@ -18,6 +18,7 @@ package com.facebook.buck.testutil;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.keys.config.impl.BuckVersion;
@@ -524,6 +525,16 @@ public abstract class AbstractWorkspace {
    */
   public String getFileContents(Path pathRelativeToWorkspaceRoot) throws IOException {
     return getFileContentsWithAbsolutePath(getPath(pathRelativeToWorkspaceRoot));
+  }
+
+  /**
+   * Resolves the given path relative to the path the workspace is held and returns its contents
+   *
+   * @param pathRelativeToWorkspaceRoot is the path relative to the workspace's destPath
+   * @return file contents at absolute path of the given path relative to the workspace's destPath
+   */
+  public String getFileContents(PathWrapper pathRelativeToWorkspaceRoot) throws IOException {
+    return getFileContents(pathRelativeToWorkspaceRoot.getPath());
   }
 
   /**

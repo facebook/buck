@@ -34,6 +34,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -191,7 +192,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     Path artifactZip =
         DirArtifactCacheTestUtil.getPathForRuleKey(
             dirCache, new RuleKey(ruleKey.asHashCode()), Optional.empty());
-    HashMap<String, byte[]> archiveContents = new HashMap<>(TarInspector.readTarZst(artifactZip));
+    HashMap<String, byte[]> archiveContents =
+        new HashMap<>(TarInspector.readTarZst(AbsPath.of(artifactZip)));
     archiveContents.put(outputPath.toString(), emptyJarFile());
     writeTarZst(artifactZip, archiveContents);
 

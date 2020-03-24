@@ -100,7 +100,7 @@ public class TargetSpecResolverTest {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "target_specs", tmp);
     workspace.setUp();
 
-    cellRoot = tmp.getRoot();
+    cellRoot = tmp.getRoot().getPath();
     filesystem = TestProjectFilesystems.createProjectFilesystem(cellRoot);
     cell = new TestCellBuilder().setFilesystem(filesystem).build();
     eventBus = BuckEventBusForTests.newInstance();

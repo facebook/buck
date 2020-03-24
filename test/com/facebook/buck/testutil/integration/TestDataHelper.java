@@ -18,6 +18,7 @@ package com.facebook.buck.testutil.integration;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.config.Inis;
 import com.google.common.base.Splitter;
@@ -83,7 +84,7 @@ public class TestDataHelper {
   public static ProjectWorkspace createProjectWorkspaceForScenario(
       Object testCase, String scenario, TemporaryPaths temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
-    return new ProjectWorkspace(templateDir, temporaryRoot.getRoot());
+    return new ProjectWorkspace(templateDir, temporaryRoot.getRoot().getPath());
   }
 
   public static ProjectWorkspace createProjectWorkspaceForScenario(
@@ -92,16 +93,27 @@ public class TestDataHelper {
     return new ProjectWorkspace(templateDir, temporaryRoot);
   }
 
+  public static ProjectWorkspace createProjectWorkspaceForScenario(
+      Object testCase, String scenario, AbsPath temporaryRoot) {
+    return createProjectWorkspaceForScenario(testCase, scenario, temporaryRoot.getPath());
+  }
+
   public static ProjectWorkspace createProjectWorkspaceForScenarioWithoutDefaultCell(
       Object testCase, String scenario, TemporaryPaths temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
-    return new ProjectWorkspace(templateDir, temporaryRoot.getRoot(), false);
+    return new ProjectWorkspace(templateDir, temporaryRoot.getRoot().getPath(), false);
   }
 
   public static ProjectWorkspace createProjectWorkspaceForScenarioWithoutDefaultCell(
       Object testCase, String scenario, Path temporaryRoot) {
     Path templateDir = TestDataHelper.getTestDataScenario(testCase, scenario);
     return new ProjectWorkspace(templateDir, temporaryRoot, false);
+  }
+
+  public static ProjectWorkspace createProjectWorkspaceForScenarioWithoutDefaultCell(
+      Object testCase, String scenario, AbsPath temporaryRoot) {
+    return createProjectWorkspaceForScenarioWithoutDefaultCell(
+        testCase, scenario, temporaryRoot.getPath());
   }
 
   public static void overrideBuckconfig(

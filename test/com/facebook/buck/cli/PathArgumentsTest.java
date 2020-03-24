@@ -35,7 +35,7 @@ public class PathArgumentsTest {
   public void testGetCanonicalFilesUnderProjectRoot() throws IOException {
     TestDataHelper.createProjectWorkspaceForScenario(this, "path_arguments", tmp).setUp();
 
-    AbsPath projectRoot = AbsPath.of(tmp.getRoot());
+    AbsPath projectRoot = tmp.getRoot();
     ImmutableSet<String> nonCanonicalFilePaths =
         ImmutableSet.of(
             "src/com/facebook/CanonicalRelativePath.txt",

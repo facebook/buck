@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -40,7 +41,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -59,13 +59,15 @@ public class SQLiteArtifactCacheTest {
   private static final long MAX_INLINED_BYTES = 1024;
 
   private ProjectFilesystem filesystem;
-  private Path fileA, fileB, fileC;
+  private AbsPath fileA;
+  private AbsPath fileB;
+  private AbsPath fileC;
   private RuleKey ruleKeyA, ruleKeyB, ruleKeyC;
   private RuleKey contentHashA, contentHashB, contentHashC;
   private ArtifactInfo artifactInfoA, artifactInfoB, artifactInfoC;
-  private Path emptyFile;
+  private AbsPath emptyFile;
 
-  private Path cacheDir;
+  private AbsPath cacheDir;
   private LazyPath output;
   private SQLiteArtifactCache artifactCache;
 
@@ -105,7 +107,7 @@ public class SQLiteArtifactCacheTest {
     return new SQLiteArtifactCache(
         "sqlite",
         filesystem,
-        cacheDir,
+        cacheDir.getPath(),
         BuckEventBusForTests.newInstance(),
         maxCacheSizeBytes,
         Optional.of(MAX_INLINED_BYTES),
@@ -117,9 +119,9 @@ public class SQLiteArtifactCacheTest {
    *
    * <p>Uses the pathname to guarantee that files have different content for testing overwrites.
    */
-  private void writeInlinedArtifact(Path file) throws IOException {
+  private void writeInlinedArtifact(AbsPath file) throws IOException {
     Files.write(
-        file,
+        file.getPath(),
         file.toString().getBytes(UTF_8),
         StandardOpenOption.CREATE,
         StandardOpenOption.APPEND);
@@ -130,10 +132,10 @@ public class SQLiteArtifactCacheTest {
    *
    * <p>Uses the pathname to guarantee that files have different content for testing overwrites.
    */
-  private void writeFileArtifact(Path file) throws IOException {
+  private void writeFileArtifact(AbsPath file) throws IOException {
     byte[] toWrite = file.toString().getBytes(UTF_8);
     for (int i = 0; i <= MAX_INLINED_BYTES / toWrite.length; i++) {
-      Files.write(file, toWrite, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+      Files.write(file.getPath(), toWrite, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
     }
   }
 
@@ -171,7 +173,7 @@ public class SQLiteArtifactCacheTest {
             .putMetadata(METADATA_KEY, contentHashA.toString())
             .putMetadata(BuildInfo.MetadataKey.RULE_KEY, ruleKeyA.toString())
             .build(),
-        BorrowablePath.notBorrowablePath(emptyFile));
+        BorrowablePath.notBorrowablePath(emptyFile.getPath()));
 
     assertThat(artifactCache.metadataRuleKeys(), Matchers.contains(ruleKeyA));
 
@@ -192,14 +194,14 @@ public class SQLiteArtifactCacheTest {
             .addRuleKeys(ruleKeyA)
             .putMetadata(METADATA_KEY, contentHashA.toString())
             .build();
-    artifactCache.store(oldMapping, BorrowablePath.notBorrowablePath(emptyFile));
+    artifactCache.store(oldMapping, BorrowablePath.notBorrowablePath(emptyFile.getPath()));
 
     ArtifactInfo newMapping =
         ArtifactInfo.builder()
             .addRuleKeys(ruleKeyA)
             .putMetadata(METADATA_KEY, contentHashB.toString())
             .build();
-    artifactCache.store(newMapping, BorrowablePath.notBorrowablePath(emptyFile));
+    artifactCache.store(newMapping, BorrowablePath.notBorrowablePath(emptyFile.getPath()));
 
     assertThat(artifactCache.metadataRuleKeys(), Matchers.contains(ruleKeyA));
 
@@ -214,47 +216,47 @@ public class SQLiteArtifactCacheTest {
   public void testInlinedContentStoreAndFetchHit() throws IOException, SQLException {
     artifactCache = cache(Optional.empty());
     writeInlinedArtifact(fileA);
-    artifactCache.store(artifactInfoA, BorrowablePath.notBorrowablePath(fileA));
+    artifactCache.store(artifactInfoA, BorrowablePath.notBorrowablePath(fileA.getPath()));
 
     assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.contains(contentHashA));
 
     CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(null, contentHashA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.anEmptyMap());
-    assertEquals(filesystem.getFileSize(fileA), result.getArtifactSizeBytes());
-    assertArrayEquals(Files.readAllBytes(fileA), Files.readAllBytes(output.get()));
+    assertEquals(filesystem.getFileSize(fileA.getPath()), result.getArtifactSizeBytes());
+    assertArrayEquals(Files.readAllBytes(fileA.getPath()), Files.readAllBytes(output.get()));
   }
 
   @Test
   public void testFileContentStoreAndFetchHit() throws IOException, SQLException {
     artifactCache = cache(Optional.empty());
     writeFileArtifact(fileA);
-    artifactCache.store(artifactInfoA, BorrowablePath.notBorrowablePath(fileA));
+    artifactCache.store(artifactInfoA, BorrowablePath.notBorrowablePath(fileA.getPath()));
 
     assertThat(artifactCache.directoryFileContentHashes(), Matchers.contains(contentHashA));
 
     CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(null, contentHashA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.anEmptyMap());
-    assertEquals(filesystem.getFileSize(fileA), result.getArtifactSizeBytes());
+    assertEquals(filesystem.getFileSize(fileA.getPath()), result.getArtifactSizeBytes());
   }
 
   @Test
   public void testContentStoreAlreadyExists() throws IOException, SQLException {
     artifactCache = cache(Optional.empty());
     writeInlinedArtifact(fileA);
-    artifactCache.store(artifactInfoA, BorrowablePath.notBorrowablePath(fileA));
+    artifactCache.store(artifactInfoA, BorrowablePath.notBorrowablePath(fileA.getPath()));
 
     // skip storing because content hash already exists
-    artifactCache.store(artifactInfoA, BorrowablePath.notBorrowablePath(fileA));
+    artifactCache.store(artifactInfoA, BorrowablePath.notBorrowablePath(fileA.getPath()));
 
     assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.contains(contentHashA));
 
     CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(null, contentHashA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.anEmptyMap());
-    assertEquals(filesystem.getFileSize(fileA), result.getArtifactSizeBytes());
-    assertArrayEquals(Files.readAllBytes(fileA), Files.readAllBytes(output.get()));
+    assertEquals(filesystem.getFileSize(fileA.getPath()), result.getArtifactSizeBytes());
+    assertArrayEquals(Files.readAllBytes(fileA.getPath()), Files.readAllBytes(output.get()));
   }
 
   @Test
@@ -264,11 +266,11 @@ public class SQLiteArtifactCacheTest {
     writeFileArtifact(fileA);
     writeFileArtifact(fileB);
 
-    artifactCache.store(artifactInfoA, BorrowablePath.notBorrowablePath(fileA));
-    artifactCache.store(artifactInfoB, BorrowablePath.borrowablePath(fileB));
+    artifactCache.store(artifactInfoA, BorrowablePath.notBorrowablePath(fileA.getPath()));
+    artifactCache.store(artifactInfoB, BorrowablePath.borrowablePath(fileB.getPath()));
 
-    assertTrue(Files.exists(fileA));
-    assertFalse(Files.exists(fileB));
+    assertTrue(Files.exists(fileA.getPath()));
+    assertFalse(Files.exists(fileB.getPath()));
   }
 
   @Test
@@ -283,7 +285,7 @@ public class SQLiteArtifactCacheTest {
 
     artifactCache.store(
         ArtifactInfo.builder().addRuleKeys(ruleKeyC).putMetadata(METADATA_KEY, "foo").build(),
-        BorrowablePath.notBorrowablePath(emptyFile));
+        BorrowablePath.notBorrowablePath(emptyFile.getPath()));
 
     assertThat(artifactCache.metadataRuleKeys(), Matchers.hasSize(3));
 
@@ -299,12 +301,14 @@ public class SQLiteArtifactCacheTest {
     writeFileArtifact(fileA);
     writeFileArtifact(fileB);
 
-    artifactCache.insertContent(contentHashA, BorrowablePath.notBorrowablePath(fileA), time);
-    artifactCache.insertContent(contentHashB, BorrowablePath.notBorrowablePath(fileB), time);
+    artifactCache.insertContent(
+        contentHashA, BorrowablePath.notBorrowablePath(fileA.getPath()), time);
+    artifactCache.insertContent(
+        contentHashB, BorrowablePath.notBorrowablePath(fileB.getPath()), time);
 
     assertThat(artifactCache.directoryFileContentHashes(), Matchers.hasSize(2));
 
-    artifactCache.store(artifactInfoC, BorrowablePath.notBorrowablePath(emptyFile));
+    artifactCache.store(artifactInfoC, BorrowablePath.notBorrowablePath(emptyFile.getPath()));
 
     // remove fileA and fileB and stop when size limit reached, leaving fileC
     artifactCache.removeOldContent().get();
@@ -321,9 +325,9 @@ public class SQLiteArtifactCacheTest {
     writeFileArtifact(fileB);
     writeFileArtifact(fileC);
 
-    artifactCache.store(artifactInfoA, BorrowablePath.borrowablePath(fileA));
-    artifactCache.store(artifactInfoB, BorrowablePath.borrowablePath(fileB));
-    artifactCache.store(artifactInfoC, BorrowablePath.borrowablePath(fileC));
+    artifactCache.store(artifactInfoA, BorrowablePath.borrowablePath(fileA.getPath()));
+    artifactCache.store(artifactInfoB, BorrowablePath.borrowablePath(fileB.getPath()));
+    artifactCache.store(artifactInfoC, BorrowablePath.borrowablePath(fileC.getPath()));
 
     artifactCache.removeOldContent().get();
     assertThat(
@@ -339,9 +343,9 @@ public class SQLiteArtifactCacheTest {
     writeFileArtifact(fileB);
     writeFileArtifact(fileC);
 
-    artifactCache.store(artifactInfoA, BorrowablePath.borrowablePath(fileA));
-    artifactCache.store(artifactInfoB, BorrowablePath.borrowablePath(fileB));
-    artifactCache.store(artifactInfoC, BorrowablePath.borrowablePath(fileC));
+    artifactCache.store(artifactInfoA, BorrowablePath.borrowablePath(fileA.getPath()));
+    artifactCache.store(artifactInfoB, BorrowablePath.borrowablePath(fileB.getPath()));
+    artifactCache.store(artifactInfoC, BorrowablePath.borrowablePath(fileC.getPath()));
 
     artifactCache.removeOldContent().get();
     assertThat(
@@ -359,13 +363,13 @@ public class SQLiteArtifactCacheTest {
 
     artifactCache.insertContent(
         contentHashA,
-        BorrowablePath.borrowablePath(fileA),
+        BorrowablePath.borrowablePath(fileA.getPath()),
         Timestamp.from(Instant.now().minus(Duration.ofDays(3))));
     assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.hasSize(1));
 
     artifactCache.insertContent(
         contentHashB,
-        BorrowablePath.borrowablePath(fileB),
+        BorrowablePath.borrowablePath(fileB.getPath()),
         Timestamp.from(Instant.now().minus(Duration.ofDays(2))));
     assertThat(artifactCache.inlinedArtifactContentHashes(), Matchers.hasSize(1));
     assertThat(artifactCache.directoryFileContentHashes(), Matchers.hasSize(1));
@@ -376,7 +380,7 @@ public class SQLiteArtifactCacheTest {
     assertThat(artifactCache.directoryFileContentHashes(), Matchers.hasSize(1));
 
     // add fileC, causing cache to exceed max size
-    artifactCache.store(artifactInfoC, BorrowablePath.borrowablePath(fileC));
+    artifactCache.store(artifactInfoC, BorrowablePath.borrowablePath(fileC.getPath()));
     ImmutableList<RuleKey> filesNotDeleted = artifactCache.directoryFileContentHashes();
     int remaining = filesNotDeleted.size() + artifactCache.inlinedArtifactContentHashes().size();
     assertEquals(remaining, 3);
@@ -396,7 +400,7 @@ public class SQLiteArtifactCacheTest {
             .addRuleKeys(ruleKeyA, ruleKeyB, ruleKeyC)
             .putMetadata(METADATA_KEY, contentHashA.toString())
             .build(),
-        BorrowablePath.notBorrowablePath(emptyFile));
+        BorrowablePath.notBorrowablePath(emptyFile.getPath()));
 
     CacheResult resultA = Futures.getUnchecked(artifactCache.fetchAsync(null, ruleKeyA, output));
     assertEquals(CacheResultType.HIT, resultA.getType());
@@ -424,14 +428,14 @@ public class SQLiteArtifactCacheTest {
             .addRuleKeys(ruleKeyA)
             .putMetadata(BuildInfo.MetadataKey.TARGET, "foo")
             .build(),
-        BorrowablePath.notBorrowablePath(fileA));
+        BorrowablePath.notBorrowablePath(fileA.getPath()));
 
     CacheResult result = Futures.getUnchecked(artifactCache.fetchAsync(null, ruleKeyA, output));
     assertEquals(CacheResultType.HIT, result.getType());
     assertThat(result.getMetadata(), Matchers.hasKey(BuildInfo.MetadataKey.TARGET));
     assertEquals(result.getMetadata().get(BuildInfo.MetadataKey.TARGET), "foo");
-    assertEquals(result.getArtifactSizeBytes(), Files.size(fileA));
-    assertArrayEquals(Files.readAllBytes(output.get()), Files.readAllBytes(fileA));
+    assertEquals(result.getArtifactSizeBytes(), Files.size(fileA.getPath()));
+    assertArrayEquals(Files.readAllBytes(output.get()), Files.readAllBytes(fileA.getPath()));
   }
 
   @Test
@@ -462,9 +466,10 @@ public class SQLiteArtifactCacheTest {
   @Test
   public void testFolderLevelsForRuleKeys() throws IOException, SQLException {
     artifactCache = cache(Optional.empty());
-    assertEquals(cacheDir.resolve("0123"), artifactCache.getArtifactPath(new RuleKey("0123")));
     assertEquals(
-        cacheDir.resolve("45").resolve("67").resolve("456789abcdef"),
+        cacheDir.resolve("0123").getPath(), artifactCache.getArtifactPath(new RuleKey("0123")));
+    assertEquals(
+        cacheDir.resolve("45").resolve("67").resolve("456789abcdef").getPath(),
         artifactCache.getArtifactPath(new RuleKey("456789abcdef")));
   }
 }

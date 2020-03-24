@@ -29,6 +29,10 @@ public class TestProjectFilesystems {
 
   private TestProjectFilesystems() {}
 
+  public static DefaultProjectFilesystem createProjectFilesystem(AbsPath root, Config config) {
+    return createProjectFilesystem(root.getPath(), config);
+  }
+
   public static DefaultProjectFilesystem createProjectFilesystem(Path root, Config config) {
     return new DefaultProjectFilesystemFactory()
         .createProjectFilesystem(

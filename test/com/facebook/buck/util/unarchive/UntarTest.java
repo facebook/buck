@@ -90,8 +90,8 @@ public class UntarTest {
   }
 
   private void assertModifiedTime(Path path) throws IOException {
-    Path fullPath = tmpFolder.getRoot().resolve(path);
-    FileTime lastModifiedTime = filesystem.getLastModifiedTime(fullPath);
+    AbsPath fullPath = tmpFolder.getRoot().resolve(path);
+    FileTime lastModifiedTime = filesystem.getLastModifiedTime(fullPath.getPath());
     Assert.assertEquals(
         String.format(
             "Expected %s to be modified at %s, but it was modified at %s",
@@ -114,7 +114,7 @@ public class UntarTest {
 
   private void assertExecutable(
       Path path, boolean shouldBeExecutable, boolean allowFilesToBeWrong) {
-    Path fullPath = tmpFolder.getRoot().resolve(path);
+    AbsPath fullPath = tmpFolder.getRoot().resolve(path);
     File file = fullPath.toFile();
     boolean isExecutable = file.canExecute();
 
@@ -132,18 +132,20 @@ public class UntarTest {
 
   /** Assert that a directory exists inside of the temp directory */
   private void assertOutputDirExists(Path path) {
-    Path fullPath = tmpFolder.getRoot().resolve(path);
+    AbsPath fullPath = tmpFolder.getRoot().resolve(path);
     Assert.assertTrue(
-        String.format("Expected %s to be a directory", fullPath), Files.isDirectory(fullPath));
+        String.format("Expected %s to be a directory", fullPath),
+        Files.isDirectory(fullPath.getPath()));
   }
 
   /** Assert that a file exists inside of the temp directory with given contents */
   private void assertOutputFileExists(Path path, String expectedContents) throws IOException {
-    Path fullPath = tmpFolder.getRoot().resolve(path);
+    AbsPath fullPath = tmpFolder.getRoot().resolve(path);
     Assert.assertTrue(
-        String.format("Expected %s to be a file", fullPath), Files.isRegularFile(fullPath));
+        String.format("Expected %s to be a file", fullPath),
+        Files.isRegularFile(fullPath.getPath()));
 
-    String contents = Joiner.on('\n').join(Files.readAllLines(fullPath));
+    String contents = Joiner.on('\n').join(Files.readAllLines(fullPath.getPath()));
     Assert.assertEquals(expectedContents, contents);
   }
 
@@ -153,11 +155,12 @@ public class UntarTest {
    */
   private void assertOutputSymlinkExists(
       Path symlinkPath, Path expectedLinkedToPath, String expectedContents) throws IOException {
-    Path fullPath = tmpFolder.getRoot().resolve(symlinkPath);
+    AbsPath fullPath = tmpFolder.getRoot().resolve(symlinkPath);
     if (Platform.detect() != Platform.WINDOWS) {
       Assert.assertTrue(
-          String.format("Expected %s to be a symlink", fullPath), Files.isSymbolicLink(fullPath));
-      Path linkedToPath = Files.readSymbolicLink(fullPath);
+          String.format("Expected %s to be a symlink", fullPath),
+          Files.isSymbolicLink(fullPath.getPath()));
+      Path linkedToPath = Files.readSymbolicLink(fullPath.getPath());
       Assert.assertEquals(
           String.format(
               "Expected symlink at %s to point to %s, not %s",
@@ -173,9 +176,9 @@ public class UntarTest {
     Assert.assertTrue(
         String.format(
             "Expected link %s to be the same file as %s", fullPath, realExpectedLinkedToPath),
-        Files.isSameFile(fullPath, realExpectedLinkedToPath.getPath()));
+        Files.isSameFile(fullPath.getPath(), realExpectedLinkedToPath.getPath()));
 
-    String contents = Joiner.on('\n').join(Files.readAllLines(fullPath));
+    String contents = Joiner.on('\n').join(Files.readAllLines(fullPath.getPath()));
     Assert.assertEquals(expectedContents, contents);
   }
 
@@ -314,9 +317,9 @@ public class UntarTest {
     assertModifiedTime(expectedPaths);
     assertExecutable(expectedPaths.get(0), true);
     if (tmpFolder.getRoot().getFileSystem().supportedFileAttributeViews().contains("posix")) {
-      Path executablePath = tmpFolder.getRoot().resolve(expectedPaths.get(0));
+      AbsPath executablePath = tmpFolder.getRoot().resolve(expectedPaths.get(0));
       Assert.assertThat(
-          Files.getPosixFilePermissions(executablePath),
+          Files.getPosixFilePermissions(executablePath.getPath()),
           Matchers.hasItems(
               PosixFilePermission.OWNER_EXECUTE,
               PosixFilePermission.OTHERS_EXECUTE,

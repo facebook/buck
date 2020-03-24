@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.testutil.PlatformUtils;
@@ -35,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.logging.FileHandler;
@@ -61,8 +61,8 @@ public class DiffRuleKeysScriptIntegrationTest {
     ruleKeyBuilderLogger = Logger.get(RuleKeyBuilder.class);
     previousRuleKeyBuilderLevel = ruleKeyBuilderLogger.getLevel();
     ruleKeyBuilderLogger.setLevel(Level.FINER);
-    Path fullLogFilePath = tmp.getRoot().resolve(getLogFilePath());
-    Files.createDirectories(fullLogFilePath.getParent());
+    AbsPath fullLogFilePath = getLogFilePath();
+    Files.createDirectories(fullLogFilePath.getParent().getPath());
     FileHandler handler = new FileHandler(fullLogFilePath.toString());
     handler.setFormatter(new LogFormatter());
     ruleKeyBuilderLogger.addHandler(handler);
@@ -271,8 +271,8 @@ public class DiffRuleKeysScriptIntegrationTest {
 
     invokeBuckCommand(workspace, ImmutableList.of("//apple:cxx_bin"), "buck-0.log");
 
-    Path logPath = tmp.getRoot().resolve("buck-0.log");
-    String expectedFileContent = new String(Files.readAllBytes(logPath), UTF_8);
+    AbsPath logPath = tmp.getRoot().resolve("buck-0.log");
+    String expectedFileContent = new String(Files.readAllBytes(logPath.getPath()), UTF_8);
     assertThat(
         expectedFileContent,
         Matchers.containsString("string(\"-I$SDKROOT/usr/include/libxml2\"):key(sanitized):"));
@@ -327,7 +327,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     workspace.writeContentsToPath(logContentsForThisInvocation, logOut);
   }
 
-  private Path getLogFilePath() {
+  private AbsPath getLogFilePath() {
     return tmp.getRoot().resolve("buck.test.log");
   }
 

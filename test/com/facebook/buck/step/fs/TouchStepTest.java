@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
@@ -57,7 +56,7 @@ public class TouchStepTest {
         new FakeProjectFilesystem(
             new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
             CanonicalCellName.rootCell(),
-            AbsPath.of(tmp.getRoot()),
+            tmp.getRoot(),
             ImmutableSet.of());
     TouchStep touchStep = new TouchStep(projectFilesystem, path);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -72,7 +71,7 @@ public class TouchStepTest {
         new FakeProjectFilesystem(
             new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1)),
             CanonicalCellName.rootCell(),
-            AbsPath.of(tmp.getRoot()),
+            tmp.getRoot(),
             ImmutableSet.of(path));
     FileTime lastModifiedTime = projectFilesystem.getLastModifiedTime(path);
     TouchStep touchStep = new TouchStep(projectFilesystem, path);

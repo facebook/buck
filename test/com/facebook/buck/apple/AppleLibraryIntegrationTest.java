@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -479,7 +480,7 @@ public class AppleLibraryIntegrationTest {
             "cxx.cflags=-g");
     result.assertSuccess();
 
-    Path dsymPath =
+    AbsPath dsymPath =
         tmp.getRoot()
             .resolve(
                 BuildTargetPaths.getGenPath(
@@ -488,7 +489,7 @@ public class AppleLibraryIntegrationTest {
                         "//Libraries/TestLibrary:TestLibrary#dwarf-and-dsym,framework,include-frameworks,macosx-x86_64"),
                     "%s"))
             .resolve("TestLibrary.framework.dSYM");
-    assertThat(Files.exists(dsymPath), is(true));
+    assertThat(Files.exists(dsymPath.getPath()), is(true));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbol("+[TestClass answer]", workspace, dsymPath);
   }
 
@@ -610,7 +611,7 @@ public class AppleLibraryIntegrationTest {
         workspace.getPath(BuildTargetPaths.getGenPath(filesystem, implicitTarget, "%s"));
     assertThat(Files.exists(outputPath), is(true));
 
-    Path dsymPath =
+    AbsPath dsymPath =
         tmp.getRoot()
             .resolve(
                 BuildTargetPaths.getGenPath(
@@ -618,7 +619,7 @@ public class AppleLibraryIntegrationTest {
                     BuildTargetFactory.newInstance(
                         "//Libraries/TestLibrary:TestLibrary#apple-dsym,macosx-x86_64,shared"),
                     "%s.dSYM"));
-    assertThat(Files.exists(dsymPath), is(true));
+    assertThat(Files.exists(dsymPath.getPath()), is(true));
     AppleDsymTestUtil.checkDsymFileHasDebugSymbol("+[TestClass answer]", workspace, dsymPath);
   }
 
@@ -984,7 +985,7 @@ public class AppleLibraryIntegrationTest {
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
-    Path dwarfPath =
+    AbsPath dwarfPath =
         tmp.getRoot()
             .resolve(
                 BuildTargetPaths.getGenPath(
@@ -992,8 +993,8 @@ public class AppleLibraryIntegrationTest {
                     BuildTargetFactory.newInstance("//:Mixed#apple-dsym,macosx-x86_64,shared"),
                     "%s.dSYM"))
             .resolve("Contents/Resources/DWARF/Mixed");
-    assertThat(Files.exists(dwarfPath), is(true));
-    AppleDsymTestUtil.checkDsymFileHasSection("__SWIFT", "__ast", workspace, dwarfPath);
+    assertThat(Files.exists(dwarfPath.getPath()), is(true));
+    AppleDsymTestUtil.checkDsymFileHasSection("__SWIFT", "__ast", workspace, dwarfPath.getPath());
   }
 
   @Test

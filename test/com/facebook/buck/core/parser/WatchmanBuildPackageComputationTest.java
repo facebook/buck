@@ -175,8 +175,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
   @Override
   protected ImmutableList<GraphComputationStage<?, ?>> getComputationStages(String buildFileName) {
-    return getComputationStages(
-        buildFileName, filesystem.asView(), ImmutableSet.of(AbsPath.of(tmp.getRoot())));
+    return getComputationStages(buildFileName, filesystem.asView(), ImmutableSet.of(tmp.getRoot()));
   }
 
   private ImmutableList<GraphComputationStage<?, ?>> getComputationStages(
@@ -240,8 +239,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     public MockWatchmanFactory() {
       super(
           ImmutableMap.of(
-              AbsPath.of(tmp.getRoot()),
-              ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
+              tmp.getRoot(), ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
           ImmutableSet.of(),
           ImmutableMap.of(),
           Optional.of(Paths.get("(MockWatchmanFactory socket)")),

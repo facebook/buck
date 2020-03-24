@@ -20,6 +20,7 @@ import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.android.exopackage.ExopackageInfo.DexInfo;
 import com.facebook.buck.android.exopackage.ExopackageInfo.NativeLibsInfo;
 import com.facebook.buck.android.exopackage.ExopackageInfo.ResourcesInfo;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -57,7 +58,7 @@ public class ExopackageSymlinkTreeTest {
 
   @Test
   public void layoutSymlinkTree() throws Exception {
-    Path outputSymlinkRoot = tmpFolder.newFolder();
+    AbsPath outputSymlinkRoot = tmpFolder.newFolder();
     filesystem.mkdirs(outputSymlinkRoot);
 
     ExopackageInfo exopackageInfo = buildExoInfo(tmpFolder.getRoot());
@@ -66,22 +67,24 @@ public class ExopackageSymlinkTreeTest {
         exopackageInfo,
         new TestActionGraphBuilder().getSourcePathResolver(),
         filesystem,
-        outputSymlinkRoot);
+        outputSymlinkRoot.getPath());
 
     verifyMetadataBasedOutput(
-        outputSymlinkRoot.resolve("secondary-dex"), metadataLine -> metadataLine.split(" ")[0]);
+        outputSymlinkRoot.resolve("secondary-dex").getPath(),
+        metadataLine -> metadataLine.split(" ")[0]);
     verifyMetadataBasedOutput(
-        outputSymlinkRoot.resolve("native-libs").resolve("DummyAbi"),
+        outputSymlinkRoot.resolve("native-libs").resolve("DummyAbi").getPath(),
         metadataLine -> metadataLine.split(" ")[1]);
     verifyMetadataBasedOutput(
-        outputSymlinkRoot.resolve("resources"),
+        outputSymlinkRoot.resolve("resources").getPath(),
         metadataLine -> metadataLine.split(" ")[1] + ".apk");
 
     // Assert the root metadata file was written correctly
-    Path rootMetadataPath = outputSymlinkRoot.resolve("metadata.txt");
-    Assert.assertTrue(Files.exists(rootMetadataPath));
+    AbsPath rootMetadataPath = outputSymlinkRoot.resolve("metadata.txt");
+    Assert.assertTrue(Files.exists(rootMetadataPath.getPath()));
     Assert.assertEquals(
-        "/data/local/tmp/exopackage/com.example", new String(Files.readAllBytes(rootMetadataPath)));
+        "/data/local/tmp/exopackage/com.example",
+        new String(Files.readAllBytes(rootMetadataPath.getPath())));
   }
 
   private DexInfo buildDexInfo(Path relRoot) {
@@ -104,11 +107,11 @@ public class ExopackageSymlinkTreeTest {
                 PathSourcePath.of(filesystem, relRoot.resolve("res_foo.sha1")))));
   }
 
-  private ExopackageInfo buildExoInfo(Path relRoot) {
+  private ExopackageInfo buildExoInfo(AbsPath relRoot) {
     return ExopackageInfo.builder()
-        .setDexInfo(buildDexInfo(relRoot.resolve("dex")))
-        .setNativeLibsInfo(buildNativeLibsInfo(relRoot.resolve("so")))
-        .setResourcesInfo(buildResInfo(relRoot.resolve("res")))
+        .setDexInfo(buildDexInfo(relRoot.resolve("dex").getPath()))
+        .setNativeLibsInfo(buildNativeLibsInfo(relRoot.resolve("so").getPath()))
+        .setResourcesInfo(buildResInfo(relRoot.resolve("res").getPath()))
         .build();
   }
 

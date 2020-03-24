@@ -163,7 +163,7 @@ public class TimeoutIntegrationTest {
    */
   private void rewriteFileWithTransform(String path, Function<String, String> transform)
       throws IOException {
-    Path javaFile = temporaryFolder.getRoot().resolve(path);
+    Path javaFile = temporaryFolder.getRoot().resolve(path).getPath();
     List<String> lines = Files.readAllLines(javaFile, Charsets.UTF_8);
     String java = lines.stream().map(transform).collect(Collectors.joining(""));
     Files.write(javaFile, java.getBytes(Charsets.UTF_8));

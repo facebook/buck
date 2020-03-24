@@ -22,6 +22,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AssumeAndroidPlatform;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -411,14 +413,14 @@ public class ProjectIntegrationTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     workspace.runBuckCommand("project").assertSuccess("buck project should exit cleanly");
-    Path outPath = temporaryFolder2.getRoot();
+    AbsPath outPath = temporaryFolder2.getRoot();
     workspace
         .runBuckCommand("project", "--output-dir", outPath.toString())
         .assertSuccess("buck project should exit cleanly");
 
     // Check every file in output-dir matches one in project
     for (File outFile : Files.fileTreeTraverser().children(outPath.toFile())) {
-      Path relativePath = outPath.relativize(Paths.get(outFile.getPath()));
+      RelPath relativePath = outPath.relativize(Paths.get(outFile.getPath()));
       File projFile = temporaryFolder.getRoot().resolve(relativePath).toFile();
       assertTrue(projFile.exists());
       if (projFile.isFile()) {
@@ -439,8 +441,8 @@ public class ProjectIntegrationTest {
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
-    Path projPath = temporaryFolder.getRoot();
-    Path outPath = temporaryFolder2.getRoot();
+    Path projPath = temporaryFolder.getRoot().getPath();
+    Path outPath = temporaryFolder2.getRoot().getPath();
 
     long lastModifiedProject =
         Streams.stream(recursePath(projPath)).map(File::lastModified).max(Long::compare).get();
@@ -465,9 +467,9 @@ public class ProjectIntegrationTest {
     workspace.setUp();
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
-    Path out1Path = temporaryFolder2.newFolder("project1");
+    Path out1Path = temporaryFolder2.newFolder("project1").getPath();
     // Make sure buck project creates a dir if it doesn't exist
-    Path out2Path = temporaryFolder2.getRoot().resolve("project2/subdir");
+    Path out2Path = temporaryFolder2.getRoot().resolve("project2/subdir").getPath();
     workspace
         .runBuckCommand("project", "--output-dir", out1Path.toString())
         .assertSuccess("buck project should exit cleanly");

@@ -30,6 +30,7 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -126,7 +127,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     folder.create();
 
     // Setup up a symlink to our working directory.
-    Path symlinkedRoot = folder.getRoot().toPath().resolve("symlinked-root");
+    AbsPath symlinkedRoot = AbsPath.of(folder.getRoot().toPath().resolve("symlinked-root"));
     CreateSymlinksForTests.createSymLink(symlinkedRoot, tmp.getRoot());
 
     // Run the build, setting PWD to the above symlink.  Typically, this causes compilers to use
@@ -134,7 +135,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
     workspace
         .runBuckCommandWithEnvironmentOverridesAndContext(
-            tmp.getRoot(),
+            tmp.getRoot().getPath(),
             Optional.empty(),
             ImmutableMap.of("PWD", symlinkedRoot.toString()),
             "build",

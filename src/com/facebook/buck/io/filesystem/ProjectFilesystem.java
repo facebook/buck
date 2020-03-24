@@ -263,6 +263,12 @@ public interface ProjectFilesystem {
   /** Sets the last modified time for the given path. */
   Path setLastModifiedTime(Path pathRelativeToProjectRoot, FileTime time) throws IOException;
 
+  /** Sets the last modified time for the given path. */
+  default void setLastModifiedTime(PathWrapper pathRelativeToProjectRoot, FileTime time)
+      throws IOException {
+    setLastModifiedTime(pathRelativeToProjectRoot.getPath(), time);
+  }
+
   /**
    * Recursively delete everything under the specified path. Ignore the failure if the file at the
    * specified path does not exist.
@@ -274,6 +280,14 @@ public interface ProjectFilesystem {
    * Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
    */
   void mkdirs(Path pathRelativeToProjectRoot) throws IOException;
+
+  /**
+   * Resolves the relative path against the project root and then calls {@link
+   * Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
+   */
+  default void mkdirs(PathWrapper pathRelativeToProjectRoot) throws IOException {
+    mkdirs(pathRelativeToProjectRoot.getPath());
+  }
 
   /** Creates a new file relative to the project root. */
   Path createNewFile(Path pathRelativeToProjectRoot) throws IOException;
@@ -302,6 +316,12 @@ public interface ProjectFilesystem {
   void writeContentsToPath(
       String contents, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException;
+
+  default void writeContentsToPath(
+      String contents, PathWrapper pathRelativeToProjectRoot, FileAttribute<?>... attrs)
+      throws IOException {
+    writeContentsToPath(contents, pathRelativeToProjectRoot.getPath(), attrs);
+  }
 
   void writeBytesToPath(byte[] bytes, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException;
@@ -332,6 +352,10 @@ public interface ProjectFilesystem {
   void copyToOutputStream(Path pathRelativeToProjectRoot, OutputStream out) throws IOException;
 
   Optional<String> readFileIfItExists(Path pathRelativeToProjectRoot);
+
+  default Optional<String> readFileIfItExists(PathWrapper pathRelativeToProjectRoot) {
+    return readFileIfItExists(pathRelativeToProjectRoot.getPath());
+  }
 
   /**
    * Attempts to read the first line of the file specified by the relative path. If the file does

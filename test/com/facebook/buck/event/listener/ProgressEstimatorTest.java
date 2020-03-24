@@ -259,7 +259,7 @@ public class ProgressEstimatorTest {
   }
 
   private Path getStorageForTest() throws IOException {
-    return tmp.newFile();
+    return tmp.newFile().getPath();
   }
 
   @Test

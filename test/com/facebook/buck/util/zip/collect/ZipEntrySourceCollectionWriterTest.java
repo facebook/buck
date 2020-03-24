@@ -18,6 +18,7 @@ package com.facebook.buck.util.zip.collect;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -30,7 +31,6 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -61,8 +61,8 @@ public class ZipEntrySourceCollectionWriterTest {
         new ZipEntrySourceCollectionWriter(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
 
-    Path output = tmp.newFolder("output").resolve("output.zip");
-    writer.copyToZip(collection, output);
+    AbsPath output = tmp.newFolder("output").resolve("output.zip");
+    writer.copyToZip(collection, output.getPath());
 
     ImmutableMap<String, Collection<String>> entries = readZipEntryContent(output).asMap();
 
@@ -88,8 +88,8 @@ public class ZipEntrySourceCollectionWriterTest {
         new ZipEntrySourceCollectionWriter(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
 
-    Path output = tmp.newFolder("output").resolve("output.zip");
-    writer.copyToZip(collection, output);
+    AbsPath output = tmp.newFolder("output").resolve("output.zip");
+    writer.copyToZip(collection, output.getPath());
 
     ImmutableMap<String, Collection<String>> entries = readZipEntryContent(output).asMap();
 
@@ -113,8 +113,8 @@ public class ZipEntrySourceCollectionWriterTest {
         new ZipEntrySourceCollectionWriter(
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()));
 
-    Path output = tmp.newFolder("output").resolve("output.zip");
-    writer.copyToZip(collection, output);
+    AbsPath output = tmp.newFolder("output").resolve("output.zip");
+    writer.copyToZip(collection, output.getPath());
 
     ImmutableMap<String, Collection<String>> entries = readZipEntryContent(output).asMap();
 
@@ -125,11 +125,11 @@ public class ZipEntrySourceCollectionWriterTest {
         entries);
   }
 
-  private ImmutableMultimap<String, String> readZipEntryContent(Path output) throws IOException {
+  private ImmutableMultimap<String, String> readZipEntryContent(AbsPath output) throws IOException {
     ImmutableMultimap.Builder<String, String> entryToContent = ImmutableMultimap.builder();
 
     try (ZipInputStream in =
-        new ZipInputStream(new BufferedInputStream(Files.newInputStream(output)))) {
+        new ZipInputStream(new BufferedInputStream(Files.newInputStream(output.getPath())))) {
       for (ZipEntry e = in.getNextEntry(); e != null; e = in.getNextEntry()) {
         entryToContent.put(
             e.getName(), new String(ByteStreams.toByteArray(in), StandardCharsets.UTF_8).trim());

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.testutil;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class TemporaryPaths extends ExternalResource {
 
   private final String prefix;
   private final boolean keepContents;
-  private Path root;
+  private AbsPath root;
 
   public TemporaryPaths() {
     this("1".equals(EnvVariablesProvider.getSystemEnv().get("BUCK_TEST_KEEP_TEMPORARY_PATHS")));
@@ -61,15 +62,15 @@ public class TemporaryPaths extends ExternalResource {
     if (root != null) {
       return;
     }
-    root = Files.createTempDirectory(prefix).toRealPath();
+    root = AbsPath.of(Files.createTempDirectory(prefix).toRealPath());
   }
 
-  public Path getRoot() {
+  public AbsPath getRoot() {
     return root;
   }
 
-  public Path newFolder() throws IOException {
-    return Files.createTempDirectory(root, "tmpFolder");
+  public AbsPath newFolder() throws IOException {
+    return AbsPath.of(Files.createTempDirectory(root.getPath(), "tmpFolder"));
   }
 
   @Override
@@ -86,7 +87,7 @@ public class TemporaryPaths extends ExternalResource {
 
     try {
       Files.walkFileTree(
-          root,
+          root.getPath(),
           new SimpleFileVisitor<Path>() {
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
@@ -107,46 +108,46 @@ public class TemporaryPaths extends ExternalResource {
     }
   }
 
-  public Path newFile(String fileName) throws IOException {
-    Path toCreate = root.resolve(fileName);
+  public AbsPath newFile(String fileName) throws IOException {
+    AbsPath toCreate = root.resolve(fileName);
 
-    if (Files.exists(toCreate)) {
+    if (Files.exists(toCreate.getPath())) {
       throw new IOException(
           "a file with the name \'" + fileName + "\' already exists in the test folder");
     }
 
-    return Files.createFile(toCreate);
+    return AbsPath.of(Files.createFile(toCreate.getPath()));
   }
 
-  public Path newFile() throws IOException {
-    return Files.createTempFile(root, "junit", "file");
+  public AbsPath newFile() throws IOException {
+    return AbsPath.of(Files.createTempFile(root.getPath(), "junit", "file"));
   }
 
-  public Path newExecutableFile() throws IOException {
-    Path newFile = newFile();
-    MostFiles.makeExecutable(newFile);
+  public AbsPath newExecutableFile() throws IOException {
+    AbsPath newFile = newFile();
+    MostFiles.makeExecutable(newFile.getPath());
     return newFile;
   }
 
-  public Path newExecutableFile(String name) throws IOException {
-    Path newFile = newFile(name);
-    MostFiles.makeExecutable(newFile);
+  public AbsPath newExecutableFile(String name) throws IOException {
+    AbsPath newFile = newFile(name);
+    MostFiles.makeExecutable(newFile.getPath());
     return newFile;
   }
 
-  public Path newFolder(String... name) throws IOException {
-    Path toCreate = root;
+  public AbsPath newFolder(String... name) throws IOException {
+    AbsPath toCreate = root;
     for (String segment : name) {
       toCreate = toCreate.resolve(segment);
     }
 
-    if (Files.exists(toCreate)) {
+    if (Files.exists(toCreate.getPath())) {
       throw new IOException(
           String.format(
               "a folder with the name '%s' already exists in the test folder",
               Arrays.toString(name)));
     }
 
-    return Files.createDirectories(toCreate);
+    return AbsPath.of(Files.createDirectories(toCreate.getPath()));
   }
 }
