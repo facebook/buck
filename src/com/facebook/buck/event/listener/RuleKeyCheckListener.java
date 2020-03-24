@@ -145,6 +145,11 @@ public class RuleKeyCheckListener implements BuckEventListener {
             queryEndpoint(event.getFullyQualifiedRuleName(), event.getRulekeyAsString());
         isTopLevelResultCalculated = true;
         buckEventBus.post(new TopLevelCacheCheckEvent(result));
+        if (result == RuleKeyCheckResult.TARGET_BUILT_NO_RULEKEY_MATCH
+            && ruleKeyCheckListenerConfig.getDivergenceWarningMessage().isPresent()) {
+          buckEventBus.register(
+              new CacheMissBuildTimeListener(buckEventBus, ruleKeyCheckListenerConfig));
+        }
       }
     }
   }

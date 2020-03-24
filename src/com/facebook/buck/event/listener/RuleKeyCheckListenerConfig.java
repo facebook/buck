@@ -50,4 +50,12 @@ public abstract class RuleKeyCheckListenerConfig implements ConfigView<BuckConfi
         getDelegate().getListWithoutComments(SECTION_NAME, "targets_enabled_for");
     return ImmutableList.copyOf(raw.stream().map(Pattern::compile).collect(Collectors.toList()));
   }
+
+  public Optional<String> getDivergenceWarningMessage() {
+    return getDelegate().getValue(SECTION_NAME, "divergence_warning_message");
+  }
+
+  public int getDivergenceWarningThresholdInSec() {
+    return getDelegate().getInteger(SECTION_NAME, "divergence_warning_threshold_in_sec").orElse(60);
+  }
 }
