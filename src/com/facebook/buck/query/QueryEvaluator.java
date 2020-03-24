@@ -27,7 +27,6 @@ public interface QueryEvaluator<ENV_NODE_TYPE> {
    * @return the evaluated target set.
    * @throws QueryException if evaluation fails.
    */
-  <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
-      QueryExpression<ENV_NODE_TYPE> exp, QueryEnvironment<ENV_NODE_TYPE> env)
+  Set<ENV_NODE_TYPE> eval(QueryExpression<ENV_NODE_TYPE> exp, QueryEnvironment<ENV_NODE_TYPE> env)
       throws QueryException;
 }

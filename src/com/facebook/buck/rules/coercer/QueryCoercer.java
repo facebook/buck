@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.base.Preconditions;
@@ -58,9 +59,9 @@ public class QueryCoercer implements TypeCoercer<Object, Query> {
             query.getBaseName(),
             ImmutableSet.of(),
             query.getTargetConfiguration());
-    QueryExpression<QueryBuildTarget> parsedExp;
+    QueryExpression<QueryTarget> parsedExp;
     try {
-      parsedExp = QueryExpression.<QueryBuildTarget>parse(query.getQuery(), env);
+      parsedExp = QueryExpression.parse(query.getQuery(), env);
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing query: " + query.getQuery(), e);
     }

@@ -43,7 +43,7 @@ import java.util.Set;
  *
  * <pre>expr ::= LABELS '(' WORD ',' expr ')'</pre>
  */
-public class LabelsFunction implements QueryFunction<QueryTarget, QueryBuildTarget> {
+public class LabelsFunction<NODE_TYPE> implements QueryFunction<NODE_TYPE> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);
@@ -66,16 +66,14 @@ public class LabelsFunction implements QueryFunction<QueryTarget, QueryBuildTarg
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public Set<QueryTarget> eval(
-      QueryEvaluator<QueryBuildTarget> evaluator,
-      QueryEnvironment<QueryBuildTarget> env,
-      ImmutableList<Argument<QueryBuildTarget>> args)
+  public Set<NODE_TYPE> eval(
+      QueryEvaluator<NODE_TYPE> evaluator,
+      QueryEnvironment<NODE_TYPE> env,
+      ImmutableList<Argument<NODE_TYPE>> args)
       throws QueryException {
     final String label =
         CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
-    Set<QueryBuildTarget> inputs = evaluator.eval(args.get(1).getExpression(), env);
-    return (Set<QueryTarget>)
-        Unions.of((QueryBuildTarget input) -> env.getTargetsInAttribute(input, label), inputs);
+    Set<NODE_TYPE> inputs = evaluator.eval(args.get(1).getExpression(), env);
+    return Unions.of((NODE_TYPE input) -> env.getTargetsInAttribute(input, label), inputs);
   }
 }

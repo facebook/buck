@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Threads;
@@ -166,11 +167,11 @@ public final class QueryUtils {
             declaredDeps,
             target.getTargetConfiguration());
     try {
-      QueryExpression<QueryBuildTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
-      Set<QueryBuildTarget> queryTargets =
-          cache.getQueryEvaluator(targetGraph).eval(parsedExp, env);
+      QueryExpression<QueryTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
+      Set<QueryTarget> queryTargets = cache.getQueryEvaluator(targetGraph).eval(parsedExp, env);
       return queryTargets.stream()
-          .map(queryTarget -> queryTarget.getBuildTarget())
+          .filter(queryTarget -> queryTarget instanceof QueryBuildTarget)
+          .map(queryTarget -> ((QueryBuildTarget) queryTarget).getBuildTarget())
           .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     } catch (QueryException e) {
       if (e.getCause() instanceof InterruptedException) {
@@ -193,7 +194,7 @@ public final class QueryUtils {
             targetBaseName,
             ImmutableSet.of(),
             query.getTargetConfiguration());
-    QueryExpression<QueryBuildTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
+    QueryExpression<QueryTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
     return parsedExp.getTargets(env).stream()
         .map(
             queryTarget -> {

@@ -28,7 +28,7 @@ import java.util.function.Predicate;
 import org.junit.Test;
 
 public class AttrFilterFunctionTest {
-  private QueryEnvironment<QueryBuildTarget> queryEnvironment;
+  private QueryEnvironment<QueryTarget> queryEnvironment;
   private QueryBuildTarget onlyTarget =
       QueryBuildTarget.of(BuildTargetFactory.newInstance("//x:y"));
 
@@ -67,13 +67,13 @@ public class AttrFilterFunctionTest {
   }
 
   private void assertQuery(String query, Set<QueryBuildTarget> expected) throws QueryException {
-    QueryExpression<QueryBuildTarget> queryExpr = QueryParser.parse(query, queryEnvironment);
+    QueryExpression<QueryTarget> queryExpr = QueryParser.parse(query, queryEnvironment);
 
-    Set<QueryBuildTarget> result = queryExpr.eval(new NoopQueryEvaluator<>(), queryEnvironment);
+    Set<QueryTarget> result = queryExpr.eval(new NoopQueryEvaluator<>(), queryEnvironment);
     assertEquals(expected, result);
   }
 
-  private class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryBuildTarget> {
+  private class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryTarget> {
     private String attributeName;
     private Object attributeValue;
 
@@ -83,8 +83,8 @@ public class AttrFilterFunctionTest {
     }
 
     @Override
-    public Iterable<QueryFunction<? extends QueryTarget, QueryBuildTarget>> getFunctions() {
-      return ImmutableList.of(new AttrFilterFunction());
+    public Iterable<QueryFunction<QueryTarget>> getFunctions() {
+      return ImmutableList.of(new AttrFilterFunction<>());
     }
 
     @Override
@@ -107,8 +107,7 @@ public class AttrFilterFunctionTest {
 
     @Override
     public Set<Object> filterAttributeContents(
-        QueryBuildTarget target, String attribute, Predicate<Object> predicate)
-        throws QueryException {
+        QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException {
 
       if (target == onlyTarget && attribute.equals(this.attributeName)) {
         if (predicate.test(attributeValue)) {

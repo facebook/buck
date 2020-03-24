@@ -56,7 +56,7 @@ import java.util.function.Consumer;
  *
  * <pre>       | DEPS '(' expr ',' INTEGER ',' expr ')'</pre>
  */
-public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> {
+public class DepsFunction<T> implements QueryFunction<T> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.INTEGER, ArgumentType.EXPRESSION);
@@ -87,8 +87,8 @@ public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> 
     for (T target : targets) {
       Set<T> deps =
           depsExpression.eval(
-              new NoopQueryEvaluator<T>(),
-              new TargetVariablesQueryEnvironment<T>(
+              new NoopQueryEvaluator<>(),
+              new TargetVariablesQueryEnvironment<>(
                   ImmutableMap.of(
                       FirstOrderDepsFunction.NAME,
                       env.getFwdDeps(ImmutableList.of(target)),
@@ -147,7 +147,7 @@ public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> 
    * A function that resolves to the current node's target being traversed when evaluating the deps
    * function.
    */
-  public static class FirstOrderDepsFunction<T extends QueryTarget> implements QueryFunction<T, T> {
+  public static class FirstOrderDepsFunction<T extends QueryTarget> implements QueryFunction<T> {
 
     private static final String NAME = "first_order_deps";
 
@@ -175,8 +175,7 @@ public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> 
   }
 
   /** A function that looks up target variables by name */
-  public static class LookupFunction<OUTPUT_TYPE extends QueryTarget, ENV_NODE_TYPE>
-      implements QueryFunction<OUTPUT_TYPE, ENV_NODE_TYPE> {
+  public static class LookupFunction<ENV_NODE_TYPE> implements QueryFunction<ENV_NODE_TYPE> {
     @Override
     public String getName() {
       return "lookup";
@@ -193,13 +192,12 @@ public class DepsFunction<T extends QueryTarget> implements QueryFunction<T, T> 
     }
 
     @Override
-    @SuppressWarnings("unchecked")
-    public Set<OUTPUT_TYPE> eval(
+    public Set<ENV_NODE_TYPE> eval(
         QueryEvaluator<ENV_NODE_TYPE> evaluator,
         QueryEnvironment<ENV_NODE_TYPE> env,
         ImmutableList<Argument<ENV_NODE_TYPE>> args) {
       Preconditions.checkArgument(args.size() == 1);
-      return (Set<OUTPUT_TYPE>) env.resolveTargetVariable(args.get(0).getWord());
+      return env.resolveTargetVariable(args.get(0).getWord());
     }
   }
 }

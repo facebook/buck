@@ -37,7 +37,7 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
   }
 
   @Override
-  public TargetEvaluator getTargetEvaluator() {
+  public TargetEvaluator<NODE_TYPE> getTargetEvaluator() {
     return delegate.getTargetEvaluator();
   }
 
@@ -52,7 +52,7 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
   }
 
   @Override
-  public Set<QueryFileTarget> getInputs(NODE_TYPE target) throws QueryException {
+  public Set<NODE_TYPE> getInputs(NODE_TYPE target) throws QueryException {
     return delegate.getInputs(target);
   }
 
@@ -62,7 +62,7 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
   }
 
   @Override
-  public void buildTransitiveClosure(Set<? extends QueryTarget> targetNodes, int maxDepth)
+  public void buildTransitiveClosure(Set<NODE_TYPE> targetNodes, int maxDepth)
       throws QueryException {
     delegate.buildTransitiveClosure(targetNodes, maxDepth);
   }
@@ -78,7 +78,7 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
   }
 
   @Override
-  public Set<QueryFileTarget> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException {
+  public Set<NODE_TYPE> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException {
     return delegate.getBuildFiles(targets);
   }
 
@@ -88,7 +88,7 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
   }
 
   @Override
-  public Set<? extends QueryTarget> getTargetsInAttribute(NODE_TYPE target, String attribute)
+  public Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, String attribute)
       throws QueryException {
     return delegate.getTargetsInAttribute(target, attribute);
   }
@@ -100,7 +100,7 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
   }
 
   @Override
-  public Iterable<QueryFunction<?, NODE_TYPE>> getFunctions() {
+  public Iterable<QueryFunction<NODE_TYPE>> getFunctions() {
     return delegate.getFunctions();
   }
 

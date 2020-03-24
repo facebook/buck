@@ -48,7 +48,7 @@ import java.util.Set;
  *
  * <pre>       | RDEPS '(' expr ',' expr ',' WORD ')'</pre>
  */
-public class RdepsFunction<T extends QueryTarget> implements QueryFunction<T, T> {
+public class RdepsFunction<T> implements QueryFunction<T> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.EXPRESSION, ArgumentType.INTEGER);

@@ -27,8 +27,7 @@ import java.util.regex.Pattern;
  * An abstract class that provides generic regex filter functionality. The actual expressions to
  * filter are defined in the subclasses.
  */
-abstract class RegexFilterFunction<T extends QueryTarget, ENV_NODE_TYPE>
-    implements QueryFunction<T, ENV_NODE_TYPE> {
+abstract class RegexFilterFunction<ENV_NODE_TYPE> implements QueryFunction<ENV_NODE_TYPE> {
 
   protected abstract QueryExpression<ENV_NODE_TYPE> getExpressionToEval(
       ImmutableList<Argument<ENV_NODE_TYPE>> args);
@@ -36,11 +35,13 @@ abstract class RegexFilterFunction<T extends QueryTarget, ENV_NODE_TYPE>
   protected abstract String getPattern(ImmutableList<Argument<ENV_NODE_TYPE>> args);
 
   protected abstract String getStringToFilter(
-      QueryEnvironment<ENV_NODE_TYPE> env, ImmutableList<Argument<ENV_NODE_TYPE>> args, T target)
+      QueryEnvironment<ENV_NODE_TYPE> env,
+      ImmutableList<Argument<ENV_NODE_TYPE>> args,
+      ENV_NODE_TYPE target)
       throws QueryException;
 
   @Override
-  public Set<T> eval(
+  public Set<ENV_NODE_TYPE> eval(
       QueryEvaluator<ENV_NODE_TYPE> evaluator,
       QueryEnvironment<ENV_NODE_TYPE> env,
       ImmutableList<Argument<ENV_NODE_TYPE>> args)
@@ -53,9 +54,9 @@ abstract class RegexFilterFunction<T extends QueryTarget, ENV_NODE_TYPE>
           String.format("Illegal pattern regexp '%s': %s", getPattern(args), e.getMessage()));
     }
 
-    Set<T> targets = evaluator.eval(getExpressionToEval(args), env);
-    HashSet<T> result = new HashSet<>(targets.size());
-    for (T target : targets) {
+    Set<ENV_NODE_TYPE> targets = evaluator.eval(getExpressionToEval(args), env);
+    HashSet<ENV_NODE_TYPE> result = new HashSet<>(targets.size());
+    for (ENV_NODE_TYPE target : targets) {
       String attributeValue = getStringToFilter(env, args, target);
       if (compiledPattern.matcher(attributeValue).find()) {
         result.add(target);

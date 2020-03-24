@@ -47,7 +47,7 @@ import java.util.Set;
  *
  * <pre>expr ::= ALLPATHS '(' expr ',' expr ')'</pre>
  */
-public class AllPathsFunction<T extends QueryTarget> implements QueryFunction<T, T> {
+public class AllPathsFunction<T> implements QueryFunction<T> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION, ArgumentType.EXPRESSION);

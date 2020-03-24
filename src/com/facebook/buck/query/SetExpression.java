@@ -71,8 +71,8 @@ final class SetExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
   }
 
   @Override
-  <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
-      QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException {
+  Set<NODE_TYPE> eval(QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env)
+      throws QueryException {
     return Unions.of((TargetLiteral<NODE_TYPE> expr) -> evaluator.eval(expr, env), getWords());
   }
 

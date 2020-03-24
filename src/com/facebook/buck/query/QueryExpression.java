@@ -71,8 +71,8 @@ public abstract class QueryExpression<NODE_TYPE> {
    *
    * <p>Failures resulting from evaluation of an ill-formed query cause QueryException to be thrown.
    */
-  abstract <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
-      QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException;
+  abstract Set<NODE_TYPE> eval(QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env)
+      throws QueryException;
 
   /**
    * Collects all target patterns that are referenced anywhere within this query expression and adds
@@ -88,7 +88,7 @@ public abstract class QueryExpression<NODE_TYPE> {
   public abstract void traverse(Visitor<NODE_TYPE> visitor);
 
   /** Returns a set of all targets referenced from literals within this query expression. */
-  public Set<QueryTarget> getTargets(QueryEnvironment<NODE_TYPE> env) {
+  public Set<NODE_TYPE> getTargets(QueryEnvironment<NODE_TYPE> env) {
     QueryTargetCollector<NODE_TYPE> collector = new QueryTargetCollector<NODE_TYPE>(env);
     traverse(collector);
     return collector.getTargets();

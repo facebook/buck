@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableList;
  *
  * <pre>expr ::= FILTER '(' WORD ',' expr ')'</pre>
  */
-public class FilterFunction<NODE_TYPE> extends RegexFilterFunction<QueryTarget, NODE_TYPE> {
+public class FilterFunction<NODE_TYPE> extends RegexFilterFunction<NODE_TYPE> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);
@@ -75,9 +75,7 @@ public class FilterFunction<NODE_TYPE> extends RegexFilterFunction<QueryTarget, 
 
   @Override
   protected String getStringToFilter(
-      QueryEnvironment<NODE_TYPE> env,
-      ImmutableList<Argument<NODE_TYPE>> args,
-      QueryTarget target) {
+      QueryEnvironment<NODE_TYPE> env, ImmutableList<Argument<NODE_TYPE>> args, NODE_TYPE target) {
     return target.toString();
   }
 }

@@ -27,7 +27,7 @@ import java.util.Set;
  *
  * <pre>expr ::= BUILDFILE '(' expr ')'</pre>
  */
-public class BuildFileFunction<T extends QueryTarget> implements QueryFunction<QueryFileTarget, T> {
+public class BuildFileFunction<T> implements QueryFunction<T> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION);
@@ -50,7 +50,7 @@ public class BuildFileFunction<T extends QueryTarget> implements QueryFunction<Q
   }
 
   @Override
-  public Set<QueryFileTarget> eval(
+  public Set<T> eval(
       QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
     Set<T> argumentSet = evaluator.eval(args.get(0).getExpression(), env);

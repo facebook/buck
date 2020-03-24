@@ -34,7 +34,7 @@ import java.util.function.Predicate;
  *
  * <pre>expr ::= ATTRFILTER '(' WORD ',' WORD ',' expr ')'</pre>
  */
-public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, QueryBuildTarget> {
+public class AttrFilterFunction<NODE_TYPE> implements QueryFunction<NODE_TYPE> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.WORD, ArgumentType.EXPRESSION);
@@ -57,12 +57,12 @@ public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, Query
   }
 
   @Override
-  public Set<QueryBuildTarget> eval(
-      QueryEvaluator<QueryBuildTarget> evaluator,
-      QueryEnvironment<QueryBuildTarget> env,
-      ImmutableList<Argument<QueryBuildTarget>> args)
+  public Set<NODE_TYPE> eval(
+      QueryEvaluator<NODE_TYPE> evaluator,
+      QueryEnvironment<NODE_TYPE> env,
+      ImmutableList<Argument<NODE_TYPE>> args)
       throws QueryException {
-    QueryExpression<QueryBuildTarget> argument = args.get(args.size() - 1).getExpression();
+    QueryExpression<NODE_TYPE> argument = args.get(args.size() - 1).getExpression();
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
 
     String attrValue = args.get(1).getWord();
@@ -80,9 +80,9 @@ public class AttrFilterFunction implements QueryFunction<QueryBuildTarget, Query
           return matches(input, attrValue);
         };
 
-    Set<QueryBuildTarget> targets = evaluator.eval(argument, env);
-    HashSet<QueryBuildTarget> result = new HashSet<>(targets.size());
-    for (QueryBuildTarget target : targets) {
+    Set<NODE_TYPE> targets = evaluator.eval(argument, env);
+    HashSet<NODE_TYPE> result = new HashSet<>(targets.size());
+    for (NODE_TYPE target : targets) {
       Set<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);

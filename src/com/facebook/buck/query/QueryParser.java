@@ -71,8 +71,8 @@ final class QueryParser<NODE_TYPE> {
   private Lexer.Token token; // current lookahead token
   private final List<Lexer.Token> tokens;
   private final Iterator<Lexer.Token> tokenIterator;
-  private final Map<String, QueryFunction<? extends QueryTarget, NODE_TYPE>> functions;
-  private final QueryEnvironment.TargetEvaluator targetEvaluator;
+  private final Map<String, QueryFunction<NODE_TYPE>> functions;
+  private final QueryEnvironment.TargetEvaluator<NODE_TYPE> targetEvaluator;
 
   /** Scan and parse the specified query expression. */
   static <NODE_TYPE> QueryExpression<NODE_TYPE> parse(String query, QueryEnvironment<NODE_TYPE> env)
@@ -89,7 +89,7 @@ final class QueryParser<NODE_TYPE> {
 
   private QueryParser(List<Lexer.Token> tokens, QueryEnvironment<NODE_TYPE> env) {
     this.functions = new HashMap<>();
-    for (QueryFunction<? extends QueryTarget, NODE_TYPE> queryFunction : env.getFunctions()) {
+    for (QueryFunction<NODE_TYPE> queryFunction : env.getFunctions()) {
       this.functions.put(queryFunction.getName(), queryFunction);
     }
     this.targetEvaluator = env.getTargetEvaluator();
@@ -117,8 +117,7 @@ final class QueryParser<NODE_TYPE> {
     return new QueryException(message);
   }
 
-  private QueryException syntaxError(
-      QueryException cause, QueryFunction<? extends QueryTarget, NODE_TYPE> function) {
+  private QueryException syntaxError(QueryException cause, QueryFunction<NODE_TYPE> function) {
     ImmutableList<ArgumentType> mandatoryArguments =
         function.getArgumentTypes().subList(0, function.getMandatoryArguments());
     ImmutableList<ArgumentType> optionalArguments =
@@ -256,7 +255,7 @@ final class QueryParser<NODE_TYPE> {
                     .map(TargetLiteral::<NODE_TYPE>of)
                     .collect(ImmutableList.toImmutableList()));
           }
-          Set<QueryTarget> targets = Unions.of(word -> targetEvaluator.evaluateTarget(word), words);
+          Set<NODE_TYPE> targets = Unions.of(word -> targetEvaluator.evaluateTarget(word), words);
           return TargetSetExpression.of(targets);
         }
         // $CASES-OMITTED$
@@ -267,7 +266,7 @@ final class QueryParser<NODE_TYPE> {
 
   @SuppressWarnings("unchecked")
   private QueryExpression<NODE_TYPE> consumeFunction(String word) throws QueryException {
-    QueryFunction<? extends QueryTarget, NODE_TYPE> function = functions.get(word);
+    QueryFunction<NODE_TYPE> function = functions.get(word);
     if (function == null) {
       throw new QueryException(syntaxError(token), "Unknown function '%s'", word);
     }

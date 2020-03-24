@@ -27,8 +27,7 @@ import java.util.Set;
  *
  * <pre>expr ::= OWNER '(' WORD ')'</pre>
  */
-public class OwnerFunction<ENV_NODE_TYPE extends QueryTarget>
-    implements QueryFunction<ENV_NODE_TYPE, ENV_NODE_TYPE> {
+public class OwnerFunction<NODE_TYPE> implements QueryFunction<NODE_TYPE> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD);
@@ -51,10 +50,10 @@ public class OwnerFunction<ENV_NODE_TYPE extends QueryTarget>
   }
 
   @Override
-  public Set<ENV_NODE_TYPE> eval(
-      QueryEvaluator<ENV_NODE_TYPE> evaluator,
-      QueryEnvironment<ENV_NODE_TYPE> env,
-      ImmutableList<Argument<ENV_NODE_TYPE>> args)
+  public Set<NODE_TYPE> eval(
+      QueryEvaluator<NODE_TYPE> evaluator,
+      QueryEnvironment<NODE_TYPE> env,
+      ImmutableList<Argument<NODE_TYPE>> args)
       throws QueryException {
     // NOTE: If we ever decide to make this work with nested expressions, we need to handle
     //       CWD relative paths. (e.g. `owner(inputs(//foo:bar))` would not work properly from

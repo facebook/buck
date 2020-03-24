@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.query;
 
 import com.facebook.buck.jvm.core.HasClasspathEntries;
-import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEvaluator;
@@ -38,8 +37,7 @@ import java.util.function.Consumer;
  *
  * <pre>       | CLASSPATH '(' expr ',' INTEGER ')'</pre>
  */
-public class ClasspathFunction
-    implements QueryEnvironment.QueryFunction<QueryTarget, QueryBuildTarget> {
+public class ClasspathFunction implements QueryEnvironment.QueryFunction<QueryTarget> {
   @Override
   public String getName() {
     return "classpath";
@@ -62,9 +60,9 @@ public class ClasspathFunction
    */
   @Override
   public ImmutableSet<QueryTarget> eval(
-      QueryEvaluator<QueryBuildTarget> evaluator,
-      QueryEnvironment<QueryBuildTarget> graphEnhancementQueryEnvironment,
-      ImmutableList<Argument<QueryBuildTarget>> args)
+      QueryEvaluator<QueryTarget> evaluator,
+      QueryEnvironment<QueryTarget> graphEnhancementQueryEnvironment,
+      ImmutableList<Argument<QueryTarget>> args)
       throws QueryException {
     GraphEnhancementQueryEnvironment env =
         (GraphEnhancementQueryEnvironment) graphEnhancementQueryEnvironment;

@@ -37,10 +37,9 @@ public final class TargetLiteral<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
-      QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException {
-    return (Set<OUTPUT_TYPE>) env.getTargetsMatchingPattern(getPattern());
+  public Set<NODE_TYPE> eval(QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env)
+      throws QueryException {
+    return env.getTargetsMatchingPattern(getPattern());
   }
 
   @Override

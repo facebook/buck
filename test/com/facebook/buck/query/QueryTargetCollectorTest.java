@@ -48,7 +48,7 @@ public class QueryTargetCollectorTest {
           BaseName.of(baseName),
           ImmutableSet.of(),
           UnconfiguredTargetConfiguration.INSTANCE);
-  private QueryTargetCollector<QueryBuildTarget> collector;
+  private QueryTargetCollector<QueryTarget> collector;
 
   @Before
   public void setUp() {
@@ -65,13 +65,13 @@ public class QueryTargetCollectorTest {
   public void targetSet() {
     ImmutableSet<QueryTarget> targets =
         ImmutableSet.of(target("foo"), target("bar"), target("baz"));
-    TargetSetExpression.<QueryBuildTarget>of(targets).traverse(collector);
+    TargetSetExpression.of(targets).traverse(collector);
     assertThat(collector.getTargets(), Matchers.equalTo(targets));
   }
 
   @Test
   public void emptySet() {
-    SetExpression.of(ImmutableList.<TargetLiteral<QueryBuildTarget>>of()).traverse(collector);
+    SetExpression.of(ImmutableList.<TargetLiteral<QueryTarget>>of()).traverse(collector);
     assertThat(collector.getTargets(), Matchers.empty());
   }
 

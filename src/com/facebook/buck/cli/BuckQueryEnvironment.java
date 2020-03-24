@@ -107,23 +107,23 @@ import java.util.function.Predicate;
  *
  * <p>The query language is documented at docs/command/query.soy
  */
-public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> {
+public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
 
   /** List of the default query functions. */
-  private static final List<QueryFunction<?, QueryBuildTarget>> QUERY_FUNCTIONS =
+  private static final List<QueryFunction<QueryTarget>> QUERY_FUNCTIONS =
       ImmutableList.of(
           new AllPathsFunction<>(),
-          new AttrFilterFunction(),
-          new AttrRegexFilterFunction(),
+          new AttrFilterFunction<>(),
+          new AttrRegexFilterFunction<>(),
           new BuildFileFunction<>(),
           new DepsFunction<>(),
           new DepsFunction.FirstOrderDepsFunction<>(),
-          new DepsFunction.LookupFunction<QueryTarget, QueryBuildTarget>(),
+          new DepsFunction.LookupFunction<>(),
           new InputsFunction<>(),
-          new FilterFunction<QueryBuildTarget>(),
+          new FilterFunction<>(),
           new KindFunction<>(),
-          new LabelsFunction(),
-          new OwnerFunction<QueryBuildTarget>(),
+          new LabelsFunction<>(),
+          new OwnerFunction<>(),
           new RdepsFunction<>(),
           new TestsOfFunction<>());
 
@@ -133,7 +133,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   private final OwnersReport.Builder ownersReportBuilder;
   private final TargetPatternEvaluator targetPatternEvaluator;
   private final BuckEventBus eventBus;
-  private final QueryEnvironment.TargetEvaluator queryTargetEvaluator;
+  private final QueryEnvironment.TargetEvaluator<QueryTarget> queryTargetEvaluator;
   private final TypeCoercerFactory typeCoercerFactory;
 
   private final ImmutableMap<Cell, BuildFileTree> buildFileTrees;
@@ -246,12 +246,12 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
    * @return the resulting set of targets.
    * @throws QueryException if the evaluation failed.
    */
-  public Set<QueryTarget> evaluateQuery(QueryExpression<QueryBuildTarget> expr)
+  public Set<QueryTarget> evaluateQuery(QueryExpression<QueryTarget> expr)
       throws QueryException, InterruptedException {
     Set<String> targetLiterals = new HashSet<>();
     expr.collectTargetPatterns(targetLiterals);
     preloadTargetPatterns(targetLiterals);
-    return new NoopQueryEvaluator<QueryBuildTarget>().eval(expr, this);
+    return new NoopQueryEvaluator<QueryTarget>().eval(expr, this);
   }
 
   public Set<QueryTarget> evaluateQuery(String query) throws QueryException, InterruptedException {
@@ -308,10 +308,9 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> getFwdDeps(Iterable<QueryBuildTarget> targets)
-      throws QueryException {
-    ImmutableSet.Builder<QueryBuildTarget> result = new ImmutableSet.Builder<>();
-    for (QueryBuildTarget target : targets) {
+  public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException {
+    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
+    for (QueryBuildTarget target : allBuildTargets(targets)) {
       TargetNode<?> node = getNode(target);
       result.addAll(getTargetsFromTargetNodes(graph.getOutgoingNodesFor(node)));
     }
@@ -319,10 +318,9 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   }
 
   @Override
-  public Set<QueryBuildTarget> getReverseDeps(Iterable<QueryBuildTarget> targets)
-      throws QueryException {
-    Set<QueryBuildTarget> result = new LinkedHashSet<>();
-    for (QueryBuildTarget target : targets) {
+  public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) throws QueryException {
+    Set<QueryTarget> result = new LinkedHashSet<>();
+    for (QueryBuildTarget target : allBuildTargets(targets)) {
       TargetNode<?> node = getNode(target);
       for (TargetNode<?> parentNode : graph.getIncomingNodesFor(node)) {
         result.add(getOrCreateQueryBuildTarget(parentNode.getBuildTarget()));
@@ -332,9 +330,11 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   }
 
   @Override
-  public Set<QueryFileTarget> getInputs(QueryBuildTarget target) throws QueryException {
-    TargetNode<?> node = getNode(target);
-    BuildTarget buildTarget = target.getBuildTarget();
+  public Set<QueryTarget> getInputs(QueryTarget target) throws QueryException {
+    // TODO: Give an error message if this cast fails.
+    QueryBuildTarget queryBuildTarget = (QueryBuildTarget) target;
+    TargetNode<?> node = getNode(queryBuildTarget);
+    BuildTarget buildTarget = queryBuildTarget.getBuildTarget();
     Cell cell = rootCell.getCell(buildTarget.getCell());
     return node.getInputs().stream()
         .map(
@@ -349,13 +349,13 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> getTransitiveClosure(Set<QueryBuildTarget> targets)
+  public ImmutableSet<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
       throws QueryException {
     Set<TargetNode<?>> nodes = new LinkedHashSet<>(targets.size());
-    for (QueryBuildTarget target : targets) {
+    for (QueryBuildTarget target : allBuildTargets(targets)) {
       nodes.add(getNode(target));
     }
-    ImmutableSet.Builder<QueryBuildTarget> result = ImmutableSet.builder();
+    ImmutableSet.Builder<QueryTarget> result = ImmutableSet.builder();
 
     new AbstractBreadthFirstTraversal<TargetNode<?>>(nodes) {
       @Override
@@ -371,8 +371,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   }
 
   @Override
-  public void buildTransitiveClosure(Set<? extends QueryTarget> targets, int maxDepth)
-      throws QueryException {
+  public void buildTransitiveClosure(Set<QueryTarget> targets, int maxDepth) throws QueryException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
     ImmutableSet<BuildTarget> newBuildTargets =
         targets.stream()
@@ -505,19 +504,31 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> getTestsForTarget(QueryBuildTarget target)
-      throws QueryException {
-    return getTargetsFromBuildTargets(TargetNodes.getTestTargetsForNode(getNode(target)));
+  public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException {
+    return ImmutableSet.copyOf(
+        getTargetsFromBuildTargets(
+            TargetNodes.getTestTargetsForNode(getNode((QueryBuildTarget) target))));
+  }
+
+  // TODO: This should be moved closer to QueryTarget itself, not a helper on BuckQueryEnvironment.
+  private ImmutableSet<QueryBuildTarget> allBuildTargets(Iterable<QueryTarget> targets) {
+    ImmutableSet.Builder<QueryBuildTarget> builder = ImmutableSet.builder();
+    for (QueryTarget target : targets) {
+      if (target instanceof QueryBuildTarget) {
+        builder.add((QueryBuildTarget) target);
+      }
+    }
+    return builder.build();
   }
 
   @Override
-  public ImmutableSet<QueryFileTarget> getBuildFiles(Set<QueryBuildTarget> targets) {
+  public ImmutableSet<QueryTarget> getBuildFiles(Set<QueryTarget> targets) {
     ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
     AbsPath rootPath = cellFilesystem.getRootPath();
 
-    ImmutableSet.Builder<QueryFileTarget> builder =
+    ImmutableSet.Builder<QueryTarget> builder =
         ImmutableSet.builderWithExpectedSize(targets.size());
-    for (QueryBuildTarget target : targets) {
+    for (QueryBuildTarget target : allBuildTargets(targets)) {
       BuildTarget buildTarget = target.getBuildTarget();
       Cell cell = rootCell.getCell(buildTarget.getCell());
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
@@ -543,7 +554,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   }
 
   @Override
-  public ImmutableSet<QueryBuildTarget> getFileOwners(ImmutableList<String> files) {
+  public ImmutableSet<QueryTarget> getFileOwners(ImmutableList<String> files) {
     OwnersReport report = ownersReportBuilder.build(buildFileTrees, files);
     report
         .getInputsWithNoOwners()
@@ -554,40 +565,46 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     report
         .getNonFileInputs()
         .forEach(path -> eventBus.post(ConsoleEvent.warning("%s is not a regular file", path)));
-    return getTargetsFromTargetNodes(report.owners.keySet());
+    return ImmutableSet.copyOf(getTargetsFromTargetNodes(report.owners.keySet()));
   }
 
   @Override
-  public String getTargetKind(QueryBuildTarget target) throws QueryException {
-    return getNode(target).getRuleType().getName();
+  public String getTargetKind(QueryTarget target) throws QueryException {
+    return getNode((QueryBuildTarget) target).getRuleType().getName();
   }
 
   @Override
-  public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
-      QueryBuildTarget target, String attribute) throws QueryException {
+  public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
+      throws QueryException {
     return QueryTargetAccessor.getTargetsInAttribute(
-        typeCoercerFactory, getNode(target), attribute, rootCell.getCellNameResolver());
+        typeCoercerFactory,
+        getNode((QueryBuildTarget) target),
+        attribute,
+        rootCell.getCellNameResolver());
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryBuildTarget target, String attribute, Predicate<Object> predicate)
-      throws QueryException {
+      QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException {
     return QueryTargetAccessor.filterAttributeContents(
-        typeCoercerFactory, getNode(target), attribute, predicate, rootCell.getCellNameResolver());
+        typeCoercerFactory,
+        getNode((QueryBuildTarget) target),
+        attribute,
+        predicate,
+        rootCell.getCellNameResolver());
   }
 
   @Override
-  public Iterable<QueryFunction<? extends QueryTarget, QueryBuildTarget>> getFunctions() {
+  public Iterable<QueryFunction<QueryTarget>> getFunctions() {
     return QUERY_FUNCTIONS;
   }
 
   @Override
-  public QueryEnvironment.TargetEvaluator getTargetEvaluator() {
+  public QueryEnvironment.TargetEvaluator<QueryTarget> getTargetEvaluator() {
     return queryTargetEvaluator;
   }
 
-  private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator {
+  private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator<QueryTarget> {
     private final TargetPatternEvaluator evaluator;
 
     private TargetEvaluator(TargetPatternEvaluator evaluator) {

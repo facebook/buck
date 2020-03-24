@@ -41,19 +41,19 @@ import java.util.Set;
 
 /** A query expression for user-defined query functions. */
 final class FunctionExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
-  private final QueryEnvironment.QueryFunction<?, NODE_TYPE> function;
+  private final QueryEnvironment.QueryFunction<NODE_TYPE> function;
   private final ImmutableList<QueryEnvironment.Argument<NODE_TYPE>> args;
   private final int hash;
 
   public FunctionExpression(
-      QueryEnvironment.QueryFunction<?, NODE_TYPE> function,
+      QueryEnvironment.QueryFunction<NODE_TYPE> function,
       Iterable<? extends QueryEnvironment.Argument<NODE_TYPE>> args) {
     this.function = function;
     this.args = ImmutableList.copyOf(args);
     this.hash = Objects.hash(function.getClass(), args);
   }
 
-  QueryFunction<?, NODE_TYPE> getFunction() {
+  QueryFunction<NODE_TYPE> getFunction() {
     return function;
   }
 
@@ -62,10 +62,9 @@ final class FunctionExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
-      QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException {
-    return ((QueryFunction<OUTPUT_TYPE, NODE_TYPE>) getFunction()).eval(evaluator, env, getArgs());
+  Set<NODE_TYPE> eval(QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env)
+      throws QueryException {
+    return getFunction().eval(evaluator, env, getArgs());
   }
 
   @Override

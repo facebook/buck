@@ -44,7 +44,7 @@ class Unions {
    * @param f function that produces a {@link java.util.Set} that can be assumed to be immutable.
    * @param sources inputs to pass to <code>f</code>
    */
-  static <I, T extends QueryTarget> Set<T> of(SourceToSetFunction<I, T> f, Collection<I> sources)
+  static <I, T> Set<T> of(SourceToSetFunction<I, T> f, Collection<I> sources)
       throws QueryException {
     int size = sources.size();
     if (size == 0) {

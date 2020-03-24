@@ -24,26 +24,25 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 public class CachingQueryEvaluator<ENV_NODE_TYPE> implements QueryEvaluator<ENV_NODE_TYPE> {
-  private final Cache<QueryExpression<?>, Set<?>> cache;
+  private final Cache<QueryExpression<ENV_NODE_TYPE>, Set<ENV_NODE_TYPE>> cache;
 
   public CachingQueryEvaluator() {
     this.cache = CacheBuilder.newBuilder().build();
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  public <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
+  public Set<ENV_NODE_TYPE> eval(
       QueryExpression<ENV_NODE_TYPE> exp, QueryEnvironment<ENV_NODE_TYPE> env)
       throws QueryException {
     try {
-      return (Set<OUTPUT_TYPE>) cache.get(exp, () -> exp.eval(this, env));
+      return cache.get(exp, () -> exp.eval(this, env));
     } catch (ExecutionException e) {
       throw new QueryException(e, "Failed executing query [%s]", exp);
     }
   }
 
   @VisibleForTesting
-  public boolean isPresent(QueryExpression<?> exp) {
+  public boolean isPresent(QueryExpression<ENV_NODE_TYPE> exp) {
     return Objects.nonNull(cache.getIfPresent(exp));
   }
 }

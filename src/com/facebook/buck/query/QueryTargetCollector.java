@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Set;
 
 class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV_NODE_TYPE> {
-  private final ImmutableSet.Builder<QueryTarget> targets;
+  private final ImmutableSet.Builder<ENV_NODE_TYPE> targets;
   private final QueryEnvironment<ENV_NODE_TYPE> env;
 
   QueryTargetCollector(QueryEnvironment<ENV_NODE_TYPE> env) {
@@ -30,7 +30,6 @@ class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public QueryExpression.VisitResult visit(QueryExpression<ENV_NODE_TYPE> exp) {
     if (exp instanceof TargetLiteral) {
       try {
@@ -42,13 +41,13 @@ class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV
     }
 
     if (exp instanceof TargetSetExpression) {
-      targets.addAll(((TargetSetExpression<QueryTarget>) exp).getTargets());
+      targets.addAll(((TargetSetExpression<ENV_NODE_TYPE>) exp).getTargets());
     }
 
     return QueryExpression.VisitResult.CONTINUE;
   }
 
-  Set<QueryTarget> getTargets() {
+  Set<ENV_NODE_TYPE> getTargets() {
     return targets.build();
   }
 }

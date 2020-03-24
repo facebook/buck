@@ -42,7 +42,7 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
   }
 
   @Override
-  public Set<QueryFileTarget> getInputs(NODE_TYPE target) throws QueryException {
+  public Set<NODE_TYPE> getInputs(NODE_TYPE target) throws QueryException {
     throw new UnsupportedOperationException();
   }
 
@@ -52,7 +52,7 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
   }
 
   @Override
-  public void buildTransitiveClosure(Set<? extends QueryTarget> targetNodes, int maxDepth)
+  public void buildTransitiveClosure(Set<NODE_TYPE> targetNodes, int maxDepth)
       throws QueryException {
     throw new UnsupportedOperationException();
   }
@@ -68,7 +68,7 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
   }
 
   @Override
-  public Set<QueryFileTarget> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException {
+  public Set<NODE_TYPE> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException {
     throw new UnsupportedOperationException();
   }
 
@@ -78,7 +78,7 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
   }
 
   @Override
-  public Set<? extends QueryTarget> getTargetsInAttribute(NODE_TYPE target, String attribute)
+  public Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, String attribute)
       throws QueryException {
     throw new UnsupportedOperationException();
   }
@@ -90,7 +90,7 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
   }
 
   @Override
-  public Iterable<QueryEnvironment.QueryFunction<? extends QueryTarget, NODE_TYPE>> getFunctions() {
+  public Iterable<QueryEnvironment.QueryFunction<NODE_TYPE>> getFunctions() {
     throw new UnsupportedOperationException();
   }
 }

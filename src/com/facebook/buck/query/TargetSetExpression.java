@@ -27,7 +27,7 @@ final class TargetSetExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
   private final int hash;
 
   @SuppressWarnings({"unchecked", "rawtypes"})
-  static <NODE_TYPE> TargetSetExpression<NODE_TYPE> of(Set<? extends QueryTarget> targets) {
+  static <NODE_TYPE> TargetSetExpression<NODE_TYPE> of(Set<NODE_TYPE> targets) {
     return new TargetSetExpression(targets);
   }
 
@@ -41,10 +41,8 @@ final class TargetSetExpression<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
-      QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) {
-    return (Set<OUTPUT_TYPE>) targets;
+  Set<NODE_TYPE> eval(QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) {
+    return targets;
   }
 
   @Override

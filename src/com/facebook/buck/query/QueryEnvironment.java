@@ -157,14 +157,8 @@ public interface QueryEnvironment<NODE_TYPE> {
     }
   }
 
-  /**
-   * A user-defined query function.
-   *
-   * @param <ENV_NODE_TYPE> determines the type of the {@link QueryEnvironment} in which this
-   *     function is expected to operate.
-   * @param <OUTPUT_TYPE> return type of this function.
-   */
-  interface QueryFunction<OUTPUT_TYPE extends QueryTarget, ENV_NODE_TYPE> {
+  /** A user-defined query function, which operates on the nodes of the QueryEnvironment */
+  interface QueryFunction<ENV_NODE_TYPE> {
     /** Name of the function as it appears in the query language. */
     String getName();
 
@@ -190,7 +184,7 @@ public interface QueryEnvironment<NODE_TYPE> {
      *     enable actual implementation to avoid making unnecessary copies, but resulting set is not
      *     supposed to be mutated afterwards so implementation is ok to return {@link ImmutableSet}.
      */
-    Set<OUTPUT_TYPE> eval(
+    Set<ENV_NODE_TYPE> eval(
         QueryEvaluator<ENV_NODE_TYPE> evaluator,
         QueryEnvironment<ENV_NODE_TYPE> env,
         ImmutableList<Argument<ENV_NODE_TYPE>> args)
@@ -201,9 +195,9 @@ public interface QueryEnvironment<NODE_TYPE> {
    * A procedure for evaluating a target literal to {@link QueryTarget}. This evaluation can either
    * happen immediately at parse time or be delayed until evalution of the entire query.
    */
-  interface TargetEvaluator {
+  interface TargetEvaluator<ENV_NODE_TYPE> {
     /** Returns the set of target nodes for the specified target pattern, in 'buck build' syntax. */
-    Set<QueryTarget> evaluateTarget(String target) throws QueryException;
+    Set<ENV_NODE_TYPE> evaluateTarget(String target) throws QueryException;
 
     Type getType();
 
@@ -214,13 +208,13 @@ public interface QueryEnvironment<NODE_TYPE> {
   }
 
   /** Returns an evaluator for target patterns. */
-  TargetEvaluator getTargetEvaluator();
+  TargetEvaluator<NODE_TYPE> getTargetEvaluator();
 
   /**
    * Returns the set of target nodes in the graph for the specified target pattern, in 'buck build'
    * syntax.
    */
-  default Set<QueryTarget> getTargetsMatchingPattern(String pattern) throws QueryException {
+  default Set<NODE_TYPE> getTargetsMatchingPattern(String pattern) throws QueryException {
     return getTargetEvaluator().evaluateTarget(pattern);
   }
 
@@ -240,7 +234,7 @@ public interface QueryEnvironment<NODE_TYPE> {
   /** Returns the direct reverse dependencies of the specified targets. */
   Set<NODE_TYPE> getReverseDeps(Iterable<NODE_TYPE> targets) throws QueryException;
 
-  Set<QueryFileTarget> getInputs(NODE_TYPE target) throws QueryException;
+  Set<NODE_TYPE> getInputs(NODE_TYPE target) throws QueryException;
 
   /**
    * Returns the forward transitive closure of all of the targets in "targets". Callers must ensure
@@ -255,8 +249,7 @@ public interface QueryEnvironment<NODE_TYPE> {
    * <p>If a larger transitive closure was already built, returns it to improve incrementality,
    * since all depth-constrained methods filter it after it is built anyway.
    */
-  void buildTransitiveClosure(Set<? extends QueryTarget> targetNodes, int maxDepth)
-      throws QueryException;
+  void buildTransitiveClosure(Set<NODE_TYPE> targetNodes, int maxDepth) throws QueryException;
 
   String getTargetKind(NODE_TYPE target) throws QueryException;
 
@@ -264,7 +257,7 @@ public interface QueryEnvironment<NODE_TYPE> {
   Set<NODE_TYPE> getTestsForTarget(NODE_TYPE target) throws QueryException;
 
   /** Returns the build files that define the given targets. */
-  Set<QueryFileTarget> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException;
+  Set<NODE_TYPE> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException;
 
   /** Returns the targets that own one or more of the given files. */
   Set<NODE_TYPE> getFileOwners(ImmutableList<String> files) throws QueryException;
@@ -273,19 +266,18 @@ public interface QueryEnvironment<NODE_TYPE> {
    * Returns the existing targets in the value of `attribute` of the given `target`.
    *
    * <p>Note that unlike most methods in this interface, this method can return a heterogeneous
-   * collection of objects that implement {@link QueryTarget}.
+   * collection of objects (both paths and build targets).
    */
-  Set<? extends QueryTarget> getTargetsInAttribute(NODE_TYPE target, String attribute)
-      throws QueryException;
+  Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, String attribute) throws QueryException;
 
   /** Returns the objects in the `attribute` of the given `target` that satisfy `predicate` */
   Set<Object> filterAttributeContents(
       NODE_TYPE target, String attribute, Predicate<Object> predicate) throws QueryException;
 
   /** Returns the set of query functions implemented by this query environment. */
-  Iterable<QueryFunction<? extends QueryTarget, NODE_TYPE>> getFunctions();
+  Iterable<QueryFunction<NODE_TYPE>> getFunctions();
 
-  /** @return the {@link QueryTarget}s expanded from the given variable {@code name}. */
+  /** @return the {@link NODE_TYPE}s expanded from the given variable {@code name}. */
   default Set<NODE_TYPE> resolveTargetVariable(String name) {
     throw new IllegalArgumentException(String.format("unexpected target variable \"%s\"", name));
   }

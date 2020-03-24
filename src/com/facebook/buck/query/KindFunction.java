@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableList;
  *
  * <pre>expr ::= KIND '(' WORD ',' expr ')'</pre>
  */
-public class KindFunction<T extends QueryTarget> extends RegexFilterFunction<T, T> {
+public class KindFunction<T> extends RegexFilterFunction<T> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.EXPRESSION);

@@ -27,7 +27,7 @@ import java.util.Set;
  *
  * <pre>expr ::= INPUTS '(' expr ')'</pre>
  */
-public class InputsFunction<T extends QueryTarget> implements QueryFunction<QueryFileTarget, T> {
+public class InputsFunction<T> implements QueryFunction<T> {
 
   @Override
   public String getName() {
@@ -46,7 +46,7 @@ public class InputsFunction<T extends QueryTarget> implements QueryFunction<Quer
 
   /** Evaluates to the direct inputs of the argument. */
   @Override
-  public Set<QueryFileTarget> eval(
+  public Set<T> eval(
       QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
     Set<T> targets = evaluator.eval(args.get(0).getExpression(), env);

@@ -130,7 +130,7 @@ public class QueryParserTest {
     }
   }
 
-  private static class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryBuildTarget> {
+  private static class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryTarget> {
 
     private final TargetEvaluator targetEvaluator;
 
@@ -144,8 +144,8 @@ public class QueryParserTest {
     }
 
     @Override
-    public Iterable<QueryFunction<?, QueryBuildTarget>> getFunctions() {
-      return ImmutableList.of(new DepsFunction(), new RdepsFunction(), new TestsOfFunction());
+    public Iterable<QueryFunction<QueryTarget>> getFunctions() {
+      return ImmutableList.of(new DepsFunction<>(), new RdepsFunction<>(), new TestsOfFunction<>());
     }
   }
 }

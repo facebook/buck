@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  *
  * <pre>expr ::= ATTRREGEXFILTER '(' WORD ',' WORD ',' expr ')'</pre>
  */
-public class AttrRegexFilterFunction implements QueryFunction<QueryBuildTarget, QueryBuildTarget> {
+public class AttrRegexFilterFunction<NODE_TYPE> implements QueryFunction<NODE_TYPE> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.WORD, ArgumentType.WORD, ArgumentType.EXPRESSION);
@@ -57,12 +57,12 @@ public class AttrRegexFilterFunction implements QueryFunction<QueryBuildTarget, 
   }
 
   @Override
-  public Set<QueryBuildTarget> eval(
-      QueryEvaluator<QueryBuildTarget> evaluator,
-      QueryEnvironment<QueryBuildTarget> env,
-      ImmutableList<Argument<QueryBuildTarget>> args)
+  public Set<NODE_TYPE> eval(
+      QueryEvaluator<NODE_TYPE> evaluator,
+      QueryEnvironment<NODE_TYPE> env,
+      ImmutableList<Argument<NODE_TYPE>> args)
       throws QueryException {
-    QueryExpression<QueryBuildTarget> argument = args.get(args.size() - 1).getExpression();
+    QueryExpression<NODE_TYPE> argument = args.get(args.size() - 1).getExpression();
     String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
 
     String attrValue = args.get(1).getWord();
@@ -82,9 +82,9 @@ public class AttrRegexFilterFunction implements QueryFunction<QueryBuildTarget, 
             !(input instanceof Collection || input instanceof Map)
                 && compiledPattern.matcher(input.toString()).find();
 
-    ImmutableSet.Builder<QueryBuildTarget> result = new ImmutableSet.Builder<>();
-    Set<QueryBuildTarget> targets = evaluator.eval(argument, env);
-    for (QueryBuildTarget target : targets) {
+    ImmutableSet.Builder<NODE_TYPE> result = new ImmutableSet.Builder<>();
+    Set<NODE_TYPE> targets = evaluator.eval(argument, env);
+    for (NODE_TYPE target : targets) {
       Set<Object> matchingObjects = env.filterAttributeContents(target, attr, predicate);
       if (!matchingObjects.isEmpty()) {
         result.add(target);

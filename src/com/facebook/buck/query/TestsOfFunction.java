@@ -29,7 +29,7 @@ import java.util.Set;
  *
  * <pre>expr ::= TESTSOF '(' expr ')'</pre>
  */
-public class TestsOfFunction<T extends QueryTarget> implements QueryFunction<T, T> {
+public class TestsOfFunction<T> implements QueryFunction<T> {
 
   private static final ImmutableList<ArgumentType> ARGUMENT_TYPES =
       ImmutableList.of(ArgumentType.EXPRESSION);

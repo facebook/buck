@@ -114,14 +114,13 @@ final class BinaryOperatorExpression<NODE_TYPE> extends QueryExpression<NODE_TYP
   }
 
   @Override
-  @SuppressWarnings("unchecked")
-  <OUTPUT_TYPE extends QueryTarget> Set<OUTPUT_TYPE> eval(
-      QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env) throws QueryException {
+  Set<NODE_TYPE> eval(QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env)
+      throws QueryException {
     ImmutableList<QueryExpression<NODE_TYPE>> operands = getOperands();
-    Set<QueryTarget> lhsValue = new LinkedHashSet<>(evaluator.eval(operands.get(0), env));
+    Set<NODE_TYPE> lhsValue = new LinkedHashSet<>(evaluator.eval(operands.get(0), env));
 
     for (int i = 1; i < operands.size(); i++) {
-      Set<QueryTarget> rhsValue = evaluator.eval(operands.get(i), env);
+      Set<NODE_TYPE> rhsValue = evaluator.eval(operands.get(i), env);
       switch (getOperator()) {
         case INTERSECT:
           lhsValue.retainAll(rhsValue);
@@ -136,7 +135,7 @@ final class BinaryOperatorExpression<NODE_TYPE> extends QueryExpression<NODE_TYP
           throw new IllegalStateException("operator=" + getOperator());
       }
     }
-    return (Set<OUTPUT_TYPE>) lhsValue;
+    return lhsValue;
   }
 
   @Override
