@@ -24,8 +24,6 @@ IO_SRCS = [
     "NamedTemporaryDirectory.java",
     "PkillProcessManager.java",
     "TimeFormat.java",
-    "UnixUserIdFetcher.java",
-    "UserIdFetcher.java",
 ]
 
 java_immutables_library(

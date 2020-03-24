@@ -16,21 +16,16 @@
 
 package com.facebook.buck.apple.simulator;
 
-import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
-import com.facebook.buck.util.FakeUserIdFetcher;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.Test;
 
 /** Unit tests for {@link AppleCoreSimulatorServiceController}. */
@@ -38,47 +33,6 @@ public class AppleCoreSimulatorServiceControllerTest {
 
   private static final ProcessExecutorParams LAUNCHCTL_LIST_PARAMS =
       ProcessExecutorParams.builder().setCommand(ImmutableList.of("launchctl", "list")).build();
-
-  @Test
-  public void coreSimulatorServicePathFetchedFromLaunchctlPrint()
-      throws IOException, InterruptedException {
-    ImmutableList.Builder<Map.Entry<ProcessExecutorParams, FakeProcess>> fakeProcessesBuilder =
-        ImmutableList.builder();
-    fakeProcessesBuilder.add(
-        new SimpleImmutableEntry<>(
-            LAUNCHCTL_LIST_PARAMS,
-            new FakeProcess(
-                0,
-                "87823\t0\tcom.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy\n",
-                "")));
-    fakeProcessesBuilder.add(
-        new SimpleImmutableEntry<>(
-            ProcessExecutorParams.builder()
-                .setCommand(
-                    ImmutableList.of(
-                        "launchctl",
-                        "print",
-                        "user/42/com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy"))
-                .build(),
-            new FakeProcess(
-                0,
-                "com.apple.CoreSimulator.CoreSimulatorService.117.15.1.lkhDXxRPp5yy = {\n"
-                    + "    path = xcode-dir/Developer/Library/PrivateFrameworks/CoreSimulator.framework"
-                    + "/Versions/A/XPCServices/com.apple.CoreSimulator.CoreSimulatorService.xpc\n"
-                    + "}\n",
-                "")));
-    FakeProcessExecutor fakeProcessExecutor = new FakeProcessExecutor(fakeProcessesBuilder.build());
-    AppleCoreSimulatorServiceController appleCoreSimulatorServiceController =
-        new AppleCoreSimulatorServiceController(fakeProcessExecutor);
-    Optional<Path> coreSimulatorServicePath =
-        appleCoreSimulatorServiceController.getCoreSimulatorServicePath(new FakeUserIdFetcher(42));
-    Optional<Path> expected =
-        Optional.of(
-            Paths.get(
-                "xcode-dir/Developer/Library/PrivateFrameworks/CoreSimulator.framework/"
-                    + "Versions/A/XPCServices/com.apple.CoreSimulator.CoreSimulatorService.xpc"));
-    assertThat(coreSimulatorServicePath, is(equalTo(expected)));
-  }
 
   @Test
   public void coreSimulatorServicesKilledSuccessfully() throws IOException, InterruptedException {

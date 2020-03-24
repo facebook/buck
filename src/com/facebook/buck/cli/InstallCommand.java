@@ -72,7 +72,6 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.UnixUserIdFetcher;
 import com.facebook.infer.annotation.Assertions;
 import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
@@ -949,32 +948,6 @@ public class InstallCommand extends BuildCommand {
       return FAILURE;
     }
 
-    UnixUserIdFetcher userIdFetcher = new UnixUserIdFetcher();
-    AppleCoreSimulatorServiceController appleCoreSimulatorServiceController =
-        new AppleCoreSimulatorServiceController(processExecutor);
-
-    Optional<Path> coreSimulatorServicePath =
-        appleCoreSimulatorServiceController.getCoreSimulatorServicePath(userIdFetcher);
-
-    boolean shouldWaitForSimulatorsToShutdown = false;
-
-    if (!coreSimulatorServicePath.isPresent()
-        || !coreSimulatorServicePath
-            .get()
-            .toRealPath()
-            .startsWith(xcodeDeveloperPath.get().toRealPath())) {
-      LOG.warn(
-          "Core simulator service path %s does not match developer directory %s, "
-              + "killing all simulators.",
-          coreSimulatorServicePath, xcodeDeveloperPath.get());
-      if (!appleCoreSimulatorServiceController.killSimulatorProcesses()) {
-        params.getConsole().printBuildFailure("Could not kill running simulator processes.");
-        return FAILURE;
-      }
-
-      shouldWaitForSimulatorsToShutdown = true;
-    }
-
     Path simctlPath = xcodeDeveloperPath.get().resolve("usr/bin/simctl");
     Optional<AppleSimulator> appleSimulator =
         getAppleSimulatorForBundle(appleBundle, processExecutor, simctlPath);
@@ -1013,9 +986,12 @@ public class InstallCommand extends BuildCommand {
 
     AppleSimulatorController appleSimulatorController =
         new AppleSimulatorController(processExecutor, simctlPath, iosSimulatorPath);
+    boolean shouldWaitForSimulatorsToShutdown = false;
 
     if (!appleSimulatorController.canStartSimulator(appleSimulator.get().getUdid())) {
       LOG.info("Cannot start simulator %s, killing simulators and trying again.");
+      AppleCoreSimulatorServiceController appleCoreSimulatorServiceController =
+          new AppleCoreSimulatorServiceController(processExecutor);
       if (!appleCoreSimulatorServiceController.killSimulatorProcesses()) {
         params.getConsole().printBuildFailure("Could not kill running simulator processes.");
         return FAILURE;
