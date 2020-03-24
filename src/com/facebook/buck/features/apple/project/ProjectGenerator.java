@@ -2522,6 +2522,9 @@ public class ProjectGenerator {
       // I'm not sure how to look for the correct folder here, so just adding both for now, if the
       // folder changes in a future release this can be revisited.
 
+      // Contains SDK-specific modules (e.g., UIKit, AppKit, etc)
+      librarySearchPaths.add("/usr/lib/swift");
+      // Toolchain directory contains runtime-specific modules
       librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift/$PLATFORM_NAME");
       if (options.shouldLinkSystemSwift()) {
         librarySearchPaths.add("$DT_TOOLCHAIN_DIR/usr/lib/swift-5.0/$PLATFORM_NAME");
