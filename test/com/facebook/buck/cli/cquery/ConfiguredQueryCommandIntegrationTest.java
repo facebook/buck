@@ -52,7 +52,6 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void basicTargetPrinting() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
@@ -63,7 +62,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     result.assertSuccess();
     // TODO(srice): We shouldn't expect it to print a readable name, but until we know what the hash
     // is going to be it doesn't matter what we put here.
-    assertEquals("//lib:foo (//config/platform:ios)", result.getStdout());
+    assertEquals("//lib:foo (//config/platform:ios)", result.getStdout().trim());
   }
 
   @Test
@@ -75,7 +74,7 @@ public class ConfiguredQueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand("cquery", "config(//lib:foo, //config/platform:tvos)");
-    assertEquals("//lib:foo (//config/platform:tvos)", result.getStdout());
+    assertEquals("//lib:foo (//config/platform:tvos)", result.getStdout().trim());
   }
 
   @Test
@@ -91,7 +90,7 @@ public class ConfiguredQueryCommandIntegrationTest {
 
     ProcessResult macOSResult =
         workspace.runBuckCommand("cquery", "//lib:foo", "--target-universe", "//bin:mac-bin");
-    assertEquals("//lib:foo (//config/platform:macos)", macOSResult.getStdout());
+    assertEquals("//lib:foo (//config/platform:macos)", macOSResult.getStdout().trim());
   }
 
   @Test
@@ -106,7 +105,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "cquery", "owner(lib/maconly.m)", "--target-universe", "//bin:tvos-bin");
-    assertEquals("", result.getStdout());
+    assertEquals("", result.getStdout().trim());
   }
 
   @Test
