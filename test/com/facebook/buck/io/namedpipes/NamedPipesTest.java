@@ -21,7 +21,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Throwables;
@@ -78,7 +77,7 @@ public class NamedPipesTest {
       println(stringWriter, "Named pipe: " + namedPipePath);
       executorService.execute(readFromNamedPipeRunnable(namedPipePath, stringWriter));
 
-      try (OutputStream outputStream = namedPipe.openOutputStream();
+      try (OutputStream outputStream = namedPipe.getOutputStream();
           BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream))) {
         println(stringWriter, "Starting write messages into a named pipe!");
         writeToNamedPipe(writer, "Hello pipe reader!");
@@ -154,8 +153,8 @@ public class NamedPipesTest {
         println(writer, "Read named pipe path: " + namedPipePath);
 
         NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
-        try (NamedPipe namedPipe = namedPipeFactory.connect(AbsPath.get(namedPipePath))) {
-          try (InputStream inputStream = namedPipe.openInputStream();
+        try (NamedPipe namedPipe = namedPipeFactory.connect(Paths.get(namedPipePath))) {
+          try (InputStream inputStream = namedPipe.getInputStream();
               BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
 
             String line;

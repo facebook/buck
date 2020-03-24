@@ -16,23 +16,14 @@
 
 package com.facebook.buck.io.namedpipes;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.namedpipes.posix.POSIXNamedPipeFactory;
 import com.facebook.buck.io.namedpipes.windows.WindowsNamedPipeFactory;
 import com.facebook.buck.util.environment.Platform;
 import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.UUID;
+import java.nio.file.Path;
 
 /** Factory interface that creates named pipe. */
 public interface NamedPipeFactory {
-
-  String TMP_DIR = System.getProperty("java.io.tmpdir");
-
-  /** Returns a generated platform specific named pipe path. */
-  default AbsPath generateNamedPathName() {
-    return AbsPath.of(Paths.get(TMP_DIR, "Pipe", UUID.randomUUID().toString()).toAbsolutePath());
-  }
 
   /** Creates platform specific named pipe and named pipe object. */
   NamedPipe create() throws IOException;
@@ -42,7 +33,9 @@ public interface NamedPipeFactory {
    *
    * @param namedPipePath - absolute path for the named pipe.
    */
-  NamedPipe connect(AbsPath namedPipePath) throws IOException;
+  default NamedPipe connect(Path namedPipePath) throws IOException {
+    return new RandomAccessFileBasedNamedPipe(namedPipePath);
+  }
 
   /** Returns platform specific implementation of {@code NamedPipeFactory}. */
   static NamedPipeFactory getFactory() {

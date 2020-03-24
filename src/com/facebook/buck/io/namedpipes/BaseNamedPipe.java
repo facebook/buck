@@ -16,20 +16,29 @@
 
 package com.facebook.buck.io.namedpipes;
 
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import com.google.common.base.MoreObjects;
+import java.nio.file.Path;
 
-/** Interface for named pipe. */
-public interface NamedPipe extends Closeable {
+/** Base implementation of {@code NamedPipe} interface. */
+public abstract class BaseNamedPipe implements NamedPipe {
 
-  /** Returns named pipe name */
-  String getName();
+  private final Path path;
 
-  /** Gets {@code InputStream} to named pipe. */
-  InputStream getInputStream() throws IOException;
+  protected BaseNamedPipe(Path path) {
+    this.path = path;
+  }
 
-  /** Gets {@code OutputStream} to named pipe. */
-  OutputStream getOutputStream() throws IOException;
+  @Override
+  public String getName() {
+    return path.toString();
+  }
+
+  protected Path getPath() {
+    return path;
+  }
+
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this).add("path", path).toString();
+  }
 }

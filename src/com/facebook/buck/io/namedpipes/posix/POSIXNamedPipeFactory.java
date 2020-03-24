@@ -16,21 +16,39 @@
 
 package com.facebook.buck.io.namedpipes.posix;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 /** POSIX named pipe factory. */
 public class POSIXNamedPipeFactory implements NamedPipeFactory {
 
-  @Override
-  public NamedPipe create() throws IOException {
-    return new POSIXNamedPipe.OwnedPOSIXNamedPipe(generateNamedPathName());
-  }
+  String TMP_DIR = System.getProperty("java.io.tmpdir");
 
   @Override
-  public NamedPipe connect(AbsPath namedPipePath) throws IOException {
-    return new POSIXNamedPipe(namedPipePath);
+  public NamedPipe create() throws IOException {
+    Path namedPathName = Paths.get(TMP_DIR, "pipe", UUID.randomUUID().toString());
+    createNamedPipe(namedPathName);
+    return new POSIXNamedPipe(namedPathName);
+  }
+
+  private static void createNamedPipe(Path path) throws IOException {
+    Files.createDirectories(path.getParent());
+    String pathString = path.toString();
+    int exitCode =
+        POSIXNamedPipeLibrary.mkfifo(
+            pathString, POSIXNamedPipeLibrary.OWNER_READ_WRITE_ACCESS_MODE);
+    if (exitCode != 0) {
+      throw new IOException(
+          "Can't create named pipe: "
+              + pathString
+              + " with `mkfifo` command:"
+              + " exit code = "
+              + exitCode);
+    }
   }
 }

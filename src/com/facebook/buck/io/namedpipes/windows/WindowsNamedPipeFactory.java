@@ -16,13 +16,22 @@
 
 package com.facebook.buck.io.namedpipes.windows;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 /** Windows named pipe factory. */
 public class WindowsNamedPipeFactory implements NamedPipeFactory {
+
+  String TMP_DIR = System.getProperty("java.io.tmpdir");
+
+  /** Returns a generated platform specific named pipe path. */
+  Path generateNamedPathName() {
+    return Paths.get(TMP_DIR, "Pipe", UUID.randomUUID().toString());
+  }
 
   @Override
   public NamedPipe create() throws IOException {
@@ -30,7 +39,7 @@ public class WindowsNamedPipeFactory implements NamedPipeFactory {
   }
 
   @Override
-  public NamedPipe connect(AbsPath path) throws IOException {
+  public NamedPipe connect(Path path) throws IOException {
     return new WindowsNamedPipe(path);
   }
 }

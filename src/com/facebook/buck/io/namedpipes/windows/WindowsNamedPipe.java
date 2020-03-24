@@ -18,21 +18,21 @@ package com.facebook.buck.io.namedpipes.windows;
 
 import static com.facebook.buck.io.windowspipe.WindowsNamedPipe.createPipeWithPath;
 
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.google.common.base.MoreObjects;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 /** Windows named pipe. */
 class WindowsNamedPipe implements NamedPipe {
 
-  private final AbsPath path;
+  private final Path path;
   private final com.facebook.buck.io.windowspipe.WindowsNamedPipe windowsNamedPipe;
 
-  public WindowsNamedPipe(AbsPath namedPipePath) throws IOException {
+  public WindowsNamedPipe(Path namedPipePath) throws IOException {
     this.path = namedPipePath;
     this.windowsNamedPipe = createPipeWithPath(namedPipePath.toString());
   }
@@ -43,12 +43,12 @@ class WindowsNamedPipe implements NamedPipe {
   }
 
   @Override
-  public InputStream openInputStream() {
+  public InputStream getInputStream() {
     return windowsNamedPipe.getInputStream();
   }
 
   @Override
-  public OutputStream openOutputStream() {
+  public OutputStream getOutputStream() {
     return windowsNamedPipe.getOutputStream();
   }
 
@@ -62,21 +62,21 @@ class WindowsNamedPipe implements NamedPipe {
     return MoreObjects.toStringHelper(this).add("path", path).toString();
   }
 
-  protected AbsPath getPath() {
+  protected Path getPath() {
     return path;
   }
 
   /** Windows name pipe that creates and removes a physical file corresponding to the named pipe. */
   static class OwnedWindowsNamedPipe extends WindowsNamedPipe {
 
-    public OwnedWindowsNamedPipe(AbsPath path) throws IOException {
+    public OwnedWindowsNamedPipe(Path path) throws IOException {
       super(path);
     }
 
     @Override
     public void close() throws IOException {
       super.close();
-      Files.deleteIfExists(getPath().getPath());
+      Files.deleteIfExists(getPath());
     }
   }
 }
