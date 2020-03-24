@@ -106,6 +106,7 @@ message WorkerRequirements {
     LINUX = 0;
     ANDROID_EMULATOR = 1;
     LINUX_GPU = 2;
+    BROWSER_CHROME = 3;
   }
 
   enum WorkerSize {
