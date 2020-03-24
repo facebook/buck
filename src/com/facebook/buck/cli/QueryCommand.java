@@ -234,8 +234,11 @@ public class QueryCommand extends AbstractQueryCommand {
         break;
 
       case LIST:
-      default:
         printListOutput(params, env, queryResult, printStream);
+        break;
+
+      default:
+        throw new AssertionError("unreachable");
     }
   }
 
