@@ -60,6 +60,32 @@ public class QueryTargetTranslatorTest {
   }
 
   @Test
+  public void translateRelativeTargets() {
+    BuildTarget a = BuildTargetFactory.newInstance("//foo:a");
+    BuildTarget b = BuildTargetFactory.newInstance("//bar:b");
+    FixedTargetNodeTranslator translator =
+        new FixedTargetNodeTranslator(
+            new DefaultTypeCoercerFactory(), ImmutableMap.of(a, b), new TestCellBuilder().build());
+    QueryTargetTranslator queryTranslator =
+        new QueryTargetTranslator(new ParsingUnconfiguredBuildTargetViewFactory());
+    assertThat(
+        queryTranslator.translateTargets(
+            CELL_PATH_RESOLVER.getCellNameResolver(),
+            BaseName.of("//foo"),
+            translator,
+            Query.of(
+                "deps(set(:a :a //blah:a))",
+                UnconfiguredTargetConfiguration.INSTANCE,
+                BaseName.ROOT)),
+        Matchers.equalTo(
+            Optional.of(
+                Query.of(
+                    "deps(set(//bar:b //bar:b //blah:a))",
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    BaseName.ROOT))));
+  }
+
+  @Test
   public void noTargets() {
     FixedTargetNodeTranslator translator =
         new FixedTargetNodeTranslator(

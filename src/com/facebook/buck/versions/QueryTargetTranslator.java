@@ -24,6 +24,8 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -64,13 +66,21 @@ public class QueryTargetTranslator implements TargetTranslator<Query> {
       return Optional.empty();
     }
 
+    List<String> patterns = new ArrayList<>();
+    // Match all fully qualified targets.
+    targets.stream().map(Object::toString).map(Pattern::quote).forEach(patterns::add);
+    // Match all short name targets (e.g. `:foo`) for targets matching the top-level target
+    // basename.
+    targets.stream()
+        .filter(t -> t.getBaseName().equals(targetBaseName))
+        .map(t -> ":" + t.getShortNameAndFlavorPostfix())
+        .map(Pattern::quote)
+        // Use a positive look-behind assertion to avoid matching in a fully qualified target.
+        .map(p -> "(?<=[( ])" + p)
+        .forEach(patterns::add);
+
     // A pattern matching all of the build targets in the query string.
-    Pattern targetsPattern =
-        Pattern.compile(
-            targets.stream()
-                .map(Object::toString)
-                .map(Pattern::quote)
-                .collect(Collectors.joining("|")));
+    Pattern targetsPattern = Pattern.compile(patterns.stream().collect(Collectors.joining("|")));
 
     // Build a new query string from the original by translating all build targets.
     String queryString = query.getQuery();
