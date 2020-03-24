@@ -1478,6 +1478,7 @@ public final class MainRunner {
                         artifactCacheFactory,
                         parserAndCaches.getTypeCoercerFactory(),
                         buildTargetFactory,
+                        targetConfigurationFactory,
                         targetConfiguration,
                         hostConfiguration,
                         targetConfigurationSerializer,

@@ -26,6 +26,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
+import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -83,6 +84,8 @@ public abstract class CommandRunnerParams {
   public abstract TypeCoercerFactory getTypeCoercerFactory();
 
   public abstract UnconfiguredBuildTargetViewFactory getUnconfiguredBuildTargetFactory();
+
+  public abstract TargetConfigurationFactory getTargetConfigurationFactory();
 
   public abstract Optional<TargetConfiguration> getTargetConfiguration();
 
@@ -193,6 +196,7 @@ public abstract class CommandRunnerParams {
         artifactCacheFactory,
         getTypeCoercerFactory(),
         getUnconfiguredBuildTargetFactory(),
+        getTargetConfigurationFactory(),
         getTargetConfiguration(),
         getHostConfiguration(),
         getTargetConfigurationSerializer(),
@@ -241,6 +245,7 @@ public abstract class CommandRunnerParams {
         getArtifactCacheFactory(),
         getTypeCoercerFactory(),
         getUnconfiguredBuildTargetFactory(),
+        getTargetConfigurationFactory(),
         getTargetConfiguration(),
         getHostConfiguration(),
         getTargetConfigurationSerializer(),

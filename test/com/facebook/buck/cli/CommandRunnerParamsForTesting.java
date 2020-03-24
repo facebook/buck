@@ -21,6 +21,7 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
+import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
@@ -29,8 +30,10 @@ import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
+import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -148,15 +151,22 @@ public class CommandRunnerParamsForTesting {
     CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
         depsAwareExecutorSupplier = MainRunner.getDepsAwareExecutorSupplier(config, eventBus);
 
+    UnconfiguredBuildTargetViewFactory buildTargetViewFactory =
+        new ParsingUnconfiguredBuildTargetViewFactory();
+    CellPathResolver cellPathResolver = cells.getRootCell().getCellPathResolver();
+
     BuckGlobalState buckGlobalState =
         BuckGlobalStateFactory.create(
             cells,
             knownRuleTypesProvider,
             WatchmanFactory.NULL_WATCHMAN,
             Optional.empty(),
-            new ParsingUnconfiguredBuildTargetViewFactory(),
-            new TargetConfigurationSerializerForTests(cells.getRootCell().getCellPathResolver()),
+            buildTargetViewFactory,
+            new TargetConfigurationSerializerForTests(cellPathResolver),
             FakeClock.doNotCare());
+
+    TargetConfigurationFactory targetConfigurationFactory =
+        new TargetConfigurationFactory(buildTargetViewFactory, cellPathResolver);
 
     return ImmutableCommandRunnerParams.ofImpl(
         console,
@@ -167,7 +177,8 @@ public class CommandRunnerParamsForTesting {
             new VersionedTargetGraphCache(), new NoOpCacheStatsTracker()),
         new SingletonArtifactCacheFactory(artifactCache),
         typeCoercerFactory,
-        new ParsingUnconfiguredBuildTargetViewFactory(),
+        buildTargetViewFactory,
+        targetConfigurationFactory,
         Optional.empty(),
         Optional.empty(),
         TargetConfigurationSerializerForTests.create(cells.getRootCell().getCellPathResolver()),
