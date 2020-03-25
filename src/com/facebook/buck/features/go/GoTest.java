@@ -42,7 +42,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
@@ -149,17 +148,11 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     buildContext.getBuildCellRootPath(),
                     getProjectFilesystem(),
                     getPathToTestOutputDirectory())))
-        .addAll(
-            MakeCleanDirectoryStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    getPathToTestWorkingDirectory())))
-        .add(
-            getResourceSymlinkTree(buildContext, getPathToTestWorkingDirectory(), Optional.empty()))
         .add(
             new GoTestStep(
                 getProjectFilesystem(),
+                // Note: the working directory here is important for tests
+                // targets that have resources defined on them.
                 getPathToTestWorkingDirectory(),
                 args.build(),
                 Stream.of(
@@ -314,42 +307,11 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   protected Path getPathToTestWorkingDirectory() {
-    return getPathToTestOutputDirectory().resolve("working_dir");
+    return testMain.getPathToBinaryDirectory();
   }
 
   protected Path getPathToTestExitCode() {
     return getPathToTestOutputDirectory().resolve("exitCode");
-  }
-
-  private SymlinkTreeStep getResourceSymlinkTree(
-      BuildContext buildContext,
-      Path outputDirectory,
-      Optional<BuildableContext> buildableContext) {
-
-    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
-
-    if (buildableContext.isPresent()) {
-      resources.forEach(
-          pth ->
-              buildableContext
-                  .get()
-                  .recordArtifact(
-                      buildContext
-                          .getSourcePathResolver()
-                          .getRelativePath(getProjectFilesystem(), pth)));
-    }
-
-    return new SymlinkTreeStep(
-        "go_test",
-        getProjectFilesystem(),
-        outputDirectory,
-        resources.stream()
-            .collect(
-                ImmutableMap.toImmutableMap(
-                    input ->
-                        getProjectFilesystem()
-                            .getPath(resolver.getSourcePathName(getBuildTarget(), input)),
-                    input -> resolver.getAbsolutePath(input))));
   }
 
   @Override

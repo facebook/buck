@@ -392,10 +392,10 @@ func (x byOrder) Less(i, j int) bool { return x[i].Order < x[j].Order }
 var testmainTmpl = template.Must(template.New("main").Parse(`
 package main
 import (
-{{if not .TestMain}}
+	"fmt"
 	"os"
-{{end}}
 	"io"
+	"path/filepath"
 	"regexp"
 	"runtime/pprof"
 	"testing"
@@ -505,6 +505,22 @@ func coverRegisterFile(fileName string, counter []uint32, pos []uint32, numStmts
 }
 {{end}}
 func main() {
+	// Buck ensures that resources defined on the test targets live in the same
+	// directory as the binary. We change the working directory to this
+	// directory to make sure that tests can read test fixtures relative to the
+	// current working directory. This matches behavior with "go test" from the
+	// test author perspective.
+	execPath, err := os.Executable()
+	if err != nil {
+		os.Stderr.WriteString("Unable to get path to test binary executable.")
+		os.Exit(1)
+	}
+	execDir := filepath.Dir(execPath)
+	err = os.Chdir(execDir)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to change directory to %s.", execDir)
+		os.Exit(1)
+	}
 {{if .CoverEnabled}}
 	testing.RegisterCover(testing.Cover{
 		Mode: {{printf "%q" .CoverMode}},

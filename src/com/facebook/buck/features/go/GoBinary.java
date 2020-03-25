@@ -114,6 +114,10 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return environment.build();
   }
 
+  protected Path getPathToBinaryDirectory() {
+    return output.getParent();
+  }
+
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {

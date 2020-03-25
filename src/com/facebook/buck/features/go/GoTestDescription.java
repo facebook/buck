@@ -395,13 +395,6 @@ public class GoTestDescription
       GoTestDescriptionArg args,
       GoPlatform platform,
       GoTestMain generatedTestMain) {
-    boolean createResourcesSymlinkTree =
-        goBuckConfig
-            .getDelegate()
-            .getView(TestBuckConfig.class)
-            .getExternalTestRunner()
-            .isPresent();
-
     BuildRule testLibrary =
         new NoopBuildRuleWithDeclaredAndExtraDeps(
             buildTarget.withAppendedFlavors(TEST_LIBRARY_FLAVOR), projectFilesystem, params);
@@ -419,7 +412,7 @@ public class GoTestDescription
             args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
             args.getLinkMode(),
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
-            createResourcesSymlinkTree ? args.getResources() : ImmutableSortedSet.of(),
+            args.getResources(),
             args.getCompilerFlags(),
             args.getAssemblerFlags(),
             args.getLinkerFlags(),
