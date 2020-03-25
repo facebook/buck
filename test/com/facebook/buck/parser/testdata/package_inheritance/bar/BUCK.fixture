@@ -7,6 +7,16 @@ java_library(
 )
 
 java_library(
+    name = "should_pass_2",
+    visibility = ["//foo:baz"],
+)
+
+java_library(
+    name = "should_pass_3",
+    deps = ["//baz:not_inherited"],
+)
+
+java_library(
     name = "should_fail",
     deps = [
         "//foo:waldo",

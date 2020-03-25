@@ -27,7 +27,10 @@ import com.facebook.buck.parser.api.PackageMetadata;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -44,6 +47,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 class PackagePipeline implements AutoCloseable {
   private static final String PACKAGE_FILE_NAME = "PACKAGE";
   private static final Logger LOG = Logger.get(UnconfiguredTargetNodePipeline.class);
+
+  /**
+   * A singleton instance of a manifest when there is no defined package. We utilize a pseudo
+   * package at the path, and it inherits properties of the parent package.
+   */
+  private static final PackageFileManifest NONEXISTANT_PACKAGE =
+      PackageFileManifest.of(
+          PackageMetadata.of(true, ImmutableList.of(), ImmutableList.of()),
+          ImmutableSortedSet.of(),
+          ImmutableMap.of(),
+          Optional.empty(),
+          ImmutableList.of());
 
   private final ListeningExecutorService executorService;
   private final BuckEventBus eventBus;
@@ -177,7 +192,7 @@ class PackagePipeline implements AutoCloseable {
     if (cell.getFilesystem().isFile(packageFile)) {
       return packageFileParsePipeline.getFileJob(cell, packageFile);
     }
-    return Futures.immediateFuture(PackageFileManifest.EMPTY_SINGLETON);
+    return Futures.immediateFuture(NONEXISTANT_PACKAGE);
   }
 
   private ListenableFuture<Optional<Package>> getParentPackageJob(

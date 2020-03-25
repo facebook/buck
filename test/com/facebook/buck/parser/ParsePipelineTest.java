@@ -442,7 +442,7 @@ public class ParsePipelineTest {
 
       // Validate the cache has the data we expect
       assertTrue(fixture.buildFileExistsInCache(barBuildFilePath));
-      assertEquals(2, nodes.size());
+      assertEquals(4, nodes.size());
       assertTrue(fixture.targetExistsInCache(nodes.get(0).getBuildTarget()));
       assertTrue(fixture.targetExistsInCache(nodes.get(1).getBuildTarget()));
 

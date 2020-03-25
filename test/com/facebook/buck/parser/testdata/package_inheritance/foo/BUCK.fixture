@@ -1,5 +1,6 @@
 java_library(
     name = "baz",
+    deps = ["//bar:should_pass_2"],
 )
 
 java_library(
@@ -10,4 +11,9 @@ java_library(
 java_library(
     name = "waldo",
     visibility = ["//:should_pass_2"],
+)
+
+java_library(
+    name = "should_fail",
+    deps = ["//baz:not_inherited"],
 )

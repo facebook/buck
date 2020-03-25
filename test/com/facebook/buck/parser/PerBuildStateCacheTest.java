@@ -72,9 +72,10 @@ public class PerBuildStateCacheTest {
   Package createPackage(
       Cell cell,
       AbsPath packageFile,
+      Boolean inherit,
       ImmutableList<String> visibility,
       ImmutableList<String> within_view) {
-    return createPackage(cell, packageFile, PackageMetadata.of(visibility, within_view));
+    return createPackage(cell, packageFile, PackageMetadata.of(inherit, visibility, within_view));
   }
 
   Package createPackage(Cell cell, AbsPath packageFile, PackageMetadata packageMetadata) {
@@ -119,9 +120,14 @@ public class PerBuildStateCacheTest {
     // Make sure to create two different packages
     Package pkg1 =
         createPackage(
-            cells.getRootCell(), packageFile, ImmutableList.of("//bar/..."), ImmutableList.of());
+            cells.getRootCell(),
+            packageFile,
+            false,
+            ImmutableList.of("//bar/..."),
+            ImmutableList.of());
     Package pkg2 =
-        createPackage(childCell, packageFile, ImmutableList.of("//bar/..."), ImmutableList.of());
+        createPackage(
+            childCell, packageFile, false, ImmutableList.of("//bar/..."), ImmutableList.of());
 
     packageCache.putComputedNodeIfNotPresent(
         cells.getRootCell(), packageFile, pkg1, false, eventBus);

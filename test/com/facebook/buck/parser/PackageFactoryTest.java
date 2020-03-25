@@ -37,7 +37,7 @@ public class PackageFactoryTest {
     Path packageFile = Paths.get("foo/PACKAGE");
 
     PackageMetadata rawPackage =
-        PackageMetadata.of(ImmutableList.of("//a/..."), ImmutableList.of("//b/..."));
+        PackageMetadata.of(false, ImmutableList.of("//a/..."), ImmutableList.of("//b/..."));
 
     Package pkg =
         PackageFactory.create(cell.getRootCell(), packageFile, rawPackage, Optional.empty());
@@ -55,13 +55,32 @@ public class PackageFactoryTest {
   }
 
   @Test
-  public void createWithParent() {
+  public void createWithParentNoInherit() {
     Package parentPkg = createGenericPackage();
 
     Path packageFile = Paths.get("foo/bar/PACKAGE");
 
     PackageMetadata rawPackage =
-        PackageMetadata.of(ImmutableList.of("//c/..."), ImmutableList.of("//d/..."));
+        PackageMetadata.of(false, ImmutableList.of("//c/..."), ImmutableList.of("//d/..."));
+
+    Package pkg =
+        PackageFactory.create(cell.getRootCell(), packageFile, rawPackage, Optional.of(parentPkg));
+
+    assertEquals(1, pkg.getVisibilityPatterns().size());
+    assertEquals("//c/...", pkg.getVisibilityPatterns().asList().get(0).getRepresentation());
+
+    assertEquals(1, pkg.getWithinViewPatterns().size());
+    assertEquals("//d/...", pkg.getWithinViewPatterns().asList().get(0).getRepresentation());
+  }
+
+  @Test
+  public void createWithParentInherit() {
+    Package parentPkg = createGenericPackage();
+
+    Path packageFile = Paths.get("foo/bar/PACKAGE");
+
+    PackageMetadata rawPackage =
+        PackageMetadata.of(true, ImmutableList.of("//c/..."), ImmutableList.of("//d/..."));
 
     Package pkg =
         PackageFactory.create(cell.getRootCell(), packageFile, rawPackage, Optional.of(parentPkg));
@@ -70,7 +89,7 @@ public class PackageFactoryTest {
     assertEquals("//a/...", pkg.getVisibilityPatterns().asList().get(0).getRepresentation());
     assertEquals("//c/...", pkg.getVisibilityPatterns().asList().get(1).getRepresentation());
 
-    assertEquals(pkg.getWithinViewPatterns().size(), 2);
+    assertEquals(2, pkg.getWithinViewPatterns().size());
     assertEquals("//b/...", pkg.getWithinViewPatterns().asList().get(0).getRepresentation());
     assertEquals("//d/...", pkg.getWithinViewPatterns().asList().get(1).getRepresentation());
   }

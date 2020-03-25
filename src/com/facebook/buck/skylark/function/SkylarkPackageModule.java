@@ -54,6 +54,13 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
       allowReturnNones = true,
       parameters = {
         @Param(
+            name = "inherit",
+            type = Boolean.class,
+            defaultValue = "False",
+            positional = false,
+            named = true,
+            doc = "whether to inherit properties from the parent package."),
+        @Param(
             name = VisibilityAttributes.VISIBILITY,
             type = SkylarkList.class,
             generic1 = String.class,
@@ -71,6 +78,7 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
             doc = "a list of build patterns that targets may depend on."),
       })
   public void packageFunction(
+      Boolean inherit,
       SkylarkList<String> visibility,
       SkylarkList<String> within_view,
       FuncallExpression ast,
@@ -78,7 +86,8 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
       throws EvalException {
     ParseContext.getParseContext(env, ast)
         .recordPackage(
-            PackageMetadata.of(ImmutableList.copyOf(visibility), ImmutableList.copyOf(within_view)),
+            PackageMetadata.of(
+                inherit, ImmutableList.copyOf(visibility), ImmutableList.copyOf(within_view)),
             ast);
   }
 

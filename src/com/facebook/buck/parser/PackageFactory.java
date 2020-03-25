@@ -44,8 +44,10 @@ public class PackageFactory {
 
     parentPackage.ifPresent(
         pkg -> {
-          visibilityBuilder.addAll(pkg.getVisibilityPatterns());
-          withinViewBuilder.addAll(pkg.getWithinViewPatterns());
+          if (rawPackage.getInherit()) {
+            visibilityBuilder.addAll(pkg.getVisibilityPatterns());
+            withinViewBuilder.addAll(pkg.getWithinViewPatterns());
+          }
         });
 
     visibilityBuilder.addAll(
@@ -64,6 +66,7 @@ public class PackageFactory {
             packageFile,
             () -> visibilityDefinerDescription));
 
-    return Package.of(visibilityBuilder.build(), withinViewBuilder.build());
+    return Package.of(
+        rawPackage.getInherit(), visibilityBuilder.build(), withinViewBuilder.build());
   }
 }

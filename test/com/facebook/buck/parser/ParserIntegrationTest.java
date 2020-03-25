@@ -286,9 +286,22 @@ public class ParserIntegrationTest {
     processResult.assertFailure();
     assertThat(processResult.getStderr(), containsString("which is not visible"));
 
+    // Verify foo targets
+    workspace.runBuckCommand("build", "//foo:baz").assertSuccess();
+    workspace.runBuckCommand("build", "//foo:qux").assertSuccess();
+    workspace.runBuckCommand("build", "//foo:waldo").assertSuccess();
+
+    // Verify bar targets
     workspace.runBuckCommand("build", "//bar:should_pass").assertSuccess();
+    workspace.runBuckCommand("build", "//bar:should_pass_2").assertSuccess();
 
     processResult = workspace.runBuckCommand("build", "//bar:should_fail");
+    processResult.assertFailure();
+    assertThat(processResult.getStderr(), containsString("which is not visible"));
+
+    // Verify targets that depend on //baz/...
+    workspace.runBuckCommand("build", "//bar:should_pass_3").assertSuccess();
+    processResult = workspace.runBuckCommand("build", "//foo:should_fail");
     processResult.assertFailure();
     assertThat(processResult.getStderr(), containsString("which is not visible"));
   }

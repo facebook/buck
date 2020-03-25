@@ -30,13 +30,16 @@ import com.google.common.collect.ImmutableSet;
 @BuckStyleValue
 public abstract class Package {
 
+  public abstract boolean getInherit();
+
   public abstract ImmutableSet<VisibilityPattern> getVisibilityPatterns();
 
   public abstract ImmutableSet<VisibilityPattern> getWithinViewPatterns();
 
   public static Package of(
+      boolean inherit,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns) {
-    return ImmutablePackage.ofImpl(visibilityPatterns, withinViewPatterns);
+    return ImmutablePackage.ofImpl(inherit, visibilityPatterns, withinViewPatterns);
   }
 }
