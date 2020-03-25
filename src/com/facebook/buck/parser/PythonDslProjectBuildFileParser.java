@@ -55,6 +55,7 @@ import com.facebook.buck.util.concurrent.AssertScopeExclusiveAccess;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Unit;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -455,18 +456,24 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         }
       }
       currentBuildFile.set(buildFile);
-      BuildFilePythonResult resultObject =
-          performJsonRequest(
-              ImmutableMap.of(
-                  "buildFile",
-                  buildFile.toString(),
-                  "watchRoot",
-                  watchRoot,
-                  "projectPrefix",
-                  projectPrefix,
-                  "packageImplicitLoad",
-                  packageImplicitIncludeFinder.findIncludeForBuildFile(getBasePath(buildFile))));
       Path buckPyPath = getPathToBuckPy(options.getDescriptions());
+      BuildFilePythonResult resultObject;
+      try {
+        resultObject =
+          performJsonRequest(
+            ImmutableMap.of(
+              "buildFile",
+              buildFile.toString(),
+              "watchRoot",
+              watchRoot,
+              "projectPrefix",
+              projectPrefix,
+              "packageImplicitLoad",
+              packageImplicitIncludeFinder.findIncludeForBuildFile(getBasePath(buildFile))));
+      } catch (JsonParseException jpe) {
+        throw BuildFileParseException.createForBuildFileParseError(
+          buildFile, createParseException(buildFile, buckPyPath.getParent(), jpe.getMessage(), null));
+      }
       handleDiagnostics(
           buildFile, buckPyPath.getParent(), resultObject.getDiagnostics(), buckEventBus);
       values = resultObject.getValues();
