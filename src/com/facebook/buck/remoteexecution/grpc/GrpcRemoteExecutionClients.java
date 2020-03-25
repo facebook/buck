@@ -23,6 +23,7 @@ import build.bazel.remote.execution.v2.ExecutionGrpc;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
@@ -48,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 
 /** A RemoteExecution that sends jobs to a grpc-based remote execution service. */
 public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
+  private static final Logger LOG = Logger.get(GrpcRemoteExecutionClients.class);
   public static final Protocol PROTOCOL = new GrpcProtocol();
   private final ContentAddressedStorageClient storage;
   private final GrpcRemoteExecutionServiceClient executionService;
@@ -166,17 +168,28 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
 
   @Override
   public void close() throws IOException {
-    closeChannel(casChannel);
     closeChannel(executionEngineChannel);
+    closeChannel(casChannel);
   }
 
   private static void closeChannel(ManagedChannel channel) {
-    channel.shutdown();
     try {
-      channel.awaitTermination(3, TimeUnit.SECONDS);
+      channel.shutdownNow().awaitTermination(3, TimeUnit.SECONDS);
     } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+      // This is hacky, but it ensures that we close the channels successfully on SIGINT.
+      // Current SIGINT handler tries to cancel futures, which interrupts this flow and
+      // channels are left open.
+      try {
+        LOG.debug(
+            "Unable to close channel %s gracefully, trying to close again", channel.authority());
+        channel.shutdownNow().awaitTermination(3, TimeUnit.SECONDS);
+      } catch (InterruptedException ee) {
+        throw new RuntimeException(e);
+      }
+      LOG.debug("Successfully closed channel %s", channel.authority());
+      Thread.currentThread().interrupt();
     }
+    LOG.debug("Successfully closed channel %s", channel.authority());
   }
 
   private ContentAddressedStorageClient createStorage(
