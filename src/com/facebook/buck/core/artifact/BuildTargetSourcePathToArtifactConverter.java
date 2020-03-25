@@ -16,13 +16,13 @@
 
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
@@ -61,13 +61,13 @@ public class BuildTargetSourcePathToArtifactConverter {
       ExplicitBuildTargetSourcePath explicitBuildTargetSourcePath =
           (ExplicitBuildTargetSourcePath) sourcePath;
 
-      Path genDir = filesystem.getBuckPaths().getGenDir();
+      RelPath genDir = filesystem.getBuckPaths().getGenDir();
 
       return ArtifactImpl.ofLegacy(
           target,
-          genDir,
+          genDir.getPath(),
           Paths.get("."),
-          genDir.relativize(explicitBuildTargetSourcePath.getResolvedPath()),
+          genDir.getPath().relativize(explicitBuildTargetSourcePath.getResolvedPath()),
           explicitBuildTargetSourcePath.getTarget().equals(target)
               ? explicitBuildTargetSourcePath
               : ExplicitBuildTargetSourcePath.of(

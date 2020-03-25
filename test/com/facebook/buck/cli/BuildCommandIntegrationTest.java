@@ -185,7 +185,8 @@ public class BuildCommandIntegrationTest {
         workspace.runBuckBuild("-c", "build.create_build_output_symlinks_enabled=true", "//:bar");
     runBuckResult.assertSuccess();
     assertTrue(
-        Files.exists(workspace.getBuckPaths().getLastOutputDir().toAbsolutePath().resolve("bar")));
+        Files.exists(
+            workspace.getBuckPaths().getLastOutputDir().toAbsolutePath().resolve("bar").getPath()));
   }
 
   @Test
@@ -199,14 +200,20 @@ public class BuildCommandIntegrationTest {
     runBuckResult.assertSuccess();
     assertTrue(
         Files.exists(
-            workspace.getBuckPaths().getLastOutputDir().toAbsolutePath().resolve("DemoApp.app")));
+            workspace
+                .getBuckPaths()
+                .getLastOutputDir()
+                .toAbsolutePath()
+                .resolve("DemoApp.app")
+                .getPath()));
     assertTrue(
         Files.exists(
             workspace
                 .getBuckPaths()
                 .getLastOutputDir()
                 .toAbsolutePath()
-                .resolve("DemoAppBinary#apple-dsym,iphonesimulator-x86_64.dSYM")));
+                .resolve("DemoAppBinary#apple-dsym,iphonesimulator-x86_64.dSYM")
+                .getPath()));
   }
 
   @Test

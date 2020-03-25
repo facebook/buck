@@ -799,8 +799,8 @@ public class InterCellIntegrationTest {
 
     List<Path> primaryDirs =
         ImmutableList.of(
-            primary.getPath(primary.getBuckPaths().getScratchDir()),
-            primary.getPath(primary.getBuckPaths().getGenDir()),
+            primary.getPath(primary.getBuckPaths().getScratchDir().getPath()),
+            primary.getPath(primary.getBuckPaths().getGenDir().getPath()),
             primary.getPath(primary.getBuckPaths().getTrashDir()));
     Path secondaryBuckOut =
         primary

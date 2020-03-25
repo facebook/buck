@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisData;
@@ -28,7 +29,7 @@ public class BuildArtifactFactoryForTests {
 
   protected final BuildTarget target;
   private final Path basePath;
-  private final Path genDir;
+  private final RelPath genDir;
 
   public BuildArtifactFactoryForTests(BuildTarget target, ProjectFilesystem filesystem) {
     this.target = target;
@@ -38,11 +39,11 @@ public class BuildArtifactFactoryForTests {
 
   public DeclaredArtifact createDeclaredArtifact(Path output, Location location)
       throws ArtifactDeclarationException {
-    return ArtifactImpl.of(target, genDir, basePath, output, location);
+    return ArtifactImpl.of(target, genDir.getPath(), basePath, output, location);
   }
 
   public BuildArtifact createBuildArtifact(Path output, Location location) {
-    ArtifactImpl declared = ArtifactImpl.of(target, genDir, basePath, output, location);
+    ArtifactImpl declared = ArtifactImpl.of(target, genDir.getPath(), basePath, output, location);
     return declared.materialize(ActionAnalysisDataKey.of(target, new ActionAnalysisData.ID("a")));
   }
 }

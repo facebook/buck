@@ -17,6 +17,7 @@
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
@@ -37,7 +38,7 @@ public class BuildArtifactFactory {
 
   protected final BuildTarget target;
   private final Path basePath;
-  private final Path genDir;
+  private final RelPath genDir;
 
   private final Set<ArtifactImpl> declaredArtifacts;
 
@@ -83,7 +84,7 @@ public class BuildArtifactFactory {
    */
   protected DeclaredArtifact createDeclaredArtifact(Path output, Location location)
       throws ArtifactDeclarationException {
-    return declareArtifact(ArtifactImpl.of(target, genDir, basePath, output, location));
+    return declareArtifact(ArtifactImpl.of(target, genDir.getPath(), basePath, output, location));
   }
 
   /**
@@ -98,7 +99,7 @@ public class BuildArtifactFactory {
    */
   protected DeclaredArtifact createDeclaredArtifact(String output, Location location)
       throws ArtifactDeclarationException {
-    return declareArtifact(ArtifactImpl.of(target, genDir, basePath, output, location));
+    return declareArtifact(ArtifactImpl.of(target, genDir.getPath(), basePath, output, location));
   }
 
   /**

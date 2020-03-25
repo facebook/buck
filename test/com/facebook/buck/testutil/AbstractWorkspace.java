@@ -19,6 +19,7 @@ package com.facebook.buck.testutil;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.core.filesystems.PathWrapper;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.rules.keys.config.impl.BuckVersion;
@@ -507,6 +508,10 @@ public abstract class AbstractWorkspace {
     return destPath.resolve(pathRelativeToWorkspaceRoot);
   }
 
+  public Path getPath(RelPath pathRelativeToWorkspaceRoot) {
+    return destPath.resolve(pathRelativeToWorkspaceRoot.getPath());
+  }
+
   /**
    * Resolves the given path relative to the path the workspace is held.
    *
@@ -608,8 +613,7 @@ public abstract class AbstractWorkspace {
   /**
    * Deletes the directory (relative to workspace root)
    *
-   * @param source source path of file relative to workspace root
-   * @throws IOException
+   * @param path source path of file relative to workspace root
    */
   public void deleteRecursivelyIfExists(String path) throws IOException {
     MostFiles.deleteRecursivelyIfExists(getPath(path));

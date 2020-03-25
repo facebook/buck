@@ -70,28 +70,28 @@ public abstract class BuckPaths {
 
   /** The version the buck output directory was created for */
   @Value.Derived
-  public Path getCurrentVersionFile() {
-    return getConfiguredBuckOut().resolve(".currentversion");
+  public RelPath getCurrentVersionFile() {
+    return getConfiguredBuckOut().resolveRel(".currentversion");
   }
 
   @Value.Derived
-  public Path getGenDir() {
-    return getConfiguredBuckOut().resolve("gen");
+  public RelPath getGenDir() {
+    return getConfiguredBuckOut().resolveRel("gen");
   }
 
   @Value.Derived
-  public Path getResDir() {
-    return getConfiguredBuckOut().resolve("res");
+  public RelPath getResDir() {
+    return getConfiguredBuckOut().resolveRel("res");
   }
 
   @Value.Derived
-  public Path getScratchDir() {
-    return getConfiguredBuckOut().resolve("bin");
+  public RelPath getScratchDir() {
+    return getConfiguredBuckOut().resolveRel("bin");
   }
 
   @Value.Derived
-  public Path getAnnotationDir() {
-    return getConfiguredBuckOut().resolve("annotation");
+  public RelPath getAnnotationDir() {
+    return getConfiguredBuckOut().resolveRel("annotation");
   }
 
   @Value.Derived
@@ -141,8 +141,8 @@ public abstract class BuckPaths {
   }
 
   @Value.Derived
-  public Path getLastOutputDir() {
-    return getConfiguredBuckOut().resolve("last");
+  public RelPath getLastOutputDir() {
+    return getConfiguredBuckOut().resolveRel("last");
   }
 
   @Value.Derived
@@ -155,8 +155,9 @@ public abstract class BuckPaths {
     return getBuckOut().resolve("project_root");
   }
 
-  public Path getSymlinkPathForDir(Path unconfiguredDirInBuckOut) {
-    return getConfiguredBuckOut().resolve(getBuckOut().relativize(unconfiguredDirInBuckOut));
+  public RelPath getSymlinkPathForDir(Path unconfiguredDirInBuckOut) {
+    return getConfiguredBuckOut()
+        .resolve(RelPath.of(getBuckOut().relativize(unconfiguredDirInBuckOut)));
   }
 
   public static BuckPaths of(

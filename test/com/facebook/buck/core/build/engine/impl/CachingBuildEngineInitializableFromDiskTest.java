@@ -484,7 +484,8 @@ public class CachingBuildEngineInitializableFromDiskTest extends CommonFixture {
     buildInfoStoreManager.close();
     buildInfoStoreManager = new BuildInfoStoreManager();
     filesystem.deleteRecursivelyIfExists(filesystem.getBuckPaths().getBuckOut());
-    Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
+    Files.createDirectories(
+        filesystem.resolve(filesystem.getBuckPaths().getScratchDir()).getPath());
     buildInfoStore = buildInfoStoreManager.get(filesystem);
     System.out.println(
         buildInfoStore.readMetadata(dependency.getBuildTarget(), BuildInfo.MetadataKey.RULE_KEY));

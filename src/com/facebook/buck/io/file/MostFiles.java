@@ -112,6 +112,10 @@ public final class MostFiles {
         path, EnumSet.of(DeleteRecursivelyOptions.IGNORE_NO_SUCH_FILE_EXCEPTION));
   }
 
+  public static void deleteRecursivelyIfExists(AbsPath path) throws IOException {
+    deleteRecursivelyIfExists(path.getPath());
+  }
+
   /** Recursively copies all files under {@code fromPath} to {@code toPath}. */
   public static void copyRecursively(Path fromPath, Path toPath) throws IOException {
     copyRecursively(fromPath, toPath, Functions.identity());

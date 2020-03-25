@@ -71,7 +71,7 @@ public class CommandAliasIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "command_alias", tmp).setUp();
 
     workspace.runBuckCommand("run", "//:platform_specific").assertSuccess();
-    File genDir = workspace.getPath(workspace.getBuckPaths().getGenDir()).toFile();
+    File genDir = workspace.getPath(workspace.getBuckPaths().getGenDir().getPath()).toFile();
     ImmutableSet<String> platforms =
         Arrays.stream(Platform.values())
             .map(Enum::name)

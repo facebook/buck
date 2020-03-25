@@ -107,6 +107,10 @@ public interface ProjectFilesystem {
 
   Path getPathForRelativePath(Path pathRelativeToProjectRoot);
 
+  default Path getPathForRelativePath(RelPath pathRelativeToProjectRoot) {
+    return getPathForRelativePath(pathRelativeToProjectRoot.getPath());
+  }
+
   Path getPathForRelativePath(String pathRelativeToProjectRoot);
 
   /**
@@ -276,6 +280,14 @@ public interface ProjectFilesystem {
   void deleteRecursivelyIfExists(Path pathRelativeToProjectRoot) throws IOException;
 
   /**
+   * Recursively delete everything under the specified path. Ignore the failure if the file at the
+   * specified path does not exist.
+   */
+  default void deleteRecursivelyIfExists(PathWrapper pathRelativeToProjectRoot) throws IOException {
+    deleteRecursivelyIfExists(pathRelativeToProjectRoot.getPath());
+  }
+
+  /**
    * Resolves the relative path against the project root and then calls {@link
    * Files#createDirectories(java.nio.file.Path, java.nio.file.attribute.FileAttribute[])}
    */
@@ -419,8 +431,18 @@ public interface ProjectFilesystem {
   /** Returns true if the file under {@code path} exists and is a symbolic link, false otherwise. */
   boolean isSymLink(Path path);
 
+  /** Returns true if the file under {@code path} exists and is a symbolic link, false otherwise. */
+  default boolean isSymLink(PathWrapper path) {
+    return isSymLink(path.getPath());
+  }
+
   /** Returns the target of the specified symbolic link. */
   Path readSymLink(Path path) throws IOException;
+
+  /** Returns the target of the specified symbolic link. */
+  default Path readSymLink(RelPath path) throws IOException {
+    return readSymLink(path.getPath());
+  }
 
   Manifest getJarManifest(Path path) throws IOException;
 
@@ -461,6 +483,17 @@ public interface ProjectFilesystem {
    */
   Path createTempFile(Path directory, String prefix, String suffix, FileAttribute<?>... attrs)
       throws IOException;
+
+  /**
+   * Prefer {@link #createTempFile(String, String, FileAttribute[])} so that temporary files are
+   * guaranteed to be created under {@code buck-out}. This method will be deprecated once t12079608
+   * is resolved.
+   */
+  default Path createTempFile(
+      PathWrapper directory, String prefix, String suffix, FileAttribute<?>... attrs)
+      throws IOException {
+    return createTempFile(directory.getPath(), prefix, suffix, attrs);
+  }
 
   void touch(Path fileToTouch) throws IOException;
 

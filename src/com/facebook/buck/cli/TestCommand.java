@@ -29,6 +29,7 @@ import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
@@ -88,7 +89,6 @@ import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -353,7 +353,7 @@ public class TestCommand extends BuildCommand {
     }
 
     TestRunningOptions options = getTestRunningOptions(params);
-    Path infoFile =
+    AbsPath infoFile =
         params
             .getCells()
             .getRootCell()
@@ -405,8 +405,8 @@ public class TestCommand extends BuildCommand {
               });
 
       // Serialize the specs to a file to pass into the test runner.
-      Files.createDirectories(infoFile.getParent());
-      Files.deleteIfExists(infoFile);
+      Files.createDirectories(infoFile.getParent().getPath());
+      Files.deleteIfExists(infoFile.getPath());
       ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValue(infoFile.toFile(), specs);
 
       LOG.info("Finished writing external test runner specs.");

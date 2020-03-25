@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -60,7 +61,7 @@ public class JsRulesIntegrationTest {
 
   private ProjectWorkspace workspace;
   private ProjectFilesystem projectFilesystem;
-  private Path genPath;
+  private RelPath genPath;
 
   @Before
   public void setUp() throws IOException {
@@ -72,7 +73,8 @@ public class JsRulesIntegrationTest {
     genPath = projectFilesystem.getBuckPaths().getGenDir();
     if (projectFilesystem.getBuckPaths().shouldIncludeTargetConfigHash()) {
       genPath =
-          genPath.resolve(TargetConfigurationHasher.hash(UnconfiguredTargetConfiguration.INSTANCE));
+          genPath.resolveRel(
+              TargetConfigurationHasher.hash(UnconfiguredTargetConfiguration.INSTANCE));
     }
   }
 
@@ -457,11 +459,5 @@ public class JsRulesIntegrationTest {
         Paths.get("deps_file_genrule.expected"),
         genPath,
         JsRulesIntegrationTest::normalizeObservedContent);
-  }
-
-  private Path getGenPath(String filename) {
-    return projectFilesystem
-        .getPathForRelativePath(projectFilesystem.getBuckPaths().getGenDir())
-        .resolve(filename);
   }
 }

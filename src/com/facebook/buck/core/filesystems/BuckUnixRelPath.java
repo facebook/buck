@@ -31,6 +31,11 @@ class BuckUnixRelPath extends BuckUnixPath implements RelPath {
   }
 
   @Override
+  public BuckUnixAbsPath toAbsolutePath() {
+    return (BuckUnixAbsPath) super.toAbsolutePath();
+  }
+
+  @Override
   public BuckUnixRelPath getParent() {
     return (BuckUnixRelPath) super.getParent();
   }

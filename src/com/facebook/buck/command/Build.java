@@ -166,18 +166,21 @@ public class Build implements Closeable {
           && Platform.detect() != Platform.WINDOWS) {
         BuckPaths unconfiguredPaths =
             configuredPaths.withConfiguredBuckOut(RelPath.of(configuredPaths.getBuckOut()));
-        ImmutableMap<Path, Path> paths =
+        ImmutableMap<RelPath, RelPath> paths =
             ImmutableMap.of(
                 unconfiguredPaths.getGenDir(),
-                    configuredPaths.getSymlinkPathForDir(unconfiguredPaths.getGenDir()),
+                    configuredPaths.getSymlinkPathForDir(unconfiguredPaths.getGenDir().getPath()),
                 unconfiguredPaths.getScratchDir(),
-                    configuredPaths.getSymlinkPathForDir(unconfiguredPaths.getScratchDir()));
-        for (Map.Entry<Path, Path> entry : paths.entrySet()) {
+                    configuredPaths.getSymlinkPathForDir(
+                        unconfiguredPaths.getScratchDir().getPath()));
+        for (Map.Entry<RelPath, RelPath> entry : paths.entrySet()) {
           filesystem.deleteRecursivelyIfExists(entry.getKey());
-          Path parent = entry.getKey().getParent();
+          RelPath parent = entry.getKey().getParent();
           filesystem.mkdirs(parent);
           filesystem.createSymLink(
-              entry.getKey(), parent.relativize(entry.getValue()), /* force */ false);
+              entry.getKey(),
+              parent.getPath().relativize(entry.getValue().getPath()),
+              /* force */ false);
         }
       }
     }

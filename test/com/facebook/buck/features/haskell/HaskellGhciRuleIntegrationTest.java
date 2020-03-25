@@ -18,6 +18,7 @@ package com.facebook.buck.features.haskell;
 
 import static org.junit.Assume.assumeThat;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.TargetConfigurationHasher;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -27,7 +28,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import org.hamcrest.Matchers;
@@ -59,7 +59,7 @@ public class HaskellGhciRuleIntegrationTest {
     return linkStyle.toString().toLowerCase().replace('_', '-');
   }
 
-  private Path genPath;
+  private RelPath genPath;
 
   @Before
   public void setUp() throws IOException {
@@ -79,31 +79,32 @@ public class HaskellGhciRuleIntegrationTest {
     genPath = workspace.getBuckPaths().getGenDir();
     if (workspace.getProjectFileSystem().getBuckPaths().shouldIncludeTargetConfigHash()) {
       genPath =
-          genPath.resolve(TargetConfigurationHasher.hash(UnconfiguredTargetConfiguration.INSTANCE));
+          genPath.resolveRel(
+              TargetConfigurationHasher.hash(UnconfiguredTargetConfiguration.INSTANCE));
     }
   }
 
   @Test
   public void simple() throws IOException {
     workspace.runBuckBuild("//:foo").assertSuccess();
-    workspace.verify(Paths.get("foo_output.expected"), genPath);
+    workspace.verify(Paths.get("foo_output.expected"), genPath.getPath());
   }
 
   @Test
   public void enableProfiling() throws IOException {
     workspace.runBuckBuild("//:foo_prof").assertSuccess();
-    workspace.verify(Paths.get("foo_prof_output.expected"), genPath);
+    workspace.verify(Paths.get("foo_prof_output.expected"), genPath.getPath());
   }
 
   @Test
   public void mutuallyRecursive() throws IOException {
     workspace.runBuckBuild("//:mutually_recursive").assertSuccess();
-    workspace.verify(Paths.get("mutually_recursive_output.expected"), genPath);
+    workspace.verify(Paths.get("mutually_recursive_output.expected"), genPath.getPath());
   }
 
   @Test
   public void foreign() throws IOException {
     workspace.runBuckBuild("//:prebuilt_foreign").assertSuccess();
-    workspace.verify(Paths.get("prebuilt_foreign_output.expected"), genPath);
+    workspace.verify(Paths.get("prebuilt_foreign_output.expected"), genPath.getPath());
   }
 }

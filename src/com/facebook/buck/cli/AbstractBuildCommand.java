@@ -26,6 +26,8 @@ import com.facebook.buck.core.build.engine.type.BuildType;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
@@ -589,7 +591,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
   private void symLinkBuildRuleResult(
       SourcePathResolverAdapter pathResolver,
       BuckConfig buckConfig,
-      Path lastOutputDirPath,
+      AbsPath lastOutputDirPath,
       BuildRule rule,
       OutputLabel outputLabel)
       throws IOException {
@@ -601,7 +603,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
             outputLabel);
     if (outputPath.isPresent()) {
       Path absolutePath = outputPath.get();
-      Path destPath;
+      RelPath destPath;
       try {
         destPath = lastOutputDirPath.relativize(absolutePath);
       } catch (IllegalArgumentException e) {
@@ -612,11 +614,11 @@ abstract class AbstractBuildCommand extends AbstractCommand {
                 absolutePath, lastOutputDirPath, e.getMessage());
         throw new IllegalArgumentException(msg, e);
       }
-      Path linkPath = lastOutputDirPath.resolve(absolutePath.getFileName());
+      AbsPath linkPath = lastOutputDirPath.resolve(absolutePath.getFileName());
       // Don't overwrite existing symlink in case there are duplicate names.
-      if (!Files.exists(linkPath, LinkOption.NOFOLLOW_LINKS)) {
+      if (!Files.exists(linkPath.getPath(), LinkOption.NOFOLLOW_LINKS)) {
         ProjectFilesystem projectFilesystem = rule.getProjectFilesystem();
-        projectFilesystem.createSymLink(linkPath, destPath, false);
+        projectFilesystem.createSymLink(linkPath, destPath.getPath(), false);
       }
     }
   }
@@ -624,7 +626,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
   private void symLinkBuildResults(
       CommandRunnerParams params, GraphsAndBuildTargets graphsAndBuildTargets) throws IOException {
     // Clean up last buck-out/last.
-    Path lastOutputDirPath =
+    AbsPath lastOutputDirPath =
         params
             .getCells()
             .getRootCell()
@@ -633,7 +635,7 @@ abstract class AbstractBuildCommand extends AbstractCommand {
             .getLastOutputDir()
             .toAbsolutePath();
     MostFiles.deleteRecursivelyIfExists(lastOutputDirPath);
-    Files.createDirectories(lastOutputDirPath);
+    Files.createDirectories(lastOutputDirPath.getPath());
 
     ActionGraphBuilder graphBuilder =
         graphsAndBuildTargets.getGraphs().getActionGraphAndBuilder().getActionGraphBuilder();

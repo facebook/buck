@@ -274,21 +274,26 @@ public abstract class IsolatedBuildableBuilder {
                   && Platform.detect() != Platform.WINDOWS) {
                 BuckPaths unconfiguredPaths =
                     configuredPaths.withConfiguredBuckOut(RelPath.of(configuredPaths.getBuckOut()));
-                ImmutableMap<Path, Path> paths =
+                ImmutableMap<RelPath, RelPath> paths =
                     ImmutableMap.of(
                         unconfiguredPaths.getGenDir(), configuredPaths.getGenDir(),
                         unconfiguredPaths.getScratchDir(), configuredPaths.getScratchDir());
-                for (Map.Entry<Path, Path> entry : paths.entrySet()) {
+                for (Map.Entry<RelPath, RelPath> entry : paths.entrySet()) {
                   try {
                     filesystem.createSymLink(
                         entry.getKey(),
-                        entry.getKey().getParent().relativize(entry.getValue()),
+                        entry.getKey().getParent().getPath().relativize(entry.getValue().getPath()),
                         /* force */ false);
                   } catch (FileAlreadyExistsException e) {
                     // Verify that the symlink is valid then continue gracefully
                     if (!filesystem
                         .readSymLink(entry.getKey())
-                        .equals(entry.getKey().getParent().relativize(entry.getValue()))) {
+                        .equals(
+                            entry
+                                .getKey()
+                                .getParent()
+                                .getPath()
+                                .relativize(entry.getValue().getPath()))) {
                       throw e;
                     }
                   }

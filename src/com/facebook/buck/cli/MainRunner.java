@@ -2004,11 +2004,11 @@ public final class MainRunner {
   }
 
   private static void moveToTrash(
-      ProjectFilesystem filesystem, Console console, BuildId buildId, Path... pathsToMove)
+      ProjectFilesystem filesystem, Console console, BuildId buildId, RelPath... pathsToMove)
       throws IOException {
     Path trashPath = filesystem.getBuckPaths().getTrashDir().resolve(buildId.toString());
     filesystem.mkdirs(trashPath);
-    for (Path pathToMove : pathsToMove) {
+    for (RelPath pathToMove : pathsToMove) {
       try {
         // Technically this might throw AtomicMoveNotSupportedException,
         // but we're moving a path within buck-out, so we don't expect this
@@ -2017,8 +2017,8 @@ public final class MainRunner {
         // If it does throw, we'll complain loudly and synchronously delete
         // the file instead.
         filesystem.move(
-            pathToMove,
-            trashPath.resolve(pathToMove.getFileName()),
+            pathToMove.getPath(),
+            trashPath.resolve(pathToMove.getPath().getFileName()),
             StandardCopyOption.ATOMIC_MOVE);
       } catch (NoSuchFileException e) {
         LOG.verbose(e, "Ignoring missing path %s", pathToMove);
@@ -2026,10 +2026,11 @@ public final class MainRunner {
         console
             .getStdErr()
             .format("Atomic moves not supported, falling back to synchronous delete: %s", e);
-        MostFiles.deleteRecursivelyIfExists(pathToMove);
+        MostFiles.deleteRecursivelyIfExists(pathToMove.getPath());
       } catch (AccessDeniedException e) {
         String moveFrom = pathToMove.toAbsolutePath().toString();
-        String moveTo = trashPath.resolve(pathToMove.getFileName()).toAbsolutePath().toString();
+        String moveTo =
+            trashPath.resolve(pathToMove.getPath().getFileName()).toAbsolutePath().toString();
         if (Platform.detect() == Platform.WINDOWS) {
           throw new HumanReadableException(
               "Can't move %s to %s: Access Denied.\n"

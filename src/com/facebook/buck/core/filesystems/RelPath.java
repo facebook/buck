@@ -78,4 +78,9 @@ public interface RelPath extends PathWrapper {
   default int getNameCount() {
     return getPath().getNameCount();
   }
+
+  /** Convert path to an absolute path resolving it from current directory. */
+  default AbsPath toAbsolutePath() {
+    return AbsPath.of(getPath().toAbsolutePath());
+  }
 }

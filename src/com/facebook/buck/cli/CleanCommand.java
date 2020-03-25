@@ -70,8 +70,8 @@ public class CleanCommand extends AbstractCommand {
     JavaUtilsLoggingBuildListener.closeLogFile();
 
     Set<Path> pathsToDelete = new HashSet<>();
-    pathsToDelete.add(projectFilesystem.getBuckPaths().getScratchDir());
-    pathsToDelete.add(projectFilesystem.getBuckPaths().getGenDir());
+    pathsToDelete.add(projectFilesystem.getBuckPaths().getScratchDir().getPath());
+    pathsToDelete.add(projectFilesystem.getBuckPaths().getGenDir().getPath());
     pathsToDelete.add(projectFilesystem.getBuckPaths().getTrashDir());
     pathsToDelete.add(projectFilesystem.getBuckPaths().getJournalDir());
 
