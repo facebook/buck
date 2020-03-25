@@ -164,10 +164,6 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     // by tools and automation.
     private static final String INFER_JSON_REPORT_FILE = "report.json";
 
-    // Default name of the human-readable report is bugs.txt, renamed here for consistency.
-    // We produce this report so that a user can see the full list of warnings later on.
-    private static final String INFER_TXT_REPORT_FILE = "report.txt";
-
     private static final String REPORTS_OUTPUT_DIR = ".";
 
     // This flag instructs infer to run only nullsafe related checks. In practice, we may want to
@@ -187,7 +183,6 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
 
     @AddToRuleKey private final OutputPath reportsDir = new OutputPath(REPORTS_OUTPUT_DIR);
     @AddToRuleKey private final OutputPath reportJson = reportsDir.resolve(INFER_JSON_REPORT_FILE);
-    @AddToRuleKey private final OutputPath reportTxt = reportsDir.resolve(INFER_TXT_REPORT_FILE);
 
     // Whether to pretty print a list of issues to console and report.txt.
     // Pretty printing every time during build is distracting and incurs
@@ -248,8 +243,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
 
       // Prepare infer command line arguments and write them to args.txt
       ImmutableList<String> argsBuilder =
-          buildArgs(
-              inferOutPath.getPath(), filesystem, sourcePathResolverAdapter, outputPathResolver);
+          buildArgs(inferOutPath.getPath(), filesystem, sourcePathResolverAdapter);
       steps.add(
           new WriteFileStep(
               filesystem,
@@ -309,8 +303,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     private ImmutableList<String> buildArgs(
         Path inferOutPath,
         ProjectFilesystem filesystem,
-        SourcePathResolverAdapter sourcePathResolverAdapter,
-        OutputPathResolver outputPathResolver) {
+        SourcePathResolverAdapter sourcePathResolverAdapter) {
       ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
       argsBuilder.addAll(nullsafeArgs);
       argsBuilder.add(
@@ -321,10 +314,8 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
           "--results-dir",
           inferOutPath.toString());
 
-      if (prettyPrint) {
-        argsBuilder.add("--issues-txt", outputPathResolver.resolvePath(reportTxt).toString());
-      } else {
-        argsBuilder.add("--report-hook-reset");
+      if (!prettyPrint) {
+        argsBuilder.add("--quiet");
       }
 
       sources.stream()
