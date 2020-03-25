@@ -40,6 +40,7 @@ public class LogdProvider implements AutoCloseable {
           System.getProperty(
               "buck.path_to_logd_pex", "src/com/facebook/buck/logd/resources/logd.pex"));
 
+  private final String buildId;
   private ProcessBuilder processBuilder;
   private Process logdProcess;
   private LogDaemonClient logdClient;
@@ -51,7 +52,8 @@ public class LogdProvider implements AutoCloseable {
    *     nothing.
    * @throws IOException if fails to run the external logd process
    */
-  public LogdProvider(boolean isLogdEnabled) throws IOException {
+  public LogdProvider(boolean isLogdEnabled, String buildId) throws IOException {
+    this.buildId = buildId;
     if (isLogdEnabled) {
       this.processBuilder = new ProcessBuilder(PATH_TO_LOGD_PEX.toString());
       this.processBuilder.redirectErrorStream(true);
@@ -72,7 +74,7 @@ public class LogdProvider implements AutoCloseable {
         new BufferedReader(
             new InputStreamReader(logdProcess.getInputStream(), StandardCharsets.UTF_8))) {
       int logdServerPort = Integer.parseInt(bufferedReader.readLine());
-      logdClient = createLogdClient(logdServerPort);
+      logdClient = createLogdClient(logdServerPort, buildId);
     } catch (Exception e) {
       throw new IOException("Failed to read port info from running external logd process", e);
     }
@@ -84,8 +86,8 @@ public class LogdProvider implements AutoCloseable {
   }
 
   @VisibleForTesting
-  LogDaemonClient createLogdClient(int port) {
-    return new LogdClient(port);
+  LogDaemonClient createLogdClient(int port, String buildId) {
+    return new LogdClient(port, buildId);
   }
 
   @Override

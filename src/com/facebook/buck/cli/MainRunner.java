@@ -470,7 +470,8 @@ public final class MainRunner {
 
     ExitCode exitCode = ExitCode.SUCCESS;
 
-    try (LogdProvider logdProvider = new LogdProvider(BuckConstant.IS_LOGD_ENABLED)) {
+    try (LogdProvider logdProvider =
+        new LogdProvider(BuckConstant.IS_LOGD_ENABLED, buildId.toString())) {
       LogStreamFactory logStreamFactory =
           LogStreamProvider.of(logdProvider.getLogdClient()).getLogStreamFactory();
 

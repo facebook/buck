@@ -66,6 +66,7 @@ public class LogdClientTest {
   public void setUp() throws Exception {
     // Generate a unique in-process server name
     String serverName = InProcessServerBuilder.generateName();
+    String fakeBuildId = "c0fd2155-96aa-4770-a272-f4f23d9bd056";
     // Use a mutable service registry for later registering the service impl for each test case.
     grpcCleanup.register(
         InProcessServerBuilder.forName(serverName)
@@ -76,6 +77,7 @@ public class LogdClientTest {
     client =
         new LogdClient(
             InProcessChannelBuilder.forName(serverName).directExecutor(),
+            fakeBuildId,
             new TestStreamObserverFactory(testHelper));
   }
 

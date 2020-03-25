@@ -47,10 +47,12 @@ public class LogdProviderTest {
 
   private final MutableHandlerRegistry serviceRegistry = new MutableHandlerRegistry();
   private String serverName;
+  private String fakeBuildId;
 
   @Before
   public void setUp() throws Exception {
     serverName = InProcessServerBuilder.generateName();
+    fakeBuildId = "c0fd2155-96aa-4770-a272-f4f23d9bd056";
     grpcCleanup.register(
         InProcessServerBuilder.forName(serverName)
             .fallbackHandlerRegistry(serviceRegistry)
@@ -85,7 +87,7 @@ public class LogdProviderTest {
     serviceRegistry.addService(createLogFileImpl);
 
     ManagedChannel channel;
-    try (TestLogdProvider logdProvider = new TestLogdProvider(true)) {
+    try (TestLogdProvider logdProvider = new TestLogdProvider(true, fakeBuildId)) {
       assertTrue(logdProvider.getLogdClient().isPresent());
       LogDaemonClient logdClient = logdProvider.getLogdClient().get();
       channel = logdClient.getChannel();
@@ -102,7 +104,7 @@ public class LogdProviderTest {
 
   @Test
   public void runLogdProviderWithLogdDisabled() {
-    try (TestLogdProvider logdProvider = new TestLogdProvider(false)) {
+    try (TestLogdProvider logdProvider = new TestLogdProvider(false, fakeBuildId)) {
       assertFalse(logdProvider.getLogdClient().isPresent());
     } catch (IOException e) {
       fail("There should not be any exception raised");
@@ -119,10 +121,11 @@ public class LogdProviderTest {
      *
      * @param isLogdEnabled determines whether LogD is used. If set to false, LogdProvider does
      *     nothing.
+     * @param buildId buck command's uuid
      * @throws IOException if process fails to run
      */
-    public TestLogdProvider(boolean isLogdEnabled) throws IOException {
-      super(isLogdEnabled);
+    public TestLogdProvider(boolean isLogdEnabled, String buildId) throws IOException {
+      super(isLogdEnabled, buildId);
     }
 
     @Override
@@ -133,9 +136,10 @@ public class LogdProviderTest {
     }
 
     @Override
-    LogDaemonClient createLogdClient(int port) {
+    LogDaemonClient createLogdClient(int port, String buildId) {
       return new LogdClient(
           InProcessChannelBuilder.forName(serverName).directExecutor(),
+          buildId,
           new DefaultStreamObserverFactory());
     }
   }

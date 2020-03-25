@@ -38,6 +38,14 @@ public interface LogDaemonClient {
   int getPort();
 
   /**
+   * Client calls this method to request LogD to create a corresponding log directory in file-system
+   * and/or storage.
+   *
+   * @throws LogDaemonException if fails to create log dir
+   */
+  void createLogDir() throws LogDaemonException;
+
+  /**
    * Client calls this method to request LogD to create a log file in file-system and/or storage.
    *
    * @return a file identifier {@code logFileId} corresponding to the created file by LogD server

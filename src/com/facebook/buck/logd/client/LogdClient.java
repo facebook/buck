@@ -17,6 +17,7 @@
 package com.facebook.buck.logd.client;
 
 import com.facebook.buck.logd.LogDaemonException;
+import com.facebook.buck.logd.proto.CreateLogDirRequest;
 import com.facebook.buck.logd.proto.CreateLogRequest;
 import com.facebook.buck.logd.proto.CreateLogResponse;
 import com.facebook.buck.logd.proto.LogType;
@@ -44,6 +45,7 @@ public class LogdClient implements LogDaemonClient {
   private static final String LOCAL_HOST = "localhost";
 
   private int port;
+  private final String buildId;
   private final ManagedChannel channel;
   private final LogdServiceGrpc.LogdServiceBlockingStub blockingStub;
   private final LogdServiceGrpc.LogdServiceStub asyncStub;
@@ -58,8 +60,8 @@ public class LogdClient implements LogDaemonClient {
    *
    * @param port port number
    */
-  public LogdClient(int port) {
-    this(LOCAL_HOST, port);
+  public LogdClient(int port, String buildId) {
+    this(LOCAL_HOST, port, buildId);
   }
 
   /**
@@ -67,9 +69,10 @@ public class LogdClient implements LogDaemonClient {
    *
    * @param host host name
    * @param port port number
+   * @param buildId buildId
    */
-  public LogdClient(String host, int port) {
-    this(host, port, new DefaultStreamObserverFactory());
+  public LogdClient(String host, int port, String buildId) {
+    this(host, port, buildId, new DefaultStreamObserverFactory());
   }
 
   /**
@@ -78,10 +81,15 @@ public class LogdClient implements LogDaemonClient {
    *
    * @param host host name
    * @param port port number
+   * @param buildId buildId
    * @param streamObserverFactory an implementation of StreamObserverFactory
    */
-  public LogdClient(String host, int port, StreamObserverFactory streamObserverFactory) {
-    this(ManagedChannelBuilder.forAddress(host, port).usePlaintext(), streamObserverFactory);
+  public LogdClient(
+      String host, int port, String buildId, StreamObserverFactory streamObserverFactory) {
+    this(
+        ManagedChannelBuilder.forAddress(host, port).usePlaintext(),
+        buildId,
+        streamObserverFactory);
     this.port = port;
     LOG.info("Channel established to {} at port {}", host, port);
   }
@@ -90,13 +98,18 @@ public class LogdClient implements LogDaemonClient {
    * Constructs a LogdClient with the provided channel
    *
    * @param channelBuilder a channel to LogD server
+   * @param buildId buildId
+   * @param streamObserverFactory an implementation of StreamObserverFactory
    */
   @VisibleForTesting
   public LogdClient(
-      ManagedChannelBuilder<?> channelBuilder, StreamObserverFactory streamObserverFactory) {
+      ManagedChannelBuilder<?> channelBuilder,
+      String buildId,
+      StreamObserverFactory streamObserverFactory) {
     channel = channelBuilder.build();
     blockingStub = LogdServiceGrpc.newBlockingStub(channel);
     asyncStub = LogdServiceGrpc.newStub(channel);
+    this.buildId = buildId;
     this.streamObserverFactory = streamObserverFactory;
   }
 
@@ -132,13 +145,27 @@ public class LogdClient implements LogDaemonClient {
   }
 
   @Override
+  public void createLogDir() throws LogDaemonException {
+    try {
+      blockingStub.createLogDir(CreateLogDirRequest.newBuilder().setBuildId(buildId).build());
+    } catch (StatusRuntimeException e) {
+      LOG.error("LogD failed to return a response: {}", e.getStatus(), e);
+      throw new LogDaemonException(e, "LogD failed to return a response: %s", e.getStatus());
+    }
+  }
+
+  @Override
   public int createLogFile(String path, LogType logType) throws LogDaemonException {
     CreateLogResponse response;
 
     try {
       response =
           blockingStub.createLogFile(
-              CreateLogRequest.newBuilder().setLogFilePath(path).setLogType(logType).build());
+              CreateLogRequest.newBuilder()
+                  .setLogFilePath(path)
+                  .setLogType(logType)
+                  .setBuildId(buildId)
+                  .build());
       int logdFileId = response.getLogId();
       fileIdToPath.put(logdFileId, path);
 

@@ -28,6 +28,8 @@ message CreateLogRequest {
     string logFilePath = 1;
     // enum specifying existing types of log
     LogType logType = 2;
+    // buildId that log file is attached to
+    string buildId = 3;
 }
 
 // Response message for [LogdService.CreateLogFile]

@@ -52,6 +52,7 @@ public class LogdStreamFactoryTest {
   @Before
   public void setUp() throws Exception {
     String serverName = InProcessServerBuilder.generateName();
+    String fakeBuildId = "c0fd2155-96aa-4770-a272-f4f23d9bd056";
     grpcCleanup.register(
         InProcessServerBuilder.forName(serverName)
             .fallbackHandlerRegistry(serviceRegistry)
@@ -62,6 +63,7 @@ public class LogdStreamFactoryTest {
     client =
         new LogdClient(
             InProcessChannelBuilder.forName(serverName).directExecutor(),
+            fakeBuildId,
             new TestStreamObserverFactory(testHelper));
   }
 

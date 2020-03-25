@@ -24,6 +24,7 @@ private static final long serialVersionUID = 0L;
   private CreateLogRequest() {
     logFilePath_ = "";
     logType_ = 0;
+    buildId_ = "";
   }
 
   @java.lang.Override
@@ -60,6 +61,12 @@ private static final long serialVersionUID = 0L;
             int rawValue = input.readEnum();
 
             logType_ = rawValue;
+            break;
+          }
+          case 26: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            buildId_ = s;
             break;
           }
           default: {
@@ -161,6 +168,48 @@ private static final long serialVersionUID = 0L;
     return result == null ? com.facebook.buck.logd.proto.LogType.UNRECOGNIZED : result;
   }
 
+  public static final int BUILDID_FIELD_NUMBER = 3;
+  private volatile java.lang.Object buildId_;
+  /**
+   * <pre>
+   * buildId that log file is attached to
+   * </pre>
+   *
+   * <code>string buildId = 3;</code>
+   */
+  public java.lang.String getBuildId() {
+    java.lang.Object ref = buildId_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      buildId_ = s;
+      return s;
+    }
+  }
+  /**
+   * <pre>
+   * buildId that log file is attached to
+   * </pre>
+   *
+   * <code>string buildId = 3;</code>
+   */
+  public com.google.protobuf.ByteString
+      getBuildIdBytes() {
+    java.lang.Object ref = buildId_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      buildId_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -181,6 +230,9 @@ private static final long serialVersionUID = 0L;
     if (logType_ != com.facebook.buck.logd.proto.LogType.BUCK_LOG.getNumber()) {
       output.writeEnum(2, logType_);
     }
+    if (!getBuildIdBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 3, buildId_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -196,6 +248,9 @@ private static final long serialVersionUID = 0L;
     if (logType_ != com.facebook.buck.logd.proto.LogType.BUCK_LOG.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
         .computeEnumSize(2, logType_);
+    }
+    if (!getBuildIdBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, buildId_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -215,6 +270,8 @@ private static final long serialVersionUID = 0L;
     if (!getLogFilePath()
         .equals(other.getLogFilePath())) return false;
     if (logType_ != other.logType_) return false;
+    if (!getBuildId()
+        .equals(other.getBuildId())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -230,6 +287,8 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getLogFilePath().hashCode();
     hash = (37 * hash) + LOGTYPE_FIELD_NUMBER;
     hash = (53 * hash) + logType_;
+    hash = (37 * hash) + BUILDID_FIELD_NUMBER;
+    hash = (53 * hash) + getBuildId().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -372,6 +431,8 @@ private static final long serialVersionUID = 0L;
 
       logType_ = 0;
 
+      buildId_ = "";
+
       return this;
     }
 
@@ -400,6 +461,7 @@ private static final long serialVersionUID = 0L;
       com.facebook.buck.logd.proto.CreateLogRequest result = new com.facebook.buck.logd.proto.CreateLogRequest(this);
       result.logFilePath_ = logFilePath_;
       result.logType_ = logType_;
+      result.buildId_ = buildId_;
       onBuilt();
       return result;
     }
@@ -454,6 +516,10 @@ private static final long serialVersionUID = 0L;
       }
       if (other.logType_ != 0) {
         setLogTypeValue(other.getLogTypeValue());
+      }
+      if (!other.getBuildId().isEmpty()) {
+        buildId_ = other.buildId_;
+        onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -634,6 +700,95 @@ private static final long serialVersionUID = 0L;
     public Builder clearLogType() {
       
       logType_ = 0;
+      onChanged();
+      return this;
+    }
+
+    private java.lang.Object buildId_ = "";
+    /**
+     * <pre>
+     * buildId that log file is attached to
+     * </pre>
+     *
+     * <code>string buildId = 3;</code>
+     */
+    public java.lang.String getBuildId() {
+      java.lang.Object ref = buildId_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        buildId_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <pre>
+     * buildId that log file is attached to
+     * </pre>
+     *
+     * <code>string buildId = 3;</code>
+     */
+    public com.google.protobuf.ByteString
+        getBuildIdBytes() {
+      java.lang.Object ref = buildId_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        buildId_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <pre>
+     * buildId that log file is attached to
+     * </pre>
+     *
+     * <code>string buildId = 3;</code>
+     */
+    public Builder setBuildId(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      buildId_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * buildId that log file is attached to
+     * </pre>
+     *
+     * <code>string buildId = 3;</code>
+     */
+    public Builder clearBuildId() {
+      
+      buildId_ = getDefaultInstance().getBuildId();
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * buildId that log file is attached to
+     * </pre>
+     *
+     * <code>string buildId = 3;</code>
+     */
+    public Builder setBuildIdBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      buildId_ = value;
       onChanged();
       return this;
     }

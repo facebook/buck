@@ -42,4 +42,22 @@ public interface CreateLogRequestOrBuilder extends
    * <code>.logd.v1.LogType logType = 2;</code>
    */
   com.facebook.buck.logd.proto.LogType getLogType();
+
+  /**
+   * <pre>
+   * buildId that log file is attached to
+   * </pre>
+   *
+   * <code>string buildId = 3;</code>
+   */
+  java.lang.String getBuildId();
+  /**
+   * <pre>
+   * buildId that log file is attached to
+   * </pre>
+   *
+   * <code>string buildId = 3;</code>
+   */
+  com.google.protobuf.ByteString
+      getBuildIdBytes();
 }
