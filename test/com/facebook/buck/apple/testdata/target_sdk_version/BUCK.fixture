@@ -22,6 +22,7 @@ apple_binary(
     name = "Binary",
     srcs = [
         "Test.swift",
+        "Test.m",
         "main.m",
     ],
     compiler_flags = ["-Werror=unguarded-availability"],
