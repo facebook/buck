@@ -31,6 +31,43 @@ public final class LogdServiceGrpc {
 
   // Static method descriptors that strictly reflect the proto.
   @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  @java.lang.Deprecated // Use {@link #getCreateLogDirMethod()} instead. 
+  public static final io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.CreateLogDirRequest,
+      com.google.rpc.Status> METHOD_CREATE_LOG_DIR = getCreateLogDirMethodHelper();
+
+  private static volatile io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.CreateLogDirRequest,
+      com.google.rpc.Status> getCreateLogDirMethod;
+
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
+  public static io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.CreateLogDirRequest,
+      com.google.rpc.Status> getCreateLogDirMethod() {
+    return getCreateLogDirMethodHelper();
+  }
+
+  private static io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.CreateLogDirRequest,
+      com.google.rpc.Status> getCreateLogDirMethodHelper() {
+    io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.CreateLogDirRequest, com.google.rpc.Status> getCreateLogDirMethod;
+    if ((getCreateLogDirMethod = LogdServiceGrpc.getCreateLogDirMethod) == null) {
+      synchronized (LogdServiceGrpc.class) {
+        if ((getCreateLogDirMethod = LogdServiceGrpc.getCreateLogDirMethod) == null) {
+          LogdServiceGrpc.getCreateLogDirMethod = getCreateLogDirMethod = 
+              io.grpc.MethodDescriptor.<com.facebook.buck.logd.proto.CreateLogDirRequest, com.google.rpc.Status>newBuilder()
+              .setType(io.grpc.MethodDescriptor.MethodType.UNARY)
+              .setFullMethodName(generateFullMethodName(
+                  "logd.v1.LogdService", "CreateLogDir"))
+              .setSampledToLocalTracing(true)
+              .setRequestMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.facebook.buck.logd.proto.CreateLogDirRequest.getDefaultInstance()))
+              .setResponseMarshaller(io.grpc.protobuf.ProtoUtils.marshaller(
+                  com.google.rpc.Status.getDefaultInstance()))
+                  .setSchemaDescriptor(new LogdServiceMethodDescriptorSupplier("CreateLogDir"))
+                  .build();
+          }
+        }
+     }
+     return getCreateLogDirMethod;
+  }
+  @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/1901")
   @java.lang.Deprecated // Use {@link #getCreateLogFileMethod()} instead. 
   public static final io.grpc.MethodDescriptor<com.facebook.buck.logd.proto.CreateLogRequest,
       com.facebook.buck.logd.proto.CreateLogResponse> METHOD_CREATE_LOG_FILE = getCreateLogFileMethodHelper();
@@ -175,6 +212,18 @@ public final class LogdServiceGrpc {
     /**
      * <pre>
      * A simple, unary RPC.
+     * Client sends a CreateLogDirRequest to logD, after which logD creates the corresponding
+     * log directory in file-system and/or storage.
+     * </pre>
+     */
+    public void createLogDir(com.facebook.buck.logd.proto.CreateLogDirRequest request,
+        io.grpc.stub.StreamObserver<com.google.rpc.Status> responseObserver) {
+      asyncUnimplementedUnaryCall(getCreateLogDirMethodHelper(), responseObserver);
+    }
+
+    /**
+     * <pre>
+     * A simple, unary RPC.
      * Client sends a CreateLogRequest to logD, after which logD creates a corresponding log file in
      * file-system and/or storage and returns a CreateLogResponse with a generated id.
      * </pre>
@@ -216,6 +265,13 @@ public final class LogdServiceGrpc {
 
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
       return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
+          .addMethod(
+            getCreateLogDirMethodHelper(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                com.facebook.buck.logd.proto.CreateLogDirRequest,
+                com.google.rpc.Status>(
+                  this, METHODID_CREATE_LOG_DIR)))
           .addMethod(
             getCreateLogFileMethodHelper(),
             asyncUnaryCall(
@@ -260,6 +316,19 @@ public final class LogdServiceGrpc {
     protected LogdServiceStub build(io.grpc.Channel channel,
         io.grpc.CallOptions callOptions) {
       return new LogdServiceStub(channel, callOptions);
+    }
+
+    /**
+     * <pre>
+     * A simple, unary RPC.
+     * Client sends a CreateLogDirRequest to logD, after which logD creates the corresponding
+     * log directory in file-system and/or storage.
+     * </pre>
+     */
+    public void createLogDir(com.facebook.buck.logd.proto.CreateLogDirRequest request,
+        io.grpc.stub.StreamObserver<com.google.rpc.Status> responseObserver) {
+      asyncUnaryCall(
+          getChannel().newCall(getCreateLogDirMethodHelper(), getCallOptions()), request, responseObserver);
     }
 
     /**
@@ -332,6 +401,18 @@ public final class LogdServiceGrpc {
     /**
      * <pre>
      * A simple, unary RPC.
+     * Client sends a CreateLogDirRequest to logD, after which logD creates the corresponding
+     * log directory in file-system and/or storage.
+     * </pre>
+     */
+    public com.google.rpc.Status createLogDir(com.facebook.buck.logd.proto.CreateLogDirRequest request) {
+      return blockingUnaryCall(
+          getChannel(), getCreateLogDirMethodHelper(), getCallOptions(), request);
+    }
+
+    /**
+     * <pre>
+     * A simple, unary RPC.
      * Client sends a CreateLogRequest to logD, after which logD creates a corresponding log file in
      * file-system and/or storage and returns a CreateLogResponse with a generated id.
      * </pre>
@@ -378,6 +459,19 @@ public final class LogdServiceGrpc {
     /**
      * <pre>
      * A simple, unary RPC.
+     * Client sends a CreateLogDirRequest to logD, after which logD creates the corresponding
+     * log directory in file-system and/or storage.
+     * </pre>
+     */
+    public com.google.common.util.concurrent.ListenableFuture<com.google.rpc.Status> createLogDir(
+        com.facebook.buck.logd.proto.CreateLogDirRequest request) {
+      return futureUnaryCall(
+          getChannel().newCall(getCreateLogDirMethodHelper(), getCallOptions()), request);
+    }
+
+    /**
+     * <pre>
+     * A simple, unary RPC.
      * Client sends a CreateLogRequest to logD, after which logD creates a corresponding log file in
      * file-system and/or storage and returns a CreateLogResponse with a generated id.
      * </pre>
@@ -402,9 +496,10 @@ public final class LogdServiceGrpc {
     }
   }
 
-  private static final int METHODID_CREATE_LOG_FILE = 0;
-  private static final int METHODID_SHUTDOWN_SERVER = 1;
-  private static final int METHODID_OPEN_LOG = 2;
+  private static final int METHODID_CREATE_LOG_DIR = 0;
+  private static final int METHODID_CREATE_LOG_FILE = 1;
+  private static final int METHODID_SHUTDOWN_SERVER = 2;
+  private static final int METHODID_OPEN_LOG = 3;
 
   private static final class MethodHandlers<Req, Resp> implements
       io.grpc.stub.ServerCalls.UnaryMethod<Req, Resp>,
@@ -423,6 +518,10 @@ public final class LogdServiceGrpc {
     @java.lang.SuppressWarnings("unchecked")
     public void invoke(Req request, io.grpc.stub.StreamObserver<Resp> responseObserver) {
       switch (methodId) {
+        case METHODID_CREATE_LOG_DIR:
+          serviceImpl.createLogDir((com.facebook.buck.logd.proto.CreateLogDirRequest) request,
+              (io.grpc.stub.StreamObserver<com.google.rpc.Status>) responseObserver);
+          break;
         case METHODID_CREATE_LOG_FILE:
           serviceImpl.createLogFile((com.facebook.buck.logd.proto.CreateLogRequest) request,
               (io.grpc.stub.StreamObserver<com.facebook.buck.logd.proto.CreateLogResponse>) responseObserver);
@@ -495,6 +594,7 @@ public final class LogdServiceGrpc {
         if (result == null) {
           serviceDescriptor = result = io.grpc.ServiceDescriptor.newBuilder(SERVICE_NAME)
               .setSchemaDescriptor(new LogdServiceFileDescriptorSupplier())
+              .addMethod(getCreateLogDirMethodHelper())
               .addMethod(getCreateLogFileMethodHelper())
               .addMethod(getOpenLogMethodHelper())
               .addMethod(getShutdownServerMethodHelper())

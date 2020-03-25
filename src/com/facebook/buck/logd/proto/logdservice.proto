@@ -51,6 +51,12 @@ message ShutdownRequest {
 
 }
 
+// Request for [LogdService.CreateLogDir]
+message CreateLogDirRequest {
+    // a buck command's uuid
+    string buildId = 1;
+}
+
 // Existing types of logs we are currently maintaining. To be revised/extended.
 enum LogType {
     BUCK_LOG = 0;
@@ -64,6 +70,12 @@ enum LogType {
 
 // Manages LogdService APIs
 service LogdService {
+
+    // A simple, unary RPC.
+    //
+    // Client sends a CreateLogDirRequest to logD, after which logD creates the corresponding
+    // log directory in file-system and/or storage.
+    rpc CreateLogDir(CreateLogDirRequest) returns (google.rpc.Status) {}
 
      // A simple, unary RPC.
      //
