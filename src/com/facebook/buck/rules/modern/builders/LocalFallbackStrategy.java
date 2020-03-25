@@ -289,8 +289,11 @@ public class LocalFallbackStrategy implements BuildRuleStrategy {
         if (remoteGrpcStatus == Status.OK) {
           eventBus.post(
               ConsoleEvent.severe(
-                  "The build failed trying to build remotely. This is most likely due to a missing dependency"
-                  ));
+                  String.format(
+                      "The build failed trying to build [%s] remotely. This is most likely due to"
+                          + " compilation error or a missing dependency"
+                          + ".",
+                      this.buildTarget)));
         }
         completeCombinedFutureWithException(t, remoteBuildResult.get(), Result.NOT_RUN);
       }
