@@ -411,7 +411,11 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       rule.recordOutputs(
           path ->
               outputs.add(cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(path))));
-      outputs.add(METADATA_PATH);
+
+      // The Buck client expects the METADATA_PATH to be written at the root of the cell that is
+      // being built. METADATA_PATH is a relative path within the root of the cell; here we must
+      // explicitly relativize it with the root of the cell.
+      outputs.add(cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(METADATA_PATH)));
     }
 
     try (Scope ignored2 = LeafEvents.scope(eventBus, "constructing_action_info")) {

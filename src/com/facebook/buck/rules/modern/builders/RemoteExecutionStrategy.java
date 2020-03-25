@@ -606,6 +606,9 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             return null;
           },
           MoreExecutors.directExecutor());
+    } else {
+      // We should always have a metadata file. It's a warning we should see in LogView if we don't.
+      LOG.warn("Metadata file not found in outputs for rule %s", buildRule.getFullyQualifiedName());
     }
 
     return Futures.immediateFuture(null);
