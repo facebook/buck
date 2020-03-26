@@ -40,8 +40,8 @@ public interface NamedPipeFactory {
   /** Returns platform specific implementation of {@code NamedPipeFactory}. */
   static NamedPipeFactory getFactory() {
     if (Platform.detect() == Platform.WINDOWS) {
-      return new WindowsNamedPipeFactory();
+      return WindowsNamedPipeFactory.INSTANCE;
     }
-    return new POSIXNamedPipeFactory();
+    return POSIXNamedPipeFactory.INSTANCE;
   }
 }

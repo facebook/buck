@@ -24,8 +24,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-/** POSIX named pipe factory. */
-public class POSIXNamedPipeFactory implements NamedPipeFactory {
+/** POSIX named pipe factory. (Singleton With Enum Implementation). */
+public enum POSIXNamedPipeFactory implements NamedPipeFactory {
+  INSTANCE;
 
   private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
 

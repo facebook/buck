@@ -26,8 +26,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
-/** Windows named pipe factory. */
-public class WindowsNamedPipeFactory implements NamedPipeFactory {
+/** Windows named pipe factory. (Singleton With Enum Implementation). */
+public enum WindowsNamedPipeFactory implements NamedPipeFactory {
+  INSTANCE;
 
   private static final int BUFFER_SIZE = 512;
 
