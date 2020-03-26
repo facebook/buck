@@ -16,14 +16,11 @@
 
 package com.facebook.buck.io.namedpipes;
 
-import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
@@ -38,7 +35,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.junit.Assume;
 import org.junit.Test;
 
 public class NamedPipesTest {
@@ -55,9 +51,6 @@ public class NamedPipesTest {
    */
   @Test
   public void testNamedPipes() {
-
-    Assume.assumeThat(Platform.detect(), is(not(Platform.WINDOWS)));
-
     NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
     ExecutorService executorService = Executors.newSingleThreadExecutor();
     List<ReceivedNamedPipeJsonMessage> receivedMessages = new ArrayList<>();

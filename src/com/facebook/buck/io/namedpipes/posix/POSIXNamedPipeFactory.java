@@ -27,7 +27,7 @@ import java.util.UUID;
 /** POSIX named pipe factory. */
 public class POSIXNamedPipeFactory implements NamedPipeFactory {
 
-  String TMP_DIR = System.getProperty("java.io.tmpdir");
+  private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
 
   @Override
   public NamedPipe create() throws IOException {
@@ -44,11 +44,9 @@ public class POSIXNamedPipeFactory implements NamedPipeFactory {
             pathString, POSIXNamedPipeLibrary.OWNER_READ_WRITE_ACCESS_MODE);
     if (exitCode != 0) {
       throw new IOException(
-          "Can't create named pipe: "
-              + pathString
-              + " with `mkfifo` command:"
-              + " exit code = "
-              + exitCode);
+          String.format(
+              "Can't create named pipe: %s with `mkfifo` command. Exit code: %s",
+              pathString, exitCode));
     }
   }
 }

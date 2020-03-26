@@ -18,6 +18,9 @@ package com.facebook.buck.io.namedpipes.windows;
 
 import com.facebook.buck.io.namedpipes.NamedPipe;
 import com.facebook.buck.io.namedpipes.NamedPipeFactory;
+import com.sun.jna.platform.win32.Kernel32;
+import com.sun.jna.platform.win32.WinBase;
+import com.sun.jna.platform.win32.WinNT;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,20 +29,35 @@ import java.util.UUID;
 /** Windows named pipe factory. */
 public class WindowsNamedPipeFactory implements NamedPipeFactory {
 
-  String TMP_DIR = System.getProperty("java.io.tmpdir");
-
-  /** Returns a generated platform specific named pipe path. */
-  Path generateNamedPathName() {
-    return Paths.get(TMP_DIR, "Pipe", UUID.randomUUID().toString());
-  }
+  private static final int BUFFER_SIZE = 512;
 
   @Override
   public NamedPipe create() throws IOException {
-    return new WindowsNamedPipe.OwnedWindowsNamedPipe(generateNamedPathName());
+    String namedPipePath = "\\\\.\\pipe\\" + UUID.randomUUID().toString();
+    Path path = Paths.get(namedPipePath);
+    return new WindowsNamedPipe(path, createNamedPipe(namedPipePath));
   }
 
-  @Override
-  public NamedPipe connect(Path path) throws IOException {
-    return new WindowsNamedPipe(path);
+  private static WinNT.HANDLE createNamedPipe(String pipeName) throws IOException {
+    WinNT.HANDLE namedPipeHandler =
+        Kernel32.INSTANCE.CreateNamedPipe(
+            /* lpName */ pipeName,
+            /* dwOpenMode */ WinBase.PIPE_ACCESS_DUPLEX,
+            /* dwPipeMode */ WinBase.PIPE_TYPE_BYTE
+                | WinBase.PIPE_READMODE_BYTE
+                | WinBase.PIPE_WAIT,
+            /* nMaxInstances */ WinBase.PIPE_UNLIMITED_INSTANCES,
+            /* nOutBufferSize */ BUFFER_SIZE,
+            /* nInBufferSize */ BUFFER_SIZE,
+            /* nDefaultTimeOut */ 0,
+            /* lpSecurityAttributes */ null);
+
+    if (WinBase.INVALID_HANDLE_VALUE.equals(namedPipeHandler)) {
+      throw new IOException(
+          String.format(
+              "Can't create named pipe: %s with CreateNamedPipe() command. Error code: %s",
+              pipeName, Kernel32.INSTANCE.GetLastError()));
+    }
+    return namedPipeHandler;
   }
 }
