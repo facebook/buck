@@ -106,10 +106,8 @@ public class ResourcesFilter extends AbstractBuildRule
   private final ImmutableSortedSet<BuildRule> resourceRules;
   private final ImmutableCollection<BuildRule> rulesWithResourceDirectories;
   private final SourcePathRuleFinder ruleFinder;
-  // Rule key correctness is ensured by depping on all android_resource rules in
-  // Builder.setAndroidResourceDepsFinder(). See getBuildDeps().
-  private final ImmutableList<SourcePath> resDirectories;
-  private final ImmutableSet<SourcePath> whitelistedStringDirs;
+  @AddToRuleKey private final ImmutableList<SourcePath> resDirectories;
+  @AddToRuleKey private final ImmutableSet<SourcePath> whitelistedStringDirs;
   @AddToRuleKey private final ImmutableSet<String> locales;
   @AddToRuleKey private final Optional<String> localizedStringFileName;
   @AddToRuleKey private final ResourceCompressionMode resourceCompressionMode;
