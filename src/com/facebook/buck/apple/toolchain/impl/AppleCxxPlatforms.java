@@ -185,7 +185,6 @@ public class AppleCxxPlatforms {
     AppleConfig appleConfig = buckConfig.getView(AppleConfig.class);
 
     ImmutableList.Builder<String> ldflagsBuilder = ImmutableList.builder();
-    ldflagsBuilder.addAll(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
     if (appleConfig.linkAllObjC()) {
       ldflagsBuilder.addAll(Linkers.iXlinker("-ObjC"));
     }
