@@ -734,9 +734,8 @@ public class GenruleIntegrationTest {
 
   private Path getOutputPath(ProjectWorkspace workspace, String targetName, String outputName)
       throws IOException {
-    String format = targetSuffix.isEmpty() ? "" : "__";
     return workspace
-        .getGenPath(BuildTargetFactory.newInstance(targetName), "%s" + format)
+        .getGenPath(BuildTargetFactory.newInstance(targetName), "%s")
         .resolve(outputName);
   }
 }

@@ -44,7 +44,6 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
@@ -109,13 +108,6 @@ public class TargetsCommandIntegrationTest {
     BuildTarget target = BuildTargetFactory.newInstance(buildTarget);
     // targets like genrule use the legacy path (without double underscore suffix)
     return BuildTargetPaths.getGenPath(filesystem, target, "%s");
-  }
-
-  private static Path getNonLegacyGenDir(String buildTarget, ProjectWorkspace workspace) {
-    return BuildTargetPaths.getGenPath(
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
-        BuildTargetFactory.newInstance(buildTarget),
-        "%s__");
   }
 
   private static void assertJsonMatchesWithOutputPlaceholder(String expectedJson, String actualJson)
@@ -194,7 +186,7 @@ public class TargetsCommandIntegrationTest {
         linesToText(
             "//:test_multiple_outputs[out2] "
                 + MorePaths.pathWithPlatformSeparators(
-                    getNonLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out2.txt")),
+                    getLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out2.txt")),
             ""),
         result.getStdout());
 
@@ -204,7 +196,7 @@ public class TargetsCommandIntegrationTest {
         linesToText(
             "//:test_multiple_outputs[out1] "
                 + MorePaths.pathWithPlatformSeparators(
-                    getNonLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out1.txt")),
+                    getLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out1.txt")),
             ""),
         result.getStdout());
   }
@@ -224,7 +216,7 @@ public class TargetsCommandIntegrationTest {
                 + MorePaths.pathWithPlatformSeparators(
                     tmp.getRoot()
                         .resolve(
-                            getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                            getLegacyGenDir("//:test_multiple_outputs", workspace)
                                 .resolve("out2.txt"))),
             ""),
         result.getStdout());
@@ -239,7 +231,7 @@ public class TargetsCommandIntegrationTest {
                 + MorePaths.pathWithPlatformSeparators(
                     tmp.getRoot()
                         .resolve(
-                            getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                            getLegacyGenDir("//:test_multiple_outputs", workspace)
                                 .resolve("out1.txt"))),
             ""),
         result.getStdout());
@@ -265,13 +257,13 @@ public class TargetsCommandIntegrationTest {
                 + MorePaths.pathWithPlatformSeparators(
                     tmp.getRoot()
                         .resolve(
-                            getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                            getLegacyGenDir("//:test_multiple_outputs", workspace)
                                 .resolve("out1.txt"))),
             "//:test_multiple_outputs[out2] "
                 + MorePaths.pathWithPlatformSeparators(
                     tmp.getRoot()
                         .resolve(
-                            getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                            getLegacyGenDir("//:test_multiple_outputs", workspace)
                                 .resolve("out2.txt"))),
             ""),
         result.getStdout());
@@ -310,7 +302,7 @@ public class TargetsCommandIntegrationTest {
         linesToText(
             "//:test_multiple_outputs "
                 + MorePaths.pathWithPlatformSeparators(
-                    getNonLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out1.txt")),
+                    getLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out1.txt")),
             ""),
         result.getStdout());
   }
@@ -1147,7 +1139,7 @@ public class TargetsCommandIntegrationTest {
         MorePaths.pathWithPlatformSeparators(
             tmp.getRoot()
                 .resolve(
-                    getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                    getLegacyGenDir("//:test_multiple_outputs", workspace)
                         .resolve("out2.txt")
                         .toString()));
     assertEquals(expectedPath, targetNode.get("buck.outputPaths").get("out2").get(0).asText());
@@ -1163,7 +1155,7 @@ public class TargetsCommandIntegrationTest {
         MorePaths.pathWithPlatformSeparators(
             tmp.getRoot()
                 .resolve(
-                    getNonLegacyGenDir("//:test_multiple_outputs", workspace)
+                    getLegacyGenDir("//:test_multiple_outputs", workspace)
                         .resolve("out1.txt")
                         .toString()));
     assertEquals(expectedPath, targetNode.get("buck.outputPaths").get("out1").get(0).asText());

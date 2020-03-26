@@ -684,7 +684,8 @@ public class JsBundleGenruleDescriptionTest {
 
     Path targetOutputPath =
         BuildPaths.removeHashFrom(
-                BuildPaths.getGenDir(setup.scenario.filesystem, setup.target).resolve("js"),
+                BuildTargetPaths.getGenPath(setup.scenario.filesystem, setup.target, "%s")
+                    .resolve("js"),
                 setup.target)
             .get();
     SourcePath outputPath = setup.genrule().getSourcePathToOutput();

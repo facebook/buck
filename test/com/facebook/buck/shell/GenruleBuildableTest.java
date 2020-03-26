@@ -49,7 +49,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.DefaultBuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
-import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.rules.modern.PublicOutputPath;
 import com.facebook.buck.shell.programrunner.DirectProgramRunner;
@@ -399,7 +398,6 @@ public class GenruleBuildableTest {
     ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(fakeProjectFileSystem, target);
-    Path rootPath = outputPathResolver.getRootPath();
 
     GenruleBuildable buildable =
         ImmutableGenruleBuildableBuilder.builder()
@@ -422,7 +420,10 @@ public class GenruleBuildableTest {
             .map(p -> outputPathResolver.resolvePath(p))
             .collect(ImmutableSet.toImmutableSet());
 
-    assertThat(actual, Matchers.containsInAnyOrder(rootPath.resolve("output2a")));
+    assertThat(
+        actual,
+        Matchers.containsInAnyOrder(
+            getGenruleOutputPath(fakeProjectFileSystem, target, "output2a", outputPathResolver)));
   }
 
   @Test
@@ -431,7 +432,6 @@ public class GenruleBuildableTest {
     ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(fakeProjectFileSystem, target);
-    Path rootPath = outputPathResolver.getRootPath();
 
     GenruleBuildable buildable =
         ImmutableGenruleBuildableBuilder.builder()
@@ -456,7 +456,9 @@ public class GenruleBuildableTest {
 
     assertThat(
         actual,
-        Matchers.containsInAnyOrder(rootPath.resolve("output1a"), rootPath.resolve("output1b")));
+        Matchers.containsInAnyOrder(
+            getGenruleOutputPath(fakeProjectFileSystem, target, "output1a", outputPathResolver),
+            getGenruleOutputPath(fakeProjectFileSystem, target, "output1b", outputPathResolver)));
   }
 
   @Test
@@ -531,7 +533,7 @@ public class GenruleBuildableTest {
   }
 
   @Test
-  public void outputPathsSetsOutToUnderscoresSuffixedOutputsDirectory() {
+  public void outputPathsSetsOutToOutputsDirectory() {
     BuildTarget target = BuildTargetFactory.newInstance("//example:genrule");
     ProjectFilesystem fakeProjectFileSystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
@@ -560,7 +562,9 @@ public class GenruleBuildableTest {
     assertThat(
         envVarsBuilder.build().get("OUT"),
         Matchers.equalTo(
-            fakeProjectFileSystem.resolve(outputPathResolver.getRootPath()).toString()));
+            fakeProjectFileSystem
+                .resolve(BuildTargetPaths.getGenPath(fakeProjectFileSystem, target, "%s"))
+                .toString()));
   }
 
   @Test
@@ -650,7 +654,7 @@ public class GenruleBuildableTest {
     expectedThrownException.expectMessage(
         String.format(
             "Expected file %s to be written from genrule //example:genrule. File was not present",
-            outputPathResolver.resolvePath(new OutputPath("output.txt"))));
+            getGenruleOutputPath(fakeProjectFileSystem, target, "output.txt", outputPathResolver)));
 
     GenruleBuildable buildable =
         ImmutableGenruleBuildableBuilder.builder()
@@ -854,5 +858,17 @@ public class GenruleBuildableTest {
             .toBuildable();
 
     assertEquals("foo", buildable.getOutputName(OutputLabel.defaultLabel()));
+  }
+
+  private static Path getGenruleOutputPath(
+      ProjectFilesystem filesystem,
+      BuildTarget buildTarget,
+      String outputName,
+      OutputPathResolver resolver) {
+    return resolver.resolvePath(
+        new PublicOutputPath(
+            BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                .resolve(outputName)
+                .normalize()));
   }
 }

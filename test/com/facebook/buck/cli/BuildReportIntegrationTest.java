@@ -141,7 +141,7 @@ public class BuildReportIntegrationTest {
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
             BuildTargetFactory.newInstance("//:rule_with_multiple_outputs"),
-            "%s__");
+            "%s");
     AbsPath buildReport = tmpFolderForBuildReport.getRoot().resolve("build-report.txt");
     workspace
         .runBuckBuild("--build-report", buildReport.toString(), "//:rule_with_multiple_outputs")

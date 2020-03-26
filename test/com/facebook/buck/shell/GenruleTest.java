@@ -1091,7 +1091,7 @@ public class GenruleTest {
   }
 
   private Path getExpectedPath(ProjectFilesystem filesystem, BuildTarget target, String path) {
-    return BuildTargetPaths.getGenPath(filesystem, target, "%s__").resolve(path);
+    return BuildTargetPaths.getGenPath(filesystem, target, "%s").resolve(path);
   }
 
   private ImmutableSet<Path> convertSourcePathsToPaths(

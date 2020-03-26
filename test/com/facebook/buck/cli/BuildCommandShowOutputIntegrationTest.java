@@ -59,7 +59,7 @@ public class BuildCommandShowOutputIntegrationTest {
         .getRootPath()
         .relativize(
             workspace
-                .getGenPath(BuildTargetFactory.newInstance(targetName), "%s__")
+                .getGenPath(BuildTargetFactory.newInstance(targetName), "%s")
                 .resolve(pathName));
   }
 
