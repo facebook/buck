@@ -18,6 +18,7 @@ java_library(
         "//third-party/java/log4j2:log4j2-api",
         "//third-party/java/log4j2:log4j2-core",
         "//third-party/java/nuprocess:nuprocess",
+        "//third-party/java/okhttp:okhttp",
         "//third-party/java/remote-apis:remote-apis",
     ],
 )

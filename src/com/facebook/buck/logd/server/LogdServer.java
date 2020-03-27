@@ -17,9 +17,11 @@
 package com.facebook.buck.logd.server;
 
 import com.facebook.buck.logd.LogDaemonException;
+import com.facebook.buck.logd.proto.CreateLogDirRequest;
 import com.facebook.buck.logd.proto.CreateLogRequest;
 import com.facebook.buck.logd.proto.CreateLogResponse;
 import com.facebook.buck.logd.proto.LogMessage;
+import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.logd.proto.LogdServiceGrpc;
 import com.facebook.buck.logd.proto.ShutdownRequest;
 import com.facebook.buck.util.ExitCode;
@@ -36,6 +38,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -130,10 +133,32 @@ public class LogdServer implements LogDaemonServer {
   }
 
   private static class LogdServiceImpl extends LogdServiceGrpc.LogdServiceImplBase {
+    private static final boolean IS_UPLOADING_LOG_TO_STORAGE =
+        Boolean.parseBoolean(System.getProperty("logd.manifold.upload", "false"));
+
+    static {
+      LOG.info("logd.manifold.upload: {}", IS_UPLOADING_LOG_TO_STORAGE);
+    }
+
     private final SettableFuture<Boolean> logdServiceFinished = SettableFuture.create();
     private final Map<Integer, BufferedWriter> logStreams = new ConcurrentHashMap<>();
-    private final Map<Integer, String> fileIdToPath = new ConcurrentHashMap<>();
     private final LogFileIdGenerator logFileIdGenerator = new LogFileIdGenerator();
+    private final Map<Integer, LogFileData> fileIdToFileData = new ConcurrentHashMap<>();
+
+    @Override
+    public void createLogDir(
+        CreateLogDirRequest createLogDirRequest, StreamObserver<Status> responseObserver) {
+      String buildId = createLogDirRequest.getBuildId();
+
+      if (IS_UPLOADING_LOG_TO_STORAGE) {
+        LogdUploader.sendCreateLogDirRequestToController(buildId);
+      }
+
+      // TODO(qahoang): Implement LogD so that it is responsible for creating log dir in
+      // file-system
+      responseObserver.onNext(Status.newBuilder().setCode(ExitCode.SUCCESS.getCode()).build());
+      responseObserver.onCompleted();
+    }
 
     /**
      * LogD opens a file upon request from client and returns a generated int identifier.
@@ -173,11 +198,11 @@ public class LogdServer implements LogDaemonServer {
         public void onNext(LogMessage logMessage) throws LogDaemonException {
           logId = logMessage.getLogId();
 
-          if (!fileIdToPath.containsKey(logId)) {
+          if (!fileIdToFileData.containsKey(logId)) {
             throw new LogDaemonException("The provided logFileId " + logId + " does not exist.");
           }
 
-          String path = fileIdToPath.get(logId);
+          String path = fileIdToFileData.get(logId).getLogFilePath();
           try {
             appendLog(logId, logMessage.getLogMessage());
           } catch (IOException e) {
@@ -195,7 +220,7 @@ public class LogdServer implements LogDaemonServer {
         public void onCompleted() {
           // if client calls onCompleted and closes the stream
           // then close FileOutputStream of corresponding StreamObserver
-          String logFilePath = fileIdToPath.remove(logId);
+          String logFilePath = fileIdToFileData.remove(logId).getLogFilePath();
           try {
             logStreams.remove(logId).close();
             LOG.info("LogD closed stream to log file at {}", logFilePath);
@@ -237,20 +262,39 @@ public class LogdServer implements LogDaemonServer {
      */
     private CreateLogResponse createFile(CreateLogRequest createLogRequest)
         throws LogDaemonException {
-      // TODO(qahoang): decide what to do with logType
       String filePath = createLogRequest.getLogFilePath();
       Path logFilePath = Paths.get(filePath);
+      String buildId = createLogRequest.getBuildId();
+      LogType logType = createLogRequest.getLogType();
 
       try {
         Files.createDirectories(logFilePath.getParent());
 
         int genFileId = logFileIdGenerator.generateFileId();
-        fileIdToPath.put(genFileId, filePath);
         logStreams.put(
             genFileId,
             Files.newBufferedWriter(
                 logFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND));
         LOG.info("LogD opened new writer stream to {}", logFilePath.toString());
+
+        int offset = 0;
+        if (IS_UPLOADING_LOG_TO_STORAGE) {
+          Optional<Integer> result =
+              LogdUploader.sendCreateLogFileRequestToController(buildId, logType);
+          if (result.isPresent()) {
+            offset = result.get();
+            LOG.info(
+                "LogD created a new log file of type '{}' in storage",
+                logType.getValueDescriptor().getName());
+          } else {
+            LOG.error(
+                "Failed to create new log file of type '{}' in storage",
+                logType.getValueDescriptor().getName());
+          }
+        }
+
+        LogFileData newFile = new LogFileData(genFileId, buildId, logType, filePath, offset);
+        fileIdToFileData.put(genFileId, newFile);
 
         return CreateLogResponse.newBuilder().setLogId(genFileId).build();
       } catch (IOException e) {
@@ -266,11 +310,16 @@ public class LogdServer implements LogDaemonServer {
     private void appendLog(int fileId, String message) throws IOException {
       BufferedWriter writer = logStreams.get(fileId);
       writer.write(message);
+
+      if (IS_UPLOADING_LOG_TO_STORAGE) {
+        LogFileData logFileData = fileIdToFileData.get(fileId);
+        LogdUploader.uploadLogToStorage(logFileData, message);
+      }
     }
 
     private void closeAllStreams() {
       for (Integer logFileId : logStreams.keySet()) {
-        String logFilePath = fileIdToPath.remove(logFileId);
+        String logFilePath = fileIdToFileData.remove(logFileId).getLogFilePath();
         BufferedWriter writer = logStreams.remove(logFileId);
         try {
           writer.close();

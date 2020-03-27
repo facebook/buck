@@ -83,17 +83,20 @@ public class LogdServerTest {
   public void createLogFile() {
     // This tests if a file is created upon a call to createLogFile to logD server
     // After logD successfully creates a file, it should return a response including a logFileId = 1
+    String fakeId = "fakeId";
     String firstFilePath = getTestFilePath("/logs/buck.log");
-    String secondFilePath = getTestFilePath("/logs/buck1.log");
+    String secondFilePath = getTestFilePath("/logs/critical_path.log");
 
     CreateLogRequest firstRequest =
         CreateLogRequest.newBuilder()
+            .setBuildId(fakeId)
             .setLogType(LogType.BUCK_LOG)
             .setLogFilePath(firstFilePath)
             .build();
     CreateLogRequest secondRequest =
         CreateLogRequest.newBuilder()
-            .setLogType(LogType.BUCK_LOG)
+            .setBuildId(fakeId)
+            .setLogType(LogType.CRITICAL_PATH_LOG)
             .setLogFilePath(secondFilePath)
             .build();
 
