@@ -17,12 +17,12 @@
 package com.facebook.buck.logd.client;
 
 import com.facebook.buck.logd.proto.LogType;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 
 /** A LogStreamFactory implementation that provides FileOutputStream for when LogD is not enabled */
 public class FileOutputStreamFactory implements LogStreamFactory {
@@ -32,6 +32,6 @@ public class FileOutputStreamFactory implements LogStreamFactory {
     Path logFilePath = Paths.get(path);
     Files.createDirectories(logFilePath.getParent());
 
-    return Files.newOutputStream(logFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+    return new FileOutputStream(path, true);
   }
 }
