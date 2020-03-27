@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import com.facebook.buck.logd.client.DefaultStreamObserverFactory;
 import com.facebook.buck.logd.client.LogDaemonClient;
 import com.facebook.buck.logd.client.LogdClient;
+import com.facebook.buck.logd.proto.CreateLogDirRequest;
 import com.facebook.buck.logd.proto.CreateLogRequest;
 import com.facebook.buck.logd.proto.CreateLogResponse;
 import com.facebook.buck.logd.proto.LogType;
@@ -70,6 +71,15 @@ public class LogdProviderTest {
     LogdServiceGrpc.LogdServiceImplBase createLogFileImpl =
         new LogdServiceGrpc.LogdServiceImplBase() {
           @Override
+          public void createLogDir(
+              CreateLogDirRequest createLogDirRequest, StreamObserver<Status> responseObserver) {
+            // do nothing
+            responseObserver.onNext(
+                Status.newBuilder().setCode(io.grpc.Status.Code.OK.value()).build());
+            responseObserver.onCompleted();
+          }
+
+          @Override
           public void createLogFile(
               CreateLogRequest request, StreamObserver<CreateLogResponse> responseObserver) {
             // first log file requested should have generated id = 1
@@ -92,9 +102,8 @@ public class LogdProviderTest {
       LogDaemonClient logdClient = logdProvider.getLogdClient().get();
       channel = logdClient.getChannel();
 
-      assertEquals(ConnectivityState.IDLE, channel.getState(true));
+      assertEquals(ConnectivityState.READY, channel.getState(true));
       assertEquals(1, logdClient.createLogFile(getTestFilePath(), LogType.BUCK_LOG));
-      assertEquals(ConnectivityState.READY, channel.getState(false));
     } catch (IOException e) {
       throw new AssertionError("Process fails to run", e);
     }

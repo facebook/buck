@@ -74,6 +74,7 @@ public class LogdProvider implements AutoCloseable {
             new InputStreamReader(logdProcess.getInputStream(), StandardCharsets.UTF_8))) {
       int logdServerPort = Integer.parseInt(bufferedReader.readLine());
       logdClient = createLogdClient(logdServerPort, buildId);
+      logdClient.createLogDir();
     } catch (Exception e) {
       throw new IOException("Failed to read port info from running external logd process", e);
     }
