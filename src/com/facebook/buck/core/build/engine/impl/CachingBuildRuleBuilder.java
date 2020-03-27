@@ -764,8 +764,7 @@ class CachingBuildRuleBuilder {
           buildTimestampsMillis == null
               ? -1
               : buildTimestampsMillis.getSecond() - buildTimestampsMillis.getFirst();
-      buildRuleBuilderDelegate.addAsyncCallback(
-          buildCacheArtifactUploader.uploadToCache(success, buildTimeMs));
+      buildCacheArtifactUploader.uploadToCache(success, buildTimeMs).get();
     } catch (Throwable t) {
       eventBus.post(ThrowableConsoleEvent.create(t, "Error uploading to cache for %s.", rule));
     }
