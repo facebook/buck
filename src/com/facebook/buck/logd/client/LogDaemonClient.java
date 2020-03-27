@@ -62,9 +62,9 @@ public interface LogDaemonClient {
    */
   LogdStream openLog(int logFileId) throws LogDaemonException;
 
-  /** close all existing channels to logD server */
+  /** Close all existing channels to logD server */
   void shutdown();
 
-  /** Sends a request to LogD signaling a server shutdown. */
+  /** Client closes all existing streams and sends a request to LogD signaling a server shutdown. */
   void requestLogdServerShutdown();
 }

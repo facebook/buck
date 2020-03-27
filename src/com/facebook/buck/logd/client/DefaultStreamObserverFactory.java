@@ -16,13 +16,14 @@
 
 package com.facebook.buck.logd.client;
 
-import com.facebook.buck.core.util.log.Logger;
 import com.google.rpc.Status;
 import io.grpc.stub.StreamObserver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /** A production implementation of StreamObserverFactory */
 public class DefaultStreamObserverFactory implements StreamObserverFactory {
-  private static final Logger LOG = Logger.get(DefaultStreamObserverFactory.class.getName());
+  private static final Logger LOG = LogManager.getLogger(DefaultStreamObserverFactory.class);
 
   @Override
   public StreamObserver<Status> createStreamObserver(String path) {
@@ -34,12 +35,12 @@ public class DefaultStreamObserverFactory implements StreamObserverFactory {
 
       @Override
       public void onError(Throwable t) {
-        LOG.error(t, "LogD failed to send a response: " + io.grpc.Status.fromThrowable(t));
+        LOG.error("LogD failed to send a response: " + io.grpc.Status.fromThrowable(t), t);
       }
 
       @Override
       public void onCompleted() {
-        LOG.info("LogD closing stream to " + path);
+        LOG.info("LogD closing stream to {}", path);
       }
     };
   }

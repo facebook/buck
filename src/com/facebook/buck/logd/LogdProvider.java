@@ -94,6 +94,9 @@ public class LogdProvider implements AutoCloseable {
     if (getLogdClient().isPresent()) {
       LOG.info("Shutting down LogD...");
       logdClient.requestLogdServerShutdown();
+      // several logd responses might still be in-flight and shutting down client channel
+      // will raise grpc errors complaining server failed to respond in time
+      // let's ignore these for now
       logdClient.shutdown();
 
       try {

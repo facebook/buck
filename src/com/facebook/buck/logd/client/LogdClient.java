@@ -125,7 +125,6 @@ public class LogdClient implements LogDaemonClient {
 
   @Override
   public void shutdown() {
-    closeAllStreams();
     try {
       LOG.info(
           "Awaiting termination of channel to logD server. Waiting for up to {} seconds...",
@@ -195,14 +194,14 @@ public class LogdClient implements LogDaemonClient {
   }
 
   @Override
-  public void requestLogdServerShutdown() throws LogDaemonException {
+  public void requestLogdServerShutdown() {
     try {
+      closeAllStreams();
       // Client sends an empty message request to signal LogD to shutdown its server
       // We do not care about the status response for now
       blockingStub.shutdownServer(ShutdownRequest.newBuilder().build());
     } catch (StatusRuntimeException e) {
       LOG.error("LogD failed to return a response: {}", e.getStatus(), e);
-      throw new LogDaemonException(e, "LogD failed to return a response: %s", e.getStatus());
     }
   }
 

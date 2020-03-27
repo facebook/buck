@@ -62,6 +62,10 @@ public class LogdStream extends OutputStream {
 
   @Override
   public synchronized void write(int b) {
+    if (hasBeenClosed.get()) {
+      return;
+    }
+
     if (count >= buf.length) {
       flushBuffer();
     }
@@ -78,7 +82,9 @@ public class LogdStream extends OutputStream {
 
   @Override
   public void flush() {
-    flushBuffer();
+    if (!hasBeenClosed.get()) {
+      flushBuffer();
+    }
   }
 
   @Override
