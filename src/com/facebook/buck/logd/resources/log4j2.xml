@@ -3,7 +3,7 @@
     <Properties>
         <Property name="pattern">%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
         <Property name="logFileName">logd</Property>
-        <Property name="logPath">logd-out</Property>
+        <Property name="logPath">${sys:java.io.tmpdir}/logd-out</Property>
     </Properties>
 
     <Appenders>

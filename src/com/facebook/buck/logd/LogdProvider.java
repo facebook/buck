@@ -16,6 +16,7 @@
 
 package com.facebook.buck.logd;
 
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.logd.client.LogDaemonClient;
 import com.facebook.buck.logd.client.LogdClient;
 import com.facebook.buck.util.BgProcessKiller;
@@ -28,12 +29,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 /** Starts LogD when buck process runs and shuts down LogD when buck process ends. */
 public class LogdProvider implements AutoCloseable {
-  private static final Logger LOG = LogManager.getLogger(LogdProvider.class);
+  private static final Logger LOG = Logger.get(LogdProvider.class);
   private static final int LOGD_PROCESS_TIMEOUT_MS = 500;
   private static final Path PATH_TO_LOGD_PEX =
       Paths.get(
@@ -100,7 +99,7 @@ public class LogdProvider implements AutoCloseable {
       try {
         logdProcess.waitFor(LOGD_PROCESS_TIMEOUT_MS, TimeUnit.MILLISECONDS);
       } catch (InterruptedException e) {
-        LOG.info("LogD process got interrupted...", e);
+        LOG.info("LogD process got interrupted...");
         Thread.currentThread().interrupt();
       } finally {
         logdProcess.destroy();
