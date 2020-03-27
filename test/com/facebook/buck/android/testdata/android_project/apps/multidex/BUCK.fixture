@@ -867,7 +867,7 @@ genrule(
            "$(location :app_with_big_r_dot_java)/classes.dex > $OUT",
 )
 
-for i in (2,3,4):
+for i in (2,3):
     genrule(
         name = "disassemble_big_r_dot_java_classes%d" % i,
         out = "big_r_dot_java_secondary.txt",

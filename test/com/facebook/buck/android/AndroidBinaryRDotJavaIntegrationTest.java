@@ -249,8 +249,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
         workspace.buildMultipleAndReturnOutputs(
             "//apps/multidex:disassemble_big_r_dot_java_primary",
             "//apps/multidex:disassemble_big_r_dot_java_classes2",
-            "//apps/multidex:disassemble_big_r_dot_java_classes3",
-            "//apps/multidex:disassemble_big_r_dot_java_classes4");
+            "//apps/multidex:disassemble_big_r_dot_java_classes3");
 
     Set<String> primaryClasses =
         ImmutableSet.copyOf(
@@ -264,8 +263,6 @@ public class AndroidBinaryRDotJavaIntegrationTest {
     // Better would be to use ZipInspector to count the dexes, verify there are at least 2,
     // and use baksmali directly to diassemble them.  The last part turns out to be the trickiest
     // because baksmali is shipped as an uber-jar.
-    // TODO: Use DexInspector, note: DexInspector.assertTypeExists returns true
-    //       if a type is only referenced by a dex?
     Set<String> secondary2Classes =
         ImmutableSet.copyOf(
             filesystem.readLines(
@@ -274,12 +271,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
         ImmutableSet.copyOf(
             filesystem.readLines(
                 outputs.get("//apps/multidex:disassemble_big_r_dot_java_classes3")));
-    Set<String> secondary4Classes =
-        ImmutableSet.copyOf(
-            filesystem.readLines(
-                outputs.get("//apps/multidex:disassemble_big_r_dot_java_classes4")));
-    Set<String> secondaryClasses =
-        Sets.union(Sets.union(secondary2Classes, secondary3Classes), secondary4Classes);
+    Set<String> secondaryClasses = Sets.union(secondary2Classes, secondary3Classes);
     assertThat(secondaryClasses, hasItem("Lcom/secondary1/R$id;"));
     assertThat(secondaryClasses, hasItem("Lcom/secondary1/R$string;"));
     assertThat(secondaryClasses, hasItem("Lcom/secondary1/R$color;"));
