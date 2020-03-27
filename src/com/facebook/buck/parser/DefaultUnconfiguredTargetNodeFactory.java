@@ -48,7 +48,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -94,26 +93,19 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       RawTargetNode attrs,
       CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
-    TwoArraysImmutableHashMap.Builder<String, Object> result = TwoArraysImmutableHashMap.builder();
     DataTransferObjectDescriptor<?> constructorDescriptor =
         descriptor.dataTransferObjectDescriptor(typeCoercerFactory);
-    for (Map.Entry<String, Object> attr : attrs.getAttrs().entrySet()) {
-      ParamInfo<?> paramInfo =
-          constructorDescriptor.getParamsInfo().getByCamelCaseName(attr.getKey());
-      Preconditions.checkNotNull(
-          paramInfo, "cannot find param info for arg %s of target %s", attr.getKey(), target);
-      result.put(
-          attr.getKey(),
-          convertSelectorListInAttrValue(
-              cell,
-              target,
-              paramInfo,
-              attr.getKey(),
-              attr.getValue(),
-              pathRelativeToProjectRoot,
-              dependencyStack));
-    }
-    return result.build();
+
+    return attrs
+        .getAttrs()
+        .mapValues(
+            (k, v) -> {
+              ParamInfo<?> paramInfo = constructorDescriptor.getParamsInfo().getByCamelCaseName(k);
+              Preconditions.checkNotNull(
+                  paramInfo, "cannot find param info for arg %s of target %s", k, target);
+              return (convertSelectorListInAttrValue(
+                  cell, target, paramInfo, k, v, pathRelativeToProjectRoot, dependencyStack));
+            });
   }
 
   /**
