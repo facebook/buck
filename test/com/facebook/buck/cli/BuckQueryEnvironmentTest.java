@@ -29,7 +29,9 @@ import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwar
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -117,6 +119,8 @@ public class BuckQueryEnvironmentTest {
     ExecutableFinder executableFinder = new ExecutableFinder();
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     ParserConfig parserConfig = cells.getRootCell().getBuckConfig().getView(ParserConfig.class);
+    UnconfiguredBuildTargetViewFactory buildTargetViewFactory =
+        new ParsingUnconfiguredBuildTargetViewFactory();
     PerBuildStateFactory perBuildStateFactory =
         new PerBuildStateFactory(
             typeCoercerFactory,
@@ -125,7 +129,7 @@ public class BuckQueryEnvironmentTest {
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
-            new ParsingUnconfiguredBuildTargetViewFactory(),
+            buildTargetViewFactory,
             UnconfiguredTargetConfiguration.INSTANCE);
     Parser parser =
         TestParserFactory.create(
@@ -137,6 +141,9 @@ public class BuckQueryEnvironmentTest {
                 .build(),
             parser.getPermState());
 
+    TargetConfigurationFactory targetConfigurationFactory =
+        new TargetConfigurationFactory(
+            buildTargetViewFactory, cells.getRootCell().getCellPathResolver());
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
             cells.getRootCell(),
@@ -158,6 +165,7 @@ public class BuckQueryEnvironmentTest {
             ownersReportBuilder,
             parser,
             parserState,
+            targetConfigurationFactory,
             targetPatternEvaluator,
             eventBus,
             TYPE_COERCER_FACTORY);

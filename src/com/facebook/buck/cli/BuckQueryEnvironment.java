@@ -26,9 +26,11 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -53,6 +55,7 @@ import com.facebook.buck.query.AllPathsFunction;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.AttrRegexFilterFunction;
 import com.facebook.buck.query.BuildFileFunction;
+import com.facebook.buck.query.ConfigFunction;
 import com.facebook.buck.query.DepsFunction;
 import com.facebook.buck.query.FilterFunction;
 import com.facebook.buck.query.InputsFunction;
@@ -116,6 +119,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
           new AttrFilterFunction<>(),
           new AttrRegexFilterFunction<>(),
           new BuildFileFunction<>(),
+          new ConfigFunction<>(),
           new DepsFunction<>(),
           new DepsFunction.FirstOrderDepsFunction<>(),
           new DepsFunction.LookupFunction<>(),
@@ -131,6 +135,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   private final PerBuildState parserState;
   private final Cell rootCell;
   private final OwnersReport.Builder ownersReportBuilder;
+  private final TargetConfigurationFactory targetConfigurationFactory;
   private final TargetPatternEvaluator targetPatternEvaluator;
   private final BuckEventBus eventBus;
   private final QueryEnvironment.TargetEvaluator<QueryTarget> queryTargetEvaluator;
@@ -151,12 +156,14 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
       Builder ownersReportBuilder,
       Parser parser,
       PerBuildState parserState,
+      TargetConfigurationFactory targetConfigurationFactory,
       TargetPatternEvaluator targetPatternEvaluator,
       BuckEventBus eventBus,
       TypeCoercerFactory typeCoercerFactory) {
     this.parser = parser;
     this.eventBus = eventBus;
     this.parserState = parserState;
+    this.targetConfigurationFactory = targetConfigurationFactory;
     this.rootCell = rootCell;
     this.ownersReportBuilder = ownersReportBuilder;
     this.buildFileTrees =
@@ -181,6 +188,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
       OwnersReport.Builder ownersReportBuilder,
       Parser parser,
       PerBuildState parserState,
+      TargetConfigurationFactory targetConfigurationFactory,
       TargetPatternEvaluator targetPatternEvaluator,
       BuckEventBus eventBus,
       TypeCoercerFactory typeCoercerFactory) {
@@ -189,6 +197,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
         ownersReportBuilder,
         parser,
         parserState,
+        targetConfigurationFactory,
         targetPatternEvaluator,
         eventBus,
         typeCoercerFactory);
@@ -206,6 +215,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
             params.getTargetConfiguration()),
         params.getParser(),
         parserState,
+        params.getTargetConfigurationFactory(),
         new TargetPatternEvaluator(
             params.getCells().getRootCell(),
             params.getClientWorkingDir(),
@@ -566,6 +576,28 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
         .getNonFileInputs()
         .forEach(path -> eventBus.post(ConsoleEvent.warning("%s is not a regular file", path)));
     return ImmutableSet.copyOf(getTargetsFromTargetNodes(report.owners.keySet()));
+  }
+
+  @Override
+  public ImmutableSet<QueryTarget> getConfiguredTargets(
+      Set<QueryTarget> targets, Optional<String> configurationName) throws QueryException {
+    // TODO(srice): When this is empty, we should use the default_target_platform of the target
+    if (!configurationName.isPresent()) {
+      throw new QueryException("Must pass configuration to `config()` function");
+    }
+    ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
+    for (QueryTarget target : targets) {
+      if (!(target instanceof QueryBuildTarget)) {
+        continue;
+      }
+      BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+      TargetConfiguration configuration =
+          targetConfigurationFactory.create(configurationName.get());
+      BuildTarget reconfiguredBuildTarget =
+          buildTarget.getUnconfiguredBuildTarget().configure(configuration);
+      builder.add(getOrCreateQueryBuildTarget(reconfiguredBuildTarget));
+    }
+    return builder.build();
   }
 
   @Override

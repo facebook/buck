@@ -185,6 +185,12 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryT
   }
 
   @Override
+  public ImmutableSet<QueryTarget> getConfiguredTargets(
+      Set<QueryTarget> targets, Optional<String> configuration) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute) {
     return QueryTargetAccessor.getTargetsInAttribute(
         typeCoercerFactory, getNode(target), attribute, cellNameResolver);

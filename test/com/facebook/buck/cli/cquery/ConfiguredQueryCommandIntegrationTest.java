@@ -66,7 +66,6 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void configFunctionConfiguresTargetForSpecificPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);

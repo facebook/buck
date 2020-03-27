@@ -33,6 +33,7 @@ package com.facebook.buck.query;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -261,6 +262,13 @@ public interface QueryEnvironment<NODE_TYPE> {
 
   /** Returns the targets that own one or more of the given files. */
   Set<NODE_TYPE> getFileOwners(ImmutableList<String> files) throws QueryException;
+
+  /**
+   * Returns a set of targets equal to the input targets except configured for `configuration`
+   * instead (or the default target platform if no configuration is provided)
+   */
+  Set<NODE_TYPE> getConfiguredTargets(Set<NODE_TYPE> targets, Optional<String> configuration)
+      throws QueryException;
 
   /**
    * Returns the existing targets in the value of `attribute` of the given `target`.

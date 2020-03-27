@@ -17,6 +17,7 @@
 package com.facebook.buck.query;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -74,6 +75,12 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
 
   @Override
   public Set<NODE_TYPE> getFileOwners(ImmutableList<String> files) throws QueryException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Set<NODE_TYPE> getConfiguredTargets(
+      Set<NODE_TYPE> targets, Optional<String> configuration) {
     throw new UnsupportedOperationException();
   }
 

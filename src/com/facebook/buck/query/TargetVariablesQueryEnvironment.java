@@ -18,6 +18,7 @@ package com.facebook.buck.query;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -85,6 +86,12 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
   @Override
   public Set<NODE_TYPE> getFileOwners(ImmutableList<String> files) throws QueryException {
     return delegate.getFileOwners(files);
+  }
+
+  @Override
+  public Set<NODE_TYPE> getConfiguredTargets(Set<NODE_TYPE> targets, Optional<String> configuration)
+      throws QueryException {
+    return delegate.getConfiguredTargets(targets, configuration);
   }
 
   @Override
