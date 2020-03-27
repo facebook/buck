@@ -638,6 +638,8 @@ public class SkylarkUserDefinedRulesParserTest {
             RawTargetNode.copyOf(
                 ForwardRelativePath.of("subdir"),
                 "//subdir:foo.bzl:some_rule",
+                ImmutableList.of(),
+                ImmutableList.of(),
                 ImmutableMap.<String, Object>builder()
                     .put("name", "target1")
                     .put("attr1", 3)
@@ -669,6 +671,8 @@ public class SkylarkUserDefinedRulesParserTest {
             RawTargetNode.copyOf(
                 ForwardRelativePath.of("subdir"),
                 "//subdir:foo.bzl:some_rule",
+                ImmutableList.of(),
+                ImmutableList.of(),
                 ImmutableMap.<String, Object>builder()
                     .put("name", "target1")
                     .put("attr1", 3)
@@ -682,6 +686,8 @@ public class SkylarkUserDefinedRulesParserTest {
             RawTargetNode.copyOf(
                 ForwardRelativePath.of("subdir"),
                 "//subdir:foo.bzl:some_rule",
+                ImmutableList.of(),
+                ImmutableList.of(),
                 ImmutableMap.<String, Object>builder()
                     .put("name", "target2")
                     .put("attr1", 4)

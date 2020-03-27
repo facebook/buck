@@ -131,11 +131,15 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
                 RawTargetNode.of(
                     ForwardRelativePath.EMPTY,
                     "java_library",
+                    ImmutableList.of(),
+                    ImmutableList.of(),
                     TwoArraysImmutableHashMap.copyOf(rawAttributes1)),
                 "target2",
                 RawTargetNode.of(
                     ForwardRelativePath.EMPTY,
                     "java_library",
+                    ImmutableList.of(),
+                    ImmutableList.of(),
                     TwoArraysImmutableHashMap.copyOf(rawAttributes2))),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),

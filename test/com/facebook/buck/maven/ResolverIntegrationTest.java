@@ -213,7 +213,7 @@ public class ResolverIntegrationTest {
     assertNull(rule.get("sourceJar"));
 
     // It's a library that's requested on the CLI, so it gets full visibility.
-    assertEquals(ImmutableList.of("PUBLIC"), rule.get("visibility"));
+    assertEquals(ImmutableList.of("PUBLIC"), rule.getVisibility());
 
     // And it doesn't depend on anything
     assertNull(rule.get("deps"));
@@ -250,8 +250,7 @@ public class ResolverIntegrationTest {
                 .getTargets()
                 .values());
 
-    @SuppressWarnings("unchecked")
-    List<String> visibility = (List<String>) noDeps.get("visibility");
+    List<String> visibility = noDeps.getVisibility();
     assertEquals(1, visibility.size());
     assertEquals(
         ImmutableList.of(
@@ -259,7 +258,7 @@ public class ResolverIntegrationTest {
         visibility);
     assertNull(noDeps.get("deps"));
 
-    assertEquals(ImmutableList.of("PUBLIC"), withDeps.get("visibility"));
+    assertEquals(ImmutableList.of("PUBLIC"), withDeps.getVisibility());
     @SuppressWarnings("unchecked")
     List<String> deps = (List<String>) withDeps.get("deps");
     assertEquals(1, deps.size());

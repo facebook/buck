@@ -32,6 +32,7 @@ import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.skylark.io.GlobSpec;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -106,11 +107,19 @@ public class BuildFileManifestCacheTest {
     ImmutableMap<String, RawTargetNode> targets =
         ImmutableMap.of(
             "target1",
-            RawTargetNode.copyOf(
-                ForwardRelativePath.EMPTY, "java_library", ImmutableMap.of("key1", "val1")),
+            RawTargetNode.of(
+                ForwardRelativePath.EMPTY,
+                "java_library",
+                ImmutableList.of(),
+                ImmutableList.of(),
+                TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("key1", "val1"))),
             "target2",
-            RawTargetNode.copyOf(
-                ForwardRelativePath.EMPTY, "java_library", ImmutableMap.of("key2", 2)));
+            RawTargetNode.of(
+                ForwardRelativePath.EMPTY,
+                "java_library",
+                ImmutableList.of(),
+                ImmutableList.of(),
+                TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("key2", 2))));
     ImmutableSortedSet<String> includes =
         ImmutableSortedSet.of(includesFolder.resolve("include1.bzl").toString());
     ImmutableMap<String, Object> configs = ImmutableMap.of("config1", "cval1");

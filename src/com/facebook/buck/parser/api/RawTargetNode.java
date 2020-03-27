@@ -20,6 +20,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -29,6 +30,10 @@ public abstract class RawTargetNode {
   public abstract ForwardRelativePath getBasePath();
 
   public abstract String getBuckType();
+
+  public abstract ImmutableList<String> getVisibility();
+
+  public abstract ImmutableList<String> getWithinView();
 
   public abstract TwoArraysImmutableHashMap<String, Object> getAttrs();
 
@@ -40,13 +45,19 @@ public abstract class RawTargetNode {
   public static RawTargetNode of(
       ForwardRelativePath basePath,
       String buckType,
+      ImmutableList<String> visibility,
+      ImmutableList<String> withinView,
       TwoArraysImmutableHashMap<String, Object> attrs) {
     Preconditions.checkArgument(!buckType.isEmpty());
-    return ImmutableRawTargetNode.ofImpl(basePath, buckType, attrs);
+    return ImmutableRawTargetNode.ofImpl(basePath, buckType, visibility, withinView, attrs);
   }
 
   public static RawTargetNode copyOf(
-      ForwardRelativePath basePath, String buckType, Map<String, Object> attrs) {
-    return of(basePath, buckType, TwoArraysImmutableHashMap.copyOf(attrs));
+      ForwardRelativePath basePath,
+      String buckType,
+      ImmutableList<String> visibility,
+      ImmutableList<String> withinView,
+      Map<String, Object> attrs) {
+    return of(basePath, buckType, visibility, withinView, TwoArraysImmutableHashMap.copyOf(attrs));
   }
 }

@@ -34,6 +34,8 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.api.RawTargetNode;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;
@@ -72,7 +74,12 @@ public class BuiltTargetVerifierTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("a"), "b"))),
-        RawTargetNode.copyOf(ForwardRelativePath.EMPTY, "java_library", ImmutableMap.of()));
+        RawTargetNode.of(
+            ForwardRelativePath.EMPTY,
+            "java_library",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of())));
   }
 
   @Test
@@ -90,7 +97,12 @@ public class BuiltTargetVerifierTest {
         Paths.get("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new NonFlavoredDescription(),
-        RawTargetNode.copyOf(ForwardRelativePath.EMPTY, "java_library", ImmutableMap.of()));
+        RawTargetNode.of(
+            ForwardRelativePath.EMPTY,
+            "java_library",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of())));
   }
 
   @Test
@@ -109,8 +121,12 @@ public class BuiltTargetVerifierTest {
         Paths.get("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
-        RawTargetNode.copyOf(
-            ForwardRelativePath.EMPTY, "java_library", ImmutableMap.of("attribute", "value")));
+        RawTargetNode.of(
+            ForwardRelativePath.EMPTY,
+            "java_library",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("attribute", "value"))));
   }
 
   @Test
@@ -129,10 +145,12 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
-        RawTargetNode.copyOf(
+        RawTargetNode.of(
             ForwardRelativePath.of("z/y/z"),
             "java_library",
-            ImmutableMap.of("name", "target_name")));
+            ImmutableList.of(),
+            ImmutableList.of(),
+            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("name", "target_name"))));
   }
 
   @Test
@@ -150,8 +168,12 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
-        RawTargetNode.copyOf(
-            ForwardRelativePath.of("a/b"), "java_library", ImmutableMap.of("name", "target_name")));
+        RawTargetNode.of(
+            ForwardRelativePath.of("a/b"),
+            "java_library",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("name", "target_name"))));
   }
 
   @Test
@@ -165,8 +187,12 @@ public class BuiltTargetVerifierTest {
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
         new FlavoredDescription(
             new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("d"), "b"))),
-        RawTargetNode.copyOf(
-            ForwardRelativePath.of("a/b"), "java_library", ImmutableMap.of("name", "c")));
+        RawTargetNode.of(
+            ForwardRelativePath.of("a/b"),
+            "java_library",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("name", "c"))));
   }
 
   @Test
@@ -179,8 +205,12 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new NonFlavoredDescription(),
-        RawTargetNode.copyOf(
-            ForwardRelativePath.of("a/b"), "java_library", ImmutableMap.of("name", "c")));
+        RawTargetNode.of(
+            ForwardRelativePath.of("a/b"),
+            "java_library",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("name", "c"))));
   }
 
   private static class FlavoredDescription

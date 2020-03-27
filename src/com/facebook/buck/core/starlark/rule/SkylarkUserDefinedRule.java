@@ -23,6 +23,7 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.rules.coercer.ParamsInfo;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
@@ -94,6 +95,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   protected Object call(Object[] args, @Nullable FuncallExpression ast, Environment env)
       throws EvalException, InterruptedException {
     // We're being called directly somewhere that is not in the parser (e.g. with Location.BuiltIn)
@@ -112,6 +114,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
             .getPackageIdentifier()
             .getPackageFragment()
             .getPathString();
+    ImmutableList<String> visibility = ImmutableList.of();
+    ImmutableList<String> withinView = ImmutableList.of();
     TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
     /**
      * We can iterate through linearly because the calling conventions of {@link BaseFunction} are
@@ -121,11 +125,23 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
      */
     int i = 0;
     for (String name : names) {
-      builder.put(name, args[i]);
+      if (name.equals(VisibilityAttributes.VISIBILITY)) {
+        visibility = (ImmutableList<String>) args[i];
+      } else if (name.equals(VisibilityAttributes.WITHIN_VIEW)) {
+        withinView = (ImmutableList<String>) args[i];
+      } else {
+        builder.put(name, args[i]);
+      }
       i++;
     }
     parseContext.recordRule(
-        RecordedRule.of(ForwardRelativePath.of(basePath), this.getName(), builder.build()), ast);
+        RecordedRule.of(
+            ForwardRelativePath.of(basePath),
+            this.getName(),
+            visibility,
+            withinView,
+            builder.build()),
+        ast);
     return Runtime.NONE;
   }
 

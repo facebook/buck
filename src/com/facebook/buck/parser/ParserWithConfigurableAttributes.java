@@ -47,6 +47,7 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercer;
 import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
 import com.facebook.buck.rules.coercer.concat.SingleElementJsonTypeConcatenatingCoercer;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -188,6 +189,12 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         targetNode.getBuildTarget().getBaseName().getPath().toString());
     convertedAttributes.put(
         InternalTargetAttributeNames.BUCK_TYPE, targetNode.getRuleType().getName());
+    if (!attributes.getVisibility().isEmpty()) {
+      convertedAttributes.put(VisibilityAttributes.VISIBILITY, attributes.getVisibility());
+    }
+    if (!attributes.getWithinView().isEmpty()) {
+      convertedAttributes.put(VisibilityAttributes.WITHIN_VIEW, attributes.getWithinView());
+    }
     return convertedAttributes;
   }
 

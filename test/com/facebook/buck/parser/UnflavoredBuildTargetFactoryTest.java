@@ -25,6 +25,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
 import java.util.Map;
@@ -59,7 +61,12 @@ public class UnflavoredBuildTargetFactoryTest {
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
-        RawTargetNode.copyOf(ForwardRelativePath.of(base_path), "java_library", malformedMap),
+        RawTargetNode.of(
+            ForwardRelativePath.of(base_path),
+            "java_library",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            TwoArraysImmutableHashMap.copyOf(malformedMap)),
         buildFilePath);
   }
 
@@ -75,7 +82,12 @@ public class UnflavoredBuildTargetFactoryTest {
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
-        RawTargetNode.copyOf(ForwardRelativePath.EMPTY, "java_library", malformedMap),
+        RawTargetNode.of(
+            ForwardRelativePath.EMPTY,
+            "java_library",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            TwoArraysImmutableHashMap.copyOf(malformedMap)),
         buildFilePath);
   }
 
@@ -94,7 +106,12 @@ public class UnflavoredBuildTargetFactoryTest {
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
-        RawTargetNode.copyOf(ForwardRelativePath.EMPTY, "java_library", malformedMap),
+        RawTargetNode.of(
+            ForwardRelativePath.EMPTY,
+            "java_library",
+            ImmutableList.of(),
+            ImmutableList.of(),
+            TwoArraysImmutableHashMap.copyOf(malformedMap)),
         buildFilePath);
   }
 }

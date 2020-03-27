@@ -20,6 +20,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 /** Rule representation internal to Starlark parser. */
 @BuckStyleValue
@@ -28,13 +29,19 @@ public abstract class RecordedRule {
 
   public abstract String getBuckType();
 
+  public abstract ImmutableList<String> getVisibility();
+
+  public abstract ImmutableList<String> getWithinView();
+
   public abstract TwoArraysImmutableHashMap<String, Object> getRawRule();
 
   public static RecordedRule of(
       ForwardRelativePath basePath,
       String buckType,
+      ImmutableList<String> visibility,
+      ImmutableList<String> withinView,
       TwoArraysImmutableHashMap<String, Object> args) {
     Preconditions.checkArgument(!buckType.isEmpty());
-    return ImmutableRecordedRule.ofImpl(basePath, buckType, args);
+    return ImmutableRecordedRule.ofImpl(basePath, buckType, visibility, withinView, args);
   }
 }

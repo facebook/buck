@@ -153,6 +153,8 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
                   RawTargetNode.of(
                       r.getBasePath(),
                       r.getBuckType(),
+                      r.getVisibility(),
+                      r.getWithinView(),
                       (TwoArraysImmutableHashMap<String, Object>)
                           getBuildFileManifestPojoizer().convertToPojo(r.getRawRule())));
 

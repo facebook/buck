@@ -46,6 +46,7 @@ import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreSuppliers;
@@ -541,16 +542,23 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     return builder.build();
   }
 
+  @SuppressWarnings("unchecked")
   private static RawTargetNode convertSelectableAttributes(Map<String, Object> values) {
     TwoArraysImmutableHashMap.Builder<String, Object> attrs = TwoArraysImmutableHashMap.builder();
 
     ForwardRelativePath basePath = null;
     String type = null;
+    ImmutableList<String> visibility = ImmutableList.of();
+    ImmutableList<String> withinView = ImmutableList.of();
     for (Map.Entry<String, Object> entry : values.entrySet()) {
       if (entry.getKey().equals(InternalTargetAttributeNames.BASE_PATH)) {
         basePath = ForwardRelativePath.of((String) entry.getValue());
       } else if (entry.getKey().equals(InternalTargetAttributeNames.BUCK_TYPE)) {
         type = (String) entry.getValue();
+      } else if (entry.getKey().equals(VisibilityAttributes.VISIBILITY)) {
+        visibility = (ImmutableList<String>) entry.getValue();
+      } else if (entry.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
+        withinView = (ImmutableList<String>) entry.getValue();
       } else {
         attrs.put(
             entry.getKey(),
@@ -561,7 +569,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     Preconditions.checkNotNull(type);
     Preconditions.checkNotNull(basePath);
 
-    return RawTargetNode.of(basePath, type, attrs.build());
+    return RawTargetNode.of(basePath, type, visibility, withinView, attrs.build());
   }
 
   /**

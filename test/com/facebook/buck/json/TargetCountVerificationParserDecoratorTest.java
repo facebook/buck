@@ -68,7 +68,14 @@ public class TargetCountVerificationParserDecoratorTest {
     ImmutableMap.Builder<String, RawTargetNode> builder =
         ImmutableMap.builderWithExpectedSize(names.length);
     for (String name : names) {
-      builder.put(name, RawTargetNode.copyOf(ForwardRelativePath.EMPTY, "java_library", retMap1));
+      builder.put(
+          name,
+          RawTargetNode.copyOf(
+              ForwardRelativePath.EMPTY,
+              "java_library",
+              ImmutableList.of(),
+              ImmutableList.of(),
+              retMap1));
     }
 
     rawTargets = builder.build();

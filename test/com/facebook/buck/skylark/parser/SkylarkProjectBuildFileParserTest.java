@@ -143,9 +143,7 @@ public class SkylarkProjectBuildFileParserTest {
         Type.STRING_LIST.convert(rule.get("licenses"), "license"),
         equalTo(ImmutableList.of("LICENSE")));
     assertThat(rule.get("sourceJar"), equalTo("guava-sources.jar"));
-    assertThat(
-        Type.STRING_LIST.convert(rule.get("visibility"), "PUBLIC"),
-        equalTo(ImmutableList.of("PUBLIC")));
+    assertThat(rule.getVisibility(), equalTo(ImmutableList.of("PUBLIC")));
     assertThat(rule.getBasePath().toString(), equalTo("src/test"));
   }
 

@@ -44,6 +44,7 @@ import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -99,8 +100,6 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
                                 ImmutableList.of("//a/b:file3", "//a/b:file4")),
                             "")),
                     ImmutableList.class))
-            .put("visibility", ImmutableList.of("//a/..."))
-            .put("within_view", ImmutableList.of("//b/..."))
             .build();
 
     ImmutableMap<String, Object> expectAttributes =
@@ -141,7 +140,12 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
             buildTarget,
             DependencyStack.root(),
-            RawTargetNode.copyOf(ForwardRelativePath.of("a/b"), "java_library", inputAttributes),
+            RawTargetNode.of(
+                ForwardRelativePath.of("a/b"),
+                "java_library",
+                ImmutableList.of("//a/..."),
+                ImmutableList.of("//b/..."),
+                TwoArraysImmutableHashMap.copyOf(inputAttributes)),
             getPackage());
 
     assertEquals(

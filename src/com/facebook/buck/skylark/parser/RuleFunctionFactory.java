@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.rules.coercer.ParamInfo;
+import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
@@ -29,13 +30,13 @@ import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Runtime;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -49,8 +50,6 @@ import java.util.stream.Collectors;
  */
 public class RuleFunctionFactory {
 
-  private static final ImmutableSet<String> IMPLICIT_ATTRIBUTES =
-      ImmutableSet.of(VisibilityAttributes.VISIBILITY, VisibilityAttributes.WITHIN_VIEW);
   // URL prefix for all build rule documentation pages
   private static final String BUCK_RULE_DOC_URL_PREFIX = "https://buck.build/rule/";
 
@@ -93,10 +92,8 @@ public class RuleFunctionFactory {
                     (Class<? extends ConstructorArg>) ruleClass.getConstructorArgType())
                 .getParamsInfo()
                 .getParamInfosByCamelCaseName();
-        populateAttributes(kwargs, builder, allParamInfo);
-        throwOnMissingRequiredAttribute(kwargs, allParamInfo, getName(), ast);
-        parseContext.recordRule(
-            RecordedRule.of(ForwardRelativePath.of(basePath), name, builder.build()), ast);
+        RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, kwargs, ast);
+        parseContext.recordRule(recordedRule, ast);
         return Runtime.NONE;
       }
     };
@@ -140,24 +137,68 @@ public class RuleFunctionFactory {
    * as the target {@link BaseDescription} class.
    *
    * @param kwargs The keyword arguments and their values passed to rule function in build file.
-   * @param builder The map builder used for storing extracted attributes and their values.
-   * @param allParamInfo The parameter information for every build rule attribute.
    */
-  private void populateAttributes(
+  private RecordedRule populateAttributes(
+      BaseDescription<?> ruleClass,
+      String name,
+      String basePath,
       Map<String, Object> kwargs,
-      TwoArraysImmutableHashMap.Builder<String, Object> builder,
-      ImmutableMap<String, ParamInfo<?>> allParamInfo) {
+      FuncallExpression ast)
+      throws EvalException {
+
+    TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
+
+    ParamsInfo allParamInfo =
+        typeCoercerFactory
+            .getNativeConstructorArgDescriptor(
+                (Class<? extends ConstructorArg>) ruleClass.getConstructorArgType())
+            .getParamsInfo();
+
+    ImmutableList<String> visibility = ImmutableList.of();
+    ImmutableList<String> withinView = ImmutableList.of();
+
     for (Map.Entry<String, Object> kwargEntry : kwargs.entrySet()) {
       String paramName =
           CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, kwargEntry.getKey());
-      if (!allParamInfo.containsKey(paramName)
-          && !(IMPLICIT_ATTRIBUTES.contains(kwargEntry.getKey()))) {
+      if (kwargEntry.getKey().equals(VisibilityAttributes.VISIBILITY)) {
+        visibility = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
+        continue;
+      }
+      if (kwargEntry.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
+        withinView = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
+        continue;
+      }
+      if (!allParamInfo.getParamInfosByCamelCaseName().containsKey(paramName)) {
         throw new IllegalArgumentException(kwargEntry.getKey() + " is not a recognized attribute");
       }
       if (Runtime.NONE.equals(kwargEntry.getValue())) {
         continue;
       }
       builder.put(paramName, kwargEntry.getValue());
+    }
+
+    throwOnMissingRequiredAttribute(kwargs, allParamInfo.getParamInfosByCamelCaseName(), name, ast);
+    return RecordedRule.of(
+        ForwardRelativePath.of(basePath), name, visibility, withinView, builder.build());
+  }
+
+  private static ImmutableList<String> toListOfString(String attrName, Object value) {
+    if (value == Runtime.NONE) {
+      return ImmutableList.of();
+    } else if (value instanceof List<?>) {
+      List<?> list = (List<?>) value;
+      ImmutableList.Builder<String> builder = ImmutableList.builder();
+      for (Object o : list) {
+        if (!(o instanceof String)) {
+          throw new IllegalArgumentException(
+              "argument for " + attrName + " must be a list of string, it is " + value);
+        }
+        builder.add((String) o);
+      }
+      return builder.build();
+    } else {
+      throw new IllegalArgumentException(
+          "argument for " + attrName + " must be a list of string, it is " + value);
     }
   }
 }

@@ -19,11 +19,10 @@ package com.facebook.buck.rules.visibility.parser;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 
 /** Provides additional ways to create {@link VisibilityPattern}s. */
 public class VisibilityPatterns {
@@ -31,24 +30,15 @@ public class VisibilityPatterns {
   /** Prevent instantiations. */
   private VisibilityPatterns() {}
 
-  @SuppressWarnings("unchecked")
   public static ImmutableSet<VisibilityPattern> createFromStringList(
       CellPathResolver cellNames,
       String paramName,
-      @Nullable Object value,
+      ImmutableList<String> value,
       Path definingPath,
       Supplier<String> visibilityDefinerDescription) {
-    if (value == null) {
-      return ImmutableSet.of();
-    }
-    if (!(value instanceof List)) {
-      throw new RuntimeException(
-          String.format("Expected an array for %s but was %s", paramName, value));
-    }
-    List<String> originalPatterns = (List<String>) value;
     ImmutableSet.Builder<VisibilityPattern> patterns =
-        ImmutableSet.builderWithExpectedSize(originalPatterns.size());
-    for (String visibility : originalPatterns) {
+        ImmutableSet.builderWithExpectedSize(value.size());
+    for (String visibility : value) {
       try {
         patterns.add(VisibilityPatternParser.parse(cellNames, definingPath, visibility));
       } catch (IllegalArgumentException e) {

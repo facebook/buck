@@ -98,10 +98,6 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     DataTransferObjectDescriptor<?> constructorDescriptor =
         descriptor.dataTransferObjectDescriptor(typeCoercerFactory);
     for (Map.Entry<String, Object> attr : attrs.getAttrs().entrySet()) {
-      if (attr.getKey().equals(VisibilityAttributes.VISIBILITY)
-          || attr.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
-        continue;
-      }
       ParamInfo<?> paramInfo =
           constructorDescriptor.getParamsInfo().getByCamelCaseName(attr.getKey());
       Preconditions.checkNotNull(
@@ -190,7 +186,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
             VisibilityAttributes.VISIBILITY,
-            rawAttributes.get(VisibilityAttributes.VISIBILITY),
+            rawAttributes.getVisibility(),
             buildFile,
             target::getFullyQualifiedName);
 
@@ -202,7 +198,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
             VisibilityAttributes.WITHIN_VIEW,
-            rawAttributes.get(VisibilityAttributes.WITHIN_VIEW),
+            rawAttributes.getWithinView(),
             buildFile,
             target::getFullyQualifiedName);
 
