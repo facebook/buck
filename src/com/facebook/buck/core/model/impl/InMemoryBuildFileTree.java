@@ -24,11 +24,9 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -92,7 +90,7 @@ public class InMemoryBuildFileTree implements BuildFileTree {
 
       Node child = new Node(basePath);
       Node parent = findParent(child, basePathToNodeIndex);
-      Objects.requireNonNull(parent).addChild(child);
+      Objects.requireNonNull(parent);
       basePathToNodeIndex.put(basePath, child);
     }
   }
@@ -136,18 +134,8 @@ public class InMemoryBuildFileTree implements BuildFileTree {
     /** Build target base path. */
     private final RelPath basePath;
 
-    /** List of child nodes: created lazily to save memory. */
-    @Nullable private List<Node> children;
-
     Node(RelPath basePath) {
       this.basePath = basePath;
-    }
-
-    void addChild(Node node) {
-      if (children == null) {
-        children = new ArrayList<>();
-      }
-      children.add(node);
     }
   }
 }
