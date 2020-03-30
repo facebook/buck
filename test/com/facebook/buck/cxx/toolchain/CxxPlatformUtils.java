@@ -1,28 +1,30 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.sourcepath.resolver.impl.DefaultSourcePathResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
@@ -94,6 +96,8 @@ public class CxxPlatformUtils {
           .setPublicHeadersSymlinksEnabled(true)
           .setPrivateHeadersSymlinksEnabled(true)
           .build();
+  public static final SourcePathResolverAdapter DEFAULT_PATH_RESOLVER =
+      new SourcePathResolverAdapter(DefaultSourcePathResolver.from(new TestActionGraphBuilder()));
 
   public static final CxxPlatform buildPlatformWithLdArgs(ImmutableList<String> ldArgs) {
     CommandTool.Builder commandToolBuilder = new CommandTool.Builder();
@@ -159,7 +163,7 @@ public class CxxPlatformUtils {
     CxxPlatform defaultPlatform = getDefaultPlatform(root);
     return defaultPlatform
             .getCpp()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .supportsHeaderMaps()
         ? HeaderMode.SYMLINK_TREE_WITH_HEADER_MAP
         : HeaderMode.SYMLINK_TREE_ONLY;

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -39,8 +39,8 @@ import org.junit.Test;
 public class ForwardingRuleKeyHasherTest {
 
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
-  private static final BuildTarget TARGET_1 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
+
   private static final byte[] BYTE_ARRAY = new byte[] {42, 42};
   private static final Pattern PATTERN = Pattern.compile("42");
 

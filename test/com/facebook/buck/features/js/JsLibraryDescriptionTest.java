@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.js;
@@ -27,10 +27,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeFalse;
 
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -44,8 +45,8 @@ import com.facebook.buck.features.js.JsFile.JsFileDev;
 import com.facebook.buck.features.js.JsLibrary.Files;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.query.Query;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -158,7 +159,7 @@ public class JsLibraryDescriptionTest {
             .findAny()
             .get();
 
-    assertThat(filesRule.getBuildTarget().getFlavors(), hasItems(extraFlavors));
+    assertThat(filesRule.getBuildTarget().getFlavors().getSet(), hasItems(extraFlavors));
   }
 
   @Test
@@ -325,7 +326,7 @@ public class JsLibraryDescriptionTest {
                             "JsFile dependency `%s` of JsLibrary `%s` must have flavors `%s`",
                             depTarget, target, flavors),
                         flavors,
-                        everyItem(in(depTarget.getFlavors())))));
+                        everyItem(in(depTarget.getFlavors().getSet())))));
   }
 
   @Test
@@ -367,7 +368,10 @@ public class JsLibraryDescriptionTest {
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
             .library(
                 target,
-                Query.of(String.format("deps(%s)", x), EmptyTargetConfiguration.INSTANCE),
+                Query.of(
+                    String.format("deps(%s)", x),
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    BaseName.ROOT),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -411,7 +415,10 @@ public class JsLibraryDescriptionTest {
             .bundleWithDeps(BuildTargetFactory.newInstance("//query-deps:bundle"))
             .library(
                 target,
-                Query.of(String.format("deps(%s)", x), EmptyTargetConfiguration.INSTANCE),
+                Query.of(
+                    String.format("deps(%s)", x),
+                    UnconfiguredTargetConfiguration.INSTANCE,
+                    BaseName.ROOT),
                 FakeSourcePath.of("arbitrary/source"))
             .build();
 
@@ -443,7 +450,10 @@ public class JsLibraryDescriptionTest {
         scenarioBuilder
             .library(a)
             .library(b)
-            .library(target, Query.of(a.toString(), EmptyTargetConfiguration.INSTANCE), b)
+            .library(
+                target,
+                Query.of(a.toString(), UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT),
+                b)
             .build();
 
     JsLibrary lib = scenario.graphBuilder.getRuleWithType(target, JsLibrary.class);

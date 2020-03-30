@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.toolchain.tool.impl;
@@ -95,11 +95,11 @@ public class ToolTest {
     String tool = "tool";
     String version = "version";
 
-    Tool tool1 = VersionedTool.of(FakeSourcePath.of("something"), tool, version);
+    Tool tool1 = VersionedTool.of(tool, FakeSourcePath.of("something"), version);
     RuleKey tool1RuleKey =
         createRuleKeyBuilder(ruleKeyFactory).setReflectively("tool", tool1).build(RuleKey::new);
 
-    Tool tool2 = VersionedTool.of(FakeSourcePath.of("something-else"), tool, version);
+    Tool tool2 = VersionedTool.of(tool, FakeSourcePath.of("something-else"), version);
     RuleKey tool2RuleKey =
         createRuleKeyBuilder(ruleKeyFactory).setReflectively("tool", tool2).build(RuleKey::new);
 

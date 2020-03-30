@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.event;
@@ -22,7 +22,10 @@ import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.EventKey;
+import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.util.Scope;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonView;
 
 /** Events used to track time spent executing rule. */
 public interface BuildRuleExecutionEvent extends BuckEvent {
@@ -32,26 +35,33 @@ public interface BuildRuleExecutionEvent extends BuckEvent {
   /** Common event implementation */
   class Event extends AbstractBuckEvent implements BuildRuleExecutionEvent {
 
-    private final BuildTarget target;
+    private final BuildRule buildRule;
     private final String name;
 
     public Event(EventKey eventKey, BuildRule buildRule) {
       super(eventKey);
-      this.target = buildRule.getBuildTarget();
+      this.buildRule = buildRule;
       this.name = buildRule.getFullyQualifiedName();
     }
 
     @Override
     public BuildTarget getTarget() {
-      return target;
+      return buildRule.getBuildTarget();
+    }
+
+    @JsonView(JsonViews.MachineReadableLog.class)
+    public BuildRule getBuildRule() {
+      return buildRule;
     }
 
     @Override
+    @JsonIgnore
     public String getEventName() {
       return BuildRuleExecutionEvent.class.getSimpleName();
     }
 
     @Override
+    @JsonIgnore
     protected String getValueString() {
       return name;
     }
@@ -75,6 +85,7 @@ public interface BuildRuleExecutionEvent extends BuckEvent {
       this.statEventNanoTime = statEventNanoTime;
     }
 
+    @JsonView(JsonViews.MachineReadableLog.class)
     public long getElapsedTimeNano() {
       return getNanoTime() - statEventNanoTime;
     }

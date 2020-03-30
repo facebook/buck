@@ -1,0 +1,84 @@
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.facebook.buck.logd.proto";
+option java_outer_classname = "LogdServiceOuterFile";
+
+// best practices to include version number in package
+package logd.v1;
+
+import "third-party/java/remote-apis/google/rpc/status.proto";
+
+// Request message for [LogdService.CreateLogFile] to request a log file be created
+// in file-system and/or storage
+message CreateLogRequest {
+    // path to which log will be streamed by logD
+    string logFilePath = 1;
+    // enum specifying existing types of log
+    LogType logType = 2;
+}
+
+// Response message for [LogdService.CreateLogFile]
+// LogD returns client with a log file identifier
+message CreateLogResponse {
+    // generated id for the log file path requested by client
+    int32 logId = 1;
+}
+
+// LogMessage(s) for [LogdService.OpenLog]
+// Client streams LogMessage(s) to logD, where logD writes to corresponding log file identified by logId
+message LogMessage {
+    // log file identifier for logD
+    int32 logId = 1;
+    // log content
+    string logMessage = 2;
+}
+
+// Existing types of logs we are currently maintaining. To be revised/extended.
+enum LogType {
+    BUCK_LOG = 0;
+    BUCK_MACHINE_LOG = 1;
+    CHROME_TRACE_LOG = 2;
+    SIMPLE_CONSOLE_LOG = 3;
+    CRITICAL_PATH_LOG = 4;
+    RULE_KEY_LOG = 5;
+}
+
+// Manages LogdService APIs
+service LogdService {
+
+     // A simple, unary RPC.
+     //
+     // Client sends a CreateLogRequest to logD, after which logD creates a corresponding log file in
+     // file-system and/or storage and returns a CreateLogResponse with a generated id.
+    rpc CreateLogFile(CreateLogRequest) returns (CreateLogResponse) {}
+
+     // A client-to-server streaming RPC.
+     //
+     // Upon receiving a logId that corresponds with a log file created by logD, client can proceed to
+     // stream LogMessage(s) to logD.
+     //
+     // After receiving an OpenLog call from client, logD will
+     // proceed to open a writer stream to the log file identified by logId
+     // and return a StreamObserver that can observe and process incoming logs from client.
+     // Client can then use the returned StreamObserver to stream LogMessages to logD.
+     //
+     // After the client finishes sending logs, it should call onCompleted() on the returned
+     // StreamObserver to signal logD to close the corresponding writer stream to log file.
+    rpc OpenLog(stream LogMessage) returns (google.rpc.Status) {}
+}
+
+
+

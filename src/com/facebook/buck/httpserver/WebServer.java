@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.httpserver;
@@ -19,6 +19,7 @@ package com.facebook.buck.httpserver;
 import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.trace.BuildTraces;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -63,6 +64,7 @@ public class WebServer {
   private static final Path HTTP_PORT_FILE = Paths.get(".httpport");
 
   private final ProjectFilesystem projectFilesystem;
+  private final Clock clock;
   private final Server server;
   private final StreamingWebSocketServlet streamingWebSocketServlet;
   private final ArtifactCacheHandler artifactCacheHandler;
@@ -71,8 +73,9 @@ public class WebServer {
    * @param port If 0, then an <a href="http://en.wikipedia.org/wiki/Ephemeral_port">ephemeral
    *     port</a> will be assigned. Use {@link #getPort()} to find out which port is being used.
    */
-  public WebServer(int port, ProjectFilesystem projectFilesystem) {
+  public WebServer(int port, ProjectFilesystem projectFilesystem, Clock clock) {
     this.projectFilesystem = projectFilesystem;
+    this.clock = clock;
     this.server = new Server(port);
     this.streamingWebSocketServlet = new StreamingWebSocketServlet();
     this.artifactCacheHandler = new ArtifactCacheHandler(projectFilesystem);
@@ -85,11 +88,7 @@ public class WebServer {
   }
 
   public WebServerBuckEventListener createListener() {
-    return new WebServerBuckEventListener(this);
-  }
-
-  public StreamingWebSocketServlet getStreamingWebSocketServlet() {
-    return streamingWebSocketServlet;
+    return new WebServerBuckEventListener(streamingWebSocketServlet, clock);
   }
 
   /** @return Number of clients streaming from webserver */

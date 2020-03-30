@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -38,9 +38,16 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -49,6 +56,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -70,6 +78,66 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void testProtocolAppleTestShouldWorkAndGenerateSpec()
+      throws IOException, InterruptedException {
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_testx", tmp);
+    workspace.setUp();
+
+    workspace.addBuckConfigLocalOption("test", "external_runner", "echo");
+    ProcessResult result = workspace.runBuckCommand("test", "//:some_test");
+    result.assertSuccess();
+    Path specOutput =
+        workspace.getPath(
+            workspace.getBuckPaths().getScratchDir().resolve("external_runner_specs.json"));
+    JsonParser parser = ObjectMappers.createParser(specOutput);
+
+    ArrayNode node = parser.readValueAsTree();
+    JsonNode spec = node.get(0).get("specs");
+
+    assertEquals("spec", spec.get("my").textValue());
+
+    JsonNode other = spec.get("other");
+    assertTrue(other.isArray());
+    assertTrue(other.has(0));
+    assertEquals("stuff", other.get(0).get("complicated").textValue());
+    assertEquals(1, other.get(0).get("integer").intValue());
+    assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+    assertTrue(other.get(0).get("boolean").booleanValue());
+
+    String cmd = spec.get("cmd").textValue();
+    DefaultProcessExecutor processExecutor =
+        new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor.Result processResult =
+        processExecutor.launchAndExecute(
+            ProcessExecutorParams.builder().addCommand(cmd.split(" ")).build());
+    assertEquals(0, processResult.getExitCode());
+
+    String stdout = processResult.getStdout().get();
+    String[] parts = stdout.split("\\\n");
+
+    assertThat(
+        Iterables.getOnlyElement(Files.readAllLines(Paths.get(parts[0]))),
+        Matchers.allOf(
+            containsString("\"use_xctest\":false"),
+            containsString("\"use_idb\":false"),
+            containsString("\"is_ui_test\":false"),
+            containsString("\"xctool_path\":null"),
+            containsString("\"xctest_cmd\""),
+            containsString("\"xctest_env\":{}"),
+            containsString("\"idb_path\""),
+            containsString("\"stutter_timeout\":null"),
+            containsString("\"platform\":\"iphonesimulator\""),
+            containsString("\"default_destination\":\"\""),
+            containsString("\"developer_directory_for_tests\""),
+            containsString("\"snapshot_reference_img_path\":\"\""),
+            containsString("\"ui_test_target_app\":null"),
+            containsString("\"test_host_app\":null")));
+    assertTrue(Files.exists(Paths.get(parts[1])));
+  }
+
+  @Test
   public void testAppleTestHeaderSymlinkTree() throws IOException {
 
     ProjectWorkspace workspace =
@@ -85,7 +153,9 @@ public class AppleTestIntegrationTest {
 
     Path projectRoot = tmp.getRoot().toRealPath();
 
-    Path inputPath = projectRoot.resolve(buildTarget.getBasePath());
+    Path inputPath =
+        projectRoot.resolve(
+            buildTarget.getCellRelativeBasePath().getPath().toPath(projectRoot.getFileSystem()));
     Path outputPath =
         projectRoot.resolve(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s"));
 
@@ -201,6 +271,52 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void testDefaultPlatformInRules() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "default_platform_in_rules", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoTest");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("DemoTest_output.expected"),
+        BuildTargetPaths.getGenPath(
+            filesystem,
+            target.withAppendedFlavors(
+                AppleTestDescription.BUNDLE_FLAVOR,
+                AppleDebugFormat.DWARF.getFlavor(),
+                LinkerMapMode.NO_LINKER_MAP.getFlavor(),
+                AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+            "%s"));
+  }
+
+  @Test
+  public void testDefaultPlatformRespectsFlavorOverrides() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "default_platform_in_rules", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:DemoTest");
+    // buckconfig override is ignored
+    workspace
+        .runBuckCommand(
+            "build",
+            target.getFullyQualifiedName(),
+            "--config",
+            "cxx.default_platform=doesnotexist")
+        .assertSuccess();
+
+    BuildTarget simTarget = target.withFlavors(InternalFlavor.of("iphonesimulator-i386"));
+    workspace.runBuckCommand("build", simTarget.getFullyQualifiedName()).assertSuccess();
+
+    BuildTarget fatTarget =
+        target.withFlavors(
+            InternalFlavor.of("iphonesimulator-x86_64"), InternalFlavor.of("iphonesimulator-i386"));
+    workspace.runBuckCommand("build", fatTarget.getFullyQualifiedName()).assertSuccess();
+  }
+
+  @Test
   public void testLinkedAsMachOBundleWithNoDylibDeps() throws Exception {
 
     doTestLinkedAsMachOBundleWithNoDylibDeps(true);
@@ -277,6 +393,53 @@ public class AppleTestIntegrationTest {
   }
 
   @Test
+  public void testWithDepsCompileDeps() throws Exception {
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_lib_deps", tmp);
+    workspace.setUp();
+
+    BuildTarget buildTarget = workspace.newBuildTarget("//:foo#compile-deps");
+    workspace
+        .runBuckCommand(
+            "build",
+            "--config",
+            "cxx.default_platform=iphonesimulator-x86_64",
+            buildTarget.getFullyQualifiedName())
+        .assertSuccess();
+
+    Path projectRoot = Paths.get(tmp.getRoot().toFile().getCanonicalPath());
+    Path outputPath =
+        projectRoot.resolve(
+            BuildTargetPaths.getGenPath(filesystem, buildTarget.withAppendedFlavors(), "%s")
+                .resolve(AppleTestDescription.COMPILE_DEPS.toString()));
+    Path archivePath = outputPath.resolve("code").resolve("TEST_DEPS.a");
+
+    ProcessExecutor.Result binaryFileTypeResult =
+        workspace.runCommand("file", "-b", archivePath.toString());
+    assertEquals(0, binaryFileTypeResult.getExitCode());
+    assertThat(
+        binaryFileTypeResult.getStdout().orElse(""),
+        containsString("current ar archive random library"));
+
+    ProcessExecutor.Result otoolResult =
+        workspace.runCommand("otool", "-L", archivePath.toString());
+    assertEquals(0, otoolResult.getExitCode());
+    String otoolStdout = otoolResult.getStdout().orElse("");
+    assertThat(otoolStdout, containsString("Bar.m.o"));
+    assertThat(otoolStdout, containsString("Baz.m.o"));
+    assertThat(otoolStdout, not(containsString("Foo.m.o")));
+
+    ProcessExecutor.Result nmResult = workspace.runCommand("nm", "-p", archivePath.toString());
+    assertEquals(0, nmResult.getExitCode());
+    String nmStdout = nmResult.getStdout().orElse("");
+    assertThat(nmStdout, containsString("t +[Bar bar]"));
+    assertThat(nmStdout, containsString("t +[Baz baz]"));
+    assertThat(nmStdout, not(containsString("_OBJC_CLASS_$_Foo")));
+  }
+
+  @Test
   public void testWithResourcesCopiesResourceFilesAndDirs() throws Exception {
 
     ProjectWorkspace workspace =
@@ -296,6 +459,23 @@ public class AppleTestIntegrationTest {
                 LinkerMapMode.NO_LINKER_MAP.getFlavor(),
                 AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
             "%s"));
+  }
+
+  @Test
+  public void testCompileDepsWithResourcesCopiesResourceFilesAndDirs() throws Exception {
+    assumeTrue(
+        AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.IPHONESIMULATOR));
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_test_with_resources", tmp);
+    workspace.setUp();
+
+    BuildTarget target = workspace.newBuildTarget("//:foo#iphonesimulator-x86_64,compile-deps");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    workspace.verify(
+        Paths.get("foo_output_compile_deps.expected"),
+        BuildTargetPaths.getGenPath(filesystem, target.withAppendedFlavors(), "%s")
+            .resolve("compile-deps"));
   }
 
   @Test

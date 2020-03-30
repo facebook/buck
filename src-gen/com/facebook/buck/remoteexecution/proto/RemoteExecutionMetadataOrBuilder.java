@@ -115,7 +115,7 @@ public interface RemoteExecutionMetadataOrBuilder extends
 
   /**
    * <pre>
-   * Do not use index 9 - reserved for server side.
+   * 9 - Do not use, deprecated field.
    * </pre>
    *
    * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -123,7 +123,7 @@ public interface RemoteExecutionMetadataOrBuilder extends
   boolean hasClientActionInfo();
   /**
    * <pre>
-   * Do not use index 9 - reserved for server side.
+   * 9 - Do not use, deprecated field.
    * </pre>
    *
    * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -131,10 +131,49 @@ public interface RemoteExecutionMetadataOrBuilder extends
   com.facebook.buck.remoteexecution.proto.ClientActionInfo getClientActionInfo();
   /**
    * <pre>
-   * Do not use index 9 - reserved for server side.
+   * 9 - Do not use, deprecated field.
    * </pre>
    *
    * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
    */
   com.facebook.buck.remoteexecution.proto.ClientActionInfoOrBuilder getClientActionInfoOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+   */
+  boolean hasExecutedActionInfo();
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ExecutedActionInfo getExecutedActionInfo();
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ExecutedActionInfoOrBuilder getExecutedActionInfoOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+   */
+  boolean hasDebugInfo();
+  /**
+   * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.DebugInfo getDebugInfo();
+  /**
+   * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.DebugInfoOrBuilder getDebugInfoOrBuilder();
+
+  /**
+   * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+   */
+  boolean hasClientJobInfo();
+  /**
+   * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ClientJobInfo getClientJobInfo();
+  /**
+   * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ClientJobInfoOrBuilder getClientJobInfoOrBuilder();
 }

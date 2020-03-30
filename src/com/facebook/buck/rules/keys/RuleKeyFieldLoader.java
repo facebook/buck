@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -20,11 +20,10 @@ import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.module.BuckModuleHashStrategy;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import java.nio.file.Path;
-import java.util.Objects;
 
 public class RuleKeyFieldLoader {
 
@@ -47,24 +46,16 @@ public class RuleKeyFieldLoader {
 
     // We currently cache items using their full buck-out path, so make sure this is reflected in
     // the rule key.
-    Path buckOutPath = buildRule.getProjectFilesystem().getBuckPaths().getConfiguredBuckOut();
+    BuckPaths buckPaths = buildRule.getProjectFilesystem().getBuckPaths();
+    Path buckOutPath = buckPaths.getConfiguredBuckOut();
     builder.setReflectively(".out", buckOutPath.toString());
+    builder.setReflectively(".hashed_buck_out_paths", buckPaths.shouldIncludeTargetConfigHash());
 
     AlterRuleKeys.amendKey(builder, buildRule);
   }
 
   private void setFields(AbstractRuleKeyBuilder<?> builder, Action action) {
-    builder.setReflectively(".short_name", action.getShortName());
-    builder.setReflectively(".inputs", action.getInputs());
-    builder.setReflectively(
-        ".outputs",
-        Iterables.transform(
-            action.getOutputs(),
-            output ->
-                Objects.requireNonNull(output.asBound().asBuildArtifact())
-                    .getSourcePath()
-                    .hashCode()));
-
+    builder.setReflectively(".id", action.getID());
     AlterRuleKeys.amendKey(builder, action);
   }
 
@@ -74,6 +65,8 @@ public class RuleKeyFieldLoader {
     // name and so the following fields will never collide with other stuff.
     builder.setReflectively(".cache_key_seed", ruleKeyConfiguration.getSeed());
     builder.setReflectively(".target_name", action.getBuildTarget().getFullyQualifiedName());
+    builder.setReflectively(
+        ".target_conf", action.getBuildTarget().getTargetConfiguration().toString());
     builder.setReflectively(".buck_core_key", ruleKeyConfiguration.getCoreKey());
     builder.setReflectively(".rule_key_type", ruleKeyType);
 

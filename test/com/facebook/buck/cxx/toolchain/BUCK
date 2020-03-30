@@ -1,15 +1,14 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_benchmark", "standard_java_test")
 
 java_library(
     name = "testutil",
     srcs = glob(
         ["*.java"],
-        exclude = glob(["*Test.java"]),
+        exclude = glob([
+            "*Test.java",
+            "*Benchmark.java",
+        ]),
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/cxx/config:config",
-        "//src/com/facebook/buck/cxx/toolchain:toolchain",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -19,6 +18,7 @@ java_library(
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
@@ -31,6 +31,10 @@ java_library(
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/cxx/config:config",
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
     ],
 )
 
@@ -76,5 +80,12 @@ standard_java_test(
         "//third-party/java/guava:guava",
         "//third-party/java/hamcrest:hamcrest-junit",
         "//third-party/java/junit:junit",
+    ],
+)
+
+standard_java_benchmark(
+    name = "benchmark_lib",
+    deps = [
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
     ],
 )

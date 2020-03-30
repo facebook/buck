@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.go;
@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -29,7 +30,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -127,9 +128,10 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     Optional<Long> processTimeoutMs =
         testRuleTimeoutMs.map(timeout -> timeout + PROCESS_TIMEOUT_EXTRA_MS);
 
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     ImmutableList.Builder<String> args = ImmutableList.builder();
-    args.addAll(testMain.getExecutableCommand().getCommandPrefix(resolver));
+    args.addAll(
+        testMain.getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(resolver));
     args.add("-test.v");
     if (coverageMode != Mode.NONE) {
       Path coverProfile =
@@ -161,7 +163,9 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getPathToTestWorkingDirectory(),
                 args.build(),
                 Stream.of(
-                        testMain.getExecutableCommand().getEnvironment(resolver),
+                        testMain
+                            .getExecutableCommand(OutputLabel.defaultLabel())
+                            .getEnvironment(resolver),
                         Arg.stringify(env, resolver))
                     .flatMap(m -> m.entrySet().stream())
                     .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue)),
@@ -261,7 +265,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       return TestResults.of(
@@ -322,7 +326,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Path outputDirectory,
       Optional<BuildableContext> buildableContext) {
 
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
 
     if (buildableContext.isPresent()) {
       resources.forEach(
@@ -374,20 +378,24 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
+        .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("go")
         .putAllEnv(
-            testMain.getExecutableCommand().getEnvironment(buildContext.getSourcePathResolver()))
+            testMain
+                .getExecutableCommand(OutputLabel.defaultLabel())
+                .getEnvironment(buildContext.getSourcePathResolver()))
         .addAllCommand(
-            testMain.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
+            testMain
+                .getExecutableCommand(OutputLabel.defaultLabel())
+                .getCommandPrefix(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())
         .build();
   }
 
   @Override
-  public Tool getExecutableCommand() {
-    return testMain.getExecutableCommand();
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
+    return testMain.getExecutableCommand(OutputLabel.defaultLabel());
   }
 }

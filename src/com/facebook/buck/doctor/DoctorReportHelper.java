@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.doctor;
@@ -24,8 +24,6 @@ import com.facebook.buck.doctor.config.DoctorEndpointResponse;
 import com.facebook.buck.doctor.config.DoctorIssueCategory;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
 import com.facebook.buck.doctor.config.DoctorSuggestion;
-import com.facebook.buck.doctor.config.ImmutableDoctorEndpointResponse;
-import com.facebook.buck.doctor.config.ImmutableDoctorEndpointRequest;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
@@ -114,7 +112,7 @@ public class DoctorReportHelper {
   }
 
   public DoctorEndpointRequest generateEndpointRequest(
-      BuildLogEntry entry, DefectSubmitResult reportResult) throws IOException {
+      BuildLogEntry entry, DefectReporter.DefectSubmitResult reportResult) throws IOException {
     Optional<String> machineLog;
 
     if (entry.getMachineReadableLogFile().isPresent()) {
@@ -128,7 +126,7 @@ public class DoctorReportHelper {
       machineLog = Optional.empty();
     }
 
-    return new ImmutableDoctorEndpointRequest(
+    return DoctorEndpointRequest.of(
         entry.getBuildId(),
         entry.getRelativePath().toString(),
         machineLog,
@@ -201,7 +199,11 @@ public class DoctorReportHelper {
         String body = new String(httpResponse.body().bytes(), Charsets.UTF_8);
         return ObjectMappers.readValue(body, DoctorEndpointResponse.class);
       }
-      return createErrorDoctorEndpointResponse("Request was not successful.");
+      return createErrorDoctorEndpointResponse(
+          "Request was not successful. HTTP Status: "
+              + httpResponse.code()
+              + " Message: "
+              + httpResponse.message());
     } catch (IOException e) {
       return createErrorDoctorEndpointResponse(String.format(DECODE_FAIL_TEMPLATE, e.getMessage()));
     }
@@ -229,13 +231,13 @@ public class DoctorReportHelper {
     output.println();
   }
 
-  public final void presentRageResult(Optional<DefectSubmitResult> result) {
+  public final void presentRageResult(Optional<DefectReporter.DefectSubmitResult> result) {
     if (!result.isPresent()) {
       console.getStdOut().println("=> Failed to generate a report DefectSubmitResult.");
       return;
     }
 
-    DefectSubmitResult submitResult = result.get();
+    DefectReporter.DefectSubmitResult submitResult = result.get();
     if (submitResult.getIsRequestSuccessful().isPresent()) {
       if (submitResult.getReportSubmitLocation().isPresent()) {
         if (submitResult.getRequestProtocol().equals(DoctorProtocolVersion.JSON)) {
@@ -293,7 +295,7 @@ public class DoctorReportHelper {
   private DoctorEndpointResponse createErrorDoctorEndpointResponse(String errorMessage) {
     console.printErrorText(errorMessage);
     LOG.error(errorMessage);
-    return new ImmutableDoctorEndpointResponse(Optional.of(errorMessage), ImmutableList.of());
+    return DoctorEndpointResponse.of(Optional.of(errorMessage), ImmutableList.of());
   }
 
   @VisibleForTesting

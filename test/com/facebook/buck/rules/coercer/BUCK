@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+load("//tools/build_rules:java_rules.bzl", "standard_java_benchmark", "standard_java_test")
 
 standard_java_test(
     name = "coercer",
@@ -22,6 +22,7 @@ standard_java_test(
         "//src/com/facebook/buck/rules/macros:types",
         "//src/com/facebook/buck/versions:translator",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/cell/nameresolver:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/platform:testutil",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
@@ -30,7 +31,19 @@ standard_java_test(
         "//test/com/facebook/buck/io/file:testutil",
         "//test/com/facebook/buck/rules/keys:testutil",
         "//test/com/facebook/buck/rules/macros:testutil",
+        "//test/com/facebook/buck/testutil/integration:util",
+        "//test/com/facebook/buck/util:testutil",
         "//test/com/facebook/buck/versions:testutil",
         "//third-party/java/junit:junit",
+    ],
+)
+
+standard_java_benchmark(
+    name = "benchmark",
+    deps = [
+        "//src/com/facebook/buck/rules/coercer:coercer",
+        "//src/com/facebook/buck/rules/macros:types",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/io/filesystem/impl:testutil",
     ],
 )

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.simulator;
@@ -66,11 +66,10 @@ public class SimctlListOutputParsing {
     Matcher matcher = SIMCTL_LIST_DEVICES_PATTERN.matcher(line);
     if (matcher.matches()) {
       AppleSimulator simulator =
-          AppleSimulator.builder()
-              .setName(matcher.group(DEVICE_NAME_GROUP))
-              .setUdid(matcher.group(DEVICE_UDID_GROUP))
-              .setSimulatorState(AppleSimulatorState.fromString(matcher.group(DEVICE_STATE_GROUP)))
-              .build();
+          ImmutableAppleSimulator.of(
+              matcher.group(DEVICE_NAME_GROUP),
+              matcher.group(DEVICE_UDID_GROUP),
+              AppleSimulatorState.fromString(matcher.group(DEVICE_STATE_GROUP)));
       LOG.debug("Got simulator: %s", simulator);
       simulatorsBuilder.add(simulator);
     }

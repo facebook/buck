@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.query;
@@ -19,9 +19,10 @@ package com.facebook.buck.query;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.QueryTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
@@ -36,18 +37,18 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class QueryTargetCollectorTest {
-  private static Path ROOT = Paths.get("/fake/cell/root");
-  private static String baseName = "//app";
+  private static final Path ROOT = Paths.get("/fake/cell/root").toAbsolutePath();
+  private static final String baseName = "//app";
   private QueryEnvironment env =
       new GraphEnhancementQueryEnvironment(
           Optional.empty(),
           Optional.empty(),
           new DefaultTypeCoercerFactory(),
-          TestCellPathResolver.create(ROOT),
+          TestCellPathResolver.create(ROOT).getCellNameResolver(),
           new ParsingUnconfiguredBuildTargetViewFactory(),
-          baseName,
+          BaseName.of(baseName),
           ImmutableSet.of(),
-          EmptyTargetConfiguration.INSTANCE);
+          UnconfiguredTargetConfiguration.INSTANCE);
   private QueryTargetCollector<QueryBuildTarget> collector;
 
   @Before
@@ -105,6 +106,6 @@ public class QueryTargetCollectorTest {
   }
 
   private static QueryTarget target(String shortName) {
-    return QueryBuildTarget.of(BuildTargetFactory.newInstance(ROOT, baseName, shortName));
+    return QueryBuildTarget.of(BuildTargetFactory.newInstance(baseName, shortName));
   }
 }

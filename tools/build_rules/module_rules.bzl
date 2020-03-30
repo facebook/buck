@@ -14,7 +14,7 @@
 
 """Contains build rules for Buck modules"""
 
-load("@bazel_skylib//lib:collections.bzl", "collections")
+load("@buck_bazel_skylib//lib:collections.bzl", "collections")
 load("//tools/build_rules:java_rules.bzl", "java_library_with_plugins")
 load("//tools/build_rules:module_rules_for_tests.bzl", "convert_module_deps_to_test")
 
@@ -32,7 +32,7 @@ def buck_module(
       **kwargs: kwargs
     """
 
-    kwargs["provided_deps"] = collections.uniq(kwargs.get("provided_deps", []) + [
+    kwargs["provided_deps"] = collections.uniq(list(kwargs.get("provided_deps", [])) + [
         "//src/com/facebook/buck/core/module:module",
     ] + module_deps)
 
@@ -70,6 +70,10 @@ def buck_module(
             "mkdir $OUT && ",
             "cp $(location :{}) $OUT/module-binary-hash.txt".format(calculate_module_hash_name),
         ]),
+        cmd_exe = " && ".join([
+            "mkdir %OUT%",
+            "copy $(location :{}) %OUT%\\module-binary-hash.txt".format(calculate_module_hash_name),
+        ]),
     )
 
     module_name = name + "-module"
@@ -99,10 +103,10 @@ def buck_module(
     # to all provided dependencies of the current module.
     native.java_library(
         name = name + "_module_for_test",
-        exported_deps = depset([":" + final_module_jar_name]) +
-                        kwargs.get("provided_deps", []) +
-                        kwargs.get("exported_provided_deps", []) +
-                        convert_module_deps_to_test(module_deps),
+        exported_deps = depset([":" + final_module_jar_name] +
+                               list(kwargs.get("provided_deps", [])) +
+                               list(kwargs.get("exported_provided_deps", [])) +
+                               convert_module_deps_to_test(module_deps)),
         visibility = ["PUBLIC"],
     )
 

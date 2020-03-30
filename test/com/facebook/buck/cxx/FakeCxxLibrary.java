@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -46,6 +46,7 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
 /** Fake implementation of {@link CxxLibraryGroup} for testing. */
 public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
@@ -107,16 +108,14 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return CxxPreprocessorInput.builder()
         .addIncludes(
-            CxxSymlinkTreeHeaders.builder()
-                .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                .setNameToPathMap(
-                    ImmutableSortedMap.of(
-                        Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget)))
-                .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
-                .setIncludeRoot(
-                    Either.ofRight(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)))
-                .setSymlinkTreeClass(HeaderSymlinkTree.class.getName())
-                .build())
+            ImmutableCxxSymlinkTreeHeaders.of(
+                CxxPreprocessables.IncludeType.LOCAL,
+                DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget),
+                Either.ofRight(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)),
+                Optional.empty(),
+                ImmutableSortedMap.of(
+                    Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget)),
+                HeaderSymlinkTree.class.getName()))
         .build();
   }
 
@@ -125,17 +124,14 @@ public final class FakeCxxLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
     return CxxPreprocessorInput.builder()
         .addIncludes(
-            CxxSymlinkTreeHeaders.builder()
-                .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
-                .setIncludeRoot(
-                    Either.ofRight(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)))
-                .setNameToPathMap(
-                    ImmutableSortedMap.of(
-                        Paths.get("header.h"),
-                        DefaultBuildTargetSourcePath.of(privateHeaderTarget)))
-                .setSymlinkTreeClass(HeaderSymlinkTree.class.getName())
-                .build())
+            ImmutableCxxSymlinkTreeHeaders.of(
+                CxxPreprocessables.IncludeType.LOCAL,
+                DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget),
+                Either.ofRight(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)),
+                Optional.empty(),
+                ImmutableSortedMap.of(
+                    Paths.get("header.h"), DefaultBuildTargetSourcePath.of(privateHeaderTarget)),
+                HeaderSymlinkTree.class.getName()))
         .build();
   }
 

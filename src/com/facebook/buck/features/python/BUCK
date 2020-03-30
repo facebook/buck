@@ -48,6 +48,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:types",
@@ -58,6 +59,7 @@ java_library_with_plugins(
     ],
     resources = [
         "__test_main__.py",
+        "compile.py",
         "run_inplace.py.in",
         "run_inplace_lite.py.in",
     ],
@@ -90,13 +92,13 @@ python_binary(
 
 buck_module(
     name = "module",
-    exported_deps = [
-        "//src/com/facebook/buck/features/python:python",
-    ],
     module_resources = ["//src/com/facebook/buck/features/python:pex"],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/features/python/toolchain:toolchain",
         "//src/com/facebook/buck/features/python/toolchain/impl:impl",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/features/python:python",
     ],
 )

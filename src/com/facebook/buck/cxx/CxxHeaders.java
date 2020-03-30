@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasCustomDepsLogic;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.PathShortener;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.google.common.base.Preconditions;
@@ -63,12 +63,12 @@ public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
    * @return the path to add to the preprocessor search path to find the includes. This defaults to
    *     the root, but can be overridden to use an alternate path.
    */
-  public Optional<Path> getResolvedIncludeRoot(SourcePathResolver resolver) {
+  public Optional<Path> getResolvedIncludeRoot(SourcePathResolverAdapter resolver) {
     return Optional.of(resolver.getAbsolutePath(Objects.requireNonNull(getRoot())));
   }
 
   private static Path resolveSourcePathAndShorten(
-      SourcePathResolver resolver, SourcePath path, Optional<PathShortener> pathShortener) {
+      SourcePathResolverAdapter resolver, SourcePath path, Optional<PathShortener> pathShortener) {
     Path resolvedPath = resolver.getAbsolutePath(path);
     return pathShortener.isPresent() ? pathShortener.get().shorten(resolvedPath) : resolvedPath;
   }
@@ -79,7 +79,7 @@ public abstract class CxxHeaders implements AddsToRuleKey, HasCustomDepsLogic {
    */
   public static Iterable<String> getArgs(
       Iterable<CxxHeaders> cxxHeaderses,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Optional<PathShortener> pathMinimizer,
       Preprocessor preprocessor) {
     ImmutableList.Builder<String> args = ImmutableList.builder();

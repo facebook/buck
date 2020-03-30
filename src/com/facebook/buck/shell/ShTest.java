@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -27,7 +28,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -125,7 +126,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
                 Arg.stringify(args, buildContext.getSourcePathResolver()),
                 Arg.stringify(env, buildContext.getSourcePathResolver()),
                 testRuleTimeoutMs,
-                getBuildTarget().getFullyQualifiedName(),
+                getBuildTarget(),
                 getPathToTestOutputResult()))
         .build();
   }
@@ -143,7 +144,9 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext context, SourcePathResolver pathResolver, boolean isUsingTestSelectors) {
+      ExecutionContext context,
+      SourcePathResolverAdapter pathResolver,
+      boolean isUsingTestSelectors) {
     return () -> {
       Optional<String> resultsFileContents =
           getProjectFilesystem().readFileIfItExists(getPathToTestOutputResult());
@@ -178,7 +181,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     CommandTool.Builder builder = new CommandTool.Builder().addInputs(resources);
 
     for (Arg arg : args) {
@@ -196,7 +199,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
+        .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType(type.orElse("custom"))
         .addAllCommand(Arg.stringify(args, buildContext.getSourcePathResolver()))

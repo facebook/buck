@@ -86,4 +86,22 @@ public interface BuckInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getProjectPrefixBytes();
+
+  /**
+   * <pre>
+   * Buck version
+   * </pre>
+   *
+   * <code>string version = 5;</code>
+   */
+  java.lang.String getVersion();
+  /**
+   * <pre>
+   * Buck version
+   * </pre>
+   *
+   * <code>string version = 5;</code>
+   */
+  com.google.protobuf.ByteString
+      getVersionBytes();
 }

@@ -58,7 +58,7 @@ buck_module(
         "//src/com/facebook/buck/util/collect:collect",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/config:config",
-        "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:versions",
         "//third-party/java/dd-plist:dd-plist",

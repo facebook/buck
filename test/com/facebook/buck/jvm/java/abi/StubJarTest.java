@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi;
@@ -825,6 +825,214 @@ public class StubJarTest {
   }
 
   @Test
+  public void kotlinClassWithInlineExtensionMethodUsingLambdaAndDefaultMethod() throws IOException {
+    if (!isValidForKotlin()) {
+      return;
+    }
+
+    if (testingMode.equals(MODE_SOURCE_BASED)) {
+      // TODO T53836707 the methods in the synthetic class are wrongly stripped, preventing
+      //  compilation
+      return;
+    }
+
+    tester = new Tester(Language.KOTLIN);
+    tester
+        .setSourceFile(
+            "A.kt",
+            "package com.example.buck",
+            "open class A {",
+            "  inline fun someMethod(function: String.() -> Unit = {}): Unit {",
+            "    function(\"test\")",
+            "  }",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A",
+            "// class version 50.0 (50)",
+            "// access flags 0x21",
+            "public class com/example/buck/A {",
+            "",
+            "  // compiled from: A.kt",
+            "  // debug info: SMAP",
+            "A.kt",
+            "Kotlin",
+            "*S Kotlin",
+            "*F",
+            "+ 1 A.kt",
+            "com/example/buck/A",
+            "*L",
+            "1#1,7:1",
+            "4#1,2:8",
+            "*E",
+            "",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=1, d1={\"\\u0000\\u001e\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u0000\\n\\u0002\\u0008\\u0002\\n\\u0002\\u0010\\u0002\\n\\u0000\\n\\u0002\\u0018\\u0002\\n\\u0002\\u0010\\u000e\\n\\u0002\\u0018\\u0002\\u0008\\u0016\\u0018\\u00002\\u00020\\u0001B\\u0005\\u00a2\\u0006\\u0002\\u0010\\u0002J$\\u0010\\u0003\\u001a\\u00020\\u00042\\u0019\\u0008\\u0002\\u0010\\u0005\\u001a\\u0013\\u0012\\u0004\\u0012\\u00020\\u0007\\u0012\\u0004\\u0012\\u00020\\u00040\\u0006\\u00a2\\u0006\\u0002\\u0008\\u0008H\\u0086\\u0008\"}, d2={\"Lcom/example/buck/A;\", \"\", \"()V\", \"someMethod\", \"\", \"function\", \"Lkotlin/Function1;\", \"\", \"Lkotlin/ExtensionFunctionType;\"})",
+            "",
+            "  // access flags 0x11",
+            "  // signature (Lkotlin/jvm/functions/Function1<-Ljava/lang/String;Lkotlin/Unit;>;)V",
+            "  // declaration: void someMethod(kotlin.jvm.functions.Function1<? super java.lang.String, kotlin.Unit>)",
+            "  public final someMethod(Lkotlin/jvm/functions/Function1;)V",
+            "    // annotable parameter count: 1 (invisible)",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 0",
+            "   L0",
+            "    LDC 0",
+            "    ISTORE 2",
+            "   L1",
+            "    ALOAD 1",
+            "    LDC \"function\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "   L2",
+            "    LINENUMBER 4 L2",
+            "    ALOAD 1",
+            "    LDC \"test\"",
+            "    INVOKEINTERFACE kotlin/jvm/functions/Function1.invoke (Ljava/lang/Object;)Ljava/lang/Object; (itf)",
+            "    POP",
+            "   L3",
+            "    LINENUMBER 5 L3",
+            "    RETURN",
+            "   L4",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L4 0",
+            "    LOCALVARIABLE function Lkotlin/jvm/functions/Function1; L0 L4 1",
+            "    LOCALVARIABLE $i$f$someMethod I L1 L4 2",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 3",
+            "",
+            "  // access flags 0x1009",
+            "  public static synthetic someMethod$default(Lcom/example/buck/A;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V",
+            "   L0",
+            "    ALOAD 3",
+            "    IFNULL L1",
+            "    NEW java/lang/UnsupportedOperationException",
+            "    DUP",
+            "    LDC \"Super calls with default arguments not supported in this target, function: someMethod\"",
+            "    INVOKESPECIAL java/lang/UnsupportedOperationException.<init> (Ljava/lang/String;)V",
+            "    ATHROW",
+            "   L1",
+            "    ILOAD 2",
+            "    ICONST_1",
+            "    IAND",
+            "    IFEQ L2",
+            "   L3",
+            "    LINENUMBER 3 L3",
+            "    GETSTATIC com/example/buck/A$someMethod$1.INSTANCE : Lcom/example/buck/A$someMethod$1;",
+            "    CHECKCAST kotlin/jvm/functions/Function1",
+            "    ASTORE 1",
+            "   L2",
+            "    ICONST_0",
+            "    ISTORE 2",
+            "   L4",
+            "    ALOAD 1",
+            "    LDC \"function\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "   L5",
+            "    LINENUMBER 8 L5",
+            "    ALOAD 1",
+            "    LDC \"test\"",
+            "    INVOKEINTERFACE kotlin/jvm/functions/Function1.invoke (Ljava/lang/Object;)Ljava/lang/Object; (itf)",
+            "    POP",
+            "   L6",
+            "    LINENUMBER 9 L6",
+            "    RETURN",
+            "   L7",
+            "    LOCALVARIABLE this Lcom/example/buck/A; L0 L7 0",
+            "    LOCALVARIABLE function Lkotlin/jvm/functions/Function1; L0 L7 1",
+            "    LOCALVARIABLE $i$f$someMethod I L4 L7 2",
+            "    MAXSTACK = 3",
+            "    MAXLOCALS = 4",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "}")
+        .addExpectedStub(
+            "com/example/buck/A$someMethod$1",
+            "// class version 50.0 (50)",
+            "// access flags 0x31",
+            "// signature Lkotlin/jvm/internal/Lambda;Lkotlin/jvm/functions/Function1<Ljava/lang/String;Lkotlin/Unit;>;",
+            "// declaration: com/example/buck/A$someMethod$1 extends kotlin.jvm.internal.Lambda implements kotlin.jvm.functions.Function1<java.lang.String, kotlin.Unit>",
+            "public final class com/example/buck/A$someMethod$1 extends kotlin/jvm/internal/Lambda implements kotlin/jvm/functions/Function1 {",
+            "",
+            "  // compiled from: A.kt",
+            "  // debug info: SMAP",
+            "A.kt",
+            "Kotlin",
+            "*S Kotlin",
+            "*F",
+            "+ 1 A.kt",
+            "com/example/buck/A$someMethod$1",
+            "*L",
+            "1#1,7:1",
+            "*E",
+            "",
+            "  OUTERCLASS com/example/buck/A someMethod$default (Lcom/example/buck/A;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)V",
+            "",
+            "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=3, d1={\"\\u0000\\u000c\\n\\u0000\\n\\u0002\\u0010\\u0002\\n\\u0002\\u0010\\u000e\\n\\u0000\\u0010\\u0000\\u001a\\u00020\\u0001*\\u00020\\u0002H\\n\\u00a2\\u0006\\u0002\\u0008\\u0003\"}, d2={\"<anonymous>\", \"\", \"\", \"invoke\"})",
+            "  // access flags 0x19",
+            "  public final static INNERCLASS com/example/buck/A$someMethod$1 null null",
+            "",
+            "  // access flags 0x19",
+            "  public final static Lcom/example/buck/A$someMethod$1; INSTANCE",
+            "",
+            "  // access flags 0x1041",
+            "  public synthetic bridge invoke(Ljava/lang/Object;)Ljava/lang/Object;",
+            "   L0",
+            "    LINENUMBER 2 L0",
+            "    ALOAD 0",
+            "    ALOAD 1",
+            "    CHECKCAST java/lang/String",
+            "    INVOKEVIRTUAL com/example/buck/A$someMethod$1.invoke (Ljava/lang/String;)V",
+            "    GETSTATIC kotlin/Unit.INSTANCE : Lkotlin/Unit;",
+            "    ARETURN",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x11",
+            "  public final invoke(Ljava/lang/String;)V",
+            "    // annotable parameter count: 1 (invisible)",
+            "    @Lorg/jetbrains/annotations/NotNull;() // invisible, parameter 0",
+            "   L0",
+            "    ALOAD 1",
+            "    LDC \"$receiver\"",
+            "    INVOKESTATIC kotlin/jvm/internal/Intrinsics.checkParameterIsNotNull (Ljava/lang/Object;Ljava/lang/String;)V",
+            "   L1",
+            "    LINENUMBER 3 L1",
+            "    RETURN",
+            "   L2",
+            "    LOCALVARIABLE this Lcom/example/buck/A$someMethod$1; L0 L2 0",
+            "    LOCALVARIABLE $receiver Ljava/lang/String; L0 L2 1",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 2",
+            "",
+            "  // access flags 0x1",
+            "  public <init>()V",
+            "    ALOAD 0",
+            "    ICONST_1",
+            "    INVOKESPECIAL kotlin/jvm/internal/Lambda.<init> (I)V",
+            "    RETURN",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 1",
+            "",
+            "  // access flags 0x8",
+            "  static <clinit>()V",
+            "    NEW com/example/buck/A$someMethod$1",
+            "    DUP",
+            "    INVOKESPECIAL com/example/buck/A$someMethod$1.<init> ()V",
+            "    PUTSTATIC com/example/buck/A$someMethod$1.INSTANCE : Lcom/example/buck/A$someMethod$1;",
+            "    RETURN",
+            "    MAXSTACK = 2",
+            "    MAXLOCALS = 0",
+            "}")
+        .createAndCheckStubJar()
+        .addStubJarToClasspath()
+        .setSourceFile(
+            "B.kt",
+            "package com.example.buck",
+            "class B: A() {",
+            "fun useInlineExtension(): Unit { someMethod() }",
+            "}")
+        .testCanCompile();
+  }
+
+  @Test
   public void kotlinClassWithInlineExtensionMethodThatImplementsInterface() throws IOException {
     if (!isValidForKotlin()) {
       return;
@@ -1361,6 +1569,9 @@ public class StubJarTest {
             "  // compiled from: B.kt",
             "",
             "  @Lkotlin/Metadata;(mv={1, 1, 15}, bv={1, 0, 3}, k=3)",
+            "",
+            "  // access flags 0x1012",
+            "  private final synthetic Lkotlin/jvm/functions/Function0; function",
             "",
             "  // access flags 0x1",
             "  public <init>(Lkotlin/jvm/functions/Function0;)V",

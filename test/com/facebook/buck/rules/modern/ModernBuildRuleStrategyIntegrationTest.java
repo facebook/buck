@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern;
@@ -23,8 +23,7 @@ import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -38,10 +37,9 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionType;
 import com.facebook.buck.remoteexecution.grpc.server.GrpcServer;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
@@ -65,7 +63,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
-import org.immutables.value.Value;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -117,9 +114,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractTouchOutputDescriptionArg extends HasDeclaredDeps, ConstructorArg {
+  @RuleArg
+  interface AbstractTouchOutputDescriptionArg extends HasDeclaredDeps, BuildRuleArg {
     String getOut();
   }
 
@@ -144,9 +140,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractCheckSerializationArg extends CommonDescriptionArg {}
+  @RuleArg
+  interface AbstractCheckSerializationArg extends BuildRuleArg {}
 
   private static class CheckSerializationDescription
       implements DescriptionWithTargetGraph<CheckSerializationArg> {
@@ -196,9 +191,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractLargeDynamicsArg extends HasDeclaredDeps, ConstructorArg {
+  @RuleArg
+  interface AbstractLargeDynamicsArg extends HasDeclaredDeps, BuildRuleArg {
     Optional<BuildTarget> getFirstRef();
 
     Optional<BuildTarget> getSecondRef();
@@ -235,9 +229,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
     }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractFailingRuleArg extends CommonDescriptionArg {
+  @RuleArg
+  interface AbstractFailingRuleArg extends BuildRuleArg {
     boolean getStepFailure();
   }
 
@@ -323,7 +316,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
                         new FailingRuleDescription(),
                         new DuplicateOutputsDescription(),
                         new CheckSerializationDescription()),
-                    knownConfigurationDescriptions));
+                    knownConfigurationDescriptions,
+                    ImmutableList.of()));
     workspace.setUp();
     workspace.addBuckConfigLocalOption("modern_build_rule", "strategy", strategy.toString());
     workspace.addBuckConfigLocalOption("remoteexecution", "type", executionType.toString());
@@ -353,7 +347,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
     workspace.addBuckConfigLocalOption("remoteexecution", "cas_port", Integer.toString(remotePort));
     workspace.addBuckConfigLocalOption("remoteexecution", "cas_insecure", "yes");
 
-    filesystem = TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    filesystem = workspace.getProjectFileSystem();
 
     if (strategy == ModernBuildRuleBuildStrategy.HYBRID_LOCAL) {
       workspace.addBuckConfigLocalOption(
@@ -395,9 +389,8 @@ public class ModernBuildRuleStrategyIntegrationTest {
     result.assertSuccess();
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractDuplicateOutputsArg extends CommonDescriptionArg {
+  @RuleArg
+  interface AbstractDuplicateOutputsArg extends BuildRuleArg {
     boolean getOutputsAreDirectories();
   }
 

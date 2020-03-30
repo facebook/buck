@@ -95,7 +95,30 @@ android_library(
 
 robolectric_test(
     name = "test",
-    srcs = glob(["*.java"]),
+    srcs = glob(["ResourcesTest.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    vm_args = [
+        "-Drobolectric.dependency.dir=$(location buck//third-party/java/robolectric:robolectric_dir)",
+    ],
+    deps = [
+        "buck//third-party/java/asm:asm",
+        "buck//third-party/java/bouncycastle:bcprov",
+        "buck//third-party/java/guava:guava",
+        "buck//third-party/java/junit:junit",
+        "buck//third-party/java/robolectric:robolectric",
+        "//res/com/sample/asset_only:asset_only",
+        "//res/com/sample/title:title",
+        "//res/com/sample/top:top",
+    ],
+)
+
+robolectric_test(
+    name = "test_binary_resources",
+    srcs = glob(["BinaryResourcesTest.java"]),
+    robolectric_manifest = "TestAndroidManifest.xml",
+    use_binary_resources = True,
     visibility = [
         "PUBLIC",
     ],
@@ -116,7 +139,7 @@ robolectric_test(
 
 robolectric_test(
     name = "test_robolectric_runtime_dep",
-    srcs = glob(["*.java"]),
+    srcs = glob(["ResourcesTest.java"]),
     robolectric_runtime_dependency = "buck//third-party/java/robolectric:robolectric_dir",
     visibility = [
         "PUBLIC",

@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_test")
+load("//tools/build_rules:java_rules.bzl", "java_test")
 
 java_test(
     name = "impl",
@@ -15,7 +15,6 @@ java_test(
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/watchman:watchman",
         "//src/com/facebook/buck/jvm/java:config",
-        "//src/com/facebook/buck/manifestservice:manifestservice",
         "//src/com/facebook/buck/util/cache:cache",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
@@ -37,12 +36,12 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
-    ],
     visibility = [
         "//test/...",
     ],
     deps = [
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
     ],
 )

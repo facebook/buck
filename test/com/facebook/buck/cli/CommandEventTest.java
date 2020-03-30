@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableList;
+import java.nio.file.Paths;
 import java.util.OptionalLong;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -33,19 +34,19 @@ public class CommandEventTest {
     CommandEvent.Started startedDaemon =
         configureTestEvent(
             CommandEvent.started(
-                "build", ImmutableList.of("sample-app"), OptionalLong.of(12), 17L));
+                "build", ImmutableList.of("sample-app"), Paths.get(""), OptionalLong.of(12), 17L));
     CommandEvent.Started startedDaemonTwo =
         configureTestEvent(
             CommandEvent.started(
-                "build", ImmutableList.of("sample-app"), OptionalLong.of(20), 23L));
+                "build", ImmutableList.of("sample-app"), Paths.get(""), OptionalLong.of(20), 23L));
     CommandEvent.Started startedNoDaemon =
         configureTestEvent(
             CommandEvent.started(
-                "build", ImmutableList.of("sample-app"), OptionalLong.empty(), 3L));
+                "build", ImmutableList.of("sample-app"), Paths.get(""), OptionalLong.empty(), 3L));
     CommandEvent.Started startedDifferentName =
         configureTestEvent(
             CommandEvent.started(
-                "test", ImmutableList.of("sample-app"), OptionalLong.empty(), 11L));
+                "test", ImmutableList.of("sample-app"), Paths.get(""), OptionalLong.empty(), 11L));
     CommandEvent finishedDaemon =
         configureTestEvent(CommandEvent.finished(startedDaemon, ExitCode.SUCCESS));
     CommandEvent finishedDaemonFailed =

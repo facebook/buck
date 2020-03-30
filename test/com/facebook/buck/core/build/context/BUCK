@@ -4,9 +4,6 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/build/context:context",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/jvm/core:core",
@@ -16,5 +13,8 @@ java_library(
         "//test/com/facebook/buck/jvm/java:testutil",
         "//third-party/java/easymock:easymock",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/build/context:context",
     ],
 )

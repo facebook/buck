@@ -15,6 +15,13 @@
 .fakebuckversion
 /.nobuckcheck
 
+# LogD logs
+/logd-out
+
+# From VSCode@FB language services
+/.lsp-buck-out
+/.lsp.buckd
+
 # Files created during tests
 /test/com/facebook/buck/testutil/integration/testlibs/buck-out/
 /test/**/testdata/**/buck-out/
@@ -54,6 +61,9 @@
 
 # Vim editing-state session files
 Session.vim
+
+# VSCode stuff
+/.lsp*
 
 # Emacs backup files
 *~

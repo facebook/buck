@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.skylark.parser;
 
 import static org.junit.Assert.assertThat;
@@ -27,6 +28,7 @@ import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.skylark.function.SkylarkBuildModule;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -84,11 +86,13 @@ public class SkylarkProjectBuildFileParserTestUtils {
         .setBuildFileName("BUCK")
         .setRawConfig(ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", "dummy_value")))
         .setDescriptions(knownRuleTypesProvider.getNativeRuleTypes(cell).getDescriptions())
+        .setPerFeatureProviders(
+            knownRuleTypesProvider.getNativeRuleTypes(cell).getPerFeatureProviders())
         .setBuildFileImportWhitelist(ImmutableList.of())
         .setPythonInterpreter("skylark");
   }
 
-  static SkylarkProjectBuildFileParser createParserWithOptions(
+  public static SkylarkProjectBuildFileParser createParserWithOptions(
       SkylarkFilesystem skylarkFilesystem,
       EventHandler eventHandler,
       ProjectBuildFileParserOptions options,
@@ -98,14 +102,15 @@ public class SkylarkProjectBuildFileParserTestUtils {
         options,
         BuckEventBusForTests.newInstance(),
         skylarkFilesystem,
-        BuckGlobals.builder()
-            .setRuleFunctionFactory(new RuleFunctionFactory(new DefaultTypeCoercerFactory()))
-            .setDescriptions(options.getDescriptions())
-            .setDisableImplicitNativeRules(options.getDisableImplicitNativeRules())
-            .setEnableUserDefinedRules(options.getEnableUserDefinedRules())
-            .setLabelCache(LabelCache.newLabelCache())
-            .setKnownUserDefinedRuleTypes(knownRuleTypesProvider.getUserDefinedRuleTypes(cell))
-            .build(),
+        BuckGlobals.of(
+            SkylarkBuildModule.BUILD_MODULE,
+            options.getDescriptions(),
+            options.getUserDefinedRulesState(),
+            options.getImplicitNativeRulesState(),
+            new RuleFunctionFactory(new DefaultTypeCoercerFactory()),
+            LabelCache.newLabelCache(),
+            knownRuleTypesProvider.getUserDefinedRuleTypes(cell),
+            options.getPerFeatureProviders()),
         eventHandler,
         NativeGlobber::create);
   }
@@ -113,7 +118,7 @@ public class SkylarkProjectBuildFileParserTestUtils {
   static Map<String, Object> getSingleRule(
       SkylarkProjectBuildFileParser parser, java.nio.file.Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
-    BuildFileManifest buildFileManifest = parser.getBuildFileManifest(buildFile);
+    BuildFileManifest buildFileManifest = parser.getManifest(buildFile);
     assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
     return Iterables.getOnlyElement(buildFileManifest.getTargets().values());
   }

@@ -1,31 +1,32 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.kotlin;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -42,15 +43,16 @@ import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.test.config.TestBuckConfig;
-import com.facebook.buck.util.MoreSuppliers;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import java.util.Optional;
-import java.util.function.Supplier;
-import org.immutables.value.Value;
+import java.util.function.Function;
 
 /** Description for kotlin_test. */
 public class KotlinTestDescription
@@ -59,9 +61,9 @@ public class KotlinTestDescription
 
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
-  private final Supplier<JavaOptions> javaOptionsForTests;
+  private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
   private final JavacFactory javacFactory;
-  private final Supplier<JavacOptions> defaultJavacOptions;
+  private final LoadingCache<TargetConfiguration, JavacOptions> defaultJavacOptions;
 
   public KotlinTestDescription(
       ToolchainProvider toolchainProvider,
@@ -72,11 +74,17 @@ public class KotlinTestDescription
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.defaultJavacOptions =
-        MoreSuppliers.memoize(
-            () ->
-                toolchainProvider
-                    .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
-                    .getJavacOptions());
+        CacheBuilder.newBuilder()
+            .build(
+                new CacheLoader<TargetConfiguration, JavacOptions>() {
+                  @Override
+                  public JavacOptions load(TargetConfiguration key) throws Exception {
+                    return toolchainProvider
+                        .getByName(
+                            JavacOptionsProvider.DEFAULT_NAME, key, JavacOptionsProvider.class)
+                        .getJavacOptions();
+                  }
+                });
   }
 
   @Override
@@ -96,7 +104,11 @@ public class KotlinTestDescription
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     JavacOptions javacOptions =
-        JavacOptionsFactory.create(defaultJavacOptions.get(), buildTarget, graphBuilder, args);
+        JavacOptionsFactory.create(
+            defaultJavacOptions.getUnchecked(buildTarget.getTargetConfiguration()),
+            buildTarget,
+            graphBuilder,
+            args);
 
     DefaultJavaLibraryRules defaultJavaLibraryRules =
         KotlinLibraryBuilder.newInstance(
@@ -105,7 +117,6 @@ public class KotlinTestDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                context.getCellPathResolver(),
                 kotlinBuckConfig,
                 javaBuckConfig,
                 args,
@@ -121,12 +132,11 @@ public class KotlinTestDescription
         graphBuilder.addToIndex(defaultJavaLibraryRules.buildLibrary());
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(JavaTestDescription.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            graphBuilder,
+            JavaTestDescription.MACRO_EXPANDERS);
     return new JavaTest(
         buildTarget,
         projectFilesystem,
@@ -139,7 +149,7 @@ public class KotlinTestDescription
         args.getTestType().orElse(TestType.JUNIT),
         javacOptions.getLanguageLevelOptions().getTargetLevel(),
         javaOptionsForTests
-            .get()
+            .apply(buildTarget.getTargetConfiguration())
             .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
         Lists.transform(args.getVmArgs(), macrosConverter::convert),
         ImmutableMap.of(), /* nativeLibsEnvironment */
@@ -162,18 +172,18 @@ public class KotlinTestDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       KotlinTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
     javaOptionsForTests
-        .get()
+        .apply(buildTarget.getTargetConfiguration())
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractKotlinTestDescriptionArg
       extends KotlinLibraryDescription.CoreArg, JavaTestDescription.CoreArg {}
 }

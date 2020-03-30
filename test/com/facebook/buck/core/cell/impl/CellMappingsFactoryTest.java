@@ -1,34 +1,34 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.cell.impl;
 
 import static com.facebook.buck.core.cell.impl.DefaultCellPathResolver.REPOSITORIES_SECTION;
 import static org.junit.Assert.assertEquals;
 
-import com.facebook.buck.core.cell.CellNameResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.ImmutableCanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -68,7 +68,7 @@ public class CellMappingsFactoryTest {
 
   @Test
   public void testPathResolver() {
-    Path root = filesystem.getRootPath();
+    AbsPath root = filesystem.getRootPath();
     BuckConfig rootConfig =
         configBuilder()
             .put("cell1", "repo1")
@@ -80,18 +80,18 @@ public class CellMappingsFactoryTest {
     NewCellPathResolver newCellPathResolver =
         CellMappingsFactory.create(root, rootConfig.getConfig());
 
-    assertEquals(root, newCellPathResolver.getCellPath(CanonicalCellName.rootCell()));
+    assertEquals(root.getPath(), newCellPathResolver.getCellPath(CanonicalCellName.rootCell()));
     assertEquals(
-        root.resolve("repo1"),
-        newCellPathResolver.getCellPath(ImmutableCanonicalCellName.of(Optional.of("cell1"))));
+        root.resolve("repo1").getPath(),
+        newCellPathResolver.getCellPath(CanonicalCellName.of(Optional.of("cell1"))));
     assertEquals(
-        root.resolve("repo2"),
-        newCellPathResolver.getCellPath(ImmutableCanonicalCellName.of(Optional.of("cell2"))));
+        root.resolve("repo2").getPath(),
+        newCellPathResolver.getCellPath(CanonicalCellName.of(Optional.of("cell2"))));
   }
 
   @Test
   public void testRootNameResolver() {
-    Path root = filesystem.getRootPath();
+    AbsPath root = filesystem.getRootPath();
     BuckConfig rootConfig =
         configBuilder()
             .put("cell1", "repo1")
@@ -109,20 +109,18 @@ public class CellMappingsFactoryTest {
 
     assertEquals(CanonicalCellName.rootCell(), rootNameResolver.getName(Optional.empty()));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell1")),
-        rootNameResolver.getName(Optional.of("cell1")));
+        CanonicalCellName.of(Optional.of("cell1")), rootNameResolver.getName(Optional.of("cell1")));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell2")),
-        rootNameResolver.getName(Optional.of("cell2")));
+        CanonicalCellName.of(Optional.of("cell2")), rootNameResolver.getName(Optional.of("cell2")));
     assertEquals(CanonicalCellName.rootCell(), rootNameResolver.getName(Optional.of("self")));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell2")),
+        CanonicalCellName.of(Optional.of("cell2")),
         rootNameResolver.getName(Optional.of("cell2_alias")));
   }
 
   @Test
   public void testOtherNameResolver() {
-    Path root = filesystem.getRootPath();
+    AbsPath root = filesystem.getRootPath();
     BuckConfig rootConfig =
         configBuilder()
             .put("cell1", "repo1")
@@ -147,17 +145,15 @@ public class CellMappingsFactoryTest {
             root.resolve("repo1"), otherConfig.getConfig(), newCellPathResolver);
 
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell1")),
-        otherNameResolver.getName(Optional.empty()));
+        CanonicalCellName.of(Optional.of("cell1")), otherNameResolver.getName(Optional.empty()));
     assertEquals(CanonicalCellName.rootCell(), otherNameResolver.getName(Optional.of("root")));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell2")),
+        CanonicalCellName.of(Optional.of("cell2")),
         otherNameResolver.getName(Optional.of("cell2")));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell1")),
-        otherNameResolver.getName(Optional.of("self")));
+        CanonicalCellName.of(Optional.of("cell1")), otherNameResolver.getName(Optional.of("self")));
     assertEquals(
-        ImmutableCanonicalCellName.of(Optional.of("cell1")),
+        CanonicalCellName.of(Optional.of("cell1")),
         otherNameResolver.getName(Optional.of("other_self")));
   }
 }

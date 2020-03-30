@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.tools.consistency;
@@ -324,18 +324,13 @@ public class RuleKeyDiffPrinter {
       case BYTE_ARRAY:
         return String.format("ByteArray, length %s", value.getByteArray().length);
       case CONTAINER_MAP:
-        return value
-            .getContainerMap()
-            .entrySet()
-            .stream()
+        return value.getContainerMap().entrySet().stream()
             .map(
                 entry ->
                     String.format("%s: %s", entry.getKey(), getRuleKeyName(file, entry.getValue())))
             .collect(Collectors.joining(", "));
       case CONTAINER_LIST:
-        return value
-            .getContainerList()
-            .stream()
+        return value.getContainerList().stream()
             .map(v -> getRuleKeyName(file, v))
             .collect(Collectors.joining(", "));
       case RULE_KEY_HASH:
@@ -356,7 +351,10 @@ public class RuleKeyDiffPrinter {
         return value.getBuildTarget().name;
       case TARGET_PATH:
         return value.getTargetPath().path;
+      case KEY:
+        return value.getKey().key;
     }
-    return "UNKNOWN NAME";
+    // Should not really happen since switch above covers all union members
+    return "UNKNOWN UNION MEMBER";
   }
 }

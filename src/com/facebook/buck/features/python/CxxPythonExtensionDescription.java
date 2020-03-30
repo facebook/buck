@@ -1,28 +1,30 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -33,7 +35,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -68,7 +70,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableCollection;
@@ -77,12 +79,12 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 public class CxxPythonExtensionDescription
     implements DescriptionWithTargetGraph<CxxPythonExtensionDescriptionArg>,
@@ -120,8 +122,13 @@ public class CxxPythonExtensionDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getPythonPlatforms(), getCxxPlatforms(), LIBRARY_TYPE));
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(
+            getPythonPlatforms(toolchainTargetConfiguration),
+            getCxxPlatforms(toolchainTargetConfiguration),
+            LIBRARY_TYPE));
   }
 
   @Override
@@ -170,7 +177,8 @@ public class CxxPythonExtensionDescription
     ImmutableMap<String, CxxSource> srcs =
         CxxDescriptionEnhancer.parseCxxSources(target, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
-        CxxDescriptionEnhancer.parseHeaders(target, graphBuilder, Optional.of(cxxPlatform), args);
+        CxxDescriptionEnhancer.parseHeaders(
+            target, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -241,17 +249,21 @@ public class CxxPythonExtensionDescription
       CellPathResolver cellRoots,
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args,
-      ImmutableSet<BuildRule> deps) {
+      ImmutableSet<BuildRule> deps,
+      boolean includePrivateLinkerFlags) {
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-    CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-            args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
-        .stream()
-        .map(
-            CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
-                    target, cellRoots, graphBuilder, cxxPlatform)
-                ::convert)
-        .forEach(argsBuilder::add);
+
+    if (includePrivateLinkerFlags) {
+      CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+              args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
+          .stream()
+          .map(
+              CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
+                      target, cellRoots, graphBuilder, cxxPlatform)
+                  ::convert)
+          .forEach(argsBuilder::add);
+    }
 
     // Embed a origin-relative library path into the binary so it can find the shared libraries.
     argsBuilder.addAll(
@@ -347,7 +359,8 @@ public class CxxPythonExtensionDescription
                     cellRoots,
                     cxxPlatform,
                     args,
-                    deps))
+                    deps,
+                    true))
             .setFrameworks(args.getFrameworks())
             .setLibraries(args.getLibraries())
             .build(),
@@ -386,8 +399,10 @@ public class CxxPythonExtensionDescription
     Optional<Type> type = LIBRARY_TYPE.getValue(buildTarget);
     if (type.isPresent()) {
 
-      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms = getCxxPlatforms();
-      FlavorDomain<PythonPlatform> pythonPlatforms = getPythonPlatforms();
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+          getCxxPlatforms(buildTarget.getTargetConfiguration());
+      FlavorDomain<PythonPlatform> pythonPlatforms =
+          getPythonPlatforms(buildTarget.getTargetConfiguration());
 
       // If we *are* building a specific type of this lib, call into the type specific rule builder
       // methods.
@@ -416,7 +431,9 @@ public class CxxPythonExtensionDescription
             // we keep the platform default as a final fallback
             ImmutableSet<Flavor> defaultCxxFlavors = args.getDefaultFlavors();
             if (!cxxPlatforms.containsAnyOf(defaultCxxFlavors)) {
-              defaultCxxFlavors = ImmutableSet.of(getDefaultCxxPlatform().getFlavor());
+              defaultCxxFlavors =
+                  ImmutableSet.of(
+                      getDefaultCxxPlatform(buildTarget.getTargetConfiguration()).getFlavor());
             }
 
             target = target.withAppendedFlavors(defaultCxxFlavors);
@@ -474,21 +491,19 @@ public class CxxPythonExtensionDescription
       }
 
       @Override
-      public PythonPackageComponents getPythonPackageComponents(
+      public Optional<PythonMappedComponents> getPythonModules(
           PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         BuildRule extension = getExtension(pythonPlatform, cxxPlatform, graphBuilder);
         SourcePath output = extension.getSourcePathToOutput();
-        return PythonPackageComponents.of(
-            ImmutableMap.of(module, output),
-            ImmutableMap.of(),
-            ImmutableMap.of(),
-            ImmutableMultimap.of(),
-            Optional.of(false));
+        return Optional.of(PythonMappedComponents.of(ImmutableSortedMap.of(module, output)));
       }
 
       @Override
       public NativeLinkTarget getNativeLinkTarget(
-          PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+          PythonPlatform pythonPlatform,
+          CxxPlatform cxxPlatform,
+          ActionGraphBuilder graphBuilder,
+          boolean includePrivateLinkerFlags) {
         ImmutableList<NativeLinkable> linkTargetDeps =
             RichStream.from(getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args))
                 .filter(NativeLinkableGroup.class)
@@ -506,7 +521,8 @@ public class CxxPythonExtensionDescription
                         cellRoots,
                         cxxPlatform,
                         args,
-                        getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args)))
+                        getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args),
+                        includePrivateLinkerFlags))
                 .addAllFrameworks(args.getFrameworks())
                 .build();
         return new NativeLinkTargetInfo(
@@ -527,17 +543,18 @@ public class CxxPythonExtensionDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractCxxPythonExtensionDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Get any parse time deps from the C/C++ platforms.
-    getCxxPlatforms()
+    getCxxPlatforms(buildTarget.getTargetConfiguration())
         .getValues(buildTarget)
         .forEach(
             p -> extraDepsBuilder.addAll(p.getParseTimeDeps(buildTarget.getTargetConfiguration())));
 
-    for (PythonPlatform pythonPlatform : getPythonPlatforms().getValues()) {
+    for (PythonPlatform pythonPlatform :
+        getPythonPlatforms(buildTarget.getTargetConfiguration()).getValues()) {
       Optionals.addIfPresent(pythonPlatform.getCxxLibrary(), extraDepsBuilder);
     }
   }
@@ -547,26 +564,37 @@ public class CxxPythonExtensionDescription
     return true;
   }
 
-  private FlavorDomain<PythonPlatform> getPythonPlatforms() {
+  private FlavorDomain<PythonPlatform> getPythonPlatforms(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+        .getByName(
+            PythonPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            PythonPlatformsProvider.class)
         .getPythonPlatforms();
   }
 
-  private UnresolvedCxxPlatform getDefaultCxxPlatform() {
+  private UnresolvedCxxPlatform getDefaultCxxPlatform(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class)
         .getDefaultUnresolvedCxxPlatform();
   }
 
-  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms() {
+  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class)
         .getUnresolvedCxxPlatforms();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCxxPythonExtensionDescriptionArg extends CxxConstructorArg {
     Optional<String> getBaseModule();
 

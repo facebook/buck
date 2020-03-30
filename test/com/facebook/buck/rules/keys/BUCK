@@ -16,11 +16,6 @@ java_library(
             "*Test.java",
         ],
     ) + COMMON_TEST_SRCS,
-    exported_deps = [
-        "//src/com/facebook/buck/rules/keys:keys",
-        "//src/com/facebook/buck/util/types:types",
-        "//test/com/facebook/buck/testutil:testutil",
-    ],
     visibility = [
         "//test/...",
     ],
@@ -69,6 +64,11 @@ java_library(
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/rules/keys:keys",
+        "//src/com/facebook/buck/util/types:types",
+        "//test/com/facebook/buck/testutil:testutil",
+    ],
 )
 
 java_test(
@@ -104,7 +104,6 @@ java_test(
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
-        "//src/com/facebook/buck/distributed:distributed",
         "//src/com/facebook/buck/doctor/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",

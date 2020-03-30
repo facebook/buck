@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.description.arg;
@@ -35,6 +35,7 @@ public @interface Hint {
   boolean DEFAULT_IS_TARGET_GRAPH_ONLY_DEP = false;
   boolean DEFAULT_IS_CONFIGURABLE = true;
   boolean DEFAULT_SPLIT_CONFIGURATION = false;
+  boolean DEFAULT_EXEC_CONFIGURATION = false;
 
   /** @return Whether to search the field's value for dependencies */
   boolean isDep() default DEFAULT_IS_DEP;
@@ -66,4 +67,14 @@ public @interface Hint {
    * multiple configurations and the attribute type supports concatenation.
    */
   boolean splitConfiguration() default DEFAULT_SPLIT_CONFIGURATION;
+
+  /**
+   * Indicates that execution configuration (as opposed to target configuration) should be used when
+   * resolving targets.
+   *
+   * <p>This is used for example in {@code cxx_toolchain} rule: toolchain itself need to be created
+   * with target configuration, but if it specifies c compiler as a build target, that target need
+   * to be built for execution configuration.
+   */
+  boolean execConfiguration() default DEFAULT_EXEC_CONFIGURATION;
 }

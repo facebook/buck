@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.go;
@@ -22,6 +22,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -85,6 +86,7 @@ public class GoTestIntegrationTest {
     assertEquals("stuff", other.get(0).get("complicated").textValue());
     assertEquals(1, other.get(0).get("integer").intValue());
     assertEquals(1.2, other.get(0).get("double").doubleValue(), 0);
+    assertTrue(other.get(0).get("boolean").booleanValue());
 
     String cmd = spec.get("cmd").textValue();
 
@@ -161,7 +163,9 @@ public class GoTestIntegrationTest {
     result1.assertSuccess();
 
     assertIsRegularCopy(
-        workspace.resolve("buck-out/gen/test-with-resources#test-main/testdata/input"),
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:test-with-resources#test-main"), "%s")
+            .resolve("testdata/input"),
         workspace.resolve("testdata/input"));
   }
 
@@ -176,7 +180,10 @@ public class GoTestIntegrationTest {
     result1.assertSuccess();
 
     assertIsRegularCopy(
-        workspace.resolve("buck-out/gen/test-with-resources-directory#test-main/testdata/input"),
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance("//:test-with-resources-directory#test-main"), "%s")
+            .resolve("testdata/input"),
         workspace.resolve("testdata/input"));
   }
 
@@ -191,8 +198,10 @@ public class GoTestIntegrationTest {
     result1.assertSuccess();
 
     assertIsRegularCopy(
-        workspace.resolve(
-            "buck-out/gen/test-with-resources-2directory#test-main/testdata/level2/input"),
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance("//:test-with-resources-2directory#test-main"), "%s")
+            .resolve("testdata/level2/input"),
         workspace.resolve("testdata/level2/input"));
   }
 
@@ -207,12 +216,20 @@ public class GoTestIntegrationTest {
     result1.assertSuccess();
 
     assertIsRegularCopy(
-        workspace.resolve(
-            "buck-out/gen/test-with-resources-2directory-2resources#test-main/testdata/level2/input"),
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance(
+                    "//:test-with-resources-2directory-2resources#test-main"),
+                "%s")
+            .resolve("testdata/level2/input"),
         workspace.resolve("testdata/level2/input"));
     assertIsRegularCopy(
-        workspace.resolve(
-            "buck-out/gen/test-with-resources-2directory-2resources#test-main/testdata/level2bis/input"),
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance(
+                    "//:test-with-resources-2directory-2resources#test-main"),
+                "%s")
+            .resolve("testdata/level2bis/input"),
         workspace.resolve("testdata/level2bis/input"));
   }
 

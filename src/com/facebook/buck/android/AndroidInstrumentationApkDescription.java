@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -26,8 +26,8 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.DxToolchain;
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -39,7 +39,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -69,6 +69,7 @@ public class AndroidInstrumentationApkDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
   private final ToolchainProvider toolchainProvider;
+  private final AndroidBuckConfig androidBuckConfig;
 
   private final JavacFactory javacFactory;
 
@@ -77,13 +78,15 @@ public class AndroidInstrumentationApkDescription
       ProGuardConfig proGuardConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
-      ToolchainProvider toolchainProvider) {
+      ToolchainProvider toolchainProvider,
+      AndroidBuckConfig androidBuckConfig) {
     this.javaBuckConfig = javaBuckConfig;
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
     this.toolchainProvider = toolchainProvider;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.androidBuckConfig = androidBuckConfig;
   }
 
   @Override
@@ -152,15 +155,16 @@ public class AndroidInstrumentationApkDescription
 
     ListeningExecutorService dxExecutorService =
         toolchainProvider
-            .getByName(DxToolchain.DEFAULT_NAME, DxToolchain.class)
+            .getByName(
+                DxToolchain.DEFAULT_NAME, buildTarget.getTargetConfiguration(), DxToolchain.class)
             .getDxExecutorService();
 
     boolean shouldProguard =
         apkUnderTest.getProguardConfig().isPresent()
             || !ProGuardObfuscateStep.SdkProguardType.NONE.equals(
                 apkUnderTest.getSdkProguardConfig());
-    NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
-        NonPredexedDexBuildableArgs.builder()
+    NonPreDexedDexBuildable.NonPredexedDexBuildableArgs nonPreDexedDexBuildableArgs =
+        ImmutableNonPredexedDexBuildableArgs.builder()
             .setProguardAgentPath(proGuardConfig.getProguardAgentPath())
             .setProguardJarOverride(
                 proGuardConfig.getProguardJarOverride(buildTarget.getTargetConfiguration()))
@@ -182,8 +186,11 @@ public class AndroidInstrumentationApkDescription
 
     AndroidPlatformTarget androidPlatformTarget =
         toolchainProvider.getByName(
-            AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+            AndroidPlatformTarget.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidPlatformTarget.class);
 
+    String dexTool = args.getDexTool();
     AndroidBinaryGraphEnhancer graphEnhancer =
         new AndroidBinaryGraphEnhancer(
             toolchainProvider,
@@ -194,6 +201,7 @@ public class AndroidInstrumentationApkDescription
             params,
             graphBuilder,
             args.getAaptMode(),
+            ImmutableList.of(),
             ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -207,7 +215,7 @@ public class AndroidInstrumentationApkDescription
             PackageType.INSTRUMENTED,
             apkUnderTest.getCpuFilters(),
             /* shouldBuildStringSourceMap */ false,
-            /* shouldPreDex */ false,
+            /* shouldPreDex */ dexTool == DxStep.D8,
             DexSplitMode.NO_SPLIT,
             buildTargetsToExclude.build(),
             resourcesToExclude,
@@ -220,10 +228,14 @@ public class AndroidInstrumentationApkDescription
             /* noAutoVersionResources */ false,
             /* noVersionTransitionsResources */ false,
             /* noAutoAddOverlayResources */ false,
+            androidBuckConfig.getAaptNoResourceRemoval(),
             javaBuckConfig,
             javacFactory,
             toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             EnumSet.noneOf(ExopackageMode.class),
             /* buildConfigValues */ BuildConfigFields.of(),
@@ -244,13 +256,16 @@ public class AndroidInstrumentationApkDescription
             cxxBuckConfig,
             new APKModuleGraph(context.getTargetGraph(), buildTarget),
             dxConfig,
-            args.getDexTool(),
+            dexTool,
             /* postFilterResourcesCommands */ Optional.empty(),
             nonPreDexedDexBuildableArgs,
             createRulesToExcludeFromDexSupplier(
                 apkUnderTest.getRulesToExcludeFromDex(), apkUnderTestTransitiveClasspathDeps),
             false,
-            new NoopAndroidNativeTargetConfigurationMatcher());
+            new NoopAndroidNativeTargetConfigurationMatcher(),
+            androidBuckConfig.getFailOnLegacyAaptErrors(),
+            false /* useAapt2LocaleFiltering */,
+            ImmutableSet.of());
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
     AndroidBinaryFilesInfo filesInfo =
@@ -258,7 +273,10 @@ public class AndroidInstrumentationApkDescription
     return new AndroidInstrumentationApk(
         buildTarget,
         context.getProjectFilesystem(),
-        toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class),
+        toolchainProvider.getByName(
+            AndroidSdkLocation.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            AndroidSdkLocation.class),
         androidPlatformTarget,
         params,
         graphBuilder,
@@ -284,19 +302,18 @@ public class AndroidInstrumentationApkDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AndroidInstrumentationApkDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
     AndroidTools.addParseTimeDepsToAndroidTools(
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractAndroidInstrumentationApkDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  @RuleArg
+  interface AbstractAndroidInstrumentationApkDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<SourcePath> getManifest();
 
     Optional<SourcePath> getManifestSkeleton();
@@ -315,7 +332,7 @@ public class AndroidInstrumentationApkDescription
 
     @Value.Default
     default String getDexTool() {
-      return DxStep.DX;
+      return DxStep.D8;
     }
   }
 }

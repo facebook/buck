@@ -1,28 +1,30 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -31,7 +33,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
@@ -39,7 +41,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.types.Either;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
@@ -78,12 +80,16 @@ public class CgoLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getGoToolchain().getPlatformFlavorDomain().containsAnyOf(flavors);
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return getGoToolchain(toolchainTargetConfiguration)
+        .getPlatformFlavorDomain()
+        .containsAnyOf(flavors);
   }
 
-  private GoToolchain getGoToolchain() {
-    return toolchainProvider.getByName(GoToolchain.DEFAULT_NAME, GoToolchain.class);
+  private GoToolchain getGoToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        GoToolchain.DEFAULT_NAME, toolchainTargetConfiguration, GoToolchain.class);
   }
 
   @Override
@@ -95,7 +101,9 @@ public class CgoLibraryDescription
       Optional<ImmutableMap<BuildTarget, Version>> selectedVersions,
       Class<U> metadataClass) {
     Optional<GoPlatform> platform =
-        getGoToolchain().getPlatformFlavorDomain().getValue(buildTarget);
+        getGoToolchain(buildTarget.getTargetConfiguration())
+            .getPlatformFlavorDomain()
+            .getValue(buildTarget);
 
     if (metadataClass.isAssignableFrom(GoLinkable.class)) {
       Preconditions.checkState(platform.isPresent());
@@ -103,15 +111,13 @@ public class CgoLibraryDescription
       SourcePath output = graphBuilder.requireRule(buildTarget).getSourcePathToOutput();
       return Optional.of(
           metadataClass.cast(
-              GoLinkable.builder()
-                  .setGoLinkInput(
-                      ImmutableMap.of(
-                          args.getPackageName()
-                              .map(Paths::get)
-                              .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
-                          output))
-                  .setExportedDeps(args.getExportedDeps())
-                  .build()));
+              GoLinkable.of(
+                  ImmutableMap.of(
+                      args.getPackageName()
+                          .map(Paths::get)
+                          .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),
+                      output),
+                  args.getExportedDeps())));
     } else if (buildTarget.getFlavors().contains(GoDescriptors.TRANSITIVE_LINKABLES_FLAVOR)) {
       Preconditions.checkState(platform.isPresent());
 
@@ -140,7 +146,7 @@ public class CgoLibraryDescription
       BuildRuleParams params,
       CgoLibraryDescriptionArg args) {
 
-    GoToolchain goToolchain = getGoToolchain();
+    GoToolchain goToolchain = getGoToolchain(buildTarget.getTargetConfiguration());
     Optional<GoPlatform> platform = goToolchain.getPlatformFlavorDomain().getValue(buildTarget);
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
@@ -201,12 +207,12 @@ public class CgoLibraryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       CgoLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add the C/C++ platform deps.
-    GoToolchain toolchain = getGoToolchain();
+    GoToolchain toolchain = getGoToolchain(buildTarget.getTargetConfiguration());
     toolchain
         .getPlatformFlavorDomain()
         .getValue(buildTarget)
@@ -217,8 +223,7 @@ public class CgoLibraryDescription
                         buildTarget.getTargetConfiguration(), platform.getCxxPlatform())));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractCgoLibraryDescriptionArg extends CxxBinaryDescription.CommonArg {
     ImmutableList<String> getCgoCompilerFlags();
 
@@ -240,11 +245,19 @@ public class CgoLibraryDescription
       // used for compilers other than gcc (due to __gcc_struct__)
       return wrapFlags(ImmutableList.of("-Wno-unknown-attributes"));
     }
+
+    @Override
+    default CgoLibraryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (CgoLibraryDescriptionArg) this;
+      }
+      return CgoLibraryDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
   }
 
   private static ImmutableList<StringWithMacros> wrapFlags(ImmutableList<String> flags) {
     return flags.stream()
-        .map(flag -> StringWithMacros.of(ImmutableList.of(Either.ofLeft(flag))))
+        .map(StringWithMacros::ofConstantString)
         .collect(ImmutableList.toImmutableList());
   }
 }

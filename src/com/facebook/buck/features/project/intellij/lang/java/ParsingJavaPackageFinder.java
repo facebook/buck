@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij.lang.java;
@@ -71,7 +71,7 @@ public abstract class ParsingJavaPackageFinder {
         .collect(Collectors.toList())
         .forEach(pair -> packagePathCache.insert(pair.getFirst(), pair.getSecond().get()));
 
-    return new CacheBasedPackageFinder(fallbackPackageFinder, packagePathCache);
+    return new CacheBasedPackageFinder(projectFilesystem, fallbackPackageFinder, packagePathCache);
   }
 
   /**
@@ -171,11 +171,16 @@ public abstract class ParsingJavaPackageFinder {
   }
 
   private static class CacheBasedPackageFinder implements JavaPackageFinder {
-    private JavaPackageFinder fallbackPackageFinder;
-    private JavaPackagePathCache packagePathCache;
+
+    private final ProjectFilesystem projectFilesystem;
+    private final JavaPackageFinder fallbackPackageFinder;
+    private final JavaPackagePathCache packagePathCache;
 
     public CacheBasedPackageFinder(
-        JavaPackageFinder fallbackPackageFinder, JavaPackagePathCache packagePathCache) {
+        ProjectFilesystem projectFilesystem,
+        JavaPackageFinder fallbackPackageFinder,
+        JavaPackagePathCache packagePathCache) {
+      this.projectFilesystem = projectFilesystem;
       this.fallbackPackageFinder = fallbackPackageFinder;
       this.packagePathCache = packagePathCache;
     }
@@ -198,7 +203,12 @@ public abstract class ParsingJavaPackageFinder {
 
     @Override
     public String findJavaPackage(BuildTarget buildTarget) {
-      return findJavaPackage(buildTarget.getBasePath().resolve("removed"));
+      return findJavaPackage(
+          buildTarget
+              .getCellRelativeBasePath()
+              .getPath()
+              .toPath(projectFilesystem.getFileSystem())
+              .resolve("removed"));
     }
   }
 

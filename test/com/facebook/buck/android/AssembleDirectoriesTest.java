@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -23,6 +23,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -52,22 +53,21 @@ public class AssembleDirectoriesTest {
     context =
         TestExecutionContext.newBuilder()
             .setCellPathResolver(TestCellPathResolver.get(filesystem))
-            .setBuildCellRootPath(filesystem.getRootPath())
+            .setBuildCellRootPath(filesystem.getRootPath().getPath())
             .build();
   }
 
   @Test
   public void testAssembleFoldersWithRelativePath() throws IOException, InterruptedException {
-    Path tmp = filesystem.getRootPath();
-    Files.createDirectories(tmp.resolve("folder_a"));
-    Files.write(tmp.resolve("folder_a/a.txt"), "".getBytes(UTF_8));
-    Files.write(tmp.resolve("folder_a/b.txt"), "".getBytes(UTF_8));
-    Files.createDirectories(tmp.resolve("folder_b"));
-    Files.write(tmp.resolve("folder_b/c.txt"), "".getBytes(UTF_8));
-    Files.write(tmp.resolve("folder_b/d.txt"), "".getBytes(UTF_8));
+    AbsPath tmp = filesystem.getRootPath();
+    Files.createDirectories(tmp.resolve("folder_a").getPath());
+    Files.write(tmp.resolve("folder_a/a.txt").getPath(), "".getBytes(UTF_8));
+    Files.write(tmp.resolve("folder_a/b.txt").getPath(), "".getBytes(UTF_8));
+    Files.createDirectories(tmp.resolve("folder_b").getPath());
+    Files.write(tmp.resolve("folder_b/c.txt").getPath(), "".getBytes(UTF_8));
+    Files.write(tmp.resolve("folder_b/d.txt").getPath(), "".getBytes(UTF_8));
 
-    BuildTarget target =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:output_folder");
+    BuildTarget target = BuildTargetFactory.newInstance("//:output_folder");
     ImmutableList<SourcePath> directories =
         ImmutableList.of(
             FakeSourcePath.of(filesystem, "folder_a"), FakeSourcePath.of(filesystem, "folder_b"));
@@ -79,7 +79,7 @@ public class AssembleDirectoriesTest {
     ImmutableList<Step> steps =
         assembleDirectories.getBuildSteps(
             FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-                .withBuildCellRootPath(tmp),
+                .withBuildCellRootPath(tmp.getPath()),
             new FakeBuildableContext());
     for (Step step : steps) {
       assertEquals(0, step.execute(context).getExitCode());

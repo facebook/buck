@@ -1,24 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.CacheStatsEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.util.cache.CacheStats;
 
@@ -33,7 +32,8 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
     this.cache = cache;
 
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(buckEventBus, PerfEventId.of("rule_key_cache_setup"))) {
+        SimplePerfEvent.scope(
+            buckEventBus, SimplePerfEvent.PerfEventId.of("rule_key_cache_setup"))) {
 
       // Run additional setup.
       setup(scope);
@@ -54,7 +54,8 @@ public class EventPostingRuleKeyCacheScope<V> implements RuleKeyCacheScope<V> {
   @Override
   public final void close() {
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(buckEventBus, PerfEventId.of("rule_key_cache_cleanup"))) {
+        SimplePerfEvent.scope(
+            buckEventBus, SimplePerfEvent.PerfEventId.of("rule_key_cache_cleanup"))) {
 
       // Log stats.
       CacheStats stats = cache.getStats();

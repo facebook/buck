@@ -1,8 +1,10 @@
 
+[python]
+    interpreter = python3
+    pex_flags = "--python-shebang=/usr/bin/env python3"
 [repositories]
     buck = .
-    bazel_skylib = ./third-party/skylark/bazel-skylib
-    testlib = test/com/facebook/buck/testutil/integration/testlibs
+    buck_bazel_skylib = ./third-party/skylark/bazel-skylib
 [java]
     ; Indicates that any folder named src or test
     ; are folders that contain Java code.
@@ -24,6 +26,7 @@
   kotlin_home = test/com/facebook/buck/toolchains/kotlin/kotlinc/
 [alias]
     buck = //programs:buck
+    buck-local = //programs:buck-local
     buck-android-support = //android/com/facebook/buck/android/support:buck-android-support
     eden = //test/com/facebook/buck/edenfs/cli:cli_bin
     hmaptool = //src/com/facebook/buck/apple/clang:hmaptool
@@ -36,7 +39,6 @@
 #   mode =
 [build]
     metadata_storage = sqlite
-    enable_manifest_service = false
 [download]
     maven_repo = https://repo1.maven.org/maven2
 [project]
@@ -74,6 +76,7 @@
     watchman_cursor = clock_id
     glob_handler = watchman
     embedded_cell_buck_out_enabled = true
+    buck_out_include_target_config_hash = true
 [test]
     ; Maximum timeout of 90 seconds per test.
     timeout = 90000

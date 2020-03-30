@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
@@ -20,18 +21,29 @@ import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.nio.file.Path;
 import java.util.Optional;
-import org.immutables.value.Value;
 
-/** Immutable class for holding Android paths and tools, for use in {@link GenruleBuildable}. */
-@Value.Immutable(prehash = false, builder = false, copy = false)
+/**
+ * Immutable class for holding Android paths and tools, for use in {@link GenruleBuildable}.
+ *
+ * <p>Note that, despite implementing AddsToRuleKey, GenruleAndroidTools does not actually
+ * contribute to rule keys. The reason for this is that all of the Path objects contained in this
+ * object are paths outside of the repository. GenruleAndroidTools is never serialized due to other
+ * logic in {@link GenruleBuildable} that prevents it from happening; it is a logic error to
+ * serialize this class across a {@link com.facebook.buck.rules.modern.ModernBuildRule} boundary.
+ *
+ * <p>This class still must implement AddsToRuleKey because ModernBuildRule requires that all fields
+ * in a {@link com.facebook.buck.rules.modern.Buildable} must implement AddsToRuleKey so that a
+ * serializer can be derived.
+ */
 @BuckStyleValue
-abstract class GenruleAndroidTools {
+public abstract class GenruleAndroidTools implements AddsToRuleKey {
   public abstract Path getAndroidSdkLocation();
 
   public abstract Path getAndroidPathToDx();
@@ -65,7 +77,7 @@ abstract class GenruleAndroidTools {
     ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
     TargetConfiguration targetConfiguration = target.getTargetConfiguration();
     Tool androidAapt2 = aapt2ToolProvider.resolve(ruleResolver, targetConfiguration);
-    return new ImmutableGenruleAndroidTools(
+    return ImmutableGenruleAndroidTools.of(
         androidSdk,
         androidDx,
         androidZipalign,

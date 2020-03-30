@@ -1,0 +1,6 @@
+cxx_library(
+    name = "incompatible_with_config",
+    compatible_with = [
+        "//compatible/config:apple-config",
+    ],
+)

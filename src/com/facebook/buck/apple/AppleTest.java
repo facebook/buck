@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -45,7 +45,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
@@ -268,7 +268,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     ExternalTestRunnerTestSpec.Builder externalSpec =
         ExternalTestRunnerTestSpec.builder()
-            .setCwd(getProjectFilesystem().getRootPath())
+            .setCwd(getProjectFilesystem().getRootPath().getPath())
             .setTarget(getBuildTarget())
             .setLabels(getLabels())
             .setContacts(getContacts());
@@ -296,8 +296,10 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Path resolvedTestOutputPath = getProjectFilesystem().resolve(testOutputPath);
 
-    Optional<Path> testHostAppPath = extractBundlePathForBundle(testHostApp, buildContext);
-    Optional<Path> uiTestTargetAppPath = extractBundlePathForBundle(uiTestTargetApp, buildContext);
+    Optional<Path> testHostAppPath =
+        extractBundlePathForBundle(testHostApp, buildContext.getSourcePathResolver());
+    Optional<Path> uiTestTargetAppPath =
+        extractBundlePathForBundle(uiTestTargetApp, buildContext.getSourcePathResolver());
 
     ImmutableMap<String, String> testEnvironmentOverrides =
         ImmutableMap.<String, String>builder()
@@ -454,15 +456,14 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return new Pair<>(steps.build(), externalSpec.build());
   }
 
-  private Optional<Path> extractBundlePathForBundle(
-      Optional<AppleBundle> bundle, BuildContext buildContext) {
+  static Optional<Path> extractBundlePathForBundle(
+      Optional<AppleBundle> bundle, SourcePathResolverAdapter sourcePathResolverAdapter) {
     if (!bundle.isPresent()) {
       return Optional.empty();
     }
     Path resolvedBundleDirectory =
-        buildContext
-            .getSourcePathResolver()
-            .getAbsolutePath(Objects.requireNonNull(bundle.get().getSourcePathToOutput()));
+        sourcePathResolverAdapter.getAbsolutePath(
+            Objects.requireNonNull(bundle.get().getSourcePathToOutput()));
     return Optional.of(
         resolvedBundleDirectory.resolve(bundle.get().getUnzippedOutputFilePathToBinary()));
   }
@@ -483,7 +484,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       List<TestCaseSummary> testCaseSummaries;

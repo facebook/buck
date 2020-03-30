@@ -1,21 +1,25 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli.endtoend;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
 import com.facebook.buck.testutil.endtoend.EndToEndRunner;
@@ -69,23 +73,29 @@ public class BaseDirEndToEndTest {
     Path output =
         workspace
             .getDestPath()
+            .resolve(Paths.get("mybase-buck-out", "gen"))
             .resolve(
-                Paths.get(
-                    "mybase-buck-out",
-                    "gen",
-                    "simple_successful_helloworld",
-                    "simple_successful_helloworld"));
+                BuildTargetPaths.getBasePath(
+                        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+                        BuildTargetFactory.newInstance(
+                            "//simple_successful_helloworld:simple_successful_helloworld"),
+                        "%s")
+                    .toPath(workspace.getDestPath().getFileSystem()));
     Assert.assertTrue(Files.exists(output));
 
     Path usualOutput =
         workspace
             .getDestPath()
+            .resolve(Paths.get("buck-out", "gen"))
             .resolve(
-                Paths.get(
-                    "buck-out",
-                    "gen",
-                    "simple_successful_helloworld",
-                    "simple_successful_helloworld"));
+                BuildTargetPaths.getBasePath(
+                        FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
+                            BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
+                        BuildTargetFactory.newInstance(
+                            "//simple_successful_helloworld:simple_successful_helloworld"),
+                        "%s")
+                    .toPath(workspace.getDestPath().getFileSystem()));
     Assert.assertFalse(Files.exists(usualOutput));
 
     workspace.deleteRecursivelyIfExists(output.toString());
@@ -95,26 +105,7 @@ public class BaseDirEndToEndTest {
             "build", "//simple_successful_helloworld:simple_successful_helloworld");
     result.assertSuccess();
 
-    output =
-        workspace
-            .getDestPath()
-            .resolve(
-                Paths.get(
-                    "mybase-buck-out",
-                    "gen",
-                    "simple_successful_helloworld",
-                    "simple_successful_helloworld"));
     Assert.assertFalse(Files.exists(output));
-
-    usualOutput =
-        workspace
-            .getDestPath()
-            .resolve(
-                Paths.get(
-                    "buck-out",
-                    "gen",
-                    "simple_successful_helloworld",
-                    "simple_successful_helloworld"));
     Assert.assertTrue(Files.exists(usualOutput));
   }
 }

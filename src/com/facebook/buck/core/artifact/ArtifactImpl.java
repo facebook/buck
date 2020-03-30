@@ -1,29 +1,37 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.analysis.action.ActionAnalysisDataKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
 import com.facebook.buck.io.file.MorePaths;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.EvalException;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -42,13 +50,23 @@ class ArtifactImpl extends AbstractArtifact
   private static final Path PARENT_PATH = Paths.get("..");
 
   private @Nullable ActionAnalysisDataKey actionAnalysisDataKey = null;
-  private @Nullable ExplicitBuildTargetSourcePath sourcePath;
+  @AddToRuleKey private @Nullable ExplicitBuildTargetSourcePath sourcePath;
 
   private final BuildTarget target;
   private final Path genDir;
   private final Path basePath;
   private final Path outputPath;
   private final Location location;
+
+  static ArtifactImpl of(
+      BuildTarget target, Path genDir, Path packagePath, String outputPath, Location location) {
+    try {
+      return of(target, genDir, packagePath, Paths.get(outputPath), location);
+    } catch (InvalidPathException e) {
+      throw new ArtifactDeclarationException(
+          ArtifactDeclarationException.Reason.INVALID_PATH, target, outputPath);
+    }
+  }
 
   static ArtifactImpl of(
       BuildTarget target, Path genDir, Path packagePath, Path outputPath, Location location)
@@ -100,7 +118,8 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   /** @return the output path relative to the {@link #getPackagePath()} */
-  Path getOutputPath() {
+  @Override
+  public Path getOutputPath() {
     return outputPath;
   }
 
@@ -117,6 +136,18 @@ class ArtifactImpl extends AbstractArtifact
         ExplicitBuildTargetSourcePath.of(
             getBuildTarget(), getPackagePath().resolve(getOutputPath()));
     return this;
+  }
+
+  @Override
+  public int compareDeclared(DeclaredArtifact artifact) {
+    Preconditions.checkState(!isBound() && artifact instanceof ArtifactImpl);
+    ArtifactImpl other = (ArtifactImpl) artifact;
+    return ComparisonChain.start()
+        .compare(target, other.target)
+        .compare(outputPath, other.outputPath)
+        .compare(genDir, other.genDir)
+        .compare(basePath, other.basePath)
+        .result();
   }
 
   @Override
@@ -161,6 +192,11 @@ class ArtifactImpl extends AbstractArtifact
     this.location = Location.BUILTIN;
   }
 
+  /** Get the location where this artifact was declared. {@link Location.BUILTIN} is valid */
+  public Location getDeclaredLocation() {
+    return location;
+  }
+
   @Override
   public @Nullable SourceArtifactImpl asSource() {
     return null;
@@ -191,31 +227,65 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
+  public SkylarkOutputArtifactApi asSkylarkOutputArtifact(Location location) throws EvalException {
+    if (isBound()) {
+      throw new EvalException(
+          location,
+          String.format("%s is already bound. It cannot be used as an output artifact", this));
+    }
+    return ImmutableOutputArtifact.of(this);
+  }
+
+  @Override
+  public OutputArtifact asOutputArtifact() {
+    if (isBound()) {
+      throw new HumanReadableException(
+          "%s is already bound. It cannot be used as an output artifact", this);
+    }
+    return ImmutableOutputArtifact.of(this);
+  }
+
+  @Override
   public boolean isSource() {
     return false;
   }
 
   @Override
   public void repr(SkylarkPrinter printer) {
-    printer.append("<generated file '");
-    printer.append(getShortPath());
+    repr(printer, this, false);
+  }
+
+  static void repr(SkylarkPrinter printer, Artifact artifact, boolean isOutputArtifact) {
+    printer.append("<generated ");
+    if (isOutputArtifact) {
+      printer.append("output");
+    }
+    printer.append("file '");
+    printer.append(artifact.getShortPath());
     printer.append("'>");
   }
 
   @Override
   public String toString() {
+    return toString(this, false);
+  }
+
+  static String toString(ArtifactImpl artifact, boolean isOutputArtifact) {
     StringBuilder builder = new StringBuilder("Artifact<");
-    builder.append(getShortPath()).append(", ");
-    if (isBound()) {
-      builder.append("bound to ").append(actionAnalysisDataKey);
+    builder.append(artifact.getShortPath()).append(", ");
+    if (isOutputArtifact) {
+      builder.append("as output, ");
+    }
+    if (artifact.isBound()) {
+      builder.append("bound to ").append(artifact.actionAnalysisDataKey);
     } else {
       builder.append("declared");
     }
-    if (location != Location.BUILTIN) {
-      if (isBound()) {
+    if (artifact.location != Location.BUILTIN) {
+      if (artifact.isBound()) {
         builder.append(", declared");
       }
-      builder.append(" at ").append(location.print());
+      builder.append(" at ").append(artifact.location.print());
     }
     return builder.append(">").toString();
   }

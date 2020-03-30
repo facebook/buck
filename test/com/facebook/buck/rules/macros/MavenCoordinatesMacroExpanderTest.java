@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.macros;
@@ -21,13 +21,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeFalse;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
@@ -39,6 +39,8 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -116,14 +118,11 @@ public class MavenCoordinatesMacroExpanderTest {
         JavaLibraryBuilder.createBuilder(target).setMavenCoords(mavenCoords).build(graphBuilder);
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    CellNameResolver cellPathResolver =
+        TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(target)
-            .setCellPathResolver(cellPathResolver)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(expander)
-            .build();
+        StringWithMacrosConverter.of(
+            target, cellPathResolver, graphBuilder, ImmutableList.of(expander));
 
     String input = "$(maven_coords //:java)";
 
@@ -138,38 +137,35 @@ public class MavenCoordinatesMacroExpanderTest {
     BuildRule rule = JavaLibraryBuilder.createBuilder(target).build(graphBuilder);
 
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    CellNameResolver cellNameResolver =
+        TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
     StringWithMacrosConverter converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(target)
-            .setCellPathResolver(cellPathResolver)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(expander)
-            .build();
+        StringWithMacrosConverter.of(
+            target, cellNameResolver, graphBuilder, ImmutableList.of(expander));
 
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("no rule //:foo");
 
-    coerceAndStringify(filesystem, cellPathResolver, converter, "$(maven_coords //:foo)", rule);
+    coerceAndStringify(filesystem, cellNameResolver, converter, "$(maven_coords //:foo)", rule);
   }
 
   private String coerceAndStringify(
       ProjectFilesystem filesystem,
-      CellPathResolver cellPathResolver,
+      CellNameResolver cellNameResolver,
       StringWithMacrosConverter converter,
       String input,
       BuildRule rule)
       throws CoerceFailedException {
     StringWithMacros stringWithMacros =
-        (StringWithMacros)
-            new DefaultTypeCoercerFactory()
-                .typeCoercerForType(StringWithMacros.class)
-                .coerce(
-                    cellPathResolver,
-                    filesystem,
-                    rule.getBuildTarget().getBasePath(),
-                    EmptyTargetConfiguration.INSTANCE,
-                    input);
+        new DefaultTypeCoercerFactory()
+            .typeCoercerForType(TypeToken.of(StringWithMacros.class))
+            .coerceBoth(
+                cellNameResolver,
+                filesystem,
+                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
+                input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }

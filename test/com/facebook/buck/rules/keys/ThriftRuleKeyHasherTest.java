@@ -1,26 +1,30 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.sourcepath.AbstractDefaultBuildTargetSourcePath;
+import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -165,15 +169,15 @@ public class ThriftRuleKeyHasherTest {
     hasher.putKey(".rule_key_value");
     hasher.putRuleType(RuleType.of("sample_build_rule", RuleType.Kind.BUILD));
     hasher.putKey(".build_rule_type_value");
-    hasher.putBuildTarget(
-        BuildTargetFactory.newInstance(new File("cell_path").toPath(), "//base_name", "rule_name"));
+    hasher.putBuildTarget(BuildTargetFactory.newInstance("//base_name", "rule_name"));
     hasher.putKey(".build_target_value");
     hasher.putBuildTargetSourcePath(
-        new AbstractDefaultBuildTargetSourcePath() {
+        new DefaultBuildTargetSourcePath() {
           @Override
-          public BuildTarget getTarget() {
-            return BuildTargetFactory.newInstance(
-                new File("cell_path_2").toPath(), "//base_name_2", "rule_name_2");
+          public BuildTargetWithOutputs getTargetWithOutputs() {
+            return BuildTargetWithOutputs.of(
+                BuildTargetFactory.newInstance("//base_name_2", "rule_name_2"),
+                OutputLabel.defaultLabel());
           }
 
           @Override
@@ -264,7 +268,12 @@ public class ThriftRuleKeyHasherTest {
                     new com.facebook.buck.log.thrift.rulekeys.BuildTarget("//base_name:rule_name")))
             .put(
                 ".build_target_source_path_value",
-                Value.targetPath(new TargetPath("//base_name_2:rule_name_2")))
+                Value.targetPath(
+                    new TargetPath(
+                        BuildTargetWithOutputs.of(
+                                BuildTargetFactory.newInstance("//base_name_2:rule_name_2"),
+                                OutputLabel.defaultLabel())
+                            .toString())))
             .put(
                 ".list_value",
                 Value.containerList(
@@ -314,8 +323,12 @@ public class ThriftRuleKeyHasherTest {
   @Test
   public void canHandleForwardingBuildTargetSourcePathsWithDifferentFilesystems()
       throws TException {
-    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(Paths.get("first", "root"));
-    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(Paths.get("other", "root"));
+    ProjectFilesystem filesystem1 =
+        new FakeProjectFilesystem(
+            CanonicalCellName.rootCell(), AbsPath.of(Paths.get("first", "root").toAbsolutePath()));
+    ProjectFilesystem filesystem2 =
+        new FakeProjectFilesystem(
+            CanonicalCellName.rootCell(), AbsPath.of(Paths.get("other", "root").toAbsolutePath()));
     Path relativePath = Paths.get("arbitrary", "path");
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
 

@@ -1,23 +1,24 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution.util;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
 
+import com.facebook.buck.core.exceptions.ThrowableCauseIterable;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.remoteexecution.CasBlobUploader;
 import com.facebook.buck.remoteexecution.CasBlobUploader.UploadResult;
@@ -33,8 +34,10 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import io.grpc.Status;
 import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.BlockingQueue;
@@ -266,14 +269,67 @@ public class MultiThreadedBlobUploader {
   }
 
   private void setPendingUploadResult(PendingUpload upload, UploadResult result) {
-    if (result.status == 0) {
+    if (result.status == Status.Code.OK.value()) {
       upload.future.set(null);
     } else {
-      upload.future.setException(
-          new IOException(
-              String.format(
-                  "Failed uploading with message: %s. When uploading blob: %s.",
-                  result.message, upload.uploadData.describe())));
+      String description = upload.uploadData.describe();
+      String msg =
+          String.format(
+              "Failed uploading with message: %s. When uploading blob: %s.",
+              result.message, description);
+      if (result.status == Status.Code.INVALID_ARGUMENT.value()) {
+        upload.future.setException(new CorruptArtifactException(msg, description));
+      } else {
+        upload.future.setException(new IOException(msg));
+      }
+    }
+  }
+
+  /** An exception that indicates that an upload failed because the artifact was corrupted. */
+  public static class CorruptArtifactException extends IOException {
+
+    private final String description;
+
+    public CorruptArtifactException(String msg, String description) {
+      super(msg);
+      this.description = description;
+    }
+
+    public String getDescription() {
+      return description;
+    }
+
+    /**
+     * Determines if any of the causes in the {@link ThrowableCauseIterable} are
+     * CorruptArtifactException
+     *
+     * @param iterable
+     * @return
+     */
+    public static boolean isCause(ThrowableCauseIterable iterable) {
+      for (Throwable t : iterable) {
+        if (t instanceof CorruptArtifactException) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /**
+     * Returns CorruptArtifactException throwable if any of the causes in the {@link
+     * ThrowableCauseIterable} are CorruptArtifactException. Check {@link
+     * CorruptArtifactException#isCause(ThrowableCauseIterable)} first
+     *
+     * @param iterable
+     * @return
+     */
+    public static Optional<String> getDescription(ThrowableCauseIterable iterable) {
+      for (Throwable t : iterable) {
+        if (t instanceof CorruptArtifactException) {
+          return Optional.of(((CorruptArtifactException) t).getDescription());
+        }
+      }
+      return Optional.empty();
     }
   }
 }

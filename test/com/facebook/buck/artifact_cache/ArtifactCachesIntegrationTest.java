@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -347,8 +347,7 @@ public class ArtifactCachesIntegrationTest {
 
       CacheResult result;
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         result =
             artifactCache
@@ -387,8 +386,7 @@ public class ArtifactCachesIntegrationTest {
 
       CacheResult result;
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         result =
             artifactCache
@@ -431,8 +429,7 @@ public class ArtifactCachesIntegrationTest {
 
       CacheResult result;
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         result =
             artifactCache
@@ -472,8 +469,7 @@ public class ArtifactCachesIntegrationTest {
 
       CacheResult result;
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         result =
             artifactCache
@@ -516,8 +512,7 @@ public class ArtifactCachesIntegrationTest {
               "http_client_tls_ca = " + caCertPath.toString());
 
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         artifactCache
             .store(
@@ -554,8 +549,7 @@ public class ArtifactCachesIntegrationTest {
               "http_client_tls_ca = " + caCertPath.toString());
 
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         artifactCache
             .store(
@@ -596,8 +590,7 @@ public class ArtifactCachesIntegrationTest {
               "http_client_tls_ca = " + caCertPath.toString());
 
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         artifactCache
             .store(
@@ -635,8 +628,7 @@ public class ArtifactCachesIntegrationTest {
               "http_client_tls_ca = " + caCertPath.toString());
 
       try (ArtifactCache artifactCache =
-          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig)
-              .remoteOnlyInstance(false, false)) {
+          newArtifactCache(buckEventBus, projectFilesystem, cacheConfig).remoteOnlyInstance()) {
 
         artifactCache
             .store(
@@ -667,11 +659,11 @@ public class ArtifactCachesIntegrationTest {
     return new ArtifactCaches(
         cacheConfig,
         buckEventBus,
-        target -> unconfiguredBuildTargetFactory.create(cellPathResolver, target),
+        target ->
+            unconfiguredBuildTargetFactory.create(target, cellPathResolver.getCellNameResolver()),
         TargetConfigurationSerializerForTests.create(cellPathResolver),
         projectFilesystem,
         Optional.empty(),
-        MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),
         MoreExecutors.newDirectExecutorService(),

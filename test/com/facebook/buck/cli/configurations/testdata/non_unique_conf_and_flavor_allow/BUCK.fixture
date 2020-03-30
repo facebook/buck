@@ -1,0 +1,27 @@
+platform(
+    name = "p-target",
+    constraint_values = [
+    ],
+)
+
+platform(
+    name = "p-host",
+    constraint_values = [
+    ],
+)
+
+cxx_binary(
+    name = "b",
+    srcs = [
+        "b.cpp",
+    ],
+    default_target_platform = ":p-target",
+)
+
+genrule(
+    name = "g",
+    out = "out.txt",
+    # NOTE at the moment of writing this test target-host switching is not yet implemented
+    cmd = "$(exe :b#host) > $OUT",
+    default_target_platform = ":p-host",
+)

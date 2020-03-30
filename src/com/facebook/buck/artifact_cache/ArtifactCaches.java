@@ -1,18 +1,19 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.artifact_cache;
 
 import static com.facebook.buck.artifact_cache.config.ArtifactCacheMode.CacheType.local;
@@ -29,7 +30,7 @@ import com.facebook.buck.artifact_cache.config.SQLiteCacheEntry;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -41,10 +42,8 @@ import com.facebook.buck.slb.LoadBalancedService;
 import com.facebook.buck.slb.RetryingHttpService;
 import com.facebook.buck.slb.SingleUriService;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
-import com.facebook.buck.support.bgtasks.Timeout;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
@@ -86,13 +85,12 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
 
   private final ArtifactCacheBuckConfig buckConfig;
   private final BuckEventBus buckEventBus;
-  private final Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
+  private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final ProjectFilesystem projectFilesystem;
   private final Optional<String> wifiSsid;
   private final ListeningExecutorService httpWriteExecutorService;
   private final ListeningExecutorService httpFetchExecutorService;
-  private final ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService;
   private List<ArtifactCache> artifactCaches = new ArrayList<>();
   private final ListeningExecutorService dirWriteExecutorService;
   private final TaskManagerCommandScope managerScope;
@@ -120,12 +118,11 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     // long time to stat and cleanup large disk artifact cache directories
     // See https://github.com/facebook/buck/issues/1842
     BackgroundTask<List<ArtifactCache>> closeTask =
-        ImmutableBackgroundTask.<List<ArtifactCache>>builder()
-            .setAction(new ArtifactCachesCloseAction())
-            .setActionArgs(artifactCaches)
-            .setName("ArtifactCaches_close")
-            .setTimeout(Timeout.of(TIMEOUT_SECONDS, TimeUnit.SECONDS))
-            .build();
+        BackgroundTask.of(
+            "ArtifactCaches_close",
+            new ArtifactCachesCloseAction(),
+            artifactCaches,
+            BackgroundTask.Timeout.of(TIMEOUT_SECONDS, TimeUnit.SECONDS));
     managerScope.schedule(closeTask);
 
     buckEventBus.post(HttpArtifactCacheEvent.newShutdownEvent());
@@ -150,13 +147,12 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   public ArtifactCaches(
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
       ListeningExecutorService httpWriteExecutorService,
       ListeningExecutorService httpFetchExecutorService,
-      ListeningExecutorService downloadHeavyBuildHttpFetchExecutorService,
       ListeningExecutorService dirWriteExecutorService,
       TaskManagerCommandScope managerScope,
       String producerId,
@@ -170,7 +166,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     this.wifiSsid = wifiSsid;
     this.httpWriteExecutorService = httpWriteExecutorService;
     this.httpFetchExecutorService = httpFetchExecutorService;
-    this.downloadHeavyBuildHttpFetchExecutorService = downloadHeavyBuildHttpFetchExecutorService;
     this.dirWriteExecutorService = dirWriteExecutorService;
     this.managerScope = managerScope;
     this.producerId = producerId;
@@ -187,43 +182,27 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     return builder;
   }
 
-  @Override
-  public ArtifactCache newInstance() {
-    return newInstance(false, false);
-  }
-
   /**
    * Creates a new instance of the cache for use during a build.
    *
-   * @param distributedBuildModeEnabled true if this is a distributed build
-   * @param isDownloadHeavyBuild true if creating cache connector for download heavy build
    * @return ArtifactCache instance
    */
   @Override
-  public ArtifactCache newInstance(
-      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
-    return newInstanceInternal(
-        ImmutableSet.of(), distributedBuildModeEnabled, isDownloadHeavyBuild);
+  public ArtifactCache newInstance() {
+    return newInstanceInternal(ImmutableSet.of());
   }
 
   @Override
-  public ArtifactCache remoteOnlyInstance(
-      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
-    return newInstanceInternal(
-        ImmutableSet.of(local), distributedBuildModeEnabled, isDownloadHeavyBuild);
+  public ArtifactCache remoteOnlyInstance() {
+    return newInstanceInternal(ImmutableSet.of(local));
   }
 
   @Override
-  public ArtifactCache localOnlyInstance(
-      boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
-    return newInstanceInternal(
-        ImmutableSet.of(remote), distributedBuildModeEnabled, isDownloadHeavyBuild);
+  public ArtifactCache localOnlyInstance() {
+    return newInstanceInternal(ImmutableSet.of(remote));
   }
 
-  private ArtifactCache newInstanceInternal(
-      ImmutableSet<CacheType> cacheTypeBlacklist,
-      boolean distributedBuildModeEnabled,
-      boolean isDownloadHeavyBuild) {
+  private ArtifactCache newInstanceInternal(ImmutableSet<CacheType> cacheTypeBlacklist) {
     ArtifactCacheConnectEvent.Started started = ArtifactCacheConnectEvent.started();
     buckEventBus.post(started);
 
@@ -236,12 +215,9 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             projectFilesystem,
             wifiSsid,
             httpWriteExecutorService,
-            isDownloadHeavyBuild
-                ? downloadHeavyBuildHttpFetchExecutorService
-                : httpFetchExecutorService,
+            httpFetchExecutorService,
             dirWriteExecutorService,
             cacheTypeBlacklist,
-            distributedBuildModeEnabled,
             producerId,
             producerHostname,
             clientCertificateHandler);
@@ -263,7 +239,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
         wifiSsid,
         httpWriteExecutorService,
         httpFetchExecutorService,
-        downloadHeavyBuildHttpFetchExecutorService,
         dirWriteExecutorService,
         managerScope,
         producerId,
@@ -280,7 +255,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
    */
   public static Optional<ArtifactCache> newServedCache(
       ArtifactCacheBuckConfig buckConfig,
-      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem) {
     return buckConfig
@@ -299,7 +274,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static ArtifactCache newInstanceInternal(
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
@@ -307,7 +282,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ListeningExecutorService httpFetchExecutorService,
       ListeningExecutorService dirWriteExecutorService,
       ImmutableSet<CacheType> cacheTypeBlacklist,
-      boolean distributedBuildModeEnabled,
       String producerId,
       String producerHostname,
       Optional<ClientCertificateHandler> clientCertificateHandler) {
@@ -361,6 +335,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
               builder);
           break;
         case thrift_over_http:
+        case hybrid_thrift_grpc:
           Preconditions.checkArgument(
               buckConfig.getHybridThriftEndpoint().isPresent(),
               "Hybrid thrift endpoint path is mandatory for the ThriftArtifactCache.");
@@ -379,7 +354,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
                   new ThriftArtifactCache(
                       args,
                       buckConfig.getHybridThriftEndpoint().get(),
-                      distributedBuildModeEnabled,
                       buckEventBus.getBuildId(),
                       getMultiFetchLimit(buckConfig),
                       buckConfig.getHttpFetchConcurrency(),
@@ -417,7 +391,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static void initializeDirCaches(
       ArtifactCacheEntries artifactCacheEntries,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       ImmutableList.Builder<ArtifactCache> builder,
@@ -438,7 +412,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       ArtifactCacheEntries artifactCacheEntries,
       ArtifactCacheBuckConfig buckConfig,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       Optional<String> wifiSsid,
@@ -479,7 +453,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static void initializeSQLiteCaches(
       ArtifactCacheEntries artifactCacheEntries,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       ImmutableList.Builder<ArtifactCache> builder) {
@@ -499,7 +473,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static ArtifactCache createDirArtifactCache(
       Optional<BuckEventBus> buckEventBus,
       DirCacheEntry dirCacheConfig,
-      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService storeExecutorService) {
@@ -534,7 +508,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       HttpCacheEntry cacheDescription,
       String hostToReportToRemote,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
@@ -564,7 +538,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
       HttpCacheEntry cacheDescription,
       String hostToReportToRemote,
       BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem,
       ListeningExecutorService httpWriteExecutorService,
@@ -700,7 +674,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
     }
 
     return factory.newInstance(
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName(cacheMode.name())
             .setCacheMode(cacheMode)
             .setRepository(config.getRepository())
@@ -722,7 +696,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   private static ArtifactCache createSQLiteArtifactCache(
       BuckEventBus buckEventBus,
       SQLiteCacheEntry cacheConfig,
-      Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory,
+      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer,
       ProjectFilesystem projectFilesystem) {
     Path cacheDir = cacheConfig.getCacheDir();

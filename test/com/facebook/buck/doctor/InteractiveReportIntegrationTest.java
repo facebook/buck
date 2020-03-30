@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.doctor;
@@ -20,7 +20,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
-import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
@@ -56,7 +55,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testReport() throws Exception {
     UserInputFixture userInputFixture = new UserInputFixture("0");
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(traceWorkspace.asCell().getBuckConfig());
+    DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
             traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
@@ -64,7 +63,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -85,7 +84,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testTraceInReport() throws Exception {
     UserInputFixture userInputFixture = new UserInputFixture("0");
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(traceWorkspace.asCell().getBuckConfig());
+    DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
             traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
@@ -93,7 +92,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -109,7 +108,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testTraceRespectReportSize() throws Exception {
     UserInputFixture userInputFixture = new UserInputFixture("0");
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(traceWorkspace.asCell().getBuckConfig());
+    DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
             traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
@@ -117,7 +116,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -134,7 +133,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testLocalConfigurationReport() throws Exception {
     UserInputFixture userInputFixture = new UserInputFixture("0");
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(traceWorkspace.asCell().getBuckConfig());
+    DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
             traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
@@ -142,7 +141,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),
@@ -160,7 +159,7 @@ public class InteractiveReportIntegrationTest {
   @Test
   public void testWatchmanDiagReport() throws Exception {
     UserInputFixture userInputFixture = new UserInputFixture("0\n\n\ny");
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(traceWorkspace.asCell().getBuckConfig());
+    DoctorConfig doctorConfig = DoctorConfig.of(traceWorkspace.asCell().getBuckConfig());
     DoctorReportHelper helper =
         DoctorTestUtils.createDoctorHelper(
             traceWorkspace, userInputFixture.getUserInput(), doctorConfig);
@@ -168,7 +167,7 @@ public class InteractiveReportIntegrationTest {
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
 
-    DefectSubmitResult report =
+    DefectReporter.DefectSubmitResult report =
         DoctorTestUtils.createDefectReport(
             traceWorkspace,
             ImmutableSet.of(entry.get()),

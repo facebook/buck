@@ -1,10 +1,14 @@
 Bundletool is a command-line tool to manipulate and build Android App Bundles - https://g.co/androidappbundle
 We use it to build the final android bundle, after building each bundle module
 
-Acquired from https://mvnrepository.com/artifact/com.android.tools.build/bundletool
-Modified jar to remove the shadow/bundletool/com/android/tools/r8 package,
-which appears to be an obfuscated version of Proguard which Buck doesn't use.
-This package contains numerous class files with the same name but different
-capitalization, which causes Buck to fail with an internal error on Windows. 
+Built from source from https://github.com/google/bundletool, 
+commit SHA 8f922cf4b24bb1714d06cfa303d8e79e81b71a91 with the following modifications:
 
-Release Number: 0.10.3
+* Patch to allow the output file from BuildBundleCommand to be overwritten: 
+  https://github.com/google/bundletool/pull/139
+
+* Modified jar manually to remove obfuscated files from the 
+  shadow/bundletool/com/android/tools/r8 package, which have mixed case. Due
+  to a bug in Buck, these paths cause an internal error on Windows.
+
+Release Number: 0.12.0 + patch

@@ -1,25 +1,28 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.apple.AppleNativeTargetDescriptionArg;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.halide.HalideLibraryDescriptionArg;
@@ -52,10 +55,11 @@ public class BuildConfiguration {
    * TODO(chatatap): Investigate scenarios where the buildTarget cannot be derived from the
    * targetNode.
    *
-   * @param targetNode The target node for which to write the build confirugations.
-   * @param buildTarget The build target for which the configuratio will be set.
-   * @param cxxPlatform The CxxPlatfrom from which to obtain default build settings.
-   * @param nativeTargetAttributes The native target buiilder to mutate.
+   * @param targetNode The target node for which to write the build configurations.
+   * @param buildTarget The build target for which the configuration will be set.
+   * @param cxxPlatform The CxxPlatform from which to obtain default build settings.
+   * @param pathResolver Source path resolver to resolve args from CxxPlatform.
+   * @param nativeTargetAttributes The native target builder to mutate.
    * @param overrideBuildSettings Build settings that will override ones defined elsewhere.
    * @param buckXcodeBuildSettings Buck specific build settings that will be merged.
    * @param appendBuildSettings Build settings to be appended to ones defined elsewhere.
@@ -69,7 +73,8 @@ public class BuildConfiguration {
       TargetNode<?> targetNode,
       BuildTarget buildTarget,
       CxxPlatform cxxPlatform,
-      XCodeNativeTargetAttributes.Builder nativeTargetAttributes,
+      SourcePathResolverAdapter pathResolver,
+      ImmutableXCodeNativeTargetAttributes.Builder nativeTargetAttributes,
       ImmutableMap<String, String> overrideBuildSettings,
       ImmutableMap<String, String> buckXcodeBuildSettings,
       ImmutableMap<String, String> appendBuildSettings,
@@ -84,7 +89,7 @@ public class BuildConfiguration {
 
     ImmutableMap<String, String> cxxPlatformBuildSettings =
         BuildConfiguration.getTargetCxxBuildConfigurationForTargetNode(
-            targetNode, appendBuildSettings, cxxPlatform);
+            targetNode, appendBuildSettings, cxxPlatform, pathResolver);
 
     // Generate build configurations for each config, using the build settings provided.
     for (Map.Entry<String, ImmutableMap<String, String>> config : targetConfigs.entrySet()) {
@@ -98,15 +103,24 @@ public class BuildConfiguration {
               buckXcodeBuildSettings,
               appendBuildSettings);
 
-      Path xcconfigPath = getXcconfigPath(projectFilesystem, buildTarget, config.getKey());
+      ProjectFilesystem buildTargetFileSystem = targetNode.getFilesystem();
+      // Get the Xcconfig path relative to the target's file system; this makes sure that each
+      // buck-out gen path is appropriate depending on the cell.
+      Path buildTargetXcconfigPath =
+          getXcconfigPath(buildTargetFileSystem, buildTarget, config.getKey());
+      // Now we relativize the path based around the project file system in order for relative paths
+      // in Xcode to resolve properly (since they are relative to the project).
+      RelPath xcconfigPath =
+          projectFilesystem.relativize(buildTargetFileSystem.resolve(buildTargetXcconfigPath));
 
-      writeBuildConfiguration(projectFilesystem, xcconfigPath, mergedSettings, writeReadOnlyFile);
+      writeBuildConfiguration(
+          projectFilesystem, xcconfigPath.getPath(), mergedSettings, writeReadOnlyFile);
 
       nativeTargetAttributes.addXcconfigs(
-          new XcconfigBaseConfiguration(config.getKey(), xcconfigPath));
+          new XcconfigBaseConfiguration(config.getKey(), xcconfigPath.getPath()));
 
       xcconfigPathsBuilder.add(
-          projectFilesystem.getPathForRelativePath(xcconfigPath).toAbsolutePath());
+          projectFilesystem.getPathForRelativePath(xcconfigPath.getPath()).toAbsolutePath());
     }
   }
 
@@ -165,13 +179,14 @@ public class BuildConfiguration {
   private static ImmutableMap<String, String> getTargetCxxBuildConfigurationForTargetNode(
       TargetNode<?> targetNode,
       Map<String, String> appendedConfig,
-      CxxPlatform defaultCxxPlatform) {
+      CxxPlatform defaultCxxPlatform,
+      SourcePathResolverAdapter pathResolver) {
     if (targetNode.getDescription() instanceof CxxLibraryDescription) {
       return CxxPlatformBuildConfiguration.getCxxLibraryBuildSettings(
-          defaultCxxPlatform, appendedConfig);
+          defaultCxxPlatform, appendedConfig, pathResolver);
     } else {
       return CxxPlatformBuildConfiguration.getGenericTargetBuildSettings(
-          defaultCxxPlatform, appendedConfig);
+          defaultCxxPlatform, appendedConfig, pathResolver);
     }
   }
 

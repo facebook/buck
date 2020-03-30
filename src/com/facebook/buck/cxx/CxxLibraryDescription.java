@@ -1,22 +1,23 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
@@ -28,13 +29,14 @@ import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
@@ -45,7 +47,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
@@ -78,7 +80,7 @@ public class CxxLibraryDescription
     HEADERS(CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
     EXPORTED_HEADERS(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR),
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
-    SHARED_INTERFACE(InternalFlavor.of("shared-interface")),
+    SHARED_INTERFACE(CxxDescriptionEnhancer.SHARED_INTERFACE_FLAVOR),
     STATIC_PIC(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR),
     STATIC(CxxDescriptionEnhancer.STATIC_FLAVOR),
     MACH_O_BUNDLE(CxxDescriptionEnhancer.MACH_O_BUNDLE_FLAVOR),
@@ -96,7 +98,7 @@ public class CxxLibraryDescription
     }
   }
 
-  static final FlavorDomain<Type> LIBRARY_TYPE =
+  public static final FlavorDomain<Type> LIBRARY_TYPE =
       FlavorDomain.from("C/C++ Library Type", Type.class);
 
   public enum MetadataType implements FlavorConvertible {
@@ -142,13 +144,15 @@ public class CxxLibraryDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return cxxLibraryFlavored.flavorDomains();
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return cxxLibraryFlavored.flavorDomains(toolchainTargetConfiguration);
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return cxxLibraryFlavored.hasFlavors(flavors);
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return cxxLibraryFlavored.hasFlavors(flavors, toolchainTargetConfiguration);
   }
 
   /**
@@ -193,7 +197,7 @@ public class CxxLibraryDescription
                     // Also add private deps if we are _not_ reexporting all deps.
                     args.isReexportAllHeaderDependencies()
                             .orElse(cxxBuckConfig.getDefaultReexportAllHeaderDependencies())
-                        ? CxxDeps.of()
+                        ? CxxDeps.EMPTY_INSTANCE
                         : args.getPrivateCxxDeps()))
             .toOnceIterable(),
         args.getRawHeaders(),
@@ -239,7 +243,7 @@ public class CxxLibraryDescription
     if (!type.isPresent()) {
       return buildTarget;
     }
-    Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
+    Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors().getSet());
     flavors.remove(type.get().getKey());
     return buildTarget.withFlavors(flavors);
   }
@@ -247,7 +251,7 @@ public class CxxLibraryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       CommonArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
@@ -288,9 +292,10 @@ public class CxxLibraryDescription
 
   @Override
   public ImmutableSortedSet<Flavor> addImplicitFlavors(
-      ImmutableSortedSet<Flavor> argDefaultFlavors) {
+      ImmutableSortedSet<Flavor> argDefaultFlavors,
+      TargetConfiguration toolchainTargetConfiguration) {
     return cxxLibraryImplicitFlavors.addImplicitFlavorsForRuleTypes(
-        argDefaultFlavors, DescriptionCache.getRuleType(this));
+        argDefaultFlavors, toolchainTargetConfiguration, DescriptionCache.getRuleType(this));
   }
 
   @Override
@@ -535,7 +540,6 @@ public class CxxLibraryDescription
     Optional<Boolean> getSupportsMergedLinking();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCxxLibraryDescriptionArg extends CommonArg {}
 }

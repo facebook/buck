@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.packageable;
@@ -53,7 +53,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.ExecutableFinder;
@@ -184,7 +184,7 @@ public class AndroidPackageableCollectorTest {
                 JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
             .build();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph, toolchainProvider);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     AndroidBinary binaryRule = (AndroidBinary) graphBuilder.requireRule(binaryTarget);
     NdkLibrary ndkLibraryRule = (NdkLibrary) graphBuilder.requireRule(ndkLibrary.getBuildTarget());
@@ -450,7 +450,7 @@ public class AndroidPackageableCollectorTest {
         "Classpath entries should include facebook/base but not keystore/base.",
         ImmutableSet.of(
             BuildTargetPaths.getGenPath(
-                    androidBinary.getProjectFilesystem(), androidLibraryTarget, "lib__%s__output/")
+                    androidBinary.getProjectFilesystem(), androidLibraryTarget, "lib__%s__output")
                 .resolve(androidLibraryTarget.getShortNameAndFlavorPostfix() + ".jar")),
         packageableCollection.getClasspathEntriesToDex().stream()
             .map(graphBuilder.getSourcePathResolver()::getRelativePath)
@@ -459,7 +459,7 @@ public class AndroidPackageableCollectorTest {
 
   private void assertResolvedEquals(
       String message,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ImmutableSet<SourcePath> expected,
       ImmutableSet<SourcePath> actual) {
     assertEquals(

@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import com.facebook.buck.io.watchman.WatchmanWatcher;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.ProcessResult;
@@ -53,11 +54,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class DaemonIntegrationTest {
 
   private ScheduledExecutorService executorService;
@@ -164,13 +169,16 @@ public class DaemonIntegrationTest {
   private Runnable createRunnableCommand(ExitCode expectedExitCode, String... args) {
     return () -> {
       try {
+        ImmutableMap<String, String> env =
+            ProjectWorkspace.setAbsoluteClientWorkingDir(
+                tmp.getRoot(), EnvVariablesProvider.getSystemEnv());
         BackgroundTaskManager manager = TestBackgroundTaskManager.of();
         MainForTests main =
             new MainForTests(
                 new TestConsole(),
                 new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)),
                 tmp.getRoot(),
-                EnvVariablesProvider.getSystemEnv(),
+                env,
                 Optional.of(new TestContext()));
 
         MainRunner mainRunner = main.prepareMainRunner(manager);
@@ -221,6 +229,23 @@ public class DaemonIntegrationTest {
     workspace
         .runBuckdCommand("build", "//java/com/example/activity:activity")
         .assertExitCode(null, ExitCode.PARSE_ERROR);
+  }
+
+  @Parameters({"FILESYSTEM_CRAWL", "WATCHMAN"})
+  @Test
+  public void whenAppBuckFileRemovedThenFailingRecursiveRebuildSucceeds(
+      ParserConfig.BuildFileSearchMethod buildFileSearchMethod) throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
+    workspace.setUp();
+    workspace.setBuildFileSearchMethodConfig(buildFileSearchMethod);
+
+    String appBuckFile = "apps/myapp/BUCK";
+    Files.write(workspace.getPath(appBuckFile), "Some Illegal Python".getBytes(Charsets.UTF_8));
+    workspace.runBuckdCommand("build", "//apps/...").assertExitCode(null, ExitCode.PARSE_ERROR);
+
+    Files.delete(workspace.getPath(appBuckFile));
+    workspace.runBuckdCommand("build", "//apps/...").assertSuccess();
   }
 
   @Test

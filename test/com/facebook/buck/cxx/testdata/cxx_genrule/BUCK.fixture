@@ -56,6 +56,13 @@ cxx_library(
 )
 
 cxx_library(
+    name = "trivial",
+    srcs = [
+        "trivial.c",
+    ],
+)
+
+cxx_library(
     name = "header",
     exported_headers = {
         "header.h": "real_header.h",

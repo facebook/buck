@@ -1,6 +1,9 @@
 python_test(
     name = "bootstrapper",
     srcs = glob(["*.py"]),
+    env = {
+        "TEST_BUCK": "$(location //programs:buck)",
+    },
     deps = [
         "//src/com/facebook/buck/cli/bootstrapper:bootstrapper",
         "//test/com/facebook/buck/testutil/integration:integration-py",

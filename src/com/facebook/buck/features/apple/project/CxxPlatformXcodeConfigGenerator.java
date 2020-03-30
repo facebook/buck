@@ -1,23 +1,25 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.project;
 
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.rules.args.Arg;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -44,11 +46,13 @@ class CxxPlatformXcodeConfigGenerator {
   private CxxPlatformXcodeConfigGenerator() {}
 
   public static ImmutableMap<String, String> getAppleXcodeTargetBuildConfigurationsFromCxxPlatform(
-      CxxPlatform cxxPlatform, Map<String, String> appendedConfig) {
+      CxxPlatform cxxPlatform,
+      Map<String, String> appendedConfig,
+      SourcePathResolverAdapter pathResolver) {
 
-    ArrayList<String> notProcessedCxxFlags = new ArrayList<String>(cxxPlatform.getCxxflags());
-    LinkedHashMap<String, String> notProcessedAppendedConfig =
-        new LinkedHashMap<String, String>(appendedConfig);
+    ArrayList<String> notProcessedCxxFlags =
+        new ArrayList<>(Arg.stringify(cxxPlatform.getCxxflags(), pathResolver));
+    LinkedHashMap<String, String> notProcessedAppendedConfig = new LinkedHashMap<>(appendedConfig);
 
     ImmutableMap.Builder<String, String> configBuilder = ImmutableMap.builder();
     setSdkRootAndDeploymentTargetValues(
@@ -59,11 +63,13 @@ class CxxPlatformXcodeConfigGenerator {
   }
 
   public static ImmutableMap<String, String> getCxxXcodeTargetBuildConfigurationsFromCxxPlatform(
-      CxxPlatform cxxPlatform, Map<String, String> appendedConfig) {
+      CxxPlatform cxxPlatform,
+      Map<String, String> appendedConfig,
+      SourcePathResolverAdapter pathResolver) {
 
-    ArrayList<String> notProcessedCxxFlags = new ArrayList<String>(cxxPlatform.getCxxflags());
-    LinkedHashMap<String, String> notProcessedAppendedConfig =
-        new LinkedHashMap<String, String>(appendedConfig);
+    ArrayList<String> notProcessedCxxFlags =
+        new ArrayList<>(Arg.stringify(cxxPlatform.getCxxflags(), pathResolver));
+    LinkedHashMap<String, String> notProcessedAppendedConfig = new LinkedHashMap<>(appendedConfig);
 
     ImmutableMap.Builder<String, String> configBuilder = ImmutableMap.builder();
     setSdkRootAndDeploymentTargetValues(
@@ -79,10 +85,13 @@ class CxxPlatformXcodeConfigGenerator {
 
   public static ImmutableMap<String, ImmutableMap<String, String>>
       getDefaultXcodeBuildConfigurationsFromCxxPlatform(
-          CxxPlatform cxxPlatform, Map<String, String> appendedConfig) {
+          CxxPlatform cxxPlatform,
+          Map<String, String> appendedConfig,
+          SourcePathResolverAdapter pathResolver) {
 
     ImmutableMap<String, String> config =
-        getCxxXcodeTargetBuildConfigurationsFromCxxPlatform(cxxPlatform, appendedConfig);
+        getCxxXcodeTargetBuildConfigurationsFromCxxPlatform(
+            cxxPlatform, appendedConfig, pathResolver);
     return new ImmutableMap.Builder<String, ImmutableMap<String, String>>()
         .put(DEBUG_BUILD_CONFIGURATION_NAME, config)
         .put(PROFILE_BUILD_CONFIGURATION_NAME, config)

@@ -24,6 +24,7 @@ http_file(
     urls = [
         "http://<HOST>:<PORT>/foo/bar/echo.sh",
     ],
+    visibility = ["PUBLIC"],
 )
 
 http_file(
@@ -32,6 +33,15 @@ http_file(
     sha256 = "2c7ae82268c1bab8d048a76405a6f7f39c2d95791df37ad2c36cb9252ee3a6ca",
     urls = [
         "http://<HOST>:<PORT>/foo/bar/echo.sh",
+    ],
+)
+
+http_file(
+    name = "echo_executable.bat",
+    executable = True,
+    sha256 = "bd9f1c3067f65936a41ea6761da4d79cb447c75461ffef1ab12719339cc003c8",
+    urls = [
+        "http://<HOST>:<PORT>/foo/bar/echo.bat",
     ],
 )
 
@@ -50,6 +60,7 @@ http_file(
     urls = [
         "http://<HOST>:<PORT>/foo/bar/echo.sh",
     ],
+    visibility = ["PUBLIC"],
 )
 
 http_file(

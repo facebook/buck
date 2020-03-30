@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.impl;
@@ -20,11 +20,10 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
-import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.BuildResult;
+import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
@@ -48,7 +47,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.build.strategy.BuildRuleStrategy;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.rules.keys.RuleKeyDiagnostics;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.hasher.StringRuleKeyHasher;
@@ -59,8 +57,8 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -70,19 +68,18 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.Closeable;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /**
@@ -117,8 +114,9 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       Maps.newConcurrentMap();
 
   private final AtomicReference<Throwable> firstFailure = new AtomicReference<>();
-  private final ConcurrentLinkedQueue<WeakReference<CachingBuildRuleBuilder>> ruleBuilders =
-      new ConcurrentLinkedQueue<>();
+
+  private final ConcurrentHashMap<BuildTarget, CachingBuildRuleBuilder> liveRuleBuilders =
+      new ConcurrentHashMap<>();
 
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
 
@@ -144,11 +142,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
 
   private final boolean consoleLogBuildFailuresInline;
 
-  private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
-
   private final Optional<BuildRuleStrategy> customBuildRuleStrategy;
-
-  private final Optional<ManifestService> manifestService;
 
   public CachingBuildEngine(
       CachingBuildEngineDelegate cachingBuildEngineDelegate,
@@ -164,9 +158,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       BuildInfoStoreManager buildInfoStoreManager,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       boolean consoleLogBuildFailuresInline,
-      RuleKeyFactories ruleKeyFactories,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
-      Optional<ManifestService> manifestService) {
+      RuleKeyFactories ruleKeyFactories) {
     this(
         cachingBuildEngineDelegate,
         customBuildRuleStrategy,
@@ -180,7 +172,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         actionToBuildRuleResolver,
         targetConfigurationSerializer,
         ruleKeyFactories,
-        remoteBuildRuleCompletionWaiter,
         resourceAwareSchedulingInfo,
         new RuleKeyDiagnostics<>(
             rule ->
@@ -191,8 +182,7 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
                 ruleKeyFactories
                     .getDefaultRuleKeyFactory()
                     .buildForDiagnostics(appendable, new StringRuleKeyHasher())),
-        consoleLogBuildFailuresInline,
-        manifestService);
+        consoleLogBuildFailuresInline);
   }
 
   /** This constructor MUST ONLY BE USED FOR TESTS. */
@@ -210,15 +200,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
       RuleKeyFactories ruleKeyFactories,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter,
       ResourceAwareSchedulingInfo resourceAwareSchedulingInfo,
       RuleKeyDiagnostics<RuleKey, String> defaultRuleKeyDiagnostics,
-      boolean consoleLogBuildFailuresInline,
-      Optional<ManifestService> manifestService) {
+      boolean consoleLogBuildFailuresInline) {
     this.cachingBuildEngineDelegate = cachingBuildEngineDelegate;
     this.customBuildRuleStrategy = customBuildRuleStrategy;
 
-    this.manifestService = manifestService;
     this.service = service;
     this.buildMode = buildMode;
     this.depFiles = depFiles;
@@ -231,7 +218,6 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.ruleKeyFactories = ruleKeyFactories;
     this.resourceAwareSchedulingInfo = resourceAwareSchedulingInfo;
     this.buildInfoStoreManager = buildInfoStoreManager;
-    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
 
     this.ruleDeps = new DefaultRuleDepsCache(resolver, actionToBuildRuleResolver);
     this.unskippedRulesTracker = createUnskippedRulesTracker(buildMode, ruleDeps, resolver);
@@ -309,16 +295,12 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     // TODO(cjhopman): Change this to only accept specific exception types to enforce that we get
     // the information that we want.
     if (firstFailure.compareAndSet(null, failure)) {
-      forEachPendingBuilder(builder -> builder.cancel(failure));
+      forEachLiveBuilder(builder -> builder.cancel(failure));
     }
   }
 
-  private void forEachPendingBuilder(Consumer<CachingBuildRuleBuilder> action) {
-    for (WeakReference<CachingBuildRuleBuilder> value : ruleBuilders) {
-      CachingBuildRuleBuilder builder = value.get();
-      if (builder == null) {
-        continue;
-      }
+  private void forEachLiveBuilder(Consumer<CachingBuildRuleBuilder> action) {
+    for (CachingBuildRuleBuilder builder : liveRuleBuilders.values()) {
       action.accept(builder);
     }
   }
@@ -381,12 +363,17 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     }
 
     // Collect any runtime deps we have into a list of futures.
-    Stream<BuildTarget> runtimeDepPaths = ((HasRuntimeDeps) rule).getRuntimeDeps(resolver);
-    List<ListenableFuture<BuildResult>> runtimeDepResults = new ArrayList<>();
-    ImmutableSet<BuildRule> runtimeDeps =
-        resolver.getAllRules(runtimeDepPaths.collect(ImmutableSet.toImmutableSet()));
-    for (BuildRule dep : runtimeDeps) {
-      runtimeDepResults.add(getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext));
+    List<ListenableFuture<BuildResult>> runtimeDepResults =
+        ((HasRuntimeDeps) rule)
+            .getRuntimeDeps(resolver)
+            .map(resolver::getRule)
+            .map(dep -> getBuildRuleResultWithRuntimeDeps(dep, buildContext, executionContext))
+            .collect(ImmutableList.toImmutableList());
+
+    // If we don't have any runtime deps we can short circuit here
+    if (runtimeDepResults.isEmpty()) {
+      future.setFuture(result);
+      return future;
     }
 
     // Create a new combined future, which runs the original rule and all the runtime deps in
@@ -396,15 +383,22 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         Futures.transformAsync(
             Futures.allAsList(runtimeDepResults),
             results -> {
-              if (!isKeepGoingEnabled(buildContext)) {
-                for (BuildResult buildResult : results) {
-                  if (!buildResult.isSuccess()) {
+              Optional<BuildResult> cancelledResult = Optional.empty();
+
+              for (BuildResult buildResult : results) {
+                if (!buildResult.isSuccess()) {
+                  if (buildResult.getStatus() == BuildRuleStatus.CANCELED) {
+                    cancelledResult =
+                        Optional.of(BuildResult.canceled(rule, buildResult.getFailure()));
+                  } else {
                     return Futures.immediateFuture(
-                        BuildResult.canceled(rule, buildResult.getFailure()));
+                        BuildResult.failure(rule, buildResult.getFailure()));
                   }
                 }
               }
-              return result;
+              return cancelledResult.isPresent()
+                  ? Futures.immediateFuture(cancelledResult.get())
+                  : result;
             },
             MoreExecutors.directExecutor());
     future.setFuture(chainedResult);
@@ -445,14 +439,14 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   }
 
   @Override
-  public BuildEngineResult build(
+  public BuildEngine.BuildEngineResult build(
       BuildEngineBuildContext buildContext, ExecutionContext executionContext, BuildRule rule) {
     // Keep track of all jobs that run asynchronously with respect to the build dep chain.  We want
     // to make sure we wait for these before calling yielding the final build result.
     registerTopLevelRule(rule, buildContext.getEventBus());
     ListenableFuture<BuildResult> resultFuture =
         getBuildRuleResultWithRuntimeDeps(rule, buildContext, executionContext);
-    return BuildEngineResult.builder().setResult(resultFuture).build();
+    return BuildEngine.BuildEngineResult.of(resultFuture);
   }
 
   @Nullable
@@ -511,14 +505,27 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
             buildInfoRecorder,
             buildableContext,
             pipelinesRunner,
-            remoteBuildRuleCompletionWaiter,
-            customBuildRuleStrategy,
-            manifestService);
-    ruleBuilders.add(new WeakReference<>(cachingBuildRuleBuilder));
+            customBuildRuleStrategy);
     if (firstFailure.get() != null) {
       cachingBuildRuleBuilder.cancel(firstFailure.get());
     }
-    return cachingBuildRuleBuilder.build();
+
+    CachingBuildRuleBuilder prev =
+        liveRuleBuilders.put(rule.getBuildTarget(), cachingBuildRuleBuilder);
+    Preconditions.checkState(
+        prev == null, "rule builder is created again: %s", rule.getBuildTarget());
+
+    ListenableFuture<BuildResult> future = cachingBuildRuleBuilder.build();
+
+    future.addListener(
+        () -> {
+          CachingBuildRuleBuilder removed = liveRuleBuilders.remove(rule.getBuildTarget());
+          Preconditions.checkState(
+              removed != null, "rule builder must be removed once: %s", rule.getBuildTarget());
+        },
+        MoreExecutors.directExecutor());
+
+    return future;
   }
 
   public static class DefaultBuildRuleBuilderDelegate

@@ -156,7 +156,7 @@
     <include name="aosp/apksig.jar" />
     <include name="asm/asm*-7.1.jar" />
     <include name="bazel/bazel_deploy.jar" />
-    <include name="bundletool/bundletool-0.10.3-fb.jar" />
+    <include name="bundletool/bundletool-0.12.0-fb.jar" />
     <include name="closure-templates/soy-excluding-deps.jar" />
     <include name="commons-compress/commons-compress-1.18.jar" />
     <include name="commons-logging/commons-logging-1.2.jar" />
@@ -177,16 +177,18 @@
     <include name="fastutil/fastutil-7.2.0.jar" />
     <include name="guava/guava-20.0.jar" />
     <include name="guava/guava-23.3-jre.jar" />
-    <include name="grpc/grpc-context-1.18.0.jar" />
-    <include name="grpc/grpc-core-1.18.0.jar" />
-    <include name="grpc/grpc-netty-1.18.0.jar" />
-    <include name="grpc/grpc-netty-shaded-1.18.0.jar" />
-    <include name="grpc/grpc-protobuf-1.18.0.jar" />
-    <include name="grpc/grpc-protobuf-lite-1.18.0.jar" />
-    <include name="grpc/grpc-stub-1.18.0.jar" />
+    <include name="grpc/grpc-context-1.24.0.jar" />
+    <include name="grpc/grpc-core-1.24.0.jar" />
+    <include name="grpc/perfmark-api-0.20.1.jar" />
+    <include name="grpc/grpc-api-1.24.0.jar" />
+    <include name="grpc/grpc-netty-1.24.0.jar" />
+    <include name="grpc/grpc-netty-shaded-1.24.0.jar" />
+    <include name="grpc/grpc-protobuf-1.24.0.jar" />
+    <include name="grpc/grpc-protobuf-lite-1.24.0.jar" />
+    <include name="grpc/grpc-stub-1.24.0.jar" />
     <include name="netty/netty-all-4.1.24.Final.jar" />
-    <include name="netty-handler/netty-handler-4.1.32.Final.jar" />
-    <include name="netty-tcnative/netty-tcnative-boringssl-static-2.0.20.Final.jar" />
+    <include name="netty-handler/netty-handler-4.1.38.Final.jar" />
+    <include name="netty-tcnative/netty-tcnative-boringssl-static-2.0.25.Final.jar" />
     <include name="gson/gson-2.8.2.jar" />
     <include name="guice/guice-3.0.jar" />
     <include name="guice/guice-assistedinject-3.0.jar" />
@@ -203,7 +205,6 @@
     <include name="jopt-simple/jopt-simple-4.6.jar" />
     <include name="json-simple/json-simple-1.1.1.jar" />
     <include name="kotlin/kotlin-stdlib.jar" />
-    <include name="kotlinx-coroutines/kotlinx-coroutines-1.2.1.jar" />
     <include name="kotlinx-metadata-jvm/kotlinx-metadata-jvm-0.1.0.jar" />
     <include name="jsr/javax.inject-1.jar" />
     <include name="jsr/jsr305.jar" />
@@ -212,8 +213,8 @@
     <include name="okhttp/okhttp-3.11.0.jar" />
     <include name="okhttp/okhttp-tls-3.11.0.jar" />
     <include name="okio/okio-1.13.0.jar" />
-    <include name="opencensus/opencensus-api-0.18.0.jar" />
-    <include name="opencensus/opencensus-contrib-grpc-metrics-0.18.0.jar" />
+    <include name="opencensus/opencensus-api-0.24.0.jar" />
+    <include name="opencensus/opencensus-contrib-grpc-metrics-0.24.0.jar" />
     <include name="oshi/oshi-core-3.3-SNAPSHOT.jar" />
     <include name="pf4j/pf4j-2.0.0-SNAPSHOT.jar" />
     <include name="protobuf/protobuf-java-3.7.0.jar" />
@@ -224,6 +225,9 @@
     <include name="thrift/libthrift-0.12.0.jar" />
     <include name="xz-java-1.5/xz-1.5.jar" />
     <include name="zstd-jni/zstd-jni-1.4.0-1.jar" />
+    <include name="remote-apis/remote-apis.jar" />
+    <include name="log4j2/log4j-api-2.13.0.jar" />
+    <include name="log4j2/log4j-core-2.13.0.jar" />
 
     <!-- maven interop -->
     <include name="aether/aether-api-1.0.2.v20150114.jar" />
@@ -296,7 +300,7 @@
   <pathconvert refid="module.processorpath" property="module.processorpath" />
 
   <target name="clean" description="remove all generated files" depends="clear-successful-build">
-    <delete dir="${build.dir}" />
+    <delete file="${build.dir}/**" />
   </target>
 
   <target name="clear-successful-build">
@@ -728,13 +732,15 @@
     </build-buck-module-jar>
   </target>
 
-  <target name="build-module-intellij" depends="compile, build-module-python">
+  <target name="build-module-intellij" depends="compile, build-module-python, build-module-filegroup, build-module-ziprules">
     <build-buck-module-jar-with-resources module-name="intellij">
       <module-javac-params>
         <include name="com/facebook/buck/features/project/intellij/**/*.java" />
       </module-javac-params>
       <additional-classpath-entries>
         <include name="python.jar"/>
+        <include name="filegroup.jar" />
+        <include name="ziprules.jar" />
       </additional-classpath-entries>
       <module-resources>
         <include name="com/facebook/buck/features/project/intellij/templates/*.st"/>
@@ -896,6 +902,7 @@
   <target name="copy-resources" description="Copy resources used by Buck at runtime to the build directory">
     <copy todir="${classes.dir}">
       <fileset dir="${src.dir}">
+        <include name="com/facebook/buck/features/python/compile.py"/>
         <include name="com/facebook/buck/httpserver/*.stg"/>
         <include name="com/facebook/buck/httpserver/resources/static/*"/>
         <include name="com/facebook/buck/maven/build-file.st"/>
@@ -980,6 +987,12 @@
     </exec>
   </target>
 
+  <target name="java-version-test" depends="default">
+    <exec dir="${user.dir}/scripts" executable="python" failonerror="true">
+      <arg line="java_version_test.py" />
+    </exec>
+  </target>
+
   <!--
   Copy classpath jars to a directory buck_repo.py can use, so that buck built with ant continues
   to work after checking out a different revision or making changes to classpaths file.
@@ -1038,6 +1051,8 @@
 
   <target name="gen-buck-info">
     <exec executable="python" output="${buck.info.file}" logError="true" failonerror="true">
+      <env key="PYTHONPATH" value="${basedir}" />
+      <env key="PYTHONDONTWRITEBYTECODE" value="1" />
       <arg value="programs/gen_buck_info.py"/>
       <arg value="--java-version"/>
       <arg value="${java.version}"/>
@@ -1150,7 +1165,7 @@
     </sequential>
   </macrodef>
 
-  <target name="lint" depends="pmd, missing-test-files-check" />
+  <target name="lint" depends="pmd, missing-test-files-check, java-version-test" />
 
   <macrodef name="buck-javadoc" description="generates HTML documentation for Java code">
     <attribute name="destdir" />
@@ -1276,7 +1291,7 @@
     </exec>
   </target>
 
-  <target name="travis" depends="verify-javadoc, verify-soydoc, lint" />
+  <target name="circleci" depends="verify-javadoc, verify-soydoc, lint" />
 
   <target name="pre-checkin" depends="clean, default, lint"/>
   <target name="all" depends="default, javadoc" />

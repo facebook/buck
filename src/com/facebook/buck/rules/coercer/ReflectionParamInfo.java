@@ -1,42 +1,43 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Types;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.MapMaker;
+import com.google.common.reflect.TypeToken;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.concurrent.ConcurrentMap;
 import javax.annotation.Nullable;
 
 /**
  * Represents a single field that can be represented in buck build files, backed by an Immutable
  * DescriptionArg class
  */
-public class ReflectionParamInfo extends AbstractParamInfo {
+public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
 
   private final Method setter;
   /**
@@ -44,21 +45,21 @@ public class ReflectionParamInfo extends AbstractParamInfo {
    *
    * <p>Note that this may not be abstract, for instance if a @Value.Default is specified.
    */
-  private final Supplier<Method> closestGetterOnAbstractClassOrInterface;
+  private final Method closestGetterOnAbstractClassOrInterface;
 
   /** Holds the getter for the concrete Immutable class. */
-  private final Supplier<Method> concreteGetter;
+  private final Method concreteGetter;
 
-  private final Supplier<Boolean> isOptional;
+  private final boolean isOptional;
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private ReflectionParamInfo(
       String name,
-      TypeCoercer<?> typeCoercer,
+      TypeCoercer<?, T> typeCoercer,
       Method setter,
-      Supplier<Method> closestGetterOnAbstractClassOrInterface,
-      Supplier<Method> concreteGetter,
-      Supplier<Boolean> isOptional) {
+      Method closestGetterOnAbstractClassOrInterface,
+      Method concreteGetter,
+      boolean isOptional) {
     super(name, typeCoercer);
     this.setter = setter;
     this.closestGetterOnAbstractClassOrInterface = closestGetterOnAbstractClassOrInterface;
@@ -66,9 +67,81 @@ public class ReflectionParamInfo extends AbstractParamInfo {
     this.isOptional = isOptional;
   }
 
-  /** Create an instance of {@link ReflectionParamInfo} */
-  public static ReflectionParamInfo of(TypeCoercerFactory typeCoercerFactory, Method setter) {
+  private static class StaticInfo {
+    private final String name;
+    private final Method closestGetterOnAbstractClassOrInterface;
+    private final Type setterParameterType;
+    private final boolean isOptional;
+    private final Method concreteGetter;
 
+    public StaticInfo(
+        String name,
+        Method closestGetterOnAbstractClassOrInterface,
+        Type setterParameterType,
+        boolean isOptional,
+        Method concreteGetter) {
+      this.name = name;
+      this.closestGetterOnAbstractClassOrInterface = closestGetterOnAbstractClassOrInterface;
+      this.setterParameterType = setterParameterType;
+      this.isOptional = isOptional;
+      this.concreteGetter = concreteGetter;
+    }
+  }
+
+  private static final ConcurrentMap<Method, StaticInfo> staticInfoCache =
+      new MapMaker().weakValues().makeMap();
+
+  /** Create an instance of {@link ReflectionParamInfo} */
+  public static ReflectionParamInfo<?> of(TypeCoercerFactory typeCoercerFactory, Method setter) {
+    StaticInfo staticInfo =
+        staticInfoCache.computeIfAbsent(setter, ReflectionParamInfo::computeSetterInfo);
+
+    try {
+      TypeCoercer<?, ?> typeCoercer =
+          typeCoercerFactory.typeCoercerForType(TypeToken.of(staticInfo.setterParameterType));
+
+      return new ReflectionParamInfo<>(
+          staticInfo.name,
+          typeCoercer,
+          setter,
+          staticInfo.closestGetterOnAbstractClassOrInterface,
+          staticInfo.concreteGetter,
+          staticInfo.isOptional);
+    } catch (Exception e) {
+      throw new BuckUncheckedExecutionException(
+          e,
+          "When getting ParamInfo for %s.%s.",
+          setter.getDeclaringClass().getName(),
+          staticInfo.name);
+    }
+  }
+
+  private static Method computeConcreteGetter(Method setter) {
+    // This needs to get (and invoke) the concrete Immutable class's getter, not the
+    // abstract
+    // getter from a superclass.
+    // Accordingly, we manually find the getter there, rather than using
+    // closestGetterOnAbstractClassOrInterface.
+    Class<?> enclosingClass = setter.getDeclaringClass().getEnclosingClass();
+    if (enclosingClass == null) {
+      throw new IllegalStateException(
+          String.format("Couldn't find enclosing class of Builder %s", setter.getDeclaringClass()));
+    }
+    Iterable<String> getterNames = getGetterNames(setter);
+    for (String possibleGetterName : getterNames) {
+      try {
+        return enclosingClass.getMethod(possibleGetterName);
+      } catch (NoSuchMethodException e) {
+        // Handled below
+      }
+    }
+    throw new IllegalStateException(
+        String.format(
+            "Couldn't find declared getter for %s#%s. Tried enclosing class %s methods: %s",
+            setter.getDeclaringClass(), setter.getName(), enclosingClass, getterNames));
+  }
+
+  private static StaticInfo computeSetterInfo(Method setter) {
     Preconditions.checkArgument(
         setter.getParameterCount() == 1,
         "Setter is expected to have exactly one parameter but had %s",
@@ -82,53 +155,20 @@ public class ReflectionParamInfo extends AbstractParamInfo {
         "Setter must have name longer than just 'set' but was %s",
         setter.getName());
 
-    Supplier<Method> closestGetterOnAbstractClassOrInterface =
-        MoreSuppliers.memoize(() -> findClosestGetterOnAbstractClassOrInterface(setter));
+    Method closestGetterOnAbstractClassOrInterface =
+        findClosestGetterOnAbstractClassOrInterface(setter);
 
-    Supplier<Method> concreteGetter =
-        MoreSuppliers.memoize(
-            () -> {
-              // This needs to get (and invoke) the concrete Immutable class's getter, not the
-              // abstract
-              // getter from a superclass.
-              // Accordingly, we manually find the getter there, rather than using
-              // closestGetterOnAbstractClassOrInterface.
-              Class<?> enclosingClass = setter.getDeclaringClass().getEnclosingClass();
-              if (enclosingClass == null) {
-                throw new IllegalStateException(
-                    String.format(
-                        "Couldn't find enclosing class of Builder %s", setter.getDeclaringClass()));
-              }
-              Iterable<String> getterNames = getGetterNames(setter);
-              for (String possibleGetterName : getterNames) {
-                try {
-                  return enclosingClass.getMethod(possibleGetterName);
-                } catch (NoSuchMethodException e) {
-                  // Handled below
-                }
-              }
-              throw new IllegalStateException(
-                  String.format(
-                      "Couldn't find declared getter for %s#%s. Tried enclosing class %s methods: %s",
-                      setter.getDeclaringClass(), setter.getName(), enclosingClass, getterNames));
-            });
-    Supplier<Boolean> isOptional =
-        MoreSuppliers.memoize(
-            () -> {
-              Method getter = closestGetterOnAbstractClassOrInterface.get();
-              Class<?> type = getter.getReturnType();
-              if (CoercedTypeCache.OPTIONAL_TYPES.contains(type)) {
-                return true;
-              }
-
-              if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
-                return true;
-              }
-
-              // Unfortunately @Value.Default isn't retained at runtime, so we use abstract-ness
-              // as a proxy for whether something has a default value.
-              return !Modifier.isAbstract(getter.getModifiers());
-            });
+    boolean isOptional;
+    Class<?> type = closestGetterOnAbstractClassOrInterface.getReturnType();
+    if (CoercedTypeCache.OPTIONAL_TYPES.contains(type)) {
+      isOptional = true;
+    } else if (Collection.class.isAssignableFrom(type) || Map.class.isAssignableFrom(type)) {
+      isOptional = true;
+    } else {
+      // Unfortunately @Value.Default isn't retained at runtime, so we use abstract-ness
+      // as a proxy for whether something has a default value.
+      isOptional = !Modifier.isAbstract(closestGetterOnAbstractClassOrInterface.getModifiers());
+    }
 
     StringBuilder builder = new StringBuilder();
     builder.append(setter.getName().substring(3, 4).toLowerCase());
@@ -137,32 +177,23 @@ public class ReflectionParamInfo extends AbstractParamInfo {
     }
     String name = builder.toString();
 
-    try {
-      TypeCoercer<?> typeCoercer =
-          typeCoercerFactory.typeCoercerForType(setter.getGenericParameterTypes()[0]);
-
-      return new ReflectionParamInfo(
-          name,
-          typeCoercer,
-          setter,
-          closestGetterOnAbstractClassOrInterface,
-          concreteGetter,
-          isOptional);
-    } catch (Exception e) {
-      throw new BuckUncheckedExecutionException(
-          e, "When getting ParamInfo for %s.%s.", setter.getDeclaringClass().getName(), name);
-    }
+    return new StaticInfo(
+        name,
+        closestGetterOnAbstractClassOrInterface,
+        setter.getGenericParameterTypes()[0],
+        isOptional,
+        computeConcreteGetter(setter));
   }
 
   @Override
   public boolean isOptional() {
-    return this.isOptional.get();
+    return this.isOptional;
   }
 
   @Nullable
   @Override
   public Hint getHint() {
-    return this.closestGetterOnAbstractClassOrInterface.get().getAnnotation(Hint.class);
+    return this.closestGetterOnAbstractClassOrInterface.getAnnotation(Hint.class);
   }
 
   @Nullable
@@ -176,10 +207,11 @@ public class ReflectionParamInfo extends AbstractParamInfo {
   }
 
   @Override
-  public Object get(Object dto) {
-    Method getter = this.concreteGetter.get();
+  @SuppressWarnings("unchecked")
+  public T get(Object dto) {
+    Method getter = this.concreteGetter;
     try {
-      return getter.invoke(dto);
+      return (T) getter.invoke(dto);
     } catch (InvocationTargetException | IllegalAccessException e) {
       throw new IllegalStateException(
           String.format(
@@ -192,14 +224,11 @@ public class ReflectionParamInfo extends AbstractParamInfo {
   public void setCoercedValue(Object dto, Object value) {
     try {
       setter.invoke(dto, value);
-    } catch (IllegalAccessException | InvocationTargetException e) {
-      throw new RuntimeException(e);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "failed to invoke setter " + setter + " with value of type " + value.getClass().getName(),
+          e);
     }
-  }
-
-  @Override
-  public Type[] getGenericParameterTypes() {
-    return setter.getGenericParameterTypes();
   }
 
   /** Returns the most-overridden getter on the abstract Immutable. */

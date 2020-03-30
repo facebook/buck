@@ -1,20 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -46,18 +48,22 @@ public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTa
   protected final TargetGraphCreationResult unversionedTargetGraphCreationResult;
   protected final long timeout;
   protected final TimeUnit timeUnit;
+  private final Cells cells;
 
   protected AbstractVersionedTargetGraphBuilder(
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult unversionedTargetGraphCreationResult,
       long timeout,
-      TimeUnit timeUnit) {
+      TimeUnit timeUnit,
+      Cells cells) {
+
     this.typeCoercerFactory = typeCoercerFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.unversionedTargetGraphCreationResult = unversionedTargetGraphCreationResult;
     this.timeout = timeout;
     this.timeUnit = timeUnit;
+    this.cells = cells;
   }
 
   /** @return a flavor to which summarizes the given version selections. */
@@ -131,7 +137,7 @@ public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTa
     // Build a target translator object to translate build targets.
     ImmutableList<TargetTranslator<?>> translators =
         ImmutableList.of(new QueryTargetTranslator(unconfiguredBuildTargetFactory));
-    return new TargetNodeTranslator(typeCoercerFactory, translators) {
+    return new TargetNodeTranslator(typeCoercerFactory, translators, cells) {
 
       private final LoadingCache<BuildTarget, Optional<BuildTarget>> cache =
           CacheBuilder.newBuilder()

@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli.endtoend;
@@ -23,9 +23,12 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.config.BuildLogEntry;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.testutil.PlatformUtils;
 import com.facebook.buck.testutil.ProcessResult;
@@ -90,7 +93,7 @@ public class BuildEndToEndTest {
         .withBuckdToggled(ToggleState.ON);
   }
 
-  @EnvironmentFor(testNames = {"printsErrorWhenBuckConfigIsMissing"})
+  @EnvironmentFor(testNames = {"printsErrorWhenBuckConfigIsMissing", "allowsRelativeBuildTargets"})
   public static EndToEndEnvironment setSimpleEnv() {
     return getBaseEnvironment().addTemplates("cli");
   }
@@ -98,6 +101,36 @@ public class BuildEndToEndTest {
   @EnvironmentFor(testNames = {"nestedBuildsUseDifferentUUID"})
   public static EndToEndEnvironment setupNestedBuildsEnv() {
     return getBaseEnvironment().addTemplates("nested_build");
+  }
+
+  @EnvironmentFor(testNames = {"handlesNonUtf8OnStdFds"})
+  public static EndToEndEnvironment setupHandlesNonUtf8OnStdFds() {
+    return getBaseEnvironment().withBuckdToggled(ToggleState.ON).addTemplates("cli");
+  }
+
+  @Test
+  public void allowsRelativeBuildTargets(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
+      throws Throwable {
+    workspace.addPremadeTemplate("cli");
+    workspace.setup();
+
+    ImmutableMap<String, Path> simpleBinPath =
+        workspace.buildAndReturnOutputs("run/simple_bin:main_py");
+
+    workspace.runBuckCommand("run", "run/simple_bin:main_py").assertSuccess();
+
+    workspace.setRelativeWorkingDirectory(Paths.get("run"));
+
+    ImmutableMap<String, Path> relativeSimpleBinPath =
+        workspace.buildAndReturnOutputs("simple_bin:main_py");
+
+    ImmutableMap<String, Path> targetsRelativeSimpleBinPath =
+        workspace.runCommandAndReturnOutputs("targets", "simple_bin:main_py");
+
+    workspace.runBuckCommand("run", "simple_bin:main_py").assertSuccess();
+
+    assertEquals(simpleBinPath, relativeSimpleBinPath);
+    assertEquals(simpleBinPath, targetsRelativeSimpleBinPath);
   }
 
   @Test
@@ -260,7 +293,10 @@ public class BuildEndToEndTest {
     ImmutableList<BuildLogEntry> helper =
         new BuildLogHelper(
                 new DefaultProjectFilesystemFactory()
-                    .createProjectFilesystem(workspace.getDestPath()))
+                    .createProjectFilesystem(
+                        CanonicalCellName.rootCell(),
+                        AbsPath.of(workspace.getDestPath()),
+                        BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH))
             .getBuildLogs();
 
     assertEquals(2, helper.size());
@@ -286,5 +322,18 @@ public class BuildEndToEndTest {
     assertTrue("Query command was not found in logs", queryCommand.isPresent());
     assertEquals(Optional.of(new BuildId("1234-5678")), buildCommand.get().getBuildId());
     assertNotEquals(Optional.of(new BuildId("1234-5678")), queryCommand.get().getBuildId());
+  }
+
+  @Test
+  public void handlesNonUtf8OnStdFds(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
+      throws Throwable {
+    for (String template : test.getTemplateSet()) {
+      workspace.addPremadeTemplate(template);
+    }
+    workspace.setup();
+
+    ProcessResult res = workspace.runBuckCommand(true, "build", "//bad_utf8:").assertFailure();
+    assertThat(res.getStderr(), not(containsString("UnicodeDecodeError")));
+    assertThat(res.getStderr(), containsString("foo bar baz"));
   }
 }

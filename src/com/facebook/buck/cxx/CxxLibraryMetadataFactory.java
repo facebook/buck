@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -87,7 +88,7 @@ public class CxxLibraryMetadataFactory {
       case CXX_PREPROCESSOR_INPUT:
         {
           Map.Entry<Flavor, UnresolvedCxxPlatform> platform =
-              getCxxPlatformsProvider()
+              getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
                   .getUnresolvedCxxPlatforms()
                   .getFlavorAndValue(buildTarget)
                   .orElseThrow(
@@ -96,7 +97,7 @@ public class CxxLibraryMetadataFactory {
                               String.format(
                                   "%s: cannot extract platform from target flavors (available platforms: %s)",
                                   buildTarget,
-                                  getCxxPlatformsProvider()
+                                  getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
                                       .getUnresolvedCxxPlatforms()
                                       .getFlavors())));
           Map.Entry<Flavor, HeaderVisibility> visibility =
@@ -138,11 +139,16 @@ public class CxxLibraryMetadataFactory {
 
             for (String privateInclude : args.getIncludeDirectories()) {
               cxxPreprocessorInputBuilder.addIncludes(
-                  CxxIncludes.of(
+                  ImmutableCxxIncludes.of(
                       IncludeType.LOCAL,
                       PathSourcePath.of(
                           projectFilesystem,
-                          buildTarget.getBasePath().resolve(privateInclude).normalize())));
+                          buildTarget
+                              .getCellRelativeBasePath()
+                              .getPath()
+                              .toPath(projectFilesystem.getFileSystem())
+                              .resolve(privateInclude)
+                              .normalize())));
             }
           }
 
@@ -182,20 +188,30 @@ public class CxxLibraryMetadataFactory {
 
             for (String publicInclude : args.getPublicIncludeDirectories()) {
               cxxPreprocessorInputBuilder.addIncludes(
-                  CxxIncludes.of(
+                  ImmutableCxxIncludes.of(
                       IncludeType.LOCAL,
                       PathSourcePath.of(
                           projectFilesystem,
-                          buildTarget.getBasePath().resolve(publicInclude).normalize())));
+                          buildTarget
+                              .getCellRelativeBasePath()
+                              .getPath()
+                              .toPath(projectFilesystem.getFileSystem())
+                              .resolve(publicInclude)
+                              .normalize())));
             }
 
             for (String publicSystemInclude : args.getPublicSystemIncludeDirectories()) {
               cxxPreprocessorInputBuilder.addIncludes(
-                  CxxIncludes.of(
+                  ImmutableCxxIncludes.of(
                       IncludeType.SYSTEM,
                       PathSourcePath.of(
                           projectFilesystem,
-                          buildTarget.getBasePath().resolve(publicSystemInclude).normalize())));
+                          buildTarget
+                              .getCellRelativeBasePath()
+                              .getPath()
+                              .toPath(projectFilesystem.getFileSystem())
+                              .resolve(publicSystemInclude)
+                              .normalize())));
             }
           }
 
@@ -237,8 +253,11 @@ public class CxxLibraryMetadataFactory {
         CxxHeaders.class);
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 }

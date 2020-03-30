@@ -1,16 +1,16 @@
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import absolute_import, division, print_function, unicode_literals
 
@@ -18,8 +18,7 @@ import ast
 import os
 import os.path
 import re
-from UserDict import DictMixin
-from UserList import UserList
+
 
 BUILD_TARGET_PATTERN = re.compile(r"^(?P<cell>.*)?//(?P<path>[^:]+)?:(?P<name>.*)$")
 
@@ -42,7 +41,7 @@ def get_build_target(rule):
 
 
 def write_all():
-    for buck_file in __buck_files.itervalues():
+    for buck_file in __buck_files.values():
         buck_file.write()
 
 
@@ -115,14 +114,14 @@ class BuckFile:
     def write(self):
         """Writes back to the file all modifications accumulated in this object by calls to its
         other methods"""
-        for target in self.targets.itervalues():
+        for target in self.targets.values():
             target.save()
 
         with open(self.path, "w+") as buck_file:
             buck_file.writelines(self.lines)
 
 
-class BuildTarget(DictMixin):
+class BuildTarget:
     """Provides basic utilities for reading and editing a single rule within a BUCK file"""
 
     def __init__(self, buck_file, ast_node):

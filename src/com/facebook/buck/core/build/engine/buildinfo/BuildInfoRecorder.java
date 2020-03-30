@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.buildinfo;
@@ -146,10 +146,20 @@ public class BuildInfoRecorder {
     }
     projectFilesystem.mkdirs(pathToMetadataDirectory);
 
+    ImmutableMap.Builder<String, String> artifactMetadata = ImmutableMap.builder();
     for (Map.Entry<String, String> entry : metadataToWrite.entrySet()) {
-      projectFilesystem.writeContentsToPath(
-          entry.getValue(), pathToMetadataDirectory.resolve(entry.getKey()));
+      if (!entry.getKey().equals(BuildInfo.MetadataKey.DEP_FILE)) {
+        artifactMetadata.put(entry.getKey(), entry.getValue());
+      } else {
+        projectFilesystem.writeContentsToPath(
+            entry.getValue(), pathToMetadataDirectory.resolve(entry.getKey()));
+      }
     }
+
+    projectFilesystem.writeContentsToPath(
+        ObjectMappers.WRITER.writeValueAsString(artifactMetadata.build()),
+        BuildInfo.getPathToArtifactMetadataFile(buildTarget, projectFilesystem));
+
     updateBuildMetadata();
   }
 
@@ -178,6 +188,7 @@ public class BuildInfoRecorder {
 
   private ImmutableSortedSet<Path> getRecordedMetadataFiles() {
     return FluentIterable.from(metadataToWrite.keySet())
+        .filter(key -> key.equals(BuildInfo.MetadataKey.DEP_FILE))
         .transform(Paths::get)
         .transform(pathToMetadataDirectory::resolve)
         .toSortedSet(Ordering.natural());

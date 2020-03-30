@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.providers.impl;
 
 import com.facebook.buck.core.rules.providers.Provider;
@@ -20,16 +21,23 @@ import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlarkFunction;
 import com.facebook.buck.core.starlark.compatible.MethodLookup;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
+import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.google.devtools.build.lib.events.Location;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
 import java.util.List;
-import org.immutables.value.Value;
+import java.util.Objects;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * A {@link Provider} for a {@link ProviderInfo} that is declared in java. The provider is auto
@@ -40,18 +48,43 @@ import org.immutables.value.Value;
 public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarlarkFunction
     implements Provider<T> {
 
+  private static final String SKYLARK_CONSTRUCTOR_METHOD_NAME = "instantiateFromSkylark";
+
   protected final BuiltInKey<T> key;
-  private final Constructor<? extends T> infoConstructor;
+  private final Either<Constructor<? extends T>, Method> infoFactory;
 
   private BuiltInProvider(
       Class<? extends T> infoClass,
       Constructor<? extends T> infoConstructor,
       List<String> infoApiFields,
-      List<String> defaultSkylarkValues) {
-    super(infoClass.getSimpleName(), infoConstructor, infoApiFields, defaultSkylarkValues);
+      List<String> defaultSkylarkValues,
+      Set<String> noneableParams) {
+    super(
+        infoClass.getSimpleName(),
+        infoConstructor,
+        infoApiFields,
+        defaultSkylarkValues,
+        noneableParams);
     this.key = ImmutableBuiltInKey.of(infoClass);
-    this.infoConstructor = infoConstructor;
-    this.infoConstructor.setAccessible(true);
+    infoConstructor.setAccessible(true);
+    this.infoFactory = Either.ofLeft(infoConstructor);
+  }
+
+  private BuiltInProvider(
+      Class<? extends T> infoClass,
+      Method infoFactory,
+      List<String> infoApiFields,
+      List<String> defaultSkylarkValues,
+      Set<String> noneableParams) {
+    super(
+        infoClass.getSimpleName(),
+        infoFactory,
+        infoApiFields,
+        defaultSkylarkValues,
+        noneableParams);
+    this.key = ImmutableBuiltInKey.of(infoClass);
+    infoFactory.setAccessible(true);
+    this.infoFactory = Either.ofRight(infoFactory);
   }
 
   /**
@@ -66,9 +99,18 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
     // TODO: We'll want to probably eventually do annotation processors to make these compile time
     // errors.
     Class<U> infoApiClass = BuiltInProviderClassUtilities.findDeclaringClass(infoClass);
+    if (infoApiClass.equals(infoClass)) {
+      throw new IllegalArgumentException(
+          "The given class should be the Immutable implementation class of the BuildInProvider "
+              + "class, not the declaring API class that defined the @ImmutableInfo annotation.");
+    }
+
     ImmutableInfo info = infoApiClass.getAnnotation(ImmutableInfo.class);
     ImmutableMap<String, Method> methodMap = MethodLookup.getMethods(infoApiClass);
     ImmutableList<String> argNames = ImmutableList.copyOf(info.args());
+    ImmutableList<String> defaultSkylarkValues = ImmutableList.copyOf(info.defaultSkylarkValues());
+    ImmutableSet<String> noneableParams = ImmutableSet.copyOf(info.noneable());
+
     List<Class<?>> types =
         Lists.transform(
             argNames,
@@ -80,18 +122,79 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
                         name)
                     .getReturnType());
 
+    @Nullable Method skylarkFactory = findSkylarkFactory(infoApiClass, argNames);
+
+    if (skylarkFactory != null) {
+      return new BuiltInProvider<>(
+          infoApiClass, skylarkFactory, argNames, defaultSkylarkValues, noneableParams);
+    } else {
+      return fromConstructor(
+          infoClass, infoApiClass, types, argNames, defaultSkylarkValues, noneableParams);
+    }
+  }
+
+  private static <U extends BuiltInProviderInfo<U>> BuiltInProvider<U> fromConstructor(
+      Class<? extends U> infoClass,
+      Class<U> infoApiClass,
+      List<Class<?>> structTypes,
+      ImmutableList<String> argNames,
+      ImmutableList<String> defaultSkylarkValues,
+      ImmutableSet<String> noneableParams) {
+
     try {
       return new BuiltInProvider<>(
           infoApiClass,
-          findConstructor(infoClass, types),
-          ImmutableList.copyOf(info.args()),
-          ImmutableList.copyOf(info.defaultSkylarkValues()));
+          findConstructor(infoClass, structTypes),
+          argNames,
+          defaultSkylarkValues,
+          noneableParams);
     } catch (NoSuchMethodException e) {
       throw new IllegalArgumentException(
           String.format(
               "Infos must have a public constructor that initializes all struct values but %s doesn't. Expected constructor parameters %s",
-              infoClass, types));
+              infoClass, structTypes));
     }
+  }
+
+  @Nullable
+  private static <U extends BuiltInProviderInfo<U>> Method findSkylarkFactory(
+      Class<U> infoApiClass, ImmutableList<String> argNames) {
+    for (Method method : infoApiClass.getMethods()) {
+      if (method.getName().equals(SKYLARK_CONSTRUCTOR_METHOD_NAME)) {
+
+        if ((method.getModifiers() & Modifier.STATIC) == 0) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Method %s on %s must be a public static method.",
+                  SKYLARK_CONSTRUCTOR_METHOD_NAME, infoApiClass.getSimpleName()));
+        }
+        if (!method.getReturnType().equals(infoApiClass)) {
+          throw new IllegalArgumentException(
+              String.format(
+                  "Method %s on %s must return %s.",
+                  SKYLARK_CONSTRUCTOR_METHOD_NAME,
+                  infoApiClass.getSimpleName(),
+                  infoApiClass.getSimpleName()));
+        }
+        if (method.getParameterCount() != argNames.size()) {
+          // Skylark constructors may take a single extra argument of type `Location`, and it must
+          // be the last argument.
+          if (method.getParameterCount() != argNames.size() + 1
+              || method.getParameterTypes()[method.getParameterTypes().length - 1]
+                  != Location.class) {
+            throw new IllegalArgumentException(
+                String.format(
+                    "Method %s on %s must take %s arguments, with an optional additional "
+                        + "Location parameter as the last parameter",
+                    SKYLARK_CONSTRUCTOR_METHOD_NAME,
+                    infoApiClass.getSimpleName(),
+                    argNames.size()));
+          }
+        }
+        return method;
+      }
+    }
+    return null;
   }
 
   @SuppressWarnings("unchecked")
@@ -137,9 +240,12 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
    * @param args the args to the {@link BuiltInProviderInfo} being constructed
    * @return the info itself
    */
+  @SuppressWarnings("unchecked")
   public final T createInfo(Object... args)
       throws IllegalAccessException, InvocationTargetException, InstantiationException {
-    return infoConstructor.newInstance(args);
+    return infoFactory.isLeft()
+        ? infoFactory.getLeft().newInstance(args)
+        : (T) Objects.requireNonNull(infoFactory.getRight()).invoke(args);
   }
 
   @Override
@@ -152,10 +258,8 @@ public class BuiltInProvider<T extends BuiltInProviderInfo<T>> extends BuckStarl
    *
    * @param <U> the type of the {@link BuiltInProviderInfo}
    */
-  @Value.Immutable(copy = false, builder = false, prehash = true)
-  @Value.Style(visibility = Value.Style.ImplementationVisibility.PACKAGE)
-  public abstract static class BuiltInKey<U> implements Provider.Key<U> {
-    @Value.Parameter
+  @BuckStylePrehashedValue
+  abstract static class BuiltInKey<U> implements Provider.Key<U> {
     abstract Class<?> getInfoClass();
 
     @Override

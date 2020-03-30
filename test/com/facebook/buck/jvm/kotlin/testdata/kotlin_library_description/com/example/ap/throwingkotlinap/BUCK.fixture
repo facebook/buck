@@ -1,0 +1,34 @@
+java_annotation_processor(
+    name = "ap",
+    processor_class = "com.example.ap.throwingkotlinap.ThrowingAnnotationProcessorKotlin",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":ap-lib",
+    ],
+)
+
+kotlin_library(
+    name = "ap-lib",
+    srcs = [
+        "ThrowingAnnotationProcessorKotlin.kt",
+    ],
+    plugins = [
+        "//com/example/ap/libs:google_auto_service",
+    ],
+    resources = glob([
+        "resources/**",
+    ]),
+    resources_root = "resources",
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "buck//third-party/java/guava:guava",
+        "//com/example/ap/kotlinannotation:annotation-lib",
+        "//com/example/ap/libs:auto-common.jar",
+        "//com/example/ap/libs:auto-service.jar",
+        "//com/example/ap/libs:kotlinpoet.jar",
+    ],
+)

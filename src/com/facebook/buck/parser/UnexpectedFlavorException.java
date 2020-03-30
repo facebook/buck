@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
@@ -19,7 +19,8 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.util.PatternAndMessage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -33,7 +34,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
           PatternAndMessage.of(
               Pattern.compile("android-*"),
               "Please make sure you have the Android SDK/NDK installed and set up. See "
-                  + "https://buck.build/setup/getting-started.html#locate-android-sdk"),
+                  + "https://buck.build/setup/getting_started.html#locate-android-sdk"),
           PatternAndMessage.of(
               Pattern.compile("macosx*"),
               "Please make sure you have the Mac OSX SDK installed and set up."),
@@ -61,7 +62,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
   }
 
   public static UnexpectedFlavorException createWithSuggestions(
-      Flavored flavored, UnconfiguredBuildTargetView target) {
+      Flavored flavored, UnconfiguredBuildTarget target) {
     ImmutableSet<Flavor> invalidFlavors = getInvalidFlavors(flavored, target);
     ImmutableSet<Flavor> validFlavors = getValidFlavors(flavored, target);
     // Get the specific message
@@ -89,21 +90,29 @@ public class UnexpectedFlavorException extends HumanReadableException {
   }
 
   private static ImmutableSet<Flavor> getInvalidFlavors(
-      Flavored flavored, UnconfiguredBuildTargetView target) {
-    return target.getFlavors().stream()
-        .filter(flavor -> !flavored.hasFlavors(ImmutableSet.of(flavor)))
+      Flavored flavored, UnconfiguredBuildTarget target) {
+    // TODO(nga): wrong target configuration
+    return target.getFlavors().getSet().stream()
+        .filter(
+            flavor ->
+                !flavored.hasFlavors(
+                    ImmutableSet.of(flavor), UnconfiguredTargetConfiguration.INSTANCE))
         .collect(ImmutableSet.toImmutableSet());
   }
 
   private static ImmutableSet<Flavor> getValidFlavors(
-      Flavored flavored, UnconfiguredBuildTargetView target) {
-    return target.getFlavors().stream()
-        .filter(flavor -> flavored.hasFlavors(ImmutableSet.of(flavor)))
+      Flavored flavored, UnconfiguredBuildTarget target) {
+    // TODO(nga): wrong target configuration
+    return target.getFlavors().getSet().stream()
+        .filter(
+            flavor ->
+                flavored.hasFlavors(
+                    ImmutableSet.of(flavor), UnconfiguredTargetConfiguration.INSTANCE))
         .collect(ImmutableSet.toImmutableSet());
   }
 
   private static String createDefaultMessage(
-      UnconfiguredBuildTargetView target,
+      UnconfiguredBuildTarget target,
       ImmutableSet<Flavor> invalidFlavors,
       ImmutableSet<Flavor> validFlavors) {
     String invalidFlavorsStr =

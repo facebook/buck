@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.testutil.integration;
@@ -29,7 +29,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import org.hamcrest.Matchers;
@@ -90,8 +95,38 @@ public class ZipInspector {
   public byte[] getFileContents(String pathRelativeToRoot) throws IOException {
     try (ZipFile zipFile = new ZipFile(this.zipFile.toFile())) {
       ZipEntry entry = zipFile.getEntry(pathRelativeToRoot);
+      if (entry == null) {
+        throw new IllegalArgumentException(
+            String.format(
+                "%s not found in zip file %s, zip file contents [%s]",
+                pathRelativeToRoot, this.zipFile, String.join(", ", zipFileEntries)));
+      }
       return ByteStreams.toByteArray(zipFile.getInputStream(entry));
     }
+  }
+
+  public List<String> getFileContentsLines(String pathRelativeToRoot) throws IOException {
+    return Arrays.asList(new String(getFileContents(pathRelativeToRoot)).split("\n"));
+  }
+
+  public Set<Path> getDirectoryContents(Path pathRelativeToRoot) {
+    pathRelativeToRoot = pathRelativeToRoot.normalize();
+    if (pathRelativeToRoot.toString().length() == 0) {
+      pathRelativeToRoot = null;
+    }
+    Path parentPath = pathRelativeToRoot;
+    return getZipFileEntries().stream()
+        .map(Paths::get)
+        .filter(
+            path -> {
+              Path pathParent = path.getParent();
+              if (pathParent != null) {
+                return pathParent.equals(parentPath);
+              }
+              return parentPath == null;
+            })
+        .map(Path::getFileName)
+        .collect(Collectors.toSet());
   }
 
   public ImmutableList<String> getZipFileEntries() {

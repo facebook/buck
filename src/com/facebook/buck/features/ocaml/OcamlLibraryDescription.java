@@ -1,29 +1,30 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.ocaml;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -32,7 +33,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.Arg;
@@ -77,7 +78,10 @@ public class OcamlLibraryDescription
         CxxDeps.builder().addDeps(args.getDeps()).addPlatformDeps(args.getPlatformDeps()).build();
 
     OcamlToolchain ocamlToolchain =
-        toolchainProvider.getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class);
+        toolchainProvider.getByName(
+            OcamlToolchain.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            OcamlToolchain.class);
     FlavorDomain<OcamlPlatform> ocamlPlatforms = ocamlToolchain.getOcamlPlatforms();
     Optional<OcamlPlatform> ocamlPlatform = ocamlPlatforms.getValue(buildTarget);
     if (ocamlPlatform.isPresent()) {
@@ -223,13 +227,16 @@ public class OcamlLibraryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractOcamlLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     for (OcamlPlatform platform :
         toolchainProvider
-            .getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class)
+            .getByName(
+                OcamlToolchain.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                OcamlToolchain.class)
             .getOcamlPlatforms()
             .getValues()) {
       targetGraphOnlyDepsBuilder.addAll(
@@ -238,18 +245,19 @@ public class OcamlLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return flavors.equals(
         ImmutableSet.of(
             toolchainProvider
-                .getByName(OcamlToolchain.DEFAULT_NAME, OcamlToolchain.class)
+                .getByName(
+                    OcamlToolchain.DEFAULT_NAME, toolchainTargetConfiguration, OcamlToolchain.class)
                 .getDefaultOcamlPlatform()
                 .getFlavor()));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractOcamlLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  @RuleArg
+  interface AbstractOcamlLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     Optional<SourceSet> getSrcs();
 
     ImmutableList<StringWithMacros> getCompilerFlags();

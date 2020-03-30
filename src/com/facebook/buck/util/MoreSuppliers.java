@@ -1,22 +1,27 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util;
 
 import com.facebook.buck.util.function.ThrowingSupplier;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -64,6 +69,7 @@ public final class MoreSuppliers {
     }
   }
 
+  @JsonSerialize(using = MemoizingSupplierSerializer.class)
   private static class MemoizingSupplier<T> extends Memoizer<T> implements Supplier<T> {
     private final Supplier<T> delegate;
 
@@ -74,6 +80,28 @@ public final class MoreSuppliers {
     @Override
     public T get() {
       return get(delegate);
+    }
+  }
+
+  /**
+   * Custom serializer for Jackson because buck deserializer creates {@link
+   * com.google.common.base.Suppliers}.NonSerializableMemoizingSupplier from MemoizingSupplier and
+   * it's useful in tests to have both serialized into the same thing with Jackson.
+   */
+  static class MemoizingSupplierSerializer<T> extends StdSerializer<MemoizingSupplier<T>> {
+
+    @SuppressWarnings("unchecked")
+    public MemoizingSupplierSerializer() {
+      super((Class<MemoizingSupplier<T>>) (Class<?>) MemoizingSupplier.class);
+    }
+
+    @Override
+    public void serialize(
+        MemoizingSupplier<T> value, JsonGenerator gen, SerializerProvider provider)
+        throws IOException {
+      gen.writeStartObject();
+      gen.writeObjectField("instance", value.get());
+      gen.writeEndObject();
     }
   }
 

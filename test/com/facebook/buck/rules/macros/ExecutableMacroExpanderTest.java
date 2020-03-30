@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.macros;
@@ -19,12 +19,15 @@ package com.facebook.buck.rules.macros;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -44,6 +47,8 @@ import com.facebook.buck.rules.args.ToolArg;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.shell.GenruleBuilder;
+import com.google.common.collect.ImmutableList;
+import com.google.common.reflect.TypeToken;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -53,24 +58,23 @@ public class ExecutableMacroExpanderTest {
 
   private ProjectFilesystem filesystem;
   private ActionGraphBuilder graphBuilder;
-  private CellPathResolver cellPathResolver;
+  private CellNameResolver cellNameResolver;
   private StringWithMacrosConverter converter;
 
   @Before
   public void setUp() {
     filesystem = new FakeProjectFilesystem();
-    cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
+    cellNameResolver = TestCellBuilder.createCellRoots(filesystem).getCellNameResolver();
     graphBuilder = new TestActionGraphBuilder();
   }
 
   private void createConverter(BuildTarget buildTarget) {
     converter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellPathResolver)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(new ExecutableMacroExpander())
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            cellNameResolver,
+            graphBuilder,
+            ImmutableList.of(new ExecutableMacroExpander<>(ExecutableMacro.class)));
   }
 
   @Test
@@ -89,11 +93,7 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("java/com/facebook/util/ManifestGenerator.jar")
-            .toAbsolutePath();
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
@@ -112,11 +112,7 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("java/com/facebook/util/ManifestGenerator.jar")
-            .toAbsolutePath();
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
@@ -136,26 +132,22 @@ public class ExecutableMacroExpanderTest {
 
     // Verify that the correct cmd was created.
     Path expectedClasspath =
-        filesystem
-            .getBuckPaths()
-            .getGenDir()
-            .resolve("java/com/facebook/util/ManifestGenerator.jar")
-            .toAbsolutePath();
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
   }
 
   private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
     StringWithMacros stringWithMacros =
-        (StringWithMacros)
-            new DefaultTypeCoercerFactory()
-                .typeCoercerForType(StringWithMacros.class)
-                .coerce(
-                    cellPathResolver,
-                    filesystem,
-                    rule.getBuildTarget().getBasePath(),
-                    EmptyTargetConfiguration.INSTANCE,
-                    input);
+        new DefaultTypeCoercerFactory()
+            .typeCoercerForType(TypeToken.of(StringWithMacros.class))
+            .coerceBoth(
+                cellNameResolver,
+                filesystem,
+                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+                UnconfiguredTargetConfiguration.INSTANCE,
+                UnconfiguredTargetConfiguration.INSTANCE,
+                input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }
@@ -182,8 +174,9 @@ public class ExecutableMacroExpanderTest {
         new NoopBinaryBuildRule(target, new FakeProjectFilesystem(), params, tool));
 
     // Verify that the correct cmd was created.
-    ExecutableMacroExpander expander = new ExecutableMacroExpander();
-    ExecutableMacro executableMacro = ExecutableMacro.of(target);
+    ExecutableMacroExpander expander = new ExecutableMacroExpander(ExecutableMacro.class);
+    ExecutableMacro executableMacro =
+        ExecutableMacro.of(BuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()));
     assertEquals(ToolArg.of(tool), expander.expandFrom(target, graphBuilder, executableMacro));
     Arg expanded = expander.expandFrom(target, graphBuilder, executableMacro);
     assertThat(expanded, Matchers.instanceOf(ToolArg.class));
@@ -196,9 +189,13 @@ public class ExecutableMacroExpanderTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     Tool tool = new CommandTool.Builder().addArg("command").build();
     graphBuilder.addToIndex(new NoopBinaryBuildRule(target, filesystem, params, tool));
-    ExecutableMacroExpander expander = new ExecutableMacroExpander();
+    ExecutableMacroExpander expander = new ExecutableMacroExpander(ExecutableMacro.class);
+
     assertThat(
-        expander.expandFrom(target, graphBuilder, ExecutableMacro.of(target)),
+        expander.expandFrom(
+            target,
+            graphBuilder,
+            ExecutableMacro.of(BuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()))),
         Matchers.equalTo(ToolArg.of(tool)));
   }
 
@@ -217,7 +214,7 @@ public class ExecutableMacroExpanderTest {
     }
 
     @Override
-    public Tool getExecutableCommand() {
+    public Tool getExecutableCommand(OutputLabel outputLabel) {
       return tool;
     }
   }

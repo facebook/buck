@@ -5,6 +5,21 @@ java_immutables_library(
     srcs = glob(
         ["*.java"],
     ),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/rules/providers/collect:collect",
+        "//src/com/facebook/buck/log/views:views",
+        "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/collect:collect",
+        "//src/com/facebook/buck/util/concurrent:concurrent",
+        "//third-party/java/guava:guava",
+        "//third-party/java/infer-annotations:infer-annotations",
+        "//third-party/java/jackson:jackson-annotations",
+        "//third-party/java/jackson:jackson-databind",
+        "//third-party/java/jsr:jsr305",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/core/build/action:action",
         "//src/com/facebook/buck/core/build/buildable/context:context",
@@ -19,20 +34,5 @@ java_immutables_library(
         "//src/com/facebook/buck/core/toolchain:toolchain",
         "//src/com/facebook/buck/io/filesystem:filesystem",
         "//src/com/facebook/buck/step:step",
-    ],
-    visibility = [
-        "PUBLIC",
-    ],
-    deps = [
-        "//src/com/facebook/buck/core/rules/providers/collect/impl:impl",
-        "//src/com/facebook/buck/log/views:views",
-        "//src/com/facebook/buck/util:util",
-        "//src/com/facebook/buck/util/collect:collect",
-        "//src/com/facebook/buck/util/concurrent:concurrent",
-        "//third-party/java/guava:guava",
-        "//third-party/java/infer-annotations:infer-annotations",
-        "//third-party/java/jackson:jackson-annotations",
-        "//third-party/java/jackson:jackson-databind",
-        "//third-party/java/jsr:jsr305",
     ],
 )

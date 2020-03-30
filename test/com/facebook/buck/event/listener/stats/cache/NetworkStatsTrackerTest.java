@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.event.listener.stats.cache;
 
 import static org.junit.Assert.assertEquals;
@@ -58,34 +59,36 @@ public class NetworkStatsTrackerTest {
             BuildTargetFactory.newInstance("//:test"), new RuleKey(HashCode.fromInt(0)));
     eventBus.post(started);
 
-    assertEquals(RemoteDownloadStats.of(0, 0), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.of(0, 0), tracker.getRemoteDownloadStats());
 
     Builder finishedBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(started);
     finishedBuilder
         .getFetchBuilder()
         .setFetchResult(
-            CacheResult.hit("dontcare", ArtifactCacheMode.http).withArtifactSizeBytes(100))
+            CacheResult.hit("dontcare", ArtifactCacheMode.http)
+                .withArtifactSizeBytes(Optional.of(100L)))
         .setArtifactSizeBytes(100);
     eventBus.post(finishedBuilder.build());
 
-    assertEquals(RemoteDownloadStats.of(1, 100), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.of(1, 100), tracker.getRemoteDownloadStats());
 
     started =
         HttpArtifactCacheEvent.newFetchStartedEvent(
             BuildTargetFactory.newInstance("//:test"), new RuleKey(HashCode.fromInt(0)));
     eventBus.post(started);
 
-    assertEquals(RemoteDownloadStats.of(1, 100), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.of(1, 100), tracker.getRemoteDownloadStats());
 
     finishedBuilder = HttpArtifactCacheEvent.newFinishedEventBuilder(started);
     finishedBuilder
         .getFetchBuilder()
         .setFetchResult(
-            CacheResult.hit("dontcare", ArtifactCacheMode.http).withArtifactSizeBytes(200))
+            CacheResult.hit("dontcare", ArtifactCacheMode.http)
+                .withArtifactSizeBytes(Optional.of(200L)))
         .setArtifactSizeBytes(200);
     eventBus.post(finishedBuilder.build());
 
-    assertEquals(RemoteDownloadStats.of(2, 300), tracker.getRemoteDownloadStats());
+    assertEquals(ImmutableRemoteDownloadStats.of(2, 300), tracker.getRemoteDownloadStats());
   }
 
   @Test
@@ -249,14 +252,8 @@ public class NetworkStatsTrackerTest {
     assertTrue(uploadsFinished.get());
   }
 
-  private RemoteArtifactUploadStats uploadStats(
+  private NetworkStatsTracker.RemoteArtifactUploadStats uploadStats(
       int failed, int scheduled, int started, int uploaded, long totalBytes) {
-    return RemoteArtifactUploadStats.builder()
-        .setFailed(failed)
-        .setScheduled(scheduled)
-        .setStarted(started)
-        .setUploaded(uploaded)
-        .setTotalBytes(totalBytes)
-        .build();
+    return ImmutableRemoteArtifactUploadStats.of(started, failed, uploaded, scheduled, totalBytes);
   }
 }

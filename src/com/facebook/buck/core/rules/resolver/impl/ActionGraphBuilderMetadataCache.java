@@ -1,20 +1,22 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.resolver.impl;
 
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
@@ -35,14 +37,17 @@ final class ActionGraphBuilderMetadataCache {
   private final ActionGraphBuilder graphBuilder;
   private final TargetGraph targetGraph;
   private final LoadingCache<Pair<BuildTarget, Class<?>>, Optional<?>> metadataCache;
+  private final Cells cells;
 
   ActionGraphBuilderMetadataCache(
-      ActionGraphBuilder graphBuilder, TargetGraph targetGraph, int initialCapacity) {
+      ActionGraphBuilder graphBuilder, TargetGraph targetGraph, int initialCapacity, Cells cells) {
+
     // Precondition (not checked): graphBuilder has the same targetGraph as the one passed in
     this.graphBuilder = graphBuilder;
     this.targetGraph = targetGraph;
     this.metadataCache =
         CacheBuilder.newBuilder().initialCapacity(initialCapacity).build(new MetadataCacheLoader());
+    this.cells = cells;
   }
 
   @SuppressWarnings("unchecked")
@@ -84,7 +89,7 @@ final class ActionGraphBuilderMetadataCache {
       return metadataProvidingDescription.createMetadata(
           node.getBuildTarget(),
           graphBuilder,
-          node.getCellNames(),
+          cells.getCell(node.getBuildTarget().getCell()).getCellPathResolver(),
           arg,
           node.getSelectedVersions(),
           metadataClass);

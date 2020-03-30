@@ -10,8 +10,8 @@ def _dep_rule_impl(ctx):
 
     dep_file = list(ctx.attr.dep[DefaultInfo].default_outputs)[0].short_path.replace("\\", "/")
     expected_dep_file = "file__/out.txt"
-    if dep_file != expected_dep_file:
-        fail("Expected short path {}, got {}".format(expected_dep_file, dep_file))
+    if not dep_file.endswith(expected_dep_file):
+        fail("Expected short path endswith {}, got {}".format(expected_dep_file, dep_file))
 
     f = ctx.actions.declare_file("out2.txt")
     ctx.actions.write(f, "contents2")

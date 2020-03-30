@@ -1,21 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.doctor.config;
 
 import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import java.util.Date;
@@ -24,52 +26,37 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import org.immutables.value.Value;
 
-@Value.Immutable(copy = false, builder = false)
+@BuckStyleValue
 public interface BuildLogEntry {
 
-  @Value.Parameter
   Path getRelativePath();
 
-  @Value.Parameter
   Optional<BuildId> getBuildId();
 
-  @Value.Parameter
   Optional<List<String>> getCommandArgs();
 
-  @Value.Parameter
   Optional<List<String>> getExpandedCommandArgs();
 
-  @Value.Parameter
   OptionalInt getExitCode();
 
-  @Value.Parameter
   OptionalInt getBuildTimeMs();
 
-  @Value.Parameter
   Optional<Path> getRuleKeyLoggerLogFile();
 
-  @Value.Parameter
   Optional<Path> getMachineReadableLogFile();
 
-  @Value.Parameter
   Optional<Path> getRuleKeyDiagKeysFile();
 
-  @Value.Parameter
   Optional<Path> getRuleKeyDiagGraphFile();
 
-  @Value.Parameter
   Optional<Path> getTraceFile();
 
-  @Value.Parameter
   Optional<Path> getConfigJsonFile();
 
-  @Value.Parameter
   Optional<Path> getBuckFixSpecFile();
 
-  @Value.Parameter
   long getSize();
 
-  @Value.Parameter
   Date getLastModifiedTime();
 
   @Value.Check
@@ -81,5 +68,39 @@ public interface BuildLogEntry {
     if (getTraceFile().isPresent()) {
       Preconditions.checkState(!getTraceFile().get().isAbsolute());
     }
+  }
+
+  static BuildLogEntry of(
+      Path relativePath,
+      Optional<? extends BuildId> buildId,
+      Optional<? extends List<String>> commandArgs,
+      Optional<? extends List<String>> expandedCommandArgs,
+      OptionalInt exitCode,
+      OptionalInt buildTimeMs,
+      Optional<? extends Path> ruleKeyLoggerLogFile,
+      Optional<? extends Path> machineReadableLogFile,
+      Optional<? extends Path> ruleKeyDiagKeysFile,
+      Optional<? extends Path> ruleKeyDiagGraphFile,
+      Optional<? extends Path> traceFile,
+      Optional<? extends Path> configJsonFile,
+      Optional<? extends Path> buckFixSpecFile,
+      long size,
+      Date lastModifiedTime) {
+    return ImmutableBuildLogEntry.of(
+        relativePath,
+        buildId,
+        commandArgs,
+        expandedCommandArgs,
+        exitCode,
+        buildTimeMs,
+        ruleKeyLoggerLogFile,
+        machineReadableLogFile,
+        ruleKeyDiagKeysFile,
+        ruleKeyDiagGraphFile,
+        traceFile,
+        configJsonFile,
+        buckFixSpecFile,
+        size,
+        lastModifiedTime);
   }
 }

@@ -12,16 +12,16 @@ prebuilt_jar(
 
 java_library(
     name = "tools-sdk-common",
-    exported_deps = [
-        ":common",
-        ":sdk-common",
-    ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
         ":layoutlib-api",
         ":sdklib",
+    ],
+    exported_deps = [
+        ":common",
+        ":sdk-common",
     ],
 )
 

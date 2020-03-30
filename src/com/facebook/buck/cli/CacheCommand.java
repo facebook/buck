@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -25,6 +25,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.buildinfo.BuildInfo;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -69,9 +70,6 @@ public class CacheCommand extends AbstractCommand {
   @Option(name = "--output-dir", usage = "Extract artifacts to this directory.")
   @Nullable
   private String outputDir = null;
-
-  @Option(name = "--distributed", usage = "If the request is for our distributed system.")
-  private boolean isRequestForDistributed = false;
 
   @Option(
       name = "--rule-key-with-target",
@@ -160,8 +158,7 @@ public class CacheCommand extends AbstractCommand {
     BuildEvent.Started started = BuildEvent.started(getArguments());
 
     List<ArtifactRunner> results = null;
-    try (ArtifactCache cache =
-            params.getArtifactCacheFactory().newInstance(isRequestForDistributed, false);
+    try (ArtifactCache cache = params.getArtifactCacheFactory().newInstance();
         CommandThreadManager pool =
             new CommandThreadManager("Build", getConcurrencyLimit(params.getBuckConfig()))) {
       WeightedListeningExecutorService executor = pool.getWeightedListeningExecutorService();
@@ -283,19 +280,18 @@ public class CacheCommand extends AbstractCommand {
         .getBuckEventBus()
         .post(
             CacheCountersSummaryEvent.newSummary(
-                CacheCountersSummary.builder()
-                    .setCacheHitsPerMode(cacheHitsPerMode)
-                    .setCacheErrorsPerMode(cacheErrorsPerMode)
-                    .setTotalCacheHits(cacheHits)
-                    .setTotalCacheErrors(cacheErrors)
-                    .setTotalCacheMisses(cacheMisses)
-                    .setTotalCacheIgnores(cacheIgnored)
-                    .setTotalCacheLocalKeyUnchangedHits(localKeyUnchanged)
-                    .setFailureUploadCount(new AtomicInteger(0))
-                    .setSuccessUploadCount(new AtomicInteger(0))
-                    .setCacheBytesPerMode(cacheBytesPerMode)
-                    .setTotalCacheBytes(cacheBytes)
-                    .build()));
+                CacheCountersSummary.of(
+                    cacheHitsPerMode,
+                    cacheErrorsPerMode,
+                    cacheBytesPerMode,
+                    cacheHits,
+                    cacheErrors,
+                    cacheMisses,
+                    cacheIgnored,
+                    cacheBytes,
+                    localKeyUnchanged,
+                    new AtomicInteger(0),
+                    new AtomicInteger(0))));
 
     ExitCode exitCode = (totalRuns == goodRuns) ? ExitCode.SUCCESS : ExitCode.BUILD_ERROR;
     params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
@@ -322,8 +318,10 @@ public class CacheCommand extends AbstractCommand {
     BuildTarget buildTarget =
         params
             .getUnconfiguredBuildTargetFactory()
-            .create(params.getCell().getCellPathResolver(), targetName)
-            .configure(params.getTargetConfiguration());
+            .create(targetName, params.getCells().getRootCell().getCellNameResolver())
+            // TODO(nga): ignores default_target_platform and platform detector
+            .configure(
+                params.getTargetConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE));
     return new Pair<>(buildTarget, new RuleKey(ruleKey));
   }
 

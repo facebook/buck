@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.toolchain.impl;
@@ -56,7 +56,13 @@ public class CodeSignIdentityStoreFactoryTest {
                 + "\"Apple Development: Fizz Buzz (AAAAA12345)\" (CSSMERR_TP_CERT_REVOKED)\n"
                 + "  6) FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF "
                 + "\"Apple Development: Fizz Buzz (54321BBBBB)\" (CSSMERR_TP_CERT_EXPIRED)\n"
-                + "     6 valid identities found\n",
+                + "  7) EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE "
+                + "\"Apple Distribution: Fuss Bizz (12345BBBBB)\"\n"
+                + "  8) EEEEEEEEEEEEEEEEEEEEFFFFFFFFFFFFFFFFFFFF "
+                + "\"Apple Distribution: Fuss Bizz (BBBBB12345)\" (CSSMERR_TP_CERT_REVOKED)\n"
+                + "  9) FFFFFFFFFFFFFFFFFFFFAAAAAAAAAAAAAAAAAAAA "
+                + "\"Apple Distribution: Fuss Bizz (54321CCCCC)\" (CSSMERR_TP_CERT_EXPIRED)\n"
+                + "     9 valid identities found\n",
             "");
 
     FakeProcessExecutor processExecutor =
@@ -66,16 +72,15 @@ public class CodeSignIdentityStoreFactoryTest {
 
     ImmutableList<CodeSignIdentity> expected =
         ImmutableList.of(
-            CodeSignIdentity.builder()
-                .setFingerprint(
-                    CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"))
-                .setSubjectCommonName("iPhone Developer: Foo Bar (54321EDCBA)")
-                .build(),
-            CodeSignIdentity.builder()
-                .setFingerprint(
-                    CodeSignIdentity.toFingerprint("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"))
-                .setSubjectCommonName("Apple Development: Fizz Buzz (12345AAAAA)")
-                .build());
+            CodeSignIdentity.of(
+                CodeSignIdentity.toFingerprint("BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"),
+                "iPhone Developer: Foo Bar (54321EDCBA)"),
+            CodeSignIdentity.of(
+                CodeSignIdentity.toFingerprint("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"),
+                "Apple Development: Fizz Buzz (12345AAAAA)"),
+            CodeSignIdentity.of(
+                CodeSignIdentity.toFingerprint("EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE"),
+                "Apple Distribution: Fuss Bizz (12345BBBBB)"));
 
     assertThat(store.getIdentitiesSupplier().get(), equalTo(expected));
   }
@@ -93,11 +98,9 @@ public class CodeSignIdentityStoreFactoryTest {
 
     ImmutableList<CodeSignIdentity> expected =
         ImmutableList.of(
-            CodeSignIdentity.builder()
-                .setFingerprint(
-                    CodeSignIdentity.toFingerprint("0000000000000000000000000000000000000000"))
-                .setSubjectCommonName("iPhone Developer: Fake")
-                .build());
+            CodeSignIdentity.of(
+                CodeSignIdentity.toFingerprint("0000000000000000000000000000000000000000"),
+                "iPhone Developer: Fake"));
 
     assertThat(store.getIdentitiesSupplier().get(), is(equalTo(expected)));
   }

@@ -1,28 +1,30 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.Step;
@@ -38,6 +40,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,7 +66,7 @@ class CxxPreprocessAndCompileStep implements Step {
   private final Path input;
   private final CxxSource.Type inputType;
   private final ToolCommand command;
-  private final SourcePathResolver pathResolver;
+  private final SourcePathResolverAdapter pathResolver;
   private final HeaderPathNormalizer headerPathNormalizer;
   private final DebugPathSanitizer sanitizer;
   private final Compiler compiler;
@@ -91,7 +94,7 @@ class CxxPreprocessAndCompileStep implements Step {
       Path input,
       CxxSource.Type inputType,
       ToolCommand command,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       HeaderPathNormalizer headerPathNormalizer,
       DebugPathSanitizer sanitizer,
       Path scratchDir,
@@ -131,7 +134,7 @@ class CxxPreprocessAndCompileStep implements Step {
 
     env.putAll(
         sanitizer.getCompilationEnvironment(
-            filesystem.getRootPath().toAbsolutePath(), shouldSanitizeOutputBinary()));
+            filesystem.getRootPath().getPath(), shouldSanitizeOutputBinary()));
 
     // Set `TMPDIR` to `scratchDir` so the compiler/preprocessor uses this dir for it's temp and
     // intermediate files.
@@ -148,7 +151,7 @@ class CxxPreprocessAndCompileStep implements Step {
     }
 
     return ProcessExecutorParams.builder()
-        .setDirectory(filesystem.getRootPath().toAbsolutePath())
+        .setDirectory(filesystem.getRootPath().getPath())
         .setRedirectError(ProcessBuilder.Redirect.PIPE)
         .setEnvironment(ImmutableMap.copyOf(env));
   }
@@ -174,7 +177,7 @@ class CxxPreprocessAndCompileStep implements Step {
         .addAll(command.getArguments())
         .addAll(
             sanitizer.getCompilationFlags(
-                compiler, filesystem.getRootPath(), headerPathNormalizer.getPrefixMap()))
+                compiler, filesystem.getRootPath().getPath(), headerPathNormalizer.getPrefixMap()))
         .addAll(
             compiler.outputArgs(
                 useUnixPathSeparator
@@ -197,15 +200,25 @@ class CxxPreprocessAndCompileStep implements Step {
     ProcessExecutorParams.Builder builder = makeSubprocessBuilder(context);
 
     if (useArgfile) {
+      Path argfilePath = getArgfile();
       filesystem.writeLinesToPath(
           Iterables.transform(
               getArguments(context.getAnsi().isAnsiTerminal()), Escaper.ARGFILE_ESCAPER::apply),
-          getArgfile());
+          argfilePath);
+
+      String argfilePathString;
+      if (context.getPlatform().getType().isWindows()) {
+        // argfiles can be rather lengthy in... length
+        argfilePathString = MorePaths.getWindowsLongPathString(argfilePath);
+      } else {
+        argfilePathString = argfilePath.toString();
+      }
+
       builder.setCommand(
           ImmutableList.<String>builder()
               .addAll(command.getCommandPrefix())
               .addAll(preArgfileArgs)
-              .add("@" + getArgfile())
+              .add("@" + argfilePathString)
               .build());
     } else {
       builder.setCommand(
@@ -301,6 +314,18 @@ class CxxPreprocessAndCompileStep implements Step {
     } else {
       err = formatErrors(lines, context);
     }
+    // Replace absolute paths with relative path for headers from the repo.
+    // TODO: with RE we probably don't need to verify headers with depfile at all.
+    if (depFile.isPresent()) {
+      Optional<String> depFileContent = filesystem.readFileIfItExists(depFile.get());
+      if (depFileContent.isPresent()) {
+        filesystem.writeContentsToPath(
+            depFileContent
+                .get()
+                .replace(filesystem.getRootPath().toString() + File.separatorChar, ""),
+            depFile.get());
+      }
+    }
     return err;
   }
 
@@ -367,10 +392,10 @@ class CxxPreprocessAndCompileStep implements Step {
     int exitCode = result.getExitCode();
 
     if (exitCode == 0) {
-      Path path = filesystem.getRootPath().toAbsolutePath().resolve(output);
+      AbsPath path = filesystem.getRootPath().resolve(output);
 
       // Guarantee that the output file exists
-      if (!Files.exists(path)) {
+      if (!Files.exists(path.getPath())) {
         LOG.warn("Execution has exitCode 0 but output file does not exist: %s", path);
       }
 
@@ -379,8 +404,8 @@ class CxxPreprocessAndCompileStep implements Step {
       // above.  This locates the relevant debug section and swaps out the expanded actual
       // compilation directory with the one we really want.
       if (shouldSanitizeOutputBinary()) {
-        sanitizer.restoreCompilationDirectory(path, filesystem.getRootPath().toAbsolutePath());
-        FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path);
+        sanitizer.restoreCompilationDirectory(path.getPath(), filesystem.getRootPath().getPath());
+        FILE_LAST_MODIFIED_DATE_SCRUBBER.scrubFileWithPath(path.getPath());
       }
     }
 

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -31,9 +32,8 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
-import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -134,7 +134,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   private static String tryToExtractInstrumentationTestRunnerFromManifest(
-      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, HasInstallableApk.ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
 
     if (!Files.isRegularFile(pathToManifest)) {
@@ -150,7 +150,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   private static String tryToExtractTargetPackageFromManifest(
-      SourcePathResolver pathResolver, ApkInfo apkInfo) {
+      SourcePathResolverAdapter pathResolver, HasInstallableApk.ApkInfo apkInfo) {
     Path pathToManifest = pathResolver.getAbsolutePath(apkInfo.getManifestPath());
 
     if (!Files.isRegularFile(pathToManifest)) {
@@ -242,7 +242,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   }
 
   private InstrumentationStep getInstrumentationStep(
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       String pathToAdbExecutable,
       Optional<Path> directoryForTestResults,
       Optional<String> deviceSerial,
@@ -265,9 +265,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     String guava = getPathForResourceJar(guavaJar);
     String toolsCommon = getPathForResourceJar(toolsCommonJar);
 
-    Optional<Path> exopackageSymlinkTreePath =
+    Optional<AbsPath> exopackageSymlinkTreePath =
         getExopackageSymlinkTreePathIfNeeded(apk, isExternalRun);
-    Optional<Path> apkUnderTestSymlinkTreePath =
+    Optional<AbsPath> apkUnderTestSymlinkTreePath =
         getApkUnderTest(apk)
             .flatMap(
                 apkUnderTest ->
@@ -275,14 +275,14 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
                         apkUnderTest, isExternalRun));
 
     AndroidInstrumentationTestJVMArgs jvmArgs =
-        AndroidInstrumentationTestJVMArgs.builder()
+        ImmutableAndroidInstrumentationTestJVMArgs.builder()
             .setApkUnderTestPath(apkUnderTestPath)
-            .setApkUnderTestExopackageLocalDir(apkUnderTestSymlinkTreePath)
+            .setApkUnderTestExopackageLocalDir(apkUnderTestSymlinkTreePath.map(AbsPath::getPath))
             .setPathToAdbExecutable(pathToAdbExecutable)
             .setDeviceSerial(deviceSerial)
             .setDirectoryForTestResults(directoryForTestResults)
             .setInstrumentationApkPath(instrumentationApkPath)
-            .setExopackageLocalDir(exopackageSymlinkTreePath)
+            .setExopackageLocalDir(exopackageSymlinkTreePath.map(AbsPath::getPath))
             .setTestPackage(packageName)
             .setTargetPackage(targetPackageName)
             .setCodeCoverageEnabled(codeCoverageEnabled)
@@ -306,8 +306,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
   private String getPathForResourceJar(PackagedResource packagedResource) {
     ProjectFilesystem filesystem = this.getProjectFilesystem();
-    Path relativePath = PathSourcePath.of(filesystem, packagedResource.get()).getRelativePath();
-    return filesystem.resolve(relativePath).toString();
+    return filesystem.resolve(packagedResource.get()).toString();
   }
 
   @Override
@@ -348,7 +347,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext context, SourcePathResolver pathResolver, boolean isUsingTestSelectors) {
+      ExecutionContext context,
+      SourcePathResolverAdapter pathResolver,
+      boolean isUsingTestSelectors) {
     return () -> {
       ImmutableList.Builder<TestCaseSummary> summaries = ImmutableList.builder();
       AndroidDevice device;
@@ -444,7 +445,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         getRequiredPaths(apk, instrumentationApkPath, apkUnderTestPath);
 
     return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
+        .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("android_instrumentation")
         .setCommand(step.getShellCommandInternal(executionContext))
@@ -462,16 +463,17 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       HasInstallableApk apkInstance,
       Optional<Path> instrumentationApkPath,
       Optional<Path> apkUnderTestPath) {
-    Optional<Path> exopackageSymlinkTreePath =
+    Optional<AbsPath> exopackageSymlinkTreePath =
         getExopackageSymlinkTreePathIfNeeded(apkInstance, true);
-    Optional<Path> apkUnderTestSymlinkTreePath =
+    Optional<AbsPath> apkUnderTestSymlinkTreePath =
         getApkUnderTest(apkInstance)
             .flatMap(
                 apkUnderTest ->
                     AndroidInstrumentationTest.getExopackageSymlinkTreePathIfNeeded(
                         apkUnderTest, true));
     return ImmutableList.<Optional<Path>>builder().add(apkUnderTestPath).add(instrumentationApkPath)
-        .add(exopackageSymlinkTreePath).add(apkUnderTestSymlinkTreePath).build().stream()
+        .add(exopackageSymlinkTreePath.map(AbsPath::getPath))
+        .add(apkUnderTestSymlinkTreePath.map(AbsPath::getPath)).build().stream()
         .filter(Optional::isPresent)
         .map(Optional::get)
         .collect(ImmutableList.toImmutableList());
@@ -506,9 +508,9 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
    *     exopackage symlink tree is not necessary because we use Buck's internal exopackage support
    *     to do the installation.
    */
-  private static Optional<Path> getExopackageSymlinkTreePathIfNeeded(
+  private static Optional<AbsPath> getExopackageSymlinkTreePathIfNeeded(
       HasInstallableApk apk, boolean isExternalRun) {
-    Optional<Path> exopackageSymlinkTreePath = Optional.empty();
+    Optional<AbsPath> exopackageSymlinkTreePath = Optional.empty();
     // We only need the exo-dir if the apk supports it and we're preparing for an external runner.
     if (isExternalRun && ExopackageInstaller.exopackageEnabled(apk.getApkInfo())) {
       ProjectFilesystem filesystem = apk.getProjectFilesystem();

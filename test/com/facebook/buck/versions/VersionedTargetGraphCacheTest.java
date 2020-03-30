@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.versions;
@@ -20,12 +20,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -72,13 +72,14 @@ public class VersionedTargetGraphCacheTest {
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult graph = createSimpleGraph("foo");
-    VersionedTargetGraphCacheResult result =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult result =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            new TestCellBuilder().build());
     assertEmpty(result);
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -93,21 +94,23 @@ public class VersionedTargetGraphCacheTest {
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult graph = createSimpleGraph("foo");
-    VersionedTargetGraphCacheResult firstResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            new TestCellBuilder().build());
     assertEmpty(firstResult);
-    VersionedTargetGraphCacheResult secondResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            new TestCellBuilder().build());
     assertHit(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(1L), stats.getHitCount());
@@ -122,21 +125,23 @@ public class VersionedTargetGraphCacheTest {
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult graph = createSimpleGraph("foo");
-    VersionedTargetGraphCacheResult firstResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            new TestCellBuilder().build());
     assertEmpty(firstResult);
-    VersionedTargetGraphCacheResult secondResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            new TestCellBuilder().build());
     assertHit(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(1L), stats.getHitCount());
@@ -150,22 +155,24 @@ public class VersionedTargetGraphCacheTest {
         new InstrumentedVersionedTargetGraphCache(
             new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult firstGraph = createSimpleGraph("foo");
-    VersionedTargetGraphCacheResult firstResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             firstGraph,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            new TestCellBuilder().build());
     assertEmpty(firstResult);
     TargetGraphCreationResult secondGraph = createSimpleGraph("bar");
-    VersionedTargetGraphCacheResult secondResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             secondGraph,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            new TestCellBuilder().build());
     assertMismatch(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -182,23 +189,25 @@ public class VersionedTargetGraphCacheTest {
             new VersionedTargetGraphCache(), new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult graph = createSimpleGraph("foo");
     ImmutableMap<String, VersionUniverse> firstVersionUniverses = ImmutableMap.of();
-    VersionedTargetGraphCacheResult firstResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult firstResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            firstVersionUniverses);
+            firstVersionUniverses,
+            new TestCellBuilder().build());
     assertEmpty(firstResult);
     ImmutableMap<String, VersionUniverse> secondVersionUniverses =
         ImmutableMap.of("foo", VersionUniverse.of(ImmutableMap.of(versionedAlias, version2)));
-    VersionedTargetGraphCacheResult secondResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            secondVersionUniverses);
+            secondVersionUniverses,
+            new TestCellBuilder().build());
     assertMismatch(secondResult, firstResult.getTargetGraphCreationResult());
     CacheStats stats = cache.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -214,13 +223,14 @@ public class VersionedTargetGraphCacheTest {
     InstrumentedVersionedTargetGraphCache cache1 =
         new InstrumentedVersionedTargetGraphCache(baseCache, new InstrumentingCacheStatsTracker());
     TargetGraphCreationResult graph = createSimpleGraph("foo");
-    VersionedTargetGraphCacheResult firstResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult firstResult =
         cache1.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            new TestCellBuilder().build());
 
     CacheStats stats = cache1.getCacheStats();
     assertEquals(Optional.of(0L), stats.getHitCount());
@@ -230,13 +240,14 @@ public class VersionedTargetGraphCacheTest {
 
     InstrumentedVersionedTargetGraphCache cache2 =
         new InstrumentedVersionedTargetGraphCache(baseCache, new InstrumentingCacheStatsTracker());
-    VersionedTargetGraphCacheResult secondResult =
+    VersionedTargetGraphCache.VersionedTargetGraphCacheResult secondResult =
         cache2.getVersionedTargetGraph(
             depsAwareExecutor.get(),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory,
             graph,
-            ImmutableMap.of());
+            ImmutableMap.of(),
+            new TestCellBuilder().build());
     assertHit(secondResult, firstResult.getTargetGraphCreationResult());
     stats = cache2.getCacheStats();
     assertEquals(Optional.of(1L), stats.getHitCount());
@@ -266,7 +277,7 @@ public class VersionedTargetGraphCacheTest {
             .setDeps(ImmutableSortedSet.of(alias.getBuildTarget()))
             .build();
     TargetGraph graph = TargetGraphFactory.newInstance(root, pythonTest, alias, v1, v2);
-    return new ImmutableTargetGraphCreationResult(
+    return TargetGraphCreationResult.of(
         graph,
         ImmutableSet.of(
             root.getBuildTarget(),
@@ -276,17 +287,19 @@ public class VersionedTargetGraphCacheTest {
   }
 
   private void assertHit(
-      VersionedTargetGraphCacheResult result, TargetGraphCreationResult previousGraph) {
+      VersionedTargetGraphCache.VersionedTargetGraphCacheResult result,
+      TargetGraphCreationResult previousGraph) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.HIT));
     assertThat(result.getTargetGraphCreationResult(), Matchers.is(previousGraph));
   }
 
-  private void assertEmpty(VersionedTargetGraphCacheResult result) {
+  private void assertEmpty(VersionedTargetGraphCache.VersionedTargetGraphCacheResult result) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.EMPTY));
   }
 
   private void assertMismatch(
-      VersionedTargetGraphCacheResult result, TargetGraphCreationResult previousGraph) {
+      VersionedTargetGraphCache.VersionedTargetGraphCacheResult result,
+      TargetGraphCreationResult previousGraph) {
     assertThat(result.getType(), Matchers.is(VersionedTargetGraphCache.ResultType.MISMATCH));
     assertThat(result.getTargetGraphCreationResult(), Matchers.not(Matchers.is(previousGraph)));
   }

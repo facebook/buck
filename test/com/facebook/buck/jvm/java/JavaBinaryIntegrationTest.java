@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -29,6 +29,7 @@ import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.jvm.java.testutil.Bootclasspath;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -200,10 +201,14 @@ public class JavaBinaryIntegrationTest extends AbiCompilationModeTest {
         workspace.runBuckBuild("//:wrapper_01").assertExitCode(null, ExitCode.FATAL_IO);
     // Should show the rule that failed.
     assertThat(result.getStderr(), containsString("//:simple-lib"));
-    // Should show the jar we were operating on.
-    assertThat(result.getStderr(), containsString(libJar));
-    // Should show the original exception.
-    assertThat(result.getStderr(), containsString("ZipError"));
+    if (JavaVersion.getMajorVersion() <= 8) {
+      // Should show the jar we were operating on.
+      assertThat(result.getStderr(), containsString(libJar));
+      // Should show the original exception.
+      assertThat(result.getStderr(), containsString("ZipError"));
+    } else {
+      assertThat(result.getStderr(), containsString("ZipException"));
+    }
   }
 
   @Test

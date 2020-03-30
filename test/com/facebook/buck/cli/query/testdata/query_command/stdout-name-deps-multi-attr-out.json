@@ -1,0 +1,10 @@
+{
+  "//example:four": {
+    "deps": [":six"],
+    "name": "four"
+  },
+  "//example:one": {
+    "deps": [":three", ":two"],
+    "name": "one"
+  }
+}

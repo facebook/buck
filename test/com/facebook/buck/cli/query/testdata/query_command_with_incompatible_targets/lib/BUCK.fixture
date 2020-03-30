@@ -1,0 +1,19 @@
+java_library(
+    name = "libA",
+    srcs = [
+        "A.java",
+    ],
+    compatible_with = [
+        "//:linux_config",
+    ],
+)
+
+java_library(
+    name = "libB",
+    srcs = [
+        "B.java",
+    ],
+    compatible_with = [
+        "//:osx_config",
+    ],
+)

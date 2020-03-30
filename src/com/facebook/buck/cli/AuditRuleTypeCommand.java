@@ -1,33 +1,35 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.impl.DescriptionCache;
-import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.collect.ImmutableMap;
 import java.io.PrintStream;
+import java.util.Comparator;
 import java.util.function.Consumer;
+import javax.annotation.Nullable;
 import org.kohsuke.args4j.Argument;
 
 /** Prints a requested rule type as a Python function with all supported attributes. */
@@ -37,15 +39,18 @@ public class AuditRuleTypeCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) {
-    KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
-    RuleType buildRuleType = knownRuleTypes.getRuleType(ruleName);
-    BaseDescription<?> description = knownRuleTypes.getDescription(buildRuleType);
+    if (ruleName == null || ruleName.isEmpty()) {
+      throw new CommandLineException("Must specify the rule name");
+    }
+
+    KnownRuleTypes knownRuleTypes =
+        params.getKnownRuleTypesProvider().get(params.getCells().getRootCell());
+    BaseDescription<?> description = knownRuleTypes.getDescriptorByName(ruleName).getDescription();
     printPythonFunction(params.getConsole(), description, params.getTypeCoercerFactory());
     return ExitCode.SUCCESS;
   }
 
-  @Argument(required = true, metaVar = "RULE_NAME")
-  private String ruleName;
+  @Argument @Nullable private String ruleName;
 
   @Override
   public boolean isReadOnly() {
@@ -60,24 +65,26 @@ public class AuditRuleTypeCommand extends AbstractCommand {
   static void printPythonFunction(
       Console console, BaseDescription<?> description, TypeCoercerFactory typeCoercerFactory) {
     PrintStream printStream = console.getStdOut();
-    ImmutableMap<String, ParamInfo> allParamInfo =
-        CoercedTypeCache.INSTANCE.getAllParamInfo(
-            typeCoercerFactory, description.getConstructorArgType());
+    ImmutableMap<String, ParamInfo<?>> allParamInfo =
+        typeCoercerFactory
+            .getConstructorArgDescriptor(
+                (Class<? extends ConstructorArg>) description.getConstructorArgType())
+            .getParamInfos();
     String name = DescriptionCache.getRuleType(description).getName();
     printStream.println("def " + name + " (");
     allParamInfo.values().stream()
         .filter(param -> !param.isOptional())
-        .sorted()
+        .sorted(Comparator.comparing(ParamInfo::getName))
         .forEach(formatPythonFunction(printStream));
     allParamInfo.values().stream()
         .filter(ParamInfo::isOptional)
-        .sorted()
+        .sorted(Comparator.comparing(ParamInfo::getName))
         .forEach(formatPythonFunction(printStream));
     printStream.println("):");
     printStream.println(INDENT + "...");
   }
 
-  private static Consumer<ParamInfo> formatPythonFunction(PrintStream printStream) {
+  private static Consumer<ParamInfo<?>> formatPythonFunction(PrintStream printStream) {
     return param ->
         printStream.println(
             INDENT + param.getPythonName() + (param.isOptional() ? " = None" : "") + ",");

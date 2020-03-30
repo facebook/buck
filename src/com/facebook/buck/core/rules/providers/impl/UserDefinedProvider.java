@@ -1,22 +1,22 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.providers.impl;
 
 import com.facebook.buck.core.rules.providers.Provider;
-import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.util.MoreIterables;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -121,8 +121,7 @@ public class UserDefinedProvider extends BaseFunction
   }
 
   @Override
-  protected Object call(Object[] args, @Nullable FuncallExpression ast, Environment env)
-      throws EvalException, InterruptedException {
+  protected Object call(Object[] args, @Nullable FuncallExpression ast, Environment env) {
     Verify.verify(isExported, "Tried to call a Provider before exporting it");
 
     ImmutableList<String> fieldNames =
@@ -132,15 +131,7 @@ public class UserDefinedProvider extends BaseFunction
     ImmutableMap.Builder<String, Object> builder =
         ImmutableMap.builderWithExpectedSize(args.length);
     for (int i = 0; i < fieldNames.size(); i++) {
-      try {
-        builder.put(fieldNames.get(i), BuckSkylarkTypes.asDeepImmutable(args[i]));
-      } catch (BuckSkylarkTypes.MutableObjectException e) {
-        throw new EvalException(
-            location,
-            String.format(
-                "Value %s in field %s in %s was still mutable",
-                e.getMutableObject(), fieldNames.get(i), getName()));
-      }
+      builder.put(fieldNames.get(i), args[i]);
     }
     return new UserDefinedProviderInfo(this, builder.build());
   }

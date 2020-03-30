@@ -1,23 +1,29 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.core.model.targetgraph.MergedTargetGraph;
+import com.facebook.buck.core.model.targetgraph.MergedTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
@@ -31,20 +37,24 @@ import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryNormalizer;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Sets;
 import com.google.common.collect.TreeMultimap;
 import java.io.BufferedOutputStream;
@@ -70,7 +80,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import org.codehaus.plexus.util.StringUtils;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 import org.kohsuke.args4j.spi.FileOptionHandler;
@@ -78,9 +87,6 @@ import org.kohsuke.args4j.spi.FileOptionHandler;
 /** Provides base functionality for query commands. */
 public abstract class AbstractQueryCommand extends AbstractCommand {
   private static final Logger LOG = Logger.get(AbstractCommand.class);
-
-  /** String used to separate distinct sets when using `%Ss` in a query */
-  public static final String SET_SEPARATOR = "--";
 
   /**
    * Example usage:
@@ -119,14 +125,17 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     /** Format output as dot graph */
     DOT,
 
+    /** Format output as dot graph, in a more compact format */
+    DOT_COMPACT,
+
     /** Format output as dot graph in bfs order */
     DOT_BFS,
 
+    /** Format output as dot graph in bfs order, in a more compact format */
+    DOT_BFS_COMPACT,
+
     /** Format output as JSON */
     JSON,
-
-    /** Format output as JSON with targets having unconfigured attributes * */
-    JSON_UNCONFIGURED,
 
     /** Format output as Thrift binary */
     THRIFT,
@@ -137,7 +146,9 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       usage =
           "Output format (default: list).\n"
               + " dot -  dot graph format.\n"
+              + " dot_compact - dot graph format, compacted.\n"
               + " dot_bfs -  dot graph format in bfs order.\n"
+              + " dot_bfs_compact - dot graph format in bfs order, compacted.\n"
               + " json - JSON format.\n"
               + " json_unconfigured - JSON format with unevaluated selects\n"
               + " thrift - thrift binary format.\n")
@@ -198,6 +209,14 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   @VisibleForTesting
   Supplier<ImmutableSet<String>> outputAttributesSane = Suppliers.ofInstance(ImmutableSet.of());
 
+  /** Which of *query commands was invoked */
+  protected enum WhichQueryCommand {
+    QUERY,
+    UQUERY,
+  }
+
+  protected abstract WhichQueryCommand whichQueryCommand();
+
   private ImmutableSet<String> outputAttributes() {
     // There's no easy way apparently to ensure that an option has not been set
     ImmutableSet<String> deprecated = outputAttributesDeprecated.get();
@@ -229,8 +248,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
     String queryFormat = arguments.get(0);
     List<String> formatArgs = arguments.subList(1, arguments.size());
-    if (queryFormat.contains("%Ss")) {
-      runSingleQueryWithSet(params, env, queryFormat, formatArgs);
+    if (queryFormat.contains(QueryNormalizer.SET_SUBSTITUTOR)) {
+      runSingleQuery(params, env, QueryNormalizer.normalizePattern(queryFormat, formatArgs));
       return;
     }
     if (queryFormat.contains("%s")) {
@@ -243,7 +262,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
             // generateJsonOutput is deprecated and have to be set as outputFormat parameter
             outputFormat == OutputFormat.JSON,
             outputAttributes(),
-            printStreamWrapper.get());
+            printStreamWrapper.get(),
+            whichQueryCommand());
       }
       return;
     }
@@ -252,46 +272,6 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
           "Must not specify format arguments without a %s or %Ss in the query");
     }
     runSingleQuery(params, env, queryFormat);
-  }
-
-  /** Format and evaluate the query using list substitution */
-  private void runSingleQueryWithSet(
-      CommandRunnerParams params,
-      BuckQueryEnvironment env,
-      String queryFormat,
-      List<String> formatArgs)
-      throws InterruptedException, QueryException, IOException {
-    // No separators means 1 set, a single separator means 2 sets, etc
-    int numberOfSetsProvided = Iterables.frequency(formatArgs, SET_SEPARATOR) + 1;
-    int numberOfSetsRequested = StringUtils.countMatches(queryFormat, "%Ss");
-    if (numberOfSetsProvided != numberOfSetsRequested && numberOfSetsProvided > 1) {
-      String message =
-          String.format(
-              "Incorrect number of sets. Query uses `%%Ss` %d times but %d sets were given",
-              numberOfSetsRequested, numberOfSetsProvided);
-      throw new CommandLineException(message);
-    }
-
-    // If they only provided one list as args, use that for every instance of `%Ss`
-    if (numberOfSetsProvided == 1) {
-      String formattedQuery = queryFormat.replace("%Ss", getSetRepresentation(formatArgs));
-      runSingleQuery(params, env, formattedQuery);
-      return;
-    }
-
-    List<String> unusedFormatArgs = formatArgs;
-    String formattedQuery = queryFormat;
-    while (formattedQuery.contains("%Ss")) {
-      int nextSeparatorIndex = unusedFormatArgs.indexOf(SET_SEPARATOR);
-      List<String> currentSet =
-          nextSeparatorIndex == -1
-              ? unusedFormatArgs
-              : unusedFormatArgs.subList(0, nextSeparatorIndex);
-      // +1 so we don't include the separator in the next list
-      unusedFormatArgs = unusedFormatArgs.subList(nextSeparatorIndex + 1, unusedFormatArgs.size());
-      formattedQuery = formattedQuery.replaceFirst("%Ss", getSetRepresentation(currentSet));
-    }
-    runSingleQuery(params, env, formattedQuery);
   }
 
   /**
@@ -305,7 +285,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       List<String> inputsFormattedAsBuildTargets,
       boolean generateJsonOutput,
       ImmutableSet<String> attributesFilter,
-      PrintStream printStream)
+      PrintStream printStream,
+      WhichQueryCommand whichQueryCommand)
       throws IOException, InterruptedException, QueryException {
     if (inputsFormattedAsBuildTargets.isEmpty()) {
       throw new CommandLineException(
@@ -332,7 +313,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       queryResultMap.putAll(input, queryResult);
     }
 
-    LOG.debug("Printing out the following targets: %s", queryResultMap);
+    LOG.debug("Printing out %d targets", queryResultMap.size());
 
     if (attributesFilter.size() > 0) {
       collectAndPrintAttributesAsJson(
@@ -342,7 +323,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
               .flatMap(Collection::stream)
               .collect(ImmutableSet.toImmutableSet()),
           attributesFilter,
-          printStream);
+          printStream,
+          whichQueryCommand);
     } else if (generateJsonOutput) {
       CommandHelper.printJsonOutput(queryResultMap, printStream);
     } else {
@@ -353,7 +335,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   private void runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
       throws IOException, InterruptedException, QueryException {
     Set<QueryTarget> queryResult = env.evaluateQuery(query);
-    LOG.debug("Printing out the following targets: %s", queryResult);
+    LOG.debug("Printing out %d targets", queryResult.size());
 
     try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {
       PrintStream printStream = printStreamWrapper.get();
@@ -365,21 +347,29 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
       switch (outputFormat) {
         case DOT:
+        case DOT_COMPACT:
           printDotOutput(
-              params, env, asQueryBuildTargets(queryResult), Dot.OutputOrder.SORTED, printStream);
+              params,
+              env,
+              asQueryBuildTargets(queryResult),
+              Dot.OutputOrder.SORTED,
+              printStream,
+              outputFormat == OutputFormat.DOT_COMPACT);
           break;
 
         case DOT_BFS:
+        case DOT_BFS_COMPACT:
           printDotOutput(
-              params, env, asQueryBuildTargets(queryResult), Dot.OutputOrder.BFS, printStream);
+              params,
+              env,
+              asQueryBuildTargets(queryResult),
+              Dot.OutputOrder.BFS,
+              printStream,
+              outputFormat == OutputFormat.DOT_BFS_COMPACT);
           break;
 
         case JSON:
-          printJsonOutput(params, env, queryResult, printStream);
-          break;
-
-        case JSON_UNCONFIGURED:
-          printJsonUnconfiguredOutput(params, env, queryResult, printStream);
+          printJsonOutputConfiguredOrUnconfigured(params, env, queryResult, printStream);
           break;
 
         case THRIFT:
@@ -405,6 +395,19 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return (Set<QueryBuildTarget>) set;
   }
 
+  private void printJsonOutputConfiguredOrUnconfigured(
+      CommandRunnerParams params,
+      BuckQueryEnvironment env,
+      Set<QueryTarget> queryResult,
+      PrintStream printStream)
+      throws QueryException, IOException {
+    if (whichQueryCommand() == WhichQueryCommand.UQUERY) {
+      printJsonUnconfiguredOutput(params, env, queryResult, printStream);
+    } else {
+      printJsonOutput(params, env, queryResult, printStream);
+    }
+  }
+
   private void printJsonOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
@@ -412,7 +415,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       PrintStream printStream)
       throws IOException, QueryException {
     if (shouldOutputAttributes()) {
-      collectAndPrintAttributesAsJson(params, env, queryResult, outputAttributes(), printStream);
+      collectAndPrintAttributesAsJson(
+          params, env, queryResult, outputAttributes(), printStream, whichQueryCommand());
     } else {
       CommandHelper.printJsonOutput(queryResult, printStream);
     }
@@ -425,7 +429,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       PrintStream printStream)
       throws QueryException, IOException {
     if (shouldOutputAttributes()) {
-      collectAndPrintAttributesAsJson(params, env, queryResult, outputAttributes(), printStream);
+      printJsonOutputConfiguredOrUnconfigured(params, env, queryResult, printStream);
     } else {
       CommandHelper.print(queryResult, printStream);
     }
@@ -436,16 +440,26 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       BuckQueryEnvironment env,
       Set<QueryBuildTarget> queryResult,
       Dot.OutputOrder outputOrder,
-      PrintStream printStream)
+      PrintStream printStream,
+      boolean compactMode)
       throws IOException, QueryException {
-    Dot.Builder<TargetNode<?>> dotBuilder =
-        Dot.builder(env.getTargetGraph(), "result_graph")
-            .setNodesToFilter(env.getNodesFromQueryTargets(queryResult)::contains)
+    MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(env.getTargetGraph());
+
+    ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
+    ImmutableSet<UnflavoredBuildTarget> targetsFromQueryTargets =
+        nodesFromQueryTargets.stream()
+            .map(t -> t.getBuildTarget().getUnflavoredBuildTarget())
+            .collect(ImmutableSet.toImmutableSet());
+
+    Dot.Builder<MergedTargetNode> dotBuilder =
+        Dot.builder(mergedTargetGraph, "result_graph")
+            .setNodesToFilter(n -> targetsFromQueryTargets.contains(n.getBuildTarget()))
             .setNodeToName(targetNode -> targetNode.getBuildTarget().getFullyQualifiedName())
             .setNodeToTypeName(targetNode -> targetNode.getRuleType().getName())
-            .setOutputOrder(outputOrder);
+            .setOutputOrder(outputOrder)
+            .setCompactMode(compactMode);
     if (shouldOutputAttributes()) {
-      Function<TargetNode<?>, ImmutableSortedMap<String, String>> nodeToAttributes =
+      Function<MergedTargetNode, ImmutableSortedMap<String, String>> nodeToAttributes =
           getNodeToAttributeFunction(params, env);
       dotBuilder.setNodeToAttributes(nodeToAttributes);
     }
@@ -453,11 +467,17 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   }
 
   @Nonnull
-  private Function<TargetNode<?>, ImmutableSortedMap<String, String>> getNodeToAttributeFunction(
+  private Function<MergedTargetNode, ImmutableSortedMap<String, String>> getNodeToAttributeFunction(
       CommandRunnerParams params, BuckQueryEnvironment env) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     return node ->
-        getAttributes(params, env, patternsMatcher, node)
+        getAttributes(
+                params,
+                env,
+                patternsMatcher,
+                node,
+                DependencyStack.top(node.getBuildTarget()),
+                whichQueryCommand())
             .map(
                 attrs ->
                     attrs.entrySet().stream()
@@ -475,24 +495,25 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       Set<QueryBuildTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
-    Map<TargetNode<?>, Integer> ranks =
-        computeRanks(env.getTargetGraph(), env.getNodesFromQueryTargets(queryResult)::contains);
-
     if (shouldOutputAttributes()) {
       ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> attributesWithRanks =
-          extendAttributesWithRankMetadata(params, env, ranks.entrySet());
+          getAttributesWithRankMetadata(params, env, queryResult);
       printAttributesAsJson(attributesWithRanks, printStream);
     } else {
+      Map<UnflavoredBuildTarget, Integer> ranks =
+          computeRanksByTarget(
+              env.getTargetGraph(), env.getNodesFromQueryTargets(queryResult)::contains);
+
       printRankOutputAsPlainText(ranks, printStream);
     }
   }
 
   private void printRankOutputAsPlainText(
-      Map<TargetNode<?>, Integer> ranks, PrintStream printStream) {
+      Map<UnflavoredBuildTarget, Integer> ranks, PrintStream printStream) {
     ranks.entrySet().stream()
         // sort by rank and target nodes to break ties in order to make output deterministic
         .sorted(
-            Comparator.comparing(Map.Entry<TargetNode<?>, Integer>::getValue)
+            Comparator.comparing(Map.Entry<UnflavoredBuildTarget, Integer>::getValue)
                 .thenComparing(Map.Entry::getKey))
         .forEach(
             entry -> {
@@ -509,35 +530,45 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       PrintStream printStream)
       throws IOException, QueryException {
 
-    ThriftOutput.Builder<TargetNode<?>> targetNodeBuilder =
-        ThriftOutput.builder(env.getTargetGraph())
-            .filter(env.getNodesFromQueryTargets(queryResult)::contains)
+    DirectedAcyclicGraph<TargetNode<?>> targetGraph = env.getTargetGraph();
+    MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(targetGraph);
+
+    ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
+    ImmutableSet<UnflavoredBuildTarget> targetsFromQueryTargets =
+        nodesFromQueryTargets.stream()
+            .map(n -> n.getBuildTarget().getUnflavoredBuildTarget())
+            .collect(ImmutableSet.toImmutableSet());
+
+    ThriftOutput.Builder<MergedTargetNode> targetNodeBuilder =
+        ThriftOutput.builder(mergedTargetGraph)
+            .filter(n -> targetsFromQueryTargets.contains(n.getBuildTarget()))
             .nodeToNameMappingFunction(
                 targetNode -> targetNode.getBuildTarget().getFullyQualifiedName());
 
     if (shouldOutputAttributes()) {
-      Function<TargetNode<?>, ImmutableSortedMap<String, String>> nodeToAttributes =
+      Function<MergedTargetNode, ImmutableSortedMap<String, String>> nodeToAttributes =
           getNodeToAttributeFunction(params, env);
       targetNodeBuilder.nodeToAttributesFunction(nodeToAttributes);
     }
 
-    ThriftOutput<TargetNode<?>> thriftOutput = targetNodeBuilder.build();
+    ThriftOutput<MergedTargetNode> thriftOutput = targetNodeBuilder.build();
     thriftOutput.writeOutput(printStream);
   }
 
   private Map<String, Object> getAllUnconfiguredAttributesForTarget(
       CommandRunnerParams params, BuckQueryEnvironment env, QueryTarget target)
       throws QueryException {
-    Cell cell = params.getCell();
+    Cells cell = params.getCells();
     BuildTarget buildTarget = env.getNode((QueryBuildTarget) target).getBuildTarget();
-    Cell owningCell = cell.getCell(buildTarget);
+    Cell owningCell = cell.getCell(buildTarget.getCell());
     BuildFileManifest buildFileManifest =
         env.getParserState()
             .getBuildFileManifest(
                 owningCell,
-                cell.getBuckConfigView(ParserConfig.class)
+                cell.getRootCell()
+                    .getBuckConfigView(ParserConfig.class)
                     .getAbsolutePathToBuildFile(
-                        cell, buildTarget.getUnconfiguredBuildTargetView()));
+                        cell.getRootCell(), buildTarget.getUnconfiguredBuildTarget()));
 
     String shortName = buildTarget.getShortName();
     if (!buildFileManifest.getTargets().containsKey(shortName)) {
@@ -580,7 +611,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
 
     SortedMap<String, Object> convertedAttributes = new TreeMap<>();
-    if (patternsMatcher.hasPatterns()) {
+    if (!patternsMatcher.isMatchesNone()) {
       for (Map.Entry<String, Object> attribute : attributes.entrySet()) {
         String attributeName = attribute.getKey();
         String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, attributeName);
@@ -643,35 +674,43 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   /**
    * Returns {@code attributes} with included min/max rank metadata into keyed by the result of
    * {@link #toPresentationForm(TargetNode)}
-   *
-   * @param rankEntries A set of pairs that map {@link TargetNode}s to their rank value (min or max)
-   *     depending on {@code sortOutputFormat}.
    */
   private ImmutableSortedMap<String, ImmutableSortedMap<String, Object>>
-      extendAttributesWithRankMetadata(
-          CommandRunnerParams params,
-          BuckQueryEnvironment env,
-          Set<Map.Entry<TargetNode<?>, Integer>> rankEntries) {
+      getAttributesWithRankMetadata(
+          CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryBuildTarget> queryResult)
+          throws QueryException {
+    ImmutableSet<TargetNode<?>> nodes = env.getNodesFromQueryTargets(queryResult);
+    Map<UnflavoredBuildTarget, Integer> rankEntries =
+        computeRanksByTarget(env.getTargetGraph(), nodes::contains);
+
+    ImmutableCollection<MergedTargetNode> mergedNodes = MergedTargetNode.group(nodes).values();
+
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     // since some nodes differ in their flavors but ultimately have the same attributes, immutable
     // resulting map is created only after duplicates are merged by using regular HashMap
     Map<String, Integer> rankIndex =
-        rankEntries.stream()
+        rankEntries.entrySet().stream()
             .collect(
                 Collectors.toMap(entry -> toPresentationForm(entry.getKey()), Map.Entry::getValue));
     return ImmutableSortedMap.copyOf(
-        rankEntries.stream()
+        mergedNodes.stream()
             .collect(
                 Collectors.toMap(
-                    entry -> toPresentationForm(entry.getKey()),
-                    entry -> {
-                      String label = toPresentationForm(entry.getKey());
+                    AbstractQueryCommand::toPresentationForm,
+                    node -> {
+                      String label = toPresentationForm(node);
                       // NOTE: for resiliency in case attributes cannot be resolved a map with only
                       // minrank is returned, which means clients should be prepared to deal with
                       // potentially missing fields. Consider not returning a node in such case,
                       // since most likely an attempt to use that node would fail anyways.
                       SortedMap<String, Object> attributes =
-                          getAttributes(params, env, patternsMatcher, entry.getKey())
+                          getAttributes(
+                                  params,
+                                  env,
+                                  patternsMatcher,
+                                  node,
+                                  DependencyStack.top(node.getBuildTarget()),
+                                  whichQueryCommand())
                               .orElseGet(TreeMap::new);
                       return ImmutableSortedMap.<String, Object>naturalOrder()
                           .putAll(attributes)
@@ -681,11 +720,11 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
         Comparator.<String>comparingInt(rankIndex::get).thenComparing(Comparator.naturalOrder()));
   }
 
-  private Map<TargetNode<?>, Integer> computeRanks(
+  private Map<UnflavoredBuildTarget, Integer> computeRanksByTarget(
       DirectedAcyclicGraph<TargetNode<?>> graph, Predicate<TargetNode<?>> shouldContainNode) {
-    Map<TargetNode<?>, Integer> ranks = new HashMap<>();
+    HashMap<UnflavoredBuildTarget, Integer> ranks = new HashMap<>();
     for (TargetNode<?> root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
-      ranks.put(root, 0);
+      ranks.put(root.getBuildTarget().getUnflavoredBuildTarget(), 0);
       new AbstractBreadthFirstTraversal<TargetNode<?>>(root) {
 
         @Override
@@ -694,22 +733,18 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
             return ImmutableSet.of();
           }
 
-          int nodeRank = Objects.requireNonNull(ranks.get(node));
+          int nodeRank =
+              Objects.requireNonNull(ranks.get(node.getBuildTarget().getUnflavoredBuildTarget()));
           ImmutableSortedSet<TargetNode<?>> sinks =
               ImmutableSortedSet.copyOf(
                   Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));
           for (TargetNode<?> sink : sinks) {
-            if (!ranks.containsKey(sink)) {
-              ranks.put(sink, nodeRank + 1);
-            } else {
-              // min rank is the length of the shortest path from a root node
-              // max rank is the length of the longest path from a root node
-              ranks.put(
-                  sink,
-                  sortOutputFormat == QueryCommand.SortOutputFormat.MINRANK
-                      ? Math.min(ranks.get(sink), nodeRank + 1)
-                      : Math.max(ranks.get(sink), nodeRank + 1));
-            }
+            ranks.merge(
+                sink.getBuildTarget().getUnflavoredBuildTarget(),
+                nodeRank + 1,
+                // min rank is the length of the shortest path from a root node
+                // max rank is the length of the longest path from a root node
+                sortOutputFormat == SortOutputFormat.MINRANK ? Math::min : Math::max);
           }
           return sinks;
         }
@@ -723,15 +758,18 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult,
       ImmutableSet<String> attributes,
-      PrintStream printStream)
+      PrintStream printStream,
+      WhichQueryCommand whichQueryCommand)
       throws QueryException, IOException {
-    printAttributesAsJson(collectAttributes(params, env, queryResult, attributes), printStream);
+    printAttributesAsJson(
+        collectAttributes(params, env, queryResult, attributes, whichQueryCommand), printStream);
   }
 
   private static <T extends SortedMap<String, Object>> void printAttributesAsJson(
       ImmutableSortedMap<String, T> result, PrintStream printStream) throws IOException {
     ObjectMappers.WRITER
-        .withDefaultPrettyPrinter()
+        .with(
+            new DefaultPrettyPrinter().withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))
         // Jackson closes stream by default - we do not want it
         .without(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
         .writeValue(printStream, result);
@@ -745,21 +783,28 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       Set<QueryTarget> queryResult,
-      ImmutableSet<String> attrs)
+      ImmutableSet<String> attrs,
+      WhichQueryCommand whichQueryCommand)
       throws QueryException {
+    ImmutableList<TargetNode<?>> nodes = queryResultToTargetNodes(env, queryResult);
+
+    ImmutableCollection<MergedTargetNode> mergedNodes = MergedTargetNode.group(nodes).values();
+
     PatternsMatcher patternsMatcher = new PatternsMatcher(attrs);
     // use HashMap instead of ImmutableSortedMap.Builder to allow duplicates
     // TODO(buckteam): figure out if duplicates should actually be allowed. It seems like the only
     // reason why duplicates may occur is because TargetNode's unflavored name is used as a key,
     // which may or may not be a good idea
     Map<String, SortedMap<String, Object>> attributesMap = new HashMap<>();
-    for (QueryTarget target : queryResult) {
-      if (!(target instanceof QueryBuildTarget)) {
-        continue;
-      }
-      TargetNode<?> node = env.getNode((QueryBuildTarget) target);
+    for (MergedTargetNode node : mergedNodes) {
       try {
-        getAttributes(params, env, patternsMatcher, node)
+        getAttributes(
+                params,
+                env,
+                patternsMatcher,
+                node,
+                DependencyStack.top(node.getBuildTarget()),
+                whichQueryCommand)
             .ifPresent(attrMap -> attributesMap.put(toPresentationForm(node), attrMap));
 
       } catch (BuildFileParseException e) {
@@ -772,13 +817,34 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return ImmutableSortedMap.copyOf(attributesMap);
   }
 
+  private static ImmutableList<TargetNode<?>> queryResultToTargetNodes(
+      BuckQueryEnvironment env, Collection<QueryTarget> queryResult) throws QueryException {
+    ImmutableList.Builder<TargetNode<?>> builder = ImmutableList.builder();
+    for (QueryTarget target : queryResult) {
+      if (!(target instanceof QueryBuildTarget)) {
+        continue;
+      }
+
+      builder.add(env.getNode((QueryBuildTarget) target));
+    }
+    return builder.build();
+  }
+
   private static Optional<SortedMap<String, Object>> getAttributes(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
       PatternsMatcher patternsMatcher,
-      TargetNode<?> node) {
+      MergedTargetNode node,
+      DependencyStack dependencyStack,
+      WhichQueryCommand whichQueryCommand) {
     SortedMap<String, Object> targetNodeAttributes =
-        params.getParser().getTargetNodeRawAttributes(env.getParserState(), params.getCell(), node);
+        params
+            .getParser()
+            .getTargetNodeRawAttributes(
+                env.getParserState(),
+                params.getCells().getRootCell(),
+                node.getAnyNode(),
+                dependencyStack);
     if (targetNodeAttributes == null) {
       params
           .getConsole()
@@ -786,20 +852,71 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
               "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
       return Optional.empty();
     }
+
+    SortedMap<String, Object> computedNodeAttributes =
+        updateWithComputedAttributes(targetNodeAttributes, node);
+
     SortedMap<String, Object> attributes = new TreeMap<>();
-    if (patternsMatcher.hasPatterns()) {
-      for (String key : targetNodeAttributes.keySet()) {
-        String snakeCaseKey = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, key);
+    if (!patternsMatcher.isMatchesNone()) {
+      for (Map.Entry<String, Object> entry : computedNodeAttributes.entrySet()) {
+        String snakeCaseKey =
+            CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entry.getKey());
         if (patternsMatcher.matches(snakeCaseKey)) {
-          attributes.put(snakeCaseKey, targetNodeAttributes.get(key));
+          attributes.put(snakeCaseKey, entry.getValue());
         }
+      }
+
+      if (whichQueryCommand == WhichQueryCommand.QUERY
+          && patternsMatcher.matches(InternalTargetAttributeNames.TARGET_CONFIGURATIONS)) {
+        attributes.put(
+            InternalTargetAttributeNames.TARGET_CONFIGURATIONS,
+            computedNodeAttributes.get(InternalTargetAttributeNames.TARGET_CONFIGURATIONS));
       }
     }
     return Optional.of(attributes);
   }
 
+  private static SortedMap<String, Object> updateWithComputedAttributes(
+      SortedMap<String, Object> rawAttributes, MergedTargetNode node) {
+    SortedMap<String, Object> computedAttributes = new TreeMap<>(rawAttributes);
+
+    List<String> computedVisibility =
+        node.getAnyNode().getVisibilityPatterns().stream()
+            .map(visibilityPattern -> visibilityPattern.getRepresentation())
+            .collect(ImmutableList.toImmutableList());
+    if (!computedVisibility.isEmpty()) {
+      computedAttributes.put(VisibilityAttributes.VISIBILITY, computedVisibility);
+    }
+
+    List<String> computedWithinView =
+        node.getAnyNode().getWithinViewPatterns().stream()
+            .map(visibilityPattern -> visibilityPattern.getRepresentation())
+            .collect(ImmutableList.toImmutableList());
+    if (!computedWithinView.isEmpty()) {
+      computedAttributes.put(VisibilityAttributes.WITHIN_VIEW, computedWithinView);
+    }
+
+    ImmutableList<String> targetConfigurations =
+        node.getTargetConfigurations().stream()
+            .map(Object::toString)
+            .sorted()
+            .collect(ImmutableList.toImmutableList());
+    computedAttributes.put(
+        InternalTargetAttributeNames.TARGET_CONFIGURATIONS, targetConfigurations);
+
+    return computedAttributes;
+  }
+
+  private static String toPresentationForm(MergedTargetNode node) {
+    return toPresentationForm(node.getBuildTarget());
+  }
+
   private static String toPresentationForm(TargetNode<?> node) {
-    return node.getBuildTarget().getUnflavoredBuildTarget().getFullyQualifiedName();
+    return toPresentationForm(node.getBuildTarget().getUnflavoredBuildTarget());
+  }
+
+  private static String toPresentationForm(UnflavoredBuildTarget unflavoredBuildTarget) {
+    return unflavoredBuildTarget.getFullyQualifiedName();
   }
 
   @Override
@@ -809,12 +926,6 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
   public static String getEscapedArgumentsListAsString(List<String> arguments) {
     return arguments.stream().map(arg -> "'" + arg + "'").collect(Collectors.joining(" "));
-  }
-
-  private static String getSetRepresentation(List<String> args) {
-    return args.stream()
-        .map(input -> "'" + input + "'")
-        .collect(Collectors.joining(" ", "set(", ")"));
   }
 
   static String getAuditDependenciesQueryFormat(boolean isTransitive, boolean includeTests) {

@@ -1,23 +1,24 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.sha1;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertSame;
 
 import com.google.common.base.Strings;
@@ -98,8 +99,8 @@ public class Sha1HashCodeTest {
   @Test
   public void testSha1HashCodeSatisfiesEqualsContract() {
     Sha1HashCode hash = Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
-    assertFalse(hash.equals(null));
-    assertFalse(hash.equals(new Object()));
+    assertNotNull(hash);
+    assertNotEquals(new Object(), hash);
     assertEquals(hash, Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c"));
   }
 
@@ -107,7 +108,7 @@ public class Sha1HashCodeTest {
   public void testNotEqualWhenHashesAreNotEqual() {
     Sha1HashCode hash1 = Sha1HashCode.of("a002b39af204cdfaa5fdb67816b13867c32ac52c");
     Sha1HashCode hash2 = Sha1HashCode.of("a550e4c6dba0dd24920cb7cbbe7f599b581c69d9");
-    assertFalse(hash1.equals(hash2));
+    assertNotEquals(hash1, hash2);
   }
 
   @Test

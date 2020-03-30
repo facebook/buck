@@ -1,23 +1,24 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.RuleDescription;
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
@@ -25,7 +26,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
@@ -64,14 +64,14 @@ public class RuleAnalysisComputation
   @Override
   public RuleAnalysisResult transform(RuleAnalysisKey key, ComputationEnvironment env)
       throws ActionCreationException, RuleAnalysisException {
-    return transformImpl(targetGraph.get(key.getBuildTarget()), env);
+    return transformImpl(targetGraph.get(key.getBuildTarget()).cast(BuildRuleArg.class), env);
   }
 
   /**
    * Performs the rule analysis for the rule matching the given {@link BuildTarget}. This will
    * trigger its corresponding {@link
    * com.facebook.buck.core.description.RuleDescription#ruleImpl(RuleAnalysisContext, BuildTarget,
-   * ConstructorArg)}, which will create the rule's exported {@link ProviderInfoCollection} and
+   * BuildRuleArg)}, which will create the rule's exported {@link ProviderInfoCollection} and
    * register it's corresponding Actions.
    *
    * <p>This method is similar in functionality to Bazel's {@code
@@ -80,7 +80,7 @@ public class RuleAnalysisComputation
    *
    * @return an {@link RuleAnalysisResult} containing information about the rule analyzed
    */
-  private <T extends ConstructorArg> RuleAnalysisResult transformImpl(
+  private <T extends BuildRuleArg> RuleAnalysisResult transformImpl(
       TargetNode<T> targetNode, ComputationEnvironment env)
       throws ActionCreationException, RuleAnalysisException {
     BaseDescription<T> baseDescription = targetNode.getDescription();
@@ -112,7 +112,7 @@ public class RuleAnalysisComputation
   public ImmutableSet<RuleAnalysisKey> discoverPreliminaryDeps(RuleAnalysisKey key) {
     return ImmutableSet.copyOf(
         Iterables.transform(
-            targetGraph.get(key.getBuildTarget()).getParseDeps(), ImmutableRuleAnalysisKey::of));
+            targetGraph.get(key.getBuildTarget()).getParseDeps(), RuleAnalysisKey::of));
   }
 
   @Override

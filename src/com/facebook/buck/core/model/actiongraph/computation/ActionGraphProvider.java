@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.actiongraph.computation;
@@ -29,7 +29,6 @@ import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRul
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
 import com.facebook.buck.rules.keys.ContentAgnosticRuleKeyFactory;
@@ -114,7 +113,7 @@ public class ActionGraphProvider {
    * returns a cached version of the {@link ActionGraphAndBuilder}, else returns a new one and
    * updates the cache.
    *
-   * @param targetGraph the target graph that the action graph will be based on.
+   * @param targetGraphCreationResult the target graph that the action graph will be based on.
    * @return a {@link ActionGraphAndBuilder}
    */
   public ActionGraphAndBuilder getActionGraph(
@@ -257,7 +256,7 @@ public class ActionGraphProvider {
       RuleKeyFieldLoader fieldLoader,
       Optional<ThriftRuleKeyLogger> ruleKeyLogger) {
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(eventBus, PerfEventId.of("ActionGraphCacheCheck"))) {
+        SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of("ActionGraphCacheCheck"))) {
       // We check that the lastActionGraph is not null because it's possible we had a
       // invalidateCache() between the scheduling and the execution of this task.
       LOG.info("ActionGraph integrity check spawned.");

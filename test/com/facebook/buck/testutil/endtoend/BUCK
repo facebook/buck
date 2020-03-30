@@ -22,6 +22,7 @@ java_library(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/string:string",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//third-party/java/junit:junit",
@@ -31,6 +32,9 @@ java_library(
 java_test(
     name = "endtoend",
     srcs = TEST_SRCS,
+    env = {
+        "TEST_BUCK": "$(location //programs:buck)",
+    },
     visibility = [
         "//test/...",
     ],

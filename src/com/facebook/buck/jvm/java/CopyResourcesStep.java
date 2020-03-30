@@ -1,22 +1,24 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -93,7 +95,7 @@ public class CopyResourcesStep implements Step {
     for (Map.Entry<String, SourcePath> entry : parameters.getResources().entrySet()) {
       String resource = entry.getKey();
       SourcePath rawResource = entry.getValue();
-      Path relativePathToResource =
+      RelPath relativePathToResource =
           filesystem.relativize(buildContext.getSourcePathResolver().getAbsolutePath(rawResource));
 
       Path javaPackageAsPath =
@@ -104,7 +106,7 @@ public class CopyResourcesStep implements Step {
       if ("".equals(javaPackageAsPath.toString())) {
         // In this case, the project root is acting as the default package, so the resource path
         // works fine.
-        relativeSymlinkPath = relativePathToResource.getFileName();
+        relativeSymlinkPath = relativePathToResource.getPath().getFileName();
       } else {
         int lastIndex =
             resource.lastIndexOf(
@@ -140,11 +142,10 @@ public class CopyResourcesStep implements Step {
               BuildCellRelativePath.fromCellRelativePath(
                   buildContext.getBuildCellRootPath(), filesystem, target.getParent())));
       allSteps.add(
-          SymlinkFileStep.builder()
-              .setFilesystem(filesystem)
-              .setExistingFile(buildContext.getSourcePathResolver().getAbsolutePath(rawResource))
-              .setDesiredLink(target)
-              .build());
+          SymlinkFileStep.of(
+              filesystem,
+              buildContext.getSourcePathResolver().getAbsolutePath(rawResource),
+              target));
     }
     return allSteps.build();
   }

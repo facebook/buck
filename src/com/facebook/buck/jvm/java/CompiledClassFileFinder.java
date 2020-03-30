@@ -1,23 +1,24 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -38,7 +39,7 @@ class CompiledClassFileFinder {
 
   private final Set<String> classNamesForSources;
 
-  CompiledClassFileFinder(JavaLibrary rule, SourcePathResolver pathResolver) {
+  CompiledClassFileFinder(JavaLibrary rule, SourcePathResolverAdapter pathResolver) {
     Path outputPath;
     SourcePath outputSourcePath = rule.getSourcePathToOutput();
     if (outputSourcePath != null) {
@@ -76,7 +77,7 @@ class CompiledClassFileFinder {
       Set<SourcePath> sources,
       @Nullable Path jarFilePath,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver resolver) {
+      SourcePathResolverAdapter resolver) {
     if (jarFilePath == null) {
       return ImmutableSet.of();
     }

@@ -1,18 +1,19 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.model;
 
 import com.google.common.collect.ImmutableSet;
@@ -32,16 +33,20 @@ public interface Flavored {
 
   /**
    * @param flavors The set of {@link Flavor}s to consider. All must match.
+   * @param toolchainTargetConfiguration
    * @return Whether a {@link com.facebook.buck.core.rules.BuildRule} of the given {@link Flavor}
    *     can be created.
    */
-  default boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return flavorDomains()
+  default boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return flavorDomains(toolchainTargetConfiguration)
         .map(domains -> domains.stream().anyMatch(domain -> domain.containsAnyOf(flavors)))
         .orElse(false);
   }
 
-  default Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  @SuppressWarnings("unused") // mute incorrect ant linter error
+  default Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.empty();
   }
 }

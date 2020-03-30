@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.simulator.AppleDeviceController;
@@ -21,7 +22,6 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -119,12 +119,6 @@ public class IdbRunTestsStep implements Step {
     this.appTestBundlePath = parseBuckAppPath(appTestBundlePath);
     this.testHostAppBundlePath = parseBuckAppPath(testHostAppBundlePath);
     this.deviceUdid = deviceUdid;
-    if (!deviceUdid.isPresent()) {
-      if (type == TestTypeEnum.LOGIC) {
-        LOG.warn(
-            "Could not find any simulator to run the tests, this will cause a slower execution");
-      } else throw new HumanReadableException("Cannot run app or ui tests without a simulator");
-    }
     ImmutableList.Builder<String> installCommandBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> runCommandBuilder = ImmutableList.builder();
     installCommandBuilder.add(idbPath.toString(), "xctest", "install", testBundlePath.toString());
@@ -243,6 +237,14 @@ public class IdbRunTestsStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
 
+    // Verify if there is the udid of the device
+    if (!deviceUdid.isPresent()) {
+      if (type == TestTypeEnum.LOGIC) {
+        LOG.warn(
+            "Could not find any simulator to run the tests, this will cause a slower execution");
+      } else throw new HumanReadableException("Cannot run app or ui tests without a simulator");
+    }
+
     // Installing the test
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder().setCommand(installCommand).build();
@@ -309,7 +311,7 @@ public class IdbRunTestsStep implements Step {
     ProcessExecutorParams.Builder processExecutorParamsBuilder =
         ProcessExecutorParams.builder()
             .setCommand(runCommand)
-            .setDirectory(filesystem.getRootPath().toAbsolutePath())
+            .setDirectory(filesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE);
 
     Console console = context.getConsole();
@@ -394,7 +396,7 @@ public class IdbRunTestsStep implements Step {
         }
       }
 
-      return ImmutableStepExecutionResult.builder()
+      return StepExecutionResult.builder()
           .setExitCode(exitCode)
           .setExecutedCommand(launchedProcess.getCommand())
           .setStderr(Optional.ofNullable(stderr))

@@ -3,14 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "toolchain",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/rulekey:rulekey",
-        "//src/com/facebook/buck/core/toolchain:toolchain",
-        "//src/com/facebook/buck/core/toolchain/toolprovider:toolprovider",
-        "//src/com/facebook/buck/cxx/toolchain:toolchain",
-        "//src/com/facebook/buck/util/types:types",
-        "//third-party/java/dd-plist:dd-plist",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -21,5 +13,13 @@ java_immutables_library(
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/swift/toolchain:toolchain",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/toolchain:toolchain",
+        "//src/com/facebook/buck/core/toolchain/toolprovider:toolprovider",
+        "//src/com/facebook/buck/cxx/toolchain:toolchain",
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/dd-plist:dd-plist",
     ],
 )

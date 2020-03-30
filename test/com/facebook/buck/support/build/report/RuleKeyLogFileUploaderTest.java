@@ -1,21 +1,22 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.support.build.report;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -25,8 +26,6 @@ import com.facebook.buck.doctor.DefectReporter;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
-import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
-import com.facebook.buck.doctor.config.ImmutableDoctorJsonResponse;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -63,17 +62,16 @@ public class RuleKeyLogFileUploaderTest {
   private Path ruleKeyLogFile;
 
   private static final BuildEnvironmentDescription TEST_ENV_DESCRIPTION =
-      BuildEnvironmentDescription.builder()
-          .setUser("test_user")
-          .setHostname("test_hostname")
-          .setOs("test_os")
-          .setAvailableCores(1)
-          .setSystemMemory(1024L)
-          .setBuckDirty(Optional.of(false))
-          .setBuckCommit("test_commit")
-          .setJavaVersion("test_java_version")
-          .setJsonProtocolVersion(1)
-          .build();
+      BuildEnvironmentDescription.of(
+          "test_user",
+          "test_hostname",
+          "test_os",
+          1,
+          1024L,
+          Optional.of(false),
+          "test_commit",
+          "test_java_version",
+          1);
 
   @Before
   public void setUp() throws IOException {
@@ -126,8 +124,7 @@ public class RuleKeyLogFileUploaderTest {
       httpResponse.setCharacterEncoding("utf-8");
 
       DoctorJsonResponse json =
-          new ImmutableDoctorJsonResponse(
-              true, Optional.empty(), Optional.of(rageUrl), Optional.of(rageMsg));
+          DoctorJsonResponse.of(true, Optional.empty(), Optional.of(rageUrl), Optional.of(rageMsg));
       try (DataOutputStream out = new DataOutputStream(httpResponse.getOutputStream())) {
         ObjectMappers.WRITER.writeValue((DataOutput) out, json);
       }
@@ -179,7 +176,7 @@ public class RuleKeyLogFileUploaderTest {
                         .put("slb_server_pool", endpointUrl)
                         .build()))
             .build();
-    DoctorConfig doctorConfig = buckConfig.getView(ImmutableDoctorConfig.class);
+    DoctorConfig doctorConfig = buckConfig.getView(DoctorConfig.class);
 
     return new DefaultDefectReporter(
         filesystem, doctorConfig, BuckEventBusForTests.newInstance(clock), clock);

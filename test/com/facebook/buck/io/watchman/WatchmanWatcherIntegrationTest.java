@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.watchman;
@@ -21,6 +21,8 @@ import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.FileExtensionMatcher;
@@ -68,7 +70,7 @@ public class WatchmanWatcherIntegrationTest {
     WatchmanFactory watchmanFactory = new WatchmanFactory();
     watchman =
         watchmanFactory.build(
-            ImmutableSet.of(tmp.getRoot()),
+            ImmutableSet.of(AbsPath.of(tmp.getRoot())),
             EnvVariablesProvider.getSystemEnv(),
             new Console(Verbosity.ALL, System.out, System.err, Ansi.withoutTty()),
             new DefaultClock(),
@@ -101,16 +103,16 @@ public class WatchmanWatcherIntegrationTest {
     WatchmanWatcher watcher = createWatchmanWatcher(GlobPatternMatcher.of("*.txt"));
 
     // Create a dot-file which should be ignored by the above glob.
-    Path path = tmp.getRoot().getFileSystem().getPath("foo/bar/hello.txt");
-    Files.createDirectories(tmp.getRoot().resolve(path).getParent());
-    Files.write(tmp.getRoot().resolve(path), new byte[0]);
+    RelPath path = RelPath.of(tmp.getRoot().getFileSystem().getPath("foo/bar/hello.txt"));
+    Files.createDirectories(tmp.getRoot().resolve(path.getPath()).getParent());
+    Files.write(tmp.getRoot().resolve(path.getPath()), new byte[0]);
 
     // Verify we still get an event for the created path.
     watcher.postEvents(
         new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId()),
         WatchmanWatcher.FreshInstanceAction.NONE);
     WatchmanPathEvent event = watchmanEventCollector.getOnlyEvent(WatchmanPathEvent.class);
-    Path eventPath = event.getPath();
+    RelPath eventPath = event.getPath();
     assertThat(eventPath, Matchers.equalTo(path));
     assertSame(event.getKind(), Kind.CREATE);
   }
@@ -125,7 +127,8 @@ public class WatchmanWatcherIntegrationTest {
             watchman,
             eventBus,
             ImmutableSet.copyOf(ignorePaths),
-            ImmutableMap.of(tmp.getRoot(), new WatchmanCursor("n:buckd" + UUID.randomUUID())),
+            ImmutableMap.of(
+                AbsPath.of(tmp.getRoot()), new WatchmanCursor("n:buckd" + UUID.randomUUID())),
             /* numThreads */ 1);
 
     // Clear out the initial overflow event.

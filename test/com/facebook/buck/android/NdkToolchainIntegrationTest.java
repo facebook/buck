@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.android;
 
 import static org.hamcrest.Matchers.containsString;
@@ -34,13 +35,13 @@ public class NdkToolchainIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Before
-  public void setUp() {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void setUp() throws Exception {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
   }
 
   @Test
   public void testBuildWithCustomNdkToolchain() throws IOException {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "ndk_toolchain", tmp);
     CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
@@ -65,6 +66,7 @@ public class NdkToolchainIntegrationTest {
 
   @Test
   public void testBuildWithBadToolchain() throws IOException {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "ndk_toolchain", tmp);
     CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
@@ -78,6 +80,29 @@ public class NdkToolchainIntegrationTest {
     ProcessResult result = workspace.runBuckBuild("-c", "ndk.cpu_abis=x86", "//:fat_apk");
     result.assertFailure();
     assertThat(result.getStderr(), containsString("stderr: unimplemented"));
+  }
+
+  @Test
+  public void testBuildWithCustomNdkToolchainNdkPath() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "ndk_toolchain", tmp);
+    CxxToolchainHelper.addCxxToolchainToWorkspace(workspace);
+
+    workspace.addBuckConfigLocalOption(
+        "ndk",
+        "toolchain_target_per_cpu_abi",
+        "armv7 => //ndk_toolchain:good_with_ndk, arm64 => //ndk_toolchain:good_with_ndk, x86 => //ndk_toolchain:bad");
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("-c", "ndk.cpu_abis=armv7,arm64", "//:fat_apk");
+
+    ZipInspector inspector = new ZipInspector(output);
+    inspector.assertFileContents("lib/armeabi-v7a/libc++_shared.so", "strip:\nit's a runtime");
+    inspector.assertFileContents("lib/arm64-v8a/libc++_shared.so", "strip:\nit's a runtime");
+    inspector.assertFileContents(
+        "lib/armeabi-v7a/libnative.so", "strip:\nlinker:\ncompile output: native");
+    inspector.assertFileContents(
+        "lib/arm64-v8a/libnative.so", "strip:\nlinker:\ncompile output: native");
   }
 
   // TODO(cjhopman): Consider adding a test that the relinker uses the custom objdump.

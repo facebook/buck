@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.filesystems;
@@ -36,7 +36,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 
 /** Buck-specific implementation of java.nio.file.Path optimized for memory footprint */
-public class BuckUnixPath implements Path {
+public abstract class BuckUnixPath implements Path, PathWrapper {
   // Constant strings are already interned, but having the constant here makes it more obvious in
   // code below.
   private static final String DOTDOT = "..";
@@ -49,10 +49,10 @@ public class BuckUnixPath implements Path {
   // to have either 1 or three 4-byte fields.
   private final String[] segments;
   private final BuckFileSystem fs;
-  private volatile int hashCode = 0;
+  private int hashCode = 0;
 
   // segments should already be interned.
-  private BuckUnixPath(BuckFileSystem fs, String[] segments) {
+  protected BuckUnixPath(BuckFileSystem fs, String[] segments) {
     this.fs = fs;
     this.segments = segments;
   }
@@ -70,7 +70,16 @@ public class BuckUnixPath implements Path {
     if (path.equals("/")) {
       return fs.getRootDirectory();
     }
-    return new BuckUnixPath(fs, splitAndInternPath(path));
+    String[] segments = splitAndInternPath(path);
+    return isAbsolute(segments)
+        ? new BuckUnixAbsPath(fs, segments)
+        : new BuckUnixRelPath(fs, segments);
+  }
+
+  static BuckUnixPath ofComponentsUnsafe(BuckFileSystem fs, String[] segments) {
+    return isAbsolute(segments)
+        ? new BuckUnixAbsPath(fs, segments)
+        : new BuckUnixRelPath(fs, segments);
   }
 
   private static String[] splitAndInternPath(String path) {
@@ -105,11 +114,11 @@ public class BuckUnixPath implements Path {
   }
 
   static BuckUnixPath rootOf(BuckFileSystem fs) {
-    return new BuckUnixPath(fs, new String[] {ROOT});
+    return new BuckUnixAbsPath(fs, new String[] {ROOT});
   }
 
   static BuckUnixPath emptyOf(BuckFileSystem fs) {
-    return new BuckUnixPath(fs, new String[0]);
+    return new BuckUnixRelPath(fs, new String[0]);
   }
 
   /** Return Java default implementation of Path inferred from current instance */
@@ -166,7 +175,7 @@ public class BuckUnixPath implements Path {
     if (isAbsolute() && segments.length == 1) {
       return fs.getRootDirectory();
     }
-    return new BuckUnixPath(fs, new String[] {segments[segments.length - 1]});
+    return new BuckUnixRelPath(fs, new String[] {segments[segments.length - 1]});
   }
 
   @Override
@@ -177,7 +186,7 @@ public class BuckUnixPath implements Path {
     if (segments[segments.length - 2].isEmpty()) {
       return getRoot();
     }
-    return new BuckUnixPath(fs, Arrays.copyOf(segments, segments.length - 1));
+    return ofComponentsUnsafe(fs, Arrays.copyOf(this.segments, segments.length - 1));
   }
 
   @Override
@@ -190,7 +199,7 @@ public class BuckUnixPath implements Path {
 
   @Override
   public Path getName(int index) {
-    return new BuckUnixPath(fs, new String[] {getSegment(index)});
+    return new BuckUnixRelPath(fs, new String[] {getSegment(index)});
   }
 
   private String getSegment(int index) {
@@ -205,6 +214,14 @@ public class BuckUnixPath implements Path {
     }
 
     return segments[index];
+  }
+
+  /**
+   * Access path segments. This operation must not be used anywhere except in {@link
+   * com.facebook.buck.core.path.ForwardRelativePath} implementation.
+   */
+  public String[] getSegmentsUnsafe() {
+    return segments;
   }
 
   @Override
@@ -227,12 +244,16 @@ public class BuckUnixPath implements Path {
       throw new IllegalArgumentException();
     }
 
-    return new BuckUnixPath(fs, Arrays.copyOfRange(segments, beginIndex, endIndex));
+    return ofComponentsUnsafe(fs, Arrays.copyOfRange(segments, beginIndex, endIndex));
   }
 
   @Override
   public boolean isAbsolute() {
-    return (!isEmpty() && segments[0].isEmpty());
+    return isAbsolute(segments);
+  }
+
+  private static boolean isAbsolute(String[] segments) {
+    return !(segments.length == 0) && segments[0].isEmpty();
   }
 
   @Override
@@ -247,7 +268,7 @@ public class BuckUnixPath implements Path {
       return other;
     }
 
-    return new BuckUnixPath(fs, concatSegments(segments, other.segments));
+    return ofComponentsUnsafe(fs, concatSegments(segments, other.segments));
   }
 
   @Override
@@ -280,7 +301,7 @@ public class BuckUnixPath implements Path {
   public Path relativize(Path obj) {
     BuckUnixPath other = toUnixPath(obj);
 
-    if (other.equals(this)) {
+    if (other.equalTo(this)) {
       return emptyPath();
     }
 
@@ -311,7 +332,7 @@ public class BuckUnixPath implements Path {
       // no remaining sections in other so result is simply a sequence of ".."
       String[] newSegments = new String[dotdots];
       Arrays.fill(newSegments, DOTDOT);
-      return new BuckUnixPath(fs, newSegments);
+      return ofComponentsUnsafe(fs, newSegments);
     }
 
     // result is a  "../" for each remaining name in base
@@ -319,7 +340,7 @@ public class BuckUnixPath implements Path {
     String[] newSegments = new String[dotdots + other.segments.length - i];
     Arrays.fill(newSegments, 0, dotdots, DOTDOT);
     System.arraycopy(other.segments, i, newSegments, dotdots, other.segments.length - i);
-    return new BuckUnixPath(fs, newSegments);
+    return ofComponentsUnsafe(fs, newSegments);
   }
 
   @Override
@@ -396,7 +417,7 @@ public class BuckUnixPath implements Path {
       filtered = Arrays.copyOfRange(filtered, j + 1, filtered.length);
     }
 
-    return new BuckUnixPath(fs, filtered);
+    return ofComponentsUnsafe(fs, filtered);
   }
 
   @Override
@@ -482,7 +503,10 @@ public class BuckUnixPath implements Path {
       return false;
     }
 
-    BuckUnixPath other = (BuckUnixPath) ob;
+    return equalTo((BuckUnixPath) ob);
+  }
+
+  private boolean equalTo(BuckUnixPath other) {
     if (segments.length != other.segments.length) {
       return false;
     }
@@ -586,6 +610,11 @@ public class BuckUnixPath implements Path {
         throw new UnsupportedOperationException();
       }
     };
+  }
+
+  @Override
+  public Path getPath() {
+    return this;
   }
 
   /** Top-secret internal accessors for use in {@link com.facebook.buck.io.file.FastPaths}. */

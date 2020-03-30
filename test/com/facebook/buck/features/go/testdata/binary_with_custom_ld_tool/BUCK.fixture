@@ -1,0 +1,25 @@
+genrule(
+    name = "ld.sh",
+    out = "ld.sh",
+    cmd = "echo '#!/bin/sh\ng++ \"$@\"\n' > \"$OUT\" && chmod +x \"$OUT\"",
+    executable = True,
+)
+
+# Setup a C++ linker wrapper which includes an argument that would require
+# bash quoting.
+command_alias(
+    name = "ld",
+    args = [
+        "-Lflag=that=would=require=bash=quoting",
+    ],
+    exe = ":ld.sh",
+)
+
+go_binary(
+    name = "bin",
+    srcs = [
+        "main.go",
+    ],
+    # Force external link mode to test using C++ linker.
+    link_mode = "external",
+)

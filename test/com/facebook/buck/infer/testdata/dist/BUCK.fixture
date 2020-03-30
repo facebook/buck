@@ -1,0 +1,18 @@
+java_library(
+    name = "l1",
+    srcs = ["L1.java"],
+    deps = ["buck//third-party/java/jsr:jsr305"],
+)
+
+genrule(
+    name = "infer_dist",
+    out = "dist",
+    bash = (
+        "mkdir -p $OUT && " +
+        "cp -f $(location //:fake_infer) $OUT"
+    ),
+)
+
+export_file(
+    name = "fake_infer",
+)

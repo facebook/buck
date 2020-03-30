@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.projectV2;
@@ -25,7 +25,7 @@ import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -37,7 +37,6 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.event.BuckEventBusForTests;
-import com.facebook.buck.features.apple.common.NullPathOutputPresenter;
 import com.facebook.buck.features.apple.common.XcodeWorkspaceConfigDescription;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -326,7 +325,7 @@ public class XCodeProjectCommandHelperTest {
             /* withDependenciesTests */ false);
 
     ImmutableMap<BuildTarget, TargetNode<?>> sharedLibraryToBundle =
-        ProjectGenerator.computeSharedLibrariesToBundles(
+        XCodeProjectCommandHelper.computeSharedLibrariesToBundles(
             ImmutableSet.of(sharedLibNode, bundleNode), targetGraph);
     assertTrue(sharedLibraryToBundle.containsKey(sharedLibTarget));
     assertTrue(sharedLibraryToBundle.containsValue(bundleNode));
@@ -481,15 +480,15 @@ public class XCodeProjectCommandHelperTest {
         createTargetGraph(
             originalTargetGraph, passedInTargetsSet, isWithTests, isWithDependenciesTests);
 
-    Cell cell =
+    Cells cell =
         new TestCellBuilder()
             .setFilesystem(new FakeProjectFilesystem(SettableFakeClock.DO_NOT_CARE))
             .build();
     return XCodeProjectCommandHelper.generateWorkspacesForTargets(
         BuckEventBusForTests.newInstance(),
         BuckPluginManagerFactory.createPluginManager(),
-        cell,
-        AppleProjectHelper.createDefaultBuckConfig(cell.getFilesystem()),
+        cell.getRootCell(),
+        AppleProjectHelper.createDefaultBuckConfig(cell.getRootCell().getFilesystem()),
         TestRuleKeyConfigurationFactory.create(),
         MoreExecutors.newDirectExecutorService(),
         TestTargetGraphCreationResultFactory.create(targetGraph, passedInTargetsSet),
@@ -503,7 +502,6 @@ public class XCodeProjectCommandHelperTest {
             .build(),
         ImmutableSet.of(),
         FocusedTargetMatcher.noFocus(),
-        new NullPathOutputPresenter(),
         Optional.empty());
   }
 }

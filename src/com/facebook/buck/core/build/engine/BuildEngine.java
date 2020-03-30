@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine;
@@ -19,11 +19,10 @@ package com.facebook.buck.core.build.engine;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /**
  * A build engine is responsible for building a given build rule, which includes all its transitive
@@ -59,10 +58,13 @@ public interface BuildEngine {
    */
   void terminateBuildWithFailure(Throwable failure);
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract class AbstractBuildEngineResult {
+  @BuckStyleValue
+  abstract class BuildEngineResult {
     /** @return a future that will contain the result of running the rule */
     public abstract ListenableFuture<BuildResult> getResult();
+
+    public static BuildEngineResult of(ListenableFuture<BuildResult> result) {
+      return ImmutableBuildEngineResult.of(result);
+    }
   }
 }

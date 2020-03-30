@@ -1,17 +1,17 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
@@ -38,10 +38,9 @@ import javax.annotation.Nullable;
  * <p>This {@link PythonDslProjectBuildFileParser} wrapper creates new instances of delegated parser
  * using a provided factory and adds them to worker pool. If free parser is available at the time a
  * request is made, it is reused, if not then it is recreated. Once parsing request (aka {@link
- * ProjectBuildFileParser#getBuildFileManifest(Path)} is complete, parser is returned to the worker
- * pool. Worker pool of parsers can grow unconditionally so it is really up to the user of this
- * class to manage concurrency level by calling this class' methods appropriate number of times in
- * parallel.
+ * ProjectBuildFileParser#getManifest(Path)} is complete, parser is returned to the worker pool.
+ * Worker pool of parsers can grow unconditionally so it is really up to the user of this class to
+ * manage concurrency level by calling this class' methods appropriate number of times in parallel.
  *
  * <p>Note that {@link ConcurrentProjectBuildFileParser#reportProfile()} and {@link
  * ConcurrentProjectBuildFileParser#close()} are not synchronized with the worker pool and just call
@@ -90,10 +89,10 @@ public class ConcurrentProjectBuildFileParser implements ProjectBuildFileParser 
   }
 
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException, IOException {
     try (CloseableWrapper<ProjectBuildFileParser> wrapper = getWrapper()) {
-      return wrapper.get().getBuildFileManifest(buildFile);
+      return wrapper.get().getManifest(buildFile);
     }
   }
 

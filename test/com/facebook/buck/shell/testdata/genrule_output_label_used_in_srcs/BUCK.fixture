@@ -1,0 +1,19 @@
+genrule(
+    name = "magic",
+    outs = {
+        "correct": [
+            "some-file.txt",
+        ],
+        "incorrect": [
+            "other-file.txt",
+        ],
+    },
+    bash = "echo something > $OUT/some-file.txt && echo other > $OUT/other-file.txt",
+    cmd_exe = "powershell -Command \"Out-File -FilePath $env:OUT\\some-file.txt -Encoding ascii -InputObject \"something\"\"; powershell -Command \"Out-File -FilePath $env:OUT\\other-file.txt -Encoding ascii -InputObject \"other\"\"",
+)
+
+export_file(
+    name = "file_with_named_outputs",
+    src = ":magic[correct]",
+    out = "more.txt",
+)

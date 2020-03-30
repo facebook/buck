@@ -1,18 +1,19 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.core.build.engine.BuildRuleSuccessType.BUILT_LOCALLY;
@@ -24,18 +25,13 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.test.event.IndividualTestEvent;
 import com.facebook.buck.core.test.event.TestRunEvent;
 import com.facebook.buck.core.test.event.TestStatusMessageEvent;
-import com.facebook.buck.distributed.DistBuildCreatedEvent;
-import com.facebook.buck.distributed.DistBuildRunEvent;
-import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
-import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
-import com.facebook.buck.distributed.thrift.BuildStatus;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
-import com.facebook.buck.event.listener.stats.stampede.DistBuildStatsTracker;
 import com.facebook.buck.event.listener.util.EventInterval;
+import com.facebook.buck.event.listener.util.ProgressEstimation;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
 import com.facebook.buck.util.ExitCode;
@@ -113,31 +109,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
 
     this.parseStats.registerListener(this::parseFinished);
     this.networkStatsTracker.registerListener(this::onCacheUploadsFinished);
-    this.distStatsTracker.registerListener(
-        new DistBuildStatsTracker.Listener() {
-          @Override
-          public void onWorkerJoined(BuildSlaveInfo slaveInfo) {
-            printLine(
-                "STAMPEDE WORKER [%s][%s] JOINED BUILD WITH STATUS [%s]",
-                slaveInfo.getHostname(),
-                slaveInfo.getBuildSlaveRunId().getId(),
-                slaveInfo.getStatus().name());
-          }
-
-          @Override
-          public void onWorkerStatusChanged(BuildSlaveInfo slaveInfo) {
-            printLine(
-                "STAMPEDE WORKER [%s][%s] CHANGED STATUS TO [%s]",
-                slaveInfo.getHostname(),
-                slaveInfo.getBuildSlaveRunId().getId(),
-                slaveInfo.getStatus().name());
-          }
-
-          @Override
-          public void onDistBuildStateChanged(BuildStatus distBuildState) {
-            printLine("STAMPEDE JOB STATUS CHANGED TO [%s]", distBuildState);
-          }
-        });
   }
 
   private void parseFinished() {
@@ -152,16 +123,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     printLines(lines);
   }
 
-  /** Print information regarding the current distributed build. */
-  @Subscribe
-  public void onDistbuildRunEvent(DistBuildRunEvent event) {
-    String line =
-        String.format(
-            "StampedeId=[%s] BuildSlaveRunId=[%s]",
-            event.getStampedeId().id, event.getBuildSlaveRunId().id);
-    printLines(ImmutableList.<String>builder().add(line));
-  }
-
   @Override
   @Subscribe
   public void actionGraphFinished(ActionGraphEvent.Finished finished) {
@@ -172,7 +133,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
         /* suffix */ Optional.empty(),
         clock.currentTimeMillis(),
         actionGraphEvents.values(),
-        Optional.empty(),
+        ProgressEstimation.UNKNOWN,
         Optional.empty(),
         lines);
     printLines(lines);
@@ -255,11 +216,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     printLines(lines);
   }
 
-  @Subscribe
-  public void logStampedeConsoleEvent(StampedeConsoleEvent event) {
-    logEvent(event.getConsoleEvent());
-  }
-
   @Override
   public void printSevereWarningDirectly(String line) {
     logEvent(ConsoleEvent.severe(line));
@@ -338,13 +294,6 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     }
   }
 
-  @Subscribe
-  public void onDistBuildCreatedEvent(DistBuildCreatedEvent distBuildCreatedEvent) {
-    ImmutableList.Builder<String> lines =
-        ImmutableList.<String>builder().add(distBuildCreatedEvent.getConsoleLogLine());
-    printLines(lines);
-  }
-
   private void printLine(String format, Object... args) {
     printLines(ImmutableList.of(String.format(format, args)));
   }
@@ -360,6 +309,7 @@ public class SimpleConsoleEventBusListener extends AbstractConsoleEventBusListen
     if (lines.isEmpty()) {
       return;
     }
+
     if (console.getVerbosity().shouldPrintStandardInformation()) {
       console.logLines(lines);
     }

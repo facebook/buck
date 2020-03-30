@@ -1,27 +1,28 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.ElfSharedLibraryInterface.AbstractBuildable;
 import com.facebook.buck.cxx.toolchain.elf.ElfDynamicSection;
@@ -124,8 +125,8 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
       Path outputScratch = outputPathResolver.resolvePath(new OutputPath(libName + ".scratch"));
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
-      ImmutableList<String> commandPrefix = objcopy.getCommandPrefix(sourcePathResolver);
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
+      ImmutableList<String> commandPrefix = objcopy.getCommandPrefix(sourcePathResolverAdapter);
       Pair<ProjectFilesystem, Path> input = getInput(buildContext, filesystem, outputDir, steps);
       steps.add(
           new ElfExtractSectionsStep(
@@ -135,21 +136,21 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
               input.getSecond(),
               filesystem,
               outputScratch),
-          ElfSymbolTableScrubberStep.of(
+          ImmutableElfSymbolTableScrubberStep.of(
               filesystem,
               outputScratch,
               /* section */ ".dynsym",
               /* versymSection */ Optional.of(".gnu.version"),
               /* allowMissing */ false,
               /* scrubUndefinedSymbols */ removeUndefinedSymbols),
-          ElfSymbolTableScrubberStep.of(
+          ImmutableElfSymbolTableScrubberStep.of(
               filesystem,
               outputScratch,
               /* section */ ".symtab",
               /* versymSection */ Optional.empty(),
               /* allowMissing */ true,
               /* scrubUndefinedSymbols */ true),
-          ElfDynamicSectionScrubberStep.of(
+          ImmutableElfDynamicSectionScrubberStep.of(
               filesystem,
               outputScratch,
               // When scrubbing undefined symbols, drop the `DT_NEEDED` tags from the whitelist,
@@ -159,21 +160,21 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
                   : ImmutableSet.of(
                       ElfDynamicSection.DTag.DT_NEEDED, ElfDynamicSection.DTag.DT_SONAME),
               /* removeScrubbedTags */ removeUndefinedSymbols),
-          ElfScrubFileHeaderStep.of(filesystem, outputScratch));
+          ImmutableElfScrubFileHeaderStep.of(filesystem, outputScratch));
       // If we're removing undefined symbols, rewrite the dynamic string table so that strings for
       // undefined symbol names are removed.
       if (removeUndefinedSymbols) {
-        steps.add(ElfRewriteDynStrSectionStep.of(filesystem, outputScratch));
+        steps.add(ImmutableElfRewriteDynStrSectionStep.of(filesystem, outputScratch));
       }
       steps.add(
           // objcopy doesn't like the section-address shuffling chicanery we're doing in
           // the ElfCompactSectionsStep, since the new addresses may not jive with the current
           // segment locations.  So kill the segments (program headers) in the scratch file
           // prior to compacting sections, and _again_ in the interface .so file.
-          ElfClearProgramHeadersStep.of(filesystem, outputScratch),
-          ElfCompactSectionsStep.of(
+          ImmutableElfClearProgramHeadersStep.of(filesystem, outputScratch),
+          ImmutableElfCompactSectionsStep.of(
               buildTarget, commandPrefix, filesystem, outputScratch, filesystem, output),
-          ElfClearProgramHeadersStep.of(filesystem, output));
+          ImmutableElfClearProgramHeadersStep.of(filesystem, output));
       return steps.build();
     }
 
@@ -214,9 +215,10 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
     @Override
     protected Pair<ProjectFilesystem, Path> getInput(
         BuildContext context, ProjectFilesystem filesystem, Path outputPath, Builder<Step> steps) {
-      SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
       return new Pair<>(
-          sourcePathResolver.getFilesystem(input), sourcePathResolver.getRelativePath(input));
+          sourcePathResolverAdapter.getFilesystem(input),
+          sourcePathResolverAdapter.getRelativePath(input));
     }
   }
 
@@ -241,32 +243,33 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
     protected Pair<ProjectFilesystem, Path> getInput(
         BuildContext context, ProjectFilesystem filesystem, Path outputPath, Builder<Step> steps) {
       String shortNameAndFlavorPostfix = buildTarget.getShortNameAndFlavorPostfix();
-      Path outputDirPath = filesystem.getRootPath().resolve(outputPath);
+      AbsPath outputDirPath = filesystem.getRootPath().resolve(outputPath);
 
-      Path argFilePath =
+      AbsPath argFilePath =
           outputDirPath.resolve(String.format("%s.argsfile", shortNameAndFlavorPostfix));
-      Path fileListPath =
+      AbsPath fileListPath =
           outputDirPath.resolve(String.format("%s__filelist.txt", shortNameAndFlavorPostfix));
       Path output = outputPath.resolve(libName);
-      SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
       steps
           .addAll(
               CxxPrepareForLinkStep.create(
-                  argFilePath,
-                  fileListPath,
+                  argFilePath.getPath(),
+                  fileListPath.getPath(),
                   linker.fileList(fileListPath),
                   output,
                   args,
                   linker,
-                  filesystem.getRootPath(),
-                  sourcePathResolver))
+                  buildTarget.getCell(),
+                  filesystem.getRootPath().getPath(),
+                  sourcePathResolverAdapter))
           .add(
               new CxxLinkStep(
                   filesystem.getRootPath(),
-                  linker.getEnvironment(sourcePathResolver),
-                  linker.getCommandPrefix(sourcePathResolver),
-                  argFilePath,
-                  outputDirPath));
+                  linker.getEnvironment(sourcePathResolverAdapter),
+                  linker.getCommandPrefix(sourcePathResolverAdapter),
+                  argFilePath.getPath(),
+                  outputDirPath.getPath()));
       return new Pair<>(filesystem, output);
     }
   }

@@ -1,18 +1,19 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
@@ -21,6 +22,8 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -66,7 +69,8 @@ public class CxxCompilationDatabaseTest {
 
     String root = "/Users/user/src";
     Path fakeRoot = Paths.get(root);
-    ProjectFilesystem filesystem = new FakeProjectFilesystem(fakeRoot);
+    ProjectFilesystem filesystem =
+        new FakeProjectFilesystem(CanonicalCellName.rootCell(), AbsPath.of(fakeRoot));
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
@@ -174,7 +178,7 @@ public class CxxCompilationDatabaseTest {
         step.createEntries().collect(Collectors.toList());
     Iterable<CxxCompilationDatabaseEntry> expectedEntries =
         ImmutableList.of(
-            CxxCompilationDatabaseEntry.of(
+            ImmutableCxxCompilationDatabaseEntry.of(
                 root,
                 root + "/test.cpp",
                 ImmutableList.of(
@@ -188,11 +192,15 @@ public class CxxCompilationDatabaseTest {
                     "-fdebug-prefix-map=/Users/user/src=.",
                     "-gno-record-gcc-switches",
                     "-o",
-                    "buck-out/gen/foo/baz#compile-test.cpp/test.o",
+                    BuildTargetPaths.getGenPath(filesystem, compileTarget, "%s")
+                        .resolve("test.o")
+                        .toString(),
                     "-c",
                     "-MD",
                     "-MF",
-                    "buck-out/gen/foo/baz#compile-test.cpp/test.o.dep",
+                    BuildTargetPaths.getGenPath(filesystem, compileTarget, "%s")
+                        .resolve("test.o.dep")
+                        .toString(),
                     "test.cpp")));
     MoreAsserts.assertIterablesEquals(expectedEntries, observedEntries);
   }

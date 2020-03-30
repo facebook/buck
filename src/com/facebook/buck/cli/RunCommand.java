@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -19,13 +19,13 @@ package com.facebook.buck.cli;
 import com.facebook.buck.cli.BuildCommand.BuildRunResult;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.support.fix.BuckRunSpec;
-import com.facebook.buck.support.fix.ImmutableBuckRunSpec;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
@@ -142,8 +142,8 @@ public final class RunCommand extends AbstractCommand {
     // command.
     //
     // If we haven't received a command args file, we assume it's fine to just run in-process.
-    SourcePathResolver resolver = build.getGraphBuilder().getSourcePathResolver();
-    Tool executable = binaryBuildRule.getExecutableCommand();
+    SourcePathResolverAdapter resolver = build.getGraphBuilder().getSourcePathResolver();
+    Tool executable = binaryBuildRule.getExecutableCommand(OutputLabel.defaultLabel());
     if (commandArgsFile == null) {
       ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
       ProcessExecutorParams processExecutorParams =
@@ -155,7 +155,7 @@ public final class RunCommand extends AbstractCommand {
                       .putAll(params.getEnvironment())
                       .putAll(executable.getEnvironment(resolver))
                       .build())
-              .setDirectory(params.getCell().getFilesystem().getRootPath())
+              .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath().getPath())
               .build();
       ForwardingProcessListener processListener =
           new ForwardingProcessListener(
@@ -180,8 +180,11 @@ public final class RunCommand extends AbstractCommand {
               .putAll(executable.getEnvironment(resolver))
               .build();
       BuckRunSpec cmd =
-          new ImmutableBuckRunSpec(
-              argv, envp, params.getCell().getFilesystem().getRootPath(), false);
+          BuckRunSpec.of(
+              argv,
+              envp,
+              params.getCells().getRootCell().getFilesystem().getRootPath().getPath(),
+              false);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;
     }

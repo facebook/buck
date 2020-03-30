@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -100,18 +100,14 @@ public class CxxLibraryTest {
     CxxPreprocessorInput expectedPublicCxxPreprocessorInput =
         CxxPreprocessorInput.builder()
             .addIncludes(
-                CxxSymlinkTreeHeaders.builder()
-                    .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                    .setNameToPathMap(
-                        ImmutableSortedMap.of(
-                            Paths.get("header.h"),
-                            DefaultBuildTargetSourcePath.of(publicHeaderTarget)))
-                    .setRoot(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget))
-                    .setIncludeRoot(
-                        Either.ofRight(
-                            DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)))
-                    .setSymlinkTreeClass(HeaderSymlinkTree.class.getName())
-                    .build())
+                CxxSymlinkTreeHeaders.of(
+                    CxxPreprocessables.IncludeType.LOCAL,
+                    DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget),
+                    Either.ofRight(DefaultBuildTargetSourcePath.of(publicHeaderSymlinkTreeTarget)),
+                    Optional.empty(),
+                    ImmutableSortedMap.of(
+                        Paths.get("header.h"), DefaultBuildTargetSourcePath.of(publicHeaderTarget)),
+                    HeaderSymlinkTree.class.getName()))
             .build();
     assertEquals(
         expectedPublicCxxPreprocessorInput,
@@ -120,18 +116,15 @@ public class CxxLibraryTest {
     CxxPreprocessorInput expectedPrivateCxxPreprocessorInput =
         CxxPreprocessorInput.builder()
             .addIncludes(
-                CxxSymlinkTreeHeaders.builder()
-                    .setIncludeType(CxxPreprocessables.IncludeType.LOCAL)
-                    .setRoot(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget))
-                    .setIncludeRoot(
-                        Either.ofRight(
-                            DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)))
-                    .setNameToPathMap(
-                        ImmutableSortedMap.of(
-                            Paths.get("header.h"),
-                            DefaultBuildTargetSourcePath.of(privateHeaderTarget)))
-                    .setSymlinkTreeClass(HeaderSymlinkTree.class.getName())
-                    .build())
+                CxxSymlinkTreeHeaders.of(
+                    CxxPreprocessables.IncludeType.LOCAL,
+                    DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget),
+                    Either.ofRight(DefaultBuildTargetSourcePath.of(privateHeaderSymlinkTreeTarget)),
+                    Optional.empty(),
+                    ImmutableSortedMap.of(
+                        Paths.get("header.h"),
+                        DefaultBuildTargetSourcePath.of(privateHeaderTarget)),
+                    HeaderSymlinkTree.class.getName()))
             .build();
     assertEquals(
         expectedPrivateCxxPreprocessorInput,
@@ -150,7 +143,7 @@ public class CxxLibraryTest {
             cxxPlatform,
             Linker.LinkableDepType.STATIC,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE));
+            UnconfiguredTargetConfiguration.INSTANCE));
 
     // Verify that we get the static archive and its build target via the NativeLinkable
     // interface.
@@ -165,7 +158,7 @@ public class CxxLibraryTest {
             cxxPlatform,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE));
+            UnconfiguredTargetConfiguration.INSTANCE));
 
     // Verify that the implemented BuildRule methods are effectively unused.
     assertEquals(ImmutableList.<Step>of(), cxxLibrary.getBuildSteps(null, null));
@@ -197,12 +190,12 @@ public class CxxLibraryTest {
             target,
             projectFilesystem,
             params,
-            CxxDeps.of(),
-            CxxDeps.of(),
+            CxxDeps.EMPTY_INSTANCE,
+            CxxDeps.EMPTY_INSTANCE,
             /* headerOnly */ x -> true,
             (unused1, unused2) -> StringArg.from("-ldl"),
             (unused1, unused2) -> StringArg.from("-lfoobarbaz"),
-            /* linkTargetInput */ (unused1, unused2, unused3) -> NativeLinkableInput.of(),
+            /* linkTargetInput */ (unused1, unused2, unused3, unused4) -> NativeLinkableInput.of(),
             /* supportedPlatformsRegex */ Optional.empty(),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of(),
@@ -218,7 +211,7 @@ public class CxxLibraryTest {
 
     NativeLinkableInput expectedSharedNativeLinkableInput =
         NativeLinkableInput.of(
-            StringArg.from("-ldl", "-lfoobarbaz"),
+            ImmutableList.copyOf(StringArg.from("-ldl", "-lfoobarbaz")),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of());
 
@@ -228,7 +221,7 @@ public class CxxLibraryTest {
             cxxPlatform,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE));
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -256,12 +249,12 @@ public class CxxLibraryTest {
             target,
             projectFilesystem,
             params,
-            CxxDeps.of(),
-            CxxDeps.of(),
+            CxxDeps.EMPTY_INSTANCE,
+            CxxDeps.EMPTY_INSTANCE,
             /* headerOnly */ x -> true,
             (unused1, unused2) -> StringArg.from("-ldl"),
             (unused1, unused2) -> StringArg.from("-lfoobarbaz"),
-            /* linkTargetInput */ (unused1, unused2, unused3) -> NativeLinkableInput.of(),
+            /* linkTargetInput */ (unused1, unused2, unused3, unused4) -> NativeLinkableInput.of(),
             /* supportedPlatformsRegex */ Optional.empty(),
             ImmutableSet.of(frameworkPath),
             ImmutableSet.of(),
@@ -291,7 +284,7 @@ public class CxxLibraryTest {
             cxxPlatform,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     assertEquals(expectedSharedNativeLinkableInput, actualSharedNativeLinkableInput);
   }

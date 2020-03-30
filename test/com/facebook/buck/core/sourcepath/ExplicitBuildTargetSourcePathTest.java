@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.sourcepath;
@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -32,12 +32,13 @@ public class ExplicitBuildTargetSourcePathTest {
 
   @Test
   public void explicitlySetPath() {
-    SourcePathResolver pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = new TestActionGraphBuilder().getSourcePathResolver();
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
     Path path = Paths.get("blah");
     ExplicitBuildTargetSourcePath buildTargetSourcePath =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), path);
+        com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+            rule.getBuildTarget(), path);
     assertEquals(target, buildTargetSourcePath.getTarget());
     assertEquals(path, pathResolver.getRelativePath(buildTargetSourcePath));
   }
@@ -47,9 +48,11 @@ public class ExplicitBuildTargetSourcePathTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo/bar:baz");
     FakeBuildRule rule = new FakeBuildRule(target);
     ExplicitBuildTargetSourcePath path1 =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), Paths.get("something"));
+        com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+            rule.getBuildTarget(), Paths.get("something"));
     ExplicitBuildTargetSourcePath path2 =
-        ExplicitBuildTargetSourcePath.of(rule.getBuildTarget(), Paths.get("something else"));
+        com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath.of(
+            rule.getBuildTarget(), Paths.get("something else"));
     assertNotEquals(path1, path2);
     assertNotEquals(path1.hashCode(), path2.hashCode());
   }

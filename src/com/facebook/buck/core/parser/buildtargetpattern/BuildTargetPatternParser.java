@@ -1,25 +1,28 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.parser.buildtargetpattern;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern.Kind;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import com.facebook.buck.core.path.ForwardRelativePath;
+import java.util.Optional;
 
 /**
  * Factory that parses a string into {@link BuildTargetPattern}
@@ -50,7 +53,8 @@ public class BuildTargetPatternParser {
    *     hope to make it checked one day; this type of exception would be properly handled as user
    *     error
    */
-  public static BuildTargetPattern parse(String pattern) throws BuildTargetParseException {
+  public static BuildTargetPattern parse(String pattern, CellNameResolver cellNameResolver)
+      throws BuildTargetParseException {
 
     check(
         pattern.length() >= BuildTargetLanguageConstants.ROOT_SYMBOL.length() + 1,
@@ -138,10 +142,13 @@ public class BuildTargetPatternParser {
         "base path should not end with '%s'",
         BuildTargetLanguageConstants.PATH_SYMBOL);
 
-    // This will work on both posix and Windows and always evaluates to relative path
-    Path basePath = Paths.get(path);
+    ForwardRelativePath basePath = ForwardRelativePath.of(path);
 
-    return ImmutableBuildTargetPattern.of(cellName, kind, basePath, targetName);
+    CanonicalCellName canonicalCellName =
+        cellNameResolver.getName(cellName.isEmpty() ? Optional.empty() : Optional.of(cellName));
+
+    return BuildTargetPattern.of(
+        CellRelativePath.of(canonicalCellName, basePath), kind, targetName);
   }
 
   private static void check(boolean condition, String pattern, String message, Object... args)

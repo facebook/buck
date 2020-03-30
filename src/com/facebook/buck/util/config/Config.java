@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.config;
@@ -221,10 +221,6 @@ public class Config {
     return expanded.build();
   }
 
-  public ImmutableMap<String, ImmutableMap<String, String>> getRawConfigForDistBuild() {
-    return getSectionToEntries();
-  }
-
   /**
    * @return An {@link ImmutableList} containing all entries that don't look like comments, or the
    *     empty list if the property is not defined or there are no values.
@@ -281,8 +277,12 @@ public class Config {
       if (value.isEmpty()) {
         return Optional.empty();
       } else {
-        return Optional.of(
-            decodeQuotedParts(value, Optional.empty(), sectionName, propertyName).get(0));
+        ImmutableList<String> decoded =
+            decodeQuotedParts(value, Optional.empty(), sectionName, propertyName);
+        if (decoded.isEmpty()) {
+          return Optional.empty();
+        }
+        return Optional.of(decoded.get(0));
       }
     } else {
       return rawValue;
@@ -532,7 +532,7 @@ public class Config {
           section, field, input.substring(quoteIndex, lastIndex));
     }
 
-    listBuilder.add(stringBuilder.toString());
+    if (seenChar) listBuilder.add(stringBuilder.toString());
     return listBuilder.build();
   }
 

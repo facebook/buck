@@ -8,7 +8,10 @@ buck_module(
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
+        "//src/com/facebook/buck/core/rules/actions/lib:lib",
+        "//src/com/facebook/buck/core/rules/analysis/config:config",
         "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/core/rules/providers/collect/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
         "//src/com/facebook/buck/core/toolchain/toolprovider:toolprovider",
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
@@ -25,6 +28,9 @@ buck_module(
         "//third-party/java/infer-annotations:infer-annotations",
     ],
     visibility = [
+        "//test/com/facebook/buck/core/toolchain/rule:rule",
         "//test/com/facebook/buck/features/dotnet:",
+        "//test/com/facebook/buck/rules/modern:subclass_exclusion",
+        "//test/com/facebook/buck/skylark/parser:parser",
     ],
 )

@@ -1,22 +1,21 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules.common;
 
-import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -142,11 +141,6 @@ public final class BuildableSupport {
     }
 
     @Override
-    protected AbstractRuleKeyBuilder<Stream<BuildRule>> setArtifact(Artifact artifact) {
-      return setSourcePath(artifact.asBound().getSourcePath());
-    }
-
-    @Override
     protected AbstractRuleKeyBuilder<Stream<BuildRule>> setSourcePath(SourcePath sourcePath) {
       ruleFinder.getRule(sourcePath).ifPresent(streamBuilder);
       return this;
@@ -196,12 +190,6 @@ public final class BuildableSupport {
       } else {
         AlterRuleKeys.amendKey(this, appendable);
       }
-      return this;
-    }
-
-    @Override
-    protected AbstractRuleKeyBuilder<Stream<SourcePath>> setArtifact(Artifact artifact) {
-      streamBuilder.add(artifact.asBound().getSourcePath());
       return this;
     }
 

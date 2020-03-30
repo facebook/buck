@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
@@ -89,9 +88,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
     this.compileRules = compileRules;
     this.outputJsonFile =
         BuildTargetPaths.getGenPath(
-            getProjectFilesystem(),
-            buildTarget,
-            Paths.get("__%s", "compile_commands.json").toString());
+            getProjectFilesystem(), buildTarget, "__%s/compile_commands.json");
     this.runtimeDeps = runtimeDeps;
   }
 
@@ -183,7 +180,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
               .resolve(context.getSourcePathResolver().getAbsolutePath(inputSourcePath))
               .toString();
       ImmutableList<String> arguments = compileRule.getCommand(context);
-      return CxxCompilationDatabaseEntry.of(
+      return ImmutableCxxCompilationDatabaseEntry.of(
           inputFilesystem.getRootPath().toString(), fileToCompile, arguments);
     }
   }

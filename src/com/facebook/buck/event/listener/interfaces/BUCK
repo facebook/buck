@@ -1,5 +1,3 @@
-load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
-
 java_library(
     name = "interfaces",
     srcs = glob(["*.java"]),

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -32,9 +32,9 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.AccumulateClassNamesStep;
@@ -47,7 +47,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.util.MoreSuppliers;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -80,9 +80,8 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
-class NonPreDexedDexBuildable extends AbstractBuildRule {
+class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> additionalJarsForProguardAndDesugar;
 
   @AddToRuleKey
@@ -122,9 +121,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
   private final ListeningExecutorService dxExecutorService;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractNonPredexedDexBuildableArgs {
+  @BuckStyleValueWithBuilder
+  interface NonPredexedDexBuildableArgs {
     Optional<SourcePath> getProguardJarOverride();
 
     String getProguardMaxHeapSize();
@@ -289,7 +287,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
             .map(
                 input ->
                     getProjectFilesystem()
-                        .relativize(buildContext.getSourcePathResolver().getAbsolutePath(input)))
+                        .relativize(buildContext.getSourcePathResolver().getAbsolutePath(input))
+                        .getPath())
             .collect(ImmutableSet.toImmutableSet());
 
     steps.addAll(
@@ -491,7 +490,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
     return steps.build();
   }
 
-  DexFilesInfo getDexFilesInfo() {
+  @Override
+  public DexFilesInfo getDexFilesInfo() {
     return new DexFilesInfo(
         genSourcePath(getNonPredexedPrimaryDexPath()),
         new DexFilesInfo.DexSecondaryDexDirView(
@@ -637,7 +637,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
       Optional<SourcePath> dexReorderDataDumpFile,
       ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap,
       BuildContext buildContext) {
-    SourcePathResolver resolver = buildContext.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     Supplier<Set<Path>> primaryInputsToDex;
     Optional<Path> secondaryDexDir;
     Optional<Supplier<Multimap<Path, Path>>> secondaryOutputToInputs;
@@ -863,8 +863,9 @@ class NonPreDexedDexBuildable extends AbstractBuildRule {
             androidPlatformTarget,
             buildContext,
             getProjectFilesystem(),
-            selectedPrimaryDexPath,
-            primaryInputsToDex,
+            Optional.of(selectedPrimaryDexPath),
+            Optional.of(primaryInputsToDex),
+            Optional.empty(),
             secondaryDexDir,
             secondaryOutputToInputs,
             hashInputJarsToDexStep,

@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.parser;
 
 import static com.google.common.base.Charsets.UTF_8;
@@ -20,17 +21,18 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -44,9 +46,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -66,8 +68,8 @@ public class PerBuildStateTest {
 
   private final int threads;
   private final boolean parallelParsing;
-  private Path cellRoot;
-  private Cell cell;
+  private AbsPath cellRoot;
+  private Cells cell;
   private PerBuildState perBuildState;
 
   public PerBuildStateTest(int threads, boolean parallelParsing) {
@@ -120,9 +122,12 @@ public class PerBuildStateTest {
         TestKnownRuleTypesProvider.create(pluginManager);
     Parser parser =
         TestParserFactory.create(
-            executor.get(), cell, knownRuleTypesProvider, BuckEventBusForTests.newInstance());
+            executor.get(),
+            cell.getRootCell(),
+            knownRuleTypesProvider,
+            BuckEventBusForTests.newInstance());
 
-    perBuildState = TestPerBuildStateFactory.create(parser, cell);
+    perBuildState = TestPerBuildStateFactory.create(parser, cell.getRootCell());
   }
 
   @Test
@@ -130,25 +135,26 @@ public class PerBuildStateTest {
       throws IOException, BuildFileParseException {
     tempDir.newFolder("foo");
 
-    Path testFooBuckFile = tempDir.newFile("foo/BUCK").toRealPath();
+    AbsPath testFooBuckFile = AbsPath.of(tempDir.newFile("foo/BUCK").toRealPath());
     Files.write(
-        testFooBuckFile,
+        testFooBuckFile.getPath(),
         "java_library(name = 'lib1')\njava_library(name = 'lib2')\n".getBytes(UTF_8));
-    BuildTarget fooLib1Target = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib1");
-    BuildTarget fooLib2Target = BuildTargetFactory.newInstance(cellRoot, "//foo", "lib2");
+    BuildTarget fooLib1Target = BuildTargetFactory.newInstance("//foo", "lib1");
+    BuildTarget fooLib2Target = BuildTargetFactory.newInstance("//foo", "lib2");
 
     // First, only load one target from the build file so the file is parsed, but only one of the
     // TargetNodes will be cached.
-    TargetNode<?> targetNode = perBuildState.getTargetNode(fooLib1Target);
+    TargetNodeMaybeIncompatible targetNode =
+        perBuildState.getTargetNode(fooLib1Target, DependencyStack.root());
     assertThat(targetNode.getBuildTarget(), equalTo(fooLib1Target));
 
     // Now, try to load the entire build file and get all TargetNodes.
-    ImmutableList<TargetNode<?>> targetNodes =
-        perBuildState.getAllTargetNodes(cell, testFooBuckFile, EmptyTargetConfiguration.INSTANCE);
+    ImmutableList<TargetNodeMaybeIncompatible> targetNodes =
+        perBuildState.getAllTargetNodes(cell.getRootCell(), testFooBuckFile, Optional.empty());
     assertThat(targetNodes.size(), equalTo(2));
     assertThat(
         targetNodes.stream()
-            .map(TargetNode::getBuildTarget)
+            .map(TargetNodeMaybeIncompatible::getBuildTarget)
             .collect(ImmutableList.toImmutableList()),
         hasItems(fooLib1Target, fooLib2Target));
   }

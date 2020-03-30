@@ -27,8 +27,10 @@ buck_module(
         "//test/com/facebook/buck/features/zip/rules:rules",
     ],
     visibility = [
+        "//src/com/facebook/buck/features/project/intellij:",
         "//test/com/facebook/buck/cli:cli",
         "//test/com/facebook/buck/features/project/intellij:intellij",
         "//test/com/facebook/buck/features/zip/rules:rules",
+        "//test/com/facebook/buck/rules/modern:subclass_exclusion",
     ],
 )

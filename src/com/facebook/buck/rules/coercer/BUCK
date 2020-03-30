@@ -5,7 +5,7 @@ INTERFACE_SRCS = [
     "CoerceFailedException.java",
     "CoercedTypeCache.java",
     "ConstructorArgMarshaller.java",
-    "ConstructorArgBuilder.java",
+    "DataTransferObjectDescriptor.java",
     "ParamInfo.java",
     "ParamInfoException.java",
     "ReflectionParamInfo.java",
@@ -16,16 +16,13 @@ INTERFACE_SRCS = [
 java_immutables_library(
     name = "interface",
     srcs = INTERFACE_SRCS,
-    exported_deps = [
-        "//src/com/facebook/buck/core/select:select",
-        "//src/com/facebook/buck/rules/coercer/concat:concat",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/description/arg:arg",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules/config:config",
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/io:io",
@@ -37,6 +34,10 @@ java_immutables_library(
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/select:select",
+        "//src/com/facebook/buck/rules/coercer/concat:concat",
+    ],
 )
 
 java_immutables_library(
@@ -45,12 +46,6 @@ java_immutables_library(
         ["*.java"],
         exclude = INTERFACE_SRCS,
     ),
-    exported_deps = [
-        ":interface",
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
-        "//src/com/facebook/buck/core/rulekey:rulekey",
-        "//src/com/facebook/buck/core/select:select",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/apple/xcode:xcode",
@@ -60,7 +55,6 @@ java_immutables_library(
         "//src/com/facebook/buck/core/model/targetgraph:targetgraph",
         "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/rulekey:rulekey",
-        "//src/com/facebook/buck/core/select/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver:resolver",
         "//src/com/facebook/buck/core/test/rule:rule",
         "//src/com/facebook/buck/io:io",
@@ -76,10 +70,17 @@ java_immutables_library(
         "//src/com/facebook/buck/rules/query:types",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/versions:translator",
         "//src/com/facebook/buck/versions:types",
         "//third-party/java/bazel:bazel",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
+    ],
+    exported_deps = [
+        ":interface",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/core/rulekey:rulekey",
+        "//src/com/facebook/buck/core/select:select",
     ],
 )

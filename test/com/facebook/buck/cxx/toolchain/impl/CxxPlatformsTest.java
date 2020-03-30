@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain.impl;
@@ -24,9 +24,9 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -108,7 +108,7 @@ public class CxxPlatformsTest {
                     borlandCxx452Platform.getFlavor(),
                     new StaticUnresolvedCxxPlatform(borlandCxx452Platform)),
                 CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM)
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE),
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE),
         equalTo(borlandCxx452Platform));
   }
 
@@ -221,7 +221,7 @@ public class CxxPlatformsTest {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     return CxxPlatformUtils.build(buckConfig)
         .getAr()
-        .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE);
+        .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   @Test

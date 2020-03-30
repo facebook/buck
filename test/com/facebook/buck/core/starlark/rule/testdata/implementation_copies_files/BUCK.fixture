@@ -1,0 +1,7 @@
+load(":defs.bzl", "copy_artifact", "copy_string", "write_string")
+
+write_string(name = "write_string", contents = "some contents")
+
+copy_string(name = "copy_string", dep = ":write_string")
+
+copy_artifact(name = "copy_artifact", dep = ":copy_string")

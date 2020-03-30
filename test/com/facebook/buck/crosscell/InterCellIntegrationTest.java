@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.crosscell;
@@ -57,8 +57,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -380,8 +380,7 @@ public class InterCellIntegrationTest {
     Parser parser = TestParserFactory.create(executor.get(), primary.asCell());
 
     Cell primaryCell = primary.asCell();
-    BuildTarget namedTarget =
-        BuildTargetFactory.newInstance(primaryCell.getFilesystem().getRootPath(), targetName);
+    BuildTarget namedTarget = BuildTargetFactory.newInstance(targetName);
 
     // It's enough that this parses cleanly.
     parser.buildTargetGraph(
@@ -620,7 +619,7 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testCrossCellAndroidLibrary() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");
@@ -633,8 +632,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testCrossCellAndroidLibraryMerge() throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");
@@ -677,8 +676,8 @@ public class InterCellIntegrationTest {
 
   @Test
   public void testCrossCellDependencyMerge() throws IOException, InterruptedException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeSdkIsAvailable();
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
 
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/android/primary", "inter-cell/android/secondary");

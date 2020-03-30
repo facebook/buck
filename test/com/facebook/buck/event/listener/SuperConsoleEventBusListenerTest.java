@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -25,7 +25,6 @@ import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.CacheResult;
 import com.facebook.buck.artifact_cache.DirArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
-import com.facebook.buck.artifact_cache.HttpArtifactCacheEventFetchData;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
@@ -47,20 +46,6 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.test.event.TestRunEvent;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
-import com.facebook.buck.distributed.DistBuildStatusEvent;
-import com.facebook.buck.distributed.DistributedExitCode;
-import com.facebook.buck.distributed.ImmutableDistBuildStatus;
-import com.facebook.buck.distributed.StampedeLocalBuildStatusEvent;
-import com.facebook.buck.distributed.build_client.DistBuildRemoteProgressEvent;
-import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
-import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
-import com.facebook.buck.distributed.thrift.BuildJob;
-import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
-import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
-import com.facebook.buck.distributed.thrift.BuildSlaveStatus;
-import com.facebook.buck.distributed.thrift.BuildStatus;
-import com.facebook.buck.distributed.thrift.CacheRateStats;
-import com.facebook.buck.distributed.thrift.CoordinatorBuildProgress;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -75,6 +60,8 @@ import com.facebook.buck.event.listener.util.ProgressEstimator;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestCaseSummary;
@@ -110,6 +97,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
@@ -343,7 +331,7 @@ public class SuperConsoleEventBusListenerTest {
 
     ArtifactCompressionEvent.Started compressStarted =
         ArtifactCompressionEvent.started(
-            ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of());
+            ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of(), fakeRule);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(compressStarted, 703L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
 
@@ -360,7 +348,7 @@ public class SuperConsoleEventBusListenerTest {
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
-            ArtifactCompressionEvent.finished(compressStarted, 0, 0),
+            ArtifactCompressionEvent.finished(compressStarted, 0, 0, fakeRule),
             704L,
             TimeUnit.MILLISECONDS,
             /* threadId */ 0L));
@@ -381,7 +369,9 @@ public class SuperConsoleEventBusListenerTest {
         new ParsingUnconfiguredBuildTargetViewFactory();
     DirArtifactCacheEvent.DirArtifactCacheEventFactory dirArtifactCacheEventFactory =
         new DirArtifactCacheEvent.DirArtifactCacheEventFactory(
-            target -> unconfiguredBuildTargetFactory.create(cellPathResolver, target),
+            target ->
+                unconfiguredBuildTargetFactory.create(
+                    target, cellPathResolver.getCellNameResolver()),
             TargetConfigurationSerializerForTests.create(cellPathResolver));
 
     ArtifactCacheEvent.Started dirFetchStarted =
@@ -421,8 +411,8 @@ public class SuperConsoleEventBusListenerTest {
     CacheResult remoteCacheResult =
         CacheResult.hit(
             remoteCacheMode.name(), remoteCacheMode, ImmutableMap.of(), remoteArtifactSizeBytes);
-    HttpArtifactCacheEventFetchData.Builder fetchDataBuilder =
-        HttpArtifactCacheEventFetchData.builder()
+    HttpArtifactCacheEvent.HttpArtifactCacheEventFetchData.Builder fetchDataBuilder =
+        HttpArtifactCacheEvent.HttpArtifactCacheEventFetchData.builder()
             .setFetchResult(remoteCacheResult)
             .setArtifactSizeBytes(remoteArtifactSizeBytes);
 
@@ -769,7 +759,8 @@ public class SuperConsoleEventBusListenerTest {
             "HTTP CACHE UPLOAD... 2.10 Kbytes (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"));
 
     CommandEvent.Started commandStarted =
-        CommandEvent.started("build", ImmutableList.of(), OptionalLong.of(100), 1234);
+        CommandEvent.started(
+            "build", ImmutableList.of(), Paths.get(""), OptionalLong.of(100), 1234);
     eventBus.post(CommandEvent.finished(commandStarted, ExitCode.SUCCESS));
     if (buildDetailsCommands.contains("build") && buildDetailsTemplate.isPresent()) {
       validateBuildIdConsole(
@@ -803,7 +794,7 @@ public class SuperConsoleEventBusListenerTest {
     FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
     FakeBuildRule cachedRule = new FakeBuildRule(cachedTarget, ImmutableSortedSet.of());
 
-    ProgressEstimator e = new ProgressEstimator(getStorageForTest(), eventBus);
+    ProgressEstimator e = new ProgressEstimator(Optional.of(getStorageForTest()), eventBus);
     listener.setProgressEstimator(e);
 
     BuildEvent.RuleCountCalculated ruleCountCalculated =
@@ -817,6 +808,32 @@ public class SuperConsoleEventBusListenerTest {
     ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(parseStarted, 200L, TimeUnit.MILLISECONDS, /* threadId */ 0L));
+
+    validateConsole(
+        listener,
+        renderingConsole,
+        300L,
+        ImmutableList.of("Parsing buck files... 0.1 sec (0/unknown)"));
+
+    eventBus.postWithoutConfiguring(
+        configureTestEventAtTime(
+            ParseBuckFileEvent.finished(
+                ParseBuckFileEvent.started(
+                    Paths.get(""),
+                    ParseBuckFileEvent.ParserKind.PYTHON_DSL,
+                    ProjectBuildFileParser.class),
+                7,
+                99,
+                Optional.empty()),
+            300L,
+            TimeUnit.MILLISECONDS,
+            1));
+
+    validateConsole(
+        listener,
+        renderingConsole,
+        300L,
+        ImmutableList.of("Parsing buck files... 0.1 sec (1/unknown)"));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -989,655 +1006,6 @@ public class SuperConsoleEventBusListenerTest {
             formatCacheStatsLine(false, 0, 0f, 100f),
             buildingLine,
             totalTime));
-  }
-
-  @Test
-  public void testDistBuildWithProgress() throws IOException {
-    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
-    TestRenderingConsole renderingConsole = new TestRenderingConsole(fakeClock, new TestConsole());
-    SuperConsoleEventBusListener listener =
-        createSuperConsole(fakeClock, eventBus, renderingConsole);
-
-    BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
-    BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
-    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
-    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
-
-    ProgressEstimator e = new ProgressEstimator(getStorageForTest(), eventBus);
-    listener.setProgressEstimator(e);
-
-    long timeMillis = 0;
-
-    ProjectBuildFileParseEvents.Started parseEventStarted =
-        new ProjectBuildFileParseEvents.Started();
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            parseEventStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    validateConsole(
-        listener, renderingConsole, timeMillis, ImmutableList.of("Parsing buck files... 0.0 sec"));
-
-    timeMillis += 100;
-    validateConsole(
-        listener, renderingConsole, timeMillis, ImmutableList.of("Parsing buck files... 0.1 sec"));
-    timeMillis += 100;
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new ProjectBuildFileParseEvents.Finished(parseEventStarted),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of("Parsing buck files: finished in 0.2 sec"));
-
-    // trigger a distributed build instead of a local build
-    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            buildEventStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildSuperConsoleEvent(), timeMillis, TimeUnit.MILLISECONDS, 0L));
-    ParseEvent.Started parseStarted = ParseEvent.started(buildTargets);
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            parseStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-
-    timeMillis += 100;
-    validateConsole(
-        listener, renderingConsole, timeMillis, ImmutableList.of("Parsing buck files... 0.3 sec"));
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            ParseEvent.finished(parseStarted, 10, Optional.empty()),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    BuildEvent.DistBuildStarted distBuildStartedEvent = BuildEvent.distBuildStarted();
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            distBuildStartedEvent, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-
-    timeMillis += 100;
-    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            actionGraphStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    timeMillis += 100;
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            ActionGraphEvent.finished(actionGraphStarted),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    timeMillis += 150;
-    String parsingLine = "Parsing buck files: finished in 0.3 sec";
-    String actionGraphLine = "Creating action graph: finished in 0.1 sec";
-
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed Build... 0.3 sec (0%) remote status: init; local status: init",
-            "Downloading... 0 artifacts, 0.00 bytes, 0.0% cache miss",
-            "Local Steps... 0.2 sec"));
-
-    BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
-    buildSlaveRunId1.setId("slave1");
-    BuildSlaveStatus slave1 = new BuildSlaveStatus();
-    slave1.setBuildSlaveRunId(buildSlaveRunId1);
-    BuildSlaveInfo slaveInfo1 = new BuildSlaveInfo();
-    slaveInfo1.setBuildSlaveRunId(buildSlaveRunId1);
-
-    BuildSlaveRunId buildSlaveRunId2 = new BuildSlaveRunId();
-    buildSlaveRunId2.setId("slave2");
-    BuildSlaveStatus slave2 = new BuildSlaveStatus();
-    slave2.setBuildSlaveRunId(buildSlaveRunId2);
-    BuildSlaveInfo slaveInfo2 = new BuildSlaveInfo();
-    slaveInfo2.setBuildSlaveRunId(buildSlaveRunId2);
-
-    BuildSlaveRunId buildSlaveRunId3 = new BuildSlaveRunId();
-    buildSlaveRunId3.setId("slave3");
-    BuildSlaveStatus slave3 = new BuildSlaveStatus();
-    slave3.setBuildSlaveRunId(buildSlaveRunId3);
-    BuildSlaveInfo slaveInfo3 = new BuildSlaveInfo();
-    slaveInfo3.setBuildSlaveRunId(buildSlaveRunId3);
-
-    BuildJob job = new BuildJob();
-    job.setBuildSlaves(ImmutableList.of(slaveInfo1, slaveInfo2, slaveInfo3));
-
-    timeMillis += 250;
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job,
-                new ImmutableDistBuildStatus(
-                    Optional.of(BuildStatus.QUEUED.toString()), ImmutableList.of())),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    BuildEvent.RuleCountCalculated ruleCountCalculated =
-        BuildEvent.ruleCountCalculated(ImmutableSet.of(), 10);
-    eventBus.post(ruleCountCalculated);
-
-    FakeBuildRule fakeRule = new FakeBuildRule(fakeTarget, ImmutableSortedSet.of());
-    BuildRuleEvent.Started fakeRuleStarted = BuildRuleEvent.started(fakeRule, durationTracker);
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            fakeRuleStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-
-    timeMillis += 100;
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed Build... 0.7 sec (0%) remote status: queued; local status: init",
-            "Downloading... 0 artifacts, 0.00 bytes, 0.0% cache miss",
-            "Local Steps... 0.6 sec (0%) 0/10 jobs, 0 updated",
-            " - //banana:stand... 0.1 sec (preparing)"));
-
-    timeMillis += 100;
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job, new ImmutableDistBuildStatus(Optional.empty(), ImmutableList.of())),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            BuildRuleEvent.finished(
-                fakeRuleStarted,
-                BuildRuleKeys.of(new RuleKey("aaaa")),
-                BuildRuleStatus.SUCCESS,
-                CacheResult.miss(),
-                Optional.empty(),
-                Optional.of(BuildRuleSuccessType.BUILT_LOCALLY),
-                UploadToCacheResultType.UNCACHEABLE,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty()),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    timeMillis += 100;
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed Build... 0.9 sec (0%) local status: init",
-            "Downloading... 0 artifacts, 0.00 bytes, 100.0% cache miss",
-            "Local Steps... 0.8 sec (10%) 1/10 jobs, 1 updated",
-            " - IDLE"));
-
-    slave2.setFilesMaterializedCount(128);
-
-    timeMillis += 100;
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job,
-                new ImmutableDistBuildStatus(
-                    Optional.of(BuildStatus.BUILDING.toString()),
-                    ImmutableList.of(slave1, slave2, slave3))),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    FakeBuildRule cachedRule = new FakeBuildRule(cachedTarget, ImmutableSortedSet.of());
-    BuildRuleEvent.Started cachedRuleStarted = BuildRuleEvent.started(cachedRule, durationTracker);
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            cachedRuleStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-
-    timeMillis += 100;
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed Build... 1.1 sec (0%) remote status: building; local status: init",
-            " - Preparing: creating action graph, materializing source files [128] ...",
-            " - Preparing: creating action graph ...",
-            " - Preparing: creating action graph ...",
-            "Downloading... 0 artifacts, 0.00 bytes, 100.0% cache miss",
-            "Local Steps... 1.0 sec (10%) 1/10 jobs, 1 updated",
-            " - //chicken:dance... 0.1 sec (preparing)"));
-
-    timeMillis += 100;
-    slave1.setTotalRulesCount(10);
-    slave1.setRulesFinishedCount(5);
-    slave1.setRulesBuildingCount(1);
-    CacheRateStats cacheRateStatsForSlave1 = new CacheRateStats();
-    slave1.setCacheRateStats(cacheRateStatsForSlave1);
-    cacheRateStatsForSlave1.setTotalRulesCount(10);
-    cacheRateStatsForSlave1.setUpdatedRulesCount(5);
-    cacheRateStatsForSlave1.setCacheHitsCount(4);
-    cacheRateStatsForSlave1.setCacheMissesCount(1);
-
-    slave2.setTotalRulesCount(20);
-    slave2.setRulesBuildingCount(5);
-    slave2.setRulesFinishedCount(5);
-    slave2.setRulesFailureCount(1);
-    CacheRateStats cacheRateStatsForSlave2 = new CacheRateStats();
-    slave2.setCacheRateStats(cacheRateStatsForSlave2);
-    cacheRateStatsForSlave2.setTotalRulesCount(20);
-    cacheRateStatsForSlave2.setUpdatedRulesCount(5);
-    cacheRateStatsForSlave2.setCacheHitsCount(5);
-    cacheRateStatsForSlave2.setCacheMissesCount(0);
-
-    slaveInfo3.setStatus(BuildStatus.FAILED);
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job,
-                new ImmutableDistBuildStatus(
-                    Optional.of(BuildStatus.BUILDING.toString()),
-                    ImmutableList.of(slave1, slave2, slave3))),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildRemoteProgressEvent(
-                new CoordinatorBuildProgress()
-                    .setTotalRulesCount(100)
-                    .setSkippedRulesCount(20)
-                    .setBuiltRulesCount(10)),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    eventBus.post(BuildEvent.reset());
-    eventBus.post(BuildEvent.ruleCountCalculated(ImmutableSet.of(), 5));
-
-    timeMillis += 100;
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed Build... 1.3 sec (12%) "
-                + "remote status: building, 10/80 jobs, 10.0% cache miss; local status: init",
-            " - Building 5 jobs... built 5/20 jobs, 1 jobs failed, 0.0% cache miss",
-            " - Building 1 jobs... built 5/10 jobs, 20.0% cache miss",
-            formatCacheStatsLine(true, 0, 0f, 100f),
-            "Local Steps... 1.2 sec (0%) 0/5 jobs, 1 updated"));
-
-    timeMillis += 100;
-    slave1.setRulesBuildingCount(1);
-    slave1.setRulesFinishedCount(9);
-    cacheRateStatsForSlave1.setUpdatedRulesCount(9);
-    cacheRateStatsForSlave1.setCacheHitsCount(8);
-    cacheRateStatsForSlave1.setCacheMissesCount(1);
-
-    slave2.setRulesBuildingCount(1);
-    slave2.setRulesFinishedCount(19);
-    slave2.setHttpArtifactUploadsScheduledCount(3);
-    slave2.setHttpArtifactUploadsOngoingCount(1);
-    slave2.setHttpArtifactUploadsSuccessCount(1);
-    slave2.setHttpArtifactUploadsFailureCount(1);
-    cacheRateStatsForSlave2.setUpdatedRulesCount(19);
-    cacheRateStatsForSlave2.setCacheHitsCount(18);
-    cacheRateStatsForSlave2.setCacheMissesCount(0);
-    cacheRateStatsForSlave2.setCacheErrorsCount(1);
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job,
-                new ImmutableDistBuildStatus(
-                    Optional.of("custom"), ImmutableList.of(slave1, slave2, slave3))),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new StampedeLocalBuildStatusEvent("building"),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildRemoteProgressEvent(
-                new CoordinatorBuildProgress()
-                    .setTotalRulesCount(100)
-                    .setSkippedRulesCount(20)
-                    .setBuiltRulesCount(50)),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            BuildRuleEvent.finished(
-                cachedRuleStarted,
-                BuildRuleKeys.of(new RuleKey("bbbb")),
-                BuildRuleStatus.SUCCESS,
-                CacheResult.hit(
-                    ArtifactCacheMode.thrift_over_http.name(), ArtifactCacheMode.thrift_over_http),
-                Optional.empty(),
-                Optional.of(BuildRuleSuccessType.FETCHED_FROM_CACHE),
-                // TODO(cjhopman): This doesn't make sense. It's a cache hit on an uncacheable rule.
-                UploadToCacheResultType.UNCACHEABLE,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty()),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    // TODO(cjhopman): The implementation of stampede's local reset thing is broken and leaves the
-    // superconsole objects in an invalid state...
-
-    timeMillis += 100;
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed Build... 1.5 sec (62%) remote status: custom, 50/80 jobs,"
-                + " 3.6% cache miss, 1 [3.6%] cache errors, 1 upload errors"
-                + "; local status: building",
-            " - Building 1 jobs... built 19/20 jobs, 1 jobs failed, 0.0% cache miss, "
-                + "1 [5.3%] cache errors, 1/3 uploaded, 1 upload errors",
-            " - Building 1 jobs... built 9/10 jobs, 11.1% cache miss",
-            formatCacheStatsLine(true, 0, 0f, 50f),
-            "Local Steps... 1.4 sec (20%) 1/5 jobs, 2 updated",
-            " - IDLE"));
-
-    slave2.setRulesBuildingCount(0);
-    slave2.setRulesFinishedCount(20);
-    cacheRateStatsForSlave2.setUpdatedRulesCount(20);
-    cacheRateStatsForSlave2.setCacheHitsCount(19);
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job,
-                new ImmutableDistBuildStatus(
-                    Optional.of("custom"), ImmutableList.of(slave1, slave2, slave3))),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed Build... 1.5 sec (62%) remote status: custom, 50/80 jobs,"
-                + " 3.4% cache miss, 1 [3.4%] cache errors, 1 upload errors"
-                + "; local status: building",
-            " - Building 1 jobs... built 9/10 jobs, 11.1% cache miss",
-            formatCacheStatsLine(true, 0, 0f, 50f),
-            "Local Steps... 1.4 sec (20%) 1/5 jobs, 2 updated",
-            " - IDLE"));
-
-    timeMillis += 100;
-    slave1.setRulesBuildingCount(0);
-    slave1.setRulesFinishedCount(10);
-    cacheRateStatsForSlave1.setUpdatedRulesCount(10);
-    cacheRateStatsForSlave1.setCacheHitsCount(9);
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job,
-                new ImmutableDistBuildStatus(
-                    Optional.of(BuildStatus.FINISHED_SUCCESSFULLY.toString()),
-                    ImmutableList.of(slave1, slave2, slave3))),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildRemoteProgressEvent(
-                new CoordinatorBuildProgress()
-                    .setTotalRulesCount(100)
-                    .setSkippedRulesCount(20)
-                    .setBuiltRulesCount(80)),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            BuildEvent.distBuildFinished(
-                distBuildStartedEvent, DistributedExitCode.SUCCESSFUL.getCode()),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new StampedeLocalBuildStatusEvent("downloading", "Sync Build"),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    timeMillis += 100;
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed Build: finished in 1.6 sec (100%) remote status: finished_successfully, "
-                + "80/80 jobs, 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors"
-                + "; local status: downloading",
-            formatCacheStatsLine(true, 0, 0f, 50f),
-            "Sync Build... 1.6 sec (20%) 1/5 jobs, 2 updated",
-            " - IDLE"));
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            BuildEvent.finished(buildEventStarted, ExitCode.SUCCESS),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    String distbuildLine =
-        "Distributed Build: finished in 1.6 sec (100%) remote status: finished_successfully, "
-            + "80/80 jobs, 3.3% cache miss, 1 [3.3%] cache errors, 1 upload errors"
-            + "; local status: downloading";
-    String buildingLine = "Sync Build: finished in 1.6 sec (100%) 1/5 jobs, 2 updated";
-    String totalLine = "  Total time: 1.8 sec. Build successful.";
-    timeMillis += 100;
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            distbuildLine,
-            formatCacheStatsLine(false, 0, 0f, 50f),
-            buildingLine,
-            totalLine));
-
-    timeMillis += 100;
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            ConsoleEvent.severe(SEVERE_MESSAGE),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    timeMillis += 50;
-    validateConsoleWithLogLines(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            distbuildLine,
-            formatCacheStatsLine(false, 0, 0f, 50f),
-            buildingLine,
-            totalLine),
-        ImmutableList.of(SEVERE_MESSAGE));
-  }
-
-  @Test
-  public void testDistBuildConsoleCanBeDisabled() throws IOException {
-    Clock fakeClock = new IncrementingFakeClock(TimeUnit.SECONDS.toNanos(1));
-    BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock);
-    TestRenderingConsole renderingConsole = new TestRenderingConsole(fakeClock, new TestConsole());
-    SuperConsoleEventBusListener listener =
-        createSuperConsole(fakeClock, eventBus, renderingConsole);
-
-    BuildTarget fakeTarget = BuildTargetFactory.newInstance("//banana:stand");
-    BuildTarget cachedTarget = BuildTargetFactory.newInstance("//chicken:dance");
-    ImmutableSet<BuildTarget> buildTargets = ImmutableSet.of(fakeTarget, cachedTarget);
-    Iterable<String> buildArgs = Iterables.transform(buildTargets, Object::toString);
-
-    ProgressEstimator e = new ProgressEstimator(getStorageForTest(), eventBus);
-    listener.setProgressEstimator(e);
-
-    long timeMillis = 0;
-
-    // Parse events.
-    ProjectBuildFileParseEvents.Started parseEventStarted =
-        new ProjectBuildFileParseEvents.Started();
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            parseEventStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    timeMillis += 200;
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new ProjectBuildFileParseEvents.Finished(parseEventStarted),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    // Action graph events.
-    ActionGraphEvent.Started actionGraphStarted = ActionGraphEvent.started();
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            actionGraphStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    timeMillis += 100;
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            ActionGraphEvent.finished(actionGraphStarted),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-    String parsingLine = "Parsing buck files: finished in 0.2 sec";
-    String actionGraphLine = "Creating action graph: finished in 0.1 sec";
-    validateConsole(
-        listener, renderingConsole, timeMillis, ImmutableList.of(parsingLine, actionGraphLine));
-
-    // Start build, and distbuild -- but don't enable Stampede SuperConsole yet.
-    BuildEvent.Started buildEventStarted = BuildEvent.started(buildArgs);
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            buildEventStarted, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    timeMillis += 100;
-    BuildEvent.DistBuildStarted distBuildStartedEvent = BuildEvent.distBuildStarted();
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            distBuildStartedEvent, timeMillis, TimeUnit.MILLISECONDS, /* threadId */ 0L));
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new StampedeConsoleEvent(
-                ConsoleEvent.warning("Message before activating stampede console.")),
-            timeMillis,
-            TimeUnit.MILLISECONDS, /* threadId */
-            0L));
-    timeMillis += 100;
-    validateConsoleWithLogLines(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            formatCacheStatsLine(true, 0, 0f, 0f),
-            "Building... 0.2 sec"),
-        ImmutableList.of());
-
-    // Now enable the stampede superconsole.
-    timeMillis += 100;
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildSuperConsoleEvent(), timeMillis, TimeUnit.MILLISECONDS, 0L));
-    timeMillis += 100;
-    String consoleMessage = "Message after activating stampede console.";
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new StampedeConsoleEvent(ConsoleEvent.warning(consoleMessage)),
-            timeMillis,
-            TimeUnit.MILLISECONDS, /* threadId */
-            0L));
-    timeMillis += 100;
-    validateConsoleWithLogLines(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            "Distributed Build... 0.4 sec (0%) remote status: init; local status: init",
-            formatCacheStatsLine(true, 0, 0f, 0f),
-            "Local Steps... 0.5 sec"),
-        ImmutableList.of(consoleMessage));
-
-    String stickyMessage = "Hello world from Stampede.";
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildSuperConsoleEvent(Optional.of(stickyMessage)),
-            timeMillis,
-            TimeUnit.MILLISECONDS,
-            0L));
-    validateConsole(
-        listener,
-        renderingConsole,
-        timeMillis,
-        ImmutableList.of(
-            parsingLine,
-            actionGraphLine,
-            stickyMessage,
-            "Distributed Build... 0.4 sec (0%) remote status: init; local status: init",
-            formatCacheStatsLine(true, 0, 0f, 0f),
-            "Local Steps... 0.5 sec"));
   }
 
   @Test
@@ -2857,12 +2225,12 @@ public class SuperConsoleEventBusListenerTest {
     Files.createDirectories(storagePath.getParent());
     Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
 
-    ProgressEstimator e = new ProgressEstimator(storagePath, eventBus);
+    ProgressEstimator e = new ProgressEstimator(Optional.of(storagePath), eventBus);
     listener.setProgressEstimator(e);
 
     eventBus.post(
         CommandEvent.started(
-            "project", ImmutableList.of("arg1", "arg2"), OptionalLong.empty(), 23L));
+            "project", ImmutableList.of("arg1", "arg2"), Paths.get(""), OptionalLong.empty(), 23L));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(
@@ -2925,12 +2293,12 @@ public class SuperConsoleEventBusListenerTest {
     Files.createDirectories(storagePath.getParent());
     Files.write(storagePath, contents.getBytes(StandardCharsets.UTF_8));
 
-    ProgressEstimator e = new ProgressEstimator(storagePath, eventBus);
+    ProgressEstimator e = new ProgressEstimator(Optional.of(storagePath), eventBus);
     listener.setProgressEstimator(e);
 
     eventBus.post(
         CommandEvent.started(
-            "project", ImmutableList.of("arg1", "arg2"), OptionalLong.empty(), 23L));
+            "project", ImmutableList.of("arg1", "arg2"), Paths.get(""), OptionalLong.empty(), 23L));
 
     eventBus.postWithoutConfiguring(
         configureTestEventAtTime(

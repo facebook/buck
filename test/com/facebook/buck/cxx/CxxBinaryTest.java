@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -21,7 +21,8 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -57,7 +58,7 @@ public class CxxBinaryTest {
                 TestCellPathResolver.get(projectFilesystem),
                 CxxPlatformUtils.DEFAULT_PLATFORM
                     .getLd()
-                    .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE),
+                    .resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE),
                 bin,
                 ImmutableMap.of(),
                 ImmutableList.of(),
@@ -84,7 +85,9 @@ public class CxxBinaryTest {
                 target,
                 false));
     ImmutableList<String> command =
-        binary.getExecutableCommand().getCommandPrefix(graphBuilder.getSourcePathResolver());
+        binary
+            .getExecutableCommand(OutputLabel.defaultLabel())
+            .getCommandPrefix(graphBuilder.getSourcePathResolver());
     assertTrue(Paths.get(command.get(0)).isAbsolute());
   }
 }

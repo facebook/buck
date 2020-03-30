@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.apple.simulator;
 
 import static org.hamcrest.Matchers.is;
@@ -297,7 +298,7 @@ public class AppleDeviceControllerTest {
 
   @Test
   public void getSimulatorsTest() throws IOException {
-    ImmutableSet<ImmutableAppleDevice> simulators;
+    ImmutableSet<AppleDevice> simulators;
     try (OutputStream stdin = new ByteArrayOutputStream();
         InputStream stdout = getClass().getResourceAsStream("testdata/idb-list.txt");
         InputStream stderr = new ByteArrayInputStream(new byte[0])) {
@@ -315,88 +316,88 @@ public class AppleDeviceControllerTest {
 
     ImmutableSet<ImmutableAppleDevice> expected =
         ImmutableSet.of(
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "Apple Watch Series 2 - 38mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "Apple Watch Series 2 - 42mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "Apple Watch Series 3 - 38mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "Apple Watch Series 3 - 42mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "Apple Watch Series 4 - 40mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "Apple Watch Series 4 - 44mm", "", "Shutdown", "simulator", "watchOS 5.2", "i386")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad Air (3rd generation)", "", "Booted", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone 5s", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone 6", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone 6 Plus", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone 6s", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone 6s Plus", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone 7", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone 7 Plus", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone 8", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone 8 Plus", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone SE", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone X",
                 "DF85F9BE-70D1-4706-B95F-58CD25986051",
                 "Shutdown",
                 "simulator",
                 "iOS 12.4",
                 "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone Xs", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone Xs Max", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPhone X\u0280", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad (5th generation)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad (6th generation)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad Air", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad Air 2", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad Pro (10.5-inch)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad Pro (11-inch)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad Pro (12.9-inch)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad Pro (12.9-inch) (2nd generation)",
                 "",
                 "Shutdown",
                 "simulator",
                 "iOS 12.2",
                 "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad Pro (12.9-inch) (3rd generation)",
                 "",
                 "Shutdown",
                 "simulator",
                 "iOS 12.2",
                 "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "iPad Pro (9.7-inch)", "", "Shutdown", "simulator", "iOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "Apple TV", "", "Shutdown", "simulator", "tvOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "Apple TV 4K", "", "Shutdown", "simulator", "tvOS 12.2", "x86_64")),
-            (new ImmutableAppleDevice(
+            (ImmutableAppleDevice.of(
                 "Apple TV 4K (at 1080p)", "", "Shutdown", "simulator", "tvOS 12.2", "x86_64")));
 
     assertEquals(simulators, expected);
@@ -404,7 +405,7 @@ public class AppleDeviceControllerTest {
 
   @Test
   public void getPhysicalDevicesTest() throws IOException {
-    ImmutableSet<ImmutableAppleDevice> physicalDevices;
+    ImmutableSet<AppleDevice> physicalDevices;
     try (OutputStream stdin = new ByteArrayOutputStream();
         InputStream stdout = getClass().getResourceAsStream("testdata/idb-list.txt");
         InputStream stderr = new ByteArrayInputStream(new byte[0])) {
@@ -422,7 +423,7 @@ public class AppleDeviceControllerTest {
 
     ImmutableSet<ImmutableAppleDevice> expected =
         ImmutableSet.of(
-            new ImmutableAppleDevice("iPhone", "", "Booted", "device", "iOS 12.4", "arm64"));
+            ImmutableAppleDevice.of("iPhone", "", "Booted", "device", "iOS 12.4", "arm64"));
 
     assertEquals(physicalDevices, expected);
   }

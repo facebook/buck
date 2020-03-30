@@ -1,24 +1,27 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.rule.artifact;
 
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
+import com.google.devtools.build.lib.syntax.EvalException;
 
 /**
  * Helper struct fields that should be available to users of Artifact inside of user defined rules
@@ -65,4 +68,20 @@ public interface SkylarkArtifactApi extends SkylarkValue {
       doc = "The path of this file relative to its root. This excludes the aforementioned root.",
       structField = true)
   String getShortPath();
+
+  @SkylarkCallable(
+      name = "as_output",
+      doc =
+          "Get an instance of this artifact that signals it is intended to be used as an output. "
+              + "This is normally only of use with `ctx.action.run()`, or `ctx.action.args()`",
+      useLocation = true)
+  SkylarkOutputArtifactApi asSkylarkOutputArtifact(Location location) throws EvalException;
+
+  @Override
+  default boolean isImmutable() {
+    // The user-facing attributes of Artifact do not change over the lifetime
+    // of the object. An apt comparison is String. It is "immutable", but it has
+    // a mutable field that caches the hashcode
+    return true;
+  }
 }

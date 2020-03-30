@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution.event.listener;
@@ -26,6 +26,7 @@ import com.facebook.buck.remoteexecution.event.LocalFallbackStats;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent.State;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionStatsProvider;
+import com.facebook.buck.remoteexecution.proto.ExecutedActionInfo;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
@@ -50,9 +51,9 @@ public class RemoteExecutionEventListener
   private final LongAdder uploads;
   private final LongAdder uploadBytes;
 
-  private final LongAdder remoteCpuTime;
-  private final LongAdder remoteQueueTime;
-  private final LongAdder totalRemoteTime;
+  private final LongAdder remoteCpuTimeMs;
+  private final LongAdder remoteQueueTimeMs;
+  private final LongAdder totalRemoteTimeMs;
 
   private final AtomicBoolean hasFirstRemoteActionStarted;
 
@@ -65,9 +66,9 @@ public class RemoteExecutionEventListener
     this.downloadBytes = new LongAdder();
     this.uploads = new LongAdder();
     this.uploadBytes = new LongAdder();
-    this.remoteCpuTime = new LongAdder();
-    this.remoteQueueTime = new LongAdder();
-    this.totalRemoteTime = new LongAdder();
+    this.remoteCpuTimeMs = new LongAdder();
+    this.remoteQueueTimeMs = new LongAdder();
+    this.totalRemoteTimeMs = new LongAdder();
     this.totalBuildRules = new LongAdder();
     this.hasFirstRemoteActionStarted = new AtomicBoolean(false);
 
@@ -118,27 +119,23 @@ public class RemoteExecutionEventListener
     getStateCount(State.WAITING).decrement();
     getStateCount(event.getState()).increment();
     if (event.getExecutedActionMetadata().isPresent()) {
-      Duration duration =
-          Timestamps.between(
-              event.getExecutedActionMetadata().get().getWorkerStartTimestamp(),
-              event.getExecutedActionMetadata().get().getWorkerCompletedTimestamp());
-      remoteCpuTime.add(
-          TimeUnit.SECONDS.toMillis(duration.getSeconds())
-              + TimeUnit.NANOSECONDS.toMillis(duration.getNanos()));
+      ExecutedActionInfo executedActionInfo =
+          event.getRemoteExecutionMetadata().get().getExecutedActionInfo();
+      remoteCpuTimeMs.add(TimeUnit.MICROSECONDS.toMillis(executedActionInfo.getCpuStatUsageUsec()));
 
       Duration queueDuration =
           Timestamps.between(
               event.getExecutedActionMetadata().get().getQueuedTimestamp(),
               event.getExecutedActionMetadata().get().getWorkerStartTimestamp());
-      remoteQueueTime.add(
+      remoteQueueTimeMs.add(
           TimeUnit.SECONDS.toMillis(queueDuration.getSeconds())
               + TimeUnit.NANOSECONDS.toMillis(queueDuration.getNanos()));
 
       Duration totalDuration =
           Timestamps.between(
-              event.getExecutedActionMetadata().get().getQueuedTimestamp(),
-              event.getExecutedActionMetadata().get().getOutputUploadCompletedTimestamp());
-      totalRemoteTime.add(
+              event.getExecutedActionMetadata().get().getWorkerStartTimestamp(),
+              event.getExecutedActionMetadata().get().getWorkerCompletedTimestamp());
+      totalRemoteTimeMs.add(
           TimeUnit.SECONDS.toMillis(totalDuration.getSeconds())
               + TimeUnit.NANOSECONDS.toMillis(totalDuration.getNanos()));
     }
@@ -223,17 +220,17 @@ public class RemoteExecutionEventListener
 
   @Override
   public long getRemoteCpuTimeMs() {
-    return remoteCpuTime.sum();
+    return remoteCpuTimeMs.sum();
   }
 
   @Override
   public long getRemoteQueueTimeMs() {
-    return remoteQueueTime.sum();
+    return remoteQueueTimeMs.sum();
   }
 
   @Override
   public long getTotalRemoteTimeMs() {
-    return totalRemoteTime.sum();
+    return totalRemoteTimeMs.sum();
   }
 
   @Override

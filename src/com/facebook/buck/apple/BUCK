@@ -5,12 +5,6 @@ java_library_with_plugins(
     srcs = glob(
         ["*.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/android:helpers",
-        "//src/com/facebook/buck/android/toolchain:toolchain",
-        "//src/com/facebook/buck/core/description/arg:arg",
-        "//src/com/facebook/buck/core/toolchain/toolprovider:toolprovider",
-    ],
     tests = [
         "//test/com/facebook/buck/apple:apple",
         "//test/com/facebook/buck/apple:apple_test_integration",
@@ -34,6 +28,8 @@ java_library_with_plugins(
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/sourcepath/resolver/impl:impl",
+        "//src/com/facebook/buck/core/test/rule/coercer:coercer",
+        "//src/com/facebook/buck/core/test/rule/impl:impl",
         "//src/com/facebook/buck/core/toolchain:toolchain",
         "//src/com/facebook/buck/core/toolchain/tool/impl:impl",
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
@@ -73,6 +69,7 @@ java_library_with_plugins(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/json:json",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/unarchive:unarchive",
         "//src/com/facebook/buck/util/zip:zip",
         "//src/com/facebook/buck/versions:translator",
@@ -83,5 +80,11 @@ java_library_with_plugins(
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android:helpers",
+        "//src/com/facebook/buck/android/toolchain:toolchain",
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/toolchain/toolprovider:toolprovider",
     ],
 )

@@ -1,23 +1,23 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution.config;
 
-import static com.facebook.buck.remoteexecution.config.AbstractRemoteExecutionConfig.AUTO_RE_EXPERIMENT_PROPERTY_KEY;
-import static com.facebook.buck.remoteexecution.config.AbstractRemoteExecutionConfig.DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY;
+import static com.facebook.buck.remoteexecution.config.RemoteExecutionConfig.AUTO_RE_EXPERIMENT_PROPERTY_KEY;
+import static com.facebook.buck.remoteexecution.config.RemoteExecutionConfig.DEFAULT_AUTO_RE_EXPERIMENT_PROPERTY;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -61,8 +61,8 @@ public class RemoteExecutionConfigTest {
       Assert.fail("Should've thrown.");
     } catch (HumanReadableException e) {
       Assert.assertEquals(
-          "Config [remoteexecution.cert] must point to a file.\n"
-              + "Config [remoteexecution.key] must point to a file.\n"
+          "Config [remoteexecution.cert] must point to a file, value [] or [remoteexecution.cert_env_var] must be set to a valid file location, value [].\n"
+              + "Config [remoteexecution.key] must point to a file, value [] or [remoteexecution.key_env_var] must be set to a valid file location, value [].\n"
               + "Config [remoteexecution.ca] points to file [does_not_exist] that does not exist.",
           e.getMessage());
     }

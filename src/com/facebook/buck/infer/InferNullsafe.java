@@ -1,34 +1,37 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.infer;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.jvm.core.CalculateAbi;
+import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
-import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
@@ -46,6 +49,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -86,27 +90,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     JavaLibrary baseLibrary = (JavaLibrary) graphBuilder.requireRule(unflavored);
 
     ImmutableSortedSet<SourcePath> sources = baseLibrary.getJavaSrcs();
-
-    // Add only those dependencies that contribute to "direct" classpath of base library.
-    // This includes direct deps and exported deps of direct deps.
-    ImmutableSortedSet.Builder<SourcePath> directClasspathBuilder =
-        ImmutableSortedSet.naturalOrder();
-    baseLibrary
-        .getDepsForTransitiveClasspathEntries()
-        .forEach(
-            dep -> {
-              if (dep instanceof JavaLibrary) {
-                directClasspathBuilder.addAll(
-                    JavaLibraryClasspathProvider.getOutputClasspathJars(
-                        (JavaLibrary) dep, Optional.ofNullable(dep.getSourcePathToOutput())));
-              }
-            });
-    // Add exported deps of base lib into classpath (since 2nd argument is empty the result doesn't
-    // include the lib itself).
-    directClasspathBuilder.addAll(
-        JavaLibraryClasspathProvider.getOutputClasspathJars(baseLibrary, Optional.empty()));
-    ImmutableSortedSet<SourcePath> directClasspath = directClasspathBuilder.build();
-
+    ImmutableSortedSet<SourcePath> compileTimeClasspath = calcCompilationClasspath(baseLibrary);
     SourcePath outputJar = baseLibrary.getSourcePathToOutput();
 
     InferPlatform platform =
@@ -120,10 +104,56 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
             platform,
             config.getNullsafeArgs(),
             sources,
-            directClasspath,
+            compileTimeClasspath,
             javacOptions,
             extraClasspathProvider,
-            outputJar));
+            outputJar,
+            config.getPrettyPrint()));
+  }
+
+  /**
+   * Calculate compile time classpath from general dependencies of {@link JavaLibrary}, by filtering
+   * only those deps that {@link HasJavaAbi}. This includes full libraries and/or ABI libraries
+   * depending on the java compilation settings.
+   *
+   * <p>The resulting classpath can be not as minimal as the one from {@link
+   * com.facebook.buck.jvm.java.DefaultJavaLibrary#getCompileTimeClasspathSourcePaths()} which gives
+   * a more accurate list. But is pretty close to it and works for all kinds of {@link JavaLibrary}s
+   * and not only those that inherit from DefaultJavaLibrary.
+   *
+   * <p>Note: this method plays nicely with the way libraries are commonly built in the project,
+   * since it takes whatever jar (full or ABI) is available during regular build, but it is not
+   * suited for situations when you actually need to access full jars of dependencies.
+   */
+  private static ImmutableSortedSet<SourcePath> calcCompilationClasspath(JavaLibrary baseLibrary) {
+    return baseLibrary.getBuildDeps().stream()
+        .filter(HasJavaAbi.class::isInstance) // take only deps that produce jars
+        .filter(x -> !areBuildingInterfaceForSameLibrary(baseLibrary, x))
+        .map(BuildRule::getSourcePathToOutput)
+        .filter(Objects::nonNull)
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
+  }
+
+  /**
+   * With ABI compilation, a {@link JavaLibrary} rule usually has as a dependency a {@link
+   * CalculateAbi} rule that builds the interface for the same library. We **should exclude** such
+   * dependencies since dumping into the classpath an ABI jar for the library under analysis will
+   * mess up nullsafe.
+   */
+  private static boolean areBuildingInterfaceForSameLibrary(
+      JavaLibrary baseLibrary, BuildRule other) {
+    return (other instanceof CalculateAbi || other instanceof JavaLibrary)
+        && other.getBuildTarget().withoutFlavors().equals(baseLibrary.getBuildTarget());
+  }
+
+  @Override
+  @Nullable
+  public SourcePath getSourcePathToOutput() {
+    if (getBuildable().producesOutput()) {
+      return getSourcePath(getBuildable().reportJson);
+    } else {
+      return null;
+    }
   }
 
   /** {@link Buildable} that is responsible for running Nullsafe. */
@@ -159,6 +189,11 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     @AddToRuleKey private final OutputPath reportJson = reportsDir.resolve(INFER_JSON_REPORT_FILE);
     @AddToRuleKey private final OutputPath reportTxt = reportsDir.resolve(INFER_TXT_REPORT_FILE);
 
+    // Whether to pretty print a list of issues to console and report.txt.
+    // Pretty printing every time during build is distracting and incurs
+    // ~10% overhead, so we don't want to do it, unless explicitly asked.
+    @AddToRuleKey private final Boolean prettyPrint;
+
     Impl(
         InferPlatform inferPlatform,
         ImmutableList<String> nullsafeArgs,
@@ -166,7 +201,8 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
         ImmutableSortedSet<SourcePath> classpath,
         JavacOptions javacOptions,
         Optional<ExtraClasspathProvider> extraClasspathProvider,
-        @Nullable SourcePath generatedClasses) {
+        @Nullable SourcePath generatedClasses,
+        Boolean prettyPrint) {
       this.inferPlatform = inferPlatform;
 
       // Ensure sensible default behavior
@@ -181,6 +217,14 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       this.javacOptions = javacOptions;
       this.extraClasspathProvider = extraClasspathProvider;
       this.generatedClasses = generatedClasses;
+      this.prettyPrint = prettyPrint;
+    }
+
+    private static void addNotEmpty(
+        ImmutableList.Builder<String> argBuilder, String argName, String argValue) {
+      if (!argValue.isEmpty()) {
+        argBuilder.add(argName, argValue);
+      }
     }
 
     @Override
@@ -193,31 +237,39 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
         return ImmutableList.of();
       }
 
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
 
       Path scratchDir = filesystem.resolve(outputPathResolver.getTempPath());
-      Path argFilePath = filesystem.relativize(scratchDir.resolve("args.txt"));
-      Path inferOutPath = filesystem.relativize(scratchDir.resolve(INFER_DEFAULT_RESULT_DIR));
+      RelPath argFilePath = filesystem.relativize(scratchDir.resolve("args.txt"));
+      RelPath inferOutPath = filesystem.relativize(scratchDir.resolve(INFER_DEFAULT_RESULT_DIR));
       Path inferJsonReport = inferOutPath.resolve(INFER_JSON_REPORT_FILE);
 
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
       // Prepare infer command line arguments and write them to args.txt
       ImmutableList<String> argsBuilder =
-          buildArgs(inferOutPath, filesystem, sourcePathResolver, outputPathResolver);
+          buildArgs(
+              inferOutPath.getPath(), filesystem, sourcePathResolverAdapter, outputPathResolver);
       steps.add(
           new WriteFileStep(
-              filesystem, Joiner.on(System.lineSeparator()).join(argsBuilder), argFilePath, false));
+              filesystem,
+              Joiner.on(System.lineSeparator()).join(argsBuilder),
+              argFilePath.getPath(),
+              false));
 
       // Prepare and invoke cmd with appropriate environment
-      ImmutableList<String> cmd = buildCommand(argFilePath, sourcePathResolver);
-      ImmutableMap<String, String> cmdEnv = buildEnv(sourcePathResolver);
+      ImmutableList<String> cmd = buildCommand(argFilePath.getPath(), sourcePathResolverAdapter);
+      ImmutableMap<String, String> cmdEnv = buildEnv(sourcePathResolverAdapter);
       steps.add(
           new DefaultShellStep(filesystem.getRootPath(), cmd, cmdEnv) {
             @Override
+            protected boolean shouldPrintStdout(Verbosity verbosity) {
+              return verbosity.shouldPrintBinaryRunInformation();
+            }
+
+            @Override
             protected boolean shouldPrintStderr(Verbosity verbosity) {
-              // nullsafe is expected to produce output akin to compilation warnings
-              return true;
+              return verbosity.shouldPrintBinaryRunInformation();
             }
           });
 
@@ -228,12 +280,17 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
       return steps.build();
     }
 
-    private ImmutableMap<String, String> buildEnv(SourcePathResolver sourcePathResolver) {
+    public boolean producesOutput() {
+      return generatedClasses != null && !sources.isEmpty();
+    }
+
+    private ImmutableMap<String, String> buildEnv(
+        SourcePathResolverAdapter sourcePathResolverAdapter) {
       ImmutableMap.Builder<String, String> cmdEnv = ImmutableMap.builder();
       inferPlatform.getInferVersion().ifPresent(v -> cmdEnv.put("INFERVERSION", v));
       inferPlatform
           .getInferConfig()
-          .map(sourcePathResolver::getAbsolutePath)
+          .map(sourcePathResolverAdapter::getAbsolutePath)
           .map(Objects::toString)
           .ifPresent(c -> cmdEnv.put("INFERCONFIG", c));
 
@@ -241,9 +298,9 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     }
 
     private ImmutableList<String> buildCommand(
-        Path argFilePath, SourcePathResolver sourcePathResolver) {
+        Path argFilePath, SourcePathResolverAdapter sourcePathResolverAdapter) {
       ImmutableList.Builder<String> cmd = ImmutableList.builder();
-      cmd.addAll(inferPlatform.getInferBin().getCommandPrefix(sourcePathResolver));
+      cmd.addAll(inferPlatform.getInferBin().getCommandPrefix(sourcePathResolverAdapter));
       cmd.add("@" + argFilePath.toString());
 
       return cmd.build();
@@ -252,7 +309,7 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
     private ImmutableList<String> buildArgs(
         Path inferOutPath,
         ProjectFilesystem filesystem,
-        SourcePathResolver sourcePathResolver,
+        SourcePathResolverAdapter sourcePathResolverAdapter,
         OutputPathResolver outputPathResolver) {
       ImmutableList.Builder<String> argsBuilder = ImmutableList.builder();
       argsBuilder.addAll(nullsafeArgs);
@@ -262,21 +319,25 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
           "--jobs",
           "1",
           "--results-dir",
-          inferOutPath.toString(),
-          "--issues-txt",
-          outputPathResolver.resolvePath(reportTxt).toString());
+          inferOutPath.toString());
+
+      if (prettyPrint) {
+        argsBuilder.add("--issues-txt", outputPathResolver.resolvePath(reportTxt).toString());
+      } else {
+        argsBuilder.add("--report-hook-reset");
+      }
 
       sources.stream()
-          .map(s -> filesystem.relativize(sourcePathResolver.getAbsolutePath(s)))
-          .map(Path::toString)
+          .map(s -> filesystem.relativize(sourcePathResolverAdapter.getAbsolutePath(s)))
+          .map(RelPath::toString)
           .forEach(s -> argsBuilder.add("--sources", s));
 
       addNotEmpty(
           argsBuilder,
           "--classpath",
           classpath.stream()
-              .map(s -> filesystem.relativize(sourcePathResolver.getAbsolutePath(s)))
-              .map(Path::toString)
+              .map(s -> filesystem.relativize(sourcePathResolverAdapter.getAbsolutePath(s)))
+              .map(RelPath::toString)
               .collect(Collectors.joining(File.pathSeparator)));
 
       JavacOptions buildTimeOptions =
@@ -293,36 +354,22 @@ public final class InferNullsafe extends ModernBuildRule<InferNullsafe.Impl> {
           bootClasspathOverride.orElseGet(
               () ->
                   bootClasspath.stream()
-                      .map(s -> filesystem.relativize(sourcePathResolver.getAbsolutePath(s)))
-                      .map(Path::toString)
+                      .map(s -> filesystem.relativize(sourcePathResolverAdapter.getAbsolutePath(s)))
+                      .map(RelPath::toString)
                       .collect(Collectors.joining(File.pathSeparator))));
 
       argsBuilder.add(
           "--generated-classes",
-          filesystem.relativize(sourcePathResolver.getAbsolutePath(generatedClasses)).toString());
+          filesystem
+              .relativize(sourcePathResolverAdapter.getAbsolutePath(generatedClasses))
+              .toString());
+
+      inferPlatform
+          .getNullsafeThirdPartySignatures()
+          .map(x -> sourcePathResolverAdapter.getAbsolutePath(x).toString())
+          .ifPresent(dir -> addNotEmpty(argsBuilder, "--nullsafe-third-party-signatures", dir));
 
       return argsBuilder.build();
-    }
-
-    public boolean producesOutput() {
-      return generatedClasses != null;
-    }
-
-    private static void addNotEmpty(
-        ImmutableList.Builder<String> argBuilder, String argName, String argValue) {
-      if (!argValue.isEmpty()) {
-        argBuilder.add(argName, argValue);
-      }
-    }
-  }
-
-  @Override
-  @Nullable
-  public SourcePath getSourcePathToOutput() {
-    if (getBuildable().producesOutput()) {
-      return getSourcePath(getBuildable().reportJson);
-    } else {
-      return null;
     }
   }
 }

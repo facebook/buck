@@ -1,22 +1,23 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.android.Aapt2Compile;
+import com.facebook.buck.android.AndroidBuckConfig;
 import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidResource;
 import com.facebook.buck.android.AndroidResourceDescription;
@@ -26,16 +27,18 @@ import com.facebook.buck.apple.AppleBundleResources;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.HasAppleBundleResourcesDescription;
 import com.facebook.buck.apple.SourcePathWithAppleBundleDestination;
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -49,7 +52,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ExportFile;
@@ -68,7 +71,6 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 public class JsBundleDescription
     implements DescriptionWithTargetGraph<JsBundleDescriptionArg>,
@@ -85,13 +87,17 @@ public class JsBundleDescription
           JsFlavors.OUTPUT_OPTIONS_DOMAIN);
 
   private final ToolchainProvider toolchainProvider;
+  private final AndroidBuckConfig androidBuckConfig;
 
-  public JsBundleDescription(ToolchainProvider toolchainProvider) {
+  public JsBundleDescription(
+      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
     this.toolchainProvider = toolchainProvider;
+    this.androidBuckConfig = androidBuckConfig;
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return supportsFlavors(flavors);
   }
 
@@ -100,7 +106,8 @@ public class JsBundleDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(FLAVOR_DOMAINS);
   }
 
@@ -117,7 +124,7 @@ public class JsBundleDescription
       JsBundleDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
 
     // Source maps are exposed individually using a special flavor
     if (flavors.contains(JsFlavors.SOURCE_MAP)) {
@@ -208,7 +215,7 @@ public class JsBundleDescription
     }
 
     String bundleName =
-        args.computeBundleName(buildTarget.getFlavors(), () -> args.getName() + ".js");
+        args.computeBundleName(buildTarget.getFlavors().getSet(), () -> args.getName() + ".js");
 
     return new JsBundle(
         buildTarget,
@@ -221,7 +228,7 @@ public class JsBundleDescription
         graphBuilder.getRuleWithType(args.getWorker(), ProvidesWorkerTool.class).getWorkerTool());
   }
 
-  private static BuildRule createAndroidRule(
+  private BuildRule createAndroidRule(
       ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -269,7 +276,7 @@ public class JsBundleDescription
         graphBuilder.getRuleWithType(resourceTarget, AndroidResource.class));
   }
 
-  private static BuildRule createAndroidResources(
+  private BuildRule createAndroidResources(
       ToolchainProvider toolchainProvider,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -279,14 +286,18 @@ public class JsBundleDescription
     if (buildTarget.getFlavors().contains(AndroidResourceDescription.AAPT2_COMPILE_FLAVOR)) {
       AndroidPlatformTarget androidPlatformTarget =
           toolchainProvider.getByName(
-              AndroidPlatformTarget.DEFAULT_NAME, AndroidPlatformTarget.class);
+              AndroidPlatformTarget.DEFAULT_NAME,
+              buildTarget.getTargetConfiguration(),
+              AndroidPlatformTarget.class);
       ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
       return new Aapt2Compile(
           buildTarget,
           projectFilesystem,
           graphBuilder,
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-          jsBundle.getSourcePathToResources());
+          jsBundle.getSourcePathToResources(),
+          /* skipCrunchPngs */ false,
+          androidBuckConfig.getFailOnLegacyAaptErrors());
     }
 
     BuildRuleParams params =
@@ -347,7 +358,7 @@ public class JsBundleDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       JsBundleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
@@ -355,10 +366,9 @@ public class JsBundleDescription
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJsBundleDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasExtraJson, HasBundleName {
+      extends BuildRuleArg, HasDeclaredDeps, HasExtraJson, HasBundleName {
 
     Either<ImmutableSet<String>, String> getEntry();
 
@@ -378,9 +388,9 @@ public class JsBundleDescription
       this.targetGraph = targetGraph;
       this.graphBuilder = graphBuilder;
 
-      ImmutableSortedSet<Flavor> bundleFlavors = bundleTarget.getFlavors();
+      FlavorSet bundleFlavors = bundleTarget.getFlavors();
       extraFlavors =
-          bundleFlavors.stream()
+          bundleFlavors.getSet().stream()
               .filter(
                   flavor ->
                       JsLibraryDescription.FLAVOR_DOMAINS.stream()

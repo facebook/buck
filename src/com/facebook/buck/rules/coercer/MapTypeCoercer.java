@@ -1,45 +1,63 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import java.nio.file.Path;
+import com.google.common.reflect.TypeParameter;
+import com.google.common.reflect.TypeToken;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
-  private final TypeCoercer<K> keyTypeCoercer;
-  private final TypeCoercer<V> valueTypeCoercer;
+/** Coerce to {@link com.google.common.collect.ImmutableMap}. */
+public class MapTypeCoercer<KU, VU, K, V>
+    implements TypeCoercer<ImmutableMap<KU, VU>, ImmutableMap<K, V>> {
+  private final TypeCoercer<KU, K> keyTypeCoercer;
+  private final TypeCoercer<VU, V> valueTypeCoercer;
+  private final TypeToken<ImmutableMap<K, V>> typeToken;
+  private final TypeToken<ImmutableMap<KU, VU>> typeTokenUnconfigured;
 
-  public MapTypeCoercer(TypeCoercer<K> keyTypeCoercer, TypeCoercer<V> valueTypeCoercer) {
+  public MapTypeCoercer(TypeCoercer<KU, K> keyTypeCoercer, TypeCoercer<VU, V> valueTypeCoercer) {
     this.keyTypeCoercer = keyTypeCoercer;
     this.valueTypeCoercer = valueTypeCoercer;
+    this.typeToken =
+        new TypeToken<ImmutableMap<K, V>>() {}.where(
+                new TypeParameter<K>() {}, keyTypeCoercer.getOutputType())
+            .where(new TypeParameter<V>() {}, valueTypeCoercer.getOutputType());
+    this.typeTokenUnconfigured =
+        new TypeToken<ImmutableMap<KU, VU>>() {}.where(
+                new TypeParameter<KU>() {}, keyTypeCoercer.getUnconfiguredType())
+            .where(new TypeParameter<VU>() {}, valueTypeCoercer.getUnconfiguredType());
   }
 
-  @SuppressWarnings("unchecked")
   @Override
-  public Class<ImmutableMap<K, V>> getOutputClass() {
-    return (Class<ImmutableMap<K, V>>) (Class<?>) ImmutableMap.class;
+  public TypeToken<ImmutableMap<K, V>> getOutputType() {
+    return typeToken;
+  }
+
+  @Override
+  public TypeToken<ImmutableMap<KU, VU>> getUnconfiguredType() {
+    return typeTokenUnconfigured;
   }
 
   @Override
@@ -48,7 +66,7 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, ImmutableMap<K, V> object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, ImmutableMap<K, V> object, Traversal traversal) {
     traversal.traverse(object);
     for (Map.Entry<K, V> element : object.entrySet()) {
       keyTypeCoercer.traverse(cellRoots, element.getKey(), traversal);
@@ -56,39 +74,92 @@ public class MapTypeCoercer<K, V> implements TypeCoercer<ImmutableMap<K, V>> {
     }
   }
 
+  @SuppressWarnings("unchecked")
   @Override
-  public ImmutableMap<K, V> coerce(
-      CellPathResolver cellRoots,
+  public ImmutableMap<KU, VU> coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
+      ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     if (object instanceof Map) {
-      ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
+      boolean identity = true;
+
+      ImmutableMap.Builder<KU, VU> builder = ImmutableMap.builder();
 
       for (Map.Entry<?, ?> entry : ((Map<?, ?>) object).entrySet()) {
-        K key =
-            keyTypeCoercer.coerce(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                entry.getKey());
-        V value =
-            valueTypeCoercer.coerce(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                entry.getValue());
+        KU key =
+            keyTypeCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, entry.getKey());
+        VU value =
+            valueTypeCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, entry.getValue());
         builder.put(key, value);
+
+        identity &= key == entry.getKey() && value == entry.getValue();
+      }
+
+      if (identity && object instanceof ImmutableMap<?, ?>) {
+        return (ImmutableMap<KU, VU>) object;
       }
 
       return builder.build();
     } else {
-      throw CoerceFailedException.simple(object, getOutputClass());
+      throw CoerceFailedException.simple(object, getOutputType());
     }
+  }
+
+  @Override
+  public boolean unconfiguredToConfiguredCoercionIsIdentity() {
+    return keyTypeCoercer.unconfiguredToConfiguredCoercionIsIdentity()
+        && valueTypeCoercer.unconfiguredToConfiguredCoercionIsIdentity();
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public ImmutableMap<K, V> coerce(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
+      ImmutableMap<KU, VU> object)
+      throws CoerceFailedException {
+    if (unconfiguredToConfiguredCoercionIsIdentity()) {
+      return (ImmutableMap<K, V>) object;
+    }
+
+    boolean identity = true;
+
+    ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
+
+    for (Map.Entry<KU, VU> entry : object.entrySet()) {
+      K key =
+          keyTypeCoercer.coerce(
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              entry.getKey());
+      V value =
+          valueTypeCoercer.coerce(
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              entry.getValue());
+      builder.put(key, value);
+
+      identity &= key == entry.getKey() && value == entry.getValue();
+    }
+
+    if (identity) {
+      return (ImmutableMap<K, V>) object;
+    }
+
+    return builder.build();
   }
 
   @Nullable

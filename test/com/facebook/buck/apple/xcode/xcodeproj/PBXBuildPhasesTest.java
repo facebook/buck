@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.project_generator;
@@ -22,8 +22,8 @@ import static org.junit.Assert.assertNull;
 
 import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
-import com.dd.plist.NSNumber;
 import com.dd.plist.NSString;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.GidGenerator;
 import com.facebook.buck.apple.xcode.XcodeprojSerializer;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
@@ -43,9 +43,9 @@ public class PBXBuildPhasesTest {
 
   @Before
   public void setUp() {
-    project = new PBXProject("TestProject");
+    project = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
     serializer = new XcodeprojSerializer(new GidGenerator(), project);
-    target = new PBXNativeTarget("TestTarget");
+    target = new PBXNativeTarget("TestTarget", AbstractPBXObjectFactory.DefaultFactory());
     project.getTargets().add(target);
   }
 
@@ -73,7 +73,7 @@ public class PBXBuildPhasesTest {
     NSDictionary copyPhaseDict = getObjectForGID(copyPhase.getGlobalID(), projPlist);
 
     assertEquals(new NSString(copyPhaseName), copyPhaseDict.get("name"));
-    assertEquals(new NSNumber(1), copyPhaseDict.get("runOnlyForDeploymentPostprocessing"));
+    assertEquals(new NSString("1"), copyPhaseDict.get("runOnlyForDeploymentPostprocessing"));
   }
 
   @Test
@@ -99,7 +99,7 @@ public class PBXBuildPhasesTest {
     NSDictionary phaseDict = getObjectForGID(buildPhase.getGlobalID(), projPlist);
 
     assertEquals(new NSString(phaseName), phaseDict.get("name"));
-    assertEquals(new NSNumber(1), phaseDict.get("runOnlyForDeploymentPostprocessing"));
+    assertEquals(new NSString("1"), phaseDict.get("runOnlyForDeploymentPostprocessing"));
     assertEquals(new NSArray(new NSString(input)), phaseDict.get("inputPaths"));
     assertEquals(new NSArray(new NSString(output)), phaseDict.get("outputPaths"));
     assertEquals(new NSArray(new NSString(inputFileList)), phaseDict.get("inputFileListPaths"));
@@ -120,8 +120,7 @@ public class PBXBuildPhasesTest {
   }
 
   private PBXCopyFilesBuildPhase makeCopyFilesPhase() {
-    CopyFilePhaseDestinationSpec.Builder destSpecBuilder = CopyFilePhaseDestinationSpec.builder();
-    destSpecBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.PRODUCTS);
-    return new PBXCopyFilesBuildPhase(destSpecBuilder.build());
+    return new PBXCopyFilesBuildPhase(
+        CopyFilePhaseDestinationSpec.of(PBXCopyFilesBuildPhase.Destination.PRODUCTS));
   }
 }

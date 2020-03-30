@@ -1,23 +1,24 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.js;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
@@ -27,7 +28,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -36,8 +38,8 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.query.Query;
@@ -63,7 +65,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 public class JsLibraryDescription
     implements DescriptionWithTargetGraph<JsLibraryDescriptionArg>,
@@ -107,7 +108,8 @@ public class JsLibraryDescription
       throw new RuntimeException(e);
     }
     Optional<Either<SourcePath, Pair<SourcePath, String>>> file =
-        JsFlavors.extractSourcePath(sourcesToFlavors.inverse(), buildTarget.getFlavors().stream());
+        JsFlavors.extractSourcePath(
+            sourcesToFlavors.inverse(), buildTarget.getFlavors().getSet().stream());
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
@@ -142,19 +144,21 @@ public class JsLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return JsFlavors.validateFlavors(flavors, FLAVOR_DOMAINS);
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(FLAVOR_DOMAINS);
   }
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractJsLibraryDescriptionArg arg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
@@ -165,16 +169,23 @@ public class JsLibraryDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractJsLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDepsQuery, HasExtraJson, HasTests {
+      extends BuildRuleArg, HasDepsQuery, HasExtraJson, HasTests {
     ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> getSrcs();
 
     BuildTarget getWorker();
 
     @Hint(isDep = false, isInput = false)
     Optional<String> getBasePath();
+
+    @Override
+    default JsLibraryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (JsLibraryDescriptionArg) this;
+      }
+      return JsLibraryDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
   }
 
   private static class LibraryFilesBuilder {
@@ -277,7 +288,7 @@ public class JsLibraryDescription
     }
 
     private BuildTarget addFlavorsToLibraryTarget(BuildTarget unflavored) {
-      return unflavored.withAppendedFlavors(baseTarget.getFlavors());
+      return unflavored.withAppendedFlavors(baseTarget.getFlavors().getSet());
     }
 
     JsLibrary verifyIsJsLibraryRule(BuildRule rule) {
@@ -348,12 +359,14 @@ public class JsLibraryDescription
 
   private static BuildTarget withFileFlavorOnly(BuildTarget target) {
     return target.withFlavors(
-        target.getFlavors().stream().filter(JsFlavors::isFileFlavor).toArray(Flavor[]::new));
+        target.getFlavors().getSet().stream()
+            .filter(JsFlavors::isFileFlavor)
+            .toArray(Flavor[]::new));
   }
 
   private static ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>
       mapSourcesToFlavors(
-          SourcePathResolver sourcePathResolver,
+          SourcePathResolverAdapter sourcePathResolverAdapter,
           ImmutableSet<Either<SourcePath, Pair<SourcePath, String>>> sources) {
 
     ImmutableBiMap.Builder<Either<SourcePath, Pair<SourcePath, String>>, Flavor> builder =
@@ -361,7 +374,7 @@ public class JsLibraryDescription
     for (Either<SourcePath, Pair<SourcePath, String>> source : sources) {
       Path relativePath =
           source.transform(
-              sourcePathResolver::getRelativePath, pair -> Paths.get(pair.getSecond()));
+              sourcePathResolverAdapter::getRelativePath, pair -> Paths.get(pair.getSecond()));
       builder.put(source, JsFlavors.fileFlavorForSourcePath(relativePath));
     }
     return builder.build();
@@ -371,11 +384,11 @@ public class JsLibraryDescription
       SourcePath sourcePath,
       String basePath,
       ProjectFilesystem projectFilesystem,
-      SourcePathResolver sourcePathResolver,
+      SourcePathResolverAdapter sourcePathResolverAdapter,
       CellPathResolver cellPathResolver,
-      UnflavoredBuildTargetView target) {
-    Path cellPath = cellPathResolver.getCellPathOrThrow(target);
-    Path directoryOfBuildFile = cellPath.resolve(target.getBasePath());
+      UnflavoredBuildTarget target) {
+    Path directoryOfBuildFile =
+        cellPathResolver.resolveCellRelativePath(target.getCellRelativeBasePath());
     Path transplantTo = MorePaths.normalize(directoryOfBuildFile.resolve(basePath));
     Path absolutePath =
         PathSourcePath.from(sourcePath)
@@ -383,7 +396,8 @@ public class JsLibraryDescription
                 pathSourcePath -> // for sub paths, replace the leading directory with the base path
                 transplantTo.resolve(
                         MorePaths.relativize(
-                            directoryOfBuildFile, sourcePathResolver.getAbsolutePath(sourcePath))))
+                            directoryOfBuildFile,
+                            sourcePathResolverAdapter.getAbsolutePath(sourcePath))))
             .orElse(transplantTo); // build target output paths are replaced completely
 
     return projectFilesystem
@@ -393,6 +407,6 @@ public class JsLibraryDescription
                 new HumanReadableException(
                     "%s: Using '%s' as base path for '%s' would move the file "
                         + "out of the project root.",
-                    target, basePath, sourcePathResolver.getRelativePath(sourcePath)));
+                    target, basePath, sourcePathResolverAdapter.getRelativePath(sourcePath)));
   }
 }

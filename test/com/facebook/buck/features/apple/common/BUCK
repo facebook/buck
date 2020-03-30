@@ -12,6 +12,7 @@ java_library(
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/features/apple/common:common",
+        "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],
 )

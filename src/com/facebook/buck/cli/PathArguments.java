@@ -1,21 +1,23 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -27,12 +29,12 @@ public class PathArguments {
   private PathArguments() {}
 
   static class ReferencedFiles {
-    final ImmutableSet<Path> relativePathsUnderProjectRoot;
-    final ImmutableSet<Path> absolutePathsOutsideProjectRootOrNonExistingPaths;
+    final ImmutableSet<RelPath> relativePathsUnderProjectRoot;
+    final ImmutableSet<AbsPath> absolutePathsOutsideProjectRootOrNonExistingPaths;
 
     public ReferencedFiles(
-        ImmutableSet<Path> relativePathsUnderProjectRoot,
-        ImmutableSet<Path> absolutePathsOutsideProjectRootOrNonExistingPaths) {
+        ImmutableSet<RelPath> relativePathsUnderProjectRoot,
+        ImmutableSet<AbsPath> absolutePathsOutsideProjectRootOrNonExistingPaths) {
       this.relativePathsUnderProjectRoot = relativePathsUnderProjectRoot;
       this.absolutePathsOutsideProjectRootOrNonExistingPaths =
           absolutePathsOutsideProjectRootOrNonExistingPaths;
@@ -46,31 +48,31 @@ public class PathArguments {
    * /otherproject/src/com/facebook/Test.java will be ignored.
    */
   static ReferencedFiles getCanonicalFilesUnderProjectRoot(
-      Path projectRoot, Iterable<String> nonCanonicalFilePaths) throws IOException {
+      AbsPath projectRoot, Iterable<String> nonCanonicalFilePaths) throws IOException {
     // toRealPath() is used throughout to resolve symlinks or else the Path.startsWith() check will
     // not be reliable.
-    ImmutableSet.Builder<Path> projectFiles = ImmutableSet.builder();
-    ImmutableSet.Builder<Path> nonProjectFiles = ImmutableSet.builder();
-    Path normalizedRoot = projectRoot.toRealPath();
+    ImmutableSet.Builder<RelPath> projectFiles = ImmutableSet.builder();
+    ImmutableSet.Builder<AbsPath> nonProjectFiles = ImmutableSet.builder();
+    AbsPath normalizedRoot = projectRoot.toRealPath();
     for (String filePath : nonCanonicalFilePaths) {
       Path canonicalFullPath = Paths.get(filePath);
       if (!canonicalFullPath.isAbsolute()) {
-        canonicalFullPath = projectRoot.resolve(canonicalFullPath);
+        canonicalFullPath = projectRoot.resolve(canonicalFullPath).getPath();
       }
       if (!canonicalFullPath.toFile().exists()) {
-        nonProjectFiles.add(canonicalFullPath);
+        nonProjectFiles.add(AbsPath.of(canonicalFullPath));
         continue;
       }
       canonicalFullPath = canonicalFullPath.toRealPath();
 
       // Ignore files that aren't under project root.
-      if (canonicalFullPath.startsWith(normalizedRoot)) {
+      if (canonicalFullPath.startsWith(normalizedRoot.getPath())) {
         Path relativePath =
             canonicalFullPath.subpath(
-                normalizedRoot.getNameCount(), canonicalFullPath.getNameCount());
-        projectFiles.add(relativePath);
+                normalizedRoot.getPath().getNameCount(), canonicalFullPath.getNameCount());
+        projectFiles.add(RelPath.of(relativePath));
       } else {
-        nonProjectFiles.add(canonicalFullPath);
+        nonProjectFiles.add(AbsPath.of(canonicalFullPath));
       }
     }
     return new ReferencedFiles(projectFiles.build(), nonProjectFiles.build());

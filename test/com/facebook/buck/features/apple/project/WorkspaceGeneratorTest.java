@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.project;
@@ -25,7 +25,10 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSNumber;
 import com.dd.plist.NSObject;
+import com.dd.plist.NSString;
 import com.dd.plist.PropertyListParser;
+import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -47,6 +50,7 @@ import org.w3c.dom.Node;
 public class WorkspaceGeneratorTest {
   private SettableFakeClock clock;
   private ProjectFilesystem projectFilesystem;
+  private AppleConfig appleConfig;
   private WorkspaceGenerator generator;
 
   @Before
@@ -54,7 +58,8 @@ public class WorkspaceGeneratorTest {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     clock = SettableFakeClock.DO_NOT_CARE;
     projectFilesystem = new FakeProjectFilesystem(clock);
-    generator = new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."));
+    appleConfig = FakeBuckConfig.builder().build().getView(AppleConfig.class);
+    generator = new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."), appleConfig);
   }
 
   @Test
@@ -170,7 +175,7 @@ public class WorkspaceGeneratorTest {
 
     {
       WorkspaceGenerator generator2 =
-          new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."));
+          new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."), appleConfig);
       generator2.addFilePath(Paths.get("./Project2.xcodeproj"));
       clock.setCurrentTimeMillis(64738);
       Path workspacePath2 = generator2.writeWorkspace();
@@ -193,7 +198,7 @@ public class WorkspaceGeneratorTest {
 
     {
       WorkspaceGenerator generator2 =
-          new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."));
+          new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."), appleConfig);
       generator2.addFilePath(Paths.get("./Project.xcodeproj"));
       clock.setCurrentTimeMillis(64738);
       Path workspacePath2 = generator2.writeWorkspace();
@@ -216,5 +221,28 @@ public class WorkspaceGeneratorTest {
         ((NSDictionary) object).get("IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded");
     assertThat(autocreate, instanceOf(NSNumber.class));
     assertThat(autocreate, equalTo(new NSNumber(false)));
+  }
+
+  @Test
+  public void workspaceEnabledForLegacyBuildSystem() throws Exception {
+    AppleConfig appleConfig =
+        FakeBuckConfig.builder()
+            .setSections("[apple]", "use_modern_build_system = false")
+            .build()
+            .getView(AppleConfig.class);
+
+    WorkspaceGenerator generator =
+        new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."), appleConfig);
+
+    Path workspacePath = generator.writeWorkspace();
+    Optional<String> settings =
+        projectFilesystem.readFileIfItExists(
+            workspacePath.resolve("xcshareddata/WorkspaceSettings.xcsettings"));
+    assertThat(settings.isPresent(), equalTo(true));
+    NSObject object = PropertyListParser.parse(settings.get().getBytes(Charsets.UTF_8));
+    assertThat(object, instanceOf(NSDictionary.class));
+    NSObject buildSystemType = ((NSDictionary) object).get("BuildSystemType");
+    assertThat(buildSystemType, instanceOf(NSString.class));
+    assertThat(buildSystemType, equalTo(new NSString("Original")));
   }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -33,7 +33,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionException;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -61,8 +61,17 @@ public class AuditActionGraphCommand extends AbstractCommand {
 
   private static final Logger LOG = Logger.get(AuditActionGraphCommand.class);
 
-  @Option(name = "--dot", usage = "Print result in graphviz dot format.")
+  @Option(
+      name = "--dot",
+      usage = "Print result in graphviz dot format.",
+      forbids = {"--dot-compact"})
   private boolean generateDotOutput;
+
+  @Option(
+      name = "--dot-compact",
+      usage = "Print result in a more compact graphviz dot format.",
+      forbids = {"---dot"})
+  private boolean generateDotOutputInCompactMode;
 
   @Option(
       name = "--node-view",
@@ -83,14 +92,18 @@ public class AuditActionGraphCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphWithoutTopLevelConfigurationTargets(
-                  createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                  createParsingContext(
+                          params.getCells().getRootCell(), pool.getListeningExecutorService())
                       .withApplyDefaultFlavorsMode(
                           params
                               .getBuckConfig()
                               .getView(ParserConfig.class)
                               .getDefaultFlavorsMode()),
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(), params.getBuckConfig(), targetSpecs),
+                      params.getCells().getRootCell(),
+                      params.getClientWorkingDir(),
+                      targetSpecs,
+                      params.getBuckConfig()),
                   params.getTargetConfiguration());
       TargetGraphCreationResult targetGraphCreationResult =
           params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()
@@ -102,13 +115,14 @@ public class AuditActionGraphCommand extends AbstractCommand {
           params.getActionGraphProvider().getActionGraph(targetGraphCreationResult);
 
       // Dump the action graph.
-      if (generateDotOutput) {
+      if (generateDotOutput || generateDotOutputInCompactMode) {
         dumpAsDot(
             actionGraphAndBuilder.getActionGraph(),
             actionGraphAndBuilder.getActionGraphBuilder(),
             includeRuntimeDeps,
             nodeView,
-            params.getConsole().getStdOut());
+            params.getConsole().getStdOut(),
+            generateDotOutputInCompactMode);
       } else {
         dumpAsJson(
             actionGraphAndBuilder.getActionGraph(),
@@ -207,7 +221,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
       ActionGraphBuilder actionGraphBuilder,
       boolean includeRuntimeDeps,
       NodeView nodeView,
-      DirtyPrintStreamDecorator out)
+      DirtyPrintStreamDecorator out,
+      boolean compactMode)
       throws IOException {
     MutableDirectedGraph<BuildRule> dag = new MutableDirectedGraph<>();
     graph.getNodes().forEach(dag::addNode);
@@ -222,7 +237,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
     Dot.Builder<BuildRule> builder =
         Dot.builder(new DirectedAcyclicGraph<>(dag), "action_graph")
             .setNodeToName(BuildRule::getFullyQualifiedName)
-            .setNodeToTypeName(BuildRule::getType);
+            .setNodeToTypeName(BuildRule::getType)
+            .setCompactMode(compactMode);
     if (nodeView == NodeView.Extended) {
       builder.setNodeToAttributes(AuditActionGraphCommand::getNodeAttributes);
     }

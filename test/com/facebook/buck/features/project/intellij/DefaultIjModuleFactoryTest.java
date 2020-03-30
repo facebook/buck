@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -33,6 +33,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -40,7 +41,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
@@ -626,7 +627,11 @@ public class DefaultIjModuleFactoryTest {
   public void testAndroidPrebuiltAar() {
     SourcePath androidSupportBinaryPath =
         FakeSourcePath.of(
-            "buck-out/bin/third_party/java/support/__unpack_support#aar_unzip__/classes.jar");
+            BuildTargetPaths.getScratchPath(
+                    new FakeProjectFilesystem(),
+                    BuildTargetFactory.newInstance("//third_party/java/support:support#aar_unzip"),
+                    "__unpack_%s__")
+                .resolve("classes.jar"));
     Path androidSupportSourcesPath = Paths.get("third_party/java/support/support-sources.jar");
     String androidSupportJavadocUrl = "file:///support/docs";
     TargetNode<?> androidPrebuiltAar =
@@ -638,12 +643,12 @@ public class DefaultIjModuleFactoryTest {
             .build();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathResolver sourcePathResolver = buildRuleResolver.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     IjLibraryFactoryResolver ijLibraryFactoryResolver =
         new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            return sourcePathResolver.getRelativePath(path);
+            return sourcePathResolverAdapter.getRelativePath(path);
           }
 
           @Override
@@ -660,7 +665,7 @@ public class DefaultIjModuleFactoryTest {
     assertTrue(library.isPresent());
     assertEquals(
         library.get().getBinaryJars(),
-        ImmutableSet.of(sourcePathResolver.getRelativePath(androidSupportBinaryPath)));
+        ImmutableSet.of(sourcePathResolverAdapter.getRelativePath(androidSupportBinaryPath)));
     assertEquals(library.get().getSourceJars(), ImmutableSet.of(androidSupportSourcesPath));
     assertEquals(library.get().getJavadocUrls(), ImmutableSet.of(androidSupportJavadocUrl));
   }
@@ -682,7 +687,8 @@ public class DefaultIjModuleFactoryTest {
             .build();
     JavaPackageFinder packageFinder =
         (buckConfig == null)
-            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(Collections.emptyList())
+            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+                projectFilesystem, Collections.emptyList())
             : buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
@@ -731,6 +737,12 @@ public class DefaultIjModuleFactoryTest {
               }
 
               @Override
+              public Optional<Path> getKaptAnnotationOutputPath(
+                  TargetNode<? extends JvmLibraryArg> targetNode) {
+                return Optional.empty();
+              }
+
+              @Override
               public Optional<Path> getCompilerOutputPath(
                   TargetNode<? extends JvmLibraryArg> targetNode) {
                 return Optional.empty();
@@ -738,7 +750,7 @@ public class DefaultIjModuleFactoryTest {
             },
             projectConfig,
             packageFinder);
-    return new DefaultIjModuleFactory(projectFilesystem, typeRegistry);
+    return new DefaultIjModuleFactory(projectFilesystem, projectConfig, typeRegistry);
   }
 
   @Test

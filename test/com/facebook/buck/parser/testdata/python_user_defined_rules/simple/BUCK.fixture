@@ -1,0 +1,41 @@
+load("//simple:simple_rule.bzl", "simple_rule", "simple_rule_test")
+
+simple_rule(name = "rule1", mandatory = 5, content = "rule1 string")
+
+simple_rule(
+    name = "with_label",
+    mandatory = 5,
+    content = "with_label_string",
+    labels = ["foo"],
+)
+
+simple_rule(
+    name = "without_label",
+    mandatory = 5,
+    content = "without_label string",
+)
+
+platform(
+    name = "x86_64-platform",
+    constraint_values = [
+        "buck//config/constraints:x86_64",
+    ],
+)
+
+# Make sure that implicit attributes work properly
+simple_rule(
+    name = "with_implicits",
+    mandatory = 5,
+    default_target_platform = ":x86_64-platform",
+    compatible_with = [],
+    labels = ["foo"],
+)
+
+simple_rule_test(
+    name = "with_test_implicits",
+    mandatory = 5,
+    default_target_platform = ":x86_64-platform",
+    compatible_with = [],
+    labels = ["foo"],
+    contacts = ["oncall@example.com"],
+)

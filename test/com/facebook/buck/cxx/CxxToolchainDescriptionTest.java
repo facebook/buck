@@ -1,26 +1,28 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cxx;
 
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -28,7 +30,7 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
@@ -37,6 +39,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.SharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -91,7 +94,7 @@ public class CxxToolchainDescriptionTest {
     graphBuilder.addToIndex(new SimpleToolRule(binaryToolTarget, binaryTool));
     CxxToolchainBuildRule cxxPlatformRule = builder.build(graphBuilder);
 
-    SourcePathResolver resolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = graphBuilder.getSourcePathResolver();
 
     CxxPlatform platform = cxxPlatformRule.getPlatformWithFlavor(InternalFlavor.of("dontcare"));
 
@@ -101,37 +104,39 @@ public class CxxToolchainDescriptionTest {
     assertIsBinaryTool(
         resolver,
         pathTool,
-        platform.getCc().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getCc().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         pathTool,
-        platform.getCxx().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getCxx().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         pathTool,
-        platform.getCxxpp().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getCxxpp().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         pathTool,
-        platform.getLd().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getLd().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         binaryTool,
-        platform.getAr().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getAr().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertIsBinaryTool(
         resolver,
         binaryTool,
-        platform.getAs().resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE));
+        platform.getAs().resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE));
     assertEquals(Optional.empty(), platform.getAsm());
     assertEquals(Optional.empty(), platform.getAsmpp());
     assertEquals(Optional.empty(), platform.getHip());
     assertEquals(Optional.empty(), platform.getHippp());
 
-    assertEquals(ImmutableList.of("-Wl,--build-id", "linker", "flags"), platform.getLdflags());
-    assertEquals(ImmutableList.of("c", "flags"), platform.getCflags());
+    assertEquals(
+        ImmutableList.of("-Wl,--build-id", "linker", "flags"),
+        Arg.stringify(platform.getLdflags(), resolver));
+    assertEquals(ImmutableList.of("c", "flags"), Arg.stringify(platform.getCflags(), resolver));
   }
 
-  private void assertIsBinaryTool(SourcePathResolver resolver, Tool expected, Tool other) {
+  private void assertIsBinaryTool(SourcePathResolverAdapter resolver, Tool expected, Tool other) {
     MoreAsserts.assertIterablesEquals(
         expected.getCommandPrefix(resolver), other.getCommandPrefix(resolver));
   }
@@ -145,7 +150,7 @@ public class CxxToolchainDescriptionTest {
     }
 
     @Override
-    public Tool getExecutableCommand() {
+    public Tool getExecutableCommand(OutputLabel outputLabel) {
       return tool;
     }
   }

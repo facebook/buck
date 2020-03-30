@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain.linker.impl;
@@ -34,6 +34,7 @@ public class DefaultLinkerProvider implements LinkerProvider {
   private final Type type;
   private final ToolProvider toolProvider;
   private final boolean cacheLinks;
+  private final boolean scrubConcurrently;
 
   private final LoadingCache<BuildRuleResolver, BuildRuleResolverCacheByTargetConfiguration<Linker>>
       cache =
@@ -46,20 +47,28 @@ public class DefaultLinkerProvider implements LinkerProvider {
                     public BuildRuleResolverCacheByTargetConfiguration<Linker> load(
                         @Nonnull BuildRuleResolver buildRuleResolver) {
                       return new BuildRuleResolverCacheByTargetConfiguration<>(
-                          buildRuleResolver, toolProvider, tool -> build(type, tool, cacheLinks));
+                          buildRuleResolver,
+                          toolProvider,
+                          tool -> build(type, tool, cacheLinks, scrubConcurrently));
                     }
                   });
 
   public DefaultLinkerProvider(Type type, ToolProvider toolProvider, boolean cacheLinks) {
+    this(type, toolProvider, cacheLinks, false);
+  }
+
+  public DefaultLinkerProvider(
+      Type type, ToolProvider toolProvider, boolean cacheLinks, boolean scrubConcurrently) {
     this.type = type;
     this.toolProvider = toolProvider;
     this.cacheLinks = cacheLinks;
+    this.scrubConcurrently = scrubConcurrently;
   }
 
-  private static Linker build(Type type, Tool tool, boolean cacheLinks) {
+  private static Linker build(Type type, Tool tool, boolean cacheLinks, boolean scrubConcurrently) {
     switch (type) {
       case DARWIN:
-        return new DarwinLinker(tool, cacheLinks);
+        return new DarwinLinker(tool, cacheLinks, scrubConcurrently);
       case GNU:
         return new GnuLinker(tool);
       case WINDOWS:

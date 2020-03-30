@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.toolchain.ndk.impl;
@@ -27,12 +27,13 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformCompiler;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntimeType;
+import com.facebook.buck.android.toolchain.ndk.NdkTargetArchAbi;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -87,8 +88,8 @@ public class AndroidNdkHelper {
                   filesystem,
                   new DefaultProcessExecutor(new TestConsole()),
                   new ExecutableFinder(),
-                  TestRuleKeyConfigurationFactory.create(),
-                  () -> EmptyTargetConfiguration.INSTANCE));
+                  TestRuleKeyConfigurationFactory.create()),
+              UnconfiguredTargetConfiguration.INSTANCE);
     } catch (HumanReadableException e) {
       LOG.info(e, "Cannot detect Android NDK");
       return Optional.empty();
@@ -113,12 +114,7 @@ public class AndroidNdkHelper {
                 AndroidNdkHelper.DEFAULT_CONFIG,
                 filesystem,
                 ndkPath,
-                EmptyTargetConfiguration.INSTANCE,
-                NdkCxxPlatformCompiler.builder()
-                    .setType(compilerType)
-                    .setVersion(compilerVersion)
-                    .setGccVersion(gccVersion)
-                    .build(),
+                NdkCxxPlatformCompiler.of(compilerType, compilerVersion, gccVersion),
                 cxxRuntime,
                 NdkCxxRuntimeType.DYNAMIC,
                 getDefaultCpuAbis(ndkVersion),
@@ -144,10 +140,10 @@ public class AndroidNdkHelper {
     private final ProcessExecutor executor;
     private final Path tmpDir;
     private final Tool objdump;
-    private final SourcePathResolver resolver;
+    private final SourcePathResolverAdapter resolver;
 
     public SymbolGetter(
-        ProcessExecutor executor, Path tmpDir, Tool objdump, SourcePathResolver resolver) {
+        ProcessExecutor executor, Path tmpDir, Tool objdump, SourcePathResolverAdapter resolver) {
       this.executor = executor;
       this.tmpDir = tmpDir;
       this.objdump = objdump;
@@ -243,7 +239,7 @@ public class AndroidNdkHelper {
     }
   }
 
-  public static ImmutableSet<String> getDefaultCpuAbis(String ndkVersion) {
+  public static ImmutableSet<NdkTargetArchAbi> getDefaultCpuAbis(String ndkVersion) {
     return NdkCxxPlatforms.getDefaultCpuAbis(ndkVersion);
   }
 }

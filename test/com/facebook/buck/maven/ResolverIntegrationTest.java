@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.maven;
@@ -127,6 +127,7 @@ public class ResolverIntegrationTest {
             ImmutableMap.of(),
             BuckEventBusForTests.newInstance(),
             new DefaultProcessExecutor(new TestConsole()),
+            Optional.empty(),
             Optional.empty());
   }
 
@@ -195,8 +196,8 @@ public class ResolverIntegrationTest {
     HashCode seen = MorePaths.asByteSource(jarFile).hash(Hashing.sha1());
     assertEquals(expected, seen);
 
-    Map<String, Map<String, Object>> rules =
-        buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
+    ImmutableMap<String, ImmutableMap<String, Object>> rules =
+        buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
     assertEquals(1, rules.size());
     Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
@@ -221,8 +222,8 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:with-sources:jar:1.0");
 
     Path groupDir = thirdParty.resolve("example");
-    Map<String, Map<String, Object>> rules =
-        buildFileParser.getBuildFileManifest(groupDir.resolve("BUCK")).getTargets();
+    ImmutableMap<String, ImmutableMap<String, Object>> rules =
+        buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
     Map<String, Object> rule = Iterables.getOnlyElement(rules.values());
     assertEquals("with-sources-1.0-sources.jar", rule.get("sourceJar"));
@@ -236,14 +237,14 @@ public class ResolverIntegrationTest {
     Map<String, Object> withDeps =
         Iterables.getOnlyElement(
             buildFileParser
-                .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
+                .getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
                 .getTargets()
                 .values());
     Path otherDir = thirdPartyRelative.resolve("othercorp");
     Map<String, Object> noDeps =
         Iterables.getOnlyElement(
             buildFileParser
-                .getBuildFileManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
+                .getManifest(buckRepoRoot.resolve(otherDir).resolve("BUCK"))
                 .getTargets()
                 .values());
 
@@ -271,10 +272,8 @@ public class ResolverIntegrationTest {
     resolveWithArtifacts("com.example:deps-in-same-project:jar:1.0");
 
     Path exampleDir = thirdPartyRelative.resolve("example");
-    Map<String, Map<String, Object>> allTargets =
-        buildFileParser
-            .getBuildFileManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK"))
-            .getTargets();
+    ImmutableMap<String, ImmutableMap<String, Object>> allTargets =
+        buildFileParser.getManifest(buckRepoRoot.resolve(exampleDir).resolve("BUCK")).getTargets();
 
     assertEquals(2, allTargets.size());
 

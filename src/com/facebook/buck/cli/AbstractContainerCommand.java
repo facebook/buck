@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.log.LogConfigSetup;
 import com.facebook.buck.parser.ParsingContext;
@@ -30,7 +31,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.PrintStream;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -104,6 +104,13 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
     stream.println("  " + prefix + " <command> --help");
     stream.println("  " + prefix + " <command> [<command-options>]");
     stream.println();
+    // Note environment variables are handled by a Python wrapper
+    stream.println("Environment variables:");
+    stream.println("  NO_BUCKD              do not launch buck daemon");
+    stream.println("  BUCK_DEBUG_MODE       start buck with debugger agent listening on port 8888");
+    stream.println("  BUCK_EXTRA_JAVA_ARGS  JVM arguments used when launching buck process");
+    stream.println("  FAKE_JAVA_VERSION     override a version used in rule key computation");
+    stream.println();
 
     stream.println("Available commands:");
 
@@ -145,9 +152,9 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
   }
 
   @Override
-  public CellConfig getConfigOverrides(ImmutableMap<CellName, Path> cellMapping) {
+  public CellConfig getConfigOverrides(ImmutableMap<CellName, AbsPath> cellMapping) {
     Optional<Command> cmd = getSubcommand();
-    return cmd.isPresent() ? cmd.get().getConfigOverrides(cellMapping) : CellConfig.of();
+    return cmd.isPresent() ? cmd.get().getConfigOverrides(cellMapping) : CellConfig.EMPTY_INSTANCE;
   }
 
   @Override
@@ -182,6 +189,11 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
   @Override
   public ImmutableList<String> getTargetPlatforms() {
     return getSubcommand().map(Command::getTargetPlatforms).orElse(ImmutableList.of());
+  }
+
+  @Override
+  public Optional<String> getHostPlatform() {
+    return getSubcommand().flatMap(Command::getHostPlatform);
   }
 
   @Override

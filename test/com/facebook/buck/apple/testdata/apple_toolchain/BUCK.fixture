@@ -1,0 +1,64 @@
+apple_bundle(
+    name = "TestApp",
+    binary = ":TestAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+)
+
+apple_binary(
+    name = "TestAppBinary",
+    deps = [":TestLib"],
+    frameworks = [
+        "$SDKROOT/Frameworks/Foundation.framework",
+        "$SDKROOT/Frameworks/UIKit.framework",
+    ],
+    libraries = [
+        "$SDKROOT/lib/libobjc.dylib",
+    ],
+    preprocessor_flags = ["-fobjc-arc"],
+)
+
+apple_library(
+    name = "TestLib",
+    srcs = [
+        "srcs/src_a.c",
+        "srcs/src_b.c",
+    ],
+    compiler_flags = [
+        "-extra-compile-flag",
+        "$SDKROOT/testfile",
+    ],
+    headers = [
+        "srcs/header.h",
+    ],
+)
+
+apple_binary(
+    name = "TestSwiftBinary",
+    frameworks = [
+        "$SDKROOT/Frameworks/Foundation.framework",
+    ],
+    deps = [":SwiftLibrary"],
+)
+
+swift_library(
+    name = "SwiftLibrary",
+    srcs = ["srcs/main.swift"],
+    deps = [
+        ":AnotherSwiftLibrary",
+        ":SwiftCompanionLibrary",
+    ],
+)
+
+apple_library(
+    name = "SwiftCompanionLibrary",
+    srcs = [
+        "srcs/src_a.swift",
+        "srcs/src_b.swift",
+    ],
+)
+
+swift_library(
+    name = "AnotherSwiftLibrary",
+    srcs = ["srcs/extra.swift"],
+)

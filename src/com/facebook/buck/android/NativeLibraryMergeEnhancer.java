@@ -1,23 +1,22 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.apkmodule.APKModule;
-import com.facebook.buck.android.packageable.ImmutableNativeLinkableEnhancementResult;
 import com.facebook.buck.android.packageable.NativeLinkableEnhancementResult;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
@@ -37,8 +36,8 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.core.util.graph.TopologicalSort;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.LinkOutputPostprocessor;
@@ -58,7 +57,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Charsets;
@@ -262,7 +261,7 @@ class NativeLibraryMergeEnhancer {
 
       mergedLinkablesBuilder.put(
           cpuType,
-          new ImmutableNativeLinkableEnhancementResult(
+          NativeLinkableEnhancementResult.of(
               moduleLinkablesBuilder.build(), moduleAssetLinkablesBuilder.build()));
     }
 
@@ -273,7 +272,7 @@ class NativeLibraryMergeEnhancer {
         .asMap()
         .forEach((k, v) -> finalSonameTargetsBuilder.put(k, ImmutableSortedSet.copyOf(v)));
 
-    return new ImmutableNativeLibraryMergeEnhancementResult(
+    return ImmutableNativeLibraryMergeEnhancementResult.of(
         mergedLinkablesBuilder.build(),
         ImmutableSortedMap.copyOf(sonameMapBuilder),
         finalSonameTargetsBuilder.build());
@@ -318,8 +317,8 @@ class NativeLibraryMergeEnhancer {
       String mergeSoname = mergeConfigEntry.getKey();
       List<Pattern> patterns = mergeConfigEntry.getValue();
 
-      MergedNativeLibraryConstituents.Builder constituentsBuilder =
-          MergedNativeLibraryConstituents.builder().setSoname(mergeSoname);
+      ImmutableMergedNativeLibraryConstituents.Builder constituentsBuilder =
+          ImmutableMergedNativeLibraryConstituents.builder().setSoname(mergeSoname);
 
       for (Pattern pattern : patterns) {
         for (NativeLinkable linkable : allLinkables) {
@@ -372,7 +371,8 @@ class NativeLibraryMergeEnhancer {
     for (NativeLinkable linkable : allLinkables) {
       if (!linkableMembership.containsKey(linkable)) {
         linkableMembership.put(
-            linkable, MergedNativeLibraryConstituents.builder().addLinkables(linkable).build());
+            linkable,
+            ImmutableMergedNativeLibraryConstituents.builder().addLinkables(linkable).build());
       }
     }
     return linkableMembership;
@@ -539,11 +539,8 @@ class NativeLibraryMergeEnhancer {
       if (!constituents.isActuallyMerged()) {
         // There is only one target
         BuildTarget target = preMergeLibs.iterator().next().getBuildTarget();
-        // TODO(T47190884): Compare cell name with the one from baseBuildTarget instead.
-        if (!target.getCellPath().equals(projectFilesystem.getRootPath())) {
-          // Switch the target project filesystem
-          targetProjectFilesystem = graphBuilder.getRule(target).getProjectFilesystem();
-        }
+        // Switch the target project filesystem
+        targetProjectFilesystem = graphBuilder.getRule(target).getProjectFilesystem();
       }
 
       MergedLibNativeLinkable mergedLinkable =
@@ -605,10 +602,9 @@ class NativeLibraryMergeEnhancer {
    * Data object for internal use, representing the source libraries getting merged together into
    * one DSO. Libraries not being merged will have one linkable and no soname.
    */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractMergedNativeLibraryConstituents
-      implements Comparable<AbstractMergedNativeLibraryConstituents> {
+  @BuckStyleValueWithBuilder
+  abstract static class MergedNativeLibraryConstituents
+      implements Comparable<MergedNativeLibraryConstituents> {
     public abstract Optional<String> getSoname();
 
     public abstract ImmutableSet<NativeLinkable> getLinkables();
@@ -636,7 +632,7 @@ class NativeLibraryMergeEnhancer {
     }
 
     @Override
-    public int compareTo(AbstractMergedNativeLibraryConstituents other) {
+    public int compareTo(MergedNativeLibraryConstituents other) {
       return toString().compareTo(other.toString());
     }
   }
@@ -903,11 +899,12 @@ class NativeLibraryMergeEnhancer {
         argsBuilder.addAll(linkable.getExportedPostLinkerFlags(graphBuilder));
       }
 
-      return NativeLinkableInput.of(argsBuilder.build(), ImmutableList.of(), ImmutableList.of());
+      return NativeLinkableInput.of(argsBuilder.build(), ImmutableSet.of(), ImmutableSet.of());
     }
 
     @Override
-    public Optional<NativeLinkTarget> getNativeLinkTarget(ActionGraphBuilder graphBuilder) {
+    public Optional<NativeLinkTarget> getNativeLinkTarget(
+        ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags) {
       return Optional.empty();
     }
 
@@ -923,7 +920,8 @@ class NativeLibraryMergeEnhancer {
       }
 
       for (NativeLinkable linkable : Iterables.concat(usingGlue, constituents.getLinkables())) {
-        Optional<NativeLinkTarget> nativeLinkTarget = linkable.getNativeLinkTarget(graphBuilder);
+        Optional<NativeLinkTarget> nativeLinkTarget =
+            linkable.getNativeLinkTarget(graphBuilder, true);
         if (nativeLinkTarget.isPresent()) {
           // If this constituent is a NativeLinkTarget, use its input to get raw objects and
           // linker flags.
@@ -938,9 +936,11 @@ class NativeLibraryMergeEnhancer {
                   Linker.LinkableDepType.STATIC_PIC, graphBuilder, targetConfiguration);
           builder.add(
               staticPic.withArgs(
-                  FluentIterable.from(staticPic.getArgs())
-                      .transformAndConcat(
-                          arg -> linker.linkWhole(arg, graphBuilder.getSourcePathResolver()))));
+                  ImmutableList.copyOf(
+                      FluentIterable.from(staticPic.getArgs())
+                          .transformAndConcat(
+                              arg ->
+                                  linker.linkWhole(arg, graphBuilder.getSourcePathResolver())))));
         }
       }
       return NativeLinkableInput.concat(builder.build());

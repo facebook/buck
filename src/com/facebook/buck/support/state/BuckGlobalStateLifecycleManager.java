@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.support.state;
@@ -19,6 +19,7 @@ package com.facebook.buck.support.state;
 import com.facebook.buck.command.config.ConfigDifference;
 import com.facebook.buck.command.config.ConfigDifference.ConfigChange;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -113,13 +114,15 @@ public class BuckGlobalStateLifecycleManager {
 
   /** Get or create Daemon. */
   public synchronized Pair<BuckGlobalState, LifecycleStatus> getBuckGlobalState(
-      Cell rootCell,
+      Cells cells,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Watchman watchman,
       Console console,
       Clock clock,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetConfigurationSerializer targetConfigurationSerializer) {
+
+    Cell rootCell = cells.getRootCell();
 
     BuckGlobalState currentState = buckGlobalState;
     LifecycleStatus lifecycleStatus =
@@ -211,7 +214,7 @@ public class BuckGlobalStateLifecycleManager {
 
       buckGlobalState =
           BuckGlobalStateFactory.create(
-              rootCell,
+              cells,
               knownRuleTypesProvider,
               watchman,
               webServer,

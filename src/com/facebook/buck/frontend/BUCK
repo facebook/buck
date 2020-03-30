@@ -1,0 +1,11 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "frontend",
+    srcs = glob(["*.java"]),
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src-gen:thrift",
+        "//src/com/facebook/buck/slb:slb",
+    ],
+)

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.macros;
@@ -33,20 +33,20 @@ public class MacroFinderTest {
   public void findAll() throws MacroException {
     ImmutableList<MacroMatchResult> expectedResults =
         ImmutableList.of(
-            MacroMatchResult.builder()
+            ImmutableMacroMatchResult.builder()
                 .setMacroType("macro1")
                 .setStartIndex(12)
                 .setEndIndex(21)
                 .setEscaped(false)
                 .build(),
-            MacroMatchResult.builder()
+            ImmutableMacroMatchResult.builder()
                 .setMacroType("macro2")
                 .addMacroInput("arg")
                 .setStartIndex(26)
                 .setEndIndex(39)
                 .setEscaped(false)
                 .build(),
-            MacroMatchResult.builder()
+            ImmutableMacroMatchResult.builder()
                 .setMacroType("macro1")
                 .addMacroInput("arg", "arg2")
                 .setStartIndex(40)
@@ -130,7 +130,7 @@ public class MacroFinderTest {
     assertThat(
         MacroFinder.match(ImmutableSet.of("macro1"), "$(macro1)").get(),
         Matchers.equalTo(
-            MacroMatchResult.builder()
+            ImmutableMacroMatchResult.builder()
                 .setMacroType("macro1")
                 .setStartIndex(0)
                 .setEndIndex(9)
@@ -140,7 +140,7 @@ public class MacroFinderTest {
         MacroFinder.match(ImmutableSet.of("macro1"), "$(macro1 arg)"),
         Matchers.equalTo(
             Optional.of(
-                MacroMatchResult.builder()
+                ImmutableMacroMatchResult.builder()
                     .setMacroType("macro1")
                     .addMacroInput("arg")
                     .setStartIndex(0)
@@ -155,7 +155,7 @@ public class MacroFinderTest {
         MacroFinder.match(ImmutableSet.of("macro1"), "$(macro1 arg_fun(param))"),
         Matchers.equalTo(
             Optional.of(
-                MacroMatchResult.builder()
+                ImmutableMacroMatchResult.builder()
                     .setMacroType("macro1")
                     .addMacroInput("arg_fun(param)")
                     .setStartIndex(0)
@@ -177,7 +177,7 @@ public class MacroFinderTest {
         MacroFinder.match(ImmutableSet.of("macro1"), "$(macro1 ')')"),
         Matchers.equalTo(
             Optional.of(
-                MacroMatchResult.builder()
+                ImmutableMacroMatchResult.builder()
                     .setMacroType("macro1")
                     .addMacroInput(")")
                     .setStartIndex(0)
@@ -188,7 +188,7 @@ public class MacroFinderTest {
         MacroFinder.match(ImmutableSet.of("macro1"), "$(macro1 \")\")"),
         Matchers.equalTo(
             Optional.of(
-                MacroMatchResult.builder()
+                ImmutableMacroMatchResult.builder()
                     .setMacroType("macro1")
                     .addMacroInput(")")
                     .setStartIndex(0)

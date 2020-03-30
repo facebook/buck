@@ -1,21 +1,25 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
+import com.facebook.buck.core.filesystems.RelPath;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -43,7 +47,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.jar.Manifest;
 
-/** An injectable service for interacting with the filesystem relative to the project root. */
+/** An injectable service for interacting with the filesystem relative to the cell root. */
 public interface ProjectFilesystem {
 
   /**
@@ -52,7 +56,13 @@ public interface ProjectFilesystem {
    */
   ProjectFilesystemView asView();
 
-  Path getRootPath();
+  AbsPath getRootPath();
+
+  default FileSystem getFileSystem() {
+    return getRootPath().getFileSystem();
+  }
+
+  ProjectFilesystem createBuckOutProjectFilesystem();
 
   /**
    * @return details about the delegate suitable for writing to a logger. It is recommended that the
@@ -68,10 +78,28 @@ public interface ProjectFilesystem {
 
   Path resolve(String path);
 
-  /** Construct a relative path between the project root and a given path. */
-  Path relativize(Path path);
+  /**
+   * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
+   */
+  default Path resolve(ForwardRelativePath path) {
+    return resolve(path.toPath(getFileSystem()));
+  }
 
-  /** @return a set of {@link PathMatcher} objects ignored by {@link #isIgnored(Path)} */
+  /**
+   * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
+   */
+  default AbsPath resolve(RelPath path) {
+    return AbsPath.of(resolve(path.getPath()));
+  }
+
+  /** Construct a relative path between the project root and a given path. */
+  RelPath relativize(Path path);
+
+  default RelPath relativize(AbsPath path) {
+    return relativize(path.getPath());
+  }
+
+  /** @return a set of {@link PathMatcher} objects ignored by {@link #isIgnored(RelPath)} */
   ImmutableSet<PathMatcher> getBlacklistedPaths();
 
   /** @return A {@link ImmutableSet} of {@link PathMatcher} objects to have buck ignore. */
@@ -97,6 +125,14 @@ public interface ProjectFilesystem {
 
   boolean exists(Path pathRelativeToProjectRoot, LinkOption... options);
 
+  default boolean exists(ForwardRelativePath pathRelativeToProjectRoot, LinkOption... options) {
+    return exists(pathRelativeToProjectRoot.toPath(getFileSystem()), options);
+  }
+
+  default boolean exists(RelPath pathRelativeToProjectRoot, LinkOption... options) {
+    return exists(pathRelativeToProjectRoot.getPath(), options);
+  }
+
   long getFileSize(Path pathRelativeToProjectRoot) throws IOException;
 
   /**
@@ -120,6 +156,10 @@ public interface ProjectFilesystem {
 
   /** Checks whether there is a normal file at the specified path. */
   boolean isFile(Path pathRelativeToProjectRoot, LinkOption... options);
+
+  default boolean isFile(PathWrapper pathRelativeToProjectRoot, LinkOption... options) {
+    return isFile(pathRelativeToProjectRoot.getPath(), options);
+  }
 
   boolean isHidden(Path pathRelativeToProjectRoot) throws IOException;
 
@@ -199,6 +239,10 @@ public interface ProjectFilesystem {
   /** Allows {@link Files#isDirectory} to be faked in tests. */
   boolean isDirectory(Path child, LinkOption... linkOptions);
 
+  default boolean isDirectory(PathWrapper path, LinkOption... linkOptions) {
+    return isDirectory(path.getPath(), linkOptions);
+  }
+
   /** Allows {@link Files#isExecutable} to be faked in tests. */
   boolean isExecutable(Path child);
 
@@ -209,7 +253,7 @@ public interface ProjectFilesystem {
   /**
    * Returns the files inside {@code pathRelativeToProjectRoot} which match {@code globPattern},
    * ordered in descending last modified time order. This will not obey the results of {@link
-   * #isIgnored(Path)}.
+   * #isIgnored(RelPath)}.
    */
   ImmutableSortedSet<Path> getMtimeSortedMatchingDirectoryContents(
       Path pathRelativeToProjectRoot, String globPattern) throws IOException;
@@ -276,6 +320,10 @@ public interface ProjectFilesystem {
 
   InputStream newFileInputStream(Path pathRelativeToProjectRoot) throws IOException;
 
+  default InputStream newFileInputStream(PathWrapper pathRelativeToProjectRoot) throws IOException {
+    return newFileInputStream(pathRelativeToProjectRoot.getPath());
+  }
+
   /** @param inputStream Source of the bytes. This method does not close this stream. */
   void copyToPath(InputStream inputStream, Path pathRelativeToProjectRoot, CopyOption... options)
       throws IOException;
@@ -334,6 +382,10 @@ public interface ProjectFilesystem {
 
   void createSymLink(Path symLink, Path realFile, boolean force) throws IOException;
 
+  default void createSymLink(PathWrapper symLink, Path realFile, boolean force) throws IOException {
+    createSymLink(symLink.getPath(), realFile, force);
+  }
+
   /**
    * Returns the set of POSIX file permissions, or the empty set if the underlying file system does
    * not support POSIX file attributes.
@@ -370,7 +422,7 @@ public interface ProjectFilesystem {
    * @return whether ignoredPaths contains path or any of its ancestors.
    */
   @Deprecated
-  boolean isIgnored(Path path);
+  boolean isIgnored(RelPath path);
 
   /**
    * Returns a relative path whose parent directory is guaranteed to exist. The path will be under

@@ -3,12 +3,6 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "parser",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/parser/api:api",
-        "//src/com/facebook/buck/parser/exceptions:exceptions",
-        "//src/com/facebook/buck/parser/syntax:syntax",
-        "//src/com/facebook/buck/rules/coercer:interface",
-    ],
     tests = [
         "//test/com/facebook/buck/skylark/parser:parser",
     ],
@@ -19,6 +13,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/model/targetgraph/raw:raw",
         "//src/com/facebook/buck/core/starlark/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/starlark/rule:rule",
+        "//src/com/facebook/buck/core/starlark/rule/names:names",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/event:interfaces",
         "//src/com/facebook/buck/event/external:external_lib",
@@ -37,5 +32,11 @@ java_immutables_library(
         "//third-party/java/bazel:bazel",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/parser/api:api",
+        "//src/com/facebook/buck/parser/exceptions:exceptions",
+        "//src/com/facebook/buck/parser/syntax:syntax",
+        "//src/com/facebook/buck/rules/coercer:interface",
     ],
 )

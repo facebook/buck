@@ -1,24 +1,27 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.artifact;
 
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
@@ -53,6 +56,7 @@ public class ArtifactFilesystem {
    */
   public OutputStream getOutputStream(Artifact artifact, FileAttribute<?>... attrs)
       throws IOException {
+    Preconditions.checkState(!artifact.isSource(), "Write destination should be a Build Artifact");
     Path path = resolveToPath(artifact);
     filesystem.createParentDirs(path);
     return filesystem.newFileOutputStream(path, attrs);
@@ -77,6 +81,7 @@ public class ArtifactFilesystem {
    * @throws IOException The file could not be written
    */
   public void writeContentsToPath(String contents, Artifact artifact) throws IOException {
+    Preconditions.checkState(!artifact.isSource(), "Write destination should be a Build Artifact");
     Path path = resolveToPath(artifact);
     filesystem.createParentDirs(path);
     filesystem.writeContentsToPath(contents, path);
@@ -91,6 +96,15 @@ public class ArtifactFilesystem {
   public void makeExecutable(Artifact artifact) throws IOException {
     Path path = resolveToPath(artifact);
     MostFiles.makeExecutable(filesystem.resolve(path));
+  }
+
+  /**
+   * Makes a copy of the given {@link Artifact} to the given destination {@link Artifact}, with copy
+   * behaviour as specified by the {@link CopySourceMode}.
+   */
+  public void copy(Artifact toCopy, Artifact dest, CopySourceMode mode) throws IOException {
+    Preconditions.checkState(!dest.isSource(), "Copy destination should be a Build Artifact");
+    filesystem.copy(resolveToPath(toCopy), resolveToPath(dest), mode);
   }
 
   /**
@@ -121,14 +135,14 @@ public class ArtifactFilesystem {
   }
 
   /** Create the package paths that actions will write into if it does not exist */
-  public void createPackagePaths(ImmutableSet<Artifact> outputs) throws IOException {
+  public void createPackagePaths(ImmutableSet<OutputArtifact> outputs) throws IOException {
     /*
      * Normally we'd just want to completely delete this directory if it exists. However, for
      * rules with multiple actions / outputs, they will all go in the same per-rule directory.
      * If only one action needs to re-run, we can't have the other action's files go missing.
      */
     RichStream.from(outputs)
-        .map(output -> output.asBound().asBuildArtifact())
+        .map(output -> output.getArtifact().asBound().asBuildArtifact())
         .filter(Objects::nonNull)
         .map(ba -> BuildPaths.getGenDir(filesystem, ba.getSourcePath().getTarget()))
         .distinct()
@@ -136,9 +150,9 @@ public class ArtifactFilesystem {
   }
 
   /** Remove build artifacts (only) that exist on the underlying filesystem. */
-  public void removeBuildArtifacts(ImmutableSet<Artifact> outputs) throws IOException {
+  public void removeBuildArtifacts(ImmutableSet<OutputArtifact> outputs) throws IOException {
     RichStream.from(outputs)
-        .map(output -> output.asBound().asBuildArtifact())
+        .map(output -> output.getArtifact().asBound().asBuildArtifact())
         .filter(Objects::nonNull)
         .map(this::resolveToPath)
         .forEachThrowing(filesystem::deleteRecursivelyIfExists);

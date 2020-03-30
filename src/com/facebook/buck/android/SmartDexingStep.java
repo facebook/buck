@@ -1,18 +1,19 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.DxStep.Option;
@@ -20,6 +21,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -58,6 +60,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -65,6 +68,7 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -78,9 +82,15 @@ import javax.annotation.Nullable;
  * even the right course of action given that it would require dynamically modifying the DAG.
  */
 public class SmartDexingStep implements Step {
+  private static final Logger log = Logger.get(SmartDexingStep.class);
 
   public static final String SHORT_NAME = "smart_dex";
   private static final String SECONDARY_SOLID_DEX_EXTENSION = ".dex.jar.xzs";
+  private final String PRIMARY_DEX_OVERFLOW_MESSAGE =
+      "Primary dex size exceeds 64k method ref limit\n"
+          + "Use primary dex patterns to exclude classes from the primary dex.";
+
+  private final Optional<Supplier<List<String>>> primaryDexWeightsSupplier;
 
   public interface DexInputHashesProvider {
     ImmutableMap<Path, Sha1HashCode> getDexInputHashes();
@@ -121,8 +131,9 @@ public class SmartDexingStep implements Step {
       AndroidPlatformTarget androidPlatformTarget,
       BuildContext buildContext,
       ProjectFilesystem filesystem,
-      Path primaryOutputPath,
-      Supplier<Set<Path>> primaryInputsToDex,
+      Optional<Path> primaryOutputPath,
+      Optional<Supplier<Set<Path>>> primaryInputsToDex,
+      Optional<Supplier<List<String>>> primaryDexWeightsSupplier,
       Optional<Path> secondaryOutputDir,
       Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
       DexInputHashesProvider dexInputHashesProvider,
@@ -145,12 +156,15 @@ public class SmartDexingStep implements Step {
         MoreSuppliers.memoize(
             () -> {
               Builder<Path, Path> map = ImmutableMultimap.builder();
-              map.putAll(primaryOutputPath, primaryInputsToDex.get());
+              if (primaryInputsToDex.isPresent()) {
+                map.putAll(primaryOutputPath.get(), primaryInputsToDex.get().get());
+              }
               if (secondaryInputsToDex.isPresent()) {
                 map.putAll(secondaryInputsToDex.get().get());
               }
               return map.build();
             });
+    this.primaryDexWeightsSupplier = primaryDexWeightsSupplier;
     this.secondaryOutputDir = secondaryOutputDir;
     this.dexInputHashesProvider = dexInputHashesProvider;
     this.successDir = successDir;
@@ -186,55 +200,105 @@ public class SmartDexingStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
-    try {
-      Multimap<Path, Path> outputToInputs = outputToInputsSupplier.get();
-      runDxCommands(context, outputToInputs);
-      if (secondaryOutputDir.isPresent()) {
-        removeExtraneousSecondaryArtifacts(
-            secondaryOutputDir.get(), outputToInputs.keySet(), filesystem);
 
-        // Concatenate if solid compression is specified.
-        // create a mapping of the xzs file target and the dex.jar files that go into it
-        ImmutableMultimap.Builder<Path, Path> secondaryDexJarsMultimapBuilder =
-            ImmutableMultimap.builder();
-        for (Path p : outputToInputs.keySet()) {
-          if (DexStore.XZS.matchesPath(p)) {
-            String[] matches = p.getFileName().toString().split("-");
-            Path output = p.getParent().resolve(matches[0].concat(SECONDARY_SOLID_DEX_EXTENSION));
-            secondaryDexJarsMultimapBuilder.put(output, p);
-          }
-        }
-        ImmutableMultimap<Path, Path> secondaryDexJarsMultimap =
-            secondaryDexJarsMultimapBuilder.build();
-        if (!secondaryDexJarsMultimap.isEmpty()) {
-          for (Map.Entry<Path, Collection<Path>> entry :
-              secondaryDexJarsMultimap.asMap().entrySet()) {
-            Path secondaryCompressedBlobOutput = entry.getKey();
-            Collection<Path> secondaryDexJars = entry.getValue();
-            // Construct the output path for our solid blob and its compressed form.
-            Path secondaryBlobOutput =
-                secondaryCompressedBlobOutput.getParent().resolve("uncompressed.dex.blob");
-            // Concatenate the jars into a blob and compress it.
-            Step concatStep =
-                new ConcatStep(
-                    filesystem, ImmutableList.copyOf(secondaryDexJars), secondaryBlobOutput);
-            Step xzStep =
-                new XzStep(
-                    filesystem,
-                    secondaryBlobOutput,
-                    secondaryCompressedBlobOutput,
-                    xzCompressionLevel);
-            StepRunner.runStep(context, concatStep, Optional.of(buildTarget));
-            StepRunner.runStep(context, xzStep, Optional.of(buildTarget));
-          }
-        }
-      }
+    Multimap<Path, Path> outputToInputs;
+    try {
+      outputToInputs = outputToInputsSupplier.get();
+      runDxCommands(context, outputToInputs);
     } catch (StepFailedException e) {
-      context.logError(e, "There was an error in smart dexing step.");
+      if (e.getStep() instanceof DxStep
+          && e.getExitCode().orElse(DxStep.SUCCESS_EXIT_CODE)
+              == DxStep.DEX_REFERENCE_OVERFLOW_EXIT_CODE) {
+        DxStep dxStep = (DxStep) e.getStep();
+        if (dxStep.getOutputDexFile().endsWith("classes.dex")) {
+          if (primaryDexWeightsSupplier.isPresent()) {
+            List<String> dexWeights = primaryDexWeightsSupplier.get().get();
+            context.getConsole().printErrorText(formatDexOverflowMessage(dexWeights));
+          } else {
+            context.logError(e, PRIMARY_DEX_OVERFLOW_MESSAGE);
+          }
+        } else {
+          context.logError(
+              e,
+              "Secondary dex size exceeds 64k method ref limit."
+                  + "linear_alloc_hard_limit determines the maximum size in bytes of secondary dexes."
+                  + "Reduce linear_alloc_hard_limit until all secondary dexes are small enough. (16mb recommended)");
+        }
+      } else {
+        context.logError(e, "There was an error in smart dexing step.");
+      }
       return StepExecutionResults.ERROR;
     }
 
+    if (outputToInputs != null && secondaryOutputDir.isPresent()) {
+      removeExtraneousSecondaryArtifacts(
+          secondaryOutputDir.get(), outputToInputs.keySet(), filesystem);
+
+      ImmutableMultimap<Path, Path> xzsOutputsToInputs = createXzsOutputsToInputs(outputToInputs);
+      if (!xzsOutputsToInputs.isEmpty()) {
+        try {
+          runXzsCommands(context, xzsOutputsToInputs);
+        } catch (StepFailedException e) {
+          context.logError(e, "There was an error producing an xzs file from dex jars");
+          return StepExecutionResults.ERROR;
+        }
+      }
+    }
+
     return StepExecutionResults.SUCCESS;
+  }
+
+  private String formatDexOverflowMessage(List<String> dexWeights) {
+    StringBuilder builder = new StringBuilder();
+    builder.append(
+        PRIMARY_DEX_OVERFLOW_MESSAGE
+            + "\n"
+            + "The largest libraries in the primary dex, by number of bytes:\n"
+            + "Weight\tDex file path\n");
+
+    builder.append(dexWeights.stream().limit(20).collect(Collectors.joining("\n")));
+
+    if (dexWeights.size() > 20) {
+      builder.append("\n... See buck log for full list");
+      log.error(String.join("\n", dexWeights));
+    }
+    return builder.toString();
+  }
+
+  private ImmutableMultimap<Path, Path> createXzsOutputsToInputs(
+      Multimap<Path, Path> outputToInputs) {
+    // Concatenate if solid compression is specified.
+    // create a mapping of the xzs file target and the dex.jar files that go into it
+    ImmutableMultimap.Builder<Path, Path> xzsMultimapBuilder = ImmutableMultimap.builder();
+    for (Path p : outputToInputs.keySet()) {
+      if (DexStore.XZS.matchesPath(p)) {
+        String[] matches = p.getFileName().toString().split("-");
+        Path output = p.getParent().resolve(matches[0].concat(SECONDARY_SOLID_DEX_EXTENSION));
+        xzsMultimapBuilder.put(output, p);
+      }
+    }
+    return xzsMultimapBuilder.build();
+  }
+
+  private void runXzsCommands(
+      ExecutionContext context, ImmutableMultimap<Path, Path> outputsToInputs)
+      throws StepFailedException, InterruptedException {
+    for (Map.Entry<Path, Collection<Path>> entry : outputsToInputs.asMap().entrySet()) {
+      Path secondaryCompressedBlobOutput = entry.getKey();
+      Collection<Path> secondaryDexJars = entry.getValue();
+      // Construct the output path for our solid blob and its compressed form.
+      Path secondaryBlobOutput =
+          secondaryCompressedBlobOutput.getParent().resolve("uncompressed.dex.blob");
+      // Concatenate the jars into a blob and compress it.
+      Step concatStep =
+          new ConcatStep(filesystem, ImmutableList.copyOf(secondaryDexJars), secondaryBlobOutput);
+      Step xzStep =
+          new XzStep(
+              filesystem, secondaryBlobOutput, secondaryCompressedBlobOutput, xzCompressionLevel);
+
+      StepRunner.runStep(context, concatStep, Optional.of(buildTarget));
+      StepRunner.runStep(context, xzStep, Optional.of(buildTarget));
+    }
   }
 
   private void runDxCommands(ExecutionContext context, Multimap<Path, Path> outputToInputs)

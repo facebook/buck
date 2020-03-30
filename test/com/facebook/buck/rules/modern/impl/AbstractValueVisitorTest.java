@@ -1,29 +1,34 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
 
+import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
+import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
@@ -35,11 +40,12 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
+import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.EmptyMemoizerDeserialization;
@@ -62,7 +68,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -71,13 +76,16 @@ public abstract class AbstractValueVisitorTest {
   private static final Path absoluteRoot = Paths.get(".").toAbsolutePath();
 
   protected static final ProjectFilesystem rootFilesystem =
-      new FakeProjectFilesystem(absoluteRoot.resolve(Paths.get("project/root")));
+      new FakeProjectFilesystem(
+          CanonicalCellName.rootCell(), absoluteRoot.resolve(Paths.get("project/root")));
 
   protected static final ProjectFilesystem otherFilesystem =
-      new FakeProjectFilesystem(absoluteRoot.resolve(Paths.get("project/other")));
+      new FakeProjectFilesystem(
+          CanonicalCellName.rootCell(), absoluteRoot.resolve(Paths.get("project/other")));
   private static final TargetConfiguration TARGET_CONFIGURATION =
-      ImmutableDefaultTargetConfiguration.of(
-          BuildTargetFactory.newInstance(otherFilesystem.getRootPath(), "//platform:platform"));
+      RuleBasedTargetConfiguration.of(
+          ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform"));
+
   protected static final BuildTarget someBuildTarget =
       UnconfiguredBuildTargetFactoryForTests.newInstance(
               otherFilesystem.getRootPath(), "other//some:target#flavor1,flavor2")
@@ -102,6 +110,9 @@ public abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void optional() throws Exception;
+
+  @Test
+  public abstract void frameworkPath() throws Exception;
 
   @Test
   public abstract void simple() throws Exception;
@@ -135,6 +146,9 @@ public abstract class AbstractValueVisitorTest {
 
   @Test
   public abstract void nonHashableSourcePathContainer() throws Exception;
+
+  @Test
+  public abstract void outputLabel() throws Exception;
 
   @Test
   public abstract void map() throws Exception;
@@ -255,8 +269,8 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey
     final BuildTarget target =
         someBuildTarget
-            .getUnconfiguredBuildTargetView()
-            .configure(EmptyTargetConfiguration.INSTANCE);
+            .getUnconfiguredBuildTarget()
+            .configure(UnconfiguredTargetConfiguration.INSTANCE);
   }
 
   public static class WithBuildTargetWithConfigurationForConfigurationTargets
@@ -264,7 +278,7 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey
     final BuildTarget target =
         someBuildTarget
-            .getUnconfiguredBuildTargetView()
+            .getUnconfiguredBuildTarget()
             .configure(ConfigurationForConfigurationTargets.INSTANCE);
   }
 
@@ -288,6 +302,10 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey
     final NonHashableSourcePathContainer container =
         new NonHashableSourcePathContainer(FakeSourcePath.of(rootFilesystem, "some/path"));
+  }
+
+  public static class WithOutputLabel implements FakeBuildable {
+    @AddToRuleKey final OutputLabel label = OutputLabel.of("test_label");
   }
 
   public static class WithSet implements FakeBuildable {
@@ -315,6 +333,20 @@ public abstract class AbstractValueVisitorTest {
   public static class WithOptional implements FakeBuildable {
     @AddToRuleKey private final Optional<String> present = Optional.of("hello");
     @AddToRuleKey private final Optional<String> empty = Optional.empty();
+  }
+
+  public static class WithFrameworkPath implements FakeBuildable {
+    @AddToRuleKey
+    final FrameworkPath sourceTreePath =
+        FrameworkPath.ofSourceTreePath(
+            new SourceTreePath(
+                PBXReference.SourceTree.SDKROOT,
+                Paths.get("SomeSystem.framework"),
+                Optional.empty()));
+
+    @AddToRuleKey
+    final FrameworkPath sourcePath =
+        FrameworkPath.ofSourcePath(FakeSourcePath.of(rootFilesystem, "some/path"));
   }
 
   public static class Simple implements FakeBuildable {
@@ -368,16 +400,18 @@ public abstract class AbstractValueVisitorTest {
   }
 
   public static class Complex implements FakeBuildable {
-    @AddToRuleKey
-    final Optional<ImmutableList<ImmutableSortedSet<SourcePath>>> value =
-        Optional.of(
-            ImmutableList.of(
-                ImmutableSortedSet.of(),
-                ImmutableSortedSet.of(
-                    FakeSourcePath.of(rootFilesystem, "some/path"),
-                    DefaultBuildTargetSourcePath.of(
-                        BuildTargetFactory.newInstance(
-                            rootFilesystem.getRootPath(), "//some/build:target")))));
+    @AddToRuleKey final Optional<ImmutableList<ImmutableSortedSet<SourcePath>>> value;
+
+    {
+      value =
+          Optional.of(
+              ImmutableList.of(
+                  ImmutableSortedSet.of(),
+                  ImmutableSortedSet.of(
+                      FakeSourcePath.of(rootFilesystem, "some/path"),
+                      DefaultBuildTargetSourcePath.of(
+                          BuildTargetFactory.newInstance("//some/build:target")))));
+    }
 
     @AddToRuleKey private final String string = "hello";
     @AddToRuleKey private final int number = 0;
@@ -391,9 +425,8 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey final AddsToRuleKey appendable = new Appendable();
   }
 
-  @BuckStyleTuple
-  @Value.Immutable
-  interface AbstractTupleInterfaceData extends AddsToRuleKey {
+  @BuckStyleValue
+  interface TupleInterfaceData extends AddsToRuleKey {
     @AddToRuleKey
     SourcePath getFirst();
 
@@ -401,8 +434,7 @@ public abstract class AbstractValueVisitorTest {
     String getSecond();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractImmutableInterfaceData extends AddsToRuleKey {
     @AddToRuleKey
     SourcePath getFirst();
@@ -411,18 +443,16 @@ public abstract class AbstractValueVisitorTest {
     String getSecond();
   }
 
-  @BuckStyleTuple
-  @Value.Immutable
-  abstract static class AbstractTupleClassData implements AddsToRuleKey {
+  @BuckStyleValue
+  interface TupleClassData extends AddsToRuleKey {
     @AddToRuleKey
-    abstract SourcePath getFirst();
+    SourcePath getFirst();
 
     @AddToRuleKey
-    abstract String getSecond();
+    String getSecond();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractImmutableClassData implements AddsToRuleKey {
     @AddToRuleKey
     abstract SourcePath getFirst();
@@ -435,7 +465,7 @@ public abstract class AbstractValueVisitorTest {
 
     @AddToRuleKey
     private final TupleInterfaceData tupleInterfaceData =
-        TupleInterfaceData.of(FakeSourcePath.of(rootFilesystem, "first.path"), "world");
+        ImmutableTupleInterfaceData.of(FakeSourcePath.of(rootFilesystem, "first.path"), "world");
 
     @AddToRuleKey
     private final ImmutableInterfaceData immutableInterfaceData =
@@ -446,7 +476,7 @@ public abstract class AbstractValueVisitorTest {
 
     @AddToRuleKey
     private final TupleClassData tupleClassData =
-        TupleClassData.of(FakeSourcePath.of(rootFilesystem, "third.path"), "world");
+        ImmutableTupleClassData.of(FakeSourcePath.of(rootFilesystem, "third.path"), "world");
 
     @AddToRuleKey
     private final ImmutableClassData immutableClassData =

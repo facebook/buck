@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.toolchain.tool.impl;
@@ -19,7 +19,7 @@ package com.facebook.buck.core.toolchain.tool.impl;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -27,6 +27,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -63,7 +65,7 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     ImmutableList.Builder<String> command = ImmutableList.builder();
     if (baseTool.isPresent()) {
       command.addAll(baseTool.get().getCommandPrefix(resolver));
@@ -75,13 +77,11 @@ public class CommandTool implements Tool {
   }
 
   @Override
-  public ImmutableSortedMap<String, String> getEnvironment(SourcePathResolver resolver) {
-    ImmutableSortedMap.Builder<String, String> env = ImmutableSortedMap.naturalOrder();
-    if (baseTool.isPresent()) {
-      env.putAll(baseTool.get().getEnvironment(resolver));
-    }
+  public ImmutableSortedMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
+    Map<String, String> env = new HashMap<>();
+    baseTool.ifPresent(tool -> env.putAll(tool.getEnvironment(resolver)));
     env.putAll(Arg.stringify(environment, resolver));
-    return env.build();
+    return ImmutableSortedMap.copyOf(env);
   }
 
   // Builder for a `CommandTool`.

@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain.elf;
@@ -90,19 +90,19 @@ public class ElfTest {
     Elf elf = ElfFile.mapReadOnly(elfPath);
     Optional<ElfSection> section;
 
-    section = elf.getSectionByName(".text").map(ElfSectionLookupResult::getSection);
+    section = elf.getSectionByName(".text").map(Elf.ElfSectionLookupResult::getSection);
     assertTrue(section.isPresent());
     assertEquals(ElfSectionHeader.SHType.SHT_PROGBITS, section.get().header.sh_type);
 
-    section = elf.getSectionByName(".bss").map(ElfSectionLookupResult::getSection);
+    section = elf.getSectionByName(".bss").map(Elf.ElfSectionLookupResult::getSection);
     assertTrue(section.isPresent());
     assertEquals(ElfSectionHeader.SHType.SHT_NOBITS, section.get().header.sh_type);
 
-    section = elf.getSectionByName(".strtab").map(ElfSectionLookupResult::getSection);
+    section = elf.getSectionByName(".strtab").map(Elf.ElfSectionLookupResult::getSection);
     assertTrue(section.isPresent());
     assertEquals(ElfSectionHeader.SHType.SHT_STRTAB, section.get().header.sh_type);
 
-    section = elf.getSectionByName(".symtab").map(ElfSectionLookupResult::getSection);
+    section = elf.getSectionByName(".symtab").map(Elf.ElfSectionLookupResult::getSection);
     assertTrue(section.isPresent());
     assertEquals(ElfSectionHeader.SHType.SHT_SYMTAB, section.get().header.sh_type);
   }

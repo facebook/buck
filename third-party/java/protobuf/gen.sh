@@ -20,22 +20,48 @@
 # Setup - exit on any failure, record current dir and go to repo root.
 set -e
 current_dir=$(pwd)
-cd "$(git rev-parse --show-toplevel)"
+
+IS_GIT=
+if git rev-parse --git-dir > /dev/null 2>&1; then
+    # This is a valid git repository
+
+    cd "$(git rev-parse --show-toplevel)"
+    IS_GIT=1
+else
+    # this is not a git repository
+
+    script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+    # assume this script is in third-party/java/protobuf
+    cd "${script_dir}/../../.."
+fi
+
+# In a git repo we can use git ls-files which is faster and more
+# accurate than a find
+function ls_files_cmd {
+    pattern="$1"
+    if [ -n "$IS_GIT" ]; then
+        git ls-files -c -o -- ${pattern}
+    else
+        find . -path "./${pattern}"
+    fi
+}
+
+PROTOC="protoc"
 
 # Compile all proto files visible to git (cached and others).
-for f in $(git ls-files -c -o -- src/**.proto); do
-   protoc --java_out=src-gen/ --java_opt=annotate_code $f
+for f in $(ls_files_cmd src/**.proto); do
+   $PROTOC --java_out=src-gen/ --java_opt=annotate_code $f
 done
 
 # Remove metadata files.
-for f in $(git ls-files -c -o -- src-gen/**/proto/*.meta); do
+for f in $(ls_files_cmd src-gen/**/proto/*.meta); do
    rm $f
 done
 
 # Add generated tag to make tooling correctly recognize them as generated.
 # Insert tag name into the command so that tooling does not mistaken this file with generated code.
 tag_name="generated"
-for f in $(git ls-files -c -o -- src-gen/**/proto/*.java); do
+for f in $(ls_files_cmd src-gen/**/proto/*.java); do
   # Do not use sed - the only portable version of prepending a line is awful.
   temp_file=$(mktemp)
   echo "// @$tag_name" > $temp_file
@@ -45,4 +71,3 @@ done
 
 cd "$current_dir"
 set +e
-

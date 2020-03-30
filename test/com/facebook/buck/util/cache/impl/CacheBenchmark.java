@@ -1,24 +1,26 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.cache.impl;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.watchman.ImmutableWatchmanPathEvent;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
+import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.google.caliper.BeforeExperiment;
 import com.google.caliper.Benchmark;
@@ -40,12 +42,14 @@ public class CacheBenchmark {
   private List<String> folders = Lists.newArrayList("");
   private List<String> leaves = Lists.newArrayList();
 
+  private FakeProjectFilesystem projectFilesystem;
   private WatchedFileHashCache cache;
 
   @Before
   public void setUpTest() {
     setUpBenchmark();
-    cache = new WatchedFileHashCache(new FakeProjectFilesystem(), FileHashCacheMode.DEFAULT);
+    projectFilesystem = new FakeProjectFilesystem();
+    cache = new WatchedFileHashCache(projectFilesystem, FileHashCacheMode.DEFAULT);
   }
 
   private static String generateRandomString() {
@@ -106,6 +110,9 @@ public class CacheBenchmark {
     leaves.forEach(
         leaf ->
             cache.onFileSystemChange(
-                ImmutableWatchmanPathEvent.of(Paths.get(leaf), Kind.CREATE, Paths.get(leaf))));
+                WatchmanPathEvent.of(
+                    AbsPath.of(projectFilesystem.resolve(leaf)),
+                    Kind.CREATE,
+                    RelPath.of(Paths.get(leaf)))));
   }
 }

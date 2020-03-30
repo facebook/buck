@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache.config;
@@ -130,6 +130,14 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   private static final String REPOSITORY = "repository";
   private static final String DEFAULT_REPOSITORY = "";
 
+  private static final String ENABLE_WRITE_TO_CAS = "enable_write_to_cas";
+  private static final Boolean DEFAULT_ENABLE_WRITE_TO_CAS = false;
+  private static final String CAS_HOST = "cas_host";
+  private static final String CAS_PORT = "cas_port";
+  private static final int DEFAULT_CAS_PORT = 443;
+  private static final String CAS_DEADLINE_SEC = "cas_deadline_sec";
+  private static final int DEFAULT_CAS_DEADLINE_SEC = 300;
+
   private static final String SCHEDULE_TYPE = "schedule_type";
   private static final String DEFAULT_SCHEDULE_TYPE = "none";
   public static final String MULTI_FETCH = "multi_fetch";
@@ -137,9 +145,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   public static final String MULTI_CHECK = "multi_check";
   private static final int DEFAULT_MULTI_FETCH_LIMIT = 100;
 
-  private static final String DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS =
-      "download_heavy_build_http_cache_fetch_threads";
-  private static final int DEFAULT_DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS = 20;
+  private static final String ENV_VAR_SUFFIX = "_env_var";
 
   private final ProjectFilesystem projectFilesystem;
   private final BuckConfig buckConfig;
@@ -170,12 +176,6 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     return buckConfig;
   }
 
-  public int getDownloadHeavyBuildHttpFetchConcurrency() {
-    return Math.min(
-        buckConfig.getView(ResourcesConfig.class).getMaximumResourceAmounts().getNetworkIO(),
-        getDownloadHeavyBuildHttpCacheFetchThreads());
-  }
-
   public int getHttpFetchConcurrency() {
     return (int)
         Math.min(
@@ -203,6 +203,29 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
 
   public Optional<String> getHybridThriftEndpoint() {
     return buckConfig.getValue(CACHE_SECTION_NAME, HYBRID_THRIFT_ENDPOINT);
+  }
+
+  public Boolean getEnableWriteToCas() {
+    return buckConfig.getBooleanValue(
+        CACHE_SECTION_NAME, ENABLE_WRITE_TO_CAS, DEFAULT_ENABLE_WRITE_TO_CAS);
+  }
+
+  public Optional<String> getCasHost() {
+    return buckConfig.getValue(CACHE_SECTION_NAME, CAS_HOST);
+  }
+
+  public int getCasPort() {
+    return buckConfig
+        .getValue(CACHE_SECTION_NAME, CAS_PORT)
+        .map(Integer::parseInt)
+        .orElse(DEFAULT_CAS_PORT);
+  }
+
+  public int getCasDeadline() {
+    return buckConfig
+        .getValue(CACHE_SECTION_NAME, CAS_DEADLINE_SEC)
+        .map(Integer::parseInt)
+        .orElse(DEFAULT_CAS_DEADLINE_SEC);
   }
 
   public LoadBalancingType getLoadBalancingType() {
@@ -310,11 +333,7 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
               }
             });
 
-    return ArtifactCacheEntries.builder()
-        .setDirCacheEntries(dirCacheEntries)
-        .setHttpCacheEntries(httpCacheEntries)
-        .setSQLiteCacheEntries(sqliteCacheEntries)
-        .build();
+    return ImmutableArtifactCacheEntries.of(httpCacheEntries, dirCacheEntries, sqliteCacheEntries);
   }
 
   private ImmutableSet<HttpCacheEntry> getHttpCacheEntries() {
@@ -519,16 +538,11 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     Optional<Long> maxSizeBytes =
         buckConfig.getValue(section, DIR_MAX_SIZE_FIELD).map(SizeUnit::parseBytes);
 
-    return DirCacheEntry.builder()
-        .setName(cacheName)
-        .setCacheDir(pathToCacheDir)
-        .setCacheReadMode(readMode)
-        .setMaxSizeBytes(maxSizeBytes)
-        .build();
+    return DirCacheEntry.of(cacheName, pathToCacheDir, maxSizeBytes, readMode);
   }
 
   private HttpCacheEntry obtainHttpEntry() {
-    HttpCacheEntry.Builder builder = HttpCacheEntry.builder();
+    ImmutableHttpCacheEntry.Builder builder = ImmutableHttpCacheEntry.builder();
     builder.setUrl(
         buckConfig.getUrl(CACHE_SECTION_NAME, HTTP_URL_FIELD_NAME).orElse(DEFAULT_HTTP_URL));
     long defaultTimeoutValue =
@@ -580,13 +594,8 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
     Optional<Long> maxInlinedSizeBytes =
         buckConfig.getValue(section, SQLITE_MAX_INLINED_SIZE_FIELD).map(SizeUnit::parseBytes);
 
-    return SQLiteCacheEntry.builder()
-        .setName(cacheName)
-        .setCacheDir(pathToCacheDir)
-        .setCacheReadMode(readMode)
-        .setMaxSizeBytes(maxSizeBytes)
-        .setMaxInlinedSizeBytes(maxInlinedSizeBytes)
-        .build();
+    return ImmutableSQLiteCacheEntry.of(
+        Optional.of(cacheName), pathToCacheDir, maxSizeBytes, maxInlinedSizeBytes, readMode);
   }
 
   public ImmutableSet<String> getBlacklistedWifiSsids() {
@@ -614,18 +623,6 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   }
 
   /**
-   * Number of cache fetch threads to be used by download heavy builds, such as the synchronized
-   * build phase of Stampede, which almost entirely consists of cache fetches.
-   *
-   * @return
-   */
-  private int getDownloadHeavyBuildHttpCacheFetchThreads() {
-    return buckConfig
-        .getInteger(CACHE_SECTION_NAME, DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS)
-        .orElse(DEFAULT_DOWNLOAD_HEAVY_BUILD_CACHE_FETCH_THREADS);
-  }
-
-  /**
    * @return field value or content of environment variable specified in field
    *     "${section}.${field}_env_var" if this environment variable exists and does not just contain
    *     0 or more whitespaces
@@ -633,11 +630,19 @@ public class ArtifactCacheBuckConfig implements ConfigView<BuckConfig> {
   public static Optional<String> getStringOrEnvironmentVariable(
       BuckConfig buckConfig, String section, String field) {
     Optional<String> defaultValue = buckConfig.getValue(section, field);
-    Optional<String> envVariable = buckConfig.getValue(section, field + "_env_var");
+    Optional<String> envVariable = buckConfig.getValue(section, getEnvVarFieldNameForField(field));
     if (!envVariable.isPresent()) {
       return defaultValue;
     }
     String envValue = buckConfig.getEnvironment().getOrDefault(envVariable.get(), "").trim();
     return envValue.isEmpty() ? defaultValue : Optional.of(envValue);
+  }
+
+  /**
+   * @param field
+   * @return append the {@value #ENV_VAR_SUFFIX} to the {field}
+   */
+  public static String getEnvVarFieldNameForField(String field) {
+    return field + ENV_VAR_SUFFIX;
   }
 }

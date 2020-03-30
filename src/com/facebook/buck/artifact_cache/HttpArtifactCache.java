@@ -1,24 +1,24 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.LazyPath;
@@ -53,7 +53,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
    */
   private static final Logger LOG = Logger.get(HttpArtifactCache.class);
 
-  private final Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
+  private final Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
 
   public HttpArtifactCache(NetworkCacheArgs args) {
@@ -65,7 +65,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
   @Override
   protected FetchResult fetchImpl(@Nullable BuildTarget target, RuleKey ruleKey, LazyPath output)
       throws IOException {
-    FetchResult.Builder resultBuilder = FetchResult.builder();
+    ImmutableFetchResult.Builder resultBuilder = ImmutableFetchResult.builder();
     Request.Builder requestBuilder = new Request.Builder().get();
 
     String getParams = "";
@@ -102,7 +102,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
             getProjectFilesystem()
                 .createTempFile(file.getParent(), file.getFileName().toString(), ".tmp");
 
-        FetchResponseReadResult fetchedData;
+        HttpArtifactCacheBinaryProtocol.FetchResponseReadResult fetchedData;
         try (OutputStream tempFileOutputStream = getProjectFilesystem().newFileOutputStream(temp)) {
           fetchedData =
               HttpArtifactCacheBinaryProtocol.readFetchResponse(input, tempFileOutputStream);
@@ -156,7 +156,7 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
 
   @Override
   protected StoreResult storeImpl(ArtifactInfo info, Path file) throws IOException {
-    StoreResult.Builder resultBuilder = StoreResult.builder();
+    ImmutableStoreResult.Builder resultBuilder = ImmutableStoreResult.builder();
 
     // Build the request, hitting the multi-key endpoint.
     Request.Builder builder = new Request.Builder();
@@ -187,7 +187,8 @@ public final class HttpArtifactCache extends AbstractNetworkCache {
 
           @Override
           public void writeTo(BufferedSink bufferedSink) throws IOException {
-            StoreWriteResult writeResult = storeRequest.write(bufferedSink.outputStream());
+            HttpArtifactCacheBinaryProtocol.StoreWriteResult writeResult =
+                storeRequest.write(bufferedSink.outputStream());
             resultBuilder.setArtifactContentHash(
                 writeResult.getArtifactContentHashCode().toString());
           }

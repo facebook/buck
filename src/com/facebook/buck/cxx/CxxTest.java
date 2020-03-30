@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -32,7 +33,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -126,7 +127,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     return executable;
   }
 
@@ -156,7 +157,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   /** @return the shell command used to run the test. */
   protected abstract ImmutableList<String> getShellCommand(
-      SourcePathResolver pathResolver, Path output);
+      SourcePathResolverAdapter pathResolver, Path output);
 
   @Override
   public ImmutableList<Step> runTests(
@@ -234,7 +235,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       return TestResults.of(
@@ -285,7 +286,8 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
     return Stream.concat(
             additionalDeps.get(() -> additionalDepsSupplier.apply(buildRuleResolver)).stream(),
-            BuildableSupport.getDeps(getExecutableCommand(), buildRuleResolver))
+            BuildableSupport.getDeps(
+                getExecutableCommand(OutputLabel.defaultLabel()), buildRuleResolver))
         .map(BuildRule::getBuildTarget);
   }
 
@@ -295,11 +297,12 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
+        .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType(cxxTestType.testSpecType)
         .addAllCommand(
-            getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
+            getExecutableCommand(OutputLabel.defaultLabel())
+                .getCommandPrefix(buildContext.getSourcePathResolver()))
         .addAllCommand(Arg.stringify(getArgs(), buildContext.getSourcePathResolver()))
         .putAllEnv(getEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
@@ -311,7 +314,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .build();
   }
 
-  protected ImmutableMap<String, String> getEnv(SourcePathResolver pathResolver) {
+  protected ImmutableMap<String, String> getEnv(SourcePathResolverAdapter pathResolver) {
     return new ImmutableMap.Builder<String, String>()
         .putAll(executable.getEnvironment(pathResolver))
         .putAll(Arg.stringify(env, pathResolver))

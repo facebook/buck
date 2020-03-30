@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -31,7 +31,9 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -39,12 +41,13 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.log.Logger;
@@ -74,19 +77,18 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
-import com.google.common.io.Files;
 import com.google.common.util.concurrent.Futures;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -94,7 +96,7 @@ import java.util.stream.Stream;
 /**
  * Creates a bundle: a directory containing files and subdirectories, described by an Info.plist.
  */
-public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
+public class AppleBundle extends AbstractBuildRule
     implements NativeTestable, BuildRuleWithBinary, HasRuntimeDeps, BinaryBuildRule {
 
   private static final Logger LOG = Logger.get(AppleBundle.class);
@@ -160,6 +162,7 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final ImmutableMap<SourcePath, String> extensionBundlePaths;
 
   @AddToRuleKey private final boolean copySwiftStdlibToFrameworks;
+  @AddToRuleKey private final boolean useLipoThin;
 
   @AddToRuleKey private final boolean useEntitlementsWhenAdhocCodeSigning;
 
@@ -185,9 +188,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean verifyResources;
 
   private final Duration codesignTimeout;
-  private static final ImmutableList<String> BASE_IBTOOL_FLAGS =
-      ImmutableList.of(
-          "--output-format", "human-readable-text", "--notices", "--warnings", "--errors");
+  private final BuildRuleParams buildRuleParams;
+  private BuildableSupport.DepsSupplier depsSupplier;
 
   AppleBundle(
       BuildTarget buildTarget,
@@ -221,8 +223,10 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<String> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
+      boolean useLipoThin,
       boolean useEntitlementsWhenAdhocCodeSigning) {
-    super(buildTarget, projectFilesystem, params);
+    super(buildTarget, projectFilesystem);
+    this.buildRuleParams = params;
     this.extension =
         extension.isLeft() ? extension.getLeft().toFileExtension() : extension.getRight();
     this.productName = productName;
@@ -294,7 +298,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     this.codesignTimeout = codesignTimeout;
     this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
+    this.useLipoThin = useLipoThin;
     this.useEntitlementsWhenAdhocCodeSigning = useEntitlementsWhenAdhocCodeSigning;
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -413,7 +419,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     Path metadataPath = getMetadataPath();
 
-    Path infoPlistInputPath = context.getSourcePathResolver().getAbsolutePath(infoPlist);
+    AbsPath infoPlistInputPath =
+        AbsPath.of(context.getSourcePathResolver().getAbsolutePath(infoPlist));
     Path infoPlistSubstitutionTempPath =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.plist");
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
@@ -463,57 +470,51 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
       appendCopyDsymStep(stepsBuilder, buildableContext, context);
     }
 
-    addStepsToCopyResources(context, stepsBuilder);
-
     ImmutableList.Builder<Path> codeSignOnCopyPathsBuilder = ImmutableList.builder();
+
+    AppleResourceProcessing.addStepsToCopyResources(
+        context,
+        stepsBuilder,
+        codeSignOnCopyPathsBuilder,
+        resources,
+        verifyResources,
+        bundleRoot,
+        destinations,
+        getProjectFilesystem(),
+        ibtoolFlags,
+        isLegacyWatchApp(),
+        platform,
+        LOG,
+        ibtool,
+        ibtoolModuleFlag,
+        getBuildTarget(),
+        Optional.of(binaryName));
 
     addStepsToCopyExtensionBundlesDependencies(context, stepsBuilder, codeSignOnCopyPathsBuilder);
 
-    for (SourcePath path : resources.getResourceVariantFiles()) {
-      Path variantFilePath = context.getSourcePathResolver().getAbsolutePath(path);
-
-      Path variantDirectory = variantFilePath.getParent();
-      if (variantDirectory == null || !variantDirectory.toString().endsWith(".lproj")) {
-        throw new HumanReadableException(
-            "Variant files have to be in a directory with name ending in '.lproj', "
-                + "but '%s' is not.",
-            variantFilePath);
-      }
-
-      Path bundleDestinationPath = bundleRoot.resolve(destinations.getResourcesPath());
-      Path bundleVariantDestinationPath =
-          bundleDestinationPath.resolve(variantDirectory.getFileName());
-      stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  getProjectFilesystem(),
-                  bundleVariantDestinationPath)));
-
-      Path destinationPath = bundleVariantDestinationPath.resolve(variantFilePath.getFileName());
-      addResourceProcessingSteps(
-          context.getSourcePathResolver(), variantFilePath, destinationPath, stepsBuilder);
-    }
-
-    if (!frameworks.isEmpty()) {
-      Path frameworksDestinationPath = bundleRoot.resolve(this.destinations.getFrameworksPath());
-      stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(),
-                  getProjectFilesystem(),
-                  frameworksDestinationPath)));
-      for (SourcePath framework : frameworks) {
-        Path srcPath = context.getSourcePathResolver().getAbsolutePath(framework);
-        stepsBuilder.add(
-            CopyStep.forDirectory(
-                getProjectFilesystem(),
-                srcPath,
-                frameworksDestinationPath,
-                CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-        codeSignOnCopyPathsBuilder.add(frameworksDestinationPath.resolve(srcPath.getFileName()));
-      }
-    }
+    AppleResourceProcessing.addVariantFileProcessingSteps(
+        resources,
+        context,
+        bundleRoot,
+        destinations,
+        stepsBuilder,
+        getProjectFilesystem(),
+        ibtoolFlags,
+        isLegacyWatchApp(),
+        platform,
+        LOG,
+        ibtool,
+        ibtoolModuleFlag,
+        getBuildTarget(),
+        Optional.of(binaryName));
+    AppleResourceProcessing.addFrameworksProcessingSteps(
+        frameworks,
+        bundleRoot,
+        destinations,
+        stepsBuilder,
+        context,
+        getProjectFilesystem(),
+        codeSignOnCopyPathsBuilder);
 
     if (needCodeSign()) {
       Optional<Path> signingEntitlementsTempPath = Optional.empty();
@@ -592,12 +593,23 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             };
       }
 
-      addSwiftStdlibStepIfNeeded(
+      AppleResourceProcessing.addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),
           bundleRoot.resolve(destinations.getFrameworksPath()),
+          bundleRoot,
           dryRunCodeSigning ? Optional.empty() : Optional.of(codeSignIdentitySupplier),
           stepsBuilder,
-          false /* is for packaging? */);
+          false,
+          extension,
+          copySwiftStdlibToFrameworks,
+          useLipoThin,
+          swiftStdlibTool,
+          getProjectFilesystem(),
+          getBuildTarget(),
+          sdkPath,
+          lipo,
+          bundleBinaryPath,
+          destinations);
 
       for (BuildRule extraBinary : extraBinaries) {
         Path outputPath = getBundleBinaryPathForBuildRule(extraBinary);
@@ -636,12 +648,23 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
               codesignFlags,
               codesignTimeout));
     } else {
-      addSwiftStdlibStepIfNeeded(
+      AppleResourceProcessing.addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),
           bundleRoot.resolve(destinations.getFrameworksPath()),
+          bundleRoot,
           Optional.empty(),
           stepsBuilder,
-          false /* is for packaging? */);
+          false,
+          extension,
+          copySwiftStdlibToFrameworks,
+          useLipoThin,
+          swiftStdlibTool,
+          getProjectFilesystem(),
+          getBuildTarget(),
+          sdkPath,
+          lipo,
+          bundleBinaryPath,
+          destinations);
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.
@@ -662,7 +685,14 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     // Fall back to getting CODE_SIGN_ENTITLEMENTS from info_plist_substitutions.
     if (!entitlementsPlist.isPresent()) {
-      Path srcRoot = getProjectFilesystem().getRootPath().resolve(getBuildTarget().getBasePath());
+      AbsPath srcRoot =
+          getProjectFilesystem()
+              .getRootPath()
+              .resolve(
+                  getBuildTarget()
+                      .getCellRelativeBasePath()
+                      .getPath()
+                      .toPath(getProjectFilesystem().getFileSystem()));
       Optional<String> entitlementsPlistString =
           InfoPlistSubstitution.getVariableExpansionForPlatform(
               CODE_SIGN_ENTITLEMENTS,
@@ -676,7 +706,8 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
           entitlementsPlistString.map(
               entitlementsPlistName -> {
                 ProjectFilesystem filesystem = getProjectFilesystem();
-                Path originalEntitlementsPlist = srcRoot.resolve(Paths.get(entitlementsPlistName));
+                AbsPath originalEntitlementsPlist =
+                    srcRoot.resolve(Paths.get(entitlementsPlistName));
                 Path entitlementsPlistWithSubstitutions =
                     BuildTargetPaths.getScratchPath(
                         filesystem, getBuildTarget(), "%s-Entitlements.plist");
@@ -693,27 +724,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
               });
     }
     return entitlementsPlist;
-  }
-
-  private void verifyResourceConflicts(
-      AppleBundleResources resources, SourcePathResolver resolver) {
-    // Ensure there are no resources that will overwrite each other
-    // TODO: handle ResourceDirsContainingResourceDirs
-    for (AppleBundleDestination destination : resources.getAllDestinations()) {
-      Set<Path> resourcePaths = new HashSet<>();
-      for (SourcePath path :
-          Iterables.concat(
-              resources.getResourceDirsForDestination(destination),
-              resources.getResourceFilesForDestination(destination))) {
-        Path pathInBundle = resolver.getRelativePath(path).getFileName();
-        if (resourcePaths.contains(pathInBundle)) {
-          throw new HumanReadableException(
-              "Bundle contains multiple resources with path %s", pathInBundle);
-        } else {
-          resourcePaths.add(pathInBundle);
-        }
-      }
-    }
   }
 
   private boolean needsPkgInfoFile() {
@@ -773,6 +783,35 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
         });
   }
 
+  // TODO (williamtwilson) Remove this. This is currently required because BuiltinApplePackage calls
+  // it.
+  // AppleResourceProcessing.addSwiftStdlibStepIfNeeded should be called instead.
+  /** A wrapper around AppleResourceProcessing.addSwiftStdlibStepIfNeeded */
+  public void addSwiftStdlibStepIfNeeded(
+      SourcePathResolverAdapter resolver,
+      Path destinationPath,
+      Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
+      ImmutableList.Builder<Step> stepsBuilder,
+      boolean isForPackaging) {
+    AppleResourceProcessing.addSwiftStdlibStepIfNeeded(
+        resolver,
+        destinationPath,
+        bundleRoot,
+        codeSignIdentitySupplier,
+        stepsBuilder,
+        isForPackaging,
+        extension,
+        copySwiftStdlibToFrameworks,
+        useLipoThin,
+        swiftStdlibTool,
+        getProjectFilesystem(),
+        getBuildTarget(),
+        sdkPath,
+        lipo,
+        bundleBinaryPath,
+        destinations);
+  }
+
   private void copyAnotherCopyOfWatchKitStub(
       ImmutableList.Builder<Step> stepsBuilder, BuildContext context, Path binaryOutputPath) {
     if ((isLegacyWatchApp() || platform.getName().contains("watch"))
@@ -822,11 +861,9 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .resolve(bundleRoot.getFileName() + "." + AppleBundleExtension.DSYM.toFileExtension());
     stepsBuilder.add(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    getProjectFilesystem(),
-                    dsymDestinationPath))
-            .withRecursive(true));
+            BuildCellRelativePath.fromCellRelativePath(
+                buildContext.getBuildCellRootPath(), getProjectFilesystem(), dsymDestinationPath),
+            true));
     stepsBuilder.add(new MoveStep(getProjectFilesystem(), dsymSourcePath, dsymDestinationPath));
 
     String dwarfFilename =
@@ -840,61 +877,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     // record dSYM so we can fetch it from cache
     buildableContext.recordArtifact(dsymDestinationPath);
-  }
-
-  private void addStepsToCopyResources(
-      BuildContext context, ImmutableList.Builder<Step> stepsBuilder) {
-    boolean hasNoResourceToCopy =
-        resources.getResourceDirs().isEmpty()
-            && resources.getDirsContainingResourceDirs().isEmpty()
-            && resources.getResourceFiles().isEmpty();
-    if (hasNoResourceToCopy) {
-      return;
-    }
-    if (verifyResources) {
-      verifyResourceConflicts(resources, context.getSourcePathResolver());
-    }
-
-    for (AppleBundleDestination bundleDestination : resources.getAllDestinations()) {
-      Path bundleDestinationPath = bundleRoot.resolve(bundleDestination.getPath(destinations));
-      stepsBuilder.add(
-          MkdirStep.of(
-              BuildCellRelativePath.fromCellRelativePath(
-                  context.getBuildCellRootPath(), getProjectFilesystem(), bundleDestinationPath)));
-    }
-
-    for (SourcePathWithAppleBundleDestination dirWithDestination : resources.getResourceDirs()) {
-      Path bundleDestinationPath =
-          bundleRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              context.getSourcePathResolver().getAbsolutePath(dirWithDestination.getSourcePath()),
-              bundleDestinationPath,
-              CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
-    }
-
-    for (SourcePathWithAppleBundleDestination dirWithDestination :
-        resources.getDirsContainingResourceDirs()) {
-      Path bundleDestinationPath =
-          bundleRoot.resolve(dirWithDestination.getDestination().getPath(destinations));
-      stepsBuilder.add(
-          CopyStep.forDirectory(
-              getProjectFilesystem(),
-              context.getSourcePathResolver().getAbsolutePath(dirWithDestination.getSourcePath()),
-              bundleDestinationPath,
-              CopyStep.DirectoryMode.CONTENTS_ONLY));
-    }
-
-    for (SourcePathWithAppleBundleDestination fileWithDestination : resources.getResourceFiles()) {
-      Path resolvedFilePath =
-          context.getSourcePathResolver().getAbsolutePath(fileWithDestination.getSourcePath());
-      Path bundleDestinationPath =
-          bundleRoot.resolve(fileWithDestination.getDestination().getPath(destinations));
-      Path destinationPath = bundleDestinationPath.resolve(resolvedFilePath.getFileName());
-      addResourceProcessingSteps(
-          context.getSourcePathResolver(), resolvedFilePath, destinationPath, stepsBuilder);
-    }
   }
 
   private void addStepsToCopyExtensionBundlesDependencies(
@@ -1009,147 +991,6 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return keys.build();
   }
 
-  public void addSwiftStdlibStepIfNeeded(
-      SourcePathResolver resolver,
-      Path destinationPath,
-      Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
-      ImmutableList.Builder<Step> stepsBuilder,
-      boolean isForPackaging) {
-    // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
-    // are copied over).
-    boolean shouldCopySwiftStdlib =
-        !extension.equals(AppleBundleExtension.APPEX.toFileExtension())
-            && (!extension.equals(AppleBundleExtension.FRAMEWORK.toFileExtension())
-                || copySwiftStdlibToFrameworks);
-
-    if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {
-      String tempDirPattern = isForPackaging ? "__swift_packaging_temp__%s" : "__swift_temp__%s";
-      stepsBuilder.add(
-          new SwiftStdlibStep(
-              getProjectFilesystem().getRootPath(),
-              BuildTargetPaths.getScratchPath(
-                  getProjectFilesystem(), getBuildTarget(), tempDirPattern),
-              this.sdkPath,
-              destinationPath,
-              swiftStdlibTool.get().getCommandPrefix(resolver),
-              lipo.getCommandPrefix(resolver),
-              bundleBinaryPath,
-              ImmutableSet.of(destinations.getFrameworksPath(), destinations.getPlugInsPath()),
-              codeSignIdentitySupplier));
-    }
-  }
-
-  private void addStoryboardProcessingSteps(
-      SourcePathResolver resolver,
-      Path sourcePath,
-      Path destinationPath,
-      ImmutableList.Builder<Step> stepsBuilder) {
-    ImmutableList<String> modifiedFlags =
-        ImmutableList.<String>builder().addAll(BASE_IBTOOL_FLAGS).addAll(ibtoolFlags).build();
-
-    if (platform.getName().contains("watch") || isLegacyWatchApp()) {
-      LOG.debug(
-          "Compiling storyboard %s to storyboardc %s and linking", sourcePath, destinationPath);
-
-      Path compiledStoryboardPath =
-          BuildTargetPaths.getScratchPath(
-              getProjectFilesystem(), getBuildTarget(), "%s.storyboardc");
-
-      stepsBuilder.add(
-          new IbtoolStep(
-              getProjectFilesystem(),
-              ibtool.getEnvironment(resolver),
-              ibtool.getCommandPrefix(resolver),
-              ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
-              ImmutableList.<String>builder()
-                  .addAll(modifiedFlags)
-                  .add("--target-device", "watch", "--compile")
-                  .build(),
-              sourcePath,
-              compiledStoryboardPath));
-
-      stepsBuilder.add(
-          new IbtoolStep(
-              getProjectFilesystem(),
-              ibtool.getEnvironment(resolver),
-              ibtool.getCommandPrefix(resolver),
-              ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
-              ImmutableList.<String>builder()
-                  .addAll(modifiedFlags)
-                  .add("--target-device", "watch", "--link")
-                  .build(),
-              compiledStoryboardPath,
-              destinationPath.getParent()));
-
-    } else {
-      LOG.debug("Compiling storyboard %s to storyboardc %s", sourcePath, destinationPath);
-
-      String compiledStoryboardFilename =
-          Files.getNameWithoutExtension(destinationPath.toString()) + ".storyboardc";
-
-      Path compiledStoryboardPath = destinationPath.getParent().resolve(compiledStoryboardFilename);
-
-      stepsBuilder.add(
-          new IbtoolStep(
-              getProjectFilesystem(),
-              ibtool.getEnvironment(resolver),
-              ibtool.getCommandPrefix(resolver),
-              ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
-              ImmutableList.<String>builder().addAll(modifiedFlags).add("--compile").build(),
-              sourcePath,
-              compiledStoryboardPath));
-    }
-  }
-
-  private void addResourceProcessingSteps(
-      SourcePathResolver resolver,
-      Path sourcePath,
-      Path destinationPath,
-      ImmutableList.Builder<Step> stepsBuilder) {
-    String sourcePathExtension =
-        Files.getFileExtension(sourcePath.toString()).toLowerCase(Locale.US);
-    switch (sourcePathExtension) {
-      case "plist":
-      case "stringsdict":
-        LOG.debug("Converting plist %s to binary plist %s", sourcePath, destinationPath);
-        stepsBuilder.add(
-            new PlistProcessStep(
-                getProjectFilesystem(),
-                sourcePath,
-                Optional.empty(),
-                destinationPath,
-                ImmutableMap.of(),
-                ImmutableMap.of(),
-                PlistProcessStep.OutputFormat.BINARY));
-        break;
-      case "storyboard":
-        addStoryboardProcessingSteps(resolver, sourcePath, destinationPath, stepsBuilder);
-        break;
-      case "xib":
-        String compiledNibFilename =
-            Files.getNameWithoutExtension(destinationPath.toString()) + ".nib";
-        Path compiledNibPath = destinationPath.getParent().resolve(compiledNibFilename);
-        LOG.debug("Compiling XIB %s to NIB %s", sourcePath, destinationPath);
-        stepsBuilder.add(
-            new IbtoolStep(
-                getProjectFilesystem(),
-                ibtool.getEnvironment(resolver),
-                ibtool.getCommandPrefix(resolver),
-                ibtoolModuleFlag ? Optional.of(binaryName) : Optional.empty(),
-                ImmutableList.<String>builder()
-                    .addAll(BASE_IBTOOL_FLAGS)
-                    .addAll(ibtoolFlags)
-                    .addAll(ImmutableList.of("--compile"))
-                    .build(),
-                sourcePath,
-                compiledNibPath));
-        break;
-      default:
-        stepsBuilder.add(CopyStep.forFile(getProjectFilesystem(), sourcePath, destinationPath));
-        break;
-    }
-  }
-
   @Override
   public boolean isTestedBy(BuildTarget testRule) {
     if (tests.contains(testRule)) {
@@ -1217,9 +1058,20 @@ public class AppleBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     return new CommandTool.Builder()
         .addArg(SourcePathArg.of(PathSourcePath.of(getProjectFilesystem(), bundleBinaryPath)))
         .build();
+  }
+
+  @Override
+  public SortedSet<BuildRule> getBuildDeps() {
+    return Stream.concat(depsSupplier.get().stream(), buildRuleParams.getBuildDeps().stream())
+        .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+  }
+
+  @Override
+  public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
+    this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleResolver);
   }
 }

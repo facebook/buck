@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.event;
@@ -36,20 +36,8 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     return new Started(ImmutableSet.copyOf(buildArgs));
   }
 
-  public static Reset reset() {
-    return new Reset();
-  }
-
   public static Finished finished(Started started, ExitCode exitCode) {
     return new Finished(started, exitCode);
-  }
-
-  public static DistBuildStarted distBuildStarted() {
-    return new DistBuildStarted();
-  }
-
-  public static DistBuildFinished distBuildFinished(DistBuildStarted started, int exitCode) {
-    return new DistBuildFinished(started, exitCode);
   }
 
   public static RuleCountCalculated ruleCountCalculated(
@@ -86,23 +74,6 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
 
     public ImmutableSet<String> getBuildArgs() {
       return buildArgs;
-    }
-  }
-
-  /** Event used to mark a fresh start for build completion estimation. */
-  public static class Reset extends BuildEvent {
-    protected Reset() {
-      super(EventKey.unique());
-    }
-
-    @Override
-    public String getEventName() {
-      return BUILD_RESET;
-    }
-
-    @Override
-    protected String getValueString() {
-      return "";
     }
   }
 
@@ -148,62 +119,6 @@ public abstract class BuildEvent extends AbstractBuckEvent implements WorkAdvanc
     @Override
     public int hashCode() {
       return Objects.hashCode(super.hashCode(), buildArgs, exitCode);
-    }
-  }
-
-  public static class DistBuildStarted extends BuildEvent {
-
-    protected DistBuildStarted() {
-      super(EventKey.unique());
-    }
-
-    @Override
-    public String getEventName() {
-      return DIST_BUILD_STARTED;
-    }
-
-    @Override
-    protected String getValueString() {
-      return "";
-    }
-  }
-
-  public static class DistBuildFinished extends BuildEvent {
-
-    private final int exitCode;
-
-    protected DistBuildFinished(DistBuildStarted started, int exitCode) {
-      super(started.getEventKey());
-      this.exitCode = exitCode;
-    }
-
-    public int getExitCode() {
-      return exitCode;
-    }
-
-    @Override
-    public String getEventName() {
-      return DIST_BUILD_FINISHED;
-    }
-
-    @Override
-    protected String getValueString() {
-      return String.format("exit code: %d", exitCode);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-      if (!super.equals(o)) {
-        return false;
-      }
-      // Because super.equals compares the EventKey, getting here means that we've somehow managed
-      // to create 2 Finished events for the same Started event.
-      throw new UnsupportedOperationException("Multiple conflicting Finished events detected.");
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hashCode(super.hashCode(), exitCode);
     }
   }
 

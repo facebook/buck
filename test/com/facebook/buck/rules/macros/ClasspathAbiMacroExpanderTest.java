@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.macros;
@@ -22,6 +22,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -67,7 +70,9 @@ public class ClasspathAbiMacroExpanderTest {
         String.format(
             "%s" + File.separator + "%s",
             filesystem.getRootPath(),
-            new File("buck-out/gen/cheese/cake#class-abi/cake-abi.jar").toPath()));
+            BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//cheese:cake#class-abi"), "%s")
+                .resolve("cake-abi.jar")));
   }
 
   @Test
@@ -92,14 +97,17 @@ public class ClasspathAbiMacroExpanderTest {
         String.format(
             "%s" + File.separator + "%s" + File.pathSeparatorChar + "%s" + File.separator + "%s",
             filesystem.getRootPath(),
-            new File("buck-out/gen/exciting/dep#class-abi/dep-abi.jar").toPath(),
+            BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//exciting:dep#class-abi"), "%s")
+                .resolve("dep-abi.jar"),
             filesystem.getRootPath(),
-            new File("buck-out/gen/exciting/target#class-abi/target-abi.jar").toPath()));
+            BuildTargetPaths.getGenPath(
+                    filesystem, BuildTargetFactory.newInstance("//exciting:target#class-abi"), "%s")
+                .resolve("target-abi.jar")));
   }
 
   private JavaLibraryBuilder getLibraryBuilder(String target) {
-    return JavaLibraryBuilder.createBuilder(
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), target), filesystem);
+    return JavaLibraryBuilder.createBuilder(BuildTargetFactory.newInstance(target), filesystem);
   }
 
   @Test(expected = MacroException.class)
@@ -107,8 +115,7 @@ public class ClasspathAbiMacroExpanderTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     BuildRule rule =
-        new ExportFileBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//cheese:peas"))
+        new ExportFileBuilder(BuildTargetFactory.newInstance("//cheese:peas"))
             .setSrc(FakeSourcePath.of("some-file.jar"))
             .build(graphBuilder);
 
@@ -131,7 +138,9 @@ public class ClasspathAbiMacroExpanderTest {
     BuildRule rule = graphBuilder.requireRule(ruleNode.getBuildTarget());
 
     BuildTarget forTarget = BuildTargetFactory.newInstance("//:rule");
-    ClasspathAbiMacro classpathAbiMacro = ClasspathAbiMacro.of(rule.getBuildTarget());
+    ClasspathAbiMacro classpathAbiMacro =
+        ClasspathAbiMacro.of(
+            BuildTargetWithOutputs.of(rule.getBuildTarget(), OutputLabel.defaultLabel()));
     Arg ruleKeyAppendables = expander.expandFrom(forTarget, graphBuilder, classpathAbiMacro);
 
     ImmutableList<String> deps =

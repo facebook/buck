@@ -1,21 +1,22 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.files;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphEngineCache;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
@@ -83,7 +84,7 @@ public class FileTreeCache implements GraphEngineCache<FileTreeKey, FileTree> {
         return;
       }
 
-      if (!rootPath.equals(event.getCellPath())) {
+      if (!rootPath.equals(event.getCellPath().getPath())) {
         // must be same cell
         return;
       }
@@ -91,12 +92,12 @@ public class FileTreeCache implements GraphEngineCache<FileTreeKey, FileTree> {
       // for CREATE and DELETE, invalidate all folders up the tree
       // TODO(sergeyb): be smarter - modify data in-place instead of full invalidation of the tree
       // this might require to unify FileTreeCache and DirectoryListCache
-      Path folderPath = MorePaths.getParentOrEmpty(event.getPath());
+      RelPath folderPath = MorePaths.getParentOrEmpty(event.getPath());
 
       while (true) {
-        fileTreeCache.cache.remove(ImmutableFileTreeKey.of(folderPath));
+        fileTreeCache.cache.remove(ImmutableFileTreeKey.of(folderPath.getPath()));
 
-        if (MorePaths.isEmpty(folderPath)) {
+        if (MorePaths.isEmpty(folderPath.getPath())) {
           // empty path means root, it has no parent so return
           break;
         }

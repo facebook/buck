@@ -89,6 +89,7 @@ genrule(
     name = "extra",
     out = "out",
     cmd = "touch $OUT",
+    cmd_exe = "echo > $OUT",
 )
 
 cxx_library(
@@ -186,5 +187,14 @@ python_binary(
         ":main_module_with_prebuilt_dep",
         "//external_sources:python_lib",
         "//external_sources:whl_dep_copy",
+    ],
+)
+
+python_binary(
+    name = "bin_compile",
+    compile = True,
+    main_module = "main",
+    deps = [
+        ":lib",
     ],
 )

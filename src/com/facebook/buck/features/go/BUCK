@@ -47,6 +47,7 @@ buck_module(
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/collect:collect",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/string:string",
         "//src/com/facebook/buck/versions:types",
         "//third-party/java/infer-annotations:infer-annotations",
@@ -59,5 +60,6 @@ buck_module(
     visibility = [
         "//src/com/facebook/buck/cli:main",
         "//test/com/facebook/buck/features/go/...",
+        "//test/com/facebook/buck/rules/modern:subclass_exclusion",
     ],
 )

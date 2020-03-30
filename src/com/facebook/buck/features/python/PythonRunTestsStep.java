@@ -1,23 +1,24 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -42,7 +43,7 @@ public class PythonRunTestsStep implements Step {
       CharMatcher.anyOf("_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ01234567890");
   public static final int TEST_FAILURES_EXIT_CODE = 70;
 
-  private final Path workingDirectory;
+  private final AbsPath workingDirectory;
   private final String testName;
   private final ImmutableList<String> commandPrefix;
   private final ImmutableMap<String, String> environment;
@@ -58,7 +59,7 @@ public class PythonRunTestsStep implements Step {
   private boolean timedOut;
 
   public PythonRunTestsStep(
-      Path workingDirectory,
+      AbsPath workingDirectory,
       String testName,
       ImmutableList<String> commandPrefix,
       ImmutableMap<String, String> environment,
@@ -103,7 +104,7 @@ public class PythonRunTestsStep implements Step {
                     .addAll(commandPrefix)
                     .add("-l", "-L", "buck")
                     .build())
-            .setDirectory(workingDirectory)
+            .setDirectory(workingDirectory.getPath())
             .setEnvironment(environment)
             .build();
     ProcessExecutor.Result result =

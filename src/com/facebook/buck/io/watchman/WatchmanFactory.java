@@ -1,21 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.watchman;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.unixsocket.UnixDomainSocket;
@@ -24,9 +25,9 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.bser.BserDeserializer;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
@@ -98,7 +99,7 @@ public class WatchmanFactory {
 
   /** @return new instance of {@link Watchman} using the specified params. */
   public Watchman build(
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> env,
       Console console,
       Clock clock,
@@ -118,7 +119,7 @@ public class WatchmanFactory {
   @SuppressWarnings("PMD.PrematureDeclaration") // endTimeNanos
   Watchman build(
       ListeningProcessExecutor executor,
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> env,
       ExecutableFinder exeFinder,
       Console console,
@@ -199,7 +200,7 @@ public class WatchmanFactory {
   public static Watchman getWatchman(
       WatchmanClient client,
       Path transportPath,
-      ImmutableSet<Path> projectWatchList,
+      ImmutableSet<AbsPath> projectWatchList,
       Console console,
       Clock clock,
       long endTimeNanos)
@@ -235,16 +236,16 @@ public class WatchmanFactory {
     ImmutableSet<Capability> capabilities = capabilitiesBuilder.build();
     LOG.debug("Got Watchman capabilities: %s", capabilities);
 
-    ImmutableMap.Builder<Path, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
-    for (Path projectRoot : projectWatchList) {
+    ImmutableMap.Builder<AbsPath, ProjectWatch> projectWatchesBuilder = ImmutableMap.builder();
+    for (AbsPath projectRoot : projectWatchList) {
       Optional<ProjectWatch> projectWatch =
-          queryWatchProject(client, projectRoot, clock, endTimeNanos - clock.nanoTime());
+          queryWatchProject(client, projectRoot.getPath(), clock, endTimeNanos - clock.nanoTime());
       if (!projectWatch.isPresent()) {
         return NULL_WATCHMAN;
       }
       projectWatchesBuilder.put(projectRoot, projectWatch.get());
     }
-    ImmutableMap<Path, ProjectWatch> projectWatches = projectWatchesBuilder.build();
+    ImmutableMap<AbsPath, ProjectWatch> projectWatches = projectWatchesBuilder.build();
     Iterable<String> watchRoots =
         RichStream.from(projectWatches.values())
             .map(ProjectWatch::getWatchRoot)
@@ -330,8 +331,8 @@ public class WatchmanFactory {
    * @param rootPath path to the root of the watch-project
    * @param clock used to compute timeouts and statistics
    * @param timeoutNanos for the watchman query
-   * @return If successful, a {@link com.facebook.buck.io.watchman.ProjectWatch} instance containing
-   *     the root of the watchman watch, and relative path from the root to {@code rootPath}
+   * @return If successful, a {@link ProjectWatch} instance containing the root of the watchman
+   *     watch, and relative path from the root to {@code rootPath}
    */
   private static Optional<ProjectWatch> queryWatchProject(
       WatchmanClient watchmanClient, Path rootPath, Clock clock, long timeoutNanos)

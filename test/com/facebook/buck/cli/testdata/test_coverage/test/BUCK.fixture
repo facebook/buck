@@ -4,6 +4,10 @@ java_test(
         "MockTest.java",
         "MockTest2.java",
     ],
+    labels = [
+        "A",
+        "B",
+    ],
     deps = [
         "buck//third-party/java/junit:junit",
         "//:foo",
@@ -16,6 +20,9 @@ java_test(
         "MockTest.java",
         "MockTest2.java",
     ],
+    labels = [
+        "A",
+    ],
     deps = [
         "buck//third-party/java/junit:junit",
         "//:top",
@@ -27,6 +34,9 @@ java_test(
     srcs = [
         "MockTest.java",
         "MockTest2.java",
+    ],
+    labels = [
+        "B",
     ],
     deps = [
         "buck//third-party/java/junit:junit",

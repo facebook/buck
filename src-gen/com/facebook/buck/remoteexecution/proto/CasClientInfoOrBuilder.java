@@ -26,4 +26,64 @@ public interface CasClientInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getNameBytes();
+
+  /**
+   * <pre>
+   * This is the execution id from the worker or sandcastle id
+   * </pre>
+   *
+   * <code>string job_id = 2;</code>
+   */
+  java.lang.String getJobId();
+  /**
+   * <pre>
+   * This is the execution id from the worker or sandcastle id
+   * </pre>
+   *
+   * <code>string job_id = 2;</code>
+   */
+  com.google.protobuf.ByteString
+      getJobIdBytes();
+
+  /**
+   * <pre>
+   * Passed from the client to decide which streaming mode to use
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.CasClientInfo.CasStreamingMode streaming_mode = 3;</code>
+   */
+  int getStreamingModeValue();
+  /**
+   * <pre>
+   * Passed from the client to decide which streaming mode to use
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.CasClientInfo.CasStreamingMode streaming_mode = 3;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.CasClientInfo.CasStreamingMode getStreamingMode();
+
+  /**
+   * <pre>
+   * This allows overriding the manifold bucket
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+   */
+  boolean hasManifoldBucket();
+  /**
+   * <pre>
+   * This allows overriding the manifold bucket
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ManifoldBucket getManifoldBucket();
+  /**
+   * <pre>
+   * This allows overriding the manifold bucket
+   * </pre>
+   *
+   * <code>.facebook.remote_execution.ManifoldBucket manifold_bucket = 4;</code>
+   */
+  com.facebook.buck.remoteexecution.proto.ManifoldBucketOrBuilder getManifoldBucketOrBuilder();
 }

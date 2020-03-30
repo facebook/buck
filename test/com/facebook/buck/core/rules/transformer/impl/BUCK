@@ -1,5 +1,3 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test")
-
 java_test(
     name = "impl",
     srcs = glob(
@@ -7,6 +5,7 @@ java_test(
     ),
     deps = [
         "//src/com/facebook/buck/core/cell/impl:impl",
+        "//src/com/facebook/buck/core/description/impl:impl",
         "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/analysis/impl:impl",
@@ -15,6 +14,7 @@ java_test(
         "//src/com/facebook/buck/core/rules/transformer/impl:impl",
         "//src/com/facebook/buck/rules/coercer:coercer",
         "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/cell/nameresolver:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
         "//test/com/facebook/buck/core/model/targetgraph/impl:testutil",

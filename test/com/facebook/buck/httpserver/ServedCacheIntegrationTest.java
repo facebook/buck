@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.httpserver;
@@ -31,12 +31,14 @@ import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.BuckConfigTestUtils;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
@@ -53,6 +55,7 @@ import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.Futures;
@@ -83,7 +86,7 @@ public class ServedCacheIntegrationTest {
   private static final BuildId BUILD_ID = new BuildId("test");
 
   private ProjectFilesystem projectFilesystem;
-  private Function<String, UnconfiguredBuildTargetView> unconfiguredBuildTargetFactory;
+  private Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory;
   private CellPathResolver cellPathResolver;
   private TargetConfigurationSerializer targetConfigurationSerializer;
   private WebServer webServer = null;
@@ -116,7 +119,9 @@ public class ServedCacheIntegrationTest {
     ParsingUnconfiguredBuildTargetViewFactory parsingUnconfiguredBuildTargetFactory =
         new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetFactory =
-        target -> parsingUnconfiguredBuildTargetFactory.create(cellPathResolver, target);
+        target ->
+            parsingUnconfiguredBuildTargetFactory.create(
+                target, cellPathResolver.getCellNameResolver());
     targetConfigurationSerializer = TargetConfigurationSerializerForTests.create(cellPathResolver);
   }
 
@@ -159,7 +164,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testFetchFromServedDircache() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -213,9 +218,11 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheRead() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
-            tmpDir.getRoot(),
+            CanonicalCellName.rootCell(),
+            AbsPath.of(tmpDir.getRoot()),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
-            DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
+            DefaultProjectFilesystemFactory.getWindowsFSInstance(),
+            TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
           private boolean throwingStreamServed = false;
 
           @Override
@@ -230,7 +237,7 @@ public class ServedCacheIntegrationTest {
           }
         };
 
-    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem);
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -251,9 +258,11 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheReadRetryingFail() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
-            tmpDir.getRoot(),
+            CanonicalCellName.rootCell(),
+            AbsPath.of(tmpDir.getRoot()),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
-            DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
+            DefaultProjectFilesystemFactory.getWindowsFSInstance(),
+            TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
           private int throwingStreamServedCount = 0;
 
           @Override
@@ -268,7 +277,7 @@ public class ServedCacheIntegrationTest {
           }
         };
 
-    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem);
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -284,9 +293,11 @@ public class ServedCacheIntegrationTest {
   public void testExceptionDuringTheReadRetryingSuccess() throws Exception {
     ProjectFilesystem throwingStreamFilesystem =
         new DefaultProjectFilesystem(
-            tmpDir.getRoot(),
+            CanonicalCellName.rootCell(),
+            AbsPath.of(tmpDir.getRoot()),
             new DefaultProjectFilesystemDelegate(tmpDir.getRoot()),
-            DefaultProjectFilesystemFactory.getWindowsFSInstance()) {
+            DefaultProjectFilesystemFactory.getWindowsFSInstance(),
+            TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST) {
           private int throwingStreamServedCount = 0;
 
           @Override
@@ -301,7 +312,7 @@ public class ServedCacheIntegrationTest {
           }
         };
 
-    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem);
+    webServer = new WebServer(/* port */ 0, throwingStreamFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -327,7 +338,7 @@ public class ServedCacheIntegrationTest {
       outputStream.writeInt(1024);
     }
 
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.of(dirCache));
 
     ArtifactCache serverBackedCache =
@@ -341,7 +352,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void whenNoCacheIsServedLookupsAreErrors() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.empty());
 
     ArtifactCache serverBackedCache =
@@ -355,7 +366,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void canSetArtifactCacheWithoutRestartingServer() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(Optional.empty());
 
     ArtifactCache serverBackedCache =
@@ -382,7 +393,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testStoreAndFetchNotBorrowable() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -422,7 +433,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testStoreAndFetchBorrowable() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -462,7 +473,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void testStoreDisabled() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -499,7 +510,7 @@ public class ServedCacheIntegrationTest {
 
   @Test
   public void fullStackIntegrationTest() throws Exception {
-    webServer = new WebServer(/* port */ 0, projectFilesystem);
+    webServer = new WebServer(/* port */ 0, projectFilesystem, FakeClock.doNotCare());
     webServer.updateAndStartIfNeeded(
         ArtifactCaches.newServedCache(
             createMockLocalConfig(
@@ -564,7 +575,6 @@ public class ServedCacheIntegrationTest {
             TargetConfigurationSerializerForTests.create(cellPathResolver),
             projectFilesystem,
             Optional.empty(),
-            DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,
             DIRECT_EXECUTOR_SERVICE,

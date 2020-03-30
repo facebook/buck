@@ -14,40 +14,51 @@
 
 """Unit tests for selects.bzl."""
 
-load("//:lib.bzl", "selects", "asserts", "unittest")
-
+load("//:lib.bzl", "asserts", "selects", "unittest")
 
 def _with_or_test(ctx):
-  """Unit tests for with_or."""
-  env = unittest.begin(ctx)
+    """Unit tests for with_or."""
+    env = unittest.begin(ctx)
 
-  # We actually test on with_or_dict because Skylark can't get the
-  # dictionary from a select().
+    # We actually test on with_or_dict because Skylark can't get the
+    # dictionary from a select().
 
-  # Test select()-compatible input syntax.
-  input_dict = {":foo": ":d1", "//conditions:default": ":d1"}
-  asserts.equals(env, input_dict, selects.with_or_dict(input_dict))
+    # Test select()-compatible input syntax.
+    input_dict = {"//conditions:default": ":d1", ":foo": ":d1"}
+    asserts.equals(env, input_dict, selects.with_or_dict(input_dict))
 
-  # Test OR syntax.
-  or_dict = {(":foo", ":bar"): ":d1"}
-  asserts.equals(env, {":foo": ":d1", ":bar": ":d1"},
-                 selects.with_or_dict(or_dict))
+    # Test OR syntax.
+    or_dict = {(":foo", ":bar"): ":d1"}
+    asserts.equals(
+        env,
+        {":bar": ":d1", ":foo": ":d1"},
+        selects.with_or_dict(or_dict),
+    )
 
-  # Test mixed syntax.
-  mixed_dict = {":foo": ":d1", (":bar", ":baz"): ":d2",
-                "//conditions:default": ":d3"}
-  asserts.equals(env, {":foo": ":d1", ":bar": ":d2", ":baz": ":d2",
-                       "//conditions:default": ":d3"},
-                 selects.with_or_dict(mixed_dict))
+    # Test mixed syntax.
+    mixed_dict = {
+        "//conditions:default": ":d3",
+        (":bar", ":baz"): ":d2",
+        ":foo": ":d1",
+    }
+    asserts.equals(
+        env,
+        {
+            "//conditions:default": ":d3",
+            ":bar": ":d2",
+            ":baz": ":d2",
+            ":foo": ":d1",
+        },
+        selects.with_or_dict(mixed_dict),
+    )
 
-  unittest.end(env)
+    unittest.end(env)
 
 with_or_test = unittest.make(_with_or_test)
 
-
 def selects_test_suite():
-  """Creates the test targets and test suite for selects.bzl tests."""
-  unittest.suite(
-      "selects_tests",
-      with_or_test,
-  )
+    """Creates the test targets and test suite for selects.bzl tests."""
+    unittest.suite(
+        "selects_tests",
+        with_or_test,
+    )

@@ -1,30 +1,32 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.halide;
 
 import com.facebook.buck.apple.AppleCustomLinkingDepsDescription;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -36,7 +38,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxBinary;
 import com.facebook.buck.cxx.CxxBinaryDescription;
@@ -59,6 +61,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -91,8 +94,11 @@ public class HalideLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    return getCxxPlatformsProvider().getUnresolvedCxxPlatforms().containsAnyOf(flavors)
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    return getCxxPlatformsProvider(toolchainTargetConfiguration)
+            .getUnresolvedCxxPlatforms()
+            .containsAnyOf(flavors)
         || flavors.contains(HALIDE_COMPILE_FLAVOR)
         || flavors.contains(HALIDE_COMPILER_FLAVOR)
         || StripStyle.FLAVOR_DOMAIN.containsAnyOf(flavors);
@@ -229,16 +235,14 @@ public class HalideLibraryDescription
             ExplicitBuildTargetSourcePath.of(
                 halideCompileBuildTarget,
                 HalideCompile.objectOutputPath(
-                    halideCompileBuildTarget, projectFilesystem, args.getFunctionName()))),
-        /* cacheable */ true);
+                    halideCompileBuildTarget, projectFilesystem, args.getFunctionName()))));
   }
 
   private Optional<ImmutableList<String>> expandInvocationFlags(
       Optional<ImmutableList<String>> optionalFlags, CxxPlatform platform) {
     if (optionalFlags.isPresent()) {
       AddsToRuleKeyFunction<String, String> macroMapper =
-          new TranslateMacrosFunction(
-              ImmutableSortedMap.copyOf(platform.getFlagMacros()), platform);
+          new TranslateMacrosFunction(ImmutableSortedMap.copyOf(platform.getFlagMacros()));
       ImmutableList<String> flags = optionalFlags.get();
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       for (String flag : flags) {
@@ -264,7 +268,7 @@ public class HalideLibraryDescription
         buildTarget,
         projectFilesystem,
         params.withExtraDeps(ImmutableSortedSet.of(halideCompiler)),
-        halideCompiler.getExecutableCommand(),
+        halideCompiler.getExecutableCommand(OutputLabel.defaultLabel()),
         halideBuckConfig.getHalideTargetForPlatform(platform),
         expandInvocationFlags(compilerInvocationFlags, platform),
         functionName);
@@ -276,13 +280,14 @@ public class HalideLibraryDescription
       BuildTarget buildTarget,
       BuildRuleParams params,
       HalideLibraryDescriptionArg args) {
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
 
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
     args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
-    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors());
+    ImmutableSet<Flavor> flavors = ImmutableSet.copyOf(buildTarget.getFlavors().getSet());
     // TODO(cjhopman): This description doesn't handle parse time deps correctly.
     CxxPlatform cxxPlatform =
         cxxPlatforms
@@ -358,18 +363,20 @@ public class HalideLibraryDescription
         buildTarget, projectFilesystem, params, graphBuilder, args.getSupportedPlatformsRegex());
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 
   @Override
-  public ImmutableSortedSet<BuildTarget> getCustomLinkingDeps(CommonDescriptionArg args) {
+  public ImmutableSortedSet<BuildTarget> getCustomLinkingDeps(BuildRuleArg args) {
     return ((HalideLibraryDescriptionArg) args).getDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractHalideLibraryDescriptionArg extends CxxBinaryDescription.CommonArg {
     @Value.NaturalOrder
     ImmutableSortedSet<BuildTarget> getCompilerDeps();
@@ -382,5 +389,13 @@ public class HalideLibraryDescription
     ImmutableList<String> getCompilerInvocationFlags();
 
     Optional<String> getFunctionName();
+
+    @Override
+    default HalideLibraryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (HalideLibraryDescriptionArg) this;
+      }
+      return HalideLibraryDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
   }
 }

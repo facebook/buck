@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.rule;
 
 import static org.junit.Assert.assertEquals;
@@ -29,11 +30,13 @@ import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.timing.AbstractFakeClock;
+import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
@@ -62,7 +65,7 @@ public class SkylarkDescriptionTest {
             target,
             ImmutableMap.of(),
             TestProjectFilesystems.createProjectFilesystem(tmp.getRoot()),
-            new DefaultBuckEventBus(AbstractFakeClock.doNotCare(), new BuildId("1234-5678")));
+            new DefaultBuckEventBus(FakeClock.doNotCare(), new BuildId("1234-5678")));
   }
 
   @Test
@@ -80,9 +83,18 @@ public class SkylarkDescriptionTest {
               return Runtime.NONE;
             });
 
-    ProviderInfoCollection infos =
-        description.ruleImpl(context, target, new SkylarkDescriptionArg(rule));
-    Path expectedShortPath = BuildPaths.getBaseDir(target).resolve("baz.sh");
+    SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
+    args.setPostCoercionValue("name", "a");
+    args.setPostCoercionValue("baz", "");
+    args.setPostCoercionValue("labels", ImmutableSortedSet.of());
+    args.setPostCoercionValue("licenses", ImmutableSortedSet.of());
+    args.build();
+    ProviderInfoCollection infos = description.ruleImpl(context, target, args);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path expectedShortPath =
+        BuildPaths.getBaseDir(filesystem, target)
+            .resolve("baz.sh")
+            .toPath(filesystem.getFileSystem());
 
     DefaultInfo info = infos.get(DefaultInfo.PROVIDER).get();
     Artifact artifact = Iterables.getOnlyElement(info.defaultOutputs());
@@ -112,14 +124,47 @@ public class SkylarkDescriptionTest {
               }
             });
 
-    ProviderInfoCollection infos =
-        description.ruleImpl(context, target, new SkylarkDescriptionArg(rule));
-    Path expectedShortPath = BuildPaths.getBaseDir(target).resolve("baz1.sh");
+    SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
+    args.setPostCoercionValue("name", "a");
+    args.setPostCoercionValue("baz", "");
+    args.setPostCoercionValue("labels", ImmutableSortedSet.of());
+    args.setPostCoercionValue("licenses", ImmutableSortedSet.of());
+    args.build();
+    ProviderInfoCollection infos = description.ruleImpl(context, target, args);
+    FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+    Path expectedShortPath =
+        BuildPaths.getBaseDir(filesystem, target)
+            .resolve("baz1.sh")
+            .toPath(filesystem.getFileSystem());
 
     DefaultInfo info = infos.get(DefaultInfo.PROVIDER).get();
     Artifact artifact = Iterables.getOnlyElement(info.defaultOutputs());
 
     assertTrue(info.namedOutputs().isEmpty());
     assertEquals(expectedShortPath.toString(), artifact.getShortPath());
+  }
+
+  @Test
+  public void hasCorrectName() throws LabelSyntaxException, EvalException {
+    SkylarkUserDefinedRule rule =
+        FakeSkylarkUserDefinedRuleFactory.createSimpleRuleFromCallable(
+            ctx -> {
+              try {
+                Artifact f = ctx.getActions().declareFile("baz.sh", Location.BUILTIN);
+                ctx.getActions().write(f, "content", false, Location.BUILTIN);
+              } catch (EvalException e) {
+                throw new RuntimeException(e);
+              }
+              return Runtime.NONE;
+            });
+
+    SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
+    args.setPostCoercionValue("name", "a");
+    args.setPostCoercionValue("baz", "");
+    args.setPostCoercionValue("labels", ImmutableSortedSet.of());
+    args.setPostCoercionValue("licenses", ImmutableSortedSet.of());
+    args.build();
+
+    assertEquals("//foo:bar.bzl:some_rule", description.getRuleName(args));
   }
 }

@@ -1,15 +1,15 @@
 java_library(
     name = "jmh",
-    exported_deps = [
-        ":jmh-core",
-        ":jmh-generator-annprocess",
-    ],
     visibility = [
         "//test/...",
     ],
     deps = [
         "//third-party/java/commons-math3:commons-math3",
         "//third-party/java/jopt-simple:jopt-simple",
+    ],
+    exported_deps = [
+        ":jmh-core",
+        ":jmh-generator-annprocess",
     ],
 )
 
@@ -26,11 +26,11 @@ java_annotation_processor(
 
 prebuilt_jar(
     name = "jmh-core",
-    binary_jar = "jmh-core-1.19.jar",
+    binary_jar = "jmh-core-1.23.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "jmh-core-1.19-sources.jar",
+    source_jar = "jmh-core-1.23-sources.jar",
     visibility = [
         "//test/...",
     ],
@@ -38,11 +38,11 @@ prebuilt_jar(
 
 prebuilt_jar(
     name = "jmh-generator-annprocess",
-    binary_jar = "jmh-generator-annprocess-1.19.jar",
+    binary_jar = "jmh-generator-annprocess-1.23.jar",
     licenses = [
         "LICENSE",
     ],
-    source_jar = "jmh-generator-annprocess-1.19-sources.jar",
+    source_jar = "jmh-generator-annprocess-1.23-sources.jar",
     visibility = [
         "//test/...",
     ],

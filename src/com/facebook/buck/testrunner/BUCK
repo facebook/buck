@@ -82,6 +82,9 @@ java_library(
     ],
     source = "8",
     target = "8",
+    visibility = [
+        "//test/com/facebook/buck/rules/modern:subclass_exclusion",
+    ],
     deps = [
         ":base",
         "//src/com/facebook/buck/test/result/type:type",

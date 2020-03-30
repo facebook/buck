@@ -1,22 +1,22 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.AbstractJavacOptions.SpoolMode;
+import static com.facebook.buck.jvm.java.JavacOptions.SpoolMode;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
@@ -42,7 +42,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   private static final Logger LOG = Logger.get(JavacToJarStepFactory.class);
 
   @AddToRuleKey private final Javac javac;
-  @AddToRuleKey private JavacOptions javacOptions;
+  @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
   public JavacToJarStepFactory(
@@ -188,7 +188,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
     boolean isSpoolingToJarEnabled =
         compilerParameters.getAbiGenerationMode().isSourceAbi()
             || (postprocessClassesCommands.isEmpty()
-                && javacOptions.getSpoolMode() == AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR
+                && javacOptions.getSpoolMode() == JavacOptions.SpoolMode.DIRECT_TO_JAR
                 && javac instanceof Jsr199Javac);
 
     LOG.info(

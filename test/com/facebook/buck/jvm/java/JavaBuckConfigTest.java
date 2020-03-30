@@ -1,22 +1,22 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
-import static com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION;
+import static com.facebook.buck.jvm.java.JavacLanguageLevelOptions.TARGETED_JAVA_VERSION;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasEntry;
 import static org.hamcrest.Matchers.hasKey;
@@ -34,13 +34,13 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -53,6 +53,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
@@ -66,7 +67,8 @@ import org.junit.Test;
 public class JavaBuckConfigTest {
 
   public static final BuildRuleResolver RULE_RESOLVER = new TestActionGraphBuilder();
-  private static final SourcePathResolver PATH_RESOLVER = RULE_RESOLVER.getSourcePathResolver();
+  private static final SourcePathResolverAdapter PATH_RESOLVER =
+      RULE_RESOLVER.getSourcePathResolver();
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
   private ProjectFilesystem defaultFilesystem;
@@ -83,14 +85,14 @@ public class JavaBuckConfigTest {
     assertEquals(
         ImmutableList.of("java"),
         javaOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of("java"),
         javaForTestsOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
   }
 
@@ -116,14 +118,14 @@ public class JavaBuckConfigTest {
     assertEquals(
         ImmutableList.of(javaCommand),
         javaOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
 
     JavaOptions javaForTestsOptions = config.getDefaultJavaOptionsForTests();
     assertEquals(
         ImmutableList.of(javaForTestsCommand),
         javaForTestsOptions
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
   }
 
@@ -142,7 +144,7 @@ public class JavaBuckConfigTest {
     assertEquals(
         ImmutableList.of(java.toString()),
         options
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
   }
 
@@ -161,14 +163,14 @@ public class JavaBuckConfigTest {
     assertEquals(
         ImmutableList.of(javaCommand),
         options
-            .getJavaRuntimeLauncher(RULE_RESOLVER, EmptyTargetConfiguration.INSTANCE)
+            .getJavaRuntimeLauncher(RULE_RESOLVER, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(PATH_RESOLVER));
   }
 
   @Test
   public void whenJavacIsNotSetThenAbsentIsReturned() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
-    assertEquals(Optional.empty(), config.getJavacPath(EmptyTargetConfiguration.INSTANCE));
+    assertEquals(Optional.empty(), config.getJavacPath(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -183,19 +185,19 @@ public class JavaBuckConfigTest {
 
     assertEquals(
         config.getDelegate().getPathSourcePath(javac),
-        config.getJavacPath(EmptyTargetConfiguration.INSTANCE).get());
+        config.getJavacPath(UnconfiguredTargetConfiguration.INSTANCE).get());
   }
 
   @Test
   public void whenJavacIsABuildTargetThenCorrectPathIsReturned() throws IOException {
-    BuildTarget javacTarget = BuildTargetFactory.newInstance(defaultFilesystem, "//:javac");
+    BuildTarget javacTarget = BuildTargetFactory.newInstance("//:javac");
     Reader reader =
         new StringReader(
             Joiner.on('\n').join("[tools]", "    javac = " + javacTarget.getFullyQualifiedName()));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     assertEquals(
         DefaultBuildTargetSourcePath.of(javacTarget),
-        config.getJavacPath(EmptyTargetConfiguration.INSTANCE).get());
+        config.getJavacPath(UnconfiguredTargetConfiguration.INSTANCE).get());
   }
 
   @Test
@@ -206,7 +208,7 @@ public class JavaBuckConfigTest {
             Joiner.on('\n').join("[tools]", "    javac = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
-      config.getJavacPath(EmptyTargetConfiguration.INSTANCE);
+      config.getJavacPath(UnconfiguredTargetConfiguration.INSTANCE);
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -227,7 +229,7 @@ public class JavaBuckConfigTest {
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
       config
-          .getJavacSpec(EmptyTargetConfiguration.INSTANCE)
+          .getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE)
           .getJavacProvider()
           .resolve(new TestActionGraphBuilder());
       fail("Should throw exception as javac file is not executable.");
@@ -245,7 +247,7 @@ public class JavaBuckConfigTest {
                 .join("[tools]", "    javac_jar = " + invalidPath.replace("\\", "\\\\")));
     JavaBuckConfig config = createWithDefaultFilesystem(reader);
     try {
-      config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacJarPath();
+      config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacJarPath();
       fail("Should throw exception as javac file does not exist.");
     } catch (HumanReadableException e) {
       assertEquals(
@@ -264,7 +266,7 @@ public class JavaBuckConfigTest {
 
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    AbstractJavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
+    JavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
 
     assertEquals(sourceLevel, options.getSourceLevel());
     assertEquals(targetLevel, options.getTargetLevel());
@@ -274,7 +276,7 @@ public class JavaBuckConfigTest {
   public void shouldSetJavaTargetAndSourceVersionDefaultToSaneValues() throws IOException {
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(""));
 
-    AbstractJavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
+    JavacLanguageLevelOptions options = config.getJavacLanguageLevelOptions();
 
     assertEquals(TARGETED_JAVA_VERSION, options.getSourceLevel());
     assertEquals(TARGETED_JAVA_VERSION, options.getTargetLevel());
@@ -285,7 +287,7 @@ public class JavaBuckConfigTest {
     String localConfig = "[java]\nbootclasspath-6 = one.jar\nbootclasspath-7 = two.jar";
     JavaBuckConfig config = createWithDefaultFilesystem(new StringReader(localConfig));
 
-    JavacOptions options = config.getDefaultJavacOptions(EmptyTargetConfiguration.INSTANCE);
+    JavacOptions options = config.getDefaultJavacOptions(UnconfiguredTargetConfiguration.INSTANCE);
 
     JavacOptions jse5 =
         JavacOptions.builder(options)
@@ -314,7 +316,9 @@ public class JavaBuckConfigTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().build();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
-    Javac javac = JavacFactoryHelper.createJavacFactory(javaConfig).create(null, null);
+    Javac javac =
+        JavacFactoryHelper.createJavacFactory(javaConfig)
+            .create(null, null, UnconfiguredTargetConfiguration.INSTANCE);
     assertTrue(javac.getClass().toString(), javac instanceof Jsr199Javac);
   }
 
@@ -330,7 +334,10 @@ public class JavaBuckConfigTest {
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
     assertEquals(
-        javac, JavacFactoryHelper.createJavacFactory(javaConfig).create(null, null).getShortName());
+        javac,
+        JavacFactoryHelper.createJavacFactory(javaConfig)
+            .create(null, null, UnconfiguredTargetConfiguration.INSTANCE)
+            .getShortName());
   }
 
   @Test
@@ -342,9 +349,9 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     assumeThat(
-        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(Javac.Source.JDK));
-    assertFalse(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
+    assertFalse(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -372,10 +379,10 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     assumeThat(
-        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(Javac.Source.EXTERNAL));
 
-    assertFalse(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
+    assertFalse(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -393,9 +400,9 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     assumeThat(
-        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(Javac.Source.EXTERNAL));
-    assertFalse(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
+    assertFalse(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -411,10 +418,10 @@ public class JavaBuckConfigTest {
             .getView(JavaBuckConfig.class);
 
     assumeThat(
-        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(Javac.Source.JAR));
 
-    assertTrue(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
+    assertTrue(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -422,10 +429,10 @@ public class JavaBuckConfigTest {
     JavaBuckConfig config = FakeBuckConfig.builder().build().getView(JavaBuckConfig.class);
 
     assumeThat(
-        config.getJavacSpec(EmptyTargetConfiguration.INSTANCE).getJavacSource(),
+        config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),
         is(Javac.Source.JDK));
 
-    assertTrue(config.trackClassUsage(EmptyTargetConfiguration.INSTANCE));
+    assertTrue(config.trackClassUsage(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
@@ -448,24 +455,25 @@ public class JavaBuckConfigTest {
     OptionAccumulator optionsConsumer = new OptionAccumulator();
     options.appendOptionsTo(
         optionsConsumer,
-        new AbstractSourcePathResolver() {
-          @Override
-          protected SourcePath resolveDefaultBuildTargetSourcePath(
-              DefaultBuildTargetSourcePath targetSourcePath) {
-            throw new UnsupportedOperationException();
-          }
+        new SourcePathResolverAdapter(
+            new AbstractSourcePathResolver() {
+              @Override
+              protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
+                  DefaultBuildTargetSourcePath targetSourcePath) {
+                throw new UnsupportedOperationException();
+              }
 
-          @Override
-          public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
-            throw new UnsupportedOperationException();
-          }
+              @Override
+              public String getSourcePathName(BuildTarget target, SourcePath sourcePath) {
+                throw new UnsupportedOperationException();
+              }
 
-          @Override
-          protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
-              BuildTargetSourcePath sourcePath) {
-            throw new UnsupportedOperationException();
-          }
-        },
+              @Override
+              protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
+                  BuildTargetSourcePath sourcePath) {
+                throw new UnsupportedOperationException();
+              }
+            }),
         defaultFilesystem);
     return optionsConsumer;
   }

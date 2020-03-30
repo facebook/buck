@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -29,10 +29,9 @@ import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.cache.FileHashCache;
-import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.hashing.FileHashLoader;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
@@ -47,7 +46,7 @@ public class VerifyCachesCommand extends AbstractCommand {
   private boolean shouldDump = false;
 
   private boolean verifyFileHashCache(PrintStream stdOut, FileHashCache cache) throws IOException {
-    FileHashCacheVerificationResult result = cache.verify();
+    FileHashCache.FileHashCacheVerificationResult result = cache.verify();
     stdOut.println("Examined " + result.getCachesExamined() + " caches.");
     stdOut.println("Examined " + result.getFilesExamined() + " files.");
     if (result.getVerificationErrors().isEmpty()) {
@@ -125,7 +124,7 @@ public class VerifyCachesCommand extends AbstractCommand {
             .map(
                 recycler ->
                     verifyRuleKeyCache(
-                        params.getCell().getCellProvider(),
+                        params.getCells().getRootCell().getCellProvider(),
                         params.getConsole().getStdOut(),
                         params.getRuleKeyConfiguration(),
                         params.getFileHashCache(),

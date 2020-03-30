@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -20,7 +20,6 @@ import static com.facebook.buck.rules.keys.RuleKeyScopedHasher.ContainerScope;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Container;
 import static com.facebook.buck.rules.keys.hasher.RuleKeyHasher.Wrapper;
 
-import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -33,7 +32,7 @@ import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
@@ -163,7 +162,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
    * {@link #setSourcePathAsRule}.
    */
   final RuleKeyBuilder<RULE_KEY> setSourcePathDirectly(SourcePath sourcePath) throws IOException {
-    SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
       Path relativePath = resolver.getRelativePath(sourcePath);
       Optional<HashCode> precomputedHash =
@@ -233,7 +232,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
     // TODO(simons): Enable this precondition once setPath(Path) has been removed.
     // Preconditions.checkState(absolutePath.isAbsolute());
     if (ideallyRelative.isAbsolute()) {
-      logger.warn(
+      logger.info(
           "Attempting to add absolute path to rule key. Only using file name: %s", ideallyRelative);
       ideallyRelative = ideallyRelative.getFileName();
     }
@@ -250,7 +249,7 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
   }
 
   final RuleKeyBuilder<RULE_KEY> setNonHashingSourcePathDirectly(SourcePath sourcePath) {
-    SourcePathResolver resolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = ruleFinder.getSourcePathResolver();
     if (sourcePath instanceof BuildTargetSourcePath) {
       hasher.putNonHashingPath(resolver.getRelativePath(sourcePath));
     } else if (sourcePath instanceof PathSourcePath) {
@@ -266,11 +265,6 @@ public abstract class RuleKeyBuilder<RULE_KEY> extends AbstractRuleKeyBuilder<RU
           "Unrecognized SourcePath implementation: " + sourcePath.getClass());
     }
     return this;
-  }
-
-  @Override
-  protected AbstractRuleKeyBuilder<RULE_KEY> setArtifact(Artifact artifact) throws IOException {
-    return setSourcePath(artifact.asBound().getSourcePath());
   }
 
   @Override

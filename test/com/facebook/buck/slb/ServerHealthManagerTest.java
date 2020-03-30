@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.slb;
@@ -35,8 +35,7 @@ public class ServerHealthManagerTest {
 
   private static final long NOW_MILLIS = 1409702151000L;
   private static final long NOW_NANO_TIME = 3000000;
-  private static final FakeClock NOW_FAKE_CLOCK =
-      FakeClock.builder().currentTimeMillis(NOW_MILLIS).nanoTime(NOW_NANO_TIME).build();
+  private static final FakeClock NOW_FAKE_CLOCK = FakeClock.of(NOW_MILLIS, NOW_NANO_TIME);
   private static final int RANGE_MILLIS = 42;
   private static final float MAX_ERROR_PERCENTAGE = 0.1f;
   private static final int MAX_ACCEPTABLE_LATENCY_MILLIS = 42;

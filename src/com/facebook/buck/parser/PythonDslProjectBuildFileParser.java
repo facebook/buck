@@ -1,26 +1,26 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
@@ -32,15 +32,16 @@ import com.facebook.buck.json.BuildFileParseExceptionStackTraceEntry;
 import com.facebook.buck.json.BuildFilePythonResult;
 import com.facebook.buck.json.BuildFileSyntaxError;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
+import com.facebook.buck.parser.api.UserDefinedRuleLoader;
 import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.parser.events.ParseBuckProfilerReportEvent;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.implicit.PackageImplicitIncludesFinder;
+import com.facebook.buck.parser.options.ImplicitNativeRulesState;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
-import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
-import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
+import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -118,6 +119,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private final ProcessExecutor processExecutor;
   private final AssertScopeExclusiveAccess assertSingleThreadedParsing;
   private final Optional<AtomicLong> processedBytes;
+  private final Optional<UserDefinedRuleLoader> userDefinedRulesParser;
 
   private boolean isInitialized;
   private boolean isClosed;
@@ -133,8 +135,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       ImmutableMap<String, String> environment,
       BuckEventBus buckEventBus,
       ProcessExecutor processExecutor,
-      Optional<AtomicLong> processedBytes) {
+      Optional<AtomicLong> processedBytes,
+      Optional<UserDefinedRuleLoader> userDefinedRulesParser) {
     this.processedBytes = processedBytes;
+    this.userDefinedRulesParser = userDefinedRulesParser;
     this.buckPythonProgram = null;
     this.options = options;
     this.typeCoercerFactory = typeCoercerFactory;
@@ -208,7 +212,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   /** Initialize the parser, starting buck.py. */
   private void init() throws IOException {
     try (SimplePerfEvent.Scope scope =
-        SimplePerfEvent.scope(buckEventBus, PerfEventId.of("ParserInit"))) {
+        SimplePerfEvent.scope(buckEventBus, SimplePerfEvent.PerfEventId.of("ParserInit"))) {
 
       ImmutableMap.Builder<String, String> pythonEnvironmentBuilder =
           ImmutableMap.builderWithExpectedSize(environment.size());
@@ -335,9 +339,9 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       argBuilder.add(module);
     }
 
-    argBuilder.add("--project_root", options.getProjectRoot().toAbsolutePath().toString());
+    argBuilder.add("--project_root", options.getProjectRoot().toString());
 
-    for (ImmutableMap.Entry<String, Path> entry : options.getCellRoots().entrySet()) {
+    for (Map.Entry<String, AbsPath> entry : options.getCellRoots().entrySet()) {
       argBuilder.add("--cell_root", entry.getKey() + "=" + entry.getValue());
     }
 
@@ -361,12 +365,16 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     argBuilder.add("--ignore_paths", ignorePathsJson.get().toString());
 
     // Disable native rules if requested
-    if (options.getDisableImplicitNativeRules()) {
+    if (options.getImplicitNativeRulesState() == ImplicitNativeRulesState.DISABLED) {
       argBuilder.add("--disable_implicit_native_rules");
     }
 
     if (options.isWarnAboutDeprecatedSyntax()) {
       argBuilder.add("--warn_about_deprecated_syntax");
+    }
+
+    if (options.getUserDefinedRulesState() == UserDefinedRulesState.ENABLED) {
+      argBuilder.add("--enable_user_defined_rules");
     }
 
     return argBuilder.build();
@@ -379,11 +387,14 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    * @param buildFile should be an absolute path to a build file. Must have rootPath as its prefix.
    */
   @Override
-  public BuildFileManifest getBuildFileManifest(Path buildFile)
+  public BuildFileManifest getManifest(Path buildFile)
       throws BuildFileParseException, InterruptedException {
     LOG.verbose("Started parsing build file %s", buildFile);
     try {
-      return getAllRulesInternal(buildFile);
+      BuildFileManifest manifest = getAllRulesInternal(buildFile);
+      userDefinedRulesParser.ifPresent(
+          parser -> parser.loadExtensionsForUserDefinedRules(currentBuildFile.get(), manifest));
+      return manifest;
     } catch (IOException e) {
       MoreThrowables.propagateIfInterrupt(e);
       throw BuildFileParseException.createForBuildFileParseError(buildFile, e);
@@ -433,7 +444,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList<Map<String, Object>> values = ImmutableList.of();
     Optional<String> profile = Optional.empty();
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
-      Path cellPath = options.getProjectRoot().toAbsolutePath();
+      AbsPath cellPath = options.getProjectRoot();
       String watchRoot = cellPath.toString();
       String projectPrefix = "";
       if (options.getWatchman().getProjectWatches().containsKey(cellPath)) {
@@ -469,7 +480,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       if (values.isEmpty()) {
         // in case Python process cannot send values due to serialization issues, it will send an
         // empty list
-        return ImmutableBuildFileManifest.of(
+        return BuildFileManifest.of(
             ImmutableMap.of(),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
@@ -492,18 +503,20 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    *     would return {@code src/bar}.
    */
   private Path getBasePath(Path buildFile) {
-    return MorePaths.getParentOrEmpty(MorePaths.relativize(options.getProjectRoot(), buildFile));
+    return MorePaths.getParentOrEmpty(
+        MorePaths.relativize(options.getProjectRoot().getPath(), buildFile));
   }
 
   @SuppressWarnings("unchecked")
   private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> values) {
-    return ImmutableBuildFileManifest.of(
+    return BuildFileManifest.of(
         indexTargetsByName(values.subList(0, values.size() - 3).asList()),
         ImmutableSortedSet.copyOf(
             Objects.requireNonNull(
                 (List<String>) values.get(values.size() - 3).get(MetaRules.INCLUDES))),
-        Objects.requireNonNull(
-            (Map<String, Object>) values.get(values.size() - 2).get(MetaRules.CONFIGS)),
+        ImmutableMap.copyOf(
+            Objects.requireNonNull(
+                (Map<String, Object>) values.get(values.size() - 2).get(MetaRules.CONFIGS))),
         Optional.of(
             ImmutableMap.copyOf(
                 Maps.transformValues(
@@ -514,18 +527,24 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         ImmutableList.of());
   }
 
-  private static ImmutableMap<String, Map<String, Object>> indexTargetsByName(
+  private static ImmutableMap<String, ImmutableMap<String, Object>> indexTargetsByName(
       ImmutableList<Map<String, Object>> targets) {
-    ImmutableMap.Builder<String, Map<String, Object>> builder =
+    ImmutableMap.Builder<String, ImmutableMap<String, Object>> builder =
         ImmutableMap.builderWithExpectedSize(targets.size());
     targets.forEach(
         target -> builder.put((String) target.get("name"), convertSelectableAttributes(target)));
     return builder.build();
   }
 
-  private static Map<String, Object> convertSelectableAttributes(Map<String, Object> values) {
-    return Maps.transformValues(
-        values, PythonDslProjectBuildFileParser::convertToSelectableAttributeIfNeeded);
+  private static ImmutableMap<String, Object> convertSelectableAttributes(
+      Map<String, Object> values) {
+    return values.entrySet().stream()
+        .collect(
+            ImmutableMap.toImmutableMap(
+                Map.Entry::getKey,
+                e ->
+                    PythonDslProjectBuildFileParser.convertToSelectableAttributeIfNeeded(
+                        e.getValue())));
   }
 
   /**
@@ -559,14 +578,13 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           (Map<String, Object>) Objects.requireNonNull(attributeValue.get("conditions"));
       Map<String, Object> convertedConditions =
           Maps.transformValues(conditions, v -> v == null ? Runtime.NONE : v);
-      return ImmutableSelectorValue.of(
+      return SelectorValue.of(
           convertedConditions, Objects.toString(attributeValue.get("no_match_message"), ""));
     } else {
       Preconditions.checkState("SelectorList".equals(type));
       List<Object> items = (List<Object>) Objects.requireNonNull(attributeValue.get("items"));
       ImmutableList<Object> convertedElements = convertToSelectableAttributesIfNeeded(items);
-      return ImmutableListWithSelects.of(
-          convertedElements, getType(Iterables.getLast(convertedElements)));
+      return ListWithSelects.of(convertedElements, getType(Iterables.getLast(convertedElements)));
     }
   }
 
@@ -836,7 +854,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @Override
   public ImmutableSortedSet<String> getIncludedFiles(Path buildFile)
       throws BuildFileParseException, InterruptedException {
-    return getBuildFileManifest(buildFile).getIncludes();
+    return getManifest(buildFile).getIncludes();
   }
 
   @Override

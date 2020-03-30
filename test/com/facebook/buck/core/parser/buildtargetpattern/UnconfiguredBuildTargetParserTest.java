@@ -1,29 +1,29 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.parser.buildtargetpattern;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.ImmutableCanonicalCellName;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
+import com.facebook.buck.core.model.BaseName;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -43,53 +43,53 @@ public class UnconfiguredBuildTargetParserTest {
     return new Object[] {
       new Object[] {
         "cell//path/to:target",
-        ImmutableUnconfiguredBuildTarget.of(
-            ImmutableCanonicalCellName.of(Optional.of("cell")),
-            "//path/to",
+        UnconfiguredBuildTarget.of(
+            CanonicalCellName.of(Optional.of("cell")),
+            BaseName.of("//path/to"),
             "target",
-            UnconfiguredBuildTarget.NO_FLAVORS)
+            FlavorSet.NO_FLAVORS)
       },
       new Object[] {
         "cell//path/to:target#flavor1,flavor2",
-        ImmutableUnconfiguredBuildTarget.of(
-            ImmutableCanonicalCellName.of(Optional.of("cell")),
-            "//path/to",
+        UnconfiguredBuildTarget.of(
+            CanonicalCellName.of(Optional.of("cell")),
+            BaseName.of("//path/to"),
             "target",
-            ImmutableSortedSet.of(InternalFlavor.of("flavor1"), InternalFlavor.of("flavor2")))
+            FlavorSet.of(InternalFlavor.of("flavor1"), InternalFlavor.of("flavor2")))
       },
       new Object[] {
         "//path/to:target",
-        ImmutableUnconfiguredBuildTarget.of(
-            CanonicalCellName.rootCell(), "//path/to", "target", UnconfiguredBuildTarget.NO_FLAVORS)
+        UnconfiguredBuildTarget.of(
+            CanonicalCellName.rootCell(), BaseName.of("//path/to"), "target", FlavorSet.NO_FLAVORS)
       },
       new Object[] {
         "//path/to:target#flavor",
-        ImmutableUnconfiguredBuildTarget.of(
+        UnconfiguredBuildTarget.of(
             CanonicalCellName.rootCell(),
-            "//path/to",
+            BaseName.of("//path/to"),
             "target",
-            ImmutableSortedSet.of(InternalFlavor.of("flavor")))
+            FlavorSet.of(InternalFlavor.of("flavor")))
       },
       new Object[] {
         "//:target",
-        ImmutableUnconfiguredBuildTarget.of(
-            CanonicalCellName.rootCell(), "//", "target", UnconfiguredBuildTarget.NO_FLAVORS)
+        UnconfiguredBuildTarget.of(
+            CanonicalCellName.rootCell(), BaseName.of("//"), "target", FlavorSet.NO_FLAVORS)
       },
       new Object[] {
         "cell//:target",
-        ImmutableUnconfiguredBuildTarget.of(
-            ImmutableCanonicalCellName.of(Optional.of("cell")),
-            "//",
+        UnconfiguredBuildTarget.of(
+            CanonicalCellName.of(Optional.of("cell")),
+            BaseName.of("//"),
             "target",
-            UnconfiguredBuildTarget.NO_FLAVORS)
+            FlavorSet.NO_FLAVORS)
       },
       new Object[] {
         "cell//path:target",
-        ImmutableUnconfiguredBuildTarget.of(
-            ImmutableCanonicalCellName.of(Optional.of("cell")),
-            "//path",
+        UnconfiguredBuildTarget.of(
+            CanonicalCellName.of(Optional.of("cell")),
+            BaseName.of("//path"),
             "target",
-            UnconfiguredBuildTarget.NO_FLAVORS)
+            FlavorSet.NO_FLAVORS)
       }
     };
   }

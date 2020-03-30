@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rulekey;
@@ -38,6 +38,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
+import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -45,10 +46,9 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.log.ConsoleHandler;
@@ -691,17 +691,82 @@ public class RuleKeyTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     RuleKey first =
         createBuilder(ruleFinder)
-            .setReflectively("value", TestRuleKeyInterfaceImmutable.of("added-1", "ignored-1"))
+            .setReflectively(
+                "value", ImmutableTestRuleKeyInterfaceImmutable.of("added-1", "ignored-1"))
             .build(RuleKey::new);
 
     RuleKey second =
         createBuilder(ruleFinder)
-            .setReflectively("value", TestRuleKeyInterfaceImmutable.of("added-1", "ignored-2"))
+            .setReflectively(
+                "value", ImmutableTestRuleKeyInterfaceImmutable.of("added-1", "ignored-2"))
             .build(RuleKey::new);
 
     RuleKey third =
         createBuilder(ruleFinder)
-            .setReflectively("value", TestRuleKeyInterfaceImmutable.of("added-2", "ignored-2"))
+            .setReflectively(
+                "value", ImmutableTestRuleKeyInterfaceImmutable.of("added-2", "ignored-2"))
+            .build(RuleKey::new);
+
+    assertEquals(first, second);
+    assertNotEquals(first, third);
+  }
+
+  @Test
+  public void immutablesCanAddValueMethodsFromInterfacePrehashedImmutablesToRuleKeys() {
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    RuleKey first =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value", ImmutableTestRuleKeyInterfacePrehashedImmutable.of("added-1", "ignored-1"))
+            .build(RuleKey::new);
+
+    RuleKey second =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value", ImmutableTestRuleKeyInterfacePrehashedImmutable.of("added-1", "ignored-2"))
+            .build(RuleKey::new);
+
+    RuleKey third =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value", ImmutableTestRuleKeyInterfacePrehashedImmutable.of("added-2", "ignored-2"))
+            .build(RuleKey::new);
+
+    assertEquals(first, second);
+    assertNotEquals(first, third);
+  }
+
+  @Test
+  public void immutablesCanAddValueMethodsFromInterfaceBuilderImmutablesToRuleKeys() {
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    RuleKey first =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value",
+                ImmutableTestRuleKeyInterfaceBuilderImmutable.builder()
+                    .setRuleKeyValue("added-1")
+                    .setNonRuleKeyValue("ignored-1")
+                    .build())
+            .build(RuleKey::new);
+
+    RuleKey second =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value",
+                ImmutableTestRuleKeyInterfaceBuilderImmutable.builder()
+                    .setRuleKeyValue("added-1")
+                    .setNonRuleKeyValue("ignored-2")
+                    .build())
+            .build(RuleKey::new);
+
+    RuleKey third =
+        createBuilder(ruleFinder)
+            .setReflectively(
+                "value",
+                ImmutableTestRuleKeyInterfaceBuilderImmutable.builder()
+                    .setRuleKeyValue("added-2")
+                    .setNonRuleKeyValue("ignored-2")
+                    .build())
             .build(RuleKey::new);
 
     assertEquals(first, second);
@@ -732,9 +797,24 @@ public class RuleKeyTest {
             "string(\"com.facebook.buck.core.rulekey.RuleKeyTest$?????\"):key(.class)"));
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractTestRuleKeyInterfaceImmutable extends AddsToRuleKey {
+  @BuckStyleValue
+  interface TestRuleKeyInterfaceImmutable extends AddsToRuleKey {
+    @AddToRuleKey
+    String getRuleKeyValue();
+
+    String getNonRuleKeyValue();
+  }
+
+  @BuckStylePrehashedValue
+  interface TestRuleKeyInterfacePrehashedImmutable extends AddsToRuleKey {
+    @AddToRuleKey
+    String getRuleKeyValue();
+
+    String getNonRuleKeyValue();
+  }
+
+  @BuckStyleValueWithBuilder
+  interface TestRuleKeyInterfaceBuilderImmutable extends AddsToRuleKey {
     @AddToRuleKey
     String getRuleKeyValue();
 
@@ -746,26 +826,31 @@ public class RuleKeyTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     RuleKey first =
         createBuilder(ruleFinder)
-            .setReflectively("value", TestRuleKeyImmutableWithDefaults.builder().build())
+            .setReflectively("value", TestRuleKeyImmutableWithDefaults.of())
             .build(RuleKey::new);
 
     RuleKey second =
         createBuilder(ruleFinder)
-            .setReflectively(
-                "value",
-                TestRuleKeyImmutableWithDefaults.builder().setRuleKeyValue("other").build())
+            .setReflectively("value", TestRuleKeyImmutableWithDefaults.of("other"))
             .build(RuleKey::new);
 
     assertNotEquals(first, second);
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractTestRuleKeyImmutableWithDefaults implements AddsToRuleKey {
+  @BuckStyleValue
+  abstract static class TestRuleKeyImmutableWithDefaults implements AddsToRuleKey {
     @AddToRuleKey
     @Value.Default
     String getRuleKeyValue() {
       return "default";
+    }
+
+    static TestRuleKeyImmutableWithDefaults of() {
+      return of("default");
+    }
+
+    static TestRuleKeyImmutableWithDefaults of(String ruleKeyValue) {
+      return ImmutableTestRuleKeyImmutableWithDefaults.of(ruleKeyValue);
     }
   }
 
@@ -774,33 +859,28 @@ public class RuleKeyTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     RuleKey first =
         createBuilder(ruleFinder)
-            .setReflectively("value", TestRuleKeyAbstractImmutable.of("added-1", "ignored-1"))
+            .setReflectively(
+                "value", ImmutableTestRuleKeyAbstractImmutable.of("added-1", "ignored-1"))
             .build(RuleKey::new);
 
     RuleKey second =
         createBuilder(ruleFinder)
-            .setReflectively("value", TestRuleKeyAbstractImmutable.of("added-1", "ignored-2"))
+            .setReflectively(
+                "value", ImmutableTestRuleKeyAbstractImmutable.of("added-1", "ignored-2"))
             .build(RuleKey::new);
 
     RuleKey third =
         createBuilder(ruleFinder)
-            .setReflectively("value", TestRuleKeyAbstractImmutable.of("added-2", "ignored-2"))
+            .setReflectively(
+                "value", ImmutableTestRuleKeyAbstractImmutable.of("added-2", "ignored-2"))
             .build(RuleKey::new);
 
     assertEquals(first, second);
     assertNotEquals(first, third);
   }
 
-  @Value.Immutable
-  @BuckStylePackageVisibleTuple
-  abstract static class AbstractTestPackageVisibleTuple implements AddsToRuleKey {
-    @AddToRuleKey
-    abstract int getValue();
-  }
-
-  @Value.Immutable
-  @BuckStylePackageVisibleImmutable
-  abstract static class AbstractTestPackageVisibleImmutable implements AddsToRuleKey {
+  @BuckStyleValue
+  abstract static class TestPackageVisibleTuple implements AddsToRuleKey {
     @AddToRuleKey
     abstract int getValue();
   }
@@ -809,21 +889,44 @@ public class RuleKeyTest {
   public void packageVisibleImmutablesCanUseAddToRuleKey() {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     createBuilder(ruleFinder)
-        .setReflectively("value", TestPackageVisibleTuple.of(0))
-        .build(RuleKey::new);
-
-    createBuilder(ruleFinder)
-        .setReflectively("value", TestPackageVisibleImmutable.builder().setValue(0).build())
+        .setReflectively("value", ImmutableTestPackageVisibleTuple.of(0))
         .build(RuleKey::new);
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
-  abstract static class AbstractTestRuleKeyAbstractImmutable implements AddsToRuleKey {
+  @ImmutableInfo(args = {"value"})
+  abstract static class TestProviderInfo implements AddsToRuleKey {
     @AddToRuleKey
-    abstract String getRuleKeyValue();
+    abstract TestRuleKeyAbstractImmutable value();
 
-    abstract String getNonRuleKeyValue();
+    static TestProviderInfo of(TestRuleKeyAbstractImmutable rka) {
+      return new ImmutableTestProviderInfo(rka);
+    }
+  }
+
+  @Test
+  public void providerInfoCanUseAddToRuleKey() {
+    TestRuleKeyAbstractImmutable rka1 = ImmutableTestRuleKeyAbstractImmutable.of("foo", "bar");
+    TestRuleKeyAbstractImmutable rka2 = ImmutableTestRuleKeyAbstractImmutable.of("not_foot", "bar");
+    TestRuleKeyAbstractImmutable rka3 = ImmutableTestRuleKeyAbstractImmutable.of("foo", "not_bar");
+    TestProviderInfo providerInfo1 = TestProviderInfo.of(rka1);
+    TestProviderInfo providerInfo2 = TestProviderInfo.of(rka2);
+    TestProviderInfo providerInfo3 = TestProviderInfo.of(rka3);
+
+    SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
+    HashCode rk1 = createBuilder(ruleFinder).setReflectively("value", providerInfo1).build();
+    HashCode rk2 = createBuilder(ruleFinder).setReflectively("value", providerInfo2).build();
+    HashCode rk3 = createBuilder(ruleFinder).setReflectively("value", providerInfo3).build();
+
+    assertNotEquals(rk1, rk2);
+    assertEquals(rk1, rk3);
+  }
+
+  @BuckStyleValue
+  interface TestRuleKeyAbstractImmutable extends AddsToRuleKey {
+    @AddToRuleKey
+    String getRuleKeyValue();
+
+    String getNonRuleKeyValue();
   }
 
   @Test(expected = UncheckedExecutionException.class)

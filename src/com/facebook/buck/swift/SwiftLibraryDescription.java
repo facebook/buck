@@ -1,47 +1,49 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.swift;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
+import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
-import com.facebook.buck.cxx.CxxLibraryGroup;
 import com.facebook.buck.cxx.CxxLinkOptions;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessables;
@@ -65,8 +67,11 @@ import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftPlatformsProvider;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
+import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Predicates;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -83,7 +88,10 @@ import java.util.regex.Pattern;
 import org.immutables.value.Value;
 
 public class SwiftLibraryDescription
-    implements DescriptionWithTargetGraph<SwiftLibraryDescriptionArg>, Flavored {
+    implements DescriptionWithTargetGraph<SwiftLibraryDescriptionArg>,
+        Flavored,
+        ImplicitDepsInferringDescription<
+            SwiftLibraryDescription.AbstractSwiftLibraryDescriptionArg> {
 
   static final Flavor SWIFT_COMPANION_FLAVOR = InternalFlavor.of("swift-companion");
   static final Flavor SWIFT_COMPILE_FLAVOR = InternalFlavor.of("swift-compile");
@@ -91,6 +99,21 @@ public class SwiftLibraryDescription
   private static final Set<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(
           SWIFT_COMPANION_FLAVOR, SWIFT_COMPILE_FLAVOR, LinkerMapMode.NO_LINKER_MAP.getFlavor());
+
+  @Override
+  public void findDepsForTargetFromConstructorArgs(
+      BuildTarget buildTarget,
+      CellNameResolver cellRoots,
+      AbstractSwiftLibraryDescriptionArg constructorArg,
+      ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
+    getSwiftPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+        .getValues()
+        .forEach(
+            platform ->
+                extraDepsBuilder.addAll(
+                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
+  }
 
   public enum Type implements FlavorConvertible {
     SHARED(CxxDescriptionEnhancer.SHARED_FLAVOR),
@@ -132,22 +155,24 @@ public class SwiftLibraryDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(
         ImmutableSet.of(
             // Missing: swift-companion
             // Missing: swift-compile
-            getCxxPlatforms()));
+            getCxxPlatforms(toolchainTargetConfiguration)));
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     ImmutableSet<Flavor> currentUnsupportedFlavors =
         ImmutableSet.copyOf(Sets.filter(flavors, Predicates.not(SUPPORTED_FLAVORS::contains)));
     if (currentUnsupportedFlavors.isEmpty()) {
       return true;
     }
-    return getCxxPlatforms().containsAnyOf(flavors);
+    return getCxxPlatforms(toolchainTargetConfiguration).containsAnyOf(flavors);
   }
 
   @Override
@@ -161,13 +186,13 @@ public class SwiftLibraryDescription
         LinkerMapMode.FLAVOR_DOMAIN.getValue(buildTarget);
     buildTarget =
         LinkerMapMode.removeLinkerMapModeFlavorInTarget(buildTarget, flavoredLinkerMapMode);
-    UnflavoredBuildTargetView unflavoredBuildTargetView = buildTarget.getUnflavoredBuildTarget();
+    UnflavoredBuildTarget unflavoredBuildTarget = buildTarget.getUnflavoredBuildTarget();
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
     Optional<Map.Entry<Flavor, UnresolvedCxxPlatform>> platform =
-        getCxxPlatforms().getFlavorAndValue(buildTarget);
-    ImmutableSortedSet<Flavor> buildFlavors = buildTarget.getFlavors();
+        getCxxPlatforms(buildTarget.getTargetConfiguration()).getFlavorAndValue(buildTarget);
+    FlavorSet buildFlavors = buildTarget.getFlavors();
     ImmutableSortedSet<BuildRule> filteredExtraDeps =
         params.getExtraDeps().get().stream()
             .filter(
@@ -175,16 +200,12 @@ public class SwiftLibraryDescription
                     !input
                         .getBuildTarget()
                         .getUnflavoredBuildTarget()
-                        .equals(unflavoredBuildTargetView))
+                        .equals(unflavoredBuildTarget))
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     params = params.withExtraDeps(filteredExtraDeps);
 
-    SwiftPlatformsProvider swiftPlatformsProvider =
-        toolchainProvider.getByName(
-            SwiftPlatformsProvider.DEFAULT_NAME, SwiftPlatformsProvider.class);
-
-    FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain =
-        swiftPlatformsProvider.getSwiftCxxPlatforms();
+    FlavorDomain<UnresolvedSwiftPlatform> swiftPlatformFlavorDomain =
+        getSwiftPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
@@ -193,7 +214,8 @@ public class SwiftLibraryDescription
       // TODO(cjhopman): This doesn't properly handle parse time deps...
       CxxPlatform cxxPlatform =
           platform.get().getValue().resolve(graphBuilder, buildTarget.getTargetConfiguration());
-      Optional<SwiftPlatform> swiftPlatform = swiftPlatformFlavorDomain.getValue(buildTarget);
+      Optional<SwiftPlatform> swiftPlatform =
+          swiftPlatformFlavorDomain.getRequiredValue(buildTarget).resolve(graphBuilder);
       if (!swiftPlatform.isPresent()) {
         throw new HumanReadableException("Platform %s is missing swift compiler", cxxPlatform);
       }
@@ -202,7 +224,7 @@ public class SwiftLibraryDescription
       // extract them from the flavors attached to the build target.
       Optional<Map.Entry<Flavor, Type>> type = LIBRARY_TYPE.getFlavorAndValue(buildTarget);
       if (!buildFlavors.contains(SWIFT_COMPILE_FLAVOR) && type.isPresent()) {
-        Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors());
+        Set<Flavor> flavors = Sets.newHashSet(buildTarget.getFlavors().getSet());
         flavors.remove(type.get().getKey());
         BuildTarget target = buildTarget.withFlavors(flavors);
         if (flavoredLinkerMapMode.isPresent()) {
@@ -232,32 +254,6 @@ public class SwiftLibraryDescription
 
       // Direct swift dependencies.
       SortedSet<BuildRule> buildDeps = params.getBuildDeps();
-      ImmutableSet<SwiftCompile> swiftCompileRules =
-          RichStream.from(buildDeps)
-              .filter(SwiftLibrary.class)
-              .map(input -> input.requireSwiftCompileRule(cxxPlatform.getFlavor()))
-              .toImmutableSet();
-
-      // Implicitly generated swift libraries of apple_library dependencies with swift code.
-      ImmutableSet<SwiftCompile> implicitSwiftCompileRules =
-          RichStream.from(buildDeps)
-              .filter(CxxLibraryGroup.class)
-              .flatMap(
-                  input -> {
-                    BuildTarget companionTarget =
-                        input.getBuildTarget().withAppendedFlavors(SWIFT_COMPANION_FLAVOR);
-                    // Note, this is liable to race conditions. The presence or absence of the
-                    // companion
-                    // rule should be determined by metadata query, not by assumptions.
-                    return RichStream.from(
-                        graphBuilder
-                            .getRuleOptional(companionTarget)
-                            .map(
-                                companion ->
-                                    ((SwiftLibrary) companion)
-                                        .requireSwiftCompileRule(cxxPlatform.getFlavor())));
-                  })
-              .toImmutableSet();
 
       List<CxxPreprocessorDep> preprocessorDeps = new ArrayList<>();
       // Build up the map of all C/C++ preprocessable dependencies.
@@ -284,8 +280,9 @@ public class SwiftLibraryDescription
               RichStream.from(inputs.getIncludes())
                   .filter(
                       headers -> headers.getIncludeType() != CxxPreprocessables.IncludeType.SYSTEM)
-                  .toImmutableSet(),
-              inputs.getFrameworks());
+                  .distinct()
+                  .toImmutableList(),
+              ImmutableList.copyOf(inputs.getFrameworks()));
       Preprocessor preprocessor =
           cxxPlatform.getCpp().resolve(graphBuilder, buildTarget.getTargetConfiguration());
 
@@ -294,17 +291,11 @@ public class SwiftLibraryDescription
           cxxPlatform,
           swiftBuckConfig,
           buildTarget,
+          args.getTargetSdkVersion()
+              .map(version -> swiftPlatform.get().getSwiftTarget().withTargetSdkVersion(version))
+              .orElse(swiftPlatform.get().getSwiftTarget()),
           projectFilesystem,
-          params.copyAppendingExtraDeps(
-              () ->
-                  ImmutableSet.<BuildRule>builder()
-                      .addAll(swiftCompileRules)
-                      .addAll(implicitSwiftCompileRules)
-                      .addAll(cxxDeps.getDeps(graphBuilder))
-                      // This is only used for generating include args and may not be actually
-                      // needed.
-                      .addAll(BuildableSupport.getDepsCollection(preprocessor, graphBuilder))
-                      .build()),
+          graphBuilder,
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
           args.getModuleName().orElse(buildTarget.getShortName()),
@@ -353,7 +344,7 @@ public class SwiftLibraryDescription
 
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
-            soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform);
+            soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform, projectFilesystem);
     Path sharedLibOutput =
         CxxDescriptionEnhancer.getSharedLibraryPath(
             projectFilesystem, buildTarget, sharedLibrarySoname);
@@ -406,12 +397,23 @@ public class SwiftLibraryDescription
             cellPathResolver));
   }
 
+  private FlavorDomain<UnresolvedSwiftPlatform> getSwiftPlatformsFlavorDomain(
+      TargetConfiguration toolchainTargetConfiguration) {
+    SwiftPlatformsProvider switftPlatformsProvider =
+        toolchainProvider.getByName(
+            SwiftPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            SwiftPlatformsProvider.class);
+    return switftPlatformsProvider.getUnresolvedSwiftPlatforms();
+  }
+
   public Optional<BuildRule> createCompanionBuildRule(
       BuildRuleCreationContextWithTargetGraph context,
       BuildTarget buildTarget,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      CxxLibraryDescription.CommonArg args) {
+      CxxLibraryDescription.CommonArg args,
+      Optional<String> targetSdkVersion) {
     if (!isSwiftTarget(buildTarget)) {
       boolean hasSwiftSource =
           !SwiftDescriptions.filterSwiftSources(
@@ -430,6 +432,7 @@ public class SwiftLibraryDescription
         delegateArgsBuilder,
         args,
         buildTarget);
+    delegateArgsBuilder.setTargetSdkVersion(targetSdkVersion);
     SwiftLibraryDescriptionArg delegateArgs = delegateArgsBuilder.build();
     if (!delegateArgs.getSrcs().isEmpty()) {
       return Optional.of(
@@ -444,25 +447,25 @@ public class SwiftLibraryDescription
       SwiftPlatform swiftPlatform,
       SwiftBuckConfig swiftBuckConfig,
       BuildTarget buildTarget,
-      BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       ProjectFilesystem projectFilesystem,
       SwiftLibraryDescriptionArg args,
       Preprocessor preprocessor,
       PreprocessorFlags preprocessFlags,
-      boolean importUnderlyingModule) {
+      boolean importUnderlyingModule,
+      Optional<SwiftTargetTriple> swiftTarget) {
 
     DepsBuilder srcsDepsBuilder = new DepsBuilder(graphBuilder);
     args.getSrcs().forEach(src -> srcsDepsBuilder.add(src));
-    BuildRuleParams paramsWithSrcDeps = params.copyAppendingExtraDeps(srcsDepsBuilder.build());
 
     return new SwiftCompile(
         cxxPlatform,
         swiftBuckConfig,
         buildTarget,
+        swiftTarget.orElse(swiftPlatform.getSwiftTarget()),
         projectFilesystem,
-        paramsWithSrcDeps,
+        graphBuilder,
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
         args.getModuleName().orElse(buildTarget.getShortName()),
@@ -487,16 +490,18 @@ public class SwiftLibraryDescription
         || buildTarget.getFlavors().contains(SWIFT_COMPILE_FLAVOR);
   }
 
-  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms() {
+  private FlavorDomain<UnresolvedCxxPlatform> getCxxPlatforms(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider
-        .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+        .getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            CxxPlatformsProvider.class)
         .getUnresolvedCxxPlatforms();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractSwiftLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasSrcs {
+  @RuleArg
+  interface AbstractSwiftLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasSrcs {
     Optional<String> getModuleName();
 
     ImmutableList<StringWithMacros> getCompilerFlags();
@@ -518,5 +523,11 @@ public class SwiftLibraryDescription
     Optional<SourcePath> getBridgingHeader();
 
     Optional<NativeLinkableGroup.Linkage> getPreferredLinkage();
+
+    /**
+     * The minimum OS version for which this target should be built. If set, this will override the
+     * config-level option.
+     */
+    Optional<String> getTargetSdkVersion();
   }
 }

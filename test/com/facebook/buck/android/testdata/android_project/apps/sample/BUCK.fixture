@@ -255,24 +255,6 @@ android_binary(
 )
 
 android_binary(
-    name = "app_cxx_lib_dep_with_constraints",
-    cpu_filters = [
-        "armv7",
-        "x86",
-    ],
-    keystore = "//keystores:debug",
-    manifest = "AndroidManifest.xml",
-    target_cpu_type_constraints = {
-        "armv7": "buck//config/constraints:arm",
-        "x86": "buck//config/constraints:x86_64",
-    },
-    deps = [
-        "//java/com/sample/native:native",
-        "//res/com/sample/base:base",
-    ],
-)
-
-android_binary(
     name = "app_cxx_lib_dep_with_constraints_without_cpu_map",
     cpu_filters = [
         "armv7",
@@ -833,6 +815,21 @@ android_binary(
     manifest = "AndroidManifest.xml",
     deps = [
         "//java/com/sample/lib:lib",
+        "//res/com/sample/aapt2:aapt2",
+        "//res/com/sample/base:base",
+    ],
+)
+
+android_binary(
+    name = "app_with_aapt2_locale_filtering",
+    aapt2_locale_filtering = True,
+    aapt_mode = "aapt2",
+    keystore = "//keystores:debug",
+    locales = ["en"],
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/lib:lib",
+        "//res/com/sample/aapt2:aapt2",
         "//res/com/sample/base:base",
     ],
 )

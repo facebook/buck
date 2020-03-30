@@ -1,25 +1,27 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
 
+import com.facebook.buck.android.AndroidBuildConfigDescription;
+import com.facebook.buck.android.AndroidBuildConfigDescriptionArg;
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
 import com.facebook.buck.android.UnzipAar;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
@@ -56,7 +58,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
    *
    * @param <T> the type of the TargetNode.
    */
-  abstract class TypedIjLibraryRule<T extends CommonDescriptionArg> implements IjLibraryRule {
+  abstract class TypedIjLibraryRule<T extends BuildRuleArg> implements IjLibraryRule {
     abstract Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass();
 
     abstract void apply(TargetNode<T> targetNode, IjLibrary.Builder library);
@@ -79,6 +81,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
 
     addToIndex(new AndroidPrebuiltAarLibraryRule());
     addToIndex(new PrebuiltJarLibraryRule());
+    addToIndex(new AndroidBuildConfigLibraryRule());
 
     libraryCache = new HashMap<>();
   }
@@ -195,6 +198,22 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
       arg.getSourceJar()
           .ifPresent(sourceJar -> library.addSourceJars(libraryFactoryResolver.getPath(sourceJar)));
       arg.getJavadocUrl().ifPresent(library::addJavadocUrls);
+    }
+  }
+
+  private class AndroidBuildConfigLibraryRule
+      extends TypedIjLibraryRule<AndroidBuildConfigDescriptionArg> {
+
+    @Override
+    Class<? extends DescriptionWithTargetGraph<?>> getDescriptionClass() {
+      return AndroidBuildConfigDescription.class;
+    }
+
+    @Override
+    void apply(TargetNode<AndroidBuildConfigDescriptionArg> targetNode, IjLibrary.Builder library) {
+      library.addBinaryJars(
+          libraryFactoryResolver.getPath(
+              DefaultBuildTargetSourcePath.of(targetNode.getBuildTarget())));
     }
   }
 }

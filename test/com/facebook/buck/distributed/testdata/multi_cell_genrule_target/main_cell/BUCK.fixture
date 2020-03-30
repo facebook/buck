@@ -1,5 +1,0 @@
-genrule(
-    name = "cross_cell_gen_rule",
-    out = "dir_list.txt",
-    cmd = "$(exe secondary_cell//:my_java_binary) > $OUT",
-)

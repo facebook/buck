@@ -3,13 +3,13 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "schedule",
     srcs = [
-        "AbstractRuleScheduleInfo.java",
         "OverrideScheduleRule.java",
-    ],
-    exported_deps = [
-        "//src/com/facebook/buck/core/rules/impl:impl",
+        "RuleScheduleInfo.java",
     ],
     visibility = [
         "PUBLIC",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules/impl:impl",
     ],
 )

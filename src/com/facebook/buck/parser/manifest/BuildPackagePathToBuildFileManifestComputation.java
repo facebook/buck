@@ -1,17 +1,17 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.manifest;
@@ -22,7 +22,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.ParsingError;
@@ -74,13 +73,13 @@ public class BuildPackagePathToBuildFileManifestComputation
   public BuildFileManifest transform(
       BuildPackagePathToBuildFileManifestKey key, ComputationEnvironment env) throws Exception {
     try {
-      return parser.getBuildFileManifest(root.resolve(key.getPath()).resolve(buildFileName));
+      return parser.getManifest(root.resolve(key.getPath()).resolve(buildFileName));
     } catch (BuildFileParseException ex) {
       if (throwOnParseError) {
         throw ex;
       }
 
-      return ImmutableBuildFileManifest.of(
+      return BuildFileManifest.of(
           ImmutableMap.of(),
           ImmutableSortedSet.of(),
           ImmutableMap.of(),

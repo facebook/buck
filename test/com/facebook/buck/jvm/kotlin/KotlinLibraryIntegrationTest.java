@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.kotlin;
@@ -37,7 +37,6 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.Timeout;
@@ -45,7 +44,7 @@ import org.junit.rules.Timeout;
 public class KotlinLibraryIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  @Rule public Timeout timeout = Timeout.seconds(180);
+  @Rule public Timeout timeout = Timeout.seconds(240);
 
   private ProjectWorkspace workspace;
 
@@ -73,13 +72,11 @@ public class KotlinLibraryIntegrationTest {
   }
 
   @Test
-  @Ignore("Temporarily disabled. TODO(ianc) reenable")
   public void compileKotlinClassWithAnnotationProcessorThatGeneratesJavaCode() throws Exception {
     buildKotlinLibraryThatContainsNoJavaCodeButMustCompileGeneratedJavaCode();
   }
 
   @Test
-  @Ignore("Temporarily disabled. TODO(ianc) reenable")
   public void compileKotlinClassWithAnnotationProcessorThatGeneratesJavaCodeWithExternalJavac()
       throws Exception {
     overrideToolsJavacInBuckConfig();
@@ -98,7 +95,7 @@ public class KotlinLibraryIntegrationTest {
           ImmutableSet.of(
               "META-INF/",
               "META-INF/MANIFEST.MF",
-              "META-INF/example.kotlin_module",
+              "META-INF/com.example.ap.kotlinapgenjava.example.kotlin_module",
               "com/",
               "com/example/",
               "com/example/ap/",
@@ -132,7 +129,7 @@ public class KotlinLibraryIntegrationTest {
     workspace.writeContentsToPath(amendedBuckconfig, ".buckconfig");
   }
 
-  @Test(timeout = 100000)
+  @Test
   public void shouldAnnotationProcessClassesUsingKapt() {
     ProcessResult buildResult =
         workspace.runBuckCommand(
@@ -145,6 +142,14 @@ public class KotlinLibraryIntegrationTest {
     ProcessResult buildResult =
         workspace.runBuckCommand(
             "build", "//com/example/ap/annotation-processing-tool-javac:kotlin");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldAnnotationProcessClassesUsingJavacWhenNoKotlinSources() {
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//com/example/ap/annotation-processing-tool-javac:java_sources_only");
     buildResult.assertSuccess("Build should have succeeded.");
   }
 

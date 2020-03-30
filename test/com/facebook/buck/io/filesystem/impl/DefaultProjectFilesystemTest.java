@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem.impl;
@@ -24,8 +24,11 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
@@ -106,7 +109,7 @@ public class DefaultProjectFilesystemTest {
 
     // view should be relative to root
     assertEquals(Paths.get(""), view.projectRoot);
-    assertEquals(filesystem.getRootPath(), view.getRootPath());
+    assertEquals(filesystem.getRootPath().getPath(), view.getRootPath());
     assertEquals(Paths.get(""), view.relativize(tmp.getRoot()));
 
     // view should have no ignores
@@ -600,7 +603,7 @@ public class DefaultProjectFilesystemTest {
     ImmutableSet<Path> ignorePaths =
         FluentIterable.from(filesystem.getIgnorePaths())
             .filter(RecursiveFileMatcher.class)
-            .transform(RecursiveFileMatcher::getPath)
+            .transform(recursiveFileMatcher -> recursiveFileMatcher.getPath().getPath())
             .toSet();
     assertThat(
         ImmutableSortedSet.copyOf(Ordering.natural(), ignorePaths),
@@ -628,7 +631,7 @@ public class DefaultProjectFilesystemTest {
         FluentIterable.from(
                 TestProjectFilesystems.createProjectFilesystem(rootPath, config).getIgnorePaths())
             .filter(RecursiveFileMatcher.class)
-            .transform(RecursiveFileMatcher::getPath)
+            .transform(recursiveFileMatcher -> recursiveFileMatcher.getPath().getPath())
             .toSet();
     assertThat(
         "Cache directory should be in set of ignored paths",
@@ -670,8 +673,17 @@ public class DefaultProjectFilesystemTest {
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
     assertThat(
         "Two ProjectFilesystems with same glob in ignore should be equal",
-        projectFilesystemFactory.createProjectFilesystem(rootPath, config),
-        equalTo(projectFilesystemFactory.createProjectFilesystem(rootPath, config)));
+        projectFilesystemFactory.createProjectFilesystem(
+            CanonicalCellName.rootCell(),
+            AbsPath.of(rootPath),
+            config,
+            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config)),
+        equalTo(
+            projectFilesystemFactory.createProjectFilesystem(
+                CanonicalCellName.rootCell(),
+                AbsPath.of(rootPath),
+                config,
+                BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config))));
   }
 
   @Test
@@ -680,7 +692,11 @@ public class DefaultProjectFilesystemTest {
     Path root = vfs.getPath("/root");
     Files.createDirectories(root);
     ProjectFilesystem projectFilesystem =
-        new DefaultProjectFilesystemFactory().createProjectFilesystem(root);
+        new DefaultProjectFilesystemFactory()
+            .createProjectFilesystem(
+                CanonicalCellName.rootCell(),
+                AbsPath.of(root),
+                BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH);
     assertEquals(vfs, projectFilesystem.getPath("bar").getFileSystem());
     assertEquals(vfs.getPath("bar"), projectFilesystem.getPath("bar"));
   }

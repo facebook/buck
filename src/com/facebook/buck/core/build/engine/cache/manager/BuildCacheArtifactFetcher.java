@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.cache.manager;
@@ -31,9 +31,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.file.LazyPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.base.Preconditions;
@@ -236,7 +236,7 @@ public class BuildCacheArtifactFetcher {
     // to resolve a Path for a zip entry against a file Path on disk.
     ArtifactCompressionEvent.Started started =
         ArtifactCompressionEvent.started(
-            ArtifactCompressionEvent.Operation.DECOMPRESS, ImmutableSet.of(ruleKey));
+            ArtifactCompressionEvent.Operation.DECOMPRESS, ImmutableSet.of(ruleKey), rule);
     eventBus.post(started);
     long compressedSize = filesystem.getFileSize(zipPath);
     long fullSize = 0L;
@@ -261,7 +261,8 @@ public class BuildCacheArtifactFetcher {
                   ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
       onDiskBuildInfo.validateArtifact(extractedFiles);
-      fullSize = Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).get());
+      fullSize =
+          Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).getLeft());
 
       // We only delete the ZIP file when it has been unzipped successfully. Otherwise, we leave it
       // around for debugging purposes.
@@ -278,7 +279,7 @@ public class BuildCacheArtifactFetcher {
               e.getMessage(), ruleKey),
           e.getCause());
     } finally {
-      eventBus.post(ArtifactCompressionEvent.finished(started, fullSize, compressedSize));
+      eventBus.post(ArtifactCompressionEvent.finished(started, fullSize, compressedSize, rule));
     }
 
     return cacheResult;

@@ -1,24 +1,26 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -29,9 +31,10 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -41,6 +44,7 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.CopyStep;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MakeExecutableStep;
+import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.StringTemplateStep;
 import com.facebook.buck.step.fs.SymlinkFileStep;
 import com.facebook.buck.step.fs.WriteFileStep;
@@ -88,6 +92,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey ImmutableSet<HaskellPackage> prebuiltHaskellPackages;
 
   @AddToRuleKey boolean enableProfiling;
+
+  @AddToRuleKey ArchiveContents archiveContents;
 
   @AddToRuleKey(stringify = true)
   Path ghciScriptTemplate;
@@ -139,6 +145,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<HaskellPackage> haskellPackages,
       ImmutableSet<HaskellPackage> prebuiltHaskellPackages,
       boolean enableProfiling,
+      ArchiveContents archiveContents,
       Path ghciScriptTemplate,
       ImmutableList<SourcePath> extraScriptTemplates,
       Path ghciIservScriptTemplate,
@@ -163,6 +170,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.haskellPackages = haskellPackages;
     this.prebuiltHaskellPackages = prebuiltHaskellPackages;
     this.enableProfiling = enableProfiling;
+    this.archiveContents = archiveContents;
     this.ghciScriptTemplate = ghciScriptTemplate;
     this.extraScriptTemplates = extraScriptTemplates;
     this.ghciIservScriptTemplate = ghciIservScriptTemplate;
@@ -203,18 +211,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<HaskellPackage> haskellPackages,
       ImmutableSet<HaskellPackage> prebuiltHaskellPackages,
       boolean enableProfiling,
-      Path ghciScriptTemplate,
-      ImmutableList<SourcePath> extraScriptTemplates,
-      Path ghciIservScriptTemplate,
-      Path ghciBinutils,
-      Path ghciGhc,
-      Path ghciIServ,
-      Path ghciIServProf,
-      Path ghciLib,
-      Path ghciCxx,
-      Path ghciCc,
-      Path ghciCpp,
-      Path ghciPackager) {
+      HaskellPlatform platform,
+      ImmutableList<SourcePath> extraScriptTemplates) {
 
     ImmutableSet.Builder<BuildRule> extraDeps = ImmutableSet.builder();
 
@@ -247,18 +245,19 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         haskellPackages,
         prebuiltHaskellPackages,
         enableProfiling,
-        ghciScriptTemplate,
+        platform.getArchiveContents(),
+        platform.getGhciScriptTemplate().get(),
         extraScriptTemplates,
-        ghciIservScriptTemplate,
-        ghciBinutils,
-        ghciGhc,
-        ghciIServ,
-        ghciIServProf,
-        ghciLib,
-        ghciCxx,
-        ghciCc,
-        ghciCpp,
-        ghciPackager);
+        platform.getGhciIservScriptTemplate().get(),
+        platform.getGhciBinutils().get(),
+        platform.getGhciGhc().get(),
+        platform.getGhciIServ().get(),
+        platform.getGhciIServProf().get(),
+        platform.getGhciLib().get(),
+        platform.getGhciCxx().get(),
+        platform.getGhciCc().get(),
+        platform.getGhciCpp().get(),
+        platform.getGhciPackager().get());
   }
 
   private Path getOutputDir() {
@@ -273,13 +272,13 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   /** Resolves the real path to the lib and generates a symlink to it */
   private class ResolveAndSymlinkStep extends AbstractExecutionStep {
 
-    private SourcePathResolver resolver;
+    private SourcePathResolverAdapter resolver;
     private Path symlinkDir;
     private String name;
     private SourcePath lib;
 
     public ResolveAndSymlinkStep(
-        SourcePathResolver resolver, Path symlinkDir, String name, SourcePath lib) {
+        SourcePathResolverAdapter resolver, Path symlinkDir, String name, SourcePath lib) {
       super("symlinkLib_" + name);
       this.resolver = resolver;
       this.symlinkDir = symlinkDir;
@@ -291,17 +290,12 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     public StepExecutionResult execute(ExecutionContext context) throws IOException {
       Path src = resolver.getRelativePath(lib).toRealPath();
       Path dest = symlinkDir.resolve(name);
-      SymlinkFileStep.Builder sl = SymlinkFileStep.builder();
-      return sl.setFilesystem(getProjectFilesystem())
-          .setExistingFile(src)
-          .setDesiredLink(dest)
-          .build()
-          .execute(context);
+      return SymlinkFileStep.of(getProjectFilesystem(), src, dest).execute(context);
     }
   }
 
   private void symlinkLibs(
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Path symlinkDir,
       ImmutableList.Builder<Step> steps,
       ImmutableSortedMap<String, NonHashableSourcePathContainer> libs) {
@@ -316,7 +310,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
     String name = getBuildTarget().getShortName();
     Path dir = getOutputDir();
@@ -376,27 +370,29 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
               pkgdir,
               CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
 
-      ImmutableSet.Builder<Path> artifacts = ImmutableSet.builder();
-      for (SourcePath lib : pkg.getLibraries()) {
-        artifacts.add(resolver.getRelativePath(lib).getParent());
+      ImmutableSet.Builder<SourcePath> artifacts = ImmutableSet.builder();
+      artifacts.addAll(pkg.getLibraries());
+
+      if (archiveContents == ArchiveContents.THIN) {
+        // this is required because the .a files above are thin archives,
+        // they merely point to the .o files via a relative path.
+        artifacts.addAll(pkg.getObjects());
       }
 
-      // this is required because the .a files above are thin archives,
-      // they merely point to the .o files via a relative path.
-      for (SourcePath obj : pkg.getObjects()) {
-        artifacts.add(resolver.getRelativePath(obj).getParent());
-      }
+      artifacts.addAll(pkg.getInterfaces());
 
-      for (SourcePath iface : pkg.getInterfaces()) {
-        artifacts.add(resolver.getRelativePath(iface).getParent());
-      }
-
-      for (Path artifact : artifacts.build()) {
+      for (SourcePath artifact : artifacts.build()) {
+        Path source = resolver.getRelativePath(artifact);
+        Path destination = pkgdir.resolve(source.getParent().getFileName());
+        steps.add(
+            MkdirStep.of(
+                BuildCellRelativePath.fromCellRelativePath(
+                    context.getBuildCellRootPath(), getProjectFilesystem(), destination)));
         steps.add(
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                artifact,
-                pkgdir,
+                source,
+                destination,
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS));
       }
 
@@ -586,7 +582,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     SourcePath p = ExplicitBuildTargetSourcePath.of(getBuildTarget(), scriptPath());
     return new CommandTool.Builder().addArg(SourcePathArg.of(p)).build();
   }

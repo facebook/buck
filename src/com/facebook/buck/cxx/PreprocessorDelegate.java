@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
 import com.facebook.buck.cxx.toolchain.PathShortener;
@@ -44,9 +44,9 @@ import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueTypeInfo;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.WeakMemoizer;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
@@ -85,7 +85,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
   /**
    * If present, these paths will be added first (prior to the current rule's list of paths) when
    * building the list of compiler flags, in {@link #getFlagsWithSearchPaths(Optional,
-   * SourcePathResolver)}.
+   * SourcePathResolverAdapter)}.
    */
   private final Optional<CxxIncludePaths> leadingIncludePaths;
 
@@ -138,7 +138,8 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
     return headerPathNormalizer.get(
         () -> {
           try (Scope ignored = LeafEvents.scope(context.getEventBus(), "header_path_normalizer")) {
-            // Cache the value using the first SourcePathResolver that we're called with. We expect
+            // Cache the value using the first SourcePathResolverAdapter that we're called with. We
+            // expect
             // this whole object to be recreated in cases where this computation would produce
             // different results.
             HeaderPathNormalizer.Builder builder =
@@ -167,31 +168,31 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
   public ImmutableList<Arg> getCommand(
       CxxToolFlags compilerFlags,
       Optional<PrecompiledHeaderData> pch,
-      SourcePathResolver resolver) {
+      SourcePathResolverAdapter resolver) {
     return ImmutableList.<Arg>builder()
         .addAll(StringArg.from(getCommandPrefix(resolver)))
         .addAll(getArguments(compilerFlags, pch, resolver))
         .build();
   }
 
-  public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
+  public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
     return preprocessor.getCommandPrefix(resolver);
   }
 
   public ImmutableList<Arg> getArguments(
       CxxToolFlags compilerFlags,
       Optional<PrecompiledHeaderData> pch,
-      SourcePathResolver resolver) {
+      SourcePathResolverAdapter resolver) {
     return ImmutableList.copyOf(
         CxxToolFlags.concat(getFlagsWithSearchPaths(pch, resolver), compilerFlags).getAllFlags());
   }
 
-  public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
+  public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
     return preprocessor.getEnvironment(resolver);
   }
 
   public CxxToolFlags getFlagsWithSearchPaths(
-      Optional<PrecompiledHeaderData> pch, SourcePathResolver resolver) {
+      Optional<PrecompiledHeaderData> pch, SourcePathResolverAdapter resolver) {
     CxxToolFlags leadingFlags;
     if (leadingIncludePaths.isPresent()) {
       leadingFlags =
@@ -225,7 +226,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
     return preprocessorFlags.getCxxIncludePaths();
   }
 
-  public CxxToolFlags getNonIncludePathFlags(SourcePathResolver resolver) {
+  public CxxToolFlags getNonIncludePathFlags(SourcePathResolverAdapter resolver) {
     return preprocessorFlags.getNonIncludePathFlags(resolver, Optional.empty(), preprocessor);
   }
 
@@ -233,7 +234,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
    * Build a {@link CxxToolFlags} representing our include paths (local, system, iquote, framework).
    * Does not include {@link #leadingIncludePaths}.
    */
-  public CxxToolFlags getIncludePathFlags(SourcePathResolver resolver) {
+  public CxxToolFlags getIncludePathFlags(SourcePathResolverAdapter resolver) {
     return preprocessorFlags.getIncludePathFlags(
         resolver, minLengthPathRepresentation, frameworkPathSearchPathFunction, preprocessor);
   }
@@ -245,7 +246,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
    * @param sanitizer
    */
   public CxxToolFlags getSanitizedIncludePathFlags(
-      SourcePathResolver resolver, DebugPathSanitizer sanitizer) {
+      SourcePathResolverAdapter resolver, DebugPathSanitizer sanitizer) {
     return preprocessorFlags.getSanitizedIncludePathFlags(
         sanitizer,
         resolver,
@@ -397,6 +398,8 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
         ValueTypeInfoFactory.forTypeToken(new TypeToken<HeaderVerification>() {});
     static final ValueTypeInfo<PreprocessorFlags> PREPROCESSOR_FLAGS_TYPE_INFO =
         ValueTypeInfoFactory.forTypeToken(new TypeToken<PreprocessorFlags>() {});
+    static final ValueTypeInfo<CxxIncludePaths> CXX_INCLUDE_PATHS_VALUE_TYPE_INFO =
+        ValueTypeInfoFactory.forTypeToken(new TypeToken<CxxIncludePaths>() {});
 
     @Override
     public <E extends Exception> void serialize(
@@ -409,8 +412,7 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       serializer.visitInteger(instance.conflictingHeadersBasenameWhitelist.size());
       RichStream.from(instance.conflictingHeadersBasenameWhitelist)
           .forEachThrowing(serializer::visitString);
-      Preconditions.checkState(
-          !instance.leadingIncludePaths.isPresent(), "leadingIncludePaths is not serializable.");
+      serializer.visitOptional(instance.leadingIncludePaths, CXX_INCLUDE_PATHS_VALUE_TYPE_INFO);
     }
 
     @Override
@@ -434,13 +436,15 @@ final class PreprocessorDelegate implements AddsToRuleKey, HasCustomDepsLogic {
       }
       ImmutableSortedSet<String> conflictingHeadersBasenameWhitelist =
           conflictingHeadersBasenameWhitelistBuilder.build();
+      Optional<CxxIncludePaths> leadingIncludePaths =
+          deserializer.createOptional(CXX_INCLUDE_PATHS_VALUE_TYPE_INFO);
       return new PreprocessorDelegate(
           headerVerification,
           workingDir,
           preprocessor,
           preprocessorFlags,
           frameworkPathSearchPathFunction,
-          Optional.empty(),
+          leadingIncludePaths,
           Optional.empty(),
           conflictingHeadersBasenameWhitelist);
     }

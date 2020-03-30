@@ -1,20 +1,22 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.compatible;
 
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -83,26 +85,6 @@ public class BuckSkylarkTypes {
           SkylarkList<?> list, Class<NonWildcardType> elementClass, @Nullable String description)
           throws EvalException {
     return ImmutableList.copyOf((List<DestType>) list.getContents(elementClass, description));
-  }
-
-  /**
-   * Thrown when trying to construct an Immutable Skylark object from a Mutable one (that cannot be
-   * made immutable. i.e. it is not a list or dictionary)
-   */
-  public static class MutableObjectException extends RuntimeException {
-    private final Object mutableObject;
-
-    MutableObjectException(Object mutableObject) {
-      this.mutableObject = mutableObject;
-    }
-
-    /**
-     * @return the object that is mutable. This can be useful when the mutable object was deep in a
-     *     hierarchy
-     */
-    public Object getMutableObject() {
-      return mutableObject;
-    }
   }
 
   /**
@@ -200,5 +182,42 @@ public class BuckSkylarkTypes {
    */
   public static Object skylarkValueFromNullable(@Nullable Object object) {
     return object == null ? Runtime.NONE : object;
+  }
+
+  /**
+   * Check that a value is either {@link Runtime#NONE} or an instance of {@code clazz}
+   *
+   * @param location location of evaluation
+   * @param clazz the class that the object should be an instance of if not {@link Runtime#NONE}
+   * @param object the object to check
+   * @return the original value if it is of a correct type
+   * @throws EvalException if the object is not of the correct type
+   */
+  public static Object validateNoneOrType(Location location, Class<?> clazz, Object object)
+      throws EvalException {
+    if (object == Runtime.NONE || clazz.isAssignableFrom(object.getClass())) {
+      return object;
+    }
+    throw new EvalException(
+        location,
+        String.format(
+            "Invalid type provided. Expected %s, got %s",
+            clazz.getSimpleName(), object.getClass().getSimpleName()));
+  }
+
+  /**
+   * Checks if a given value is 'Immutable'. This mostly works like {@link
+   * com.google.devtools.build.lib.syntax.EvalUtils#isImmutable(java.lang.Object)}, but it can also
+   * handle {@link com.google.common.collect.ImmutableCollection} and {@link
+   * com.google.common.collect.ImmutableMap}
+   */
+  public static boolean isImmutable(Object o) {
+    if (o instanceof ImmutableCollection<?>) {
+      return ((ImmutableCollection<?>) o).stream().allMatch(BuckSkylarkTypes::isImmutable);
+    } else if (o instanceof ImmutableMap<?, ?>) {
+      return ((ImmutableMap<?, ?>) o).values().stream().allMatch(BuckSkylarkTypes::isImmutable);
+    } else {
+      return EvalUtils.isImmutable(o);
+    }
   }
 }

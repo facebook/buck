@@ -1,39 +1,42 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
 import com.facebook.buck.rules.macros.ClasspathMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableMacro;
 import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
@@ -56,7 +59,10 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
 
   public static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
       ImmutableList.of(
-          new LocationMacroExpander(), new ClasspathMacroExpander(), new ExecutableMacroExpander());
+          LocationMacroExpander.INSTANCE,
+          new ClasspathMacroExpander(),
+          new ExecutableMacroExpander<>(ExecutableMacro.class),
+          new ExecutableMacroExpander<>(ExecutableTargetMacro.class));
 
   private final BuckConfig buckConfig;
 
@@ -87,7 +93,9 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
             buildTarget, args.getExe().get().getFullyQualifiedName());
       }
 
-      builder = new CommandTool.Builder(((BinaryBuildRule) rule).getExecutableCommand());
+      builder =
+          new CommandTool.Builder(
+              ((BinaryBuildRule) rule).getExecutableCommand(OutputLabel.defaultLabel()));
     } else {
       builder = new CommandTool.Builder();
     }
@@ -99,12 +107,11 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
             .collect(ImmutableList.toImmutableList()));
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(context.getCellPathResolver())
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            context.getCellPathResolver().getCellNameResolver(),
+            graphBuilder,
+            MACRO_EXPANDERS);
 
     if (args.getArgs().isLeft()) {
       builder.addArg(new SingleStringMacroArg(macrosConverter.convert(args.getArgs().getLeft())));
@@ -162,7 +169,8 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       ImmutableList.Builder<String> subBuilder = ImmutableList.builder();
       super.appendToCommandLine(subBuilder::add, pathResolver);
       for (String arg : subBuilder.build()) {
@@ -173,9 +181,8 @@ public class WorkerToolDescription implements DescriptionWithTargetGraph<WorkerT
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractWorkerToolDescriptionArg extends CommonDescriptionArg {
+  @RuleArg
+  interface AbstractWorkerToolDescriptionArg extends BuildRuleArg {
     ImmutableMap<String, StringWithMacros> getEnv();
 
     @Value.Default

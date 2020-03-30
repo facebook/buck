@@ -1,18 +1,19 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.parser;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -24,7 +25,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.function.BuckPyFunction;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Escaper;
 import com.google.common.base.Joiner;
@@ -128,7 +128,7 @@ class BuckPythonProgram implements AutoCloseable {
     LOG.debug("Writing python rules stub to %s.", generatedRoot);
     try (Writer out = Files.newBufferedWriter(generatedRoot.resolve("generated_rules.py"), UTF_8)) {
       out.write("from buck_parser.buck import *\n\n");
-      BuckPyFunction function = new BuckPyFunction(typeCoercerFactory, CoercedTypeCache.INSTANCE);
+      BuckPyFunction function = new BuckPyFunction(typeCoercerFactory);
       for (BaseDescription<?> description : descriptions) {
         try {
           out.write(
@@ -139,6 +139,12 @@ class BuckPythonProgram implements AutoCloseable {
           throw new BuckUncheckedExecutionException(
               e, "When writing python function for %s.", description.getClass().getName());
         }
+      }
+      try {
+        out.write(function.addDefaultAttributes());
+        out.write('\n');
+      } catch (RuntimeException e) {
+        throw new BuckUncheckedExecutionException(e, "When writing UDR python constants.");
       }
     }
 

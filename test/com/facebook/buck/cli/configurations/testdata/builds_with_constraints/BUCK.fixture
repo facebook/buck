@@ -1,0 +1,70 @@
+java_library(
+    name = "lib",
+    srcs = [
+        "B.java",
+    ],
+    deps = [
+        ":dep_with_compatible_with",
+    ],
+)
+
+java_library(
+    name = "lib-with-default-target-platform",
+    srcs = [
+        "B.java",
+    ],
+    default_target_platform = "//config:linux_x86-64",
+    deps = [
+        ":dep_with_compatible_with",
+    ],
+)
+
+java_library(
+    name = "lib-with-default-target-platform-useless",
+    srcs = [
+        "B.java",
+    ],
+    default_target_platform = "//config:macos_x86-64",
+    deps = [
+        ":dep_with_compatible_with",
+    ],
+)
+
+genrule(
+    name = "platform_dependent_genrule",
+    out = "out",
+    cmd = select({
+        "//config:linux_config": "echo linux > $OUT",
+        "//config:osx_config": "echo osx > $OUT",
+        "DEFAULT": "echo unknown > $OUT",
+    }),
+)
+
+genrule(
+    name = "cpu_dependent_genrule",
+    out = "out",
+    cmd = select({
+        "//config:x86_64_config": "echo x86_64 > $OUT",
+        "DEFAULT": "echo unknown > $OUT",
+    }),
+)
+
+java_library(
+    name = "dep_with_compatible_with",
+    srcs = [
+        "A.java",
+    ],
+    compatible_with = [
+        "//config:linux_config",
+    ],
+)
+
+java_library(
+    name = "lib_with_compatible_with",
+    srcs = [
+        "B.java",
+    ],
+    deps = [
+        ":dep_with_compatible_with",
+    ],
+)

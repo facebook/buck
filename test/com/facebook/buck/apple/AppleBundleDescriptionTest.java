@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -51,18 +51,18 @@ public class AppleBundleDescriptionTest {
 
   @Test
   public void depsHaveFlavorsPropagated() {
-    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//bar:bundle#iphoneos-x86_64");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//bar:bundle#iphoneos-arm64");
 
     BuildTarget unflavoredDep = BuildTargetFactory.newInstance("//bar:dep1");
     BuildTarget unflavoredDepAfterPropagation =
-        BuildTargetFactory.newInstance("//bar:dep1#iphoneos-x86_64");
+        BuildTargetFactory.newInstance("//bar:dep1#iphoneos-arm64");
 
     BuildTarget flavoredDep =
-        BuildTargetFactory.newInstance("//bar:dep2#iphoneos-x86_64,iphoneos-i386");
+        BuildTargetFactory.newInstance("//bar:dep2#iphoneos-arm64,iphoneos-armv7");
 
     BuildTarget flavoredDepNotInDomain = BuildTargetFactory.newInstance("//bar:dep3#otherflavor");
     BuildTarget flavoredDepNotInDomainAfterPropagation =
-        BuildTargetFactory.newInstance("//bar:dep3#iphoneos-x86_64,otherflavor");
+        BuildTargetFactory.newInstance("//bar:dep3#iphoneos-arm64,otherflavor");
 
     BuildTarget watchDep = BuildTargetFactory.newInstance("//bar:watch#watch");
     BuildTarget watchDepAfterPropagation =
@@ -86,7 +86,7 @@ public class AppleBundleDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     desc.findDepsForTargetFromConstructorArgs(
         bundleTarget,
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         constructorArg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());
@@ -104,27 +104,27 @@ public class AppleBundleDescriptionTest {
   @Test
   public void depsHaveStripAndDebugFlavorsPropagated() {
     BuildTarget bundleTargetWithStripFlavor =
-        BuildTargetFactory.newInstance("//bar:bundle#iphoneos-x86_64,strip-all,dwarf-and-dsym");
+        BuildTargetFactory.newInstance("//bar:bundle#iphoneos-arm64,strip-all,dwarf-and-dsym");
 
     BuildTarget unflavoredDep = BuildTargetFactory.newInstance("//bar:dep1");
     BuildTarget unflavoredDepAfterPropagation =
-        BuildTargetFactory.newInstance("//bar:dep1#iphoneos-x86_64,strip-all,dwarf-and-dsym");
+        BuildTargetFactory.newInstance("//bar:dep1#iphoneos-arm64,strip-all,dwarf-and-dsym");
 
     BuildTarget flavoredDep =
-        BuildTargetFactory.newInstance("//bar:dep2#iphoneos-i386,strip-debug,dwarf");
+        BuildTargetFactory.newInstance("//bar:dep2#iphoneos-armv7,strip-debug,dwarf");
 
     BuildTarget flavoredDepNotInDomain = BuildTargetFactory.newInstance("//bar:dep3#otherflavor");
     BuildTarget flavoredDepNotInDomainAfterPropagation =
         BuildTargetFactory.newInstance(
-            "//bar:dep3#iphoneos-x86_64,strip-all,dwarf-and-dsym,otherflavor");
+            "//bar:dep3#iphoneos-arm64,strip-all,dwarf-and-dsym,otherflavor");
 
     BuildTarget stripFlavorOnly = BuildTargetFactory.newInstance("//bar:dep4#strip-debug");
     BuildTarget stripFlavorOnlyAfterPropagation =
-        BuildTargetFactory.newInstance("//bar:dep4#iphoneos-x86_64,strip-debug,dwarf-and-dsym");
+        BuildTargetFactory.newInstance("//bar:dep4#iphoneos-arm64,strip-debug,dwarf-and-dsym");
 
     BuildTarget debugFlavorOnly = BuildTargetFactory.newInstance("//bar:dep5#dwarf");
     BuildTarget debugFlavorOnlyAfterPropagation =
-        BuildTargetFactory.newInstance("//bar:dep5#iphoneos-x86_64,strip-all,dwarf");
+        BuildTargetFactory.newInstance("//bar:dep5#iphoneos-arm64,strip-all,dwarf");
 
     BuildTarget binary = BuildTargetFactory.newInstance("//bar:binary");
 
@@ -150,7 +150,7 @@ public class AppleBundleDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     desc.findDepsForTargetFromConstructorArgs(
         bundleTargetWithStripFlavor,
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         constructorArg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());
@@ -169,27 +169,27 @@ public class AppleBundleDescriptionTest {
   @Test
   public void depsHaveStripAndDebugFlavorsPropagatedForPlatformDeps() {
     BuildTarget bundleTargetWithStripFlavor =
-        BuildTargetFactory.newInstance("//bar:bundle#iphoneos-x86_64,strip-all,dwarf-and-dsym");
+        BuildTargetFactory.newInstance("//bar:bundle#iphoneos-arm64,strip-all,dwarf-and-dsym");
 
     BuildTarget unflavoredDep = BuildTargetFactory.newInstance("//bar:dep1");
     BuildTarget unflavoredDepAfterPropagation =
-        BuildTargetFactory.newInstance("//bar:dep1#iphoneos-x86_64,strip-all,dwarf-and-dsym");
+        BuildTargetFactory.newInstance("//bar:dep1#iphoneos-arm64,strip-all,dwarf-and-dsym");
 
     BuildTarget flavoredDep =
-        BuildTargetFactory.newInstance("//bar:dep2#iphoneos-i386,strip-debug,dwarf");
+        BuildTargetFactory.newInstance("//bar:dep2#iphoneos-armv7,strip-debug,dwarf");
 
     BuildTarget flavoredDepNotInDomain = BuildTargetFactory.newInstance("//bar:dep3#otherflavor");
     BuildTarget flavoredDepNotInDomainAfterPropagation =
         BuildTargetFactory.newInstance(
-            "//bar:dep3#iphoneos-x86_64,strip-all,dwarf-and-dsym,otherflavor");
+            "//bar:dep3#iphoneos-arm64,strip-all,dwarf-and-dsym,otherflavor");
 
     BuildTarget stripFlavorOnly = BuildTargetFactory.newInstance("//bar:dep4#strip-debug");
     BuildTarget stripFlavorOnlyAfterPropagation =
-        BuildTargetFactory.newInstance("//bar:dep4#iphoneos-x86_64,strip-debug,dwarf-and-dsym");
+        BuildTargetFactory.newInstance("//bar:dep4#iphoneos-arm64,strip-debug,dwarf-and-dsym");
 
     BuildTarget debugFlavorOnly = BuildTargetFactory.newInstance("//bar:dep5#dwarf");
     BuildTarget debugFlavorOnlyAfterPropagation =
-        BuildTargetFactory.newInstance("//bar:dep5#iphoneos-x86_64,strip-all,dwarf");
+        BuildTargetFactory.newInstance("//bar:dep5#iphoneos-arm64,strip-all,dwarf");
 
     BuildTarget binary = BuildTargetFactory.newInstance("//bar:binary");
 
@@ -201,7 +201,7 @@ public class AppleBundleDescriptionTest {
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .setPlatformBinary(
                 PatternMatchedCollection.<BuildTarget>builder()
-                    .add(Pattern.compile("iphoneos-x86_64"), binary)
+                    .add(Pattern.compile("iphoneos-arm64"), binary)
                     .build())
             .setDeps(
                 ImmutableSortedSet.<BuildTarget>naturalOrder()
@@ -218,7 +218,7 @@ public class AppleBundleDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> implicitDeps = ImmutableSortedSet.naturalOrder();
     desc.findDepsForTargetFromConstructorArgs(
         bundleTargetWithStripFlavor,
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         constructorArg,
         implicitDeps,
         ImmutableSortedSet.naturalOrder());

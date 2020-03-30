@@ -1,18 +1,19 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.config.BuckConfig;
@@ -100,17 +101,19 @@ public class IjProjectBuckConfig {
         .build();
   }
 
-  public static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {
+  static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {
     return IjProjectConfig.builder()
         .setAutogenerateAndroidFacetSourcesEnabled(
-            !buckConfig.getBooleanValue(
-                PROJECT_BUCK_CONFIG_SECTION, "disable_r_java_idea_generator", false))
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "auto_generate_android_facet_sources", true))
         .setJavaBuckConfig(buckConfig.getView(JavaBuckConfig.class))
         .setBuckConfig(buckConfig)
         .setProjectJdkName(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_name"))
         .setProjectJdkType(buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "jdk_type"))
         .setAndroidModuleSdkName(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_name"))
+        .setAndroidGenDir(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_generated_files_directory"))
         .setAndroidModuleSdkType(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_type"))
         .setIntellijModuleSdkName(
@@ -154,7 +157,13 @@ public class IjProjectBuckConfig {
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "default_min_android_sdk_version"))
         .setMultiCellModuleSupportEnabled(
             buckConfig.getBooleanValue(
-                INTELLIJ_BUCK_CONFIG_SECTION, "multi_cell_module_support", false));
+                INTELLIJ_BUCK_CONFIG_SECTION, "multi_cell_module_support", false))
+        .setGeneratingDummyRDotJavaEnabled(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION, "generate_dummy_r_dot_java", true))
+        .setKotlinJavaRuntimeLibraryTemplatePath(
+            buckConfig.getPath(
+                INTELLIJ_BUCK_CONFIG_SECTION, "kotlin_java_runtime_library_template_path"));
   }
 
   private static String getModuleGroupName(String moduleGroupName, BuckConfig buckConfig) {

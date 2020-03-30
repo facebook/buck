@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -128,11 +129,10 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   getProjectFilesystem(),
                   fatJarDir.resolve(resource).getParent())));
       steps.add(
-          SymlinkFileStep.builder()
-              .setFilesystem(getProjectFilesystem())
-              .setExistingFile(context.getSourcePathResolver().getAbsolutePath(entry.getValue()))
-              .setDesiredLink(fatJarDir.resolve(resource))
-              .build());
+          SymlinkFileStep.of(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(entry.getValue()),
+              fatJarDir.resolve(resource)));
     }
     ImmutableMap<String, String> sonameToResourceMap = sonameToResourceMapBuilder.build();
 
@@ -160,11 +160,10 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 fatJarDir.resolve(FAT_JAR_INNER_JAR).getParent())));
     steps.add(
-        SymlinkFileStep.builder()
-            .setFilesystem(getProjectFilesystem())
-            .setExistingFile(context.getSourcePathResolver().getAbsolutePath(innerJar))
-            .setDesiredLink(fatJarDir.resolve(FAT_JAR_INNER_JAR))
-            .build());
+        SymlinkFileStep.of(
+            getProjectFilesystem(),
+            context.getSourcePathResolver().getAbsolutePath(innerJar),
+            fatJarDir.resolve(FAT_JAR_INNER_JAR)));
 
     // Build the final fat JAR from the structure we've layed out above.  We first package the
     // fat jar resources (e.g. native libs) using the "stored" compression level, to avoid
@@ -262,7 +261,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     return new CommandTool.Builder(javaRuntimeLauncher)
         .addArg("-jar")
         .addArg(SourcePathArg.of(getSourcePathToOutput()))

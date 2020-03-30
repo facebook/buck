@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -35,8 +35,8 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
@@ -47,7 +47,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
-import org.immutables.value.Value;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,7 +56,7 @@ public class JvmLibraryArgInterpreterTest {
   private JavacOptions defaults;
   private ActionGraphBuilder graphBuilder;
   private SourcePathRuleFinder ruleFinder;
-  private SourcePathResolver sourcePathResolver;
+  private SourcePathResolverAdapter sourcePathResolverAdapter;
 
   @Before
   public void createHelpers() {
@@ -68,7 +67,7 @@ public class JvmLibraryArgInterpreterTest {
             .build();
     graphBuilder = new TestActionGraphBuilder();
     ruleFinder = graphBuilder;
-    sourcePathResolver = ruleFinder.getSourcePathResolver();
+    sourcePathResolverAdapter = ruleFinder.getSourcePathResolver();
   }
 
   @Test
@@ -177,7 +176,8 @@ public class JvmLibraryArgInterpreterTest {
         (ExternalJavac) arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
 
     assertEquals(
-        ImmutableList.of(externalJavac.toString()), javac.getCommandPrefix(sourcePathResolver));
+        ImmutableList.of(externalJavac.toString()),
+        javac.getCommandPrefix(sourcePathResolverAdapter));
   }
 
   @Test
@@ -199,7 +199,8 @@ public class JvmLibraryArgInterpreterTest {
         (ExternalJavac) arg.getJavacSpec(ruleFinder).getJavacProvider().resolve(ruleFinder);
 
     assertEquals(
-        ImmutableList.of(externalJavacPath.toString()), javac.getCommandPrefix(sourcePathResolver));
+        ImmutableList.of(externalJavacPath.toString()),
+        javac.getCommandPrefix(sourcePathResolverAdapter));
   }
 
   @Test
@@ -256,7 +257,6 @@ public class JvmLibraryArgInterpreterTest {
         defaults, BuildTargetFactory.newInstance("//not:real"), graphBuilder, arg);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractExampleJvmLibraryArg extends JvmLibraryArg {}
 }

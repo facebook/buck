@@ -12,3 +12,9 @@
 
 [android]
   redex = //tools/redex:redex
+
+# The proguard included in the Android SDK is very old and doesn't support 1.8
+# .class files. In case we use an Android SDK > 23, we must use a newer version of
+# proguard than the one included in the SDK tools itself.
+[tools]
+  proguard = buck//third-party/java/proguard:proguard

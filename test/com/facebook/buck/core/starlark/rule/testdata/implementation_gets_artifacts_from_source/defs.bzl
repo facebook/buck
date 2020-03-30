@@ -9,10 +9,10 @@ def _source_rule_impl(ctx):
     src_target = ctx.attr.src_target.short_path.replace("\\", "/")
     expected_src_file = "src.txt"
     expected_src_target = "file__/out.txt"
-    if src_file != expected_src_file:
-        fail("Expected short path {}, got {}".format(expected_src_file, src_file))
-    if src_target != expected_src_target:
-        fail("Expected short path {}, got {}".format(expected_src_target, src_target))
+    if not src_file.endswith(expected_src_file):
+        fail("Expected short path endswith {}, got {}".format(expected_src_file, src_file))
+    if not src_target.endswith(expected_src_target):
+        fail("Expected short path endwith {}, got {}".format(expected_src_target, src_target))
 
     f = ctx.actions.declare_file("out2.txt")
     ctx.actions.write(f, "contents2")

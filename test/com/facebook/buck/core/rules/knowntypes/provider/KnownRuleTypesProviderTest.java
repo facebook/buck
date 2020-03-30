@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.knowntypes.provider;
 
 import static org.junit.Assert.assertNotNull;
@@ -44,7 +45,8 @@ public class KnownRuleTypesProviderTest {
   class TestFactory implements KnownNativeRuleTypesFactory {
     @Override
     public KnownNativeRuleTypes create(Cell cell) {
-      return KnownNativeRuleTypes.of(ImmutableList.of(fakeDescription), ImmutableList.of());
+      return KnownNativeRuleTypes.of(
+          ImmutableList.of(fakeDescription), ImmutableList.of(), ImmutableList.of());
     }
   }
 
@@ -53,11 +55,16 @@ public class KnownRuleTypesProviderTest {
         FakeBuckConfig.builder()
             .setSections(
                 ImmutableMap.of(
+                    "rule_analysis",
+                    ImmutableMap.of("mode", "PROVIDER_COMPATIBLE"),
                     "parser",
                     ImmutableMap.of(
-                        "enable_user_defined_rules", enableUserDefinedRules ? "true" : "false")))
+                        "default_build_file_syntax",
+                        "SKYLARK",
+                        "user_defined_rules",
+                        enableUserDefinedRules ? "enabled" : "disabled")))
             .build();
-    return new TestCellBuilder().setBuckConfig(config).build();
+    return new TestCellBuilder().setBuckConfig(config).build().getRootCell();
   }
 
   @Test
@@ -83,13 +90,15 @@ public class KnownRuleTypesProviderTest {
     KnownUserDefinedRuleTypes knownUserDefinedRuleTypes = provider.getUserDefinedRuleTypes(cell);
     knownUserDefinedRuleTypes.addRule(rule);
 
-    assertNotNull(knownRuleTypes.getRuleType("fake"));
+    assertNotNull(knownRuleTypes.getDescriptorByName("fake").getRuleType());
     assertTrue(knownRuleTypes instanceof HybridKnownRuleTypes);
-    assertSame(knownRuleTypes.getRuleType("fake"), knownNativeRuleTypes.getRuleType("fake"));
-
-    assertNotNull(knownRuleTypes.getRuleType(rule.getName()));
     assertSame(
-        knownRuleTypes.getRuleType(rule.getName()),
-        knownUserDefinedRuleTypes.getRuleType(rule.getName()));
+        knownRuleTypes.getDescriptorByName("fake").getRuleType(),
+        knownNativeRuleTypes.getDescriptorByName("fake").getRuleType());
+
+    assertNotNull(knownRuleTypes.getDescriptorByName(rule.getName()).getRuleType());
+    assertSame(
+        knownRuleTypes.getDescriptorByName(rule.getName()).getRuleType(),
+        knownUserDefinedRuleTypes.getDescriptorByName(rule.getName()).getRuleType());
   }
 }

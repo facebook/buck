@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -30,7 +30,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -39,8 +39,8 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -141,7 +141,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
    *     precompiled (see {@link #canPrecompile()}) this will correspond to {@link
    *     #getSourcePathToOutput()}, otherwise it'll be the input header file.
    */
-  public Path getIncludeFilePath(SourcePathResolver pathResolver) {
+  public Path getIncludeFilePath(SourcePathResolverAdapter pathResolver) {
     return pathResolver.getAbsolutePath(getIncludeFileSourcePath());
   }
 
@@ -181,9 +181,9 @@ class CxxPrecompiledHeader extends AbstractBuildRule
     return input;
   }
 
-  public Path getRelativeInputPath(SourcePathResolver resolver) {
+  public Path getRelativeInputPath(SourcePathResolverAdapter resolver) {
     // TODO(mzlee): We should make a generic solution to address this
-    return getProjectFilesystem().relativize(resolver.getAbsolutePath(input));
+    return getProjectFilesystem().relativize(resolver.getAbsolutePath(input)).getPath();
   }
 
   public Path getOutputPath() {
@@ -195,7 +195,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
   }
 
-  private Path getSuffixedOutput(SourcePathResolver pathResolver, String suffix) {
+  private Path getSuffixedOutput(SourcePathResolverAdapter pathResolver, String suffix) {
     return Paths.get(pathResolver.getRelativePath(getSourcePathToOutput()) + suffix);
   }
 
@@ -215,13 +215,15 @@ class CxxPrecompiledHeader extends AbstractBuildRule
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(
+      SourcePathResolverAdapter pathResolver) {
     return Depfiles.getCoveredByDepFilePredicate(
         Optional.of(preprocessorDelegate), Optional.empty());
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(
+      SourcePathResolverAdapter pathResolver) {
     return (SourcePath path) -> false;
   }
 
@@ -243,7 +245,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
     return false;
   }
 
-  private Path getDepFilePath(SourcePathResolver pathResolver) {
+  private Path getDepFilePath(SourcePathResolverAdapter pathResolver) {
     return getSuffixedOutput(pathResolver, ".dep");
   }
 
@@ -279,7 +281,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
 
   @VisibleForTesting
   CxxPreprocessAndCompileStep makeMainStep(BuildContext context, Path scratchDir) {
-    SourcePathResolver resolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     Path pchOutput =
         canPrecompile()
             ? resolver.getRelativePath(getSourcePathToOutput())
@@ -320,7 +322,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
   }
 
   public PrecompiledHeaderData getData() {
-    return PrecompiledHeaderData.of(
+    return ImmutablePrecompiledHeaderData.of(
         new NonHashableSourcePathContainer(getIncludeFileSourcePath()),
         getInput(),
         canPrecompileFlag);

@@ -1,33 +1,37 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.file;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.BuckUnixPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.io.windowsfs.WindowsFS;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.common.io.ByteSource;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystem;
@@ -68,6 +72,10 @@ public class MorePaths {
       parent = emptyOf(path);
     }
     return parent;
+  }
+
+  public static RelPath getParentOrEmpty(RelPath path) {
+    return RelPath.of(getParentOrEmpty(path.getPath()));
   }
 
   /**
@@ -114,6 +122,62 @@ public class MorePaths {
     return path1.relativize(path2);
   }
 
+  public static RelPath relativize(PathWrapper path1, PathWrapper path2) {
+    return RelPath.of(relativize(path1.getPath(), path2.getPath()));
+  }
+
+  /**
+   * Returns a child path relative to a base path. This is similar to `Path.relativize`, but
+   * supports base paths that start with "..", even in Java 11. JCL implementations of
+   * `Path.relativize` support base paths like this in Java 8, but not in Java 11.
+   *
+   * @param basePath the path against which childPath will be relativized
+   * @param childPath the path to relativize against {@code basePath}
+   * @return {@code childPath} relativized against {@code basePath}
+   */
+  public static Path relativizeWithDotDotSupport(Path basePath, Path childPath) {
+    if (basePath instanceof BuckUnixPath) {
+      // Call our more efficient implementation if using Buck's own filesystem provider.
+      return basePath.relativize(childPath);
+    }
+
+    if (basePath.equals(childPath)) {
+      return basePath.getFileSystem().getPath("");
+    }
+
+    if (basePath.isAbsolute() != childPath.isAbsolute()) {
+      throw new IllegalArgumentException("Expected paths to be of the same type");
+    }
+
+    // Skip past equal prefixes.
+    int idx = 0;
+    while (idx < basePath.getNameCount()
+        && idx < childPath.getNameCount()
+        && basePath.getName(idx).equals(childPath.getName(idx))) {
+      idx++;
+    }
+
+    // Add ".."s to get to the root of the remainder of the base path.
+    StringBuilder result = new StringBuilder();
+    for (int i = idx; i < basePath.getNameCount(); i++) {
+      if (!basePath.getName(i).toString().isEmpty()) {
+        result.append("..");
+        result.append(File.separatorChar);
+      }
+    }
+
+    // Now add the remainder of the child path.
+    if (idx < childPath.getNameCount()) {
+      result.append(childPath.getName(idx).toString());
+    }
+    for (int i = idx + 1; i < childPath.getNameCount(); i++) {
+      result.append(File.separatorChar);
+      result.append(childPath.getName(i).toString());
+    }
+
+    return basePath.getFileSystem().getPath(result.toString());
+  }
+
   /**
    * Get a path without unnecessary path parts.
    *
@@ -125,6 +189,11 @@ public class MorePaths {
       path = path.normalize();
     }
     return path;
+  }
+
+  /** Type-safer version of {@link #normalize(Path)}. */
+  public static AbsPath normalize(AbsPath path) {
+    return AbsPath.of(normalize(path.getPath()));
   }
 
   /** Return empty path with the same filesystem as provided path */
@@ -400,5 +469,17 @@ public class MorePaths {
    */
   public static boolean isDirectory(Path path, LinkOption... linkOptions) {
     return Files.isDirectory(normalize(path).toAbsolutePath(), linkOptions);
+  }
+
+  /**
+   * Converts a path to an absolute Windows 'long path' as a string.
+   * https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
+   *
+   * @param path The path to transform to a long path appropriate string form
+   * @return The string representation of the path appropriate for long file name usage.
+   */
+  public static String getWindowsLongPathString(Path path) {
+    // The path must be normalized and absolutized first.
+    return "\\\\?\\" + MorePaths.normalize(path).toAbsolutePath();
   }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -20,7 +20,8 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.file.BorrowablePath;
 import com.facebook.buck.io.file.LazyPath;
@@ -49,7 +50,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 public abstract class AbstractAsynchronousCache implements ArtifactCache {
   private static final Logger LOG = Logger.get(AbstractAsynchronousCache.class);
@@ -720,9 +720,8 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractFetchResult {
+  @BuckStyleValueWithBuilder
+  interface FetchResult {
     Optional<Long> getResponseSizeBytes();
 
     Optional<BuildTarget> getBuildTarget();
@@ -737,26 +736,23 @@ public abstract class AbstractAsynchronousCache implements ArtifactCache {
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractMultiContainsResult {
+  @BuckStyleValueWithBuilder
+  interface MultiContainsResult {
     Optional<Long> getResponseSizeBytes();
 
     ImmutableMap<RuleKey, CacheResult> getCacheResults();
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractMultiFetchResult {
+  @BuckStyleValue
+  interface MultiFetchResult {
     /** At least one of the results must be non-skipped. */
     ImmutableList<FetchResult> getResults();
   }
 
   /** Return type used by the implementations of this abstract class. */
-  @BuckStyleTuple
-  @Value.Immutable(builder = true)
-  public interface AbstractStoreResult {
+  @BuckStyleValueWithBuilder
+  interface StoreResult {
     Optional<Long> getRequestSizeBytes();
 
     Optional<String> getArtifactContentHash();

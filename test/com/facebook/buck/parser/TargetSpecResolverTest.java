@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
@@ -21,15 +21,17 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -39,22 +41,21 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.TargetSpecResolver.FlavorEnhancer;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.spec.BuildFileSpec;
+import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.testutil.CloseableResource;
-import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -62,6 +63,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import org.junit.After;
 import org.junit.Before;
@@ -82,7 +84,7 @@ public class TargetSpecResolverTest {
   private ProjectWorkspace workspace;
   private ProjectFilesystem filesystem;
   private Path cellRoot;
-  private Cell cell;
+  private Cells cell;
   private BuckEventBus eventBus;
   private PerBuildStateFactory perBuildStateFactory;
   private TypeCoercerFactory typeCoercerFactory;
@@ -92,11 +94,6 @@ public class TargetSpecResolverTest {
   private ListeningExecutorService executorService;
   private TargetSpecResolver targetNodeTargetSpecResolver;
   private FlavorEnhancer flavorEnhancer;
-
-  private static ThrowingCloseableMemoizedSupplier<ManifestService, IOException>
-      getManifestSupplier() {
-    return ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close);
-  }
 
   @Before
   public void setUp() throws Exception {
@@ -108,29 +105,28 @@ public class TargetSpecResolverTest {
     cell = new TestCellBuilder().setFilesystem(filesystem).build();
     eventBus = BuckEventBusForTests.newInstance();
     typeCoercerFactory = new DefaultTypeCoercerFactory();
-    constructorArgMarshaller = new DefaultConstructorArgMarshaller(typeCoercerFactory);
+    constructorArgMarshaller = new DefaultConstructorArgMarshaller();
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
-    ParserConfig parserConfig = cell.getBuckConfig().getView(ParserConfig.class);
+    ParserConfig parserConfig = cell.getRootCell().getBuckConfig().getView(ParserConfig.class);
     ExecutableFinder executableFinder = new ExecutableFinder();
     parserPythonInterpreterProvider =
         new ParserPythonInterpreterProvider(parserConfig, executableFinder);
     perBuildStateFactory =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
             typeCoercerFactory,
             constructorArgMarshaller,
             knownRuleTypesProvider,
             parserPythonInterpreterProvider,
             WatchmanFactory.NULL_WATCHMAN,
             eventBus,
-            getManifestSupplier(),
-            new FakeFileHashCache(ImmutableMap.of()),
-            new ParsingUnconfiguredBuildTargetViewFactory());
+            new ParsingUnconfiguredBuildTargetViewFactory(),
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     targetNodeTargetSpecResolver =
         TestTargetSpecResolverFactory.create(executor.get(), cell.getCellProvider(), eventBus);
-    parser = TestParserFactory.create(executor.get(), cell, perBuildStateFactory);
+    parser = TestParserFactory.create(executor.get(), cell.getRootCell(), perBuildStateFactory);
     flavorEnhancer = (target, targetNode, targetType) -> target;
     executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(1));
   }
@@ -147,14 +143,16 @@ public class TargetSpecResolverTest {
     ImmutableList<ImmutableSet<BuildTarget>> targets =
         resolve(
             ImmutableList.of(
-                ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get(""), cell.getRoot()))));
+                TargetNodePredicateSpec.of(
+                    BuildFileSpec.fromRecursivePath(
+                        CellRelativePath.of(
+                            cell.getRootCell().getCanonicalName(), ForwardRelativePath.of(""))))));
 
     ImmutableSet<BuildTarget> expectedTargets =
         ImmutableSet.of(
-            BuildTargetFactory.newInstance(cellRoot, "//src", "foo"),
-            BuildTargetFactory.newInstance(cellRoot, "//src", "bar"),
-            BuildTargetFactory.newInstance(cellRoot, "//src", "baz"));
+            BuildTargetFactory.newInstance("//src", "foo"),
+            BuildTargetFactory.newInstance("//src", "bar"),
+            BuildTargetFactory.newInstance("//src", "baz"));
     assertEquals("Should have returned all rules.", ImmutableList.of(expectedTargets), targets);
   }
 
@@ -174,20 +172,24 @@ public class TargetSpecResolverTest {
 
     resolve(
         ImmutableList.of(
-            ImmutableTargetNodePredicateSpec.of(
-                BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
-            ImmutableTargetNodePredicateSpec.of(
-                BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))));
+            TargetNodePredicateSpec.of(
+                BuildFileSpec.fromRecursivePath(
+                    CellRelativePath.of(
+                        cell.getRootCell().getCanonicalName(), ForwardRelativePath.of("bar")))),
+            TargetNodePredicateSpec.of(
+                BuildFileSpec.fromRecursivePath(
+                    CellRelativePath.of(
+                        cell.getRootCell().getCanonicalName(), ForwardRelativePath.of("foo"))))));
   }
 
   @Test
   public void resolveTargetSpecsPreservesOrder() throws Exception {
-    BuildTarget foo = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:foo");
+    BuildTarget foo = BuildTargetFactory.newInstance("//foo:foo");
     Path buckFile = cellRoot.resolve("foo/BUCK");
     Files.createDirectories(buckFile.getParent());
     Files.write(buckFile, "genrule(name='foo', out='foo', cmd='foo')".getBytes(UTF_8));
 
-    BuildTarget bar = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//bar:bar");
+    BuildTarget bar = BuildTargetFactory.newInstance("//bar:bar");
     buckFile = cellRoot.resolve("bar/BUCK");
     Files.createDirectories(buckFile.getParent());
     Files.write(buckFile, "genrule(name='bar', out='bar', cmd='bar')".getBytes(UTF_8));
@@ -195,19 +197,29 @@ public class TargetSpecResolverTest {
     ImmutableList<ImmutableSet<BuildTarget>> targets =
         resolve(
             ImmutableList.of(
-                ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot())),
-                ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot()))));
+                TargetNodePredicateSpec.of(
+                    BuildFileSpec.fromRecursivePath(
+                        CellRelativePath.of(
+                            cell.getRootCell().getCanonicalName(), ForwardRelativePath.of("bar")))),
+                TargetNodePredicateSpec.of(
+                    BuildFileSpec.fromRecursivePath(
+                        CellRelativePath.of(
+                            cell.getRootCell().getCanonicalName(),
+                            ForwardRelativePath.of("foo"))))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(bar), ImmutableSet.of(foo))));
 
     targets =
         resolve(
             ImmutableList.of(
-                ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("foo"), cell.getRoot())),
-                ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(Paths.get("bar"), cell.getRoot()))));
+                TargetNodePredicateSpec.of(
+                    BuildFileSpec.fromRecursivePath(
+                        CellRelativePath.of(
+                            cell.getRootCell().getCanonicalName(), ForwardRelativePath.of("foo")))),
+                TargetNodePredicateSpec.of(
+                    BuildFileSpec.fromRecursivePath(
+                        CellRelativePath.of(
+                            cell.getRootCell().getCanonicalName(),
+                            ForwardRelativePath.of("bar"))))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of(foo), ImmutableSet.of(bar))));
   }
 
@@ -221,8 +233,11 @@ public class TargetSpecResolverTest {
     ImmutableList<ImmutableSet<BuildTarget>> targets =
         resolve(
             ImmutableList.of(
-                ImmutableTargetNodePredicateSpec.of(
-                    BuildFileSpec.fromRecursivePath(buckout, cell.getRoot()))));
+                TargetNodePredicateSpec.of(
+                    BuildFileSpec.fromRecursivePath(
+                        CellRelativePath.of(
+                            cell.getRootCell().getCanonicalName(),
+                            ForwardRelativePath.ofPath(buckout))))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of())));
   }
 
@@ -230,13 +245,9 @@ public class TargetSpecResolverTest {
       throws InterruptedException {
     PerBuildState state =
         perBuildStateFactory.create(
-            ParsingContext.builder(cell, executorService).build(), parser.getPermState());
+            ParsingContext.builder(cell.getRootCell(), executorService).build(),
+            parser.getPermState());
     return targetNodeTargetSpecResolver.resolveTargetSpecs(
-        cell,
-        specs,
-        EmptyTargetConfiguration.INSTANCE,
-        flavorEnhancer,
-        state,
-        (spec, nodes) -> spec.filter(nodes));
+        cell.getRootCell(), specs, Optional.empty(), flavorEnhancer, state, TargetNodeSpec::filter);
   }
 }

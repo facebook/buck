@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.string;
@@ -177,5 +177,17 @@ public final class MoreStrings {
         .sorted(Comparator.comparing(Pair::getSecond))
         .map(Pair::getFirst)
         .collect(ImmutableList.toImmutableList());
+  }
+
+  /** If string width exceeds passed parameter, replace string tail with dot-dot-dot. */
+  public static String abbreviate(String s, int width) {
+    String dotDotDot = "...";
+    if (s.length() <= width) {
+      return s;
+    } else if (width <= dotDotDot.length()) {
+      return dotDotDot;
+    } else {
+      return s.substring(0, width - dotDotDot.length()) + dotDotDot;
+    }
   }
 }

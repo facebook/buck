@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -19,7 +19,6 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
-import com.facebook.buck.android.packageable.ImmutableNativeLinkableEnhancementResult;
 import com.facebook.buck.android.packageable.NativeLinkableEnhancementResult;
 import com.facebook.buck.android.relinker.NativeRelinker;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatform;
@@ -42,7 +41,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -163,11 +162,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap<String, SourcePath> solibs = nativeLinkable.getSharedLibraries(graphBuilder);
     for (Map.Entry<String, SourcePath> entry : solibs.entrySet()) {
       AndroidLinkableMetadata metadata =
-          AndroidLinkableMetadata.builder()
-              .setSoName(entry.getKey())
-              .setTargetCpuType(targetCpuType)
-              .setApkModule(apkModule)
-              .build();
+          ImmutableAndroidLinkableMetadata.of(entry.getKey(), targetCpuType, apkModule);
       consumer.accept(metadata, entry.getValue());
     }
   }
@@ -190,7 +185,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     boolean hasNativeCode = hasLinkables || hasNativeLibDirs;
 
     if (!hasNativeCode) {
-      return new ImmutableAndroidNativeLibsGraphEnhancementResult(
+      return ImmutableAndroidNativeLibsGraphEnhancementResult.of(
           Optional.empty(),
           Optional.of(ImmutableSortedSet.of()),
           Optional.empty(),
@@ -203,7 +198,9 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     if (hasLinkables) {
       NdkCxxPlatformsProvider ndkCxxPlatformsProvider =
           toolchainProvider.getByName(
-              NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class);
+              NdkCxxPlatformsProvider.DEFAULT_NAME,
+              originalBuildTarget.getTargetConfiguration(),
+              NdkCxxPlatformsProvider.class);
 
       nativePlatforms = ndkCxxPlatformsProvider.getResolvedNdkCxxPlatforms(graphBuilder);
 
@@ -334,10 +331,10 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       }
     }
 
-    ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsMap =
+    ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription> strippedLibsMap =
         generateStripRules(nativePlatforms, nativeLinkableLibs);
-    ImmutableMap<StripLinkable, StrippedObjectDescription> strippedLibsAssetsMap =
-        generateStripRules(nativePlatforms, nativeLinkableLibsAssets);
+    ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+        strippedLibsAssetsMap = generateStripRules(nativePlatforms, nativeLinkableLibsAssets);
 
     ImmutableSortedSet<SourcePath> unstrippedLibraries =
         RichStream.from(nativeLinkableLibs.values())
@@ -347,15 +344,17 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     Optional<CopyNativeLibraries> nativeLibrariesForPrimaryApk = Optional.empty();
 
     for (APKModule module : apkModules) {
-      ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsMap =
-          ImmutableMap.copyOf(
-              FluentIterable.from(strippedLibsMap.entrySet())
-                  .filter(entry -> module.equals(entry.getValue().getApkModule())));
+      ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+          filteredStrippedLibsMap =
+              ImmutableMap.copyOf(
+                  FluentIterable.from(strippedLibsMap.entrySet())
+                      .filter(entry -> module.equals(entry.getValue().getApkModule())));
 
-      ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsAssetsMap =
-          ImmutableMap.copyOf(
-              FluentIterable.from(strippedLibsAssetsMap.entrySet())
-                  .filter(entry -> module.equals(entry.getValue().getApkModule())));
+      ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+          filteredStrippedLibsAssetsMap =
+              ImmutableMap.copyOf(
+                  FluentIterable.from(strippedLibsAssetsMap.entrySet())
+                      .filter(entry -> module.equals(entry.getValue().getApkModule())));
 
       ImmutableCollection<SourcePath> nativeLibsDirectories =
           packageableCollection.getNativeLibsDirectories().get(module);
@@ -383,8 +382,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       if (filteredStrippedLibsMap.isEmpty()
           && filteredStrippedLibsAssetsMap.isEmpty()
           && nativeLibsDirectories.isEmpty()
-          && nativeLibsAssetsDirectories.isEmpty()
-          && nativeLibsDirectoriesForPrimaryDexModule.isEmpty()) {
+          && nativeLibsAssetsDirectories.isEmpty()) {
         continue;
       }
 
@@ -405,7 +403,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
             ? Optional.of(moduleMappedCopyNativeLibriesBuilder.build())
             : Optional.empty();
 
-    return new ImmutableAndroidNativeLibsGraphEnhancementResult(
+    return ImmutableAndroidNativeLibsGraphEnhancementResult.of(
         copyNativeLibraries,
         Optional.of(unstrippedLibraries),
         Optional.ofNullable(sonameMapping),
@@ -431,7 +429,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
         (module, group) ->
             linkableAssetsBuilder.put(module, group.getNativeLinkable(cxxPlatform, graphBuilder)));
 
-    return new ImmutableNativeLinkableEnhancementResult(
+    return NativeLinkableEnhancementResult.of(
         linkablesBuilder.build(), linkableAssetsBuilder.build());
   }
 
@@ -453,19 +451,18 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                 return;
               }
               AndroidLinkableMetadata runtimeLinkableMetadata =
-                  AndroidLinkableMetadata.builder()
-                      .setTargetCpuType(targetCpuType)
-                      .setSoName(cxxRuntime.getSoname())
-                      .setApkModule(apkModuleGraph.getRootAPKModule())
-                      .build();
+                  ImmutableAndroidLinkableMetadata.of(
+                      cxxRuntime.getSoname(), targetCpuType, apkModuleGraph.getRootAPKModule());
               nativeLinkableLibsBuilder.put(runtimeLinkableMetadata, cxxSharedRuntimePath.get());
             });
   }
 
   private CopyNativeLibraries createCopyNativeLibraries(
       APKModule module,
-      ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsMap,
-      ImmutableMap<StripLinkable, StrippedObjectDescription> filteredStrippedLibsAssetsMap,
+      ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+          filteredStrippedLibsMap,
+      ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+          filteredStrippedLibsAssetsMap,
       ImmutableCollection<SourcePath> nativeLibsDirectories,
       ImmutableCollection<SourcePath> nativeLibAssetsDirectories,
       String suffix) {
@@ -496,10 +493,12 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     return cpuFilters;
   }
 
-  private ImmutableMap<StripLinkable, StrippedObjectDescription> generateStripRules(
-      ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
-      ImmutableMap<AndroidLinkableMetadata, SourcePath> libs) {
-    ImmutableMap.Builder<StripLinkable, StrippedObjectDescription> result = ImmutableMap.builder();
+  private ImmutableMap<StripLinkable, CopyNativeLibraries.StrippedObjectDescription>
+      generateStripRules(
+          ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
+          ImmutableMap<AndroidLinkableMetadata, SourcePath> libs) {
+    ImmutableMap.Builder<StripLinkable, CopyNativeLibraries.StrippedObjectDescription> result =
+        ImmutableMap.builder();
     for (Map.Entry<AndroidLinkableMetadata, SourcePath> entry : libs.entrySet()) {
       SourcePath sourcePath = entry.getValue();
       TargetCpuType targetCpuType = entry.getKey().getTargetCpuType();
@@ -533,12 +532,11 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               sharedLibrarySoName);
       result.put(
           stripLinkable,
-          StrippedObjectDescription.builder()
-              .setSourcePath(stripLinkable.getSourcePathToOutput())
-              .setStrippedObjectName(sharedLibrarySoName)
-              .setTargetCpuType(targetCpuType)
-              .setApkModule(apkModule)
-              .build());
+          ImmutableStrippedObjectDescription.of(
+              stripLinkable.getSourcePathToOutput(),
+              sharedLibrarySoName,
+              targetCpuType,
+              apkModule));
     }
     return result.build();
   }

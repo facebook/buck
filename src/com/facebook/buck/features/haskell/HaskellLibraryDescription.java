@@ -1,23 +1,23 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -36,7 +36,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.Archive;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
@@ -62,7 +62,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
@@ -194,7 +194,8 @@ public class HaskellLibraryDescription
         // affect on build efficiency, and since this issue appears to only manifest by a size
         // mismatch with what is embedded in thin archives, just disable caching when using thin
         // archives.
-        /* cacheable */ platform.getCxxPlatform().getArchiveContents() != ArchiveContents.THIN);
+        platform.getArchiveContents(),
+        /* cacheable */ platform.getArchiveContents() != ArchiveContents.THIN);
   }
 
   private Archive requireStaticLibrary(
@@ -210,7 +211,7 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(),
+                baseTarget.getFlavors().getSet(),
                 Sets.union(
                     Type.FLAVOR_VALUES,
                     haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))
@@ -391,7 +392,7 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(),
+                baseTarget.getFlavors().getSet(),
                 Sets.union(
                     Type.FLAVOR_VALUES,
                     haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))
@@ -492,7 +493,7 @@ public class HaskellLibraryDescription
 
     String name =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
-            Optional.empty(), target.withFlavors(), platform.getCxxPlatform());
+            Optional.empty(), target.withFlavors(), platform.getCxxPlatform(), projectFilesystem);
     Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").resolve(name);
 
     return HaskellDescriptionUtils.createLinkRule(
@@ -524,7 +525,7 @@ public class HaskellLibraryDescription
       boolean hsProfile) {
     Preconditions.checkArgument(
         Sets.intersection(
-                baseTarget.getFlavors(),
+                baseTarget.getFlavors().getSet(),
                 Sets.union(
                     Type.FLAVOR_VALUES,
                     haskellPlatformsProvider.getHaskellPlatforms().getFlavors()))
@@ -569,7 +570,8 @@ public class HaskellLibraryDescription
       BuildRuleParams params,
       HaskellLibraryDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
+    HaskellPlatformsProvider haskellPlatformsProvider =
+        getHaskellPlatformsProvider(buildTarget.getTargetConfiguration());
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
@@ -692,7 +694,7 @@ public class HaskellLibraryDescription
                 allDeps.get(graphBuilder, platform.getCxxPlatform()),
                 depType,
                 hsProfile);
-        return HaskellCompileInput.builder().setPackage(rule.getPackage()).build();
+        return ImmutableHaskellCompileInput.of(ImmutableList.of(), rule.getPackage());
       }
 
       @Override
@@ -700,10 +702,7 @@ public class HaskellLibraryDescription
         BuildTarget target =
             buildTarget.withAppendedFlavors(Type.HADDOCK.getFlavor(), platform.getFlavor());
         HaskellHaddockLibRule rule = (HaskellHaddockLibRule) graphBuilder.requireRule(target);
-        return HaskellHaddockInput.builder()
-            .addAllInterfaces(rule.getInterfaces())
-            .addAllHaddockOutputDirs(rule.getHaddockOutputDirs())
-            .build();
+        return ImmutableHaskellHaddockInput.of(rule.getInterfaces(), rule.getHaddockOutputDirs());
       }
 
       @Override
@@ -847,7 +846,7 @@ public class HaskellLibraryDescription
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
             CxxDescriptionEnhancer.getSharedLibrarySoname(
-                Optional.empty(), getBuildTarget(), cxxPlatform);
+                Optional.empty(), getBuildTarget(), cxxPlatform, projectFilesystem);
         BuildRule sharedLibraryBuildRule =
             requireSharedLibrary(
                 getBaseBuildTarget(haskellPlatformsProvider, getBuildTarget()),
@@ -871,8 +870,11 @@ public class HaskellLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (getHaskellPlatformsProvider().getHaskellPlatforms().containsAnyOf(flavors)) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    if (getHaskellPlatformsProvider(toolchainTargetConfiguration)
+        .getHaskellPlatforms()
+        .containsAnyOf(flavors)) {
       return true;
     }
 
@@ -888,19 +890,24 @@ public class HaskellLibraryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractHaskellLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     HaskellDescriptionUtils.getParseTimeDeps(
         buildTarget.getTargetConfiguration(),
-        getHaskellPlatformsProvider().getHaskellPlatforms().getValues(),
+        getHaskellPlatformsProvider(buildTarget.getTargetConfiguration())
+            .getHaskellPlatforms()
+            .getValues(),
         targetGraphOnlyDepsBuilder);
   }
 
-  private HaskellPlatformsProvider getHaskellPlatformsProvider() {
+  private HaskellPlatformsProvider getHaskellPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
+        HaskellPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        HaskellPlatformsProvider.class);
   }
 
   protected enum Type implements FlavorConvertible {
@@ -932,9 +939,8 @@ public class HaskellLibraryDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractHaskellLibraryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  @RuleArg
+  interface AbstractHaskellLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     @Value.Default
     default SourceSortedSet getSrcs() {
       return SourceSortedSet.EMPTY;

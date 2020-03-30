@@ -1,39 +1,40 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.actions.lib;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.actions.AbstractAction;
-import com.facebook.buck.core.rules.actions.Action;
 import com.facebook.buck.core.rules.actions.ActionExecutionContext;
 import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistry;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionFailure;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLine;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgException;
 import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs;
 import com.facebook.buck.core.rules.actions.lib.args.ExecCompatibleCommandLineBuilder;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,15 +42,11 @@ import java.util.Optional;
 
 /** Action that runs command line applications with provided arguments and environment */
 public class RunAction extends AbstractAction {
-  private final String shortName;
-  private final CommandLineArgs args;
-  private final ImmutableMap<String, String> env;
+  @AddToRuleKey private final CommandLineArgs args;
+  @AddToRuleKey private final ImmutableMap<String, String> env;
 
   /**
    * @param registry the {@link ActionRegistry} to registry this action for.
-   * @param inputs the input {@link Artifact} for this {@link Action}. They can be either outputs of
-   *     other {@link Action}s or be source files
-   * @param outputs the outputs for this {@link Action}
    * @param shortName the short name to use in logging, console activity, etc. See {@link
    *     #getShortName()}
    * @param args the arguments to evaluate and use when executing the application. This evaluation
@@ -58,20 +55,29 @@ public class RunAction extends AbstractAction {
    */
   public RunAction(
       ActionRegistry registry,
-      ImmutableSet<Artifact> inputs,
-      ImmutableSet<Artifact> outputs,
       String shortName,
       CommandLineArgs args,
       ImmutableMap<String, String> env) {
-    super(registry, inputs, outputs);
-    this.shortName = shortName;
+    this(registry, getAllInputsAndOutputs(args), shortName, args, env);
+  }
+
+  private RunAction(
+      ActionRegistry registry,
+      Pair<ImmutableSortedSet<Artifact>, ImmutableSortedSet<OutputArtifact>> inputsAndOutputs,
+      String shortName,
+      CommandLineArgs args,
+      ImmutableMap<String, String> env) {
+    super(registry, inputsAndOutputs.getFirst(), inputsAndOutputs.getSecond(), shortName);
     this.args = args;
     this.env = env;
   }
 
-  @Override
-  public String getShortName() {
-    return shortName;
+  private static Pair<ImmutableSortedSet<Artifact>, ImmutableSortedSet<OutputArtifact>>
+      getAllInputsAndOutputs(CommandLineArgs args) {
+    ImmutableSortedSet.Builder<Artifact> inputs = ImmutableSortedSet.naturalOrder();
+    ImmutableSortedSet.Builder<OutputArtifact> outputs = ImmutableSortedSet.naturalOrder();
+    args.visitInputsAndOutputs(inputs::add, outputs::add);
+    return new Pair<>(inputs.build(), outputs.build());
   }
 
   @Override
@@ -81,11 +87,11 @@ public class RunAction extends AbstractAction {
     try {
       commandLine = new ExecCompatibleCommandLineBuilder(filesystem).build(args);
     } catch (CommandLineArgException e) {
-      return ImmutableActionExecutionFailure.of(
+      return ActionExecutionResult.failure(
           Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));
     }
     if (commandLine.getCommandLineArgs().isEmpty()) {
-      return ImmutableActionExecutionFailure.of(
+      return ActionExecutionResult.failure(
           Optional.empty(),
           Optional.empty(),
           ImmutableList.of(),
@@ -109,16 +115,16 @@ public class RunAction extends AbstractAction {
       Optional<String> stderr = result.getStderr();
       ImmutableList<String> command = result.getCommand();
       if (result.getExitCode() == 0) {
-        return ImmutableActionExecutionSuccess.of(stdout, stderr, command);
+        return ActionExecutionResult.success(stdout, stderr, command);
       } else {
-        return ImmutableActionExecutionFailure.of(
+        return ActionExecutionResult.failure(
             stdout,
             stderr,
             command,
             Optional.of(new ProcessExecutionFailedException(result.getExitCode())));
       }
     } catch (InterruptedException | IOException e) {
-      return ImmutableActionExecutionFailure.of(
+      return ActionExecutionResult.failure(
           Optional.empty(), Optional.empty(), stringifiedCommandLine, Optional.of(e));
     }
   }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
@@ -87,6 +87,27 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
     assertEquals(
         "present:Optional<\n" + "  string(hello)\n" + ">\n" + "empty:Optional.empty()",
         stringify(new WithOptional()));
+  }
+
+  @Override
+  @Test
+  public void frameworkPath() {
+    assertEquals(
+        "sourceTreePath:com.facebook.buck.rules.coercer.ImmutableFrameworkPath<\n"
+            + "  type:string(SOURCE_TREE_PATH)\n"
+            + "  sourceTreePath:com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath<\n"
+            + "    sourceTree:string(SDKROOT)\n"
+            + "    path:excluded\n"
+            + "    defaultType:Optional.empty()\n"
+            + "  >\n"
+            + "  sourcePath:null\n"
+            + ">\n"
+            + "sourcePath:com.facebook.buck.rules.coercer.ImmutableFrameworkPath<\n"
+            + "  type:string(SOURCE_PATH)\n"
+            + "  sourceTreePath:null\n"
+            + "  sourcePath:SourcePath($ROOT$/some/path)\n"
+            + ">",
+        stringify(new WithFrameworkPath()));
   }
 
   @Override
@@ -183,7 +204,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   public void buildTarget() {
     assertEquals(
-        "target:path($OTHER$)Optional<\n"
+        "target:Optional<\n"
             + "  string(other)\n"
             + ">string(//some)string(target)SortedSet<\n"
             + "  string(flavor1)\n"
@@ -196,7 +217,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   public void buildTargetWithEmptyConfiguration() {
     assertEquals(
-        "target:path($OTHER$)Optional<\n"
+        "target:Optional<\n"
             + "  string(other)\n"
             + ">string(//some)string(target)SortedSet<\n"
             + "  string(flavor1)\n"
@@ -209,7 +230,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Override
   public void buildTargetWithConfigurationForConfigurationTargets() {
     assertEquals(
-        "target:path($OTHER$)Optional<\n"
+        "target:Optional<\n"
             + "  string(other)\n"
             + ">string(//some)string(target)SortedSet<\n"
             + "  string(flavor1)\n"
@@ -247,6 +268,14 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
     assertEquals(
         "container:SourcePath($ROOT$/some/path)",
         stringify(new WithNonHashableSourcePathContainer()));
+  }
+
+  @Override
+  @Test
+  public void outputLabel() {
+    assertEquals(
+        "label:com.facebook.buck.core.model.OutputLabel<\n" + "  label:string(test_label)\n" + ">",
+        stringify(new WithOutputLabel()));
   }
 
   @Override
@@ -330,7 +359,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
   @Test
   public void immutables() {
     assertEquals(
-        "tupleInterfaceData:com.facebook.buck.rules.modern.impl.TupleInterfaceData<\n"
+        "tupleInterfaceData:com.facebook.buck.rules.modern.impl.ImmutableTupleInterfaceData<\n"
             + "  first:SourcePath($ROOT$/first.path)\n"
             + "  second:string(world)\n"
             + ">\n"
@@ -338,7 +367,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "  first:SourcePath($ROOT$/second.path)\n"
             + "  second:string(world)\n"
             + ">\n"
-            + "tupleClassData:com.facebook.buck.rules.modern.impl.TupleClassData<\n"
+            + "tupleClassData:com.facebook.buck.rules.modern.impl.ImmutableTupleClassData<\n"
             + "  first:SourcePath($ROOT$/third.path)\n"
             + "  second:string(world)\n"
             + ">\n"

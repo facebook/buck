@@ -3,13 +3,14 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "buildtargetpattern",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/core/model:model",
-    ],
     visibility = [
         "PUBLIC",
     ],
     deps = [
         "//src/com/facebook/buck/io/pathformat:pathformat",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell/nameresolver:nameresolver",
+        "//src/com/facebook/buck/core/model:model",
     ],
 )

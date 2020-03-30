@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.intellij.ideabuck.completion;
@@ -50,7 +50,6 @@ import org.jetbrains.annotations.NotNull;
  * of the form {@code @cellname//path/to:file.bzl}.
  */
 public class BuckTargetCompletionContributor extends CompletionContributor {
-
   @Override
   public void fillCompletionVariants(
       @NotNull CompletionParameters parameters, @NotNull CompletionResultSet result) {
@@ -156,9 +155,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       if (!name.startsWith(partial)) {
         continue;
       }
-      if (child.isDirectory()) {
-        addResultForFile(result, child, path + name + "/");
-      } else if (name.endsWith(".bzl")) {
+      if (child.isDirectory() || name.endsWith(".bzl")) {
         addResultForFile(result, child, path + name);
       }
     }
@@ -205,9 +202,9 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
       }
       if (child.isDirectory()) {
         doTargetsForFullyQualifiedExtensionFile(
-            child, project, cellName + "//" + cellPath + name + ":", result);
+            child, project, cellName + "//" + cellPath + name, result);
         if (Stream.of(child.getChildren()).anyMatch(VirtualFile::isDirectory)) {
-          addResultForFile(result, child, partialPrefix + name + "/");
+          addResultForFile(result, child, partialPrefix + name);
         }
       }
     }
@@ -347,11 +344,7 @@ public class BuckTargetCompletionContributor extends CompletionContributor {
         continue;
       }
       if (child.isDirectory()) {
-        VirtualFile childBuckFile = child.findChild(cell.getBuildfileName());
-        if (childBuckFile != null && childBuckFile.exists()) {
-          addResultForFile(result, childBuckFile, partialPrefix + name + ":");
-        }
-        addResultForFile(result, child, partialPrefix + name + "/");
+        addResultForFile(result, child, partialPrefix + name);
       }
     }
   }

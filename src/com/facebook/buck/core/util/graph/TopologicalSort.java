@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.util.graph;
@@ -24,6 +24,7 @@ import com.google.common.collect.Queues;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Queue;
@@ -34,6 +35,11 @@ import java.util.function.Supplier;
 
 public class TopologicalSort {
 
+  /** User provider callback used for walking the graph */
+  public interface Traversable<T> {
+    Iterator<? extends T> findChildren(T node);
+  }
+
   private TopologicalSort() {}
 
   /** Returns a topologically sorted list of the nodes in the graph. */
@@ -43,7 +49,7 @@ public class TopologicalSort {
 
   /** Returns a topologically sorted list of all nodes in the graph. */
   public static <T> ImmutableList<? extends T> sort(
-      Iterable<? extends T> roots, GraphTraversable<T> traversable) {
+      Iterable<? extends T> roots, Traversable<T> traversable) {
     return sortTraversableImpl(roots, traversable, LinkedHashSet::new);
   }
 
@@ -61,14 +67,12 @@ public class TopologicalSort {
   // TODO(agallagher): delete this.
   @Deprecated
   public static <T> ImmutableList<? extends T> snowflakeSort(
-      Iterable<? extends T> roots, GraphTraversable<T> traversable, Comparator<T> comparator) {
+      Iterable<? extends T> roots, Traversable<T> traversable, Comparator<T> comparator) {
     return sortTraversableImpl(roots, traversable, () -> new TreeSet<>(comparator));
   }
 
   private static <T> ImmutableList<? extends T> sortTraversableImpl(
-      Iterable<? extends T> roots,
-      GraphTraversable<T> traversable,
-      Supplier<Set<T>> levelSetFactory) {
+      Iterable<? extends T> roots, Traversable<T> traversable, Supplier<Set<T>> levelSetFactory) {
     MutableDirectedGraph<T> graph = new MutableDirectedGraph<>();
     AbstractBreadthFirstTraversal<T> visitor =
         new AbstractBreadthFirstTraversal<T>(roots) {

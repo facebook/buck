@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.model.BuildTarget;
@@ -35,7 +36,10 @@ import java.util.concurrent.ExecutionException;
 /**
  * An implementation of {@link NativeLinkable} where (most of) the behavior is fixed when created.
  */
-public final class NativeLinkableInfo implements NativeLinkable {
+// TODO: This class should really be final, but extraneous instances of
+// `SwiftRuntimeNativeLinkableGroup` break the default hashcode/equals used in sets/maps, requiring
+// those instances to provide their own overloads.
+public class NativeLinkableInfo implements NativeLinkable {
   private final Cache<LinkableInputCacheKey, NativeLinkableInput> nativeLinkableCache =
       CacheBuilder.newBuilder().build();
   // TODO(cjhopman): We should remove this delegate, everything should be fixed when this is
@@ -180,6 +184,11 @@ public final class NativeLinkableInfo implements NativeLinkable {
   }
 
   @Override
+  public String toString() {
+    return String.format("NativeLinkableInfo: %s (%s)", ruleType, buildTarget.toString());
+  }
+
+  @Override
   public String getRuleType() {
     return ruleType;
   }
@@ -242,7 +251,7 @@ public final class NativeLinkableInfo implements NativeLinkable {
       TargetConfiguration targetConfiguration) {
     try {
       return nativeLinkableCache.get(
-          new ImmutableLinkableInputCacheKey(forceLinkWhole, type, targetConfiguration),
+          ImmutableLinkableInputCacheKey.of(forceLinkWhole, type, targetConfiguration),
           () -> delegate.computeInput(graphBuilder, type, forceLinkWhole, targetConfiguration));
     } catch (ExecutionException e) {
       Throwables.throwIfUnchecked(e);
@@ -251,7 +260,8 @@ public final class NativeLinkableInfo implements NativeLinkable {
   }
 
   @Override
-  public Optional<NativeLinkTarget> getNativeLinkTarget(ActionGraphBuilder graphBuilder) {
+  public Optional<NativeLinkTarget> getNativeLinkTarget(
+      ActionGraphBuilder graphBuilder, boolean includePrivateLinkerFlags) {
     return nativeLinkTarget.map(NativeLinkTarget.class::cast);
   }
 

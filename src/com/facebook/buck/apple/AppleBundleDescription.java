@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -21,8 +21,10 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
+import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
@@ -30,6 +32,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -41,15 +44,15 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.FrameworkDependencies;
+import com.facebook.buck.cxx.LinkableListFilterFactory;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
-import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.versions.Version;
@@ -60,6 +63,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import java.util.function.Predicate;
 import org.immutables.value.Value;
 
 public class AppleBundleDescription
@@ -108,22 +112,28 @@ public class AppleBundleDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
     ImmutableSet.Builder<FlavorDomain<?>> builder = ImmutableSet.builder();
 
     ImmutableSet<FlavorDomain<?>> localDomains =
         ImmutableSet.of(AppleDebugFormat.FLAVOR_DOMAIN, AppleDescriptions.INCLUDE_FRAMEWORKS);
 
     builder.addAll(localDomains);
-    appleLibraryDescription.flavorDomains().ifPresent(domains -> builder.addAll(domains));
-    appleBinaryDescription.flavorDomains().ifPresent(domains -> builder.addAll(domains));
+    appleLibraryDescription
+        .flavorDomains(toolchainTargetConfiguration)
+        .ifPresent(domains -> builder.addAll(domains));
+    appleBinaryDescription
+        .flavorDomains(toolchainTargetConfiguration)
+        .ifPresent(domains -> builder.addAll(domains));
 
     return Optional.of(builder.build());
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (appleLibraryDescription.hasFlavors(flavors)) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    if (appleLibraryDescription.hasFlavors(flavors, toolchainTargetConfiguration)) {
       return true;
     }
     ImmutableSet.Builder<Flavor> flavorBuilder = ImmutableSet.builder();
@@ -136,7 +146,7 @@ public class AppleBundleDescription
       }
       flavorBuilder.add(flavor);
     }
-    return appleBinaryDescription.hasFlavors(flavorBuilder.build());
+    return appleBinaryDescription.hasFlavors(flavorBuilder.build(), toolchainTargetConfiguration);
   }
 
   @Override
@@ -160,23 +170,36 @@ public class AppleBundleDescription
           graphBuilder.requireRule(
               buildTarget.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR));
     }
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
+
+    Predicate<BuildTarget> resourceFilter =
+        LinkableListFilterFactory.resourcePredicateFrom(
+            cxxBuckConfig,
+            args.getResourceGroup(),
+            args.getResourceGroupMap(),
+            context.getTargetGraph());
 
     return AppleDescriptions.createAppleBundle(
         xcodeDescriptions,
         cxxPlatformsProvider,
-        getAppleCxxPlatformFlavorDomain(),
+        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()),
         context.getTargetGraph(),
         buildTarget,
         context.getProjectFilesystem(),
         params,
         graphBuilder,
         toolchainProvider.getByName(
-            CodeSignIdentityStore.DEFAULT_NAME, CodeSignIdentityStore.class),
+            CodeSignIdentityStore.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            CodeSignIdentityStore.class),
         toolchainProvider.getByName(
-            ProvisioningProfileStore.DEFAULT_NAME, ProvisioningProfileStore.class),
+            ProvisioningProfileStore.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            ProvisioningProfileStore.class),
         args.getBinary(),
         args.getPlatformBinary(),
+        args.getDefaultPlatform(),
         args.getExtension(),
         args.getProductName(),
         args.getInfoPlist(),
@@ -196,8 +219,10 @@ public class AppleBundleDescription
         args.getXcodeProductType(),
         appleConfig.getCodesignTimeout(),
         swiftBuckConfig.getCopyStdlibToFrameworks(),
+        swiftBuckConfig.getUseLipoThin(),
         cxxBuckConfig.shouldCacheStrip(),
-        appleConfig.useEntitlementsWhenAdhocCodeSigning());
+        appleConfig.useEntitlementsWhenAdhocCodeSigning(),
+        resourceFilter);
   }
 
   /**
@@ -207,27 +232,34 @@ public class AppleBundleDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractAppleBundleDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
     if (!cxxPlatformsProvider.getUnresolvedCxxPlatforms().containsAnyOf(buildTarget.getFlavors())) {
-      buildTarget =
-          buildTarget.withAppendedFlavors(
-              cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor());
+      Flavor platformFlavor =
+          constructorArg
+              .getDefaultPlatform()
+              .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform().getFlavor());
+      buildTarget = buildTarget.withAppendedFlavors(platformFlavor);
     }
 
-    FlavorDomain<AppleCxxPlatform> appleCxxPlatformsFlavorDomain =
-        getAppleCxxPlatformFlavorDomain();
+    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain =
+        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
     Optional<MultiarchFileInfo> fatBinaryInfo =
         MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
     UnresolvedCxxPlatform cxxPlatform;
     if (fatBinaryInfo.isPresent()) {
-      AppleCxxPlatform appleCxxPlatform = fatBinaryInfo.get().getRepresentativePlatform();
-      cxxPlatform = new StaticUnresolvedCxxPlatform(appleCxxPlatform.getCxxPlatform());
+      UnresolvedAppleCxxPlatform appleCxxPlatform =
+          appleCxxPlatformsFlavorDomain.getValue(
+              fatBinaryInfo.get().getRepresentativePlatformFlavor());
+      cxxPlatform = appleCxxPlatform.getUnresolvedCxxPlatform();
     } else {
-      cxxPlatform = ApplePlatforms.getCxxPlatformForBuildTarget(cxxPlatformsProvider, buildTarget);
+      cxxPlatform =
+          ApplePlatforms.getCxxPlatformForBuildTarget(
+              cxxPlatformsProvider, buildTarget, constructorArg.getDefaultPlatform());
     }
 
     // TODO(cjhopman): Why doesn't this add parse time deps from the cxxPlatform? Does it just
@@ -293,26 +325,30 @@ public class AppleBundleDescription
             LinkerMapMode.FLAVOR_DOMAIN, buildTarget, depsExcludingBinary);
 
     if (fatBinaryInfo.isPresent()) {
+      UnresolvedAppleCxxPlatform appleCxxPlatform =
+          appleCxxPlatformsFlavorDomain.getValue(
+              fatBinaryInfo.get().getRepresentativePlatformFlavor());
       depsExcludingBinary =
           depsExcludingBinary.append(
-              fatBinaryInfo
-                  .get()
-                  .getRepresentativePlatform()
-                  .getCodesignProvider()
-                  .getParseTimeDeps(buildTarget.getTargetConfiguration()));
+              appleCxxPlatform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
     } else {
       TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
       depsExcludingBinary =
           depsExcludingBinary.append(
               appleCxxPlatformsFlavorDomain
                   .getValue(buildTarget)
-                  .map(
-                      platform ->
-                          platform.getCodesignProvider().getParseTimeDeps(targetConfiguration))
+                  .map(platform -> platform.getParseTimeDeps(targetConfiguration))
                   .orElse(ImmutableSet.of()));
     }
 
     extraDepsBuilder.addAll(depsExcludingBinary);
+    BuildTarget finalBuildTarget = buildTarget;
+    appleCxxPlatformsFlavorDomain
+        .getValues()
+        .forEach(
+            platform ->
+                targetGraphOnlyDepsBuilder.addAll(
+                    platform.getParseTimeDeps(finalBuildTarget.getTargetConfiguration())));
   }
 
   @Override
@@ -327,14 +363,17 @@ public class AppleBundleDescription
       // Bundles should be opaque to framework dependencies.
       return Optional.empty();
     }
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
-    FlavorDomain<AppleCxxPlatform> appleCxxPlatforms = getAppleCxxPlatformFlavorDomain();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
+    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms =
+        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
             cxxPlatformsProvider,
             appleCxxPlatforms,
             buildTarget,
+            args.getDefaultPlatform(),
             MultiarchFileInfos.create(appleCxxPlatforms, buildTarget));
     BuildTarget binaryTarget =
         AppleDescriptions.getTargetPlatformBinary(
@@ -342,22 +381,27 @@ public class AppleBundleDescription
     return graphBuilder.requireMetadata(binaryTarget, metadataClass);
   }
 
-  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformFlavorDomain() {
+  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
+      TargetConfiguration toolchainTargetConfiguration) {
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
-    return appleCxxPlatformsProvider.getAppleCxxPlatforms();
+            AppleCxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AppleCxxPlatformsProvider.class);
+    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractAppleBundleDescriptionArg
-      extends CommonDescriptionArg,
+      extends BuildRuleArg,
           HasAppleBundleFields,
           HasAppleCodesignFields,
           HasContacts,
@@ -395,6 +439,11 @@ public class AppleBundleDescription
     Optional<Boolean> getIbtoolModuleFlag();
 
     Optional<ImmutableList<String>> getIbtoolFlags();
+
+    // See documentation in LinkableCxxConstructorArg. These are equivalent mappings.
+    Optional<ImmutableList<CxxLinkGroupMapping>> getResourceGroupMap();
+
+    Optional<String> getResourceGroup();
 
     @Override
     @Hint(isDep = false)

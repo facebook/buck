@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -26,7 +26,7 @@ import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.AndroidNdkHelper;
 import com.facebook.buck.android.toolchain.ndk.impl.NdkCxxPlatforms;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -53,18 +53,13 @@ public class SharedLibraryInterfacePlatforms {
     String clangVersion = NdkCxxPlatforms.getDefaultClangVersionForNdk(ndkVersion);
     String compilerVersion = compilerType == NdkCompilerType.GCC ? gccVersion : clangVersion;
     NdkCxxPlatformCompiler compiler =
-        NdkCxxPlatformCompiler.builder()
-            .setType(compilerType)
-            .setVersion(compilerVersion)
-            .setGccVersion(gccVersion)
-            .build();
+        NdkCxxPlatformCompiler.of(compilerType, compilerVersion, gccVersion);
     ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> ndkPlatforms =
         NdkCxxPlatforms.getPlatforms(
             cxxBuckConfig,
             new AndroidBuckConfig(buckConfig, Platform.detect()),
             filesystem,
             ndkDir,
-            EmptyTargetConfiguration.INSTANCE,
             compiler,
             NdkCxxPlatforms.getDefaultCxxRuntimeForNdk(ndkVersion),
             NdkCxxRuntimeType.DYNAMIC,
@@ -78,6 +73,6 @@ public class SharedLibraryInterfacePlatforms {
             .iterator()
             .next()
             .getCxxPlatform()
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE));
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE));
   }
 }

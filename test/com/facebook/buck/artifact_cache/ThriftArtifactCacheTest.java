@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -125,7 +125,7 @@ public class ThriftArtifactCacheTest {
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READONLY)
@@ -136,7 +136,7 @@ public class ThriftArtifactCacheTest {
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetViewFactory()
-                        .create(cellPathResolver, target))
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -151,7 +151,6 @@ public class ThriftArtifactCacheTest {
         new ThriftArtifactCache(
             networkArgs,
             "/nice_as_well",
-            false,
             new BuildId("aabb"),
             0,
             0,
@@ -261,7 +260,7 @@ public class ThriftArtifactCacheTest {
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READONLY)
@@ -272,7 +271,7 @@ public class ThriftArtifactCacheTest {
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetViewFactory()
-                        .create(cellPathResolver, target))
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -354,14 +353,13 @@ public class ThriftArtifactCacheTest {
         new ThriftArtifactCache(
             networkArgs,
             "/nice_as_well",
-            false,
             new BuildId("aabb"),
             0,
             0,
             false,
             "test://",
             "hostname")) {
-      MultiFetchResult result = cache.multiFetchImpl(requests);
+      AbstractAsynchronousCache.MultiFetchResult result = cache.multiFetchImpl(requests);
       assertEquals(4, result.getResults().size());
       assertEquals(CacheResultType.MISS, result.getResults().get(0).getCacheResult().getType());
       assertEquals(
@@ -391,7 +389,7 @@ public class ThriftArtifactCacheTest {
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READONLY)
@@ -402,7 +400,7 @@ public class ThriftArtifactCacheTest {
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetViewFactory()
-                        .create(cellPathResolver, target))
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -446,14 +444,13 @@ public class ThriftArtifactCacheTest {
         new ThriftArtifactCache(
             networkArgs,
             "/nice_as_well",
-            false,
             new BuildId("aabb"),
             1,
             1,
             false,
             "test://",
             "hostname")) {
-      MultiContainsResult result = cache.multiContainsImpl(ruleKeys);
+      AbstractAsynchronousCache.MultiContainsResult result = cache.multiContainsImpl(ruleKeys);
       assertEquals(4, result.getCacheResults().size());
       assertEquals(CacheResultType.MISS, result.getCacheResults().get(key0).getType());
       assertEquals(CacheResultType.CONTAINS, result.getCacheResults().get(key1).getType());
@@ -485,7 +482,7 @@ public class ThriftArtifactCacheTest {
     ListeningExecutorService service = MoreExecutors.newDirectExecutorService();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     NetworkCacheArgs networkArgs =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("default_cache_name")
             .setRepository("default_repository")
             .setCacheReadMode(CacheReadMode.READWRITE)
@@ -496,7 +493,7 @@ public class ThriftArtifactCacheTest {
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetViewFactory()
-                        .create(cellPathResolver, target))
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(filesystem)
             .setFetchClient(fetchClient)
             .setStoreClient(storeClient)
@@ -511,7 +508,6 @@ public class ThriftArtifactCacheTest {
         new ThriftArtifactCache(
             networkArgs,
             "/nice_as_well",
-            false,
             new BuildId("aabb"),
             0,
             0,

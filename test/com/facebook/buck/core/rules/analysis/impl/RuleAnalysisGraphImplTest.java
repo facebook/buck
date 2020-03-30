@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.analysis.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -20,7 +21,9 @@ import static org.junit.Assert.assertSame;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -32,8 +35,8 @@ import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.ProviderCreationContext;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
+import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisResult;
 import com.facebook.buck.core.rules.analysis.cache.RuleAnalysisCache;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
@@ -58,7 +61,8 @@ public class RuleAnalysisGraphImplTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
   private final TargetNodeFactory targetNodeFactory =
-      new TargetNodeFactory(new DefaultTypeCoercerFactory());
+      new TargetNodeFactory(
+          new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE);
   private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   @Before
@@ -102,11 +106,11 @@ public class RuleAnalysisGraphImplTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -117,7 +121,7 @@ public class RuleAnalysisGraphImplTest {
         RuleAnalysisGraphImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
 
     RuleAnalysisResult ruleAnalysisResult =
-        ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(buildTarget));
+        ruleAnalysisComputation.get(RuleAnalysisKey.of(buildTarget));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.
@@ -142,7 +146,7 @@ public class RuleAnalysisGraphImplTest {
               RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
             // here we use the deps
             assertEquals(buildTarget, target);
-            return context.deps().get(buildTarget2);
+            return context.resolveDep(buildTarget2);
           }
 
           @Override
@@ -170,22 +174,22 @@ public class RuleAnalysisGraphImplTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(buildTarget2),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             ruleDescription2,
             FakeRuleDescriptionArg.builder().setName("target2").build(),
             projectFilesystem,
             buildTarget2,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
@@ -199,7 +203,7 @@ public class RuleAnalysisGraphImplTest {
         RuleAnalysisGraphImpl.of(targetGraph, depsAwareExecutor, cache, eventBus);
 
     RuleAnalysisResult ruleAnalysisResult =
-        ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(buildTarget));
+        ruleAnalysisComputation.get(RuleAnalysisKey.of(buildTarget));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.
@@ -224,7 +228,7 @@ public class RuleAnalysisGraphImplTest {
               RuleAnalysisContext context, BuildTarget target, FakeRuleDescriptionArg args) {
             // here we use the deps
             assertEquals(buildTarget, target);
-            return context.deps().get(buildTarget2);
+            return context.resolveDep(buildTarget2);
           }
 
           @Override
@@ -233,7 +237,7 @@ public class RuleAnalysisGraphImplTest {
           }
         };
     FakeTargetNodeBuilder.FakeDescription legacyDescription =
-        new FakeTargetNodeBuilder.FakeDescription() {
+        new FakeTargetNodeBuilder.LegacyProviderFakeRuleDescription() {
           @Override
           public ProviderInfoCollection createProviders(
               ProviderCreationContext context, BuildTarget buildTarget, FakeTargetNodeArg args) {
@@ -247,22 +251,22 @@ public class RuleAnalysisGraphImplTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(buildTarget2),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     TargetNode<?> targetNode2 =
         targetNodeFactory.createFromObject(
             legacyDescription,
             FakeTargetNodeArg.builder().setName("target2").build(),
             projectFilesystem,
             buildTarget2,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
 
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
@@ -281,7 +285,7 @@ public class RuleAnalysisGraphImplTest {
             cache);
 
     RuleAnalysisResult ruleAnalysisResult =
-        ruleAnalysisComputation.get(ImmutableRuleAnalysisKey.of(buildTarget));
+        ruleAnalysisComputation.get(RuleAnalysisKey.of(buildTarget));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.

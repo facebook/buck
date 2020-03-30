@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution.util;
@@ -33,6 +33,7 @@ import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessExecutorParams.Builder;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -81,7 +82,7 @@ public class ActionRunner {
   /** Runs an action and returns the result. */
   public ActionResult runAction(
       ImmutableList<String> command,
-      ImmutableMap<String, String> environment,
+      ImmutableMap<String, String> environmentOverrides,
       Set<Path> outputs,
       Path buildDir)
       throws IOException, InterruptedException {
@@ -90,7 +91,18 @@ public class ActionRunner {
     try (Scope ignored = LeafEvents.scope(eventBus, "preparing_action")) {
       paramsBuilder = ProcessExecutorParams.builder();
       paramsBuilder.setCommand(command);
-      paramsBuilder.setEnvironment(environment);
+
+      ImmutableMap.Builder<String, String> environment =
+          ImmutableMap.builderWithExpectedSize(environmentOverrides.size() + 1);
+      environment.putAll(environmentOverrides);
+      if (!environmentOverrides.containsKey("PATH")) {
+        // Propagate `PATH` so we can find the expected version of `java` in tests.
+        ImmutableMap<String, String> currentProcessEnvironment =
+            EnvVariablesProvider.getSystemEnv();
+        environment.put("PATH", currentProcessEnvironment.get("PATH"));
+      }
+      paramsBuilder.setEnvironment(environment.build());
+
       paramsBuilder.setDirectory(buildDir);
       CapturingPrintStream stdOut = new CapturingPrintStream();
       CapturingPrintStream stdErr = new CapturingPrintStream();

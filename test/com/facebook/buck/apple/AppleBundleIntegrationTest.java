@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -92,11 +92,10 @@ public class AppleBundleIntegrationTest {
         new DefaultProcessExecutor(new TestConsole()), absoluteBundlePath);
   }
 
-  private void runSimpleApplicationBundleTestWithBuildTarget(String fqtn)
-      throws IOException, InterruptedException {
+  private ProjectWorkspace runApplicationBundleTestWithScenarioAndBuildTarget(
+      String scenario, String fqtn) throws IOException, InterruptedException {
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_application_bundle_no_debug", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget(fqtn);
@@ -122,6 +121,13 @@ public class AppleBundleIntegrationTest {
 
     // Non-Swift target shouldn't include Frameworks/
     assertFalse(Files.exists(appPath.resolve("Frameworks")));
+
+    return workspace;
+  }
+
+  private void runSimpleApplicationBundleTestWithBuildTarget(String fqtn)
+      throws IOException, InterruptedException {
+    runApplicationBundleTestWithScenarioAndBuildTarget("simple_application_bundle_no_debug", fqtn);
   }
 
   @Test
@@ -178,37 +184,52 @@ public class AppleBundleIntegrationTest {
   }
 
   @Test
+  public void applicationBundleWithDefaultPlatform() throws IOException, InterruptedException {
+    runApplicationBundleTestWithScenarioAndBuildTarget(
+        "default_platform_in_rules", "//:DemoApp#no-debug");
+  }
+
+  @Test
+  public void applicationBundleWithDefaultPlatformAndFlavor()
+      throws IOException, InterruptedException {
+    runApplicationBundleTestWithScenarioAndBuildTarget(
+        "default_platform_in_rules", "//:DemoApp#iphonesimulator-i386,no-debug");
+  }
+
+  @Test
+  public void applicationBundleFatBinaryWithDefaultPlatform()
+      throws IOException, InterruptedException {
+    runApplicationBundleTestWithScenarioAndBuildTarget(
+        "default_platform_in_rules",
+        "//:DemoApp#iphonesimulator-x86_64,iphonesimulator-i386,no-debug");
+  }
+
+  @Test
+  public void applicationBundleWithDefaultPlatformIgnoresConfigOverride()
+      throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        runApplicationBundleTestWithScenarioAndBuildTarget(
+            "default_platform_in_rules", "//:DemoApp#no-debug");
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#no-debug");
+    workspace
+        .runBuckCommand(
+            "build",
+            target.getFullyQualifiedName(),
+            "--config",
+            "cxx.default_platform=doesnotexist")
+        .assertSuccess();
+  }
+
+  @Test
   public void simpleApplicationBundleWithCodeSigning() throws Exception {
     assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
 
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(
-            this, "simple_application_bundle_with_codesigning", tmp);
-    workspace.setUp();
-
-    BuildTarget target = workspace.newBuildTarget("//:DemoApp#iphoneos-arm64,no-debug");
-    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
-
-    workspace.verify(
-        Paths.get("DemoApp_output.expected"),
-        BuildTargetPaths.getGenPath(
-            filesystem,
-            target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-            "%s"));
-
-    Path appPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(
-                    filesystem,
-                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
-                    "%s")
-                .resolve(target.getShortName() + ".app"));
-    assertTrue(Files.exists(appPath.resolve(target.getShortName())));
-
-    assertTrue(checkCodeSigning(appPath));
+        runApplicationBundleTestWithScenarioAndBuildTarget(
+            "simple_application_bundle_with_codesigning", "//:DemoApp#iphoneos-arm64,no-debug");
 
     // Do not match iOS profiles on tvOS targets.
-    target = workspace.newBuildTarget("//:DemoApp#appletvos-arm64,no-debug");
+    BuildTarget target = workspace.newBuildTarget("//:DemoApp#appletvos-arm64,no-debug");
     ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
     result.assertFailure();
     assertTrue(result.getStderr().contains("No valid non-expired provisioning profiles match"));
@@ -217,6 +238,36 @@ public class AppleBundleIntegrationTest {
     workspace.addBuckConfigLocalOption(
         "apple", "provisioning_profile_search_path", "provisioning_profiles_tvos");
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+  }
+
+  @Test
+  public void simpleApplicationBundleWithCodeSigningResources() throws Exception {
+    assumeTrue(FakeAppleDeveloperEnvironment.supportsCodeSigning());
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "simple_application_bundle_with_codesigning", tmp);
+    workspace.setUp();
+
+    BuildTarget target =
+        workspace.newBuildTarget("//:DemoAppWithAppleResource#iphoneos-arm64,no-debug");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve("DemoAppWithAppleResource.app"));
+    Path codesignedResourcePath = appPath.resolve("BinaryToBeCodesigned");
+    assertTrue(Files.exists(codesignedResourcePath));
+    assertTrue(checkCodeSigning(codesignedResourcePath));
+
+    Path nonCodesignedResourcePath = appPath.resolve("OtherBinary");
+    assertTrue(Files.exists(nonCodesignedResourcePath));
+    assertFalse(checkCodeSigning(nonCodesignedResourcePath));
   }
 
   @Test
@@ -928,7 +979,7 @@ public class AppleBundleIntegrationTest {
             InternalFlavor.of("no-include-frameworks"), InternalFlavor.of("include-frameworks"));
 
     for (BuildTarget builtTarget : buckBuildLog.getAllTargets()) {
-      if (Sets.intersection(builtTarget.getFlavors(), includeFrameworkFlavors).isEmpty()) {
+      if (Sets.intersection(builtTarget.getFlavors().getSet(), includeFrameworkFlavors).isEmpty()) {
         assertThat(
             builtTarget.getUnflavoredBuildTarget().getFullyQualifiedName(),
             not(in(targetsThatShouldContainIncludeFrameworkFlavors)));
@@ -1170,6 +1221,58 @@ public class AppleBundleIntegrationTest {
     assertTrue(
         "The resource should be present in the embedded framework.",
         Files.exists(frameworkPath.resolve(resourceName)));
+  }
+
+  @Test
+  public void resourceGroupDoesNotDuplicateResourcesInAppAndFramework() throws Exception {
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "app_bundle_with_embedded_framework_and_resource_groups", tmp);
+    workspace.setUp();
+    workspace.addBuckConfigLocalOption("cxx", "link_groups_enabled", "true");
+    workspace.addBuckConfigLocalOption("apple", "codesign", "/usr/bin/true");
+
+    BuildTarget target = BuildTargetFactory.newInstance("//:App#no-debug,macosx-x86_64");
+    workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
+
+    Path appPath =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                    filesystem,
+                    target.withAppendedFlavors(
+                        AppleDebugFormat.NONE.getFlavor(),
+                        AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR),
+                    "%s")
+                .resolve(target.getShortName() + ".app"));
+
+    String appResourceName = "resource_app.txt";
+    String utilityResourceName = "resource_utility.txt";
+    String frameworkResourceName = "resource_framework.txt";
+
+    Path appBundleResourcesPath = appPath.resolve("Contents/Resources");
+    assertTrue(
+        "App resource should be present in the app bundle.",
+        Files.exists(appBundleResourcesPath.resolve(appResourceName)));
+    assertTrue(
+        "Utility resource should be present in the app bundle.",
+        Files.exists(appBundleResourcesPath.resolve(utilityResourceName)));
+    assertFalse(
+        "Framework resource should be absent in the app bundle.",
+        Files.exists(appBundleResourcesPath.resolve(frameworkResourceName)));
+
+    Path frameworkResourcesPath =
+        appPath.resolve("Contents/Frameworks/AppFramework.framework/Resources");
+    assertFalse(
+        "App resource should be absent the framework bundle.",
+        Files.exists(frameworkResourcesPath.resolve(appResourceName)));
+    assertTrue(
+        "Utility resource should be present in the framework bundle.",
+        Files.exists(frameworkResourcesPath.resolve(utilityResourceName)));
+    assertTrue(
+        "Framework resource should be present in the framework bundle.",
+        Files.exists(frameworkResourcesPath.resolve(frameworkResourceName)));
   }
 
   @Test

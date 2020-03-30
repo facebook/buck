@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
@@ -22,11 +22,10 @@ import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.MissingExcludeReporter;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.FieldInfo;
@@ -270,10 +269,9 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
   private static boolean isImmutableBase(Class<?> clazz) {
     // Value.Immutable only has CLASS retention, so we need to detect this based on our own
     // annotations.
-    return clazz.getAnnotation(BuckStyleImmutable.class) != null
-        || clazz.getAnnotation(BuckStylePackageVisibleImmutable.class) != null
-        || clazz.getAnnotation(BuckStylePackageVisibleTuple.class) != null
-        || clazz.getAnnotation(BuckStyleTuple.class) != null
+    return clazz.getAnnotation(RuleArg.class) != null
+        || clazz.getAnnotation(BuckStylePrehashedValue.class) != null
+        || clazz.getAnnotation(BuckStyleValueWithBuilder.class) != null
         || clazz.getAnnotation(BuckStyleValue.class) != null;
   }
 
@@ -331,6 +329,7 @@ public class DefaultClassInfo<T extends AddsToRuleKey> implements ClassInfo<T> {
         // later on we expect to have only one entry for each custom behavior.
         annotation == null
             ? extractCustomBehavior(behavior)
-            : ImmutableSet.of(annotation.inputs(), annotation.serialization()).asList());
+            : ImmutableSet.of(annotation.inputs(), annotation.serialization(), annotation.deps())
+                .asList());
   }
 }

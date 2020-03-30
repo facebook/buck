@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser.decorators;
@@ -22,7 +22,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.json.ProjectBuildFileParseEvents;
 import com.facebook.buck.parser.api.BuildFileManifest;
-import com.facebook.buck.parser.api.ImmutableBuildFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
@@ -81,7 +80,7 @@ public class EventReportingProjectBuildFileParserTest {
     private boolean isClosed;
 
     @Override
-    public BuildFileManifest getBuildFileManifest(Path buildFile) {
+    public BuildFileManifest getManifest(Path buildFile) {
       return allRulesAndMetadata;
     }
 
@@ -124,8 +123,8 @@ public class EventReportingProjectBuildFileParserTest {
   @Test
   public void startEventIsRecordedOnlyOnce() throws Exception {
     assertFalse(listener.isStarted());
-    parser.getBuildFileManifest(SOME_PATH);
-    parser.getBuildFileManifest(SOME_PATH);
+    parser.getManifest(SOME_PATH);
+    parser.getManifest(SOME_PATH);
     assertTrue(listener.isStarted());
     assertThat(listener.getStartedCount(), Matchers.is(1));
   }
@@ -133,21 +132,21 @@ public class EventReportingProjectBuildFileParserTest {
   @Test
   public void getBuildFileManifestFiresStartEvent() throws Exception {
     assertFalse(listener.isStarted());
-    parser.getBuildFileManifest(SOME_PATH);
+    parser.getManifest(SOME_PATH);
     assertTrue(listener.isStarted());
   }
 
   @Test
   public void getBuildFileManifestReturnsUnderlyingRules() throws Exception {
     allRulesAndMetadata =
-        ImmutableBuildFileManifest.of(
+        BuildFileManifest.of(
             ImmutableMap.of(),
             ImmutableSortedSet.of(),
             ImmutableMap.of(),
             Optional.empty(),
             ImmutableList.of(),
             ImmutableList.of());
-    assertSame(allRulesAndMetadata, parser.getBuildFileManifest(SOME_PATH));
+    assertSame(allRulesAndMetadata, parser.getManifest(SOME_PATH));
   }
 
   @Test
@@ -159,7 +158,7 @@ public class EventReportingProjectBuildFileParserTest {
 
   @Test
   public void closeReportsFinishedEvent() throws Exception {
-    parser.getBuildFileManifest(SOME_PATH);
+    parser.getManifest(SOME_PATH);
     assertFalse(listener.isFinished());
     parser.close();
     assertTrue(listener.isFinished());

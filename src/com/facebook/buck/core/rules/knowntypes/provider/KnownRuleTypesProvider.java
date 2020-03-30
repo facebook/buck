@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules.knowntypes.provider;
@@ -23,6 +23,7 @@ import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypesFactory;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -58,9 +59,8 @@ public class KnownRuleTypesProvider {
               new CacheLoader<Cell, KnownRuleTypes>() {
                 @Override
                 public KnownRuleTypes load(Cell cell) {
-                  if (cell.getBuckConfig()
-                      .getView(ParserConfig.class)
-                      .getEnableUserDefinedRules()) {
+                  if (cell.getBuckConfig().getView(ParserConfig.class).getUserDefinedRulesState()
+                      == UserDefinedRulesState.ENABLED) {
                     return new HybridKnownRuleTypes(
                         getNativeRuleTypes(cell), getUserDefinedRuleTypes(cell));
                   } else {

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
@@ -24,6 +24,8 @@ import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -34,7 +36,8 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -48,27 +51,32 @@ import org.junit.Test;
 
 public class PexStepTest {
 
+  private static final BuildTarget TARGET = BuildTargetFactory.newInstance("//:target");
   private static final Path PYTHON_PATH = Paths.get("/usr/local/bin/python");
   private static final PythonVersion PYTHON_VERSION = PythonVersion.of("CPython", "2.6");
   private static final ImmutableMap<String, String> PEX_ENVIRONMENT = ImmutableMap.of();
   private static final ImmutableList<String> PEX_COMMAND = ImmutableList.of();
-  private static final Path TEMP_PATH = Paths.get("/tmp/");
   private static final Path DEST_PATH = Paths.get("/dest");
   private static final String ENTRY_POINT = "entry_point.main";
 
-  private static final ImmutableMap<Path, Path> MODULES =
-      ImmutableMap.of(Paths.get("m"), Paths.get("/src/m"));
-  private static final ImmutableMap<Path, Path> RESOURCES =
-      ImmutableMap.of(Paths.get("r"), Paths.get("/src/r"));
-  private static final ImmutableMap<Path, Path> NATIVE_LIBRARIES =
-      ImmutableMap.of(Paths.get("n.so"), Paths.get("/src/n.so"));
+  private static final PythonResolvedPackageComponents COMPONENTS =
+      ImmutablePythonResolvedPackageComponents.builder()
+          .putModules(
+              TARGET,
+              new PythonMappedComponents.Resolved(
+                  ImmutableSortedMap.of(Paths.get("m"), Paths.get("/src/m"))))
+          .putModules(TARGET, new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir1.whl")))
+          .putModules(TARGET, new PythonModuleDirComponents.Resolved(Paths.get("/tmp/dir2.whl")))
+          .putResources(
+              TARGET,
+              new PythonMappedComponents.Resolved(
+                  ImmutableSortedMap.of(Paths.get("r"), Paths.get("/src/r"))))
+          .putNativeLibraries(
+              TARGET,
+              new PythonMappedComponents.Resolved(
+                  ImmutableSortedMap.of(Paths.get("n.so"), Paths.get("/src/n.so"))))
+          .build();
   private static final ImmutableSortedSet<String> PRELOAD_LIBRARIES = ImmutableSortedSet.of();
-  private static final ImmutableSetMultimap<Path, Path> MODULE_DIRS =
-      ImmutableSetMultimap.of(
-          Paths.get(""),
-          Paths.get("/tmp/dir1.whl"),
-          Paths.get("subdir"),
-          Paths.get("/tmp/dir2.whl"));
 
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
 
@@ -81,15 +89,10 @@ public class PexStepTest {
             PEX_COMMAND,
             PYTHON_PATH,
             PYTHON_VERSION,
-            TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
-            MODULES,
-            RESOURCES,
-            NATIVE_LIBRARIES,
-            MODULE_DIRS,
-            PRELOAD_LIBRARIES,
-            /* zipSafe */ true);
+            COMPONENTS,
+            PRELOAD_LIBRARIES);
     String command =
         Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
@@ -109,15 +112,13 @@ public class PexStepTest {
             PEX_COMMAND,
             PYTHON_PATH,
             PYTHON_VERSION,
-            TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
-            MODULES,
-            RESOURCES,
-            NATIVE_LIBRARIES,
-            MODULE_DIRS,
-            PRELOAD_LIBRARIES,
-            /* zipSafe */ false);
+            ImmutablePythonResolvedPackageComponents.builder()
+                .from(COMPONENTS)
+                .setZipSafe(false)
+                .build(),
+            PRELOAD_LIBRARIES);
     String command =
         Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
@@ -126,20 +127,18 @@ public class PexStepTest {
 
   @Test
   @SuppressWarnings("unchecked")
-  public void testCommandStdin() throws InterruptedException, IOException {
+  public void testCommandStdin() throws IOException {
     Path realDir1 = tmpDir.getRoot().resolve("dir1.whl");
     Path realDir2 = tmpDir.getRoot().resolve("dir2.whl");
     Path file1 = realDir1.resolve("file1.py");
-    Path file2 = realDir2.resolve("file2.py");
+    Path file2 = realDir2.resolve("subdir").resolve("file2.py");
     Path childFile = realDir1.resolve("some_dir").resolve("child.py");
-
-    ImmutableSetMultimap<Path, Path> moduleDirs =
-        ImmutableSetMultimap.of(Paths.get(""), realDir1, Paths.get("subdir"), realDir2);
 
     Files.createDirectories(realDir1);
     Files.createDirectories(realDir2);
     Files.createDirectories(childFile.getParent());
     Files.write(file1, "print(\"file1\")".getBytes(Charsets.UTF_8));
+    Files.createDirectories(file2.getParent());
     Files.write(file2, "print(\"file2\")".getBytes(Charsets.UTF_8));
     Files.write(childFile, "print(\"child\")".getBytes(Charsets.UTF_8));
 
@@ -150,18 +149,25 @@ public class PexStepTest {
             PEX_COMMAND,
             PYTHON_PATH,
             PYTHON_VERSION,
-            TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
-            MODULES,
-            RESOURCES,
-            NATIVE_LIBRARIES,
-            moduleDirs,
-            PRELOAD_LIBRARIES,
-            /* zipSafe */ true);
+            ImmutablePythonResolvedPackageComponents.builder()
+                .from(COMPONENTS)
+                .setModules(
+                    ImmutableMultimap.of(
+                        TARGET,
+                        new PythonMappedComponents.Resolved(
+                            ImmutableSortedMap.of(Paths.get("m"), Paths.get("/src/m"))),
+                        TARGET,
+                        new PythonModuleDirComponents.Resolved(realDir1),
+                        TARGET,
+                        new PythonModuleDirComponents.Resolved(realDir2)))
+                .build(),
+            PRELOAD_LIBRARIES);
 
     Map<String, Object> args =
-        ObjectMappers.readValue(step.getStdin(TestExecutionContext.newInstance()).get(), Map.class);
+        ObjectMappers.readValue(
+            step.getStdin(TestExecutionContext.newInstance()).orElse(""), Map.class);
     Assert.assertTrue(file1.isAbsolute());
     Assert.assertTrue(file2.isAbsolute());
     Assert.assertTrue(childFile.isAbsolute());
@@ -195,15 +201,10 @@ public class PexStepTest {
             ImmutableList.<String>builder().add("build").add("--some", "--args").build(),
             PYTHON_PATH,
             PYTHON_VERSION,
-            TEMP_PATH,
             DEST_PATH,
             ENTRY_POINT,
-            MODULES,
-            RESOURCES,
-            NATIVE_LIBRARIES,
-            MODULE_DIRS,
-            PRELOAD_LIBRARIES,
-            /* zipSafe */ true);
+            COMPONENTS,
+            PRELOAD_LIBRARIES);
     assertThat(
         step.getShellCommandInternal(TestExecutionContext.newInstance()),
         hasItems("--some", "--args"));

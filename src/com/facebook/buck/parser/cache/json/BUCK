@@ -1,9 +1,6 @@
 java_library(
     name = "json",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/parser/api:api",
-    ],
     tests = [
         "//test/com/facebook/buck/parser/cache/json:json",
     ],
@@ -14,5 +11,8 @@ java_library(
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/parser/api:api",
     ],
 )

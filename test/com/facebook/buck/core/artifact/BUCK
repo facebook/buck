@@ -4,6 +4,7 @@ java_test(
     name = "artifact",
     srcs = glob(["*Test.java"]),
     deps = [
+        ":testutil",
         "//src/com/facebook/buck/core/artifact:artifact",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
@@ -12,4 +13,17 @@ java_test(
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],
+)
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/core/model/impl:impl",
+    ],
+    exported_deps = ["//src/com/facebook/buck/core/artifact:artifact"],
 )

@@ -1,30 +1,33 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import com.android.common.SdkConstants;
 import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -33,7 +36,10 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -42,7 +48,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.junit.Before;
 import org.junit.Rule;
@@ -67,7 +75,7 @@ public class AndroidBinaryInstallIntegrationTest {
       ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.resolve(FAKE_PACKAGE_NAME);
   private static final Path CONFIG_PATH = Paths.get("state.config");
   private static final String BINARY_TARGET = "//:binary";
-  private static final Path APK_PATH = Paths.get("buck-out/gen/binary.apk");
+  private Path apkPath;
 
   @Parameterized.Parameters(name = "concurrentInstall: {0}")
   public static Collection<Object[]> data() {
@@ -93,15 +101,15 @@ public class AndroidBinaryInstallIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     projectWorkspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "exopackage_integration", tmpFolder);
     projectWorkspace.setUp();
+    AssumeAndroidPlatform.get(projectWorkspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(projectWorkspace).assumeNdkIsAvailable();
     projectWorkspace.addBuckConfigLocalOption(
         "install", "concurrent_install", concurrentInstallType.toString());
-    filesystem = TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot());
+    filesystem = projectWorkspace.getProjectFileSystem();
     executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
     currentBuildState = null;
     apkVersionCode = "1";
@@ -111,6 +119,10 @@ public class AndroidBinaryInstallIntegrationTest {
         "buck.native_exopackage_fake_path",
         Paths.get("assets/android/native-exopackage-fakes.apk").toAbsolutePath().toString());
     AdbHelper.setDevicesSupplierForTests(Optional.of(() -> ImmutableList.of(installLimiter)));
+
+    apkPath =
+        BuildTargetPaths.getGenPath(
+            filesystem, BuildTargetFactory.newInstance(BINARY_TARGET), "%s.apk");
 
     setupDeviceWithAbi(SdkConstants.ABI_ARMEABI_V7A);
   }
@@ -126,7 +138,7 @@ public class AndroidBinaryInstallIntegrationTest {
             abi);
     this.installLimiter =
         new InstallLimitingAndroidDevice(
-            testDevice, INSTALL_ROOT, filesystem.resolve(APK_PATH), filesystem.resolve(""));
+            testDevice, INSTALL_ROOT, filesystem.resolve(apkPath), filesystem.resolve(""));
   }
 
   @Test
@@ -635,12 +647,28 @@ public class AndroidBinaryInstallIntegrationTest {
             .launchAndExecute(
                 ProcessExecutorParams.builder()
                     .setCommand(ImmutableList.of("python", "generate.py"))
-                    .setDirectory(filesystem.getRootPath())
+                    .setDirectory(filesystem.getRootPath().getPath())
                     .build());
     assertEquals(result.getMessageForUnexpectedResult("File generation"), result.getExitCode(), 0);
     ProcessResult installResult = projectWorkspace.runBuckCommand("install", BINARY_TARGET);
     installResult.assertSuccess();
     installLimiter.assertExpectedInstallsAreConsumed();
+
+    Path installRoot =
+        deviceStateDirectory.getRoot().resolve(INSTALL_ROOT.getRoot().relativize(INSTALL_ROOT));
+
+    List<String> dexDevicePaths = Lists.newArrayList("secondary-dex", "modular-dex");
+
+    for (String dexDevicePath : dexDevicePaths) {
+      Path metadataPath = installRoot.resolve(dexDevicePath).resolve("metadata.txt");
+      List<String> metadataLines = Files.readAllLines(metadataPath, Charsets.UTF_8);
+      List<DexTestUtils.DexMetadata> dexMetadata = DexTestUtils.moduleMetadata(metadataLines);
+      Set<Path> dexDirContents =
+          Files.list(metadataPath.getParent()).map(Path::getFileName).collect(Collectors.toSet());
+      for (DexTestUtils.DexMetadata metadata : dexMetadata) {
+        assertThat(dexDirContents, hasItem(metadata.dexFile));
+      }
+    }
   }
 
   private class ExoState {

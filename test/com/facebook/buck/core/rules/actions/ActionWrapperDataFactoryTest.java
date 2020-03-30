@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.actions;
 
 import static org.junit.Assert.assertEquals;
@@ -22,7 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -34,7 +35,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
@@ -65,19 +66,18 @@ public class ActionWrapperDataFactoryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     ActionRegistry actionRegistry =
         new DefaultActionRegistry(target, actionAnalysisDataRegistry, filesystem);
-    ImmutableSet<Artifact> inputs =
-        ImmutableSet.of(
-            ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("myinput"))));
+    ImmutableSortedSet<Artifact> inputs =
+        ImmutableSortedSet.of(
+            SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("myinput"))));
 
     Artifact output = actionRegistry.declareArtifact(Paths.get("myoutput"));
-    ImmutableSet<Artifact> outputs = ImmutableSet.of(output);
+    ImmutableSortedSet<Artifact> outputs = ImmutableSortedSet.of(output);
 
     FakeAction.FakeActionExecuteLambda executeFunc =
-        (inputs1, outputs1, executionContext) ->
-            ImmutableActionExecutionSuccess.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of());
+        (srcs, inputs1, outputs1, executionContext) ->
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
 
-    new FakeAction(actionRegistry, inputs, outputs, executeFunc);
+    new FakeAction(actionRegistry, ImmutableSortedSet.of(), inputs, outputs, executeFunc);
 
     BuildArtifact buildArtifact = Objects.requireNonNull(output.asBound().asBuildArtifact());
 
@@ -101,7 +101,7 @@ public class ActionWrapperDataFactoryTest {
 
     assertSame(data.getKey(), buildArtifact.getActionDataKey());
 
-    assertSame(inputs, action.getInputs());
+    assertEquals(inputs, action.getInputs());
 
     assertSame(executeFunc, ((FakeAction) action).getExecuteFunction());
   }
@@ -113,17 +113,21 @@ public class ActionWrapperDataFactoryTest {
     ActionRegistry actionRegistry =
         new DefaultActionRegistry(target, actionAnalysisDataRegistry, filesystem);
 
-    ImmutableSet<Artifact> inputs = ImmutableSet.of();
+    ImmutableSortedSet<Artifact> inputs = ImmutableSortedSet.of();
     Artifact output = actionRegistry.declareArtifact(Paths.get("myoutput"));
 
     Path expectedBasePath = BuildPaths.getGenDir(filesystem, target);
 
     FakeAction.FakeActionExecuteLambda executeFunc =
-        (inputs1, outputs1, executionContext) ->
-            ImmutableActionExecutionSuccess.of(
-                Optional.empty(), Optional.empty(), ImmutableList.of());
+        (srcs, inputs1, outputs1, executionContext) ->
+            ActionExecutionResult.success(Optional.empty(), Optional.empty(), ImmutableList.of());
 
-    new FakeAction(actionRegistry, inputs, ImmutableSet.of(output), executeFunc);
+    new FakeAction(
+        actionRegistry,
+        ImmutableSortedSet.of(),
+        inputs,
+        ImmutableSortedSet.of(output),
+        executeFunc);
 
     BuildArtifact builtArtifact = Objects.requireNonNull(output.asBound().asBuildArtifact());
     assertEquals(

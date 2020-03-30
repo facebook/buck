@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.exopackage;
@@ -28,7 +28,7 @@ import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.agent.util.AgentUtil;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -54,6 +54,7 @@ import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.UnsupportedCharsetException;
@@ -72,7 +73,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 @VisibleForTesting
 public class RealAndroidDevice implements AndroidDevice {
@@ -696,18 +696,17 @@ public class RealAndroidDevice implements AndroidDevice {
     };
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractRapidInstallMode {
+  @BuckStyleValue
+  abstract static class RapidInstallMode {
     abstract String getIpAddress();
   }
 
   private Optional<RapidInstallMode> getRapidInstallMode() {
     if (device.isEmulator() && rapidInstallTypes.contains("emu")) {
-      return Optional.of(RapidInstallMode.builder().setIpAddress("10.0.2.2").build()); // NOPMD
+      return Optional.of(ImmutableRapidInstallMode.of("10.0.2.2")); // NOPMD
     } else if (isLocalTransport() && rapidInstallTypes.contains("tcp")) {
       String hostIpAddr = device.getSerialNumber().replaceAll("\\.[0-9:]+$", ".1");
-      return Optional.of(RapidInstallMode.builder().setIpAddress(hostIpAddr).build());
+      return Optional.of(ImmutableRapidInstallMode.of(hostIpAddr));
     }
     return Optional.empty();
   }
@@ -813,12 +812,16 @@ public class RealAndroidDevice implements AndroidDevice {
     byte[] done_msg = createAdbdReq(ID_DONE, (int) time);
     writeAllToChannel(chan, ByteBuffer.wrap(done_msg));
 
-    byte[] result =
-        readResp(chan, 8); // Response has 8 bits; last four bits are length but can be ignored
+    byte[] result = readResp(chan, 8); // 4-byte ID + 4-byte length
 
     if (!isOkay(result)) {
       throw new HumanReadableException(
-          "Failed when sending file " + localPath + " --> " + remotePath);
+          "Encountered \""
+              + readErrorMessage(chan, result)
+              + "\" when sending file "
+              + localPath
+              + " --> "
+              + remotePath);
     }
   }
 
@@ -827,6 +830,12 @@ public class RealAndroidDevice implements AndroidDevice {
         && reply[1] == (byte) 'K'
         && reply[2] == (byte) 'A'
         && reply[3] == (byte) 'Y';
+  }
+
+  private String readErrorMessage(SocketChannel chann, byte[] reply) throws Exception {
+    // Read the 4-byte length at the end of the reply
+    int length = ByteBuffer.wrap(reply, 4, 4).order(ByteOrder.LITTLE_ENDIAN).getInt();
+    return new String(readResp(chann, length));
   }
 
   private static byte[] formAdbRequest(String req) {

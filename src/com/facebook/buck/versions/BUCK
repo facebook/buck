@@ -1,8 +1,8 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "java_library_with_plugins")
 
 TYPES_SRCS = [
-    "AbstractExactConstraint.java",
-    "AbstractVersion.java",
+    "ExactConstraint.java",
+    "Version.java",
     "Constraint.java",
 ]
 
@@ -16,17 +16,11 @@ TRANSLATOR_SRCS = [
     "TargetNodeTranslator.java",
     "TargetTranslatable.java",
     "TargetTranslator.java",
-    "TargetTranslatorOverridingDescription.java",
 ]
 
 java_library(
     name = "translator",
     srcs = TRANSLATOR_SRCS,
-    exported_deps = [
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
-        "//src/com/facebook/buck/core/rules:rules",
-        "//src/com/facebook/buck/util/types:types",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         ":types",
@@ -37,6 +31,11 @@ java_library(
         "//src/com/facebook/buck/rules/coercer:interface",
         "//third-party/java/guava:guava",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/util/types:types",
+    ],
 )
 
 java_library_with_plugins(
@@ -45,11 +44,6 @@ java_library_with_plugins(
         ["*.java"],
         exclude = TYPES_SRCS + TRANSLATOR_SRCS,
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/description/arg:arg",
-        "//src/com/facebook/buck/core/graph/transformation:transformation",
-        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
-    ],
     tests = [
         "//test/com/facebook/buck/versions:versions",
     ],
@@ -82,6 +76,12 @@ java_library_with_plugins(
         "//src/com/facebook/buck/rules/query:utils",
         "//src/com/facebook/buck/util:util",
         "//src/com/facebook/buck/util/cache:cache",
+        "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/infer-annotations:infer-annotations",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/description/arg:arg",
+        "//src/com/facebook/buck/core/graph/transformation:transformation",
+        "//src/com/facebook/buck/core/graph/transformation/executor:executor",
     ],
 )

@@ -1,24 +1,24 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.rust;
 
 import static com.facebook.buck.features.rust.RustCompileUtils.ruleToCrateName;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
@@ -48,7 +48,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
@@ -88,7 +88,6 @@ public class RustLibraryDescription
   private RustCompileRule requireBuild(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       RustPlatform rustPlatform,
       RustBuckConfig rustBuckConfig,
@@ -103,8 +102,9 @@ public class RustLibraryDescription
       RustLibraryDescriptionArg args,
       Iterable<BuildRule> deps,
       ImmutableMap<String, BuildTarget> depsAliases) {
-    Pair<SourcePath, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
+    Pair<String, ImmutableSortedMap<SourcePath, Optional<String>>> rootModuleAndSources =
         RustCompileUtils.getRootModuleAndSources(
+            projectFilesystem,
             buildTarget,
             graphBuilder,
             rustPlatform.getCxxPlatform(),
@@ -116,7 +116,6 @@ public class RustLibraryDescription
     return RustCompileUtils.requireBuild(
         buildTarget,
         projectFilesystem,
-        params,
         graphBuilder,
         rustPlatform,
         rustBuckConfig,
@@ -174,7 +173,7 @@ public class RustLibraryDescription
 
     String crate = args.getCrate().orElse(ruleToCrateName(buildTarget.getShortName()));
 
-    RustToolchain rustToolchain = getRustToolchain();
+    RustToolchain rustToolchain = getRustToolchain(buildTarget.getTargetConfiguration());
 
     // See if we're building a particular "type" and "platform" of this library, and if so, extract
     // them from the flavors attached to the build target.
@@ -214,7 +213,6 @@ public class RustLibraryDescription
       return requireBuild(
           buildTarget,
           projectFilesystem,
-          params,
           graphBuilder,
           platform,
           rustBuckConfig,
@@ -293,7 +291,6 @@ public class RustLibraryDescription
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
@@ -328,7 +325,7 @@ public class RustLibraryDescription
 
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
-            CrateType.DYLIB.filenameFor(target, crate, rustPlatform.getCxxPlatform()).get();
+            CrateType.DYLIB.filenameFor(target, crate, rustPlatform.getCxxPlatform());
 
         Pair<ImmutableList<Arg>, ImmutableSortedMap<String, Arg>> argenv =
             getRustcArgsEnv.apply(rustPlatform);
@@ -337,7 +334,6 @@ public class RustLibraryDescription
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
@@ -389,7 +385,7 @@ public class RustLibraryDescription
         ImmutableList.Builder<NativeLinkableGroup> nativedeps = ImmutableList.builder();
 
         RustPlatform rustPlatform =
-            getRustToolchain()
+            getRustToolchain(buildTarget.getTargetConfiguration())
                 .getRustPlatforms()
                 .getValue(cxxPlatform.getFlavor())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration());
@@ -435,7 +431,7 @@ public class RustLibraryDescription
         }
 
         RustPlatform rustPlatform =
-            getRustToolchain()
+            getRustToolchain(targetConfiguration)
                 .getRustPlatforms()
                 .getValue(cxxPlatform.getFlavor())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration());
@@ -446,7 +442,6 @@ public class RustLibraryDescription
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
@@ -478,9 +473,9 @@ public class RustLibraryDescription
           CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
         String sharedLibrarySoname =
-            CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform).get();
+            CrateType.DYLIB.filenameFor(getBuildTarget(), crate, cxxPlatform);
         RustPlatform rustPlatform =
-            getRustToolchain()
+            getRustToolchain(buildTarget.getTargetConfiguration())
                 .getRustPlatforms()
                 .getValue(cxxPlatform.getFlavor())
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration());
@@ -492,7 +487,6 @@ public class RustLibraryDescription
             requireBuild(
                 buildTarget,
                 projectFilesystem,
-                params,
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
@@ -516,14 +510,14 @@ public class RustLibraryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractRustLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     // Add parse-time deps for *all* platforms, as we don't know which platform will be
     // selected by a top-level binary rule (e.g. a Python binary transitively depending on
     // this library may choose platform "foo").
-    getRustToolchain().getRustPlatforms().getValues().stream()
+    getRustToolchain(buildTarget.getTargetConfiguration()).getRustPlatforms().getValues().stream()
         .flatMap(
             p ->
                 RichStream.from(
@@ -533,16 +527,19 @@ public class RustLibraryDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getRustToolchain().getRustPlatforms(), LIBRARY_TYPE));
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(
+            getRustToolchain(toolchainTargetConfiguration).getRustPlatforms(), LIBRARY_TYPE));
   }
 
-  private RustToolchain getRustToolchain() {
-    return toolchainProvider.getByName(RustToolchain.DEFAULT_NAME, RustToolchain.class);
+  private RustToolchain getRustToolchain(TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider.getByName(
+        RustToolchain.DEFAULT_NAME, toolchainTargetConfiguration, RustToolchain.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractRustLibraryDescriptionArg extends RustCommonArgs, HasTests {
     @Value.Default
     default NativeLinkableGroup.Linkage getPreferredLinkage() {

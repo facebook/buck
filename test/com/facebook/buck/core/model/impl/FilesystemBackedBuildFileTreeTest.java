@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.impl;
@@ -20,6 +20,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -29,7 +30,6 @@ import com.facebook.buck.util.config.ConfigBuilder;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,15 +58,15 @@ public class FilesystemBackedBuildFileTreeTest {
     BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
     assertEquals(
-        Paths.get("src/com/example"),
-        buildFiles.getBasePathOfAncestorTarget(Paths.get("src/com/example/foo")).get());
+        RelPath.get("src/com/example"),
+        buildFiles.getBasePathOfAncestorTarget(RelPath.get("src/com/example/foo")).get());
     assertEquals(
-        Paths.get("src/com/example"),
-        buildFiles.getBasePathOfAncestorTarget(Paths.get("src/com/example/some/bar")).get());
+        RelPath.get("src/com/example"),
+        buildFiles.getBasePathOfAncestorTarget(RelPath.get("src/com/example/some/bar")).get());
     assertEquals(
-        Paths.get("src/com/example/some/directory"),
+        RelPath.get("src/com/example/some/directory"),
         buildFiles
-            .getBasePathOfAncestorTarget(Paths.get("src/com/example/some/directory/baz"))
+            .getBasePathOfAncestorTarget(RelPath.get("src/com/example/some/directory/baz"))
             .get());
   }
 
@@ -86,8 +86,8 @@ public class FilesystemBackedBuildFileTreeTest {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir, config);
     BuildFileTree buildFiles = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
-    Path ancestor = buildFiles.getBasePathOfAncestorTarget(Paths.get("foo/bar/xyzzy")).get();
-    assertEquals(Paths.get("foo"), ancestor);
+    RelPath ancestor = buildFiles.getBasePathOfAncestorTarget(RelPath.get("foo/bar/xyzzy")).get();
+    assertEquals(RelPath.get("foo"), ancestor);
   }
 
   @Test
@@ -100,8 +100,8 @@ public class FilesystemBackedBuildFileTreeTest {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(root);
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
-    Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(Paths.get("bar/baz"));
-    assertEquals(Optional.of(Paths.get("")), ancestor);
+    Optional<RelPath> ancestor = buildFileTree.getBasePathOfAncestorTarget(RelPath.get("bar/baz"));
+    assertEquals(Optional.of(RelPath.get("")), ancestor);
   }
 
   @Test
@@ -113,7 +113,7 @@ public class FilesystemBackedBuildFileTreeTest {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(root);
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
-    Optional<Path> ancestor = buildFileTree.getBasePathOfAncestorTarget(Paths.get("bar/baz"));
+    Optional<RelPath> ancestor = buildFileTree.getBasePathOfAncestorTarget(RelPath.get("bar/baz"));
     assertEquals(Optional.empty(), ancestor);
   }
 
@@ -132,9 +132,9 @@ public class FilesystemBackedBuildFileTreeTest {
     // Config doesn't set any "ignore" entries.
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
-    Optional<Path> ancestor =
+    Optional<RelPath> ancestor =
         buildFileTree.getBasePathOfAncestorTarget(
-            filesystem.getBuckPaths().getBuckOut().resolve("someFile"));
+            RelPath.of(filesystem.getBuckPaths().getBuckOut().resolve("someFile")));
     assertFalse(ancestor.isPresent());
   }
 
@@ -142,19 +142,19 @@ public class FilesystemBackedBuildFileTreeTest {
   public void shouldIgnoreBuckCacheDirectoriesByDefault() throws IOException {
     Path root = tmp.getRoot();
 
-    Path cacheDir = root.resolve("buck-out/cache");
-    Files.createDirectories(cacheDir);
-    touch(cacheDir.resolve("BUCK"));
+    RelPath cacheDir = RelPath.get("buck-out/cache");
+    Files.createDirectories(tmp.getRoot().resolve(cacheDir.getPath()));
+    touch(tmp.getRoot().resolve(cacheDir.resolve("BUCK")));
     Path sibling = cacheDir.resolve("someFile");
-    touch(sibling);
+    touch(tmp.getRoot().resolve(sibling));
 
     // Config doesn't set any "ignore" entries.
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(root, new Config());
     BuildFileTree buildFileTree = new FilesystemBackedBuildFileTree(filesystem, "BUCK");
 
-    Optional<Path> ancestor =
-        buildFileTree.getBasePathOfAncestorTarget(cacheDir.resolve("someFile"));
+    Optional<RelPath> ancestor =
+        buildFileTree.getBasePathOfAncestorTarget(cacheDir.resolveRel("someFile"));
     assertFalse(ancestor.isPresent());
   }
 

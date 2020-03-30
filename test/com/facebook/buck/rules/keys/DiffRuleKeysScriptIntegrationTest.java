@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -154,7 +154,7 @@ public class DiffRuleKeysScriptIntegrationTest {
     invokeBuckCommand(workspace, ImmutableList.of("//cxx:cxx_bin"), "buck-1.log");
 
     assertThat(
-        runRuleKeyDiffer(workspace, "//cxx:cxx_bin"),
+        runRuleKeyDiffer(workspace, "//cxx:cxx_bin", ""),
         Matchers.stringContainsInOrder(
             "Change details for [//cxx:cxx_bin#compile-a.cpp.", /* hash */
             ",default",
@@ -229,7 +229,8 @@ public class DiffRuleKeysScriptIntegrationTest {
     String newHash3 = getFileSha1Hash(workspace, "JavaLib3.java");
     invokeBuckCommand(workspace, "buck-1.log");
 
-    String output = runRuleKeyDiffer(workspace, "");
+    String output =
+        runRuleKeyDiffer(workspace, "", String.format("Rulekey divergence detected.%n"));
     assertThat(
         output,
         Matchers.stringContainsInOrder(
@@ -286,10 +287,10 @@ public class DiffRuleKeysScriptIntegrationTest {
 
   private String runRuleKeyDiffer(ProjectWorkspace workspace)
       throws IOException, InterruptedException {
-    return runRuleKeyDiffer(workspace, "//:java_lib_2");
+    return runRuleKeyDiffer(workspace, "//:java_lib_2", "");
   }
 
-  private String runRuleKeyDiffer(ProjectWorkspace workspace, String target)
+  private String runRuleKeyDiffer(ProjectWorkspace workspace, String target, String expectedStderr)
       throws IOException, InterruptedException {
     ProcessExecutor.Result result =
         workspace.runCommand(
@@ -298,7 +299,7 @@ public class DiffRuleKeysScriptIntegrationTest {
             tmp.getRoot().resolve("buck-0.log").toString(),
             tmp.getRoot().resolve("buck-1.log").toString(),
             target);
-    assertThat(result.getStderr(), Matchers.equalTo(Optional.of("")));
+    assertThat(result.getStderr(), Matchers.equalTo(Optional.of(expectedStderr)));
     assertThat(result.getExitCode(), Matchers.is(0));
     String stdout = result.getStdout().get();
     String comparingRuleString = "Comparing rules..." + System.lineSeparator();

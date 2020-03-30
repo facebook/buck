@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -139,12 +139,12 @@ public class CxxPreprocessables {
     switch (headerMode) {
       case SYMLINK_TREE_WITH_HEADER_MAP:
         return HeaderSymlinkTreeWithHeaderMap.create(target, filesystem, root, links);
+      case SYMLINK_TREE_WITH_HEADERS_MODULEMAP:
+        return HeaderSymlinkTreeWithModuleMap.create(
+            target, filesystem, root, links, ModuleMapMode.HEADERS);
       case SYMLINK_TREE_WITH_UMBRELLA_HEADER_MODULEMAP:
         return HeaderSymlinkTreeWithModuleMap.create(
             target, filesystem, root, links, ModuleMapMode.UMBRELLA_HEADER);
-      case SYMLINK_TREE_WITH_UMBRELLA_DIRECTORY_MODULEMAP:
-        return HeaderSymlinkTreeWithModuleMap.create(
-            target, filesystem, root, links, ModuleMapMode.UMBRELLA_DIRECTORY);
       case HEADER_MAP_ONLY:
         return new DirectHeaderMap(target, filesystem, root, links);
       default:

@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -29,19 +29,21 @@ import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleInfoPlistParsing;
 import com.facebook.buck.apple.device.AppleDeviceHelper;
 import com.facebook.buck.apple.simulator.AppleCoreSimulatorServiceController;
+import com.facebook.buck.apple.simulator.AppleDevice;
 import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.apple.simulator.AppleSimulator;
 import com.facebook.buck.apple.simulator.AppleSimulatorController;
 import com.facebook.buck.apple.simulator.AppleSimulatorDiscovery;
-import com.facebook.buck.apple.simulator.ImmutableAppleDevice;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.cli.UninstallCommand.UninstallOptions;
 import com.facebook.buck.command.Build;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -53,17 +55,17 @@ import com.facebook.buck.core.rules.attr.HasInstallHelpers;
 import com.facebook.buck.core.rules.attr.NoopInstallable;
 import com.facebook.buck.core.rules.common.InstallTrigger;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.ParsingContext;
-import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.step.AdbOptions;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
@@ -106,7 +108,7 @@ public class InstallCommand extends BuildCommand {
   private static final String DEFAULT_APPLE_SIMULATOR_NAME = "iPhone 6s";
   private static final String DEFAULT_APPLE_TV_SIMULATOR_NAME = "Apple TV";
   private static final InstallResult FAILURE =
-      InstallResult.builder().setExitCode(ExitCode.RUN_ERROR).build();
+      ImmutableInstallResult.of(ExitCode.RUN_ERROR, Optional.empty());
 
   @VisibleForTesting static final String RUN_LONG_ARG = "--run";
   @VisibleForTesting static final String RUN_SHORT_ARG = "-r";
@@ -276,7 +278,7 @@ public class InstallCommand extends BuildCommand {
     Build build = getBuild();
     ExitCode exitCode = ExitCode.SUCCESS;
 
-    SourcePathResolver pathResolver = build.getGraphBuilder().getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = build.getGraphBuilder().getSourcePathResolver();
     for (BuildTarget buildTarget : buildRunResult.getBuildTargets()) {
 
       BuildRule buildRule = build.getGraphBuilder().requireRule(buildTarget);
@@ -330,7 +332,7 @@ public class InstallCommand extends BuildCommand {
     return super.getExecutionContextBuilder(params)
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
-                params.getCell().getToolchainProvider(),
+                params.getCells().getRootCell().getToolchainProvider(),
                 this::getExecutionContext,
                 params.getBuckConfig(),
                 adbOptions(params.getBuckConfig()),
@@ -343,7 +345,7 @@ public class InstallCommand extends BuildCommand {
 
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        createParsingContext(params.getCell(), executor)
+        createParsingContext(params.getCells().getRootCell(), executor)
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withExcludeUnsupportedTargets(false);
     ImmutableSet.Builder<String> installHelperTargets = ImmutableSet.builder();
@@ -354,7 +356,11 @@ public class InstallCommand extends BuildCommand {
     for (int index = 0; index < getArguments().size(); index++) {
       // TODO(markwang): Cache argument parsing
       TargetNodeSpec spec =
-          parseArgumentsAsTargetNodeSpecs(params.getCell(), params.getBuckConfig(), getArguments())
+          parseArgumentsAsTargetNodeSpecs(
+                  params.getCells().getRootCell(),
+                  params.getClientWorkingDir(),
+                  getArguments(),
+                  params.getBuckConfig())
               .get(index);
 
       BuildTarget target =
@@ -367,12 +373,15 @@ public class InstallCommand extends BuildCommand {
               .first()
               .get();
 
-      TargetNode<?> node = params.getParser().getTargetNode(parsingContext, target);
+      TargetNode<?> node =
+          params
+              .getParser()
+              .getTargetNodeAssertCompatible(parsingContext, target, DependencyStack.top(target));
 
       if (node != null
           && node.getRuleType()
               .equals(DescriptionCache.getRuleType(AppleBundleDescription.class))) {
-        for (Flavor flavor : node.getBuildTarget().getFlavors()) {
+        for (Flavor flavor : node.getBuildTarget().getFlavors().getSet()) {
           if (ApplePlatform.needsInstallHelper(flavor.getName())) {
             AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
@@ -396,7 +405,7 @@ public class InstallCommand extends BuildCommand {
   private ExitCode installApk(
       HasInstallableApk hasInstallableApk,
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       CommandRunnerParams params)
       throws InterruptedException {
     AndroidDevicesHelper adbHelper = executionContext.getAndroidDevicesHelper().get();
@@ -467,7 +476,7 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
-      SourcePathResolver pathResolver)
+      SourcePathResolverAdapter pathResolver)
       throws IOException, InterruptedException, NoSuchBuildTargetException {
     String platformName = appleBundle.getPlatformName();
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
@@ -499,7 +508,7 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
-      SourcePathResolver pathResolver)
+      SourcePathResolverAdapter pathResolver)
       throws IOException, InterruptedException {
 
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
@@ -508,17 +517,17 @@ public class InstallCommand extends BuildCommand {
     Console console = params.getConsole();
 
     // Choose the physical device
-    ImmutableSet<ImmutableAppleDevice> physicalDevices = appleDeviceController.getPhysicalDevices();
+    ImmutableSet<AppleDevice> physicalDevices = appleDeviceController.getPhysicalDevices();
     if (physicalDevices.isEmpty()) {
       console.printBuildFailure("Could not find any physical devices connected");
       return FAILURE;
     }
 
-    ImmutableAppleDevice chosenDevice = null;
+    AppleDevice chosenDevice = null;
     if (targetDeviceOptions().getSerialNumber().isPresent()) {
       String udidPrefix =
           Assertions.assertNotNull(targetDeviceOptions().getSerialNumber().get()).toLowerCase();
-      for (ImmutableAppleDevice physicalDevice : physicalDevices) {
+      for (AppleDevice physicalDevice : physicalDevices) {
         if (physicalDevice.getUdid().startsWith(udidPrefix)) {
           chosenDevice = physicalDevice;
           break;
@@ -607,7 +616,7 @@ public class InstallCommand extends BuildCommand {
                   getArguments().get(0),
                   getArguments().get(0)));
     }
-    return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
+    return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.empty());
   }
 
   private InstallResult installAppleBundleForDevice(
@@ -615,7 +624,7 @@ public class InstallCommand extends BuildCommand {
       AppleBundle appleBundle,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor,
-      SourcePathResolver pathResolver)
+      SourcePathResolverAdapter pathResolver)
       throws IOException {
     AppleConfig appleConfig = params.getBuckConfig().getView(AppleConfig.class);
 
@@ -750,7 +759,7 @@ public class InstallCommand extends BuildCommand {
         }
 
         if (helper.runBundleOnDevice(selectedUdid, appleBundleId.get())) {
-          return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
+          return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.empty());
         } else {
           params
               .getConsole()
@@ -765,7 +774,7 @@ public class InstallCommand extends BuildCommand {
           return FAILURE;
         }
       } else {
-        return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
+        return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.empty());
       }
     } else {
       params
@@ -786,7 +795,7 @@ public class InstallCommand extends BuildCommand {
   private InstallResult installAppleBundleForSimulatorIdb(
       CommandRunnerParams params,
       AppleBundle appleBundle,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor)
       throws IOException, InterruptedException {
@@ -796,7 +805,7 @@ public class InstallCommand extends BuildCommand {
         new AppleDeviceController(processExecutor, appleConfig.getIdbPath());
 
     // Choose the simulator
-    Optional<ImmutableAppleDevice> simulator =
+    Optional<AppleDevice> simulator =
         getAppleSimulatorForBundleIdb(appleBundle, processExecutor, appleConfig.getIdbPath());
     if (!simulator.isPresent()) {
       params
@@ -889,9 +898,11 @@ public class InstallCommand extends BuildCommand {
         }
       }
       String debugOptionMessage =
-          "(waiting for debugger) Run lldb and then "
-              + debugCommand.get()
-              + " to run the debugger.";
+          waitForDebugger
+              ? "(waiting for debugger) Run lldb and then "
+                  + debugCommand.get()
+                  + " to run the debugger."
+              : "";
       params
           .getBuckEventBus()
           .post(
@@ -901,7 +912,7 @@ public class InstallCommand extends BuildCommand {
                       .getAnsi()
                       .asHighlightedSuccessText("Successfully launched %s. %s"),
                   getArguments().get(0),
-                  waitForDebugger ? debugOptionMessage : ""));
+                  debugOptionMessage));
     } else {
       params
           .getBuckEventBus()
@@ -915,13 +926,13 @@ public class InstallCommand extends BuildCommand {
                   getArguments().get(0),
                   getArguments().get(0)));
     }
-    return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
+    return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.empty());
   }
 
   private InstallResult installAppleBundleForSimulator(
       CommandRunnerParams params,
       AppleBundle appleBundle,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem projectFilesystem,
       ProcessExecutor processExecutor)
       throws IOException, InterruptedException {
@@ -1094,7 +1105,7 @@ public class InstallCommand extends BuildCommand {
                           "Successfully installed %s. (Use `buck install -r %s` to run.)"),
                   getArguments().get(0),
                   getArguments().get(0)));
-      return InstallResult.builder().setExitCode(ExitCode.SUCCESS).build();
+      return ImmutableInstallResult.of(ExitCode.SUCCESS, Optional.empty());
     }
   }
 
@@ -1150,10 +1161,7 @@ public class InstallCommand extends BuildCommand {
                 waitForDebugger ? " (waiting for debugger)" : "",
                 launchedPid.get()));
 
-    return InstallResult.builder()
-        .setExitCode(ExitCode.SUCCESS)
-        .setLaunchedPid(launchedPid.get())
-        .build();
+    return ImmutableInstallResult.of(ExitCode.SUCCESS, launchedPid);
   }
 
   /**
@@ -1161,14 +1169,14 @@ public class InstallCommand extends BuildCommand {
    *
    * @return the chosen simulator
    */
-  private Optional<ImmutableAppleDevice> getAppleSimulatorForBundleIdb(
+  private Optional<AppleDevice> getAppleSimulatorForBundleIdb(
       AppleBundle appleBundle, ProcessExecutor processExecutor, Path idbPath) {
     LOG.debug("Choosing simulator for %s", appleBundle);
 
-    Optional<ImmutableAppleDevice> simulatorByUdid = Optional.empty();
-    Optional<ImmutableAppleDevice> simulatorByName = Optional.empty();
-    Optional<ImmutableAppleDevice> bootedSimulator = Optional.empty();
-    Optional<ImmutableAppleDevice> defaultSimulator = Optional.empty();
+    Optional<AppleDevice> simulatorByUdid = Optional.empty();
+    Optional<AppleDevice> simulatorByName = Optional.empty();
+    Optional<AppleDevice> bootedSimulator = Optional.empty();
+    Optional<AppleDevice> defaultSimulator = Optional.empty();
 
     boolean wantUdid = deviceOptions.getSerialNumber().isPresent();
     boolean wantName = deviceOptions.getSimulatorName().isPresent();
@@ -1176,7 +1184,7 @@ public class InstallCommand extends BuildCommand {
     AppleDeviceController appleDeviceController =
         new AppleDeviceController(processExecutor, idbPath);
 
-    for (ImmutableAppleDevice simulator : appleDeviceController.getSimulators()) {
+    for (AppleDevice simulator : appleDeviceController.getSimulators()) {
       if (wantUdid
           && deviceOptions
               .getSerialNumber()
@@ -1370,15 +1378,15 @@ public class InstallCommand extends BuildCommand {
   }
 
   private static class TriggerCloseable implements Closeable {
-    private final Cell root;
+    private final Cells root;
     private final CommandRunnerParams params;
     private final Closer closer;
 
     TriggerCloseable(CommandRunnerParams params) throws IOException {
       this.params = params;
-      this.root = params.getCell();
+      this.root = params.getCells();
       this.closer = Closer.create();
-      for (Cell cell : root.getAllCells()) {
+      for (Cell cell : root.getRootCell().getAllCells()) {
         invalidateTrigger(cell);
         closer.register(
             () -> {

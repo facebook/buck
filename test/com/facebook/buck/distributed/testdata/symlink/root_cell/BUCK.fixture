@@ -1,7 +1,0 @@
-java_library(
-    name = "libA",
-    srcs = [
-        "A.java",
-        "SymlinkSourceFile.java",
-    ],
-)

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -19,7 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.CapturingPrintStream;
@@ -82,7 +82,7 @@ public class JavacPipelineState implements RulePipelineState {
 
   /** Get the invocation instance. */
   public Javac.Invocation getJavacInvocation(
-      SourcePathResolver resolver, ProjectFilesystem filesystem, ExecutionContext context)
+      SourcePathResolverAdapter resolver, ProjectFilesystem filesystem, ExecutionContext context)
       throws IOException {
     if (invocation == null) {
       javacOptions.validateOptions(classpathChecker::validateClasspath);
@@ -100,7 +100,7 @@ public class JavacPipelineState implements RulePipelineState {
       closeables.add(firstOrderContext);
 
       JavacExecutionContext javacExecutionContext =
-          JavacExecutionContext.of(
+          ImmutableJavacExecutionContext.of(
               new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
               stderr,
               firstOrderContext.getClassLoaderCache(),
@@ -193,7 +193,7 @@ public class JavacPipelineState implements RulePipelineState {
       ExecutionContext context,
       ImmutableSortedSet<Path> buildClasspathEntries,
       ProjectFilesystem filesystem,
-      SourcePathResolver resolver) {
+      SourcePathResolverAdapter resolver) {
     return getOptions(
         javacOptions,
         filesystem,
@@ -207,7 +207,7 @@ public class JavacPipelineState implements RulePipelineState {
   public static ImmutableList<String> getOptions(
       JavacOptions javacOptions,
       ProjectFilesystem filesystem,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       Path outputDirectory,
       Path generatedCodeDirectory,
       ExecutionContext context,

@@ -1,28 +1,31 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.PathMatcher;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.io.watchman.Capability;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -69,6 +72,13 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   }
 
   @Override
+  public ImmutableList<String> toWatchmanQuery(Set<Capability> capabilities) {
+    return ignoredPaths.keySet().stream()
+        .map(PathMatcher::getPathOrGlob)
+        .collect(ImmutableList.toImmutableList());
+  }
+
+  @Override
   public boolean isSubdirOf(Path path) {
     return path.normalize().startsWith(resolvedProjectRoot.normalize());
   }
@@ -86,6 +96,11 @@ public class DefaultProjectFilesystemView implements ProjectFilesystemView {
   @Override
   public Path resolve(String path) {
     return resolvedProjectRoot.resolve(path);
+  }
+
+  @Override
+  public Path resolve(ForwardRelativePath path) {
+    return resolve(path.toPath(filesystemParent.getFileSystem()));
   }
 
   @Override

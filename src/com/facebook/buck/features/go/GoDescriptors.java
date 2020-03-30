@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.go;
@@ -21,17 +21,20 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.log.Logger;
@@ -143,7 +146,8 @@ abstract class GoDescriptors {
     }
 
     BuildTarget target = createSymlinkTreeTarget(buildTarget);
-    SymlinkTree symlinkTree = makeSymlinkTree(target, projectFilesystem, graphBuilder, linkables);
+    MappedSymlinkTree symlinkTree =
+        makeSymlinkTree(target, projectFilesystem, graphBuilder, linkables);
     graphBuilder.addToIndex(symlinkTree);
 
     ImmutableList.Builder<SourcePath> extraAsmOutputsBuilder = ImmutableList.builder();
@@ -169,7 +173,7 @@ abstract class GoDescriptors {
         packageName,
         getPackageImportMap(
             goBuckConfig.getVendorPaths(),
-            buildTarget.getBasePath(),
+            buildTarget.getCellRelativeBasePath().getPath(),
             linkables.stream()
                 .flatMap(input -> input.getGoLinkInput().keySet().stream())
                 .collect(ImmutableList.toImmutableList())),
@@ -185,14 +189,18 @@ abstract class GoDescriptors {
 
   @VisibleForTesting
   static ImmutableMap<Path, Path> getPackageImportMap(
-      ImmutableList<Path> globalVendorPaths, Path basePackagePath, Iterable<Path> packageNameIter) {
+      ImmutableList<Path> globalVendorPaths,
+      ForwardRelativePath basePackagePath,
+      Iterable<Path> packageNameIter) {
     Map<Path, Path> importMapBuilder = new HashMap<>();
     ImmutableSortedSet<Path> packageNames = ImmutableSortedSet.copyOf(packageNameIter);
 
     ImmutableList.Builder<Path> vendorPathsBuilder = ImmutableList.builder();
     vendorPathsBuilder.addAll(globalVendorPaths);
     Path prefix = Paths.get("");
-    for (Path component : FluentIterable.from(new Path[] {Paths.get("")}).append(basePackagePath)) {
+    for (Path component :
+        FluentIterable.from(new Path[] {Paths.get("")})
+            .append(basePackagePath.toPathDefaultFileSystem())) {
       prefix = prefix.resolve(component);
       vendorPathsBuilder.add(prefix.resolve("vendor"));
     }
@@ -288,12 +296,12 @@ abstract class GoDescriptors {
 
     // pass any platform specific or extra linker flags.
     argsBuilder.addAll(
-        SanitizedArg.from(
+        SanitizedArg.fromArgs(
             cxxPlatform.getCompilerDebugPathSanitizer().sanitizer(Optional.empty()),
             cxxPlatform.getLdflags()));
 
     // add all arguments needed to link in the C/C++ platform runtime.
-    argsBuilder.addAll(StringArg.from(cxxPlatform.getRuntimeLdflags().get(linkStyle)));
+    argsBuilder.addAll(cxxPlatform.getRuntimeLdflags().get(linkStyle));
     argsBuilder.addAll(externalLinkerFlags);
     argsBuilder.addAll(linkableInput.getArgs());
 
@@ -339,7 +347,7 @@ abstract class GoDescriptors {
     extraDeps.add(library);
 
     BuildTarget target = createTransitiveSymlinkTreeTarget(buildTarget);
-    SymlinkTree symlinkTree =
+    MappedSymlinkTree symlinkTree =
         makeSymlinkTree(
             target,
             projectFilesystem,
@@ -498,7 +506,7 @@ abstract class GoDescriptors {
                   platform);
             });
 
-    return ((BinaryBuildRule) generator).getExecutableCommand();
+    return ((BinaryBuildRule) generator).getExecutableCommand(OutputLabel.defaultLabel());
   }
 
   private static String extractTestMainGenerator() {
@@ -564,7 +572,7 @@ abstract class GoDescriptors {
         .collect(ImmutableList.toImmutableList());
   }
 
-  private static SymlinkTree makeSymlinkTree(
+  private static MappedSymlinkTree makeSymlinkTree(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
@@ -590,7 +598,7 @@ abstract class GoDescriptors {
 
     Path root = BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "__%s__tree");
 
-    return new SymlinkTree("go_linkable", buildTarget, projectFilesystem, root, treeMap);
+    return new MappedSymlinkTree("go_linkable", buildTarget, projectFilesystem, root, treeMap);
   }
 
   /**
@@ -598,7 +606,7 @@ abstract class GoDescriptors {
    *     + '.a'.
    */
   private static Path getPathInSymlinkTree(
-      SourcePathResolver resolver, Path goPackageName, SourcePath ruleOutput) {
+      SourcePathResolverAdapter resolver, Path goPackageName, SourcePath ruleOutput) {
     Path output = resolver.getRelativePath(ruleOutput);
 
     String extension = Files.getFileExtension(output.toString());

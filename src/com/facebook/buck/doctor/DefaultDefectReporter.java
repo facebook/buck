@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.doctor;
@@ -22,7 +22,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorJsonResponse;
 import com.facebook.buck.doctor.config.DoctorProtocolVersion;
-import com.facebook.buck.doctor.config.ImmutableDoctorJsonResponse;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.slb.ClientSideSlb;
@@ -126,7 +125,7 @@ public class DefaultDefectReporter implements DefectReporter {
 
   @Override
   public DefectSubmitResult submitReport(DefectReport defectReport) throws IOException {
-    DefectSubmitResult.Builder defectSubmitResult = DefectSubmitResult.builder();
+    ImmutableDefectSubmitResult.Builder defectSubmitResult = ImmutableDefectSubmitResult.builder();
     defectSubmitResult.setRequestProtocol(doctorConfig.getProtocolVersion());
     Optional<SlbBuckConfig> frontendConfig = doctorConfig.getFrontendConfig();
 
@@ -248,7 +247,7 @@ public class DefaultDefectReporter implements DefectReporter {
       throws IOException {
     String responseBody = uploadReportHttp(defectReport, slb);
 
-    return DefectSubmitResult.builder()
+    return ImmutableDefectSubmitResult.builder()
         .setIsRequestSuccessful(true)
         .setReportSubmitMessage(responseBody)
         .setReportSubmitLocation(responseBody)
@@ -263,9 +262,9 @@ public class DefaultDefectReporter implements DefectReporter {
     DoctorJsonResponse json =
         ObjectMappers.READER.readValue(
             ObjectMappers.createParser(responseBody.getBytes(Charsets.UTF_8)),
-            ImmutableDoctorJsonResponse.class);
+            DoctorJsonResponse.class);
 
-    return DefectSubmitResult.builder()
+    return ImmutableDefectSubmitResult.builder()
         .setIsRequestSuccessful(json.getRequestSuccessful())
         .setReportSubmitErrorMessage(json.getErrorMessage())
         .setReportSubmitMessage(json.getMessage())

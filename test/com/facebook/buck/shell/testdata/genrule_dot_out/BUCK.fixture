@@ -1,0 +1,6 @@
+genrule(
+    name = "mkdir",
+    out = ".",
+    bash = "mkdir -p ${OUT} && touch ${OUT}/hello",
+    cmd_exe = "powershell -Command mkdir $env:OUT ; Out-File -FilePath \"${env:OUT}/hello\" -InputObject ''",
+)

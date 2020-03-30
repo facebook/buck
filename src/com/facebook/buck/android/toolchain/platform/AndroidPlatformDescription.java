@@ -1,32 +1,33 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.toolchain.platform;
 
-import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
+import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.rules.config.ConfigurationRule;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
-import com.facebook.buck.core.rules.platform.ImmutableMultiPlatformRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.ImmutableSortedMap;
 import org.immutables.value.Value;
 
 /**
@@ -46,7 +47,7 @@ import org.immutables.value.Value;
  * </pre>
  */
 public class AndroidPlatformDescription
-    implements ConfigurationRuleDescription<AndroidPlatformArg> {
+    implements ConfigurationRuleDescription<AndroidPlatformArg, AndroidMultiPlatformRule> {
 
   @Override
   public Class<AndroidPlatformArg> getConstructorArgType() {
@@ -54,33 +55,39 @@ public class AndroidPlatformDescription
   }
 
   @Override
-  public ConfigurationRule createConfigurationRule(
+  public Class<AndroidMultiPlatformRule> getRuleClass() {
+    return AndroidMultiPlatformRule.class;
+  }
+
+  @Override
+  public AndroidMultiPlatformRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,
+      DependencyStack dependencyStack,
       AndroidPlatformArg arg) {
-    return new ImmutableMultiPlatformRule(
+    return new AndroidMultiPlatformRule(
         buildTarget,
-        arg.getName(),
         ConfigurationBuildTargets.convert(arg.getBasePlatform()),
-        ConfigurationBuildTargets.convert(arg.getNativePlatforms()));
+        ConfigurationBuildTargets.convertValues(arg.getNativePlatforms()));
   }
 
   @Override
   public ImmutableSet<BuildTarget> getConfigurationDeps(AndroidPlatformArg arg) {
     return ImmutableSet.<BuildTarget>builder()
         .add(ConfigurationBuildTargets.convert(arg.getBasePlatform()))
-        .addAll(ConfigurationBuildTargets.convert(arg.getNativePlatforms()))
+        .addAll(
+            ConfigurationBuildTargets.convert(
+                ImmutableSet.copyOf(arg.getNativePlatforms().values())))
         .build();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractAndroidPlatformArg extends ConstructorArg {
-    String getName();
-
-    UnconfiguredBuildTargetView getBasePlatform();
+  @RuleArg
+  interface AbstractAndroidPlatformArg extends ConfigurationRuleArg {
+    @Hint(isConfigurable = false)
+    UnconfiguredBuildTarget getBasePlatform();
 
     @Value.NaturalOrder
-    ImmutableSortedSet<UnconfiguredBuildTargetView> getNativePlatforms();
+    @Hint(isConfigurable = false)
+    ImmutableSortedMap<TargetCpuType, UnconfiguredBuildTarget> getNativePlatforms();
   }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.versioncontrol;
@@ -99,34 +99,39 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   @Override
-  public VersionControlSupplier<InputStream> diffBetweenRevisions(
+  public Optional<VersionControlSupplier<InputStream>> diffBetweenRevisions(
       String baseRevision, String tipRevision) throws VersionControlCommandFailedException {
     validateRevisionId(baseRevision);
     validateRevisionId(tipRevision);
 
-    return () -> {
-      try {
-        File diffFile = File.createTempFile("diff", ".tmp");
-        executeCommand(
-            ImmutableList.of(
-                HG_CMD_TEMPLATE,
-                "export",
-                "-o",
-                diffFile.toString(),
-                "--rev",
-                baseRevision + "::" + tipRevision + " - " + baseRevision));
-        return new BufferedInputStream(new FileInputStream(diffFile)) {
-          @Override
-          public void close() throws IOException {
-            super.close();
-            diffFile.delete();
+    if (baseRevision.equals(tipRevision)) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+        () -> {
+          try {
+            File diffFile = File.createTempFile("diff", ".tmp");
+            executeCommand(
+                ImmutableList.of(
+                    HG_CMD_TEMPLATE,
+                    "export",
+                    "-o",
+                    diffFile.toString(),
+                    "--rev",
+                    baseRevision + "::" + tipRevision + " - " + baseRevision));
+            return new BufferedInputStream(new FileInputStream(diffFile)) {
+              @Override
+              public void close() throws IOException {
+                super.close();
+                diffFile.delete();
+              }
+            };
+          } catch (IOException e) {
+            LOG.debug(e.getMessage());
+            throw new VersionControlCommandFailedException(e.getMessage());
           }
-        };
-      } catch (IOException e) {
-        LOG.debug(e.getMessage());
-        throw new VersionControlCommandFailedException(e.getMessage());
-      }
-    };
+        });
   }
 
   @Override
@@ -174,7 +179,7 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
       throw new VersionControlCommandFailedException(
           String.format(numberOfWordsMismatchFormat, baseRevisionLine));
     }
-    return FastVersionControlStats.of(
+    return ImmutableFastVersionControlStats.of(
         currentRevisionWords[0],
         baseRevisionWords.length == 4
             ? ImmutableSet.copyOf(baseRevisionWords[3].split(" "))

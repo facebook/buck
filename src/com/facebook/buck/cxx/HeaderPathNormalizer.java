@@ -1,23 +1,23 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -72,7 +72,7 @@ class HeaderPathNormalizer {
   }
 
   public Optional<Path> getAbsolutePathForUnnormalizedPath(
-      SourcePathResolver pathResolver, Path unnormalizedPath) {
+      SourcePathResolverAdapter pathResolver, Path unnormalizedPath) {
     Preconditions.checkArgument(unnormalizedPath.isAbsolute());
     Optional<Map.Entry<Path, SourcePath>> result = pathLookup(unnormalizedPath, normalized);
     if (!result.isPresent()) {
@@ -102,13 +102,13 @@ class HeaderPathNormalizer {
 
   public static class Builder {
 
-    private final SourcePathResolver pathResolver;
+    private final SourcePathResolverAdapter pathResolver;
 
     private final Map<Path, SourcePath> headers = new LinkedHashMap<>();
     private final Map<Path, SourcePath> normalized = new LinkedHashMap<>();
     private final Map<Path, Path> prefixMap = new LinkedHashMap<>();
 
-    public Builder(SourcePathResolver pathResolver) {
+    public Builder(SourcePathResolverAdapter pathResolver) {
       this.pathResolver = pathResolver;
     }
 

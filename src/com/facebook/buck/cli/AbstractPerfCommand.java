@@ -1,23 +1,26 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cli;
 
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -25,6 +28,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.event.FlushConsoleEvent;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -172,7 +176,8 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
           params
               .getParser()
               .buildTargetGraph(
-                  createParsingContext(params.getCell(), pool.getListeningExecutorService()),
+                  createParsingContext(
+                      params.getCells().getRootCell(), pool.getListeningExecutorService()),
                   targets);
     } catch (BuildFileParseException e) {
       throw new BuckUncheckedExecutionException(e);
@@ -195,8 +200,7 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
 
   /** Gets a list of the rules in the graph reachable from the provided targets. */
   protected static ImmutableList<BuildRule> getRulesInGraph(
-      ActionGraphBuilder graphBuilder, Iterable<BuildTarget> targets)
-      throws AcyclicDepthFirstPostOrderTraversal.CycleException {
+      ActionGraphBuilder graphBuilder, Iterable<BuildTarget> targets) throws CycleException {
     ImmutableList.Builder<BuildRule> rulesBuilder = ImmutableList.builder();
 
     ImmutableSortedSet<BuildRule> topLevelRules = graphBuilder.requireAllRules(targets);
@@ -229,12 +233,17 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
   protected StackedFileHashCache createStackedFileHashCache(CommandRunnerParams params)
       throws InterruptedException {
     FileHashCacheMode cacheMode =
-        params.getCell().getBuckConfig().getView(BuildBuckConfig.class).getFileHashCacheMode();
+        params
+            .getCells()
+            .getRootCell()
+            .getBuckConfig()
+            .getView(BuildBuckConfig.class)
+            .getFileHashCacheMode();
 
     return new StackedFileHashCache(
         ImmutableList.<ProjectFileHashCache>builder()
             .addAll(
-                params.getCell().getAllCells().stream()
+                params.getCells().getRootCell().getAllCells().stream()
                     .flatMap(this::createFileHashCaches)
                     .collect(Collectors.toList()))
             .addAll(
@@ -242,27 +251,52 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
                     new ProjectFilesystemFactory() {
                       @Override
                       public ProjectFilesystem createProjectFilesystem(
-                          Path root,
+                          CanonicalCellName cellName,
+                          AbsPath root,
                           Config config,
-                          Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
+                          Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
+                          boolean buckOutIncludeTargetConfigHash) {
                         return createHashFakingFilesystem(
                             new DefaultProjectFilesystemFactory()
-                                .createProjectFilesystem(root, config, embeddedCellBuckOutInfo));
+                                .createProjectFilesystem(
+                                    cellName,
+                                    root,
+                                    config,
+                                    embeddedCellBuckOutInfo,
+                                    buckOutIncludeTargetConfigHash));
                       }
 
                       @Override
-                      public ProjectFilesystem createProjectFilesystem(Path root, Config config) {
-                        return createProjectFilesystem(root, config, Optional.empty());
+                      public ProjectFilesystem createProjectFilesystem(
+                          CanonicalCellName cellName,
+                          AbsPath root,
+                          Config config,
+                          boolean buckOutIncludeTargetConfigHash) {
+                        return createProjectFilesystem(
+                            cellName,
+                            root,
+                            config,
+                            Optional.empty(),
+                            buckOutIncludeTargetConfigHash);
                       }
 
                       @Override
-                      public ProjectFilesystem createProjectFilesystem(Path root) {
-                        return createProjectFilesystem(root, new Config());
+                      public ProjectFilesystem createProjectFilesystem(
+                          CanonicalCellName cellName,
+                          AbsPath root,
+                          boolean buckOutIncludeTargetCofigHash) {
+                        final Config config = new Config();
+                        return createProjectFilesystem(
+                            cellName, root, config, buckOutIncludeTargetCofigHash);
                       }
 
                       @Override
-                      public ProjectFilesystem createOrThrow(Path path) {
-                        return createProjectFilesystem(path);
+                      public ProjectFilesystem createOrThrow(
+                          CanonicalCellName cellName,
+                          AbsPath path,
+                          boolean buckOutIncludeTargetCofigHash) {
+                        return createProjectFilesystem(
+                            cellName, path, buckOutIncludeTargetCofigHash);
                       }
                     },
                     cacheMode))

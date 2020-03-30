@@ -1,25 +1,26 @@
-# Copyright 2019-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import os
 import shutil
 import tempfile
 import unittest
 
-from buck_tool import BuckToolException
-from java_lookup import _get_java_path_for_highest_minor_version, get_java_path
-from subprocutils import which
+from programs.buck_tool import BuckToolException
+from programs.java_lookup import _get_java_path_for_highest_minor_version, get_java_path
+from programs.subprocutils import which
+
 
 ANY_JAVA_VERSION = 8
 JAVA_VERSION_THAT_OBVIOUSLY_CANT_EXIST_LOCALLY = 500
@@ -83,6 +84,18 @@ class TestJavaPath(unittest.TestCase):
             os.path.join(java_base_path, "jdk1.8.1_100"),
         )
 
+    def test_openjdk_8_highest_version_lookup(self):
+        java_base_path = tempfile.mkdtemp()
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-7.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-8.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-9.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-18.jdk"))
+
+        self.assertEquals(
+            _get_java_path_for_highest_minor_version(java_base_path, 8),
+            os.path.join(java_base_path, "adoptopenjdk-8.jdk"),
+        )
+
     def test_java_11_highest_version_lookup(self):
         java_base_path = tempfile.mkdtemp()
         os.mkdir(os.path.join(java_base_path, "jdk-10.0.1"))
@@ -96,6 +109,25 @@ class TestJavaPath(unittest.TestCase):
         self.assertEquals(
             _get_java_path_for_highest_minor_version(java_base_path, 11),
             os.path.join(java_base_path, "jdk-11.0.2_200"),
+        )
+
+    def test_openjdk_11_highest_version_lookup(self):
+        java_base_path = tempfile.mkdtemp()
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-7.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-8.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-9.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-10.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-11.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-11.0.2.jdk"))
+        os.mkdir(os.path.join(java_base_path, "adoptopenjdk-12.jdk"))
+
+        self.assertEquals(
+            _get_java_path_for_highest_minor_version(java_base_path, 11),
+            os.path.join(java_base_path, "adoptopenjdk-11.0.2.jdk"),
+        )
+        self.assertEquals(
+            _get_java_path_for_highest_minor_version(java_base_path, 12),
+            os.path.join(java_base_path, "adoptopenjdk-12.jdk"),
         )
 
     def tearDown(self):

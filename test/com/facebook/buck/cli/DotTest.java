@@ -1,23 +1,24 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.Dot.OutputOrder;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.google.common.base.Functions;
@@ -88,6 +89,66 @@ public class DotTest {
             "  E;",
             "  F;"),
         false);
+  }
+
+  @Test
+  public void testGenerateCompactDotOutput() throws IOException {
+    MutableDirectedGraph<String> mutableGraph = new MutableDirectedGraph<>();
+    mutableGraph.addEdge("A", "B");
+    mutableGraph.addEdge("B", "C");
+    mutableGraph.addEdge("B", "D");
+    mutableGraph.addEdge("C", "E");
+    mutableGraph.addEdge("D", "E");
+    mutableGraph.addEdge("A", "E");
+    mutableGraph.addEdge("F", "E");
+    DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
+
+    StringBuilder output = new StringBuilder();
+    Dot.builder(graph, "the_graph")
+        .setNodeToName(Functions.identity())
+        .setNodeToTypeName(name -> "A")
+        .setOutputOrder(outputOrder)
+        .setCompactMode(true)
+        .build()
+        .writeOutput(output);
+
+    if (outputOrder == OutputOrder.SORTED) {
+      assertOutput(
+          output.toString(),
+          ImmutableSet.of(
+              "  1 -> 2;",
+              "  1 -> 3;",
+              "  2 -> 4;",
+              "  2 -> 5;",
+              "  4 -> 3;",
+              "  5 -> 3;",
+              "  6 -> 3;",
+              "  1 [style=filled,color=\"#C1C1C0\",label=A];",
+              "  2 [style=filled,color=\"#C1C1C0\",label=B];",
+              "  3 [style=filled,color=\"#C1C1C0\",label=E];",
+              "  4 [style=filled,color=\"#C1C1C0\",label=C];",
+              "  5 [style=filled,color=\"#C1C1C0\",label=D];",
+              "  6 [style=filled,color=\"#C1C1C0\",label=F];"),
+          true);
+    } else {
+      assertOutput(
+          output.toString(),
+          ImmutableSet.of(
+              "  1 -> 2;",
+              "  1 -> 3;",
+              "  2 -> 5;",
+              "  2 -> 6;",
+              "  4 -> 3;",
+              "  5 -> 3;",
+              "  6 -> 3;",
+              "  1 [style=filled,color=\"#C1C1C0\",label=A];",
+              "  2 [style=filled,color=\"#C1C1C0\",label=B];",
+              "  3 [style=filled,color=\"#C1C1C0\",label=E];",
+              "  4 [style=filled,color=\"#C1C1C0\",label=F];",
+              "  5 [style=filled,color=\"#C1C1C0\",label=C];",
+              "  6 [style=filled,color=\"#C1C1C0\",label=D];"),
+          true);
+    }
   }
 
   @Test

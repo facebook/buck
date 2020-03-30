@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -72,7 +72,7 @@ class DirectHeaderMap extends HeaderSymlinkTree {
               context.getSourcePathResolver().getAbsolutePath(entry.getValue())));
     }
     return ImmutableList.<Step>builder()
-        .add(getVerifyStep())
+        .add(getVerifyStep(getResolvedSymlinks(context.getSourcePathResolver())))
         .addAll(
             MakeCleanDirectoryStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
@@ -87,7 +87,9 @@ class DirectHeaderMap extends HeaderSymlinkTree {
             RmStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), headerMapPath)))
-        .add(new HeaderMapStep(getProjectFilesystem(), headerMapPath, entriesBuilder.build()))
+        .add(
+            new HeaderMapStep(
+                getProjectFilesystem(), headerMapPath, entriesBuilder.build(), buildableContext))
         .build();
   }
 

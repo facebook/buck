@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -21,14 +21,15 @@ import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
-import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProvider;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -37,26 +38,25 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
+import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.java.AbstractJavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaFileParser;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaLibraryDescriptionArg;
+import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.test.selectors.Nullable;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
@@ -64,8 +64,8 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.collect.MoreSets;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.collect.ImmutableList;
@@ -75,10 +75,9 @@ import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -88,13 +87,12 @@ public class IjProjectCommandHelper {
   private final Console console;
   private final Parser parser;
   private final BuckConfig buckConfig;
-  private final ActionGraphProvider actionGraphProvider;
   private final InstrumentedVersionedTargetGraphCache versionedTargetGraphCache;
   private final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
   private final Cell cell;
   private final IjProjectConfig projectConfig;
-  private final TargetConfiguration targetConfiguration;
+  private final Optional<TargetConfiguration> targetConfiguration;
   private final boolean processAnnotations;
   private final boolean updateOnly;
   private final @Nullable String outputDir;
@@ -108,12 +106,11 @@ public class IjProjectCommandHelper {
       BuckEventBus buckEventBus,
       ListeningExecutorService executor,
       CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor,
-      ActionGraphProvider actionGraphProvider,
       InstrumentedVersionedTargetGraphCache versionedTargetGraphCache,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       Cell cell,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       IjProjectConfig projectConfig,
       boolean enableParserProfiling,
       boolean processAnnotations,
@@ -129,7 +126,6 @@ public class IjProjectCommandHelper {
     this.console = projectGeneratorParameters.getConsole();
     this.parser = projectGeneratorParameters.getParser();
     this.buckConfig = buckConfig;
-    this.actionGraphProvider = actionGraphProvider;
     this.versionedTargetGraphCache = versionedTargetGraphCache;
     this.typeCoercerFactory = typeCoercerFactory;
     this.cell = cell;
@@ -154,8 +150,8 @@ public class IjProjectCommandHelper {
       throws IOException, InterruptedException {
     if (updateOnly && projectConfig.getAggregationMode() != AggregationMode.NONE) {
       throw new CommandLineException(
-          "`--regenerate` option is incompatible with IntelliJ"
-              + " module aggregation. In order to use `--regenerate` set `--intellij-aggregation-mode=none`");
+          "`--update` option is incompatible with IntelliJ"
+              + " module aggregation. In order to use `--update` set `--intellij-aggregation-mode=none`");
     }
 
     List<String> targets = arguments;
@@ -205,12 +201,6 @@ public class IjProjectCommandHelper {
     return runIntellijProjectGenerator(targetGraphCreationResult);
   }
 
-  private ActionGraphAndBuilder getActionGraph(
-      TargetGraphCreationResult targetGraphCreationResult) {
-    TargetNodeToBuildRuleTransformer transformer = new ShallowTargetNodeToBuildRuleTransformer();
-    return actionGraphProvider.getFreshActionGraph(transformer, targetGraphCreationResult);
-  }
-
   /** Run intellij specific project generation actions. */
   private ExitCode runIntellijProjectGenerator(TargetGraphCreationResult targetGraphCreationResult)
       throws IOException, InterruptedException {
@@ -235,9 +225,15 @@ public class IjProjectCommandHelper {
 
   private ProjectFilesystem getProjectOutputFilesystem() throws IOException {
     if (outputDir != null) {
-      Path outputPath = Paths.get(outputDir).toAbsolutePath();
-      Files.createDirectories(outputPath);
-      return new DefaultProjectFilesystemFactory().createProjectFilesystem(outputPath);
+      AbsPath outputPath = AbsPath.of(Paths.get(outputDir).toAbsolutePath());
+      Files.createDirectories(outputPath.getPath());
+      Cell rootCell = this.cell.getCell(CanonicalCellName.rootCell());
+      return new DefaultProjectFilesystemFactory()
+          .createProjectFilesystem(
+              this.cell.getCanonicalName(),
+              outputPath,
+              BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(
+                  rootCell.getBuckConfig().getConfig()));
     } else {
       return cell.getFilesystem();
     }
@@ -245,12 +241,7 @@ public class IjProjectCommandHelper {
 
   private ImmutableSet<BuildTarget> writeProjectAndGetRequiredBuildTargets(
       TargetGraphCreationResult targetGraphCreationResult) throws IOException {
-    ActionGraphAndBuilder result =
-        Objects.requireNonNull(getActionGraph(targetGraphCreationResult));
-
-    ActionGraphBuilder graphBuilder = result.getActionGraphBuilder();
-
-    AbstractJavacLanguageLevelOptions languageLevelOptions =
+    JavacLanguageLevelOptions languageLevelOptions =
         buckConfig.getView(JavaBuckConfig.class).getJavacLanguageLevelOptions();
 
     IjProject project =
@@ -258,7 +249,6 @@ public class IjProjectCommandHelper {
             targetGraphCreationResult.getTargetGraph(),
             getJavaPackageFinder(buckConfig),
             JavaFileParser.createJavaFileParser(languageLevelOptions),
-            graphBuilder,
             cell.getFilesystem(),
             projectConfig,
             getProjectOutputFilesystem());
@@ -381,7 +371,8 @@ public class IjProjectCommandHelper {
               unconfiguredBuildTargetFactory,
               targetGraphCreationResult,
               targetConfiguration,
-              buckEventBus);
+              buckEventBus,
+              new Cells(cell));
     }
     return targetGraphCreationResult;
   }
@@ -428,9 +419,13 @@ public class IjProjectCommandHelper {
         .filter(
             test ->
                 (includePatterns.isEmpty()
-                        || includePatterns.stream().anyMatch(pattern -> pattern.matches(test)))
+                        || includePatterns.stream()
+                            .anyMatch(
+                                pattern -> pattern.matches(test.getUnconfiguredBuildTarget())))
                     && (excludePatterns.isEmpty()
-                        || excludePatterns.stream().noneMatch(pattern -> pattern.matches(test))))
+                        || excludePatterns.stream()
+                            .noneMatch(
+                                pattern -> pattern.matches(test.getUnconfiguredBuildTarget()))))
         .toImmutableSet();
   }
 
@@ -439,7 +434,7 @@ public class IjProjectCommandHelper {
       CellPathResolver cellPathResolver,
       ImmutableSet<String> patterns) {
     return RichStream.from(patterns)
-        .map(pattern -> parser.parse(cellPathResolver, pattern))
+        .map(pattern -> parser.parse(pattern, cellPathResolver.getCellNameResolver()))
         .toImmutableSet();
   }
 }

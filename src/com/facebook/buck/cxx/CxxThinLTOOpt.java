@@ -1,28 +1,29 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
-import com.facebook.buck.cxx.AbstractCxxSource.Type;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.cxx.CxxSource.Type;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -153,12 +154,12 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         boolean useArgfile) {
-      SourcePathResolver resolver = context.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
       ImmutableList<Arg> arguments =
-          compilerDelegate.getArguments(CxxToolFlags.of(), filesystem.getRootPath());
+          compilerDelegate.getArguments(CxxToolFlags.of(), filesystem.getRootPath().getPath());
 
-      Path relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
+      RelPath relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
       Path resolvedOutput = outputPathResolver.resolvePath(output);
 
       return new CxxPreprocessAndCompileStep(
@@ -166,7 +167,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
           CxxPreprocessAndCompileStep.Operation.COMPILE,
           resolvedOutput,
           Optional.empty(),
-          relativeInputPath,
+          relativeInputPath.getPath(),
           inputType,
           new CxxPreprocessAndCompileStep.ToolCommand(
               compilerDelegate.getCommandPrefix(resolver),
@@ -180,11 +181,10 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
           compilerDelegate.getPreArgfileArgs(),
           compilerDelegate.getCompiler(),
           Optional.of(
-              CxxLogInfo.builder()
-                  .setTarget(targetName)
-                  .setSourcePath(relativeInputPath)
-                  .setOutputPath(resolvedOutput)
-                  .build()));
+              ImmutableCxxLogInfo.of(
+                  Optional.ofNullable(targetName),
+                  Optional.ofNullable(relativeInputPath.getPath()),
+                  Optional.ofNullable(resolvedOutput))));
     }
 
     @Override

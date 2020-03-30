@@ -1,21 +1,22 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.DefaultProjectBuildFileParserFactory;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -56,18 +57,19 @@ public class AuditIncludesCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
-    ProjectFilesystem projectFilesystem = params.getCell().getFilesystem();
+    ProjectFilesystem projectFilesystem = params.getCells().getRootCell().getFilesystem();
     try (ProjectBuildFileParser parser =
         new DefaultProjectBuildFileParserFactory(
                 new DefaultTypeCoercerFactory(),
                 params.getConsole(),
                 new ParserPythonInterpreterProvider(
-                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
-                params.getKnownRuleTypesProvider(),
-                params.getManifestServiceSupplier(),
-                params.getFileHashCache())
-            .createBuildFileParser(
-                params.getBuckEventBus(), params.getCell(), params.getWatchman(), false)) {
+                    params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
+                params.getKnownRuleTypesProvider())
+            .createFileParser(
+                params.getBuckEventBus(),
+                params.getCells().getRootCell(),
+                params.getWatchman(),
+                false)) {
       PrintStream out = params.getConsole().getStdOut();
       for (String pathToBuildFile : getArguments()) {
         if (!json) {
@@ -78,8 +80,8 @@ public class AuditIncludesCommand extends AbstractCommand {
         // Resolve the path specified by the user.
         Path path = Paths.get(pathToBuildFile);
         if (!path.isAbsolute()) {
-          Path root = projectFilesystem.getRootPath();
-          path = root.resolve(path);
+          AbsPath root = projectFilesystem.getRootPath();
+          path = root.resolve(path).getPath();
         }
 
         Iterable<String> includes = parser.getIncludedFiles(path);

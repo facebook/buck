@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.doctor;
@@ -20,9 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.doctor.config.DoctorConfig;
-import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
-import com.facebook.buck.doctor.config.ImmutableSourceControlInfo;
-import com.facebook.buck.doctor.config.ImmutableUserLocalConfiguration;
+import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -54,34 +52,33 @@ public class DefectReporterTest {
   DoctorConfig config;
   Clock clock;
   DefectReporter reporter;
-  DefectReport.Builder defectReportBuilder;
+  DefectReporter.DefectReport.Builder defectReportBuilder;
 
   private static final BuildEnvironmentDescription TEST_ENV_DESCRIPTION =
-      BuildEnvironmentDescription.builder()
-          .setUser("test_user")
-          .setHostname("test_hostname")
-          .setOs("test_os")
-          .setAvailableCores(1)
-          .setSystemMemory(1024L)
-          .setBuckDirty(Optional.of(false))
-          .setBuckCommit("test_commit")
-          .setJavaVersion("test_java_version")
-          .setJsonProtocolVersion(1)
-          .build();
+      BuildEnvironmentDescription.of(
+          "test_user",
+          "test_hostname",
+          "test_os",
+          1,
+          1024L,
+          Optional.of(false),
+          "test_commit",
+          "test_java_version",
+          1);
 
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Before
   public void setUp() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    config = new ImmutableDoctorConfig(FakeBuckConfig.builder().build());
+    config = DoctorConfig.of(FakeBuckConfig.builder().build());
     clock = new DefaultClock();
     reporter =
         new DefaultDefectReporter(
             filesystem, config, BuckEventBusForTests.newInstance(clock), clock);
 
     UserLocalConfiguration testUserLocalConfiguration =
-        new ImmutableUserLocalConfiguration(
+        UserLocalConfiguration.of(
             true,
             ImmutableMap.of(
                 Paths.get(".buckconfig.local"),
@@ -91,7 +88,7 @@ public class DefectReporterTest {
             ImmutableMap.of("config_key", "config_value"));
 
     defectReportBuilder =
-        DefectReport.builder()
+        DefectReporter.DefectReport.builder()
             .setBuildEnvironmentDescription(TEST_ENV_DESCRIPTION)
             .setUserLocalConfiguration(testUserLocalConfiguration);
   }
@@ -104,7 +101,7 @@ public class DefectReporterTest {
     String fileToBeIncludedContent = "testcontentbehere";
     filesystem.writeContentsToPath(fileToBeIncludedContent, fileToBeIncluded);
 
-    DefectSubmitResult defectSubmitResult =
+    DefectReporter.DefectSubmitResult defectSubmitResult =
         reporter.submitReport(defectReportBuilder.setIncludedPaths(fileToBeIncluded).build());
 
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
@@ -114,7 +111,8 @@ public class DefectReporterTest {
 
   @Test
   public void testAttachesReport() throws Exception {
-    DefectSubmitResult defectSubmitResult = reporter.submitReport(defectReportBuilder.build());
+    DefectReporter.DefectSubmitResult defectSubmitResult =
+        reporter.submitReport(defectReportBuilder.build());
 
     Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     try (ZipFile zipFile = new ZipFile(reportPath.toFile())) {
@@ -153,11 +151,11 @@ public class DefectReporterTest {
   @Test
   public void testSourceControlExceptionAllowsGeneratingReport() throws Exception {
 
-    DefectSubmitResult defectSubmitResult =
+    DefectReporter.DefectSubmitResult defectSubmitResult =
         reporter.submitReport(
             defectReportBuilder
                 .setSourceControlInfo(
-                    new ImmutableSourceControlInfo(
+                    SourceControlInfo.of(
                         "commitid",
                         ImmutableSet.of("base"),
                         Optional.empty(),

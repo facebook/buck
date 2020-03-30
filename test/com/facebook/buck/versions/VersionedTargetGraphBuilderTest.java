@@ -1,28 +1,28 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.versions;
 
 import static org.hamcrest.junit.MatcherAssert.assertThat;
 
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
@@ -65,7 +65,8 @@ public class VersionedTargetGraphBuilderTest {
                 unversionedTargetGraphAndBuildTargets,
                 typeCoercerFactory,
                 unconfiguredBuildTargetFactory,
-                20);
+                20,
+                new TestCellBuilder().build());
   }
 
   @After
@@ -132,7 +133,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(graph, ImmutableSet.of(root.getBuildTarget())),
+            TargetGraphCreationResult.of(graph, ImmutableSet.of(root.getBuildTarget())),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
     TargetGraph versionedGraph = builder.build();
@@ -149,7 +150,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            TargetGraphCreationResult.of(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:root1"),
@@ -171,7 +172,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            TargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -195,7 +196,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            TargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -222,7 +223,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            TargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root1"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -248,7 +249,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            TargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -291,7 +292,7 @@ public class VersionedTargetGraphBuilderTest {
                 ImmutableMap.of(
                     a, ImmutableMap.of(dep, Version.of("1.0")),
                     b, ImmutableMap.of(dep, Version.of("2.0")))),
-            new ImmutableTargetGraphCreationResult(
+            TargetGraphCreationResult.of(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:a"),
@@ -331,7 +332,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            TargetGraphCreationResult.of(
                 graph, ImmutableSet.of(BuildTargetFactory.newInstance("//:root"))),
             new DefaultTypeCoercerFactory(),
             unconfiguredBuildTargetFactory);
@@ -355,7 +356,7 @@ public class VersionedTargetGraphBuilderTest {
         factory.create(
             executor,
             new NaiveVersionSelector(),
-            new ImmutableTargetGraphCreationResult(
+            TargetGraphCreationResult.of(
                 graph,
                 ImmutableSet.of(
                     BuildTargetFactory.newInstance("//:root1"),

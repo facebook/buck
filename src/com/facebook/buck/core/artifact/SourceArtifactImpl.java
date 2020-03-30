@@ -1,30 +1,37 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.artifact;
 
+import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.io.file.MorePaths;
 import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.util.Optional;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
 /** An artifact representing a source file */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class SourceArtifactImpl extends AbstractArtifact
     implements SourceArtifact, BoundArtifact {
 
@@ -35,7 +42,7 @@ public abstract class SourceArtifactImpl extends AbstractArtifact
 
   /** @return the path to the source file */
   @Override
-  @Value.Parameter
+  @AddToRuleKey
   public abstract PathSourcePath getSourcePath();
 
   @Nullable
@@ -85,5 +92,20 @@ public abstract class SourceArtifactImpl extends AbstractArtifact
     printer.append("<source file '");
     printer.append(getShortPath());
     printer.append("'>");
+  }
+
+  @Override
+  public SkylarkOutputArtifactApi asSkylarkOutputArtifact(Location location) throws EvalException {
+    throw new EvalException(
+        location, String.format("source file %s cannot be used as an output artifact", this));
+  }
+
+  @Override
+  public OutputArtifact asOutputArtifact() {
+    throw new HumanReadableException("source file %s cannot be used as an output artifact", this);
+  }
+
+  public static SourceArtifactImpl of(PathSourcePath sourcePath) {
+    return ImmutableSourceArtifactImpl.of(sourcePath);
   }
 }

@@ -1,24 +1,25 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.util.DirtyPrintStreamDecorator;
 import com.facebook.buck.util.ExitCode;
@@ -35,7 +36,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -52,7 +52,7 @@ public class AuditConfigCommand extends AbstractCommand {
 
   @Option(
       name = "--tab",
-      usage = "Output in a tab-delmiited format key/value format",
+      usage = "Output in a tab-delimited format key/value format",
       forbids = {"--json"})
   private boolean generateTabbedOutput;
 
@@ -66,24 +66,19 @@ public class AuditConfigCommand extends AbstractCommand {
     return arguments;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractConfigValue {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class ConfigValue {
     public abstract String getKey();
 
-    @Value.Parameter
     public abstract String getSection();
 
-    @Value.Parameter
     public abstract String getProperty();
 
-    @Value.Parameter
     public abstract Optional<String> getValue();
   }
 
   private ImmutableSortedSet<ConfigValue> readConfig(CommandRunnerParams params) {
-    Cell rootCell = params.getCell();
+    Cells cells = params.getCells();
 
     ImmutableSortedSet.Builder<ConfigValue> builder;
     builder =
@@ -91,7 +86,7 @@ public class AuditConfigCommand extends AbstractCommand {
             Comparator.comparing(ConfigValue::getSection).thenComparing(ConfigValue::getKey));
     if (getArguments().isEmpty()) {
       // Dump entire config.
-      BuckConfig buckConfig = rootCell.getBuckConfig();
+      BuckConfig buckConfig = cells.getRootCell().getBuckConfig();
       buckConfig
           .getConfig()
           .getSectionToEntries()
@@ -100,7 +95,7 @@ public class AuditConfigCommand extends AbstractCommand {
                   section.forEach(
                       (key, val) ->
                           builder.add(
-                              ConfigValue.of(
+                              ImmutableConfigValue.of(
                                   String.join(".", section_name, key),
                                   section_name,
                                   key,
@@ -111,7 +106,7 @@ public class AuditConfigCommand extends AbstractCommand {
           .forEach(
               input -> {
                 BuckCellArg arg = BuckCellArg.of(input);
-                BuckConfig buckConfig = getCellBuckConfig(rootCell, arg.getCellName());
+                BuckConfig buckConfig = getCellBuckConfig(cells.getRootCell(), arg.getCellName());
                 String[] parts = arg.getArg().split("\\.", 2);
 
                 DirtyPrintStreamDecorator stdErr = params.getConsole().getStdErr();
@@ -137,12 +132,12 @@ public class AuditConfigCommand extends AbstractCommand {
                       .forEach(
                           (key, val) ->
                               builder.add(
-                                  ConfigValue.of(
+                                  ImmutableConfigValue.of(
                                       String.join(".", input, key), input, key, Optional.of(val))));
                 } else {
                   // Dump specified value
                   builder.add(
-                      ConfigValue.of(
+                      ImmutableConfigValue.of(
                           input,
                           parts[0],
                           parts[1],

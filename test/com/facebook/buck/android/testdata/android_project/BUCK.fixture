@@ -1,10 +1,22 @@
 android_platform(
     name = "android-x86_64-arm",
     base_platform = ":android-os",
-    native_platforms = [
-        ":android-x86_64",
-        ":android-arm",
+    native_platforms = {
+        "arm": ":android-arm",
+        "x86_64": ":android-x86_64",
+    },
+    visibility = [
+        "PUBLIC",
     ],
+)
+
+android_platform(
+    name = "android-x86_32-armv7",
+    base_platform = ":android-os",
+    native_platforms = {
+        "armv7": ":android-armv7",
+        "x86": ":android-x86_32",
+    },
     visibility = [
         "PUBLIC",
     ],
@@ -13,11 +25,11 @@ android_platform(
 android_platform(
     name = "android-x86_64-arm-armv7",
     base_platform = ":android-os",
-    native_platforms = [
-        ":android-x86_64",
-        ":android-arm",
-        ":android-armv7",
-    ],
+    native_platforms = {
+        "arm": ":android-arm",
+        "armv7": ":android-armv7",
+        "x86_64": ":android-x86_64",
+    },
     visibility = [
         "PUBLIC",
     ],
@@ -26,9 +38,9 @@ android_platform(
 android_platform(
     name = "android-platform-x86_64",
     base_platform = ":android-os",
-    native_platforms = [
-        ":android-x86_64",
-    ],
+    native_platforms = {
+        "x86_64": ":android-x86_64",
+    },
     visibility = [
         "PUBLIC",
     ],
@@ -38,6 +50,17 @@ platform(
     name = "android-os",
     constraint_values = [
         ":android",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+platform(
+    name = "android-x86_32",
+    constraint_values = [
+        ":android",
+        "buck//config/constraints:x86_32",
     ],
     visibility = [
         "PUBLIC",
@@ -86,9 +109,9 @@ constraint_value(
 )
 
 config_setting(
-    name = "x86-64_config",
+    name = "x86_32-config",
     constraint_values = [
-        "buck//config/constraints:x86_64",
+        "buck//config/constraints:x86_32",
     ],
     visibility = [
         "PUBLIC",

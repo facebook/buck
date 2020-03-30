@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.config;
@@ -23,7 +23,7 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -33,7 +33,7 @@ import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider.LegacyArchiverType;
@@ -82,8 +82,6 @@ public class CxxBuckConfig {
   private static final String MAX_TEST_OUTPUT_SIZE = "max_test_output_size";
   private static final String LINKER_PLATFORM = "linker_platform";
   private static final String LINK_GROUPS_ENABLED = "link_groups_enabled";
-  private static final String LINK_GROUPS_CUTTING_GENRULE_BRANCH_ENABLED =
-      "link_groups_cutting_genrule_branch_enabled";
   private static final String UNTRACKED_HEADERS = "untracked_headers";
   private static final String UNTRACKED_HEADERS_WHITELIST = "untracked_headers_whitelist";
   private static final String EXPORTED_HEADERS_SYMLINKS_ENABLED =
@@ -315,39 +313,37 @@ public class CxxBuckConfig {
       return Optional.empty();
     }
     String source = String.format("[%s] %s", cxxSection, toolType.key);
-    Optional<UnconfiguredBuildTargetView> target =
+    Optional<UnconfiguredBuildTarget> target =
         delegate.getMaybeUnconfiguredBuildTarget(cxxSection, toolType.key);
     Optional<Type> type = delegate.getEnum(cxxSection, toolType.key + "_type", Type.class);
     if (target.isPresent()) {
       return Optional.of(
-          CxxToolProviderParams.builder()
-              .setSource(source)
-              .setBuildTarget(target.get())
-              .setType(type)
-              .setPreferDependencyTree(getUseDetailedUntrackedHeaderMessages())
-              .setToolType(toolType)
-              .build());
+          ImmutableCxxToolProviderParams.of(
+              source,
+              target,
+              Optional.empty(),
+              type,
+              toolType,
+              Optional.of(getUseDetailedUntrackedHeaderMessages())));
     } else {
       return Optional.of(
-          CxxToolProviderParams.builder()
-              .setSource(source)
-              .setPath(
-                  delegate.getPathSourcePath(delegate.getRequiredPath(cxxSection, toolType.key)))
-              .setType(type)
-              .setPreferDependencyTree(getUseDetailedUntrackedHeaderMessages())
-              .setToolType(toolType)
-              .build());
+          ImmutableCxxToolProviderParams.of(
+              source,
+              Optional.empty(),
+              Optional.of(
+                  delegate.getPathSourcePath(delegate.getRequiredPath(cxxSection, toolType.key))),
+              type,
+              toolType,
+              Optional.of(getUseDetailedUntrackedHeaderMessages())));
     }
   }
 
   private Optional<PreprocessorProvider> getPreprocessorProvider(ToolType toolType) {
-    return getCxxToolProviderParams(toolType)
-        .map(AbstractCxxToolProviderParams::getPreprocessorProvider);
+    return getCxxToolProviderParams(toolType).map(CxxToolProviderParams::getPreprocessorProvider);
   }
 
   private Optional<CompilerProvider> getCompilerProvider(ToolType toolType) {
-    return getCxxToolProviderParams(toolType)
-        .map(AbstractCxxToolProviderParams::getCompilerProvider);
+    return getCxxToolProviderParams(toolType).map(CxxToolProviderParams::getCompilerProvider);
   }
 
   public Optional<CompilerProvider> getAs() {
@@ -422,13 +418,13 @@ public class CxxBuckConfig {
   }
 
   public HeaderVerification getHeaderVerificationOrIgnore() {
-    return HeaderVerification.builder()
-        .setMode(
-            delegate
-                .getEnum(cxxSection, UNTRACKED_HEADERS, HeaderVerification.Mode.class)
-                .orElse(HeaderVerification.Mode.IGNORE))
-        .addAllWhitelist(delegate.getListWithoutComments(cxxSection, UNTRACKED_HEADERS_WHITELIST))
-        .build();
+    return HeaderVerification.of(
+        delegate
+            .getEnum(cxxSection, UNTRACKED_HEADERS, HeaderVerification.Mode.class)
+            .orElse(HeaderVerification.Mode.IGNORE),
+        ImmutableSortedSet.copyOf(
+            delegate.getListWithoutComments(cxxSection, UNTRACKED_HEADERS_WHITELIST)),
+        ImmutableSortedSet.of());
   }
 
   public Optional<Boolean> getLinkGroupsEnabledSetting() {
@@ -437,14 +433,6 @@ public class CxxBuckConfig {
 
   public boolean getLinkGroupsEnabled() {
     return getLinkGroupsEnabledSetting().orElse(false);
-  }
-
-  public Optional<Boolean> getLinkGroupCuttingGenruleBranchEnabledSetting() {
-    return delegate.getBoolean(cxxSection, LINK_GROUPS_CUTTING_GENRULE_BRANCH_ENABLED);
-  }
-
-  public boolean getLinkGroupCuttingGenruleBranchEnabled() {
-    return getLinkGroupCuttingGenruleBranchEnabledSetting().orElse(false);
   }
 
   public Optional<Boolean> getPublicHeadersSymlinksSetting() {
@@ -465,8 +453,7 @@ public class CxxBuckConfig {
 
   public Optional<RuleScheduleInfo> getLinkScheduleInfo() {
     Optional<Long> linkWeight = delegate.getLong(cxxSection, LINK_WEIGHT);
-    return linkWeight.map(
-        weight -> RuleScheduleInfo.builder().setJobsMultiplier(weight.intValue()).build());
+    return linkWeight.map(weight -> RuleScheduleInfo.of(weight.intValue()));
   }
 
   public boolean shouldCacheLinks() {
@@ -541,25 +528,24 @@ public class CxxBuckConfig {
   }
 
   /** @return whether to enable shared library interfaces. */
-  public SharedLibraryInterfaceParams.Type getSharedLibraryInterfaces() {
+  public Optional<SharedLibraryInterfaceParams.Type> getSharedLibraryInterfaces() {
 
     // Check for an explicit setting.
     Optional<SharedLibraryInterfaceParams.Type> setting =
         delegate.getEnum(cxxSection, SHLIB_INTERFACES, SharedLibraryInterfaceParams.Type.class);
     if (setting.isPresent()) {
-      return setting.get();
+      return setting;
     }
 
     // For backwards compatibility, check the older boolean setting.
     Optional<Boolean> oldSetting = delegate.getBoolean(cxxSection, SHARED_LIBRARY_INTERFACES);
     if (oldSetting.isPresent()) {
       return oldSetting.get()
-          ? SharedLibraryInterfaceParams.Type.ENABLED
-          : SharedLibraryInterfaceParams.Type.DISABLED;
+          ? Optional.of(SharedLibraryInterfaceParams.Type.ENABLED)
+          : Optional.of(SharedLibraryInterfaceParams.Type.DISABLED);
     }
 
-    // Default.
-    return SharedLibraryInterfaceParams.Type.DISABLED;
+    return Optional.empty();
   }
 
   /**
@@ -637,7 +623,7 @@ public class CxxBuckConfig {
       BuckConfig config, Flavor flavor) {
     String cxxSection = new CxxBuckConfig(config, flavor).cxxSection;
 
-    Optional<UnconfiguredBuildTargetView> toolchainTarget =
+    Optional<UnconfiguredBuildTarget> toolchainTarget =
         config.getMaybeUnconfiguredBuildTarget(cxxSection, TOOLCHAIN_TARGET);
     if (!toolchainTarget.isPresent()) {
       return Optional.empty();
@@ -659,13 +645,12 @@ public class CxxBuckConfig {
     return Optional.of(new ProviderBasedUnresolvedCxxPlatform(toolchainTarget.get(), flavor));
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractCxxToolProviderParams {
+  @BuckStyleValue
+  abstract static class CxxToolProviderParams {
 
     public abstract String getSource();
 
-    public abstract Optional<UnconfiguredBuildTargetView> getBuildTarget();
+    public abstract Optional<UnconfiguredBuildTarget> getBuildTarget();
 
     public abstract Optional<PathSourcePath> getPath();
 

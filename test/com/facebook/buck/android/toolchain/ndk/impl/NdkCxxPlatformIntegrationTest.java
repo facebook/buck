@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.toolchain.ndk.impl;
@@ -76,16 +76,16 @@ import org.junit.runners.Parameterized;
 public class NdkCxxPlatformIntegrationTest {
 
   @Parameterized.Parameters(name = "{0},{1},{2}")
-  public static Collection<Object[]> data() {
+  public static Collection<Object[]> data() throws IOException {
     ImmutableList.Builder<TargetCpuType> targetCpuTypes = ImmutableList.builder();
-    if (AssumeAndroidPlatform.isArmAvailable()) {
+    if (AssumeAndroidPlatform.getForDefaultFilesystem().isArmAvailable()) {
       targetCpuTypes.add(TargetCpuType.ARM);
     }
     targetCpuTypes.add(
         TargetCpuType.ARMV7, TargetCpuType.ARM64, TargetCpuType.X86, TargetCpuType.X86_64);
     List<Object[]> data = new ArrayList<>();
     for (TargetCpuType targetCpuType : targetCpuTypes.build()) {
-      if (AssumeAndroidPlatform.isGnuStlAvailable()) {
+      if (AssumeAndroidPlatform.getForDefaultFilesystem().isGnuStlAvailable()) {
         data.add(new Object[] {NdkCompilerType.GCC, NdkCxxRuntime.GNUSTL, targetCpuType});
         // We don't support 64-bit clang yet.
         if (targetCpuType != TargetCpuType.ARM64 && targetCpuType != TargetCpuType.X86_64) {
@@ -143,9 +143,9 @@ public class NdkCxxPlatformIntegrationTest {
   }
 
   @Before
-  public void setUp() {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
-    if (AssumeAndroidPlatform.isArmAvailable()) {
+  public void setUp() throws Exception {
+    AssumeAndroidPlatform.getForDefaultFilesystem().assumeNdkIsAvailable();
+    if (AssumeAndroidPlatform.getForDefaultFilesystem().isArmAvailable()) {
       architectures = "arm, armv7, arm64, x86, x86_64";
     } else {
       architectures = "armv7, arm64, x86, x86_64";
@@ -154,7 +154,7 @@ public class NdkCxxPlatformIntegrationTest {
 
   @Test
   public void runtimeSupportsStl() throws IOException {
-    assumeFalse(AssumeAndroidPlatform.isUnifiedHeadersAvailable());
+    assumeFalse(AssumeAndroidPlatform.getForDefaultFilesystem().isUnifiedHeadersAvailable());
     assumeTrue(
         "libcxx is unsupported with this ndk",
         NdkCxxPlatforms.isSupportedConfiguration(getNdkRoot(), cxxRuntime));
@@ -199,8 +199,7 @@ public class NdkCxxPlatformIntegrationTest {
     // TODO: fix for Clang
     assumeTrue("clang is not supported", compiler != NdkCompilerType.CLANG);
     ProjectWorkspace workspace = setupWorkspace("ndk_debug_paths", tmp);
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     BuildTarget target =
         BuildTargetFactory.newInstance(
@@ -230,8 +229,7 @@ public class NdkCxxPlatformIntegrationTest {
 
     // Run another build in a location with a longer PWD, to verify that this doesn't affect output.
     ProjectWorkspace longPwdWorkspace = setupWorkspace("ndk_debug_paths", tmp_long_pwd);
-    ProjectFilesystem longPwdFilesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem longPwdFilesystem = longPwdWorkspace.getProjectFileSystem();
     longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     lib =
         longPwdWorkspace.getPath(
@@ -295,11 +293,7 @@ public class NdkCxxPlatformIntegrationTest {
             .getNdkGccVersion()
             .orElse(NdkCxxPlatforms.getDefaultGccVersionForNdk(ndkVersion));
     NdkCxxPlatformCompiler ndkCxxPlatformCompiler =
-        NdkCxxPlatformCompiler.builder()
-            .setType(NdkCompilerType.GCC)
-            .setVersion(gccVersion)
-            .setGccVersion(gccVersion)
-            .build();
+        NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, gccVersion, gccVersion);
     NdkCxxPlatformTargetConfiguration targetConfiguration =
         NdkCxxPlatforms.getTargetConfiguration(
             targetCpuType, ndkCxxPlatformCompiler, androidPlatform);

@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -19,8 +19,10 @@ package com.facebook.buck.cxx;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -43,36 +45,36 @@ public class CxxWriteArgsToFileStepTest {
   public void cxxWriteArgsToFilePassesLinkerOptionsViaArgFile()
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    Path fileListPath =
+    AbsPath fileListPath =
         projectFilesystem
             .getRootPath()
             .resolve("/tmp/cxxWriteArgsToFilePassesLinkerOptionsViaArgFile.txt");
 
     runTestForArgFilePathAndOutputPath(
-        fileListPath,
+        fileListPath.getPath(),
         Optional.empty(),
         ImmutableList.of(StringArg.of("-dummy"), StringArg.of("\"")),
         ImmutableList.of("-dummy", "\""),
-        projectFilesystem.getRootPath());
+        CanonicalCellName.rootCell());
   }
 
   @Test
   public void cxxWriteArgsToFileCreatesDirectoriesIfNeeded()
       throws IOException, InterruptedException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
-    Path fileListPath =
+    AbsPath fileListPath =
         projectFilesystem.getRootPath().resolve("unexisting_parent_folder/filelist.txt");
 
     runTestForArgFilePathAndOutputPath(
-        fileListPath,
+        fileListPath.getPath(),
         Optional.of(input -> "foo".equals(input) ? "bar" : input),
         ImmutableList.of(StringArg.of("-dummy"), StringArg.of("foo")),
         ImmutableList.of("-dummy", "bar"),
-        projectFilesystem.getRootPath());
+        CanonicalCellName.rootCell());
 
     // cleanup after test
-    Files.deleteIfExists(fileListPath);
-    Files.deleteIfExists(fileListPath.getParent());
+    Files.deleteIfExists(fileListPath.getPath());
+    Files.deleteIfExists(fileListPath.getParent().getPath());
   }
 
   private void runTestForArgFilePathAndOutputPath(
@@ -80,14 +82,15 @@ public class CxxWriteArgsToFileStepTest {
       Optional<Function<String, String>> escaper,
       ImmutableList<Arg> inputArgs,
       ImmutableList<String> expectedArgFileContents,
-      Path currentCellPath)
+      CanonicalCellName currentCellName)
       throws IOException {
     ExecutionContext context = TestExecutionContext.newInstance();
 
-    SourcePathResolver sourcePathResolver = new TestActionGraphBuilder().getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter =
+        new TestActionGraphBuilder().getSourcePathResolver();
     CxxWriteArgsToFileStep step =
         CxxWriteArgsToFileStep.create(
-            argFilePath, inputArgs, escaper, currentCellPath, sourcePathResolver, false);
+            argFilePath, inputArgs, escaper, currentCellName, sourcePathResolverAdapter, false);
 
     step.execute(context);
 

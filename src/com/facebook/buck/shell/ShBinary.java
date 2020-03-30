@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
@@ -19,11 +19,13 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.cell.CellNameResolver;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -35,7 +37,7 @@ import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -64,6 +66,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements BinaryBuildRule, HasRuntimeDeps {
@@ -129,7 +132,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // Create symlink to our own cell.
     CanonicalCellName thisCellCanonicalName = cellNameResolver.getName(Optional.empty());
     Path rootPath = cellPathResolver.getCellPath(thisCellCanonicalName);
-    Path relativePath = projectFilesystem.getRootPath().relativize(rootPath);
+    RelPath relativePath = projectFilesystem.getRootPath().relativize(rootPath);
     cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
     cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ROOT_CELL_LINK_NAME));
 
@@ -188,7 +191,13 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     valuesBuilder.put("cell_paths", cellsPathsStringsBuilder.build());
 
     Path defaultRuntimeResourcesPath =
-        runtimeResourcesDir.resolve(ROOT_CELL_LINK_NAME).resolve(getBuildTarget().getBasePath());
+        runtimeResourcesDir
+            .resolve(ROOT_CELL_LINK_NAME)
+            .resolve(
+                getBuildTarget()
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(runtimeResourcesDir.getFileSystem()));
 
     String defaultRuntimeResources = Escaper.escapeAsBashString(defaultRuntimeResourcesPath);
 
@@ -222,8 +231,8 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private CellLookupResult lookupCellForPath(Path path) {
-    Optional<String> result = null;
-    Path matchedPath = null;
+    @Nullable Optional<String> result = null;
+    @Nullable Path matchedPath = null;
 
     for (Map.Entry<Optional<String>, CanonicalCellName> alias :
         cellNameResolver.getKnownCells().entrySet()) {
@@ -235,8 +244,10 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       }
     }
 
-    Objects.requireNonNull(result, String.format("path %s is not included in any cell", path));
-    return new ImmutableCellLookupResult(result, matchedPath);
+    return ImmutableCellLookupResult.of(
+        Objects.requireNonNull(result, String.format("path %s is not included in any cell", path)),
+        Objects.requireNonNull(
+            matchedPath, String.format("path %s is not included in any cell", path)));
   }
 
   @Override
@@ -245,7 +256,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     return new CommandTool.Builder()
         .addArg(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), output)))
         .addInput(main)
@@ -264,7 +275,9 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   private Step getSymlinkStep(
-      SourcePathResolver resolver, ProjectFilesystem projectFilesystem, Path buildCellRootPath) {
+      SourcePathResolverAdapter resolver,
+      ProjectFilesystem projectFilesystem,
+      Path buildCellRootPath) {
     ImmutableList<String> conflicts = searchForLinkConflicts(resolver);
     if (conflicts.isEmpty()) {
       return new SymlinkTreeStep(
@@ -288,13 +301,13 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     };
   }
 
-  private Path getSymlinkPath(SourcePathResolver resolver, SourcePath input) {
+  private Path getSymlinkPath(SourcePathResolverAdapter resolver, SourcePath input) {
     Path runtimeLinkPath = runtimeResourcesDir.resolve(deriveLinkPath(resolver, input));
 
     return getProjectFilesystem().resolve(runtimeLinkPath);
   }
 
-  private ImmutableList<String> searchForLinkConflicts(SourcePathResolver resolver) {
+  private ImmutableList<String> searchForLinkConflicts(SourcePathResolverAdapter resolver) {
     Map<Path, Path> linkPaths = new HashMap<>();
     ImmutableList.Builder<String> conflicts = ImmutableList.builder();
     for (SourcePath sourcePath : resources) {
@@ -311,7 +324,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return conflicts.build();
   }
 
-  private Path deriveLinkPath(SourcePathResolver resolver, SourcePath sourcePath) {
+  private Path deriveLinkPath(SourcePathResolverAdapter resolver, SourcePath sourcePath) {
     if (sourcePath instanceof DefaultBuildTargetSourcePath) {
       BuildTarget target = ((DefaultBuildTargetSourcePath) sourcePath).getTarget();
 
@@ -325,7 +338,11 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
       // Tack on the target's base path and the source path name of the resource
       return mapped.resolve(
-          target.getBasePath().resolve(resolver.getSourcePathName(target, sourcePath)));
+          target
+              .getCellRelativeBasePath()
+              .getPath()
+              .toPathDefaultFileSystem()
+              .resolve(resolver.getSourcePathName(target, sourcePath)));
     }
     return Paths.get(ROOT_CELL_LINK_NAME).resolve(resolver.getRelativePath(sourcePath));
   }

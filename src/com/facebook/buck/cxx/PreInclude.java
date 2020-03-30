@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -39,7 +39,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -108,7 +108,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   /** @return path to the header file, relativized against the given project filesystem (cell) */
   public Path getRelativeHeaderPath(ProjectFilesystem relativizedTo) {
-    return relativizedTo.relativize(getAbsoluteHeaderPath());
+    return relativizedTo.relativize(getAbsoluteHeaderPath()).getPath();
   }
 
   private static BuildRuleParams makeBuildRuleParams(ImmutableSortedSet<BuildRule> deps) {
@@ -237,7 +237,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       Preprocessor preprocessor,
       CxxToolFlags preprocessorFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver) {
+      SourcePathResolverAdapter pathResolver) {
     return new PreprocessorDelegate(
         cxxPlatform.getHeaderVerification(),
         PathSourcePath.of(getProjectFilesystem(), Paths.get("")),
@@ -246,7 +246,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
             Optional.of(getHeaderSourcePath()),
             preprocessorFlags,
             getIncludes(cxxPlatform, graphBuilder),
-            getFrameworks(cxxPlatform, graphBuilder)),
+            ImmutableList.copyOf(getFrameworks(cxxPlatform, graphBuilder))),
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, pathResolver),
         /* leadingIncludePaths */ Optional.empty(),
         Optional.empty(),
@@ -264,7 +264,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolver pathResolver);
+      SourcePathResolverAdapter pathResolver);
 
   /**
    * Look up or build a precompiled header build rule which this build rule is requesting.

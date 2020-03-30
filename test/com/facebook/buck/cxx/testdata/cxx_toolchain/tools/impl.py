@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import argparse
 import sys
 
@@ -21,11 +23,6 @@ class StripQuotesAction(argparse.Action):
 def log(v):
     sys.stderr.write(str(v))
     sys.stderr.write("\n")
-
-
-def run(cmd):
-    sys.stderr.write(cmd)
-    sys.stderr.write(" ".join(parse_args()))
 
 
 # To make debugging easier, just always log the args when this module is loaded

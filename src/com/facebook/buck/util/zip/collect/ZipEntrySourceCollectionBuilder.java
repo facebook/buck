@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.util.zip.collect;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -52,10 +53,10 @@ public class ZipEntrySourceCollectionBuilder {
   /** Add the given file as a source for an entry with the provided name. */
   public void addFile(String entryName, Path sourceFilePath) {
     entryName = PathFormatter.pathWithUnixSeparators(entryName);
-    if (excludedEntriesMatcher.matchesAny(entryName)) {
+    if (excludedEntriesMatcher.matches(entryName)) {
       return;
     }
-    ZipEntrySource entrySource = new ImmutableFileZipEntrySource(sourceFilePath, entryName);
+    ZipEntrySource entrySource = ImmutableFileZipEntrySource.of(sourceFilePath, entryName);
     Collection<ZipEntrySource> oldEntries = entryNameToEntry.get(entrySource.getEntryName());
     if (oldEntries.isEmpty()) {
       entryNameToEntry.put(entrySource.getEntryName(), entrySource);
@@ -72,10 +73,10 @@ public class ZipEntrySourceCollectionBuilder {
     ImmutableList<String> zipEntries = Zip.getAllZipEntries(zipFilePath);
     for (int i = 0; i < zipEntries.size(); ++i) {
       String entryName = zipEntries.get(i);
-      if (excludedEntriesMatcher.matchesAny(entryName)) {
+      if (excludedEntriesMatcher.matches(entryName)) {
         continue;
       }
-      ZipEntrySource entrySource = new ImmutableZipEntrySourceFromZip(zipFilePath, entryName, i);
+      ZipEntrySource entrySource = ImmutableZipEntrySourceFromZip.of(zipFilePath, entryName, i);
       Collection<ZipEntrySource> oldEntries = entryNameToEntry.get(entryName);
       if (oldEntries.isEmpty()) {
         entryNameToEntry.put(entryName, entrySource);
@@ -86,7 +87,7 @@ public class ZipEntrySourceCollectionBuilder {
   }
 
   public ZipEntrySourceCollection build() {
-    return new ImmutableZipEntrySourceCollection(entryNameToEntry.values());
+    return ImmutableZipEntrySourceCollection.of(entryNameToEntry.values());
   }
 
   private Function<ZipEntrySource, Unit> createDuplicateEntryHandler() {

@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -32,8 +32,9 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaClassHashesProvider;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -46,6 +47,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.step.fs.TouchStep;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.zip.ZipScrubberStep;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -81,9 +83,12 @@ import javax.annotation.Nullable;
  * cannot write a meaningful "dummy .dex" if there are no class files to pass to {@code dx}.
  */
 public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJavaLibrary.Impl>
-    implements InitializableFromDisk<DexProducedFromJavaLibrary.BuildOutput> {
+    implements InitializableFromDisk<DexProducedFromJavaLibrary.BuildOutput>,
+        TrimUberRDotJava.UsesResources {
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
+
+  private final BuildTarget javaLibraryBuildTarget;
 
   public DexProducedFromJavaLibrary(
       BuildTarget buildTarget,
@@ -106,6 +111,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
             androidPlatformTarget,
             javaLibrary));
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
+    this.javaLibraryBuildTarget = javaLibrary.getBuildTarget();
   }
 
   public DexProducedFromJavaLibrary(
@@ -174,19 +180,20 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
       ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
       // If there are classes, run dx.
       ImmutableSortedMap<String, HashCode> classNamesToHashes =
-          javaClassHashesProvider.getClassNamesToHashes(filesystem, sourcePathResolver);
+          javaClassHashesProvider.getClassNamesToHashes(filesystem, sourcePathResolverAdapter);
       boolean hasClassesToDx = !classNamesToHashes.isEmpty();
       Supplier<Integer> weightEstimate;
 
       @Nullable DxStep dx;
 
+      Path pathToDex = outputPathResolver.resolvePath(outputDex);
       if (hasClassesToDx) {
-        Path pathToOutputFile = sourcePathResolver.getAbsolutePath(javaLibrarySourcePath);
+        Path pathToOutputFile = sourcePathResolverAdapter.getAbsolutePath(javaLibrarySourcePath);
         EstimateDexWeightStep estimate = new EstimateDexWeightStep(filesystem, pathToOutputFile);
         steps.add(estimate);
         weightEstimate = estimate;
@@ -202,7 +209,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         if (!desugarEnabled) {
           options.add(Option.NO_DESUGAR);
         }
-        Path pathToDex = outputPathResolver.resolvePath(outputDex);
         dx =
             new DxStep(
                 filesystem,
@@ -213,7 +219,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
                 Optional.empty(),
                 dexTool,
                 dexTool.equals(DxStep.D8),
-                getAbsolutePaths(desugarDeps, sourcePathResolver),
+                getAbsolutePaths(desugarDeps, sourcePathResolverAdapter),
                 Optional.empty(),
                 Optional.empty() /* minSdkVersion */);
         steps.add(dx);
@@ -225,6 +231,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
       } else {
         dx = null;
         weightEstimate = Suppliers.ofInstance(0);
+        // Create an empty file so the dex output can be used in input rulekeys
+        steps.add(new TouchStep(filesystem, pathToDex));
       }
 
       // Run a step to record artifacts and metadata. The values recorded depend upon whether dx was
@@ -272,10 +280,10 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     }
 
     private Collection<Path> getAbsolutePaths(
-        Collection<SourcePath> sourcePaths, SourcePathResolver sourcePathResolver) {
+        Collection<SourcePath> sourcePaths, SourcePathResolverAdapter sourcePathResolverAdapter) {
       return sourcePaths.stream()
           .filter(Objects::nonNull)
-          .map(sourcePathResolver::getAbsolutePath)
+          .map(sourcePathResolverAdapter::getAbsolutePath)
           .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.naturalOrder()));
     }
   }
@@ -322,7 +330,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
   }
 
   @Override
-  public BuildOutput initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+  public BuildOutput initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
     return new BuildOutput(
         readWeightEstimateFromMetadata(),
         readClassNamesToHashesFromMetadata(),
@@ -393,7 +401,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     return getBuildable().desugarDeps;
   }
 
-  public SourcePath getSourcePathToDex() {
+  BuildTargetSourcePath getSourcePathToDex() {
     return getSourcePath(getPathToDex());
   }
 
@@ -402,10 +410,10 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
   }
 
   public boolean hasOutput() {
-    return !getClassNames().isEmpty();
+    return !getClassNamesToHashes().isEmpty();
   }
 
-  ImmutableSortedMap<String, HashCode> getClassNames() {
+  ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
     return buildOutputInitializer.getBuildOutput().classnamesToHashes;
   }
 
@@ -413,7 +421,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     return buildOutputInitializer.getBuildOutput().weightEstimate;
   }
 
-  ImmutableList<String> getReferencedResources() {
+  @Override
+  public ImmutableList<String> getReferencedResources() {
     return buildOutputInitializer.getBuildOutput().referencedResources;
   }
 
@@ -425,5 +434,9 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
             .resolve(Impl.DEX_RULE_METADATA)
             .resolve(REFERENCED_RESOURCES.toString());
     return filesystem.readFileIfItExists(resourcesFile);
+  }
+
+  public BuildTarget getJavaLibraryBuildTarget() {
+    return javaLibraryBuildTarget;
   }
 }

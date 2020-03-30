@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain.objectfile;
@@ -139,18 +139,6 @@ public class ObjectFileScrubbers {
     return bytes;
   }
 
-  public static int getOctalStringAsInt(ByteBuffer buffer, int len) {
-    byte[] bytes = getBytes(buffer, len);
-    String str = new String(bytes, Charsets.US_ASCII);
-    return Integer.parseInt(str.trim(), 8);
-  }
-
-  public static int getDecimalStringAsInt(ByteBuffer buffer, int len) {
-    byte[] bytes = getBytes(buffer, len);
-    String str = new String(bytes, Charsets.US_ASCII);
-    return Integer.parseInt(str.trim());
-  }
-
   public static long getDecimalStringAsLong(ByteBuffer buffer, int len) {
     byte[] bytes = getBytes(buffer, len);
     String str = new String(bytes, Charsets.US_ASCII).trim();
@@ -183,16 +171,21 @@ public class ObjectFileScrubbers {
     return Shorts.fromBytes(b2, b1);
   }
 
-  public static String getAsciiString(ByteBuffer buffer) {
-    int position = buffer.position();
-    int length = 0;
-    do {
-      length++;
-    } while (buffer.get() != 0x00);
-    byte[] bytes = new byte[length - 1];
-    buffer.position(position);
-    buffer.get(bytes, 0, length - 1);
-    return new String(bytes, Charsets.US_ASCII);
+  /** Returned buffer does _not_ include NULL-terminating char. */
+  public static ByteBuffer getCharByteBuffer(byte[] bytes, int startPosition) {
+    int nullCharOffset = startPosition;
+    while (bytes[nullCharOffset] != 0x0) {
+      nullCharOffset++;
+    }
+
+    return ByteBuffer.wrap(bytes, startPosition, nullCharOffset - startPosition);
+  }
+
+  /** C string does _not_ include NULL-terminating char. */
+  public static void putCharByteBuffer(ByteBuffer dest, int position, ByteBuffer charByteBuffer) {
+    dest.position(position);
+    dest.put(charByteBuffer);
+    dest.put((byte) 0x0); // NULL terminating character
   }
 
   private static void putSpaceLeftPaddedString(ByteBuffer buffer, int len, String value) {
@@ -230,23 +223,35 @@ public class ObjectFileScrubbers {
   }
 
   public static void putLittleEndianLong(ByteBuffer buffer, long value) {
-    byte[] bytes = Longs.toByteArray(value);
-    byte[] flipped = {
-      bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]
-    };
-    buffer.put(flipped);
+    byte bytes0 = (byte) (value >>> 0);
+    byte bytes1 = (byte) (value >>> 8);
+    byte bytes2 = (byte) (value >>> 16);
+    byte bytes3 = (byte) (value >>> 24);
+    byte bytes4 = (byte) (value >>> 32);
+    byte bytes5 = (byte) (value >>> 40);
+    byte bytes6 = (byte) (value >>> 48);
+    byte bytes7 = (byte) (value >>> 56);
+
+    buffer.put(bytes0);
+    buffer.put(bytes1);
+    buffer.put(bytes2);
+    buffer.put(bytes3);
+    buffer.put(bytes4);
+    buffer.put(bytes5);
+    buffer.put(bytes6);
+    buffer.put(bytes7);
   }
 
   public static void putLittleEndianInt(ByteBuffer buffer, int value) {
-    byte[] bytes = Ints.toByteArray(value);
-    byte[] flipped = {bytes[3], bytes[2], bytes[1], bytes[0]};
-    buffer.put(flipped);
-  }
+    byte bytes0 = (byte) (value >>> 0);
+    byte bytes1 = (byte) (value >>> 8);
+    byte bytes2 = (byte) (value >>> 16);
+    byte bytes3 = (byte) (value >>> 24);
 
-  public static void putAsciiString(ByteBuffer buffer, String string) {
-    byte[] bytes = string.getBytes(Charsets.US_ASCII);
-    buffer.put(bytes);
-    buffer.put((byte) 0x00);
+    buffer.put(bytes0);
+    buffer.put(bytes1);
+    buffer.put(bytes2);
+    buffer.put(bytes3);
   }
 
   public static void checkArchive(boolean expression, String msg)

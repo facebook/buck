@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.builders;
@@ -23,10 +23,11 @@ import com.facebook.buck.core.cell.CellConfig;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.module.BuckModuleManager;
 import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
@@ -39,6 +40,7 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.sourcepath.resolver.impl.AbstractSourcePathResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.ToolchainProviderFactory;
@@ -63,15 +65,16 @@ import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
@@ -108,8 +111,8 @@ public abstract class IsolatedBuildableBuilder {
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   IsolatedBuildableBuilder(Path workRoot, Path projectRoot, Path metadataPath) throws IOException {
-    Path canonicalWorkRoot = workRoot.toRealPath().normalize();
-    Path canonicalProjectRoot = canonicalWorkRoot.resolve(projectRoot).normalize();
+    AbsPath canonicalWorkRoot = AbsPath.of(workRoot.toRealPath()).normalize();
+    AbsPath canonicalProjectRoot = canonicalWorkRoot.resolve(projectRoot).normalize();
     this.metadataPath = metadataPath;
     this.dataRoot = workRoot.resolve("__data__");
 
@@ -132,12 +135,16 @@ public abstract class IsolatedBuildableBuilder {
         };
 
     // Setup filesystemCell and buck config.
-    Config config = Configs.createDefaultConfig(canonicalProjectRoot);
+    Config config = Configs.createDefaultConfig(canonicalProjectRoot.getPath());
     ProjectFilesystemFactory projectFilesystemFactory = new DefaultProjectFilesystemFactory();
 
     // Root filesystemCell doesn't require embedded buck-out info.
     ProjectFilesystem filesystem =
-        projectFilesystemFactory.createProjectFilesystem(canonicalProjectRoot, config);
+        projectFilesystemFactory.createProjectFilesystem(
+            CanonicalCellName.rootCell(),
+            canonicalProjectRoot,
+            config,
+            BuckPaths.getBuckOutIncludeTargetConfigHashFromRootCellConfig(config));
 
     Architecture architecture = Architecture.detect();
     Platform platform = Platform.detect();
@@ -156,7 +163,8 @@ public abstract class IsolatedBuildableBuilder {
             architecture,
             platform,
             clientEnvironment,
-            buildTargetName -> buildTargetFactory.create(cellPathResolver, buildTargetName));
+            buildTargetName ->
+                buildTargetFactory.create(buildTargetName, cellPathResolver.getCellNameResolver()));
 
     BuckModuleManager moduleManager =
         new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
@@ -167,17 +175,13 @@ public abstract class IsolatedBuildableBuilder {
 
     ToolchainProviderFactory toolchainProviderFactory =
         new DefaultToolchainProviderFactory(
-            pluginManager,
-            clientEnvironment,
-            processExecutor,
-            executableFinder,
-            () -> EmptyTargetConfiguration.INSTANCE);
+            pluginManager, clientEnvironment, processExecutor, executableFinder);
 
     CellProvider cellProvider =
         LocalCellProviderFactory.create(
             filesystem,
             buckConfig,
-            CellConfig.of(),
+            CellConfig.EMPTY_INSTANCE,
             cellPathResolver.getPathMapping(),
             cellPathResolver,
             moduleManager,
@@ -197,24 +201,23 @@ public abstract class IsolatedBuildableBuilder {
     this.eventBus = createEventBus(console);
 
     this.executionContext =
-        ExecutionContext.of(
-            console,
-            eventBus,
-            platform,
-            clientEnvironment,
-            javaPackageFinder,
-            ImmutableMap.of(),
-            Optional.empty(),
-            Optional.empty(),
-            Optional.empty(),
-            cellPathResolver,
-            canonicalProjectRoot,
-            processExecutor,
-            projectFilesystemFactory);
+        ExecutionContext.builder()
+            .setConsole(console)
+            .setBuckEventBus(eventBus)
+            .setPlatform(platform)
+            .setEnvironment(clientEnvironment)
+            .setJavaPackageFinder(javaPackageFinder)
+            .setExecutors(ImmutableMap.of())
+            .setCellPathResolver(cellPathResolver)
+            .setCells(cellProvider.getRootCell())
+            .setBuildCellRootPath(canonicalProjectRoot.getPath())
+            .setProcessExecutor(processExecutor)
+            .setProjectFilesystemFactory(projectFilesystemFactory)
+            .build();
 
     this.buildContext =
-        BuildContext.builder()
-            .setSourcePathResolver(
+        BuildContext.of(
+            new SourcePathResolverAdapter(
                 new AbstractSourcePathResolver() {
                   @Override
                   protected ProjectFilesystem getBuildTargetSourcePathFilesystem(
@@ -225,7 +228,7 @@ public abstract class IsolatedBuildableBuilder {
                   }
 
                   @Override
-                  protected SourcePath resolveDefaultBuildTargetSourcePath(
+                  protected ImmutableSortedSet<SourcePath> resolveDefaultBuildTargetSourcePath(
                       DefaultBuildTargetSourcePath targetSourcePath) {
                     throw new IllegalStateException(
                         "Cannot resolve DefaultBuildTargetSourcePaths when running with an isolated strategy. "
@@ -237,13 +240,11 @@ public abstract class IsolatedBuildableBuilder {
                     throw new IllegalStateException(
                         "Cannot resolve SourcePath names during build when running with an isolated strategy.");
                   }
-                })
-            .setBuildCellRootPath(canonicalProjectRoot)
-            .setEventBus(eventBus)
-            .setJavaPackageFinder(javaPackageFinder)
-            .setShouldDeleteTemporaries(
-                buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries())
-            .build();
+                }),
+            canonicalProjectRoot.getPath(),
+            javaPackageFinder,
+            eventBus,
+            buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries());
 
     this.toolchainProviderFunction =
         cellName ->

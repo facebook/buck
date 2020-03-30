@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.swift;
@@ -24,13 +24,14 @@ import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -47,7 +48,7 @@ public class SwiftNativeLinkableGroupTest {
 
   private Tool swiftcTool;
   private Tool swiftStdTool;
-  private SourcePathResolver sourcePathResolver;
+  private SourcePathResolverAdapter sourcePathResolverAdapter;
   private AppleSdk iphoneSdk;
   private AppleSdkPaths iphoneSdkPaths;
   private AppleSdk macosxSdk;
@@ -92,20 +93,25 @@ public class SwiftNativeLinkableGroupTest {
 
   @Before
   public void setUp() {
-    swiftcTool = VersionedTool.of(FakeSourcePath.of("swiftc"), "foo", "1.0");
-    swiftStdTool = VersionedTool.of(FakeSourcePath.of("swift-std"), "foo", "1.0");
+    swiftcTool = VersionedTool.of("foo", FakeSourcePath.of("swiftc"), "1.0");
+    swiftStdTool = VersionedTool.of("foo", FakeSourcePath.of("swift-std"), "1.0");
 
     setUpAppleSdks();
 
     BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    sourcePathResolver = buildRuleResolver.getSourcePathResolver();
+    sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
   }
 
   @Test
   public void testStaticLinkerFlagsOnMobile() {
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            iphoneSdk, iphoneSdkPaths, swiftcTool, Optional.of(swiftStdTool), true);
+            iphoneSdk,
+            iphoneSdkPaths,
+            swiftcTool,
+            Optional.of(swiftStdTool),
+            true,
+            SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3"));
 
     ImmutableList.Builder<Arg> staticArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(
@@ -121,7 +127,7 @@ public class SwiftNativeLinkableGroupTest {
     // On iOS, Swift runtime is not available as static libs
     assertEquals(staticArgs, sharedArgs);
     assertEquals(
-        Arg.stringify(sharedArgs, sourcePathResolver),
+        Arg.stringify(sharedArgs, sourcePathResolverAdapter),
         ImmutableList.of(
             "-Xlinker",
             "-rpath",
@@ -141,7 +147,12 @@ public class SwiftNativeLinkableGroupTest {
   public void testStaticLinkerFlagsOnMac() {
     SwiftPlatform swiftPlatform =
         SwiftPlatformFactory.build(
-            macosxSdk, macosxSdkPaths, swiftcTool, Optional.of(swiftStdTool), true);
+            macosxSdk,
+            macosxSdkPaths,
+            swiftcTool,
+            Optional.of(swiftStdTool),
+            true,
+            SwiftTargetTriple.of("x86_64", "apple", "ios", "9.3"));
 
     ImmutableList.Builder<Arg> sharedArgsBuilder = ImmutableList.builder();
     SwiftRuntimeNativeLinkableGroup.populateLinkerArguments(
@@ -149,7 +160,7 @@ public class SwiftNativeLinkableGroupTest {
 
     ImmutableList<Arg> sharedArgs = sharedArgsBuilder.build();
     assertEquals(
-        Arg.stringify(sharedArgs, sourcePathResolver),
+        Arg.stringify(sharedArgs, sourcePathResolverAdapter),
         ImmutableList.of(
             "-Xlinker",
             "-rpath",

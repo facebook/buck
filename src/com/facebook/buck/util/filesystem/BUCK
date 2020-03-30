@@ -1,14 +1,6 @@
 java_library(
     name = "filesystem",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/io/filesystem:filesystem",
-        "//src/com/facebook/buck/util/function:function",
-        "//src/com/facebook/buck/util/types:types",
-        "//third-party/java/bazel:bazel",
-        "//third-party/java/guava:guava",
-        "//third-party/java/jackson:jackson-databind",
-    ],
     tests = [
         "//test/com/facebook/buck/util/filesystem:filesystem",
     ],
@@ -18,5 +10,13 @@ java_library(
     deps = [
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/io/filesystem:filesystem",
+        "//src/com/facebook/buck/util/function:function",
+        "//src/com/facebook/buck/util/types:types",
+        "//third-party/java/bazel:bazel",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-databind",
     ],
 )

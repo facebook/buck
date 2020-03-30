@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.simulator;
@@ -69,77 +69,65 @@ public class AppleSimulatorDiscoveryTest {
     ImmutableSet<AppleSimulator> expected =
         ImmutableSet.<AppleSimulator>builder()
             .add(
-                AppleSimulator.builder()
-                    .setName("iPhone 4s")
-                    .setUdid("F7C1CC9A-945E-4258-BA84-DEEBE683798B")
-                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "iPhone 4s",
+                    "F7C1CC9A-945E-4258-BA84-DEEBE683798B",
+                    AppleSimulatorState.SHUTDOWN))
             .add(
-                AppleSimulator.builder()
-                    .setName("iPhone 5")
-                    .setUdid("45BD7164-686C-474F-8C68-3730432BC5F2")
-                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "iPhone 5",
+                    "45BD7164-686C-474F-8C68-3730432BC5F2",
+                    AppleSimulatorState.SHUTDOWN))
             .add(
-                AppleSimulator.builder()
-                    .setName("iPhone 5s")
-                    .setUdid("70200ED8-EEF1-4BDB-BCCF-3595B137D67D")
-                    .setSimulatorState(AppleSimulatorState.BOOTED)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "iPhone 5s",
+                    "70200ED8-EEF1-4BDB-BCCF-3595B137D67D",
+                    AppleSimulatorState.BOOTED))
             .add(
-                AppleSimulator.builder()
-                    .setName("iPhone 6 Plus")
-                    .setUdid("92340ACF-2C44-455F-BACD-573B133FB20E")
-                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "iPhone 6 Plus",
+                    "92340ACF-2C44-455F-BACD-573B133FB20E",
+                    AppleSimulatorState.SHUTDOWN))
             .add(
-                AppleSimulator.builder()
-                    .setName("iPhone 6")
-                    .setUdid("A75FF972-FE12-4656-A8CC-99572879D4A3")
-                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "iPhone 6",
+                    "A75FF972-FE12-4656-A8CC-99572879D4A3",
+                    AppleSimulatorState.SHUTDOWN))
             .add(
-                AppleSimulator.builder()
-                    .setName("iPhone SE Trailing Whitespace")
-                    .setUdid("CBB0391A-118C-39BA-CA29-11405CA10BC1")
-                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "iPhone SE Trailing Whitespace",
+                    "CBB0391A-118C-39BA-CA29-11405CA10BC1",
+                    AppleSimulatorState.SHUTDOWN))
             .add(
-                AppleSimulator.builder()
-                    .setName("iPhone ANSI Color")
-                    .setUdid("7313DF34-884C-49F7-8261-B26377F9FC23")
-                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "iPhone ANSI Color",
+                    "7313DF34-884C-49F7-8261-B26377F9FC23",
+                    AppleSimulatorState.SHUTDOWN))
             .add(
-                AppleSimulator.builder()
-                    .setName("iPad 2")
-                    .setUdid("CC1B0BAD-BAE6-4A53-92CF-F79850654057")
-                    .setSimulatorState(AppleSimulatorState.SHUTTING_DOWN)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "iPad 2",
+                    "CC1B0BAD-BAE6-4A53-92CF-F79850654057",
+                    AppleSimulatorState.SHUTTING_DOWN))
             .add(
-                AppleSimulator.builder()
-                    .setName("iPad Retina")
-                    .setUdid("137AAA25-54A1-42E8-8202-84DEADD668E1")
-                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "iPad Retina",
+                    "137AAA25-54A1-42E8-8202-84DEADD668E1",
+                    AppleSimulatorState.SHUTDOWN))
             .add(
-                AppleSimulator.builder()
-                    .setName("iPad Air")
-                    .setUdid("554B2E0F-63F3-4400-8319-5C5062CF4C95")
-                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "iPad Air",
+                    "554B2E0F-63F3-4400-8319-5C5062CF4C95",
+                    AppleSimulatorState.SHUTDOWN))
             .add(
-                AppleSimulator.builder()
-                    .setName("Resizable iPhone")
-                    .setUdid("58E3748F-F7E6-4A45-B52C-A136B59F7A42")
-                    .setSimulatorState(AppleSimulatorState.CREATING)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "Resizable iPhone",
+                    "58E3748F-F7E6-4A45-B52C-A136B59F7A42",
+                    AppleSimulatorState.CREATING))
             .add(
-                AppleSimulator.builder()
-                    .setName("Resizable iPad")
-                    .setUdid("56FE1CBC-61FF-443D-8E23-19D05864C6DB")
-                    .setSimulatorState(AppleSimulatorState.SHUTDOWN)
-                    .build())
+                ImmutableAppleSimulator.of(
+                    "Resizable iPad",
+                    "56FE1CBC-61FF-443D-8E23-19D05864C6DB",
+                    AppleSimulatorState.SHUTDOWN))
             .build();
 
     assertThat(simulators, is(equalTo(expected)));
@@ -148,18 +136,15 @@ public class AppleSimulatorDiscoveryTest {
   @Test
   public void appleSimulatorProfileDiscoveredFromPlist() throws Exception {
     AppleSimulator simulator =
-        AppleSimulator.builder()
-            .setName("iPhone 5s")
-            .setUdid("70200ED8-EEF1-4BDB-BCCF-3595B137D67D")
-            .setSimulatorState(AppleSimulatorState.BOOTED)
-            .build();
+        ImmutableAppleSimulator.of(
+            "iPhone 5s", "70200ED8-EEF1-4BDB-BCCF-3595B137D67D", AppleSimulatorState.BOOTED);
     Optional<AppleSimulatorProfile> simulatorProfile =
         AppleSimulatorDiscovery.discoverAppleSimulatorProfile(
             simulator, TestDataHelper.getTestDataDirectory(this));
 
     Optional<AppleSimulatorProfile> expected =
         Optional.of(
-            AppleSimulatorProfile.builder()
+            ImmutableAppleSimulatorProfile.builder()
                 .addSupportedProductFamilyIDs(1)
                 .addSupportedArchitectures("i386", "x86_64")
                 .build());

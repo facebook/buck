@@ -1,22 +1,22 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Escaper;
@@ -72,7 +72,7 @@ class CxxErrorTransformer {
                       + "(?<suffix>(?::\\d+(?::\\d+:)?)?:)"));
 
   @VisibleForTesting
-  String transformLine(SourcePathResolver pathResolver, String line) {
+  String transformLine(SourcePathResolverAdapter pathResolver, String line) {
     for (Pattern pattern : PATH_PATTERNS) {
       Matcher m = pattern.matcher(line);
       if (m.find()) {
@@ -92,7 +92,7 @@ class CxxErrorTransformer {
     return line;
   }
 
-  private String transformPath(SourcePathResolver pathResolver, String original) {
+  private String transformPath(SourcePathResolverAdapter pathResolver, String original) {
     Path path = MorePaths.normalize(filesystem.resolve(original));
 
     // And, of course, we need to fixup any replacement paths.

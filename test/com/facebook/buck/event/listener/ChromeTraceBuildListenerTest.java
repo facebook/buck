@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -49,7 +49,6 @@ import com.facebook.buck.event.CompilerPluginDurationEvent;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.LeafEvents;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.event.chrome_trace.ChromeTraceEvent;
@@ -68,6 +67,7 @@ import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.test.selectors.TestSelectorList;
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.perf.PerfStatsTracking;
@@ -108,38 +108,39 @@ public class ChromeTraceBuildListenerTest {
   private static final BuildId BUILD_ID = new BuildId("BUILD_ID");
   private static final long CURRENT_TIME_MILLIS = 1409702151000L;
   private static final long NANO_TIME = TimeUnit.SECONDS.toNanos(300);
-  private static final FakeClock FAKE_CLOCK =
-      FakeClock.builder().currentTimeMillis(CURRENT_TIME_MILLIS).nanoTime(NANO_TIME).build();
+  private static final FakeClock FAKE_CLOCK = FakeClock.of(CURRENT_TIME_MILLIS, NANO_TIME);
   private static final String EXPECTED_DIR =
       "buck-out/log/2014-09-02_23h55m51s_no_sub_command_BUILD_ID/";
 
   @Rule public TemporaryFolder tmpDir = new TemporaryFolder();
+  @Rule public TemporaryPaths tmpPath = new TemporaryPaths();
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private InvocationInfo invocationInfo;
   private BuildRuleDurationTracker durationTracker;
   private BuckEventBus eventBus;
   private TaskManagerCommandScope managerScope;
+  private CriticalPathEventListener criticalPathEventListener;
 
   @Before
   public void setUp() {
     invocationInfo =
-        InvocationInfo.builder()
-            .setTimestampMillis(CURRENT_TIME_MILLIS)
-            .setBuckLogDir(tmpDir.getRoot().toPath().resolve("buck-out/log"))
-            .setBuildId(BUILD_ID)
-            .setSubCommand("no_sub_command")
-            .setIsDaemon(false)
-            .setSuperConsoleEnabled(false)
-            .setUnexpandedCommandArgs(ImmutableList.of("@mode/arglist", "--foo", "--bar"))
-            .setCommandArgs(ImmutableList.of("--config", "configvalue", "--foo", "--bar"))
-            .setIsRemoteExecution(false)
-            .setRepository("repository")
-            .setWatchmanVersion("3.1.0")
-            .build();
+        InvocationInfo.of(
+            BUILD_ID,
+            false,
+            false,
+            "no_sub_command",
+            ImmutableList.of("--config", "configvalue", "--foo", "--bar"),
+            ImmutableList.of("@mode/arglist", "--foo", "--bar"),
+            tmpDir.getRoot().toPath().resolve("buck-out/log"),
+            false,
+            "repository",
+            "3.1.0",
+            CURRENT_TIME_MILLIS);
     durationTracker = new BuildRuleDurationTracker();
     eventBus = new DefaultBuckEventBus(FAKE_CLOCK, BUILD_ID);
     managerScope = TestBackgroundTaskManager.of().getNewScope(invocationInfo.getBuildId());
+    criticalPathEventListener = new CriticalPathEventListener(tmpPath.getRoot());
   }
 
   @Test
@@ -154,7 +155,8 @@ public class ChromeTraceBuildListenerTest {
             FAKE_CLOCK,
             chromeTraceConfig(1, false),
             managerScope,
-            Optional.empty());
+            Optional.empty(),
+            criticalPathEventListener);
     FakeBuckEvent event = new FakeBuckEvent();
     eventBus.post(event); // Populates it with a timestamp
 
@@ -193,7 +195,8 @@ public class ChromeTraceBuildListenerTest {
             FAKE_CLOCK,
             chromeTraceConfig(1, false),
             managerScope,
-            Optional.empty());
+            Optional.empty(),
+            criticalPathEventListener);
     listener.writeChromeTraceMetadataEvent("test", ImmutableMap.of());
     listener.close();
     managerScope.close();
@@ -231,7 +234,8 @@ public class ChromeTraceBuildListenerTest {
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(42, false),
             managerScope,
-            Optional.empty());
+            Optional.empty(),
+            criticalPathEventListener);
     eventBus.register(listener);
 
     LeafEvents.scope(eventBus, "testing_scope", false).close();
@@ -264,7 +268,8 @@ public class ChromeTraceBuildListenerTest {
             threadMXBean,
             chromeTraceConfig(3, false),
             managerScope,
-            Optional.empty());
+            Optional.empty(),
+            criticalPathEventListener);
 
     FakeBuckEvent event = new FakeBuckEvent();
     int threadId = 1;
@@ -319,7 +324,8 @@ public class ChromeTraceBuildListenerTest {
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(3, false),
             managerScope,
-            Optional.empty());
+            Optional.empty(),
+            criticalPathEventListener);
 
     listener.close();
     managerScope.close();
@@ -357,7 +363,8 @@ public class ChromeTraceBuildListenerTest {
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(42, false),
             managerScope,
-            Optional.of(reStats));
+            Optional.of(reStats),
+            criticalPathEventListener);
 
     Clock fakeClock = new IncrementingFakeClock(TimeUnit.MILLISECONDS.toNanos(1));
     BuckEventBus eventBus = BuckEventBusForTests.newInstance(fakeClock, buildId);
@@ -365,7 +372,8 @@ public class ChromeTraceBuildListenerTest {
     eventBus.register(listener);
 
     CommandEvent.Started commandEventStarted =
-        CommandEvent.started("party", ImmutableList.of("arg1", "arg2"), OptionalLong.of(100), 23L);
+        CommandEvent.started(
+            "party", ImmutableList.of("arg1", "arg2"), Paths.get(""), OptionalLong.of(100), 23L);
     eventBus.post(commandEventStarted);
 
     RemoteExecutionSessionEvent.Started reEventStarted = RemoteExecutionSessionEvent.started();
@@ -432,7 +440,8 @@ public class ChromeTraceBuildListenerTest {
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(42, false),
             managerScope,
-            Optional.empty());
+            Optional.empty(),
+            criticalPathEventListener);
 
     BuildTarget target = BuildTargetFactory.newInstance("//fake:rule");
 
@@ -449,7 +458,8 @@ public class ChromeTraceBuildListenerTest {
     eventBus.register(listener);
 
     CommandEvent.Started commandEventStarted =
-        CommandEvent.started("party", ImmutableList.of("arg1", "arg2"), OptionalLong.of(100), 23L);
+        CommandEvent.started(
+            "party", ImmutableList.of("arg1", "arg2"), Paths.get(""), OptionalLong.of(100), 23L);
     eventBus.post(commandEventStarted);
     eventBus.post(
         new PerfStatsTracking.MemoryPerfStatsEvent(
@@ -475,9 +485,9 @@ public class ChromeTraceBuildListenerTest {
 
     ArtifactCompressionEvent.Started artifactCompressionStartedEvent =
         ArtifactCompressionEvent.started(
-            ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of(ruleKey));
+            ArtifactCompressionEvent.Operation.COMPRESS, ImmutableSet.of(ruleKey), rule);
     eventBus.post(artifactCompressionStartedEvent);
-    eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent, 0, 0));
+    eventBus.post(ArtifactCompressionEvent.finished(artifactCompressionStartedEvent, 0, 0, rule));
 
     BuildRuleEvent.Started started = BuildRuleEvent.started(rule, durationTracker);
     eventBus.post(started);
@@ -542,9 +552,11 @@ public class ChromeTraceBuildListenerTest {
 
     try (SimplePerfEvent.Scope scope1 =
         SimplePerfEvent.scope(
-            eventBus, PerfEventId.of("planning"), ImmutableMap.of("nefarious", true))) {
+            eventBus,
+            SimplePerfEvent.PerfEventId.of("planning"),
+            ImmutableMap.of("nefarious", true))) {
       try (SimplePerfEvent.Scope scope2 =
-          SimplePerfEvent.scope(eventBus, PerfEventId.of("scheming"))) {
+          SimplePerfEvent.scope(eventBus, SimplePerfEvent.PerfEventId.of("scheming"))) {
         scope2.appendFinishedInfo("success", false);
       }
       scope1.appendFinishedInfo(
@@ -822,7 +834,8 @@ public class ChromeTraceBuildListenerTest {
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(3, false),
             managerScope,
-            Optional.empty());
+            Optional.empty(),
+            criticalPathEventListener);
     listener.close();
     TestBackgroundTaskManager manager = (TestBackgroundTaskManager) managerScope.getManager();
     managerScope.close();
@@ -847,7 +860,8 @@ public class ChromeTraceBuildListenerTest {
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(1, false),
             managerScope,
-            Optional.empty());
+            Optional.empty(),
+            criticalPathEventListener);
     listener.close();
     managerScope.close();
     assertTrue(
@@ -870,7 +884,8 @@ public class ChromeTraceBuildListenerTest {
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(1, true),
             managerScope,
-            Optional.empty());
+            Optional.empty(),
+            criticalPathEventListener);
     listener.close();
     managerScope.close();
 

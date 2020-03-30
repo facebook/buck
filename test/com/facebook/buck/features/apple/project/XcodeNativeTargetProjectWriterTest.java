@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.project;
@@ -41,6 +41,7 @@ import com.facebook.buck.apple.AppleBundleDestination;
 import com.facebook.buck.apple.AppleResourceDescriptionArg;
 import com.facebook.buck.apple.XcodePostbuildScriptBuilder;
 import com.facebook.buck.apple.XcodePrebuildScriptBuilder;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXCopyFilesBuildPhase;
@@ -55,13 +56,14 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.js.JsBundleGenruleBuilder;
 import com.facebook.buck.features.js.JsTestScenario;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
@@ -83,23 +85,24 @@ import org.junit.Test;
 public class XcodeNativeTargetProjectWriterTest {
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
-  private SourcePathResolver sourcePathResolver;
+  private SourcePathResolverAdapter sourcePathResolverAdapter;
   private BuildRuleResolver buildRuleResolver;
 
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    generatedProject = new PBXProject("TestProject");
+    generatedProject = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
     buildRuleResolver = new TestActionGraphBuilder();
-    sourcePathResolver = buildRuleResolver.getSourcePathResolver();
+    sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =
-        new PathRelativizer(Paths.get("_output"), sourcePathResolver::getRelativePath);
+        new PathRelativizer(Paths.get("_output"), sourcePathResolverAdapter::getRelativePath);
   }
 
   @Test
   public void shouldCreateTargetAndTargetGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
+        new NewNativeTargetProjectMutator(
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath);
     mutator
         .setTargetName("TestTarget")
         .setProduct(ProductTypes.BUNDLE, "TestTargetProduct", Paths.get("TestTargetProduct.bundle"))
@@ -112,7 +115,8 @@ public class XcodeNativeTargetProjectWriterTest {
   @Test
   public void shouldCreateTargetAndCustomTargetGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
+        new NewNativeTargetProjectMutator(
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath);
     mutator
         .setTargetName("TestTarget")
         .setTargetGroupPath(ImmutableList.of("Grandparent", "Parent"))
@@ -128,7 +132,8 @@ public class XcodeNativeTargetProjectWriterTest {
   @Test
   public void shouldCreateTargetAndNoGroup() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator =
-        new NewNativeTargetProjectMutator(pathRelativizer, sourcePathResolver::getRelativePath);
+        new NewNativeTargetProjectMutator(
+            pathRelativizer, sourcePathResolverAdapter::getRelativePath);
     NewNativeTargetProjectMutator.Result result =
         mutator
             .setTargetName("TestTarget")
@@ -331,11 +336,11 @@ public class XcodeNativeTargetProjectWriterTest {
   public void testCopyFilesBuildPhase() throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    CopyFilePhaseDestinationSpec.Builder specBuilder = CopyFilePhaseDestinationSpec.builder();
-    specBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
-    specBuilder.setPath("foo.png");
+    PBXBuildPhase copyPhase =
+        new PBXCopyFilesBuildPhase(
+            CopyFilePhaseDestinationSpec.of(
+                PBXCopyFilesBuildPhase.Destination.FRAMEWORKS, Optional.of("foo.png")));
 
-    PBXBuildPhase copyPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
     mutator.setCopyFilesPhases(ImmutableList.of(copyPhase));
 
     NewNativeTargetProjectMutator.Result result =
@@ -351,11 +356,11 @@ public class XcodeNativeTargetProjectWriterTest {
       throws NoSuchBuildTargetException {
     NewNativeTargetProjectMutator mutator = mutatorWithCommonDefaults();
 
-    CopyFilePhaseDestinationSpec.Builder specBuilder = CopyFilePhaseDestinationSpec.builder();
-    specBuilder.setDestination(PBXCopyFilesBuildPhase.Destination.FRAMEWORKS);
-    specBuilder.setPath("script/input.png");
+    PBXBuildPhase copyFilesPhase =
+        new PBXCopyFilesBuildPhase(
+            CopyFilePhaseDestinationSpec.of(
+                PBXCopyFilesBuildPhase.Destination.FRAMEWORKS, Optional.of("script/input.png")));
 
-    PBXBuildPhase copyFilesPhase = new PBXCopyFilesBuildPhase(specBuilder.build());
     mutator.setCopyFilesPhases(ImmutableList.of(copyFilesPhase));
 
     TargetNode<?> postbuildNode =
@@ -459,14 +464,16 @@ public class XcodeNativeTargetProjectWriterTest {
     PBXShellScriptBuildPhase phase =
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
     String shellScript = phase.getShellScript();
-    Path genDir = scenario.filesystem.getBuckPaths().getGenDir().toAbsolutePath();
+    Path genPath = BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s__");
+    Path jsGenPath = genPath.resolve("js").toAbsolutePath();
+    Path resGenPath = genPath.resolve("res").toAbsolutePath();
     assertEquals(
         String.format(
             "BASE_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n"
                 + "mkdir -p \"${BASE_DIR}\"\n\n"
-                + "cp -a \"%s/foo/dep/js/\" \"${BASE_DIR}/\"\n"
-                + "cp -a \"%s/foo/dep/res/\" \"${BASE_DIR}/\"\n",
-            genDir, genDir),
+                + "cp -a \"%s/\" \"${BASE_DIR}/\"\n"
+                + "cp -a \"%s/\" \"${BASE_DIR}/\"\n",
+            jsGenPath, resGenPath),
         shellScript);
   }
 
@@ -492,28 +499,35 @@ public class XcodeNativeTargetProjectWriterTest {
     PBXShellScriptBuildPhase phase =
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
     String shellScript = phase.getShellScript();
-    Path genDir = scenario.filesystem.getBuckPaths().getGenDir().toAbsolutePath();
+    Path depGenPath =
+        BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s__")
+            .resolve("js")
+            .toAbsolutePath();
+    Path bundleGenPath =
+        BuildTargetPaths.getGenPath(scenario.filesystem, bundleBuildTarget, "%s__")
+            .resolve("res")
+            .toAbsolutePath();
     assertEquals(
         String.format(
             "BASE_DIR=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\n"
                 + "mkdir -p \"${BASE_DIR}\"\n\n"
-                + "cp -a \"%s/foo/dep/js/\" \"${BASE_DIR}/\"\n"
-                + "cp -a \"%s/foo/bundle/res/\" \"${BASE_DIR}/\"\n",
-            genDir, genDir),
+                + "cp -a \"%s/\" \"${BASE_DIR}/\"\n"
+                + "cp -a \"%s/\" \"${BASE_DIR}/\"\n",
+            depGenPath, bundleGenPath),
         shellScript);
   }
 
   private NewNativeTargetProjectMutator mutatorWithCommonDefaults() {
-    return mutator(sourcePathResolver, pathRelativizer);
+    return mutator(sourcePathResolverAdapter, pathRelativizer);
   }
 
-  private NewNativeTargetProjectMutator mutator(SourcePathResolver pathResolver) {
+  private NewNativeTargetProjectMutator mutator(SourcePathResolverAdapter pathResolver) {
     return mutator(
         pathResolver, new PathRelativizer(Paths.get("_output"), pathResolver::getRelativePath));
   }
 
   private NewNativeTargetProjectMutator mutator(
-      SourcePathResolver pathResolver, PathRelativizer relativizer) {
+      SourcePathResolverAdapter pathResolver, PathRelativizer relativizer) {
     NewNativeTargetProjectMutator mutator =
         new NewNativeTargetProjectMutator(relativizer, pathResolver::getRelativePath);
     mutator

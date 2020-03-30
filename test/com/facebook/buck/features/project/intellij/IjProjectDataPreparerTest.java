@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -25,6 +25,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -77,7 +80,7 @@ public class IjProjectDataPreparerTest {
     filesystem = new FakeProjectFilesystem();
     javaPackageFinder =
         DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
-            ImmutableSet.of("/java/", "/javatests/"));
+            filesystem, ImmutableSet.of("/java/", "/javatests/"));
     androidManifestParser = new AndroidManifestParser(new FakeProjectFilesystem());
   }
 
@@ -126,11 +129,10 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            DependencyEntryData.builder()
-                                .setName("third_party_guava")
-                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                                .setExported(false)
-                                .build()))))));
+                            ImmutableDependencyEntryData.of(
+                                "third_party_guava",
+                                IjDependencyListBuilder.Scope.COMPILE,
+                                false)))))));
   }
 
   @Test
@@ -145,28 +147,29 @@ public class IjProjectDataPreparerTest {
 
   private void testWriteModuleWithMultiCellModulesEnabledHelper(@Nullable String packageName)
       throws Exception {
-    ProjectFilesystem depFileSystem = new FakeProjectFilesystem(Paths.get("dep").toAbsolutePath());
+    ProjectFilesystem depFileSystem =
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("dep")), Paths.get("dep").toAbsolutePath());
     ProjectFilesystem mainFileSystem =
-        new FakeProjectFilesystem(Paths.get("main").toAbsolutePath());
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("main")), Paths.get("main").toAbsolutePath());
 
     Path depPath = Paths.get("java/com/example/Dep.java");
     TargetNode<?> depTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(depFileSystem, "dep//java/com/example:dep"),
-                depFileSystem)
+                BuildTargetFactory.newInstance("dep//java/com/example:dep"), depFileSystem)
             .addSrc(depPath)
             .build();
 
-    Path depPathToProjectRoot = mainFileSystem.relativize(depFileSystem.resolve(depPath));
+    RelPath depPathToProjectRoot = mainFileSystem.relativize(depFileSystem.resolve(depPath));
     if (packageName != null) {
       mainFileSystem.writeContentsToPath(
-          "package " + packageName + ";\nclass Dep{}", depPathToProjectRoot);
+          "package " + packageName + ";\nclass Dep{}", depPathToProjectRoot.getPath());
     }
 
     TargetNode<?> mainTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(mainFileSystem, "main//java/com/example:main"),
-                mainFileSystem)
+                BuildTargetFactory.newInstance("main//java/com/example:main"), mainFileSystem)
             .addSrc(Paths.get("java/com/example/Main.java"))
             .addDep(depTargetNode.getBuildTarget())
             .build();
@@ -190,7 +193,7 @@ public class IjProjectDataPreparerTest {
             ParsingJavaPackageFinder.preparse(
                 javaFileParser,
                 mainFileSystem,
-                ImmutableSet.of(depPathToProjectRoot),
+                ImmutableSet.of(depPathToProjectRoot.getPath()),
                 javaPackageFinder),
             moduleGraph,
             mainFileSystem,
@@ -221,11 +224,10 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            DependencyEntryData.builder()
-                                .setName("___dep_java_com_example")
-                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                                .setExported(false)
-                                .build()))))));
+                            ImmutableDependencyEntryData.of(
+                                "___dep_java_com_example",
+                                IjDependencyListBuilder.Scope.COMPILE,
+                                false)))))));
   }
 
   @Test
@@ -303,9 +305,6 @@ public class IjProjectDataPreparerTest {
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseInlineTestsTargetNode),
         IjModuleGraphTest.getModuleForTarget(moduleGraph, baseTargetNode));
 
-    DependencyEntryData.Builder dependencyEntryBuilder =
-        DependencyEntryData.builder().setExported(false);
-
     assertThat(
         dataPreparer.getDependencies(baseModule),
         contains(
@@ -315,31 +314,30 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            DependencyEntryData.builder()
-                                .setExported(true)
-                                .setName("//java/com/example/base:tests")
-                                .setScope(IjDependencyListBuilder.Scope.PROVIDED)
-                                .build())))),
+                            ImmutableDependencyEntryData.of(
+                                "//java/com/example/base:tests",
+                                IjDependencyListBuilder.Scope.PROVIDED,
+                                true))))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty(
                     "data",
                     equalTo(
                         Optional.of(
-                            dependencyEntryBuilder
-                                .setName(guavaLibrary.getName())
-                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                                .build())))),
+                            ImmutableDependencyEntryData.of(
+                                guavaLibrary.getName(),
+                                IjDependencyListBuilder.Scope.COMPILE,
+                                false))))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty(
                     "data",
                     equalTo(
                         Optional.of(
-                            dependencyEntryBuilder
-                                .setName(hamcrestLibrary.getName())
-                                .setScope(IjDependencyListBuilder.Scope.COMPILE)
-                                .build()))))));
+                            ImmutableDependencyEntryData.of(
+                                hamcrestLibrary.getName(),
+                                IjDependencyListBuilder.Scope.COMPILE,
+                                false)))))));
 
     assertThat(
         dataPreparer.getDependencies(baseTestModule),
@@ -350,20 +348,20 @@ public class IjProjectDataPreparerTest {
                     "data",
                     equalTo(
                         Optional.of(
-                            dependencyEntryBuilder
-                                .setName(baseModule.getName())
-                                .setScope(IjDependencyListBuilder.Scope.TEST)
-                                .build())))),
+                            ImmutableDependencyEntryData.of(
+                                baseModule.getName(),
+                                IjDependencyListBuilder.Scope.TEST,
+                                false))))),
             allOf(
                 hasProperty("type", equalTo(IjDependencyListBuilder.Type.LIBRARY)),
                 hasProperty(
                     "data",
                     equalTo(
                         Optional.of(
-                            dependencyEntryBuilder
-                                .setName(hamcrestLibrary.getName())
-                                .setScope(IjDependencyListBuilder.Scope.TEST)
-                                .build()))))));
+                            ImmutableDependencyEntryData.of(
+                                hamcrestLibrary.getName(),
+                                IjDependencyListBuilder.Scope.TEST,
+                                false)))))));
   }
 
   @Test
@@ -442,41 +440,37 @@ public class IjProjectDataPreparerTest {
     // Libraries don't go into the index.
     assertEquals(
         ImmutableSet.of(
-            ModuleIndexEntry.builder()
-                .setFileUrl("file://$PROJECT_DIR$/project_root.iml")
-                .setFilePath(Paths.get("project_root.iml"))
-                .build(),
-            ModuleIndexEntry.builder()
-                .setGroup("modules")
-                .setFileUrl("file://$PROJECT_DIR$/java/com/example/base/java_com_example_base.iml")
-                .setFilePath(Paths.get("java/com/example/base/java_com_example_base.iml"))
-                .build(),
-            ModuleIndexEntry.builder()
-                .setGroup("modules")
-                .setFileUrl(
-                    "file://$PROJECT_DIR$/javatests/com/example/base/javatests_com_example_base.iml")
-                .setFilePath(Paths.get("javatests/com/example/base/javatests_com_example_base.iml"))
-                .build()),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/project_root.iml", Paths.get("project_root.iml"), null),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/java/com/example/base/java_com_example_base.iml",
+                Paths.get("java/com/example/base/java_com_example_base.iml"),
+                "modules"),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/javatests/com/example/base/javatests_com_example_base.iml",
+                Paths.get("javatests/com/example/base/javatests_com_example_base.iml"),
+                "modules")),
         dataPreparer.getModuleIndexEntries());
   }
 
   @Test
   public void testModuleIndexWithMultiCellModulesEnabled() {
-    ProjectFilesystem depFileSystem = new FakeProjectFilesystem(Paths.get("dep").toAbsolutePath());
+    ProjectFilesystem depFileSystem =
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("dep")), Paths.get("dep").toAbsolutePath());
     ProjectFilesystem mainFileSystem =
-        new FakeProjectFilesystem(Paths.get("main").toAbsolutePath());
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("main")), Paths.get("main").toAbsolutePath());
 
     TargetNode<?> depTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(depFileSystem, "dep//java/com/example:dep"),
-                depFileSystem)
+                BuildTargetFactory.newInstance("dep//java/com/example:dep"), depFileSystem)
             .addSrc(Paths.get("java/com/example/Dep.java"))
             .build();
 
     TargetNode<?> mainTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(mainFileSystem, "main//java/com/example:main"),
-                mainFileSystem)
+                BuildTargetFactory.newInstance("main//java/com/example:main"), mainFileSystem)
             .addSrc(Paths.get("java/com/example/Main.java"))
             .addDep(depTargetNode.getBuildTarget())
             .build();
@@ -498,21 +492,16 @@ public class IjProjectDataPreparerTest {
             androidManifestParser);
     assertEquals(
         ImmutableSet.of(
-            ModuleIndexEntry.builder()
-                .setGroup("modules")
-                .setFileUrl(
-                    "file://$PROJECT_DIR$/../dep/java/com/example/___dep_java_com_example.iml")
-                .setFilePath(Paths.get("../dep/java/com/example/___dep_java_com_example.iml"))
-                .build(),
-            ModuleIndexEntry.builder()
-                .setGroup("modules")
-                .setFileUrl("file://$PROJECT_DIR$/java/com/example/java_com_example.iml")
-                .setFilePath(Paths.get("java/com/example/java_com_example.iml"))
-                .build(),
-            ModuleIndexEntry.builder()
-                .setFileUrl("file://$PROJECT_DIR$/project_root.iml")
-                .setFilePath(Paths.get("project_root.iml"))
-                .build()),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/../dep/java/com/example/___dep_java_com_example.iml",
+                Paths.get("../dep/java/com/example/___dep_java_com_example.iml"),
+                "modules"),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/java/com/example/java_com_example.iml",
+                Paths.get("java/com/example/java_com_example.iml"),
+                "modules"),
+            ModuleIndexEntry.of(
+                "file://$PROJECT_DIR$/project_root.iml", Paths.get("project_root.iml"), null)),
         dataPreparer.getModuleIndexEntries());
   }
 
@@ -537,7 +526,11 @@ public class IjProjectDataPreparerTest {
             Paths.get("lib/guava.jar"));
 
     FakeProjectFilesystem filesystemForExcludesTest =
-        new FakeProjectFilesystem(FakeClock.doNotCare(), Paths.get(".").toAbsolutePath(), paths);
+        new FakeProjectFilesystem(
+            FakeClock.doNotCare(),
+            CanonicalCellName.rootCell(),
+            AbsPath.of(Paths.get(".").toAbsolutePath()),
+            paths);
 
     TargetNode<?> guavaTargetNode =
         PrebuiltJarBuilder.createBuilder(BuildTargetFactory.newInstance("//lib:guava"))

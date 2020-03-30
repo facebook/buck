@@ -1,29 +1,29 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.coercer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
-import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -46,7 +46,6 @@ import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
 import java.lang.reflect.Type;
-import java.nio.file.Paths;
 import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
@@ -69,7 +68,7 @@ public class SkylarkParamInfoTest {
     public abstract boolean getMandatory();
 
     @Override
-    public TypeCoercer<Integer> getTypeCoercer() {
+    public TypeCoercer<?, Integer> getTypeCoercer() {
       return new NumberTypeCoercer<>(Integer.class);
     }
 
@@ -92,7 +91,7 @@ public class SkylarkParamInfoTest {
     public abstract boolean getMandatory();
 
     @Override
-    public TypeCoercer<Optional<Integer>> getTypeCoercer() {
+    public TypeCoercer<?, Optional<Integer>> getTypeCoercer() {
       return new OptionalTypeCoercer<>(new NumberTypeCoercer<>(Integer.class));
     }
 
@@ -114,7 +113,7 @@ public class SkylarkParamInfoTest {
     public abstract boolean getMandatory();
 
     @Override
-    public TypeCoercer<ImmutableList<String>> getTypeCoercer() {
+    public TypeCoercer<?, ImmutableList<String>> getTypeCoercer() {
       return new ListTypeCoercer<>(new StringTypeCoercer());
     }
 
@@ -136,7 +135,7 @@ public class SkylarkParamInfoTest {
     public abstract boolean getMandatory();
 
     @Override
-    public TypeCoercer<ImmutableMap<String, Integer>> getTypeCoercer() {
+    public TypeCoercer<?, ImmutableMap<String, Integer>> getTypeCoercer() {
       return new MapTypeCoercer<>(new StringTypeCoercer(), new NumberTypeCoercer<>(Integer.class));
     }
 
@@ -148,11 +147,11 @@ public class SkylarkParamInfoTest {
 
   @Test
   public void attributesOfOptionalsAreOptional() {
-    SkylarkParamInfo nonOptionalInfo =
-        new SkylarkParamInfo("foo", new ImmutableTestIntAttribute(1, "", false));
-    SkylarkParamInfo optionalInfo =
-        new SkylarkParamInfo(
-            "foo", new ImmutableTestOptionalIntAttribute(Optional.empty(), "", false));
+    SkylarkParamInfo<?> nonOptionalInfo =
+        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.of(1, "", false));
+    SkylarkParamInfo<?> optionalInfo =
+        new SkylarkParamInfo<>(
+            "foo", ImmutableTestOptionalIntAttribute.of(Optional.empty(), "", false));
 
     assertFalse(nonOptionalInfo.isOptional());
     assertTrue(optionalInfo.isOptional());
@@ -160,15 +159,15 @@ public class SkylarkParamInfoTest {
 
   @Test
   public void doesNotReturnAHint() {
-    SkylarkParamInfo info =
-        new SkylarkParamInfo("foo", new ImmutableTestIntAttribute(1, "", false));
+    SkylarkParamInfo<?> info =
+        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.of(1, "", false));
     assertNull(info.getHint());
   }
 
   @Test
   public void errorsOnWrongDTOTypeInGet() {
-    SkylarkParamInfo info =
-        new SkylarkParamInfo("foo", new ImmutableTestIntAttribute(1, "", false));
+    SkylarkParamInfo<?> info =
+        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.of(1, "", false));
 
     expected.expect(IllegalArgumentException.class);
 
@@ -177,8 +176,8 @@ public class SkylarkParamInfoTest {
 
   @Test
   public void errorsOnWrongDTOTypeInSet() {
-    SkylarkParamInfo info =
-        new SkylarkParamInfo("foo", new ImmutableTestIntAttribute(1, "", false));
+    SkylarkParamInfo<?> info =
+        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.of(1, "", false));
 
     expected.expect(IllegalArgumentException.class);
 
@@ -187,45 +186,40 @@ public class SkylarkParamInfoTest {
 
   @Test
   public void returnsEmptyGenericsOnNonGenericCoercer() {
-    SkylarkParamInfo info =
-        new SkylarkParamInfo("foo", new ImmutableTestIntAttribute(1, "", false));
-    assertEquals(0, info.getGenericParameterTypes().length);
+    SkylarkParamInfo<?> info =
+        new SkylarkParamInfo<>("foo", ImmutableTestIntAttribute.of(1, "", false));
+    assertEquals(Integer.class, info.getTypeCoercer().getOutputType().getType());
   }
 
   @Test
   public void returnsCorrectGenericsOnGenericCoercer() {
-    SkylarkParamInfo listInfo =
-        new SkylarkParamInfo(
-            "foo", new ImmutableTestListStringAttribute(ImmutableList.of(), "", false));
+    SkylarkParamInfo<?> listInfo =
+        new SkylarkParamInfo<>(
+            "foo", ImmutableTestListStringAttribute.of(ImmutableList.of(), "", false));
 
-    SkylarkParamInfo mapInfo =
-        new SkylarkParamInfo(
-            "foo", new ImmutableTestMapStringAttribute(ImmutableMap.of(), "", false));
+    SkylarkParamInfo<?> mapInfo =
+        new SkylarkParamInfo<>(
+            "foo", ImmutableTestMapStringAttribute.of(ImmutableMap.of(), "", false));
 
-    Type[] listParamTypes = listInfo.getGenericParameterTypes();
-    Type[] mapParamTypes = mapInfo.getGenericParameterTypes();
+    Type listParamTypes = listInfo.getTypeCoercer().getOutputType().getType();
+    Type mapParamTypes = mapInfo.getTypeCoercer().getOutputType().getType();
 
-    assertNotNull(listParamTypes);
-    assertEquals(1, listParamTypes.length);
-    assertEquals(TypeToken.of(String.class).getType(), listParamTypes[0]);
-
-    assertNotNull(mapParamTypes);
-    assertEquals(2, mapParamTypes.length);
-    assertEquals(TypeToken.of(String.class).getType(), mapParamTypes[0]);
-    assertEquals(TypeToken.of(Integer.class).getType(), mapParamTypes[1]);
+    assertEquals(new TypeToken<ImmutableList<String>>() {}.getType(), listParamTypes);
+    assertEquals(new TypeToken<ImmutableMap<String, Integer>>() {}.getType(), mapParamTypes);
   }
 
   @Test
   public void setsValue() throws LabelSyntaxException, EvalException, ParamInfoException {
     SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
     SkylarkDescriptionArg arg = new SkylarkDescriptionArg(rule);
-    SkylarkParamInfo info = new SkylarkParamInfo("baz", rule.getAttrs().get("baz"));
+    SkylarkParamInfo<?> info = new SkylarkParamInfo<>("baz", rule.getAttrs().get("baz"));
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     info.set(
-        TestCellPathResolver.get(filesystem),
+        TestCellPathResolver.get(filesystem).getCellNameResolver(),
         filesystem,
-        Paths.get(""),
-        EmptyTargetConfiguration.INSTANCE,
+        ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         arg,
         "foo");
 
@@ -238,46 +232,27 @@ public class SkylarkParamInfoTest {
       throws LabelSyntaxException, EvalException, ParamInfoException {
     SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
     SkylarkDescriptionArg arg = new SkylarkDescriptionArg(rule);
-    SkylarkParamInfo info = new SkylarkParamInfo("baz", rule.getAttrs().get("baz"));
+    SkylarkParamInfo<?> info = new SkylarkParamInfo<>("baz", rule.getAttrs().get("baz"));
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
     expected.expect(ParamInfoException.class);
     expected.expectMessage("parameter 'baz': cannot coerce '7' to class java.lang.String");
 
     info.set(
-        TestCellPathResolver.get(filesystem),
+        TestCellPathResolver.get(filesystem).getCellNameResolver(),
         filesystem,
-        Paths.get(""),
-        EmptyTargetConfiguration.INSTANCE,
+        ForwardRelativePath.of(""),
+        UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
         arg,
         7);
-  }
-
-  @Test
-  public void setsProperlyFromMapOfParams()
-      throws ParamInfoException, LabelSyntaxException, EvalException {
-
-    SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
-    SkylarkDescriptionArg arg = new SkylarkDescriptionArg(rule);
-    SkylarkParamInfo info = new SkylarkParamInfo("baz", rule.getAttrs().get("baz"));
-    ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    info.setFromParams(
-        TestCellPathResolver.get(filesystem),
-        filesystem,
-        BuildTargetFactory.newInstance("//foo:bar"),
-        EmptyTargetConfiguration.INSTANCE,
-        arg,
-        ImmutableMap.of("baz", "foo"));
-
-    assertEquals("foo", info.get(arg));
-    assertEquals("foo", arg.getPostCoercionValue("baz"));
   }
 
   @Test
   public void errorsOnGettingANonSetValue() throws LabelSyntaxException, EvalException {
     SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
     SkylarkDescriptionArg arg = new SkylarkDescriptionArg(rule);
-    SkylarkParamInfo info = new SkylarkParamInfo("baz", rule.getAttrs().get("baz"));
+    SkylarkParamInfo<?> info = new SkylarkParamInfo<>("baz", rule.getAttrs().get("baz"));
 
     expected.expect(NullPointerException.class);
 
@@ -287,11 +262,13 @@ public class SkylarkParamInfoTest {
   @Test
   public void returnsImplicitDefaultValue() throws LabelSyntaxException, EvalException {
     SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
-    SkylarkParamInfo info = new SkylarkParamInfo("baz", rule.getAttrs().get("baz"));
-    SkylarkParamInfo implicitInfo =
-        new SkylarkParamInfo("_implicit_baz", rule.getAttrs().get("baz"));
+    SkylarkParamInfo<?> info = new SkylarkParamInfo<>("baz", rule.getAttrs().get("baz"));
+    SkylarkParamInfo<?> implicitInfo =
+        new SkylarkParamInfo<>("_implicit_baz", rule.getAttrs().get("baz"));
 
-    assertNull(info.getImplicitPreCoercionValue());
+    assertEquals(
+        rule.getAttrs().get("baz").getPreCoercionDefaultValue(),
+        info.getImplicitPreCoercionValue());
     assertEquals("default", implicitInfo.getImplicitPreCoercionValue());
   }
 }

@@ -1,14 +1,14 @@
 java_library(
     name = "jackson",
+    visibility = [
+        "//test/...",
+    ],
+    deps = [],
     exported_deps = [
         ":jackson-annotations",
         ":jackson-core",
         ":jackson-databind",
     ],
-    visibility = [
-        "//test/...",
-    ],
-    deps = [],
 )
 
 prebuilt_jar(
@@ -63,13 +63,13 @@ prebuilt_jar(
 
 java_library(
     name = "jackson-databind",
+    visibility = ["PUBLIC"],
     exported_deps = [
         # If ObjectMapper.writeValue() is used, then
         # com.fasterxml.jackson.core.ObjectCodec needs to be accessible.
         ":jackson-core",
         ":jackson-databind-jar",
     ],
-    visibility = ["PUBLIC"],
 )
 
 prebuilt_jar(

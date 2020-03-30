@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
@@ -39,7 +40,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -82,7 +82,8 @@ public class AuditInputCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                  createParsingContext(
+                          params.getCells().getRootCell(), pool.getListeningExecutorService())
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                       .withExcludeUnsupportedTargets(false),
                   targets)
@@ -113,21 +114,28 @@ public class AuditInputCommand extends AbstractCommand {
 
       @Override
       public void visit(TargetNode<?> node) {
-        Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
-        Cell cell = cellRoot.orElse(params.getCell());
+        Cell cell = params.getCells().getCell(node.getBuildTarget().getCell());
         LOG.debug("Looking at inputs for %s", node.getBuildTarget().getFullyQualifiedName());
 
         ImmutableSortedSet.Builder<Path> targetInputs =
             new ImmutableSortedSet.Builder<>(Ordering.natural());
-        for (Path input : node.getInputs()) {
+        for (ForwardRelativePath input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
             if (!cell.getFilesystem().exists(input)) {
               throw new HumanReadableException(
                   "Target %s refers to non-existent input file: %s",
-                  node, params.getCell().getRoot().relativize(cell.getRoot().resolve(input)));
+                  node,
+                  params
+                      .getCells()
+                      .getRootCell()
+                      .getRoot()
+                      .relativize(
+                          cell.getRoot().resolve(input.toPath(cell.getRoot().getFileSystem()))));
             }
-            targetInputs.addAll(cell.getFilesystem().getFilesUnderPath(input));
+            targetInputs.addAll(
+                cell.getFilesystem()
+                    .getFilesUnderPath(input.toPath(cell.getFilesystem().getFileSystem())));
           } catch (IOException e) {
             throw new RuntimeException(e);
           }
@@ -151,20 +159,33 @@ public class AuditInputCommand extends AbstractCommand {
 
       @Override
       public void visit(TargetNode<?> node) {
-        Optional<Cell> cellRoot = params.getCell().getCellIfKnown(node.getBuildTarget());
-        Cell cell = cellRoot.orElse(params.getCell());
-        for (Path input : node.getInputs()) {
+        Cell cell = params.getCells().getCell(node.getBuildTarget().getCell());
+        for (ForwardRelativePath input : node.getInputs()) {
           LOG.debug("Walking input %s", input);
           try {
             if (!cell.getFilesystem().exists(input)) {
               throw new HumanReadableException(
                   "Target %s refers to non-existent input file: %s",
-                  node, params.getCell().getRoot().relativize(cell.getRoot().resolve(input)));
+                  node,
+                  params
+                      .getCells()
+                      .getRootCell()
+                      .getRoot()
+                      .relativize(
+                          cell.getRoot().resolve(input.toPath(cell.getRoot().getFileSystem()))));
             }
             ImmutableSortedSet<Path> nodeContents =
-                ImmutableSortedSet.copyOf(cell.getFilesystem().getFilesUnderPath(input));
+                ImmutableSortedSet.copyOf(
+                    cell.getFilesystem()
+                        .getFilesUnderPath(input.toPath(cell.getFilesystem().getFileSystem())));
             for (Path path : nodeContents) {
-              putInput(params.getCell().getRoot().relativize(cell.getRoot().resolve(path)));
+              putInput(
+                  params
+                      .getCells()
+                      .getRootCell()
+                      .getRoot()
+                      .getPath()
+                      .relativize(cell.getRoot().getPath().resolve(path)));
             }
           } catch (IOException e) {
             throw new RuntimeException(e);

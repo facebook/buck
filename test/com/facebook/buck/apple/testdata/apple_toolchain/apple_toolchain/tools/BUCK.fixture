@@ -1,0 +1,33 @@
+def define_impl(name):
+    python_binary(
+        name = name,
+        main = name + ".py",
+        deps = [
+            "//tools:impl",
+            ":gen-sdk",
+        ],
+        visibility = ["PUBLIC"],
+    )
+
+define_impl("apple_compiler")
+
+define_impl("apple_linker")
+
+define_impl("codesign")
+
+define_impl("dsymutil")
+
+define_impl("dsymutil_workaround")
+
+define_impl("lipo")
+
+define_impl("lldb")
+
+define_impl("swiftc")
+
+genrule(
+    name = "gen-sdk",
+    cmd = "mkdir $OUT; echo test > $OUT/testfile; mkdir $OUT/lib; mkdir $OUT/Frameworks",
+    out = "sdk",
+    visibility = ["PUBLIC"],
+)

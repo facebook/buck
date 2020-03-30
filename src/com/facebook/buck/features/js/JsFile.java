@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.js;
@@ -23,7 +23,7 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.js.JsFile.AbstractImpl;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -84,26 +84,27 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
 
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
       String outputPath = filesystem.resolve(outputPathResolver.resolvePath(output)).toString();
 
       return ImmutableList.of(
           JsUtil.jsonWorkerShellStepAddingFlavors(
               workerTool,
-              getJobArgs(sourcePathResolver, outputPath)
-                  .addRaw("extraData", getExtraJson(sourcePathResolver)),
+              getJobArgs(sourcePathResolverAdapter, outputPath)
+                  .addRaw("extraData", getExtraJson(sourcePathResolverAdapter)),
               buildTarget,
-              sourcePathResolver,
+              sourcePathResolverAdapter,
               filesystem));
     }
 
-    abstract ObjectBuilder getJobArgs(SourcePathResolver sourcePathResolver, String outputPath);
+    abstract ObjectBuilder getJobArgs(
+        SourcePathResolverAdapter sourcePathResolverAdapter, String outputPath);
 
     @Nullable
     abstract BuildTarget getSourceBuildTarget(SourcePathRuleFinder ruleFinder);
 
-    private Optional<String> getExtraJson(SourcePathResolver sourcePathResolver) {
-      return extraJson.map(a -> Arg.stringify(a, sourcePathResolver));
+    private Optional<String> getExtraJson(SourcePathResolverAdapter sourcePathResolverAdapter) {
+      return extraJson.map(a -> Arg.stringify(a, sourcePathResolverAdapter));
     }
   }
 
@@ -155,8 +156,9 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
     }
 
     @Override
-    ObjectBuilder getJobArgs(SourcePathResolver sourcePathResolver, String outputPath) {
-      Path srcPath = sourcePathResolver.getAbsolutePath(src);
+    ObjectBuilder getJobArgs(
+        SourcePathResolverAdapter sourcePathResolverAdapter, String outputPath) {
+      Path srcPath = sourcePathResolverAdapter.getAbsolutePath(src);
       return JsonBuilder.object()
           .addString("command", "transform")
           .addString("outputFilePath", outputPath)
@@ -166,7 +168,7 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
               virtualPath.orElseGet(
                   () ->
                       PathFormatter.pathWithUnixSeparators(
-                          sourcePathResolver.getRelativePath(src))));
+                          sourcePathResolverAdapter.getRelativePath(src))));
     }
 
     @Nullable
@@ -222,12 +224,14 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
     }
 
     @Override
-    ObjectBuilder getJobArgs(SourcePathResolver sourcePathResolver, String outputPath) {
+    ObjectBuilder getJobArgs(
+        SourcePathResolverAdapter sourcePathResolverAdapter, String outputPath) {
       return JsonBuilder.object()
           .addString("command", "optimize")
           .addString("outputFilePath", outputPath)
           .addString(
-              "transformedJsFilePath", sourcePathResolver.getAbsolutePath(devFile).toString());
+              "transformedJsFilePath",
+              sourcePathResolverAdapter.getAbsolutePath(devFile).toString());
     }
 
     @Override

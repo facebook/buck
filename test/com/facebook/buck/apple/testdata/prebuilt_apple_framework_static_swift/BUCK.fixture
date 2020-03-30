@@ -5,7 +5,7 @@ apple_library(
         "$SDKROOT/System/Library/Frameworks/Foundation.framework",
     ],
     swift_version = "4",
-    deps = [':Dummy'],
+    deps = [":Dummy"],
 )
 
 prebuilt_apple_framework(

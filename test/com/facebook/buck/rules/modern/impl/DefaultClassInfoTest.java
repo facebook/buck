@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -36,8 +37,8 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -70,7 +71,9 @@ public class DefaultClassInfoTest {
   @SuppressWarnings("unchecked")
   private Consumer<OutputPath> outputConsumer = createStrictMock(Consumer.class);
 
-  private ProjectFilesystem filesystem = new FakeProjectFilesystem(Paths.get("/project/root"));
+  private ProjectFilesystem filesystem =
+      new FakeProjectFilesystem(
+          CanonicalCellName.rootCell(), Paths.get("project/root").toAbsolutePath());
 
   static class NoOpBuildable implements Buildable {
     @Override
@@ -109,9 +112,9 @@ public class DefaultClassInfoTest {
 
   @Test
   public void testDerivedClass() {
-    BuildTarget target1 = BuildTargetFactory.newInstance(Paths.get("some1"), "//some1", "name");
-    BuildTarget target2 = BuildTargetFactory.newInstance(Paths.get("some2"), "//some2", "name");
-    BuildTarget target3 = BuildTargetFactory.newInstance(Paths.get("some3"), "//some3", "name");
+    BuildTarget target1 = BuildTargetFactory.newInstance("//some1", "name");
+    BuildTarget target2 = BuildTargetFactory.newInstance("//some2", "name");
+    BuildTarget target3 = BuildTargetFactory.newInstance("//some3", "name");
 
     BuildRule rule1 = new FakeBuildRule(target1, ImmutableSortedSet.of());
     BuildRule rule2 = new FakeBuildRule(target2, ImmutableSortedSet.of());
@@ -282,8 +285,7 @@ public class DefaultClassInfoTest {
     DefaultClassInfoFactory.forInstance(LazyImmutable.builder().setPath(path).build());
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractLazyImmutable extends AddsToRuleKey {
     SourcePath getPath();
 
@@ -304,8 +306,7 @@ public class DefaultClassInfoTest {
     assertEquals("path:excluded\n" + "lazyPath:excluded", visitor.getValue());
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractExcludedLazyImmutable extends AddsToRuleKey {
     SourcePath getPath();
 
@@ -323,11 +324,14 @@ public class DefaultClassInfoTest {
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     classInfo.visit(derived, visitor);
     assertEquals(
-        "path:excluded\n" + "lazyPath:SourcePath(/project/root/some.path)", visitor.getValue());
+        "path:excluded\n"
+            + "lazyPath:SourcePath("
+            + filesystem.getRootPath().toString().replace('\\', '/')
+            + "/some.path)",
+        visitor.getValue().replace('\\', '/'));
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
+  @RuleArg
   interface AbstractDerivedImmutable extends AddsToRuleKey {
     SourcePath getPath();
 
@@ -341,11 +345,13 @@ public class DefaultClassInfoTest {
   @Test
   public void testBuckStyleValueImmutable() {
     SourcePath path = FakeSourcePath.of(filesystem, "some.path");
-    BuckStyleValueImmutable immutable = new ImmutableBuckStyleValueImmutable(path);
+    BuckStyleValueImmutable immutable = ImmutableBuckStyleValueImmutable.of(path);
     ClassInfo<BuckStyleValueImmutable> classInfo = DefaultClassInfoFactory.forInstance(immutable);
     StringifyingValueVisitor visitor = new StringifyingValueVisitor();
     classInfo.visit(immutable, visitor);
-    assertEquals("path:SourcePath(/project/root/some.path)", visitor.getValue());
+    assertEquals(
+        "path:SourcePath(" + filesystem.getRootPath().toString().replace('\\', '/') + "/some.path)",
+        visitor.getValue().replace('\\', '/'));
   }
 
   @BuckStyleValue

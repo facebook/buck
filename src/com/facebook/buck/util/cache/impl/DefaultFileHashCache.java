@@ -1,28 +1,31 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.cache.impl;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
+import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheEngine;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
 import com.facebook.buck.util.cache.JarHashCodeAndFileType;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
@@ -37,7 +40,6 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -131,7 +133,9 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   public static DefaultFileHashCache createBuckOutFileHashCache(
       ProjectFilesystem projectFilesystem, FileHashCacheMode fileHashCacheMode) {
     return new DefaultFileHashCache(
-        projectFilesystem, (path) -> !isInBuckOut(projectFilesystem, path), fileHashCacheMode);
+        projectFilesystem.createBuckOutProjectFilesystem(),
+        (path) -> !isInBuckOut(projectFilesystem, path),
+        fileHashCacheMode);
   }
 
   public static DefaultFileHashCache createDefaultFileHashCache(
@@ -148,7 +152,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
     return path ->
         isInBuckOut(projectFilesystem, path)
             || isInEmbeddedCellBuckOut(projectFilesystem, path)
-            || projectFilesystem.isIgnored(path);
+            || projectFilesystem.isIgnored(RelPath.of(path));
   }
 
   /** Check that the file is in the buck-out of the cell that's related to the project filesystem */
@@ -175,7 +179,11 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         continue;
       }
 
-      ProjectFilesystem projectFilesystem = projectFilesystemFactory.createOrThrow(root);
+      ProjectFilesystem projectFilesystem =
+          projectFilesystemFactory.createOrThrow(
+              CanonicalCellName.unsafeNotACell(),
+              AbsPath.of(root),
+              false /* doesn't matter here, since filesystem here is not even a cell */);
       // A cache which caches hashes of absolute paths which my be accessed by certain
       // rules (e.g. /usr/bin/gcc), and only serves to prevent rehashing the same file
       // multiple times in a single run.
@@ -188,7 +196,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
 
   private void checkNotIgnored(Path relativePath) {
     if (SHOULD_CHECK_IGNORED_PATHS) {
-      Preconditions.checkArgument(!projectFilesystem.isIgnored(relativePath));
+      Preconditions.checkArgument(!projectFilesystem.isIgnored(RelPath.of(relativePath)));
     }
   }
 
@@ -311,8 +319,8 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
   }
 
   @Override
-  public FileHashCacheVerificationResult verify() throws IOException {
-    List<String> errors = new ArrayList<>();
+  public FileHashCache.FileHashCacheVerificationResult verify() throws IOException {
+    ImmutableList.Builder<String> errors = ImmutableList.builder();
     Map<Path, HashCodeAndFileType> cacheMap = fileHashCacheEngine.asMap();
     for (Map.Entry<Path, HashCodeAndFileType> entry : cacheMap.entrySet()) {
       Path path = entry.getKey();
@@ -322,11 +330,7 @@ public class DefaultFileHashCache implements ProjectFileHashCache {
         errors.add(path.toString());
       }
     }
-    return FileHashCacheVerificationResult.builder()
-        .setCachesExamined(1)
-        .setFilesExamined(cacheMap.size())
-        .addAllVerificationErrors(errors)
-        .build();
+    return FileHashCache.FileHashCacheVerificationResult.of(1, cacheMap.size(), errors.build());
   }
 
   @Override

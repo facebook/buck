@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -126,5 +126,29 @@ public class CxxSourceTypesTest {
     assertThat(
         CxxSourceTypes.getCompiler(cxxPlatform, CxxSource.Type.ASM),
         Matchers.is(cxxPlatform.getAsm().get()));
+  }
+
+  @Test
+  public void toName() {
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.C), Matchers.equalTo("c"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.C_CPP_OUTPUT), Matchers.equalTo("c"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.CXX), Matchers.equalTo("cxx"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.CXX_CPP_OUTPUT), Matchers.equalTo("cxx"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.OBJC), Matchers.equalTo("objc"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.OBJC_CPP_OUTPUT), Matchers.equalTo("objc"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.OBJCXX), Matchers.equalTo("objcxx"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.OBJCXX_CPP_OUTPUT), Matchers.equalTo("objcxx"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.CUDA), Matchers.equalTo("cuda"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.CUDA_CPP_OUTPUT), Matchers.equalTo("cuda"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.HIP), Matchers.equalTo("hip"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.HIP_CPP_OUTPUT), Matchers.equalTo("hip"));
+    assertThat(
+        CxxSourceTypes.toName(CxxSource.Type.CXX_THINLINK), Matchers.equalTo("cxx_thinlink"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.PCM), Matchers.equalTo("pcm"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.ASSEMBLER), Matchers.equalTo("assembler"));
+    assertThat(
+        CxxSourceTypes.toName(CxxSource.Type.ASSEMBLER_WITH_CPP), Matchers.equalTo("assembler"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.ASM), Matchers.equalTo("asm"));
+    assertThat(CxxSourceTypes.toName(CxxSource.Type.ASM_WITH_CPP), Matchers.equalTo("asm"));
   }
 }

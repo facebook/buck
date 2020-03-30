@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.go;
@@ -22,7 +22,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -71,7 +72,11 @@ public class GoBinaryIntegrationTest {
     workspace.resetBuildLogFile();
 
     ProcessExecutor.Result result =
-        workspace.runCommand(workspace.resolve("buck-out/gen/xyzzy/xyzzy").toString());
+        workspace.runCommand(
+            workspace
+                .getGenPath(BuildTargetFactory.newInstance("//:xyzzy"), "%s")
+                .resolve("xyzzy")
+                .toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStdout().get(), Matchers.containsString("Hello, world!"));
     assertThat(result.getStderr().get(), Matchers.blankString());
@@ -319,7 +324,9 @@ public class GoBinaryIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("run", "//src/mixed_with_c:bin-shared");
     result.assertSuccess();
 
-    Path output = workspace.resolve("buck-out/bin/src/mixed_with_c/bin-shared.argsfile");
+    Path output =
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//src/mixed_with_c:bin-shared"), "%s.argsfile");
 
     assertTrue(output.toFile().exists());
     assertThat(
@@ -362,6 +369,26 @@ public class GoBinaryIntegrationTest {
     assertThat(
         workspace
             .runBuckCommand("run", "//src/prebuilt_cxx_lib/cli:cli")
+            .assertSuccess()
+            .getStdout(),
+        Matchers.containsString("called remote_function"));
+  }
+
+  @Test
+  public void cgoLibraryWithCxxPrebuiltDepBuiltWithWrappedCpp() throws IOException {
+    GoAssumptions.assumeGoVersionAtLeast("1.10.0");
+    ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
+    workspace.setUp();
+
+    assertThat(
+        workspace
+            .runBuckCommand(
+                "run",
+                "-c",
+                "cxx.cpp=//cpp_wrapper:cpp_wrapper",
+                "-c",
+                "cxx.cpp_type=gcc",
+                "//src/prebuilt_cxx_lib/cli:cli")
             .assertSuccess()
             .getStdout(),
         Matchers.containsString("called remote_function"));
@@ -416,7 +443,7 @@ public class GoBinaryIntegrationTest {
     assumeTrue(
         cxxPlatform
             .getAr()
-            .resolve(ruleResolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .supportsThinArchives());
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "cgo", tmp);
     workspace.setUp();
@@ -445,6 +472,18 @@ public class GoBinaryIntegrationTest {
         findFiles(tmp.getRoot(), tmp.getRoot().getFileSystem().getPathMatcher("glob:**/cxx**/*.o"));
     assertThat(initialObjects, Matchers.equalTo(subsequentObjects));
     assertTrue(initialObjects.size() > 0);
+  }
+
+  /**
+   * Test that Go binaries work with custom C++ linker wrapper tools which includes extra arguments
+   * (which would otherwise require bash quoting).
+   */
+  @Test
+  public void binaryWithCustomCxxLdTool() throws IOException, InterruptedException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_custom_ld_tool", tmp);
+    workspace.setUp();
+    workspace.runBuckBuild("//:bin").assertSuccess();
   }
 
   private ImmutableSortedSet<Path> findFiles(Path root, PathMatcher matcher) throws IOException {

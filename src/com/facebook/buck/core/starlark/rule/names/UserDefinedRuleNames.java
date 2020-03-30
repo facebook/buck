@@ -1,24 +1,26 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.rule.names;
 
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.syntax.SkylarkImport;
 import javax.annotation.Nullable;
 
 /**
@@ -67,6 +69,26 @@ public class UserDefinedRuleNames {
           Label.parseAbsolute(identifier.substring(0, idx), ImmutableMap.of()),
           identifier.substring(idx + 1));
     } catch (LabelSyntaxException e) {
+      return null;
+    }
+  }
+
+  /**
+   * Convert a 'buck.type' string into a SkylarkImport object
+   *
+   * @param identifier the result from buck.type
+   * @return A {@link SkylarkImport} object if {@code identifier} is parsable as a UDR identifier,
+   *     else {@code null}
+   */
+  @Nullable
+  public static SkylarkImport importFromIdentifier(String identifier) {
+    int idx = identifier.lastIndexOf(':');
+    if (idx == -1 || idx == identifier.length() - 1) {
+      return null;
+    }
+    try {
+      return SkylarkImport.create(identifier.substring(0, idx));
+    } catch (SkylarkImport.SkylarkImportSyntaxException e) {
       return null;
     }
   }

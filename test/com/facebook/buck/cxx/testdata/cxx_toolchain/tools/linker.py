@@ -1,7 +1,10 @@
+#!/usr/bin/env python3
+
 import os
 import sys
 
-import impl
+from tools import impl
+
 
 parser = impl.argparser()
 

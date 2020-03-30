@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.types;
@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import java.util.Optional;
 import java.util.function.Function;
 import org.junit.Test;
 
@@ -45,11 +46,19 @@ public class EitherTest {
   }
 
   @Test
+  public void getOption() {
+    assertEquals(Optional.empty(), Either.ofRight("a").getLeftOption());
+    assertEquals(Optional.empty(), Either.ofLeft("a").getRightOption());
+    assertEquals(Optional.of("a"), Either.ofRight("a").getRightOption());
+    assertEquals(Optional.of("a"), Either.ofLeft("a").getLeftOption());
+  }
+
+  @Test
   public void equality() {
     Object value = new Object();
-    assertTrue("Left equals left", Either.ofLeft(value).equals(Either.ofLeft(value)));
-    assertTrue("Right equals right", Either.ofRight(value).equals(Either.ofRight(value)));
-    assertFalse("Left !equals right", Either.ofLeft(value).equals(Either.ofRight(value)));
+    assertEquals("Left equals left", Either.ofLeft(value), Either.ofLeft(value));
+    assertEquals("Right equals right", Either.ofRight(value), Either.ofRight(value));
+    assertNotEquals("Left !equals right", Either.ofLeft(value), Either.ofRight(value));
   }
 
   @Test

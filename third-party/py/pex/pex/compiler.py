@@ -65,7 +65,7 @@ def named_temporary_file():
     fp, path = tempfile.mkstemp()
     os.close(fp)
     try:
-        with open(path, 'w') as fp:
+        with open(path, 'wb') as fp:
             yield fp
     finally:
         os.remove(path)

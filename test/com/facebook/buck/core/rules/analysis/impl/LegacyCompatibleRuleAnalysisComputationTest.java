@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.analysis.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -22,7 +23,9 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.SingleRootCellNameResolverProvider;
 import com.facebook.buck.core.description.RuleDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.impl.FakeComputationEnvironment;
 import com.facebook.buck.core.model.BuildTarget;
@@ -35,7 +38,6 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.ProviderCreationContext;
 import com.facebook.buck.core.rules.actions.ActionCreationException;
-import com.facebook.buck.core.rules.analysis.ImmutableRuleAnalysisKey;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisKey;
@@ -59,25 +61,81 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
   private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
   private final CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
   private final TargetNodeFactory targetNodeFactory =
-      new TargetNodeFactory(new DefaultTypeCoercerFactory());
+      new TargetNodeFactory(
+          new DefaultTypeCoercerFactory(), SingleRootCellNameResolverProvider.INSTANCE);
   private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   @Test
-  public void getDepsDiscoveryDelegates() {
+  public void getDepsReturnsEmptyForLegacyRules() {
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
+
+    TargetNode<?> targetNode =
+        FakeTargetNodeBuilder.newBuilder(new FakeTargetNodeBuilder.FakeDescription(), buildTarget)
+            .build();
+
+    MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
+    ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
+        ImmutableMap.of(buildTarget, targetNode);
+    TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
+
+    LegacyCompatibleRuleAnalysisComputation transformer =
+        new LegacyCompatibleRuleAnalysisComputation(
+            new RuleAnalysisComputation(targetGraph, eventBus) {
+              @Override
+              public ImmutableSet<RuleAnalysisKey> discoverPreliminaryDeps(RuleAnalysisKey key) {
+                fail("Should not call into delegate");
+                return ImmutableSet.of();
+              }
+
+              @Override
+              public ImmutableSet<RuleAnalysisKey> discoverDeps(
+                  RuleAnalysisKey key, ComputationEnvironment env) {
+                fail("Should not call into delegate");
+                return ImmutableSet.of();
+              }
+            },
+            targetGraph);
+
+    assertEquals(
+        ImmutableSet.of(), transformer.discoverPreliminaryDeps(RuleAnalysisKey.of(buildTarget)));
+
+    assertEquals(
+        ImmutableSet.of(),
+        transformer.discoverDeps(
+            RuleAnalysisKey.of(buildTarget), new FakeComputationEnvironment(ImmutableMap.of())));
+  }
+
+  @Test
+  public void getDepsDiscoveryDelegatesForCompatibleRules() {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//my:target");
 
+    TargetNode<?> targetNode =
+        FakeTargetNodeBuilder.newBuilder(
+                new FakeTargetNodeBuilder.LegacyProviderFakeRuleDescription() {
+                  @Override
+                  public ProviderInfoCollection createProviders(
+                      ProviderCreationContext context,
+                      BuildTarget buildTarget,
+                      FakeTargetNodeArg args) {
+                    return TestProviderInfoCollectionImpl.builder().build();
+                  }
+                },
+                buildTarget)
+            .build();
+
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
-    ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex = ImmutableMap.of();
+    ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
+        ImmutableMap.of(buildTarget, targetNode);
     TargetGraph targetGraph = new TargetGraph(graph, targetNodeIndex);
 
     AtomicBoolean pdepsCalled = new AtomicBoolean();
     AtomicBoolean depsCalled = new AtomicBoolean();
 
     ImmutableSet<RuleAnalysisKey> pdepsKeys =
-        ImmutableSet.of(ImmutableRuleAnalysisKey.of(BuildTargetFactory.newInstance("//some:pdep")));
+        ImmutableSet.of(RuleAnalysisKey.of(BuildTargetFactory.newInstance("//some:pdep")));
     ImmutableSet<RuleAnalysisKey> depsKeys =
-        ImmutableSet.of(ImmutableRuleAnalysisKey.of(BuildTargetFactory.newInstance("//some:dep")));
+        ImmutableSet.of(RuleAnalysisKey.of(BuildTargetFactory.newInstance("//some:dep")));
 
     LegacyCompatibleRuleAnalysisComputation transformer =
         new LegacyCompatibleRuleAnalysisComputation(
@@ -97,15 +155,13 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             },
             targetGraph);
 
-    assertSame(
-        pdepsKeys, transformer.discoverPreliminaryDeps(ImmutableRuleAnalysisKey.of(buildTarget)));
+    assertSame(pdepsKeys, transformer.discoverPreliminaryDeps(RuleAnalysisKey.of(buildTarget)));
     assertTrue(pdepsCalled.get());
 
     assertSame(
         depsKeys,
         transformer.discoverDeps(
-            ImmutableRuleAnalysisKey.of(buildTarget),
-            new FakeComputationEnvironment(ImmutableMap.of())));
+            RuleAnalysisKey.of(buildTarget), new FakeComputationEnvironment(ImmutableMap.of())));
     assertTrue(depsCalled.get());
   }
 
@@ -140,11 +196,11 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             FakeRuleDescriptionArg.builder().setName("target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -166,8 +222,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
 
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(
-            ImmutableRuleAnalysisKey.of(buildTarget),
-            new FakeComputationEnvironment(ImmutableMap.of()));
+            RuleAnalysisKey.of(buildTarget), new FakeComputationEnvironment(ImmutableMap.of()));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.
@@ -189,7 +244,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
 
     AtomicBoolean createProvidersCalled = new AtomicBoolean();
     DescriptionWithTargetGraph<?> descriptionWithTargetGraph =
-        new FakeTargetNodeBuilder.FakeDescription() {
+        new FakeTargetNodeBuilder.LegacyProviderFakeRuleDescription() {
           @Override
           public ProviderInfoCollection createProviders(
               ProviderCreationContext context, BuildTarget buildTarget, FakeTargetNodeArg args) {
@@ -204,11 +259,11 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
             FakeTargetNodeArg.builder().setName("//my:target").build(),
             projectFilesystem,
             buildTarget,
+            DependencyStack.root(),
             ImmutableSet.of(),
             ImmutableSortedSet.of(),
             ImmutableSet.of(),
-            ImmutableSet.of(),
-            cellPathResolver);
+            ImmutableSet.of());
     MutableDirectedGraph<TargetNode<?>> graph = new MutableDirectedGraph<>();
     graph.addNode(targetNode);
     ImmutableMap<BuildTarget, TargetNode<?>> targetNodeIndex =
@@ -229,8 +284,7 @@ public class LegacyCompatibleRuleAnalysisComputationTest {
 
     RuleAnalysisResult ruleAnalysisResult =
         transformer.transform(
-            ImmutableRuleAnalysisKey.of(buildTarget),
-            new FakeComputationEnvironment(ImmutableMap.of()));
+            RuleAnalysisKey.of(buildTarget), new FakeComputationEnvironment(ImmutableMap.of()));
 
     // We shouldn't be making copies of the providers or build target in our transformation. It
     // should be as given.

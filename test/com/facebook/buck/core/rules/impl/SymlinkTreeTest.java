@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules.impl;
@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -47,7 +47,8 @@ import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
+import com.facebook.buck.step.fs.SymlinkMapsPaths;
+import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -81,7 +82,7 @@ public class SymlinkTreeTest {
   private SymlinkTree symlinkTreeBuildRule;
   private ImmutableMap<Path, SourcePath> links;
   private Path outputPath;
-  private SourcePathResolver pathResolver;
+  private SourcePathResolverAdapter pathResolver;
   private ActionGraphBuilder graphBuilder;
 
   @Before
@@ -136,8 +137,12 @@ public class SymlinkTreeTest {
                     BuildCellRelativePath.fromCellRelativePath(
                         buildContext.getBuildCellRootPath(), projectFilesystem, outputPath)))
             .add(
-                new SymlinkTreeStep(
-                    "link_tree", projectFilesystem, outputPath, pathResolver.getMappedPaths(links)))
+                new SymlinkTreeMergeStep(
+                    "link_tree",
+                    projectFilesystem,
+                    outputPath,
+                    new SymlinkMapsPaths(pathResolver.getMappedPaths(links)),
+                    (a, b) -> false))
             .build();
     ImmutableList<Step> actualBuildSteps =
         symlinkTreeBuildRule.getBuildSteps(buildContext, buildableContext);
@@ -267,6 +272,7 @@ public class SymlinkTreeTest {
 
   @Test
   public void verifyStepFailsIfKeyContainsDotDot() throws Exception {
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SymlinkTree symlinkTree =
         new SymlinkTree(
             "link_tree",
@@ -278,7 +284,10 @@ public class SymlinkTreeTest {
                 PathSourcePath.of(
                     projectFilesystem, MorePaths.relativize(tmpDir.getRoot(), tmpDir.newFile()))));
     int exitCode =
-        symlinkTree.getVerifyStep().execute(TestExecutionContext.newInstance()).getExitCode();
+        symlinkTree
+            .getVerifyStep(symlinkTree.getResolvedSymlinks(ruleResolver.getSourcePathResolver()))
+            .execute(TestExecutionContext.newInstance())
+            .getExitCode();
     assertThat(exitCode, Matchers.not(Matchers.equalTo(0)));
   }
 

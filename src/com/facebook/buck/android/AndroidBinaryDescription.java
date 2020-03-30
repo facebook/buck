@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -24,15 +24,16 @@ import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -44,7 +45,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -53,6 +54,7 @@ import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.step.fs.XzStep;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -62,6 +64,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import org.immutables.value.Value;
 
@@ -83,7 +86,7 @@ public class AndroidBinaryDescription
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidBuckConfig androidBuckConfig;
   private final JavacFactory javacFactory;
-  private final Supplier<JavaOptions> javaOptions;
+  private final Function<TargetConfiguration, JavaOptions> javaOptions;
   private final ProGuardConfig proGuardConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
@@ -159,16 +162,20 @@ public class AndroidBinaryDescription
 
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
 
+    // TODO(nga): obtain proper dependency stack
+    DependencyStack dependencyStack = DependencyStack.top(buildTarget);
     AndroidBinaryGraphEnhancer graphEnhancer =
         androidBinaryGraphEnhancerFactory.create(
             toolchainProvider,
             javaBuckConfig,
+            androidBuckConfig,
             cxxBuckConfig,
             dxConfig,
             proGuardConfig,
             cellRoots,
             context.getTargetGraph(),
             buildTarget,
+            dependencyStack,
             projectFilesystem,
             params,
             graphBuilder,
@@ -177,8 +184,8 @@ public class AndroidBinaryDescription
             exopackageModes,
             rulesToExcludeFromDex,
             args,
-            false,
-            javaOptions.get(),
+            /* useProtoFormat */ false,
+            javaOptions.apply(buildTarget.getTargetConfiguration()),
             javacFactory,
             context.getConfigurationRuleRegistry());
     AndroidBinary androidBinary =
@@ -195,7 +202,7 @@ public class AndroidBinaryDescription
             resourceFilter,
             rulesToExcludeFromDex,
             args,
-            javaOptions.get());
+            javaOptions.apply(buildTarget.getTargetConfiguration()));
     // The exo installer is always added to the index so that the action graph is the same
     // between build and install calls.
     new AndroidBinaryInstallGraphEnhancer(
@@ -218,6 +225,7 @@ public class AndroidBinaryDescription
         dexSplitStrategy,
         args.getDexCompression().orElse(defaultDexStore),
         args.getLinearAllocHardLimit(),
+        args.getDexGroupLibLimit(),
         args.getPrimaryDexPatterns(),
         args.getPrimaryDexClassesFile(),
         args.getPrimaryDexScenarioFile(),
@@ -228,7 +236,8 @@ public class AndroidBinaryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     for (Flavor flavor : flavors) {
       if (!FLAVORS.contains(flavor)) {
         return false;
@@ -240,13 +249,16 @@ public class AndroidBinaryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractAndroidBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
     TargetConfiguration targetConfiguration = buildTarget.getTargetConfiguration();
-    javaOptions.get().addParseTimeDeps(targetGraphOnlyDepsBuilder, targetConfiguration);
+    javaOptions
+        .apply(targetConfiguration)
+        .addParseTimeDeps(targetGraphOnlyDepsBuilder, targetConfiguration);
 
     Optionals.addIfPresent(proGuardConfig.getProguardTarget(targetConfiguration), extraDepsBuilder);
 
@@ -257,7 +269,10 @@ public class AndroidBinaryDescription
     }
     // TODO(cjhopman): we could filter this by the abis that this binary supports.
     toolchainProvider
-        .getByNameIfPresent(NdkCxxPlatformsProvider.DEFAULT_NAME, NdkCxxPlatformsProvider.class)
+        .getByNameIfPresent(
+            NdkCxxPlatformsProvider.DEFAULT_NAME,
+            buildTarget.getTargetConfiguration(),
+            NdkCxxPlatformsProvider.class)
         .map(NdkCxxPlatformsProvider::getNdkCxxPlatforms).map(Map::values)
         .orElse(ImmutableList.of()).stream()
         .map(platform -> platform.getParseTimeDeps(targetConfiguration))
@@ -267,16 +282,9 @@ public class AndroidBinaryDescription
         toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
   }
 
-  @Override
-  public ImmutableSet<BuildTarget> getConfigurationDeps(AndroidBinaryDescriptionArg arg) {
-    return ImmutableSet.copyOf(
-        ConfigurationBuildTargets.convertValues(arg.getTargetCpuTypeConstraints()).values());
-  }
-
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractAndroidBinaryDescriptionArg
-      implements CommonDescriptionArg,
+      implements BuildRuleArg,
           HasDeclaredDeps,
           HasExopackageArgs,
           HasTests,
@@ -317,6 +325,11 @@ public class AndroidBinaryDescription
       return DexSplitMode.DEFAULT_LINEAR_ALLOC_HARD_LIMIT;
     }
 
+    @Value.Default
+    int getDexGroupLibLimit() {
+      return DexSplitMode.DEFAULT_DEX_GROUP_LIB_LIMIT;
+    }
+
     abstract List<String> getResourceFilter();
 
     @Value.NaturalOrder
@@ -352,5 +365,16 @@ public class AndroidBinaryDescription
     @Override
     @Value.NaturalOrder
     public abstract ImmutableSortedSet<BuildTarget> getDeps();
+
+    @Override
+    public AndroidBinaryDescriptionArg withApplicationModuleBlacklist(List<Query> queries) {
+      if (getApplicationModuleBlacklist().equals(Optional.of(queries))) {
+        return (AndroidBinaryDescriptionArg) this;
+      }
+      return AndroidBinaryDescriptionArg.builder()
+          .from(this)
+          .setApplicationModuleBlacklist(queries)
+          .build();
+    }
   }
 }

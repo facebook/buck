@@ -1,18 +1,19 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.jvm.kotlin;
 
 import static com.google.common.collect.Iterables.transform;
@@ -20,7 +21,6 @@ import static com.google.common.collect.Iterables.transform;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -48,6 +48,7 @@ public class KotlincStep implements Step {
   private final ImmutableSortedSet<Path> combinedClassPathEntries;
   private final Path outputDirectory;
   private final ImmutableList<String> extraArguments;
+  private final ImmutableList<String> verboseModeOnlyExtraArguments;
   private final ImmutableSortedSet<Path> sourceFilePaths;
   private final ProjectFilesystem filesystem;
   private final Path pathToSrcsList;
@@ -62,6 +63,7 @@ public class KotlincStep implements Step {
       ImmutableSortedSet<Path> combinedClassPathEntries,
       Kotlinc kotlinc,
       ImmutableList<String> extraArguments,
+      ImmutableList<String> verboseModeOnlyExtraArguments,
       ProjectFilesystem filesystem,
       Optional<Path> workingDirectory) {
     this.invokingRule = invokingRule;
@@ -71,6 +73,7 @@ public class KotlincStep implements Step {
     this.kotlinc = kotlinc;
     this.combinedClassPathEntries = combinedClassPathEntries;
     this.extraArguments = extraArguments;
+    this.verboseModeOnlyExtraArguments = verboseModeOnlyExtraArguments;
     this.filesystem = filesystem;
     this.workingDirectory = workingDirectory;
   }
@@ -108,7 +111,7 @@ public class KotlincStep implements Step {
       } else {
         returnedStderr = Optional.empty();
       }
-      return ImmutableStepExecutionResult.builder()
+      return StepExecutionResult.builder()
           .setExitCode(declaredDepsBuildResult)
           .setStderr(returnedStderr)
           .build();
@@ -137,14 +140,6 @@ public class KotlincStep implements Step {
   @VisibleForTesting
   ImmutableList<String> getOptions(
       ExecutionContext context, ImmutableSortedSet<Path> buildClasspathEntries) {
-    return getOptions(filesystem, outputDirectory, buildClasspathEntries);
-  }
-
-  private ImmutableList<String> getOptions(
-      ProjectFilesystem filesystem,
-      Path outputDirectory,
-      ImmutableSortedSet<Path> buildClasspathEntries) {
-
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
     if (outputDirectory != null) {
@@ -167,6 +162,15 @@ public class KotlincStep implements Step {
 
     if (!extraArguments.isEmpty()) {
       for (String extraArgument : extraArguments) {
+        if (!extraArgument.isEmpty()) {
+          builder.add(extraArgument);
+        }
+      }
+    }
+
+    if (context.getVerbosity().shouldUseVerbosityFlagIfAvailable()
+        && !verboseModeOnlyExtraArguments.isEmpty()) {
+      for (String extraArgument : verboseModeOnlyExtraArguments) {
         if (!extraArgument.isEmpty()) {
           builder.add(extraArgument);
         }

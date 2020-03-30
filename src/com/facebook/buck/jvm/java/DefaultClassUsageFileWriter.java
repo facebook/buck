@@ -1,23 +1,25 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Preconditions;
@@ -40,7 +42,8 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       CellPathResolver cellPathResolver) {
     ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
     try {
-      Preconditions.checkState(filesystem.exists(relativePath.getParent()));
+      Path parent = relativePath.getParent();
+      Preconditions.checkState(filesystem.exists(parent), "directory must exist: %s", parent);
       ObjectMappers.WRITER.writeValue(
           filesystem.resolve(relativePath).toFile(),
           relativizeMap(classUsageMap, filesystem, cellPathResolver));
@@ -90,13 +93,13 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
   private static Optional<Path> getCrossCellPath(Path jarAbsolutePath, CellPathResolver resolver) {
     // TODO(cjhopman): This is wrong if a cell ends up depending on something in another cell that
     // it doesn't have a mapping for :o
-    for (Path cellRoot : resolver.getKnownRoots()) {
-      if (jarAbsolutePath.startsWith(cellRoot)) {
-        Path relativePath = cellRoot.relativize(jarAbsolutePath);
+    for (AbsPath cellRoot : resolver.getKnownRoots()) {
+      if (jarAbsolutePath.startsWith(cellRoot.getPath())) {
+        RelPath relativePath = cellRoot.relativize(jarAbsolutePath);
         Optional<String> cellName = resolver.getCanonicalCellName(cellRoot);
         // We use an absolute path to represent a path rooted in another cell
-        Path cellNameRoot = cellRoot.getRoot().resolve(cellName.orElse(ROOT_CELL_IDENTIFIER));
-        return Optional.of(cellNameRoot.resolve(relativePath));
+        AbsPath cellNameRoot = cellRoot.getRoot().resolve(cellName.orElse(ROOT_CELL_IDENTIFIER));
+        return Optional.of(cellNameRoot.resolve(relativePath).getPath());
       }
     }
     return Optional.empty();

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.cache.impl;
@@ -19,7 +19,6 @@ package com.facebook.buck.util.cache.impl;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
-import com.facebook.buck.util.cache.FileHashCacheVerificationResult;
 import com.facebook.buck.util.cache.ProjectFileHashCache;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -28,6 +27,7 @@ import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -65,10 +65,25 @@ import java.util.stream.Stream;
  */
 public class StackedFileHashCache implements FileHashCache {
 
+  /**
+   * Used to make sure that for two Paths where one is a sub-path of another, the longer Path
+   * appears first in the StackedFileHasCache. This is important for finding matching cells in the
+   * `lookup` function.
+   */
+  static class FileHashCacheComparator implements Comparator<ProjectFileHashCache> {
+    @Override
+    public int compare(ProjectFileHashCache c1, ProjectFileHashCache c2) {
+      return c2.getFilesystem()
+          .getRootPath()
+          .toString()
+          .compareTo(c1.getFilesystem().getRootPath().toString());
+    }
+  }
+
   private final ImmutableList<? extends ProjectFileHashCache> caches;
 
   public StackedFileHashCache(ImmutableList<? extends ProjectFileHashCache> caches) {
-    this.caches = caches;
+    this.caches = ImmutableList.sortedCopyOf(new FileHashCacheComparator(), caches);
   }
 
   public static StackedFileHashCache createDefaultHashCaches(
@@ -161,18 +176,19 @@ public class StackedFileHashCache implements FileHashCache {
 
   @Override
   public FileHashCacheVerificationResult verify() throws IOException {
-    FileHashCacheVerificationResult.Builder builder = FileHashCacheVerificationResult.builder();
+    ImmutableList.Builder<String> verificationErrors = ImmutableList.builder();
     int cachesExamined = 1;
     int filesExamined = 0;
 
     for (ProjectFileHashCache cache : caches) {
-      FileHashCacheVerificationResult result = cache.verify();
+      FileHashCache.FileHashCacheVerificationResult result = cache.verify();
       cachesExamined += result.getCachesExamined();
       filesExamined += result.getFilesExamined();
-      builder.addAllVerificationErrors(result.getVerificationErrors());
+      verificationErrors.addAll(result.getVerificationErrors());
     }
 
-    return builder.setCachesExamined(cachesExamined).setFilesExamined(filesExamined).build();
+    return FileHashCacheVerificationResult.of(
+        cachesExamined, filesExamined, verificationErrors.build());
   }
 
   @Override

@@ -8,9 +8,6 @@ java_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/io:executable-finder",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//src/com/facebook/buck/core/config:config",
@@ -32,6 +29,7 @@ java_library(
         "//src/com/facebook/buck/util/environment:environment",
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",
         "//src/com/facebook/buck/util/xml:xml",
         "//test/com/facebook/buck/testutil:testutil",
@@ -44,6 +42,9 @@ java_library(
         "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/io:executable-finder",
     ],
 )
 
@@ -68,7 +69,6 @@ standard_java_test(
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/cxx:rules",
-        "//src/com/facebook/buck/distributed:distributed",
         "//src/com/facebook/buck/doctor/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -124,6 +124,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/environment:platform",
         "//src/com/facebook/buck/util/network/hostname:hostname",
         "//src/com/facebook/buck/util/sha1:sha1",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/trace:trace",
         "//src/com/facebook/buck/util/unit:unit",
         "//src/com/facebook/buck/util/versioncontrol:versioncontrol",

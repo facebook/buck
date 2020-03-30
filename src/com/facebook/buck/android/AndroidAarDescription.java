@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -22,7 +22,7 @@ import com.facebook.buck.android.apkmodule.APKModuleGraph;
 import com.facebook.buck.android.exopackage.ExopackageMode;
 import com.facebook.buck.android.packageable.AndroidPackageableCollection;
 import com.facebook.buck.android.packageable.AndroidPackageableCollector;
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -36,13 +36,14 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
+import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableCollection.Builder;
 import com.google.common.collect.ImmutableList;
@@ -211,9 +212,12 @@ public class AndroidAarDescription
               args.getBuildConfigValues(),
               Optional.empty(),
               graphBuilder,
-              javacFactory.create(graphBuilder, args),
+              javacFactory.create(graphBuilder, args, buildTarget.getTargetConfiguration()),
               toolchainProvider
-                  .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                  .getByName(
+                      JavacOptionsProvider.DEFAULT_NAME,
+                      buildTarget.getTargetConfiguration(),
+                      JavacOptionsProvider.class)
                   .getJavacOptions(),
               packageableCollection);
       buildConfigRules.forEach(graphBuilder::addToIndex);
@@ -278,15 +282,15 @@ public class AndroidAarDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AndroidAarDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractAndroidAarDescriptionArg extends AndroidLibraryDescription.CoreArg {
     SourcePath getManifestSkeleton();
 
@@ -303,6 +307,22 @@ public class AndroidAarDescription
     @Value.Default
     default boolean isEnableRelinker() {
       return false;
+    }
+
+    @Override
+    default AndroidAarDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (AndroidAarDescriptionArg) this;
+      }
+      return AndroidAarDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
+
+    @Override
+    default AndroidAarDescriptionArg withProvidedDepsQuery(Query query) {
+      if (getProvidedDepsQuery().equals(Optional.of(query))) {
+        return (AndroidAarDescriptionArg) this;
+      }
+      return AndroidAarDescriptionArg.builder().from(this).setProvidedDepsQuery(query).build();
     }
   }
 }

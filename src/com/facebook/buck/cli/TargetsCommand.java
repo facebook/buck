@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -19,51 +19,54 @@ package com.facebook.buck.cli;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
 import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.model.OutputLabel;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetGraphHashing;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDepsPackage;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDepsPackage;
 import com.facebook.buck.core.parser.BuildTargetPatternToBuildPackagePathKey;
-import com.facebook.buck.core.parser.ImmutableBuildTargetPatternToBuildPackagePathKey;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.calculator.ParallelRuleKeyCalculator;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.io.filesystem.BuckPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.log.thrift.ThriftRuleKeyLogger;
-import com.facebook.buck.parser.BuildFileSpec;
-import com.facebook.buck.parser.ImmutableTargetNodePredicateSpec;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
@@ -71,6 +74,9 @@ import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.spec.BuildFileSpec;
+import com.facebook.buck.parser.spec.TargetNodePredicateSpec;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
@@ -98,8 +104,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
@@ -127,7 +135,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 import org.kohsuke.args4j.Argument;
 import org.kohsuke.args4j.Option;
 
@@ -193,6 +200,12 @@ public class TargetsCommand extends AbstractCommand {
           "Print the path to the output, relative to the cell path, for each rule after the "
               + "rule name. Use '--show-full-output' to obtain the full absolute path.")
   private boolean isShowOutput;
+
+  @Option(
+      name = "--show-outputs",
+      usage =
+          "Print paths to outputs, relative to the cell path, for each rule after the rule name.")
+  private boolean isShowOutputs;
 
   @Option(
       name = "--show-full-output",
@@ -288,7 +301,7 @@ public class TargetsCommand extends AbstractCommand {
     return types.get();
   }
 
-  public PathArguments.ReferencedFiles getReferencedFiles(Path projectRoot) throws IOException {
+  public PathArguments.ReferencedFiles getReferencedFiles(AbsPath projectRoot) throws IOException {
     return PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, referencedFiles.get());
   }
 
@@ -343,7 +356,8 @@ public class TargetsCommand extends AbstractCommand {
                 .getParser()
                 .getPerBuildStateFactory()
                 .create(
-                    createParsingContext(params.getCell(), pool.getListeningExecutorService())
+                    createParsingContext(
+                            params.getCells().getRootCell(), pool.getListeningExecutorService())
                         .withExcludeUnsupportedTargets(false)
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
@@ -382,47 +396,54 @@ public class TargetsCommand extends AbstractCommand {
     // Parse target patterns
     ImmutableSet<BuildTargetPattern> buildTargetPatterns =
         targetPatterns.stream()
-            .map(BuildTargetPatternParser::parse)
+            .map(
+                (String pattern1) ->
+                    BuildTargetPatternParser.parse(
+                        pattern1, params.getCells().getRootCell().getCellNameResolver()))
             .collect(ImmutableSet.toImmutableSet());
 
     // Group all specs by cell
     // TODO: figure out how to group by with ImmutableMap
-    Map<String, List<BuildTargetPattern>> patternsPerCell =
-        buildTargetPatterns.stream().collect(Collectors.groupingBy(pattern -> pattern.getCell()));
+    Map<CanonicalCellName, List<BuildTargetPattern>> patternsPerCell =
+        buildTargetPatterns.stream()
+            .collect(
+                Collectors.groupingBy(pattern -> pattern.getCellRelativeBasePath().getCellName()));
 
     // Build graph engines for each cell in provided specs and evaluate
-    List<RawTargetNodeWithDepsPackage> nodes = new ArrayList<>();
+    List<UnconfiguredTargetNodeWithDepsPackage> nodes = new ArrayList<>();
     Closer closer = Closer.create();
     try {
       // For each cell, build a Graph Engine which will parse that cell's targets
       // In the returned result, the key is a cell name and the value is Graph Engine instance
       // configured for this cell
-      ImmutableMap<String, GraphTransformationEngine> enginesPerCell =
+      ImmutableMap<CanonicalCellName, GraphTransformationEngine> enginesPerCell =
           buildGraphEngineForEachCell(
               ImmutableSet.copyOf(patternsPerCell.keySet()), closer, params);
 
       // Execute graph engine for each cell sequentially
       // TODO(buck_team): parallelize it with Graph Engine
-      for (Map.Entry<String, List<BuildTargetPattern>> cellAndPatterns :
+      for (Entry<CanonicalCellName, List<BuildTargetPattern>> cellAndPatterns :
           patternsPerCell.entrySet()) {
         GraphTransformationEngine engine = enginesPerCell.get(cellAndPatterns.getKey());
 
         ImmutableSet<
-                ComposedKey<BuildTargetPatternToBuildPackagePathKey, RawTargetNodeWithDepsPackage>>
+                ComposedKey<
+                    BuildTargetPatternToBuildPackagePathKey, UnconfiguredTargetNodeWithDepsPackage>>
             keys =
                 cellAndPatterns.getValue().stream()
                     .map(
                         pattern ->
-                            ImmutableComposedKey.of(
-                                (BuildTargetPatternToBuildPackagePathKey)
-                                    ImmutableBuildTargetPatternToBuildPackagePathKey.of(pattern),
-                                RawTargetNodeWithDepsPackage.class))
+                            ComposedKey.of(
+                                BuildTargetPatternToBuildPackagePathKey.of(pattern),
+                                UnconfiguredTargetNodeWithDepsPackage.class))
                     .collect(ImmutableSet.toImmutableSet());
 
         ImmutableMap<
-                ComposedKey<BuildTargetPatternToBuildPackagePathKey, RawTargetNodeWithDepsPackage>,
+                ComposedKey<
+                    BuildTargetPatternToBuildPackagePathKey, UnconfiguredTargetNodeWithDepsPackage>,
                 ComposedResult<
-                    ComputeKey<RawTargetNodeWithDepsPackage>, RawTargetNodeWithDepsPackage>>
+                    ComputeKey<UnconfiguredTargetNodeWithDepsPackage>,
+                    UnconfiguredTargetNodeWithDepsPackage>>
             results = engine.computeAllUnchecked(keys);
 
         results.values().forEach(result -> nodes.addAll(result.resultMap().values()));
@@ -441,22 +462,23 @@ public class TargetsCommand extends AbstractCommand {
     }
   }
 
-  private ImmutableMap<String, GraphTransformationEngine> buildGraphEngineForEachCell(
-      ImmutableSet<String> cellNames, Closer closer, CommandRunnerParams params) {
-    ImmutableMap.Builder<String, GraphTransformationEngine> builder =
+  private ImmutableMap<CanonicalCellName, GraphTransformationEngine> buildGraphEngineForEachCell(
+      ImmutableSet<CanonicalCellName> cellNames, Closer closer, CommandRunnerParams params) {
+    ImmutableMap.Builder<CanonicalCellName, GraphTransformationEngine> builder =
         ImmutableMap.builderWithExpectedSize(cellNames.size());
-    for (String cellName : cellNames) {
+    for (CanonicalCellName cellName : cellNames) {
 
       // Linear scan to find a cell that corresponds to the name. It is not supposed to have a lot
       // of cells so this is probably fine for now.
       // TODO(buck_team): add a method to resolve cell by name from the context
       Cell cell =
-          params.getCell().getAllCells().stream()
-              .filter(name -> name.getCanonicalName().getName().equals(cellName))
+          params.getCells().getRootCell().getAllCells().stream()
+              .filter(name -> name.getCanonicalName().equals(cellName))
               .findFirst()
               .orElseThrow(() -> new BuckUncheckedExecutionException("Unknown cell " + cellName));
 
-      GraphTransformationEngine engine = GraphEngineFactory.create(cell, closer, params);
+      GraphTransformationEngine engine =
+          GraphEngineFactory.create(params.getCells(), cell, closer, params);
 
       builder.put(cellName, engine);
     }
@@ -466,6 +488,12 @@ public class TargetsCommand extends AbstractCommand {
   private ExitCode runWithExecutor(CommandRunnerParams params, ListeningExecutorService executor)
       throws IOException, InterruptedException, BuildFileParseException, CycleException,
           VersionException {
+    if (isShowOutput) {
+      CommandHelper.maybePrintShowOutputWarning(
+          params.getBuckConfig().getView(CliConfig.class),
+          params.getConsole().getAnsi(),
+          params.getBuckEventBus());
+    }
     Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses =
         getDescriptionClassFromParams(params);
     if (!descriptionClasses.isPresent()) {
@@ -475,6 +503,7 @@ public class TargetsCommand extends AbstractCommand {
     // shortcut to old plain simple format
     if (!(isShowCellPath
         || isShowOutput
+        || isShowOutputs
         || isShowFullOutput
         || isShowRuleKey
         || isShowTargetHash)) {
@@ -493,20 +522,24 @@ public class TargetsCommand extends AbstractCommand {
       return ExitCode.SUCCESS;
     }
 
+    ImmutableList<TargetNodeSpec> targetNodeSpecs = getTargetNodeSpecs(params);
+
     // plain or json output
     TargetGraphCreationResult targetGraphAndBuildTargetsForShowRules =
-        buildTargetGraphAndTargetsForShowRules(params, executor, descriptionClasses);
+        buildTargetGraphAndTargetsForShowRules(
+            params, targetNodeSpecs, executor, descriptionClasses);
     boolean useVersioning =
-        isShowRuleKey || isShowOutput || isShowFullOutput
+        isShowRuleKey || isShowOutput || isShowOutputs || isShowFullOutput
             ? params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()
             : params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions();
     targetGraphAndBuildTargetsForShowRules =
         useVersioning
             ? toVersionedTargetGraph(params, targetGraphAndBuildTargetsForShowRules)
             : targetGraphAndBuildTargetsForShowRules;
-    ImmutableSortedMap<BuildTarget, TargetResult> showRulesResult =
+    ImmutableSortedMap<BuildTargetWithOutputs, TargetResult> showRulesResult =
         computeShowRules(
             params,
+            targetNodeSpecs,
             executor,
             new Pair<>(
                 targetGraphAndBuildTargetsForShowRules.getTargetGraph(),
@@ -515,9 +548,24 @@ public class TargetsCommand extends AbstractCommand {
                     .getAll(targetGraphAndBuildTargetsForShowRules.getBuildTargets())));
 
     if (shouldUseJsonFormat()) {
+      ImmutableSetMultimap.Builder<BuildTarget, OutputLabel> builder =
+          ImmutableSetMultimap.builder();
+      for (BuildTargetWithOutputs buildTargetWithOutputs : showRulesResult.keySet()) {
+        builder.put(
+            buildTargetWithOutputs.getBuildTarget(), buildTargetWithOutputs.getOutputLabel());
+      }
+      ImmutableSetMultimap<BuildTarget, OutputLabel> targetToAllLabels = builder.build();
       Iterable<TargetNode<?>> matchingNodes =
-          targetGraphAndBuildTargetsForShowRules.getTargetGraph().getAll(showRulesResult.keySet());
-      printJsonForTargets(params, executor, matchingNodes, showRulesResult, outputAttributes.get());
+          targetGraphAndBuildTargetsForShowRules
+              .getTargetGraph()
+              .getAll(targetToAllLabels.keySet());
+      printJsonForTargets(
+          params,
+          executor,
+          matchingNodes,
+          targetToAllLabels,
+          showRulesResult,
+          outputAttributes.get());
     } else {
       printShowRules(showRulesResult, params);
     }
@@ -536,7 +584,7 @@ public class TargetsCommand extends AbstractCommand {
     ActionGraphAndBuilder result =
         params
             .getActionGraphProvider()
-            .getActionGraph(new ImmutableTargetGraphCreationResult(targetGraph, ImmutableSet.of()));
+            .getActionGraph(TargetGraphCreationResult.of(targetGraph, ImmutableSet.of()));
 
     // construct real graph
     MutableDirectedGraph<BuildRule> actionGraphMutable = new MutableDirectedGraph<>();
@@ -579,14 +627,31 @@ public class TargetsCommand extends AbstractCommand {
     }
   }
 
+  private ImmutableList<TargetNodeSpec> getTargetNodeSpecs(CommandRunnerParams params) {
+    if (arguments.isEmpty()) {
+      return ImmutableList.of(
+          TargetNodePredicateSpec.of(
+              BuildFileSpec.fromRecursivePath(
+                  CellRelativePath.of(
+                      params.getCells().getRootCell().getCanonicalName(),
+                      ForwardRelativePath.of("")))));
+    }
+    return parseArgumentsAsTargetNodeSpecs(
+        params.getCells().getRootCell(),
+        params.getClientWorkingDir(),
+        arguments,
+        params.getBuckConfig());
+  }
+
   private TargetGraphCreationResult buildTargetGraphAndTargetsForShowRules(
       CommandRunnerParams params,
+      Iterable<? extends TargetNodeSpec> targetNodeSpecs,
       ListeningExecutorService executor,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses)
       throws InterruptedException, BuildFileParseException, IOException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        createParsingContext(params.getCell(), executor)
+        createParsingContext(params.getCells().getRootCell(), executor)
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withSpeculativeParsing(SpeculativeParsing.ENABLED);
     if (arguments.isEmpty()) {
@@ -594,19 +659,15 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraphWithTopLevelConfigurationTargets(
-                  parsingContext,
-                  ImmutableList.of(
-                      ImmutableTargetNodePredicateSpec.of(
-                          BuildFileSpec.fromRecursivePath(
-                              Paths.get(""), params.getCell().getRoot()))),
-                  params.getTargetConfiguration());
+                  parsingContext, targetNodeSpecs, params.getTargetConfiguration());
       SortedMap<String, TargetNode<?>> matchingNodes =
           getMatchingNodes(params, completeTargetGraphAndBuildTargets, descriptionClasses);
 
-      Iterable<BuildTarget> buildTargets =
-          FluentIterable.from(matchingNodes.values()).transform(TargetNode::getBuildTarget);
+      ImmutableSet<BuildTarget> buildTargets =
+          ImmutableSet.copyOf(
+              FluentIterable.from(matchingNodes.values()).transform(TargetNode::getBuildTarget));
 
-      return new ImmutableTargetGraphCreationResult(
+      return TargetGraphCreationResult.of(
           completeTargetGraphAndBuildTargets.getTargetGraph(), buildTargets);
     } else {
       return filterTargetGraphCreationResultByType(
@@ -615,8 +676,7 @@ public class TargetsCommand extends AbstractCommand {
               .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext.withApplyDefaultFlavorsMode(
                       ParserConfig.ApplyDefaultFlavorsMode.DISABLED),
-                  parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(), params.getBuckConfig(), arguments),
+                  targetNodeSpecs,
                   params.getTargetConfiguration()),
           descriptionClasses);
     }
@@ -639,7 +699,7 @@ public class TargetsCommand extends AbstractCommand {
     }
 
     TargetGraph targetGraph = targetGraphCreationResult.getTargetGraph();
-    return new ImmutableTargetGraphCreationResult(
+    return TargetGraphCreationResult.of(
         targetGraph,
         targetGraphCreationResult.getBuildTargets().stream()
             .filter(
@@ -658,13 +718,16 @@ public class TargetsCommand extends AbstractCommand {
       throws BuildFileParseException {
     if (shouldUseJsonFormat()) {
       printJsonForTargets(
-          params, executor, matchingNodes.values(), ImmutableMap.of(), outputAttributes.get());
+          params,
+          executor,
+          matchingNodes.values(),
+          ImmutableSetMultimap.of(),
+          ImmutableMap.of(),
+          outputAttributes.get());
     } else if (print0) {
-      printNullDelimitedTargets(matchingNodes.keySet(), params.getConsole().getStdOut());
+      printTargets(matchingNodes.keySet(), "\0", params.getConsole().getStdOut());
     } else {
-      for (String target : matchingNodes.keySet()) {
-        params.getConsole().getStdOut().println(target);
-      }
+      printTargets(matchingNodes.keySet(), System.lineSeparator(), params.getConsole().getStdOut());
     }
   }
 
@@ -674,7 +737,7 @@ public class TargetsCommand extends AbstractCommand {
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses)
       throws IOException {
     PathArguments.ReferencedFiles referencedFiles =
-        getReferencedFiles(params.getCell().getFilesystem().getRootPath());
+        getReferencedFiles(params.getCells().getRootCell().getFilesystem().getRootPath());
     SortedMap<String, TargetNode<?>> matchingNodes;
     // If all of the referenced files are paths outside the project root, then print nothing.
     if (!referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths.isEmpty()
@@ -693,7 +756,8 @@ public class TargetsCommand extends AbstractCommand {
               matchingBuildTargets.isEmpty() ? Optional.empty() : Optional.of(matchingBuildTargets),
               descriptionClasses.get().isEmpty() ? Optional.empty() : descriptionClasses,
               isDetectTestChanges,
-              parserConfig.getBuildFileName());
+              parserConfig.getBuildFileName(),
+              params.getCells().getRootCell().getFilesystem());
     }
     return matchingNodes;
   }
@@ -703,7 +767,7 @@ public class TargetsCommand extends AbstractCommand {
       throws IOException, InterruptedException, BuildFileParseException, VersionException {
     ParserConfig parserConfig = params.getBuckConfig().getView(ParserConfig.class);
     ParsingContext parsingContext =
-        createParsingContext(params.getCell(), executor)
+        createParsingContext(params.getCells().getRootCell(), executor)
             .withApplyDefaultFlavorsMode(parserConfig.getDefaultFlavorsMode())
             .withSpeculativeParsing(SpeculativeParsing.ENABLED);
     // Parse the entire action graph, or (if targets are specified), only the specified targets and
@@ -712,15 +776,17 @@ public class TargetsCommand extends AbstractCommand {
     TargetGraphCreationResult targetGraphCreationResult;
     if (arguments.isEmpty() || isDetectTestChanges) {
       targetGraphCreationResult =
-          new ImmutableTargetGraphCreationResult(
+          TargetGraphCreationResult.of(
               params
                   .getParser()
                   .buildTargetGraphWithTopLevelConfigurationTargets(
                       parsingContext,
                       ImmutableList.of(
-                          ImmutableTargetNodePredicateSpec.of(
+                          TargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
-                                  Paths.get(""), params.getCell().getRoot()))),
+                                  CellRelativePath.of(
+                                      params.getCells().getRootCell().getCanonicalName(),
+                                      ForwardRelativePath.of(""))))),
                       params.getTargetConfiguration())
                   .getTargetGraph(),
               ImmutableSet.of());
@@ -731,7 +797,10 @@ public class TargetsCommand extends AbstractCommand {
               .buildTargetGraphWithTopLevelConfigurationTargets(
                   parsingContext,
                   parseArgumentsAsTargetNodeSpecs(
-                      params.getCell(), params.getBuckConfig(), arguments),
+                      params.getCells().getRootCell(),
+                      params.getClientWorkingDir(),
+                      arguments,
+                      params.getBuckConfig()),
                   params.getTargetConfiguration());
     }
     return params.getBuckConfig().getView(BuildBuckConfig.class).getTargetsVersions()
@@ -747,9 +816,9 @@ public class TargetsCommand extends AbstractCommand {
         ImmutableSet.builder();
     for (String name : types) {
       try {
-        KnownRuleTypes knownRuleTypes = params.getKnownRuleTypesProvider().get(params.getCell());
-        RuleType type = knownRuleTypes.getRuleType(name);
-        BaseDescription<?> description = knownRuleTypes.getDescription(type);
+        KnownRuleTypes knownRuleTypes =
+            params.getKnownRuleTypesProvider().get(params.getCells().getRootCell());
+        BaseDescription<?> description = knownRuleTypes.getDescriptorByName(name).getDescription();
         descriptionClassesBuilder.add((Class<? extends BaseDescription<?>>) description.getClass());
       } catch (IllegalArgumentException e) {
         params.getBuckEventBus().post(ConsoleEvent.severe("Invalid build rule type: " + name));
@@ -760,17 +829,30 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private void printShowRules(
-      ImmutableSortedMap<BuildTarget, TargetResult> showRulesResult, CommandRunnerParams params) {
-    for (Entry<BuildTarget, TargetResult> entry : showRulesResult.entrySet()) {
+      ImmutableSortedMap<BuildTargetWithOutputs, TargetResult> showRulesResult,
+      CommandRunnerParams params) {
+    for (Entry<BuildTargetWithOutputs, TargetResult> entry : showRulesResult.entrySet()) {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
-      builder.add(entry.getKey().getFullyQualifiedName());
+      builder.add(entry.getKey().toString());
       TargetResult targetResult = entry.getValue();
       targetResult.getRuleKey().ifPresent(builder::add);
       if (isShowCellPath) {
-        // TODO(T47190884): Use a NewCellPathResolver and look this up based on name.
-        builder.add(entry.getKey().getCellPath().toString());
+        Path cellPath =
+            params
+                .getCells()
+                .getRootCell()
+                .getNewCellPathResolver()
+                .getCellPath(entry.getKey().getBuildTarget().getCell());
+        builder.add(cellPath.toString());
       }
-      targetResult.getOutputPath().ifPresent(builder::add);
+      @Nullable
+      ImmutableSet<String> outputPathForLabel =
+          targetResult.getOutputPathsByLabels().get(entry.getKey().getOutputLabel());
+      if (outputPathForLabel != null && !outputPathForLabel.isEmpty()) {
+        // TODO(irenewchen): Should loop through the set of strings and construct one line per
+        // String
+        builder.add(Iterables.getOnlyElement(outputPathForLabel));
+      }
       targetResult.getGeneratedSourcePath().ifPresent(builder::add);
       targetResult.getTargetHash().ifPresent(builder::add);
       params.getConsole().getStdOut().println(Joiner.on(' ').join(builder.build()));
@@ -796,21 +878,25 @@ public class TargetsCommand extends AbstractCommand {
   @VisibleForTesting
   ImmutableSortedMap<String, TargetNode<?>> getMatchingNodes(
       TargetGraph graph,
-      Optional<ImmutableSet<Path>> referencedFiles,
+      Optional<ImmutableSet<RelPath>> referencedFiles,
       Optional<ImmutableSet<BuildTarget>> matchingBuildTargets,
       Optional<ImmutableSet<Class<? extends BaseDescription<?>>>> descriptionClasses,
       boolean detectTestChanges,
-      String buildFileName) {
+      String buildFileName,
+      ProjectFilesystem projectFilesystem) {
     ImmutableSet<TargetNode<?>> directOwners;
     if (referencedFiles.isPresent()) {
       BuildFileTree buildFileTree =
           new InMemoryBuildFileTree(
               graph.getNodes().stream()
                   .map(TargetNode::getBuildTarget)
-                  .collect(ImmutableSet.toImmutableSet()));
+                  .collect(ImmutableSet.toImmutableSet()),
+              projectFilesystem);
       directOwners =
           graph.getNodes().stream()
-              .filter(new DirectOwnerPredicate(buildFileTree, referencedFiles.get(), buildFileName))
+              .filter(
+                  new DirectOwnerPredicate(
+                      buildFileTree, projectFilesystem, referencedFiles.get(), buildFileName))
               .collect(ImmutableSet.toImmutableSet());
     } else {
       directOwners = graph.getNodes();
@@ -890,10 +976,12 @@ public class TargetsCommand extends AbstractCommand {
       CommandRunnerParams params,
       ListeningExecutorService executor,
       Iterable<TargetNode<?>> targetNodes,
-      ImmutableMap<BuildTarget, TargetResult> targetResults,
+      ImmutableSetMultimap<BuildTarget, OutputLabel> targetToAllLabels,
+      ImmutableMap<BuildTargetWithOutputs, TargetResult> targetResults,
       ImmutableSet<String> outputAttributes)
       throws BuildFileParseException {
-    PatternsMatcher attributesPatternsMatcher = new PatternsMatcher(outputAttributes);
+    PatternsMatcher attributesPatternsMatcher =
+        outputAttributes.isEmpty() ? PatternsMatcher.ANY : new PatternsMatcher(outputAttributes);
 
     // Print the JSON representation of the build node for the specified target(s).
     params.getConsole().getStdOut().println("[");
@@ -901,19 +989,18 @@ public class TargetsCommand extends AbstractCommand {
     Iterator<TargetNode<?>> targetNodeIterator = targetNodes.iterator();
 
     try (PerBuildState state =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
                 params.getTypeCoercerFactory(),
-                new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                new DefaultConstructorArgMarshaller(),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
-                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                    params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getWatchman(),
                 params.getBuckEventBus(),
-                params.getManifestServiceSupplier(),
-                params.getFileHashCache(),
-                params.getUnconfiguredBuildTargetFactory())
+                params.getUnconfiguredBuildTargetFactory(),
+                params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                createParsingContext(params.getCell(), executor)
+                createParsingContext(params.getCells().getRootCell(), executor)
                     .withExcludeUnsupportedTargets(false),
                 params.getParser().getPermState())) {
 
@@ -924,7 +1011,13 @@ public class TargetsCommand extends AbstractCommand {
         TargetNode<?> targetNode = targetNodeIterator.next();
         @Nullable
         Map<String, Object> targetNodeAttributes =
-            params.getParser().getTargetNodeRawAttributes(state, params.getCell(), targetNode);
+            params
+                .getParser()
+                .getTargetNodeRawAttributes(
+                    state,
+                    params.getCells().getRootCell(),
+                    targetNode,
+                    DependencyStack.top(targetNode.getBuildTarget()));
         if (targetNodeAttributes == null) {
           printWarning(
               params,
@@ -933,20 +1026,31 @@ public class TargetsCommand extends AbstractCommand {
           continue;
         }
 
-        @Nullable TargetResult targetResult = targetResults.get(targetNode.getBuildTarget());
-        if (targetResult != null) {
-          for (TargetResultFieldName field : TargetResultFieldName.values()) {
-            Optional<String> fieldResult = field.getter.apply(targetResult);
-            if (fieldResult.isPresent()) {
-              targetNodeAttributes.put(field.name, fieldResult.get());
+        for (OutputLabel outputLabel : targetToAllLabels.get(targetNode.getBuildTarget())) {
+          @Nullable
+          TargetResult targetResult =
+              targetResults.get(
+                  BuildTargetWithOutputs.of(targetNode.getBuildTarget(), outputLabel));
+          if (targetResult != null) {
+            for (TargetResultFieldName field : TargetResultFieldName.values()) {
+              Optional<?> fieldResult = field.getter.apply(targetResult);
+              if (fieldResult.isPresent()) {
+                targetNodeAttributes.put(field.name, fieldResult.get());
+              }
             }
           }
         }
+
         targetNodeAttributes.put(
             "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
         if (isShowCellPath) {
-          // TODO(T47190884): Use a NewCellPathResolver and look this up based on name.
-          targetNodeAttributes.put("buck.cell_path", targetNode.getBuildTarget().getCellPath());
+          Path cellPath =
+              params
+                  .getCells()
+                  .getRootCell()
+                  .getNewCellPathResolver()
+                  .getCellPath(targetNode.getBuildTarget().getCell());
+          targetNodeAttributes.put("buck.cell_path", cellPath);
         }
 
         if (jsonAttributeFormat != JsonAttributeFormat.LEGACY) {
@@ -983,10 +1087,14 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   @VisibleForTesting
-  static void printNullDelimitedTargets(Iterable<String> targets, PrintStream printStream) {
+  static void printTargets(Iterable<String> targets, String newline, PrintStream printStream) {
+    StringBuilder sb = new StringBuilder();
     for (String target : targets) {
-      printStream.print(target + '\0');
+      sb.append(target);
+      sb.append(newline);
     }
+    printStream.print(sb.toString());
+    printStream.flush();
   }
 
   /**
@@ -1007,8 +1115,9 @@ public class TargetsCommand extends AbstractCommand {
    *
    * @return An immutable map consisting of result of show options for to each target rule
    */
-  private ImmutableSortedMap<BuildTarget, TargetResult> computeShowRules(
+  private ImmutableSortedMap<BuildTargetWithOutputs, TargetResult> computeShowRules(
       CommandRunnerParams params,
+      ImmutableList<TargetNodeSpec> targetNodeSpecs,
       ListeningExecutorService executor,
       Pair<TargetGraph, Iterable<TargetNode<?>>> targetGraphAndTargetNodes)
       throws IOException, InterruptedException, BuildFileParseException, CycleException {
@@ -1036,12 +1145,12 @@ public class TargetsCommand extends AbstractCommand {
     Optional<ParallelRuleKeyCalculator<RuleKey>> ruleKeyCalculator = Optional.empty();
 
     try (ThriftRuleKeyLogger ruleKeyLogger = createRuleKeyLogger().orElse(null)) {
-      if (isShowRuleKey || isShowOutput || isShowFullOutput) {
+      if (isShowRuleKey || isShowOutput || isShowOutputs || isShowFullOutput) {
         ActionGraphAndBuilder result =
             params
                 .getActionGraphProvider()
                 .getActionGraph(
-                    new ImmutableTargetGraphCreationResult(
+                    TargetGraphCreationResult.of(
                         targetGraphAndTargetNodes.getFirst(), ImmutableSet.of()));
         actionGraph = Optional.of(result.getActionGraph());
         graphBuilder = Optional.of(result.getActionGraphBuilder());
@@ -1087,7 +1196,7 @@ public class TargetsCommand extends AbstractCommand {
 
       // TODO rewrite targets so that this doesn't alter the ActionGraph
       for (TargetNode<?> targetNode : targetGraphAndTargetNodes.getSecond()) {
-        TargetResult.Builder builder =
+        ImmutableTargetResult.Builder builder =
             targetResultBuilders.getOrCreate(targetNode.getBuildTarget());
         Objects.requireNonNull(builder);
         if (actionGraph.isPresent() && isShowRuleKey) {
@@ -1104,7 +1213,7 @@ public class TargetsCommand extends AbstractCommand {
             AbstractBreadthFirstTraversal.traverse(
                 rule,
                 traversedRule -> {
-                  TargetResult.Builder showOptionsBuilder =
+                  ImmutableTargetResult.Builder showOptionsBuilder =
                       targetResultBuilders.getOrCreate(traversedRule.getBuildTarget());
                   showOptionsBuilder.setRuleKey(
                       Futures.getUnchecked(
@@ -1116,85 +1225,85 @@ public class TargetsCommand extends AbstractCommand {
         }
       }
 
+      ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs =
+          matchBuildTargetsWithLabelsFromSpecs(targetNodeSpecs, targetResultBuilders.map.keySet());
       TargetGraph targetGraph = targetGraphAndTargetNodes.getFirst();
       graphBuilder.ifPresent(
           actionGraphBuilder ->
-              processBuildRules(targetResultBuilders.map, targetGraph, actionGraphBuilder, params));
+              processBuildRules(
+                  targetResultBuilders.map,
+                  targetGraph,
+                  buildTargetsWithOutputs,
+                  actionGraphBuilder,
+                  params));
 
-      ImmutableSortedMap.Builder<BuildTarget, TargetResult> builder =
+      ImmutableSortedMap.Builder<BuildTargetWithOutputs, TargetResult> builder =
           ImmutableSortedMap.naturalOrder();
-      for (Map.Entry<BuildTarget, TargetResult.Builder> entry :
-          targetResultBuilders.map.entrySet()) {
-        builder.put(entry.getKey(), entry.getValue().build());
-      }
+      buildTargetsWithOutputs.forEach(
+          targetWithOutputs ->
+              builder.put(
+                  targetWithOutputs,
+                  Objects.requireNonNull(
+                          targetResultBuilders.map.get(targetWithOutputs.getBuildTarget()))
+                      .build()));
       return builder.build();
     }
   }
 
   private void processBuildRules(
-      Map<BuildTarget, TargetResult.Builder> buildTargetToTargetBuilderMap,
+      Map<BuildTarget, ImmutableTargetResult.Builder> buildTargetToTargetBuilderMap,
       TargetGraph targetGraph,
+      ImmutableSet<BuildTargetWithOutputs> buildTargetsWithOutputs,
       ActionGraphBuilder graphBuilder,
       CommandRunnerParams params) {
-    buildTargetToTargetBuilderMap.forEach(
-        (target, builder) -> {
-          if (!targetGraph.get(target).getRuleType().isBuildRule()) {
-            return;
-          }
-          BuildRule rule = graphBuilder.requireRule(target);
-          builder.setRuleType(rule.getType());
-          if (isShowOutput || isShowFullOutput) {
-            SourcePathResolver sourcePathResolver = graphBuilder.getSourcePathResolver();
-            getUserFacingOutputPath(
-                    sourcePathResolver,
-                    rule,
-                    params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink())
-                .map(path -> pathToString(path, params))
-                .ifPresent(builder::setOutputPath);
-            // If the output dir is requested, also calculate the generated src dir
-            if (rule instanceof JavaLibrary) {
-              ((JavaLibrary) rule)
-                  .getGeneratedAnnotationSourcePath()
-                  .map(sourcePathResolver::getRelativePath)
-                  .map(rule.getProjectFilesystem()::resolve)
-                  .map(path -> pathToString(path, params))
-                  .ifPresent(builder::setGeneratedSourcePath);
-            }
-          }
-        });
+    for (BuildTargetWithOutputs targetWithOutputs : buildTargetsWithOutputs) {
+      BuildTarget target = targetWithOutputs.getBuildTarget();
+      if (!targetGraph.get(target).getRuleType().isBuildRule()) {
+        continue;
+      }
+      ImmutableTargetResult.Builder builder =
+          Objects.requireNonNull(buildTargetToTargetBuilderMap.get(target));
+      BuildRule rule = graphBuilder.requireRule(target);
+      builder.setRuleType(rule.getType());
+      if (isShowOutput || isShowOutputs || isShowFullOutput) {
+        SourcePathResolverAdapter sourcePathResolverAdapter = graphBuilder.getSourcePathResolver();
+        PathUtils.getUserFacingOutputPath(
+                sourcePathResolverAdapter,
+                rule,
+                params.getBuckConfig().getView(BuildBuckConfig.class).getBuckOutCompatLink(),
+                targetWithOutputs.getOutputLabel(),
+                isShowOutputs)
+            .map(path -> pathToString(path, params))
+            .ifPresent(
+                path -> {
+                  // Need to call both #setOutputPath and #putOutputPathsByLabels because
+                  // buck.outputPath for JSON printing uses getOutputPath. This can be removed after
+                  // client usages stop parsing buck.outputPath
+                  if (targetWithOutputs.getOutputLabel().isDefault()) {
+                    builder.setOutputPath(path);
+                  }
+                  builder.putOutputPathsByLabels(
+                      targetWithOutputs.getOutputLabel(), ImmutableSet.of(path));
+                });
+        // If the output dir is requested, also calculate the generated src dir
+        if (rule instanceof JavaLibrary) {
+          ((JavaLibrary) rule)
+              .getGeneratedAnnotationSourcePath()
+              .map(sourcePathResolverAdapter::getRelativePath)
+              .map(rule.getProjectFilesystem()::resolve)
+              .map(path -> pathToString(path, params))
+              .ifPresent(builder::setGeneratedSourcePath);
+        }
+      }
+    }
   }
 
   private String pathToString(Path path, CommandRunnerParams params) {
     Path formattedPath =
-        isShowFullOutput ? path : params.getCell().getFilesystem().relativize(path);
+        isShowFullOutput
+            ? path
+            : params.getCells().getRootCell().getFilesystem().relativize(path).getPath();
     return formattedPath.toString();
-  }
-
-  /** Returns absolute path to the output rule, if the rule has an output. */
-  static Optional<Path> getUserFacingOutputPath(
-      SourcePathResolver pathResolver, BuildRule rule, boolean buckOutCompatLink) {
-    Optional<Path> outputPathOptional =
-        Optional.ofNullable(rule.getSourcePathToOutput()).map(pathResolver::getRelativePath);
-
-    // When using buck out compat mode, we favor using the default buck output path in the UI, so
-    // amend the output paths when this is set.
-    if (outputPathOptional.isPresent() && buckOutCompatLink) {
-      BuckPaths paths = rule.getProjectFilesystem().getBuckPaths();
-      if (outputPathOptional.get().startsWith(paths.getConfiguredBuckOut())) {
-        outputPathOptional =
-            Optional.of(
-                paths
-                    .getBuckOut()
-                    .resolve(
-                        outputPathOptional
-                            .get()
-                            .subpath(
-                                paths.getConfiguredBuckOut().getNameCount(),
-                                outputPathOptional.get().getNameCount())));
-      }
-    }
-
-    return outputPathOptional.map(rule.getProjectFilesystem()::resolve);
   }
 
   private Pair<TargetGraph, Iterable<TargetNode<?>>> computeTargetsAndGraphToShowTargetHash(
@@ -1221,7 +1330,7 @@ public class TargetsCommand extends AbstractCommand {
           params
               .getParser()
               .buildTargetGraph(
-                  createParsingContext(params.getCell(), executor)
+                  createParsingContext(params.getCells().getRootCell(), executor)
                       .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                       .withExcludeUnsupportedTargets(false),
                   matchingBuildTargetsWithTests)
@@ -1269,9 +1378,14 @@ public class TargetsCommand extends AbstractCommand {
         return params.getFileHashCache();
       case PATHS_ONLY:
         return new FilePathHashLoader(
-            params.getCell().getRoot(),
+            params.getCells().getRootCell().getRoot().getPath(),
             getTargetHashModifiedPaths(),
-            params.getCell().getBuckConfig().getView(ParserConfig.class).getAllowSymlinks()
+            params
+                    .getCells()
+                    .getRootCell()
+                    .getBuckConfig()
+                    .getView(ParserConfig.class)
+                    .getAllowSymlinks()
                 != ParserConfig.AllowSymlinks.FORBID);
     }
     throw new IllegalStateException(
@@ -1297,19 +1411,18 @@ public class TargetsCommand extends AbstractCommand {
     ImmutableMap<BuildTarget, HashCode> buildTargetHashes;
 
     try (PerBuildState state =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
                 params.getTypeCoercerFactory(),
-                new DefaultConstructorArgMarshaller(params.getTypeCoercerFactory()),
+                new DefaultConstructorArgMarshaller(),
                 params.getKnownRuleTypesProvider(),
                 new ParserPythonInterpreterProvider(
-                    params.getCell().getBuckConfig(), params.getExecutableFinder()),
+                    params.getCells().getRootCell().getBuckConfig(), params.getExecutableFinder()),
                 params.getWatchman(),
                 params.getBuckEventBus(),
-                params.getManifestServiceSupplier(),
-                params.getFileHashCache(),
-                params.getUnconfiguredBuildTargetFactory())
+                params.getUnconfiguredBuildTargetFactory(),
+                params.getHostConfiguration().orElse(UnconfiguredTargetConfiguration.INSTANCE))
             .create(
-                createParsingContext(params.getCell(), executor)
+                createParsingContext(params.getCells().getRootCell(), executor)
                     .withExcludeUnsupportedTargets(false),
                 params.getParser().getPermState())) {
       buildTargetHashes =
@@ -1323,7 +1436,11 @@ public class TargetsCommand extends AbstractCommand {
                   node ->
                       params
                           .getParser()
-                          .getTargetNodeRawAttributesJob(state, params.getCell(), node),
+                          .getTargetNodeRawAttributesJob(
+                              state,
+                              params.getCells().getRootCell(),
+                              node,
+                              DependencyStack.top(node.getBuildTarget())),
                   getHashFunction())
               .hashTargetGraph();
     }
@@ -1407,21 +1524,25 @@ public class TargetsCommand extends AbstractCommand {
 
   private static class DirectOwnerPredicate implements Predicate<TargetNode<?>> {
 
-    private final ImmutableSet<Path> referencedInputs;
-    private final ImmutableSet<Path> basePathOfTargets;
+    private final ProjectFilesystem projectFilesystem;
+    private final ImmutableSet<RelPath> referencedInputs;
+    private final ImmutableSet<RelPath> basePathOfTargets;
     private final String buildFileName;
 
     /**
      * @param referencedInputs A {@link TargetNode} must reference at least one of these paths as
      *     input to match the predicate. All the paths must be relative to the project root. Ignored
-     *     if empty.
      */
     public DirectOwnerPredicate(
-        BuildFileTree buildFileTree, ImmutableSet<Path> referencedInputs, String buildFileName) {
+        BuildFileTree buildFileTree,
+        ProjectFilesystem projectFilesystem,
+        ImmutableSet<RelPath> referencedInputs,
+        String buildFileName) {
+      this.projectFilesystem = projectFilesystem;
       this.referencedInputs = referencedInputs;
 
-      ImmutableSet.Builder<Path> basePathOfTargetsBuilder = ImmutableSet.builder();
-      for (Path input : referencedInputs) {
+      ImmutableSet.Builder<RelPath> basePathOfTargetsBuilder = ImmutableSet.builder();
+      for (RelPath input : referencedInputs) {
         buildFileTree.getBasePathOfAncestorTarget(input).ifPresent(basePathOfTargetsBuilder::add);
       }
       this.basePathOfTargets = basePathOfTargetsBuilder.build();
@@ -1432,19 +1553,29 @@ public class TargetsCommand extends AbstractCommand {
     public boolean test(TargetNode<?> node) {
       // For any referenced file, only those with the nearest target base path can
       // directly depend on that file.
-      if (!basePathOfTargets.contains(node.getBuildTarget().getBasePath())) {
+      if (!basePathOfTargets.contains(
+          node.getBuildTarget()
+              .getCellRelativeBasePath()
+              .getPath()
+              .toRelPath(projectFilesystem.getFileSystem()))) {
         return false;
       }
 
-      for (Path input : node.getInputs()) {
-        for (Path referencedInput : referencedInputs) {
-          if (referencedInput.startsWith(input)) {
+      for (ForwardRelativePath input : node.getInputs()) {
+        for (RelPath referencedInput : referencedInputs) {
+          if (referencedInput.startsWith(input.toPath(projectFilesystem.getFileSystem()))) {
             return true;
           }
         }
       }
 
-      return referencedInputs.contains(node.getBuildTarget().getBasePath().resolve(buildFileName));
+      return referencedInputs.contains(
+          RelPath.of(
+              node.getBuildTarget()
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toRelPath(projectFilesystem.getFileSystem())
+                  .resolve(buildFileName)));
     }
   }
 
@@ -1454,18 +1585,19 @@ public class TargetsCommand extends AbstractCommand {
    */
   private static class TargetResultBuilders {
 
-    final Map<BuildTarget, TargetResult.Builder> map = new HashMap<>();
+    final Map<BuildTarget, ImmutableTargetResult.Builder> map = new HashMap<>();
 
-    TargetResult.Builder getOrCreate(BuildTarget target) {
-      return map.computeIfAbsent(target, ignored -> TargetResult.builder());
+    ImmutableTargetResult.Builder getOrCreate(BuildTarget target) {
+      return map.computeIfAbsent(target, ignored -> ImmutableTargetResult.builder());
     }
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractTargetResult {
+  @BuckStyleValueWithBuilder
+  abstract static class TargetResult {
 
     public abstract Optional<String> getOutputPath();
+
+    public abstract ImmutableMap<OutputLabel, ImmutableSet<String>> getOutputPathsByLabels();
 
     public abstract Optional<String> getGeneratedSourcePath();
 
@@ -1474,6 +1606,17 @@ public class TargetsCommand extends AbstractCommand {
     public abstract Optional<String> getTargetHash();
 
     public abstract Optional<String> getRuleType();
+
+    /**
+     * Wrapper method for {@link #getOutputPathsByLabels} to make the return type {@link Optional}
+     * so empty lists and empty maps won't be printed in the JSON output. {@link
+     * #getOutputPathsByLabels} isn't Optional to make it easy to interact with while building (i.e.
+     * to have access to #putOutputPathsByLabels from codegen).
+     */
+    public Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> getOutputPaths() {
+      ImmutableMap<OutputLabel, ImmutableSet<String>> result = getOutputPathsByLabels();
+      return result.isEmpty() ? Optional.empty() : Optional.of(result);
+    }
   }
 
   private enum TargetResultFieldName {
@@ -1481,12 +1624,13 @@ public class TargetsCommand extends AbstractCommand {
     GEN_SRC_PATH("buck.generatedSourcePath", TargetResult::getGeneratedSourcePath),
     TARGET_HASH("buck.targetHash", TargetResult::getTargetHash),
     RULE_KEY("buck.ruleKey", TargetResult::getRuleKey),
-    RULE_TYPE("buck.ruleType", TargetResult::getRuleType);
+    RULE_TYPE("buck.ruleType", TargetResult::getRuleType),
+    OUTPUT_PATHS("buck.outputPaths", TargetResult::getOutputPaths);
 
     private String name;
-    private Function<TargetResult, Optional<String>> getter;
+    private Function<TargetResult, Optional<?>> getter;
 
-    TargetResultFieldName(String name, Function<TargetResult, Optional<String>> getter) {
+    TargetResultFieldName(String name, Function<TargetResult, Optional<?>> getter) {
       this.name = name;
       this.getter = getter;
     }

@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.graph.transformation.composition;
 
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
@@ -23,8 +24,6 @@ import com.facebook.buck.core.graph.transformation.model.ComposedKey;
 import com.facebook.buck.core.graph.transformation.model.ComposedResult;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedKey;
-import com.facebook.buck.core.graph.transformation.model.ImmutableComposedResult;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
@@ -89,8 +88,7 @@ public class LeftComposingComputation<
       ComposedKey<BaseKey, Result2> key, ComputationEnvironment env) throws Exception {
     // TODO(bobyf): figure out how to not do this computation twice
     ComposedResult<ComputeKey<Result1>, Result1> results =
-        env.getDep(
-            ImmutableComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
+        env.getDep(ComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
     ImmutableMap.Builder<ComputeKey<Result2>, Result2> resultBuilder =
         ImmutableMap.builderWithExpectedSize(results.resultMap().size());
 
@@ -104,7 +102,7 @@ public class LeftComposingComputation<
                           ::contains));
       resultBuilder.putAll(values);
     }
-    return ImmutableComposedResult.of(resultBuilder.build());
+    return ComposedResult.of(resultBuilder.build());
   }
 
   @Override
@@ -112,8 +110,7 @@ public class LeftComposingComputation<
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverDeps(
       ComposedKey<BaseKey, Result2> key, ComputationEnvironment env) throws Exception {
     ComposedResult<ComputeKey<Result1>, Result1> results =
-        env.getDep(
-            ImmutableComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
+        env.getDep(ComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
 
     ImmutableSet.Builder<ComputeKey<?>> depBuilder =
         ImmutableSet.builderWithExpectedSize(results.resultMap().size());
@@ -127,7 +124,7 @@ public class LeftComposingComputation<
   public ImmutableSet<? extends ComputeKey<? extends ComputeResult>> discoverPreliminaryDeps(
       ComposedKey<BaseKey, Result2> key) {
     return ImmutableSet.of(
-        ImmutableComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
+        ComposedKey.of(key.getOriginKey(), baseIdentifier.getTargetResultClass()));
   }
 
   @Override

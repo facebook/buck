@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -127,18 +127,19 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
       ProjectSubCommand subCommand = subcommands.get(projectIde);
 
       ProjectGeneratorParameters projectGeneratorParameters =
-          ProjectGeneratorParameters.builder()
-              .setArgsParser(
-                  arguments ->
-                      parseArgumentsAsTargetNodeSpecs(
-                          params.getCell(), params.getBuckConfig(), arguments))
-              .setCommandRunnerParams(params)
-              .setDryRun(dryRun)
-              .setEnableParserProfiling(getEnableParserProfiling())
-              .setWithoutDependenciesTests(withoutDependenciesTests)
-              .setWithoutTests(withoutTests)
-              .setWithTests(withTests)
-              .build();
+          ImmutableProjectGeneratorParameters.of(
+              params,
+              dryRun,
+              withTests,
+              withoutTests,
+              withoutDependenciesTests,
+              getEnableParserProfiling(),
+              arguments ->
+                  parseArgumentsAsTargetNodeSpecs(
+                      params.getCells().getRootCell(),
+                      params.getClientWorkingDir(),
+                      arguments,
+                      params.getBuckConfig()));
 
       params.getBuckEventBus().post(ProjectGenerationEvent.started());
       ExitCode result;
@@ -183,7 +184,8 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
     if (!Paths.get(pathToScript).isAbsolute()) {
       pathToScript =
           params
-              .getCell()
+              .getCells()
+              .getRootCell()
               .getFilesystem()
               .getPathForRelativePath(pathToScript)
               .toAbsolutePath()
@@ -200,7 +202,7 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
                     .put("BUCK_PROJECT_TARGETS", Joiner.on(" ").join(arguments))
                     .put("BUCK_PROJECT_TYPE", projectIde)
                     .build())
-            .setDirectory(params.getCell().getFilesystem().getRootPath())
+            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath().getPath())
             .build();
     ForwardingProcessListener processListener =
         new ForwardingProcessListener(

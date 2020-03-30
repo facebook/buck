@@ -1,18 +1,19 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import static org.junit.Assert.assertFalse;
@@ -30,17 +31,25 @@ public class SingletonBuildTargetMatcherTest {
   @Test
   public void testApply() {
     SingletonBuildTargetMatcher pattern =
-        SingletonBuildTargetMatcher.of(ROOT, "//src/com/facebook/buck:buck");
+        ImmutableSingletonBuildTargetMatcher.of(
+            BuildTargetFactory.newInstance("//src/com/facebook/buck:buck")
+                .getUnconfiguredBuildTarget());
 
     assertTrue(
-        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "buck")));
+        pattern.matches(
+            BuildTargetFactory.newInstance("//src/com/facebook/buck", "buck")
+                .getUnconfiguredBuildTarget()));
     assertFalse(
         pattern.matches(
-            BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck", "otherTarget")));
-    assertFalse(
-        pattern.matches(BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/foo", "foo")));
+            BuildTargetFactory.newInstance("//src/com/facebook/buck", "otherTarget")
+                .getUnconfiguredBuildTarget()));
     assertFalse(
         pattern.matches(
-            BuildTargetFactory.newInstance(ROOT, "//src/com/facebook/buck/bar", "bar")));
+            BuildTargetFactory.newInstance("//src/com/facebook/foo", "foo")
+                .getUnconfiguredBuildTarget()));
+    assertFalse(
+        pattern.matches(
+            BuildTargetFactory.newInstance("//src/com/facebook/buck/bar", "bar")
+                .getUnconfiguredBuildTarget()));
   }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -19,8 +19,10 @@ package com.facebook.buck.apple;
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -28,20 +30,19 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
@@ -81,8 +82,8 @@ public class ApplePackageDescription
     BuildRule bundle =
         graphBuilder.getRule(propagateFlavorsToTarget(buildTarget, args.getBundle()));
 
-    Optional<ApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
-        getApplePackageConfig(buildTarget);
+    Optional<ImmutableApplePackageConfigAndPlatformInfo> applePackageConfigAndPlatformInfo =
+        getApplePackageConfig(buildTarget, args.getDefaultPlatform(), graphBuilder);
 
     if (applePackageConfigAndPlatformInfo.isPresent()) {
       return new ExternallyBuiltApplePackage(
@@ -90,21 +91,14 @@ public class ApplePackageDescription
           projectFilesystem,
           sandboxExecutionStrategy,
           graphBuilder,
-          params.withExtraDeps(
-              () ->
-                  ImmutableSortedSet.<BuildRule>naturalOrder()
-                      .add(bundle)
-                      .addAll(
-                          BuildableSupport.getDepsCollection(
-                              applePackageConfigAndPlatformInfo.get().getExpandedArg(),
-                              graphBuilder))
-                      .build()),
           applePackageConfigAndPlatformInfo.get(),
           Objects.requireNonNull(bundle.getSourcePathToOutput()),
           bundle.isCacheable(),
           Optional.empty(),
           args.isNeedAndroidTools()
-              ? Optional.of(AndroidTools.getAndroidTools(toolchainProvider))
+              ? Optional.of(
+                  AndroidTools.getAndroidTools(
+                      toolchainProvider, buildTarget.getTargetConfiguration()))
               : Optional.empty());
     } else {
       return new BuiltinApplePackage(
@@ -118,14 +112,14 @@ public class ApplePackageDescription
   }
 
   private BuildTarget propagateFlavorsToTarget(BuildTarget fromTarget, BuildTarget toTarget) {
-    return toTarget.withAppendedFlavors(fromTarget.getFlavors());
+    return toTarget.withAppendedFlavors(fromTarget.getFlavors().getSet());
   }
 
   /** Propagate the packages's flavors to its dependents. */
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractApplePackageDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
@@ -134,21 +128,29 @@ public class ApplePackageDescription
           toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
     }
     extraDepsBuilder.add(propagateFlavorsToTarget(buildTarget, constructorArg.getBundle()));
+    getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+        .getValues()
+        .forEach(
+            platform ->
+                targetGraphOnlyDepsBuilder.addAll(
+                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getAppleCxxPlatformFlavorDomain()));
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(getAppleCxxPlatformsFlavorDomain(toolchainTargetConfiguration)));
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractApplePackageDescriptionArg extends CommonDescriptionArg {
+  @RuleArg
+  interface AbstractApplePackageDescriptionArg extends BuildRuleArg, HasDefaultPlatform {
     @Hint(isDep = false)
     BuildTarget getBundle();
 
@@ -167,23 +169,27 @@ public class ApplePackageDescription
    * @return If found, a package config for this target.
    * @throws HumanReadableException if there are multiple possible package configs.
    */
-  private Optional<ApplePackageConfigAndPlatformInfo> getApplePackageConfig(BuildTarget target) {
-    FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain = getAppleCxxPlatformFlavorDomain();
-    Set<Flavor> platformFlavors = getPlatformFlavorsOrDefault(target, appleCxxPlatformFlavorDomain);
+  private Optional<ImmutableApplePackageConfigAndPlatformInfo> getApplePackageConfig(
+      BuildTarget target, Optional<Flavor> defaultPlatform, ActionGraphBuilder graphBuilder) {
+    FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain =
+        getAppleCxxPlatformsFlavorDomain(target.getTargetConfiguration());
+    Set<Flavor> platformFlavors =
+        getPlatformFlavorsOrDefault(target, defaultPlatform, appleCxxPlatformFlavorDomain);
 
     // Ensure that different platforms generate the same config.
     // The value of this map is just for error reporting.
-    Multimap<Optional<ApplePackageConfigAndPlatformInfo>, Flavor> packageConfigs =
+    Multimap<Optional<ImmutableApplePackageConfigAndPlatformInfo>, Flavor> packageConfigs =
         MultimapBuilder.hashKeys().arrayListValues().build();
 
     for (Flavor flavor : platformFlavors) {
-      AppleCxxPlatform platform = appleCxxPlatformFlavorDomain.getValue(flavor);
-      Optional<ApplePackageConfig> packageConfig =
+      AppleCxxPlatform platform =
+          appleCxxPlatformFlavorDomain.getValue(flavor).resolve(graphBuilder);
+      Optional<AppleConfig.ApplePackageConfig> packageConfig =
           config.getPackageConfigForPlatform(platform.getAppleSdk().getApplePlatform());
       packageConfigs.put(
           packageConfig.map(
               applePackageConfig ->
-                  ApplePackageConfigAndPlatformInfo.of(applePackageConfig, platform)),
+                  ImmutableApplePackageConfigAndPlatformInfo.of(applePackageConfig, platform)),
           flavor);
     }
 
@@ -199,13 +205,22 @@ public class ApplePackageDescription
   }
 
   private ImmutableSet<Flavor> getPlatformFlavorsOrDefault(
-      BuildTarget target, FlavorDomain<AppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+      BuildTarget target,
+      Optional<Flavor> defaultPlatform,
+      FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain) {
+
     Sets.SetView<Flavor> intersection =
-        Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors());
+        Sets.intersection(appleCxxPlatformFlavorDomain.getFlavors(), target.getFlavors().getSet());
     if (intersection.isEmpty()) {
+      if (defaultPlatform.isPresent()) {
+        return ImmutableSet.of(defaultPlatform.get());
+      }
       return ImmutableSet.of(
           toolchainProvider
-              .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class)
+              .getByName(
+                  CxxPlatformsProvider.DEFAULT_NAME,
+                  target.getTargetConfiguration(),
+                  CxxPlatformsProvider.class)
               .getDefaultUnresolvedCxxPlatform()
               .getFlavor());
     } else {
@@ -213,10 +228,13 @@ public class ApplePackageDescription
     }
   }
 
-  private FlavorDomain<AppleCxxPlatform> getAppleCxxPlatformFlavorDomain() {
+  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
+      TargetConfiguration toolchainTargetConfiguration) {
     AppleCxxPlatformsProvider appleCxxPlatformsProvider =
         toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME, AppleCxxPlatformsProvider.class);
-    return appleCxxPlatformsProvider.getAppleCxxPlatforms();
+            AppleCxxPlatformsProvider.DEFAULT_NAME,
+            toolchainTargetConfiguration,
+            AppleCxxPlatformsProvider.class);
+    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
   }
 }

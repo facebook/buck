@@ -1,21 +1,22 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.graph.transformation.ComputationEnvironment;
 import com.facebook.buck.core.graph.transformation.GraphComputation;
 import com.facebook.buck.core.graph.transformation.GraphTransformationEngine;
@@ -33,9 +34,11 @@ import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.cache.CacheBuilder;
@@ -56,7 +59,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.immutables.value.Value;
-import org.immutables.value.Value.Style.ImplementationVisibility;
 
 /**
  * Takes a regular {@link TargetGraph}, resolves any versioned nodes, and returns a new graph with
@@ -78,13 +80,15 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
       TargetGraphCreationResult unversionedTargetGraphCreationResult,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      long timeoutSeconds) {
+      long timeoutSeconds,
+      Cells cells) {
     super(
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
         unversionedTargetGraphCreationResult,
         timeoutSeconds,
-        TimeUnit.SECONDS);
+        TimeUnit.SECONDS,
+        cells);
 
     this.versionedTargetGraphTransformer =
         new VersionedTargetGraphComputation(
@@ -164,7 +168,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      long timeoutSeconds)
+      long timeoutSeconds,
+      Cells cells)
       throws VersionException, TimeoutException, InterruptedException {
     return unversionedTargetGraphCreationResult.withTargetGraph(
         new AsyncVersionedTargetGraphBuilder(
@@ -173,7 +178,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
                 unversionedTargetGraphCreationResult,
                 typeCoercerFactory,
                 unconfiguredBuildTargetFactory,
-                timeoutSeconds)
+                timeoutSeconds,
+                cells)
             .build());
   }
 
@@ -181,14 +187,12 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
    * Computes all the {@link VersionInfo} in the graph. TODO(bobyf) rewrite this as stages once
    * {@link GraphComputation} supports staging
    */
-  @Value.Immutable(builder = false, copy = false, prehash = true)
-  @Value.Style(visibility = ImplementationVisibility.PACKAGE)
+  @BuckStylePrehashedValue
   abstract static class VersionInfoKey implements ComputeKey<VersionInfo> {
 
     public static final ComputationIdentifier<VersionInfo> IDENTIFIER =
         ClassBasedComputationIdentifier.of(VersionInfoKey.class, VersionInfo.class);
 
-    @Value.Parameter
     public abstract TargetNode<?> getTargetNode();
 
     @Override
@@ -278,7 +282,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   }
 
   /** Key used to request for resolved {@link TargetNode}s. */
-  @Value.Immutable(builder = false, copy = false, prehash = true)
+  @BuckStylePrehashedValue
   abstract static class VersionTargetGraphKey implements ComputeKey<TargetNode<?>> {
 
     @SuppressWarnings("unchecked")
@@ -286,13 +290,10 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
         ClassBasedComputationIdentifier.of(
             VersionTargetGraphKey.class, (Class<TargetNode<?>>) (Class<?>) TargetNode.class);
 
-    @Value.Parameter
     public abstract TargetNode<?> getTargetNode();
 
-    @Value.Parameter
     public abstract Optional<ImmutableMap<BuildTarget, Version>> getSelectedVersions();
 
-    @Value.Parameter
     @Value.Auxiliary
     public abstract Optional<TargetNodeTranslator> targetNodeTranslator();
 
@@ -307,13 +308,10 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
   }
 
   /** Key used to request for {@link VersionInfo} */
-  @Value.Immutable(builder = false, copy = false)
-  @Value.Style(visibility = ImplementationVisibility.PACKAGE)
+  @BuckStyleValue
   abstract static class VersionRootInfo {
-    @Value.Parameter
     abstract ImmutableMap<BuildTarget, Version> getSelectedVersions();
 
-    @Value.Parameter
     abstract TargetNodeTranslator getTargetTranslator();
   }
 
@@ -392,7 +390,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
         targetTranslator = info.getTargetTranslator();
       }
 
-      Set<BuildTarget> parseDeps = root.getParseDeps();
+      Set<BuildTarget> parseDeps = Sets.union(root.getParseDeps(), root.getConfigurationDeps());
       ImmutableSet.Builder<VersionTargetGraphKey> subGraphKeys =
           ImmutableSet.builderWithExpectedSize(parseDeps.size());
       targetGraph
@@ -409,6 +407,14 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
                 } else {
                   subGraphKeys.add(ImmutableVersionTargetGraphKey.of(targetNode));
                 }
+              });
+      root.getBuildTarget()
+          .getTargetConfiguration()
+          .getConfigurationTarget()
+          .ifPresent(
+              t -> {
+                TargetNode<?> targetNode = targetGraph.get(t);
+                subGraphKeys.add(ImmutableVersionTargetGraphKey.of(targetNode));
               });
       return subGraphKeys.build();
     }
@@ -460,7 +466,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
           node.getBuildTarget()
               .withFlavors(
                   Sets.difference(
-                      newNode.getBuildTarget().getFlavors(), node.getBuildTarget().getFlavors())),
+                      newNode.getBuildTarget().getFlavors().getSet(),
+                      node.getBuildTarget().getFlavors().getSet())),
           newNode);
 
       for (TargetNode<?> childNode : env.getDeps(VersionTargetGraphKey.IDENTIFIER).values()) {

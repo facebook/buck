@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.lua;
@@ -24,10 +24,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -77,7 +78,10 @@ public class LuaBinaryDescriptionTest {
       new TestPythonPlatform(
           InternalFlavor.of("py2"),
           new PythonEnvironment(
-              Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
+              Paths.get("python2"),
+              PythonVersion.of("CPython", "2.6"),
+              PythonBuckConfig.SECTION,
+              UnconfiguredTargetConfiguration.INSTANCE),
           Optional.of(PYTHON2_DEP_TARGET));
 
   private static final BuildTarget PYTHON3_DEP_TARGET =
@@ -86,7 +90,10 @@ public class LuaBinaryDescriptionTest {
       new TestPythonPlatform(
           InternalFlavor.of("py3"),
           new PythonEnvironment(
-              Paths.get("python3"), PythonVersion.of("CPython", "3.5"), PythonBuckConfig.SECTION),
+              Paths.get("python3"),
+              PythonVersion.of("CPython", "3.5"),
+              PythonBuckConfig.SECTION,
+              UnconfiguredTargetConfiguration.INSTANCE),
           Optional.of(PYTHON3_DEP_TARGET));
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
@@ -150,10 +157,10 @@ public class LuaBinaryDescriptionTest {
             TargetGraphFactory.newInstance(cxxLibraryBuilder.build(), binaryBuilder.build()));
     cxxLibraryBuilder.build(graphBuilder);
     binaryBuilder.build(graphBuilder);
-    SymlinkTree tree =
+    MappedSymlinkTree tree =
         graphBuilder.getRuleWithType(
             LuaBinaryDescription.getNativeLibsSymlinkTreeTarget(binaryBuilder.getTarget()),
-            SymlinkTree.class);
+            MappedSymlinkTree.class);
     assertThat(
         tree.getLinks().keySet(),
         Matchers.hasItem(tree.getProjectFilesystem().getPath("libfoo.so")));
@@ -263,7 +270,7 @@ public class LuaBinaryDescriptionTest {
                     new ToolchainProviderBuilder()
                         .withToolchain(
                             LuaPlatformsProvider.DEFAULT_NAME,
-                            LuaPlatformsProvider.of(
+                            ImmutableLuaPlatformsProvider.of(
                                 LuaTestUtils.DEFAULT_PLATFORM, LuaTestUtils.DEFAULT_PLATFORMS))
                         .withToolchain(
                             PythonPlatformsProvider.DEFAULT_NAME,

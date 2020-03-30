@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.macros;
@@ -19,7 +19,7 @@ package com.facebook.buck.rules.macros;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.jvm.core.HasMavenCoordinates;
 import com.facebook.buck.rules.args.Arg;
 import java.util.Optional;
@@ -52,15 +52,23 @@ public class MavenCoordinatesMacroExpander extends BuildTargetMacroExpander<Mave
   }
 
   @Override
-  public Arg expand(SourcePathResolver resolver, MavenCoordinatesMacro ignored, BuildRule rule)
+  public Arg expand(
+      SourcePathResolverAdapter resolver, MavenCoordinatesMacro ignored, BuildRule rule)
       throws MacroException {
-    return new Arg() {
-      @AddToRuleKey private final String mavenCoordinates = getMavenCoordinates(rule);
+    return new MavenCoordinateLink(getMavenCoordinates(rule));
+  }
 
-      @Override
-      public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
-        consumer.accept(mavenCoordinates);
-      }
-    };
+  private static class MavenCoordinateLink implements Arg {
+    @AddToRuleKey private final String mavenCoordinates;
+
+    public MavenCoordinateLink(String mavenCoordinates) {
+      this.mavenCoordinates = mavenCoordinates;
+    }
+
+    @Override
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
+      consumer.accept(mavenCoordinates);
+    }
   }
 }

@@ -3,9 +3,9 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "worker_job_params",
     srcs = [
-        "AbstractWorkerJobParams.java",
-        "AbstractWorkerProcessIdentity.java",
-        "AbstractWorkerProcessParams.java",
+        "WorkerJobParams.java",
+        "WorkerProcessIdentity.java",
+        "WorkerProcessParams.java",
     ],
     visibility = ["PUBLIC"],
 )
@@ -35,9 +35,9 @@ java_library(
 java_immutables_library(
     name = "worker_process",
     srcs = [
-        "AbstractWorkerJobResult.java",
-        "AbstractWorkerProcessCommand.java",
+        "WorkerJobResult.java",
         "WorkerProcess.java",
+        "WorkerProcessCommand.java",
         "WorkerProcessPool.java",
         "WorkerProcessProtocol.java",
         "WorkerProcessProtocolZero.java",

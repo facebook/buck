@@ -19,9 +19,16 @@
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/android/annotations/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/aosp/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/core/util/immutables/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/logd/resources" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/ant-out" />
       <excludeFolder url="file://$MODULE_DIR$/buck-out" />
+      <excludeFolder url="file://$MODULE_DIR$/logd-out" />
+      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/buckv2/target" />
+      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice/target" />
+      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/dice_macros/target" />
+      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/math/target" />
+      <excludeFolder url="file://$MODULE_DIR$/skunkworks/protobuck/target" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/android/support" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/intellij" />
       <excludeFolder url="file://$MODULE_DIR$/src/com/facebook/buck/jvm/java/abi/java11" />
@@ -36,6 +43,8 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/apple/xcode/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/bootstrapper/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/configurations/testdata" />
+      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/query/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cli/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/core/model/actiongraph/computation/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/core/model/targetgraph/impl/testdata" />
@@ -47,7 +56,6 @@
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cxx/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/cxx/toolchain/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/d/testdata" />
-      <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/distributed/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/dotnet/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/event/listener/integration/testdata" />
       <excludeFolder url="file://$MODULE_DIR$/test/com/facebook/buck/event/listener/testdata" />
@@ -138,7 +146,7 @@
     <orderEntry type="library" name="opencensus-api-0.18.0" level="project" />
     <orderEntry type="library" name="remote-apis" level="project" />
     <orderEntry type="library" name="guava-20.0" level="project" />
-    <orderEntry type="library" name="bundletool-0.10.3-fb" level="project" />
+    <orderEntry type="library" name="bundletool-0.12.0-fb" level="project" />
     <orderEntry type="library" name="aapt2-proto-0.4.0" level="project" />
     <orderEntry type="library" name="commons-compress-1.18" level="project" />
     <orderEntry type="library" name="apksig" level="project" />
@@ -150,5 +158,6 @@
     <orderEntry type="library" name="kotlin-compiler" level="project" />
     <orderEntry type="library" name="kotlinx-metadata" level="project" />
     <orderEntry type="library" name="jackson-module-kotlin-2.9.9" level="project" />
+    <orderEntry type="library" name="log4j2" level="project" />
   </component>
 </module>

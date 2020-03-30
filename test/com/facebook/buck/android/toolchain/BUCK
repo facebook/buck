@@ -4,9 +4,6 @@ java_library(
         ["*.java"],
         exclude = ["*Test.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/android/toolchain/impl:impl",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -18,5 +15,8 @@ java_library(
         "//test/com/facebook/buck/core/toolchain/impl:testutil",
         "//test/com/facebook/buck/rules/keys/config:testutil",
         "//test/com/facebook/buck/testutil:testutil",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/android/toolchain/impl:impl",
     ],
 )

@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.actiongraph.computation;
@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.build.engine.RuleDepsCache;
 import com.facebook.buck.core.build.engine.impl.DefaultRuleDepsCache;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -34,12 +35,13 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
-import com.facebook.buck.core.model.targetgraph.ImmutableTargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TestTargetGraphCreationResultFactory;
@@ -93,7 +95,7 @@ import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.facebook.buck.testutil.CloseableResource;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.AsyncVersionedTargetGraphBuilder;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionUniverse;
@@ -382,12 +384,13 @@ public class IncrementalActionGraphScenarioTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                new ImmutableTargetGraphCreationResult(
+                TargetGraphCreationResult.of(
                     unversionedTargetGraph, ImmutableSet.of(binaryTarget, binaryTarget2)),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().build())
             .getTargetGraph();
     ActionGraphAndBuilder result = createActionGraph(versionedTargetGraph);
     queryTransitiveDeps(result);
@@ -557,12 +560,13 @@ public class IncrementalActionGraphScenarioTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     unversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                new ImmutableTargetGraphCreationResult(
+                TargetGraphCreationResult.of(
                     unversionedTargetGraph, ImmutableSet.of(compilationDatabaseTarget)),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().setFilesystem(filesystem).build())
             .getTargetGraph();
 
     ActionGraphAndBuilder result = createActionGraph(versionedTargetGraph);
@@ -583,12 +587,13 @@ public class IncrementalActionGraphScenarioTest {
         AsyncVersionedTargetGraphBuilder.transform(
                 new VersionUniverseVersionSelector(
                     newUnversionedTargetGraph, ImmutableMap.of("1", universe1, "2", universe2)),
-                new ImmutableTargetGraphCreationResult(
+                TargetGraphCreationResult.of(
                     newUnversionedTargetGraph, ImmutableSet.of(binaryTarget)),
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20)
+                20,
+                new TestCellBuilder().setFilesystem(filesystem).build())
             .getTargetGraph();
 
     ActionGraphAndBuilder newResult = createActionGraph(newVersionedTargetGraph);
@@ -1223,7 +1228,7 @@ public class IncrementalActionGraphScenarioTest {
   private void assertBuildRulesSame(
       ActionGraphAndBuilder expectedActionGraph,
       ActionGraphAndBuilder actualActionGraph,
-      UnflavoredBuildTargetView unflavoredTarget) {
+      UnflavoredBuildTarget unflavoredTarget) {
     assertBuildRulesSame(
         filterRules(expectedActionGraph, unflavoredTarget),
         filterRules(actualActionGraph, unflavoredTarget));
@@ -1258,7 +1263,7 @@ public class IncrementalActionGraphScenarioTest {
   private void assertCommonBuildRulesNotSame(
       ActionGraphAndBuilder lastActionGraph,
       ActionGraphAndBuilder newActionGraph,
-      UnflavoredBuildTargetView unflavoredTarget) {
+      UnflavoredBuildTarget unflavoredTarget) {
     ImmutableMap<BuildRule, BuildRule> lastBuildRuleMap =
         buildBuildRuleMap(filterRules(lastActionGraph, unflavoredTarget));
     ImmutableMap<BuildRule, BuildRule> newBuildRuleMap =
@@ -1270,7 +1275,7 @@ public class IncrementalActionGraphScenarioTest {
   }
 
   private Iterable<BuildRule> filterRules(
-      ActionGraphAndBuilder actionGraph, UnflavoredBuildTargetView unflavoredTarget) {
+      ActionGraphAndBuilder actionGraph, UnflavoredBuildTarget unflavoredTarget) {
     return RichStream.from(actionGraph.getActionGraph().getNodes())
         .filter(
             x ->
@@ -1359,7 +1364,10 @@ public class IncrementalActionGraphScenarioTest {
     return new TestPythonPlatform(
         InternalFlavor.of("py2"),
         new PythonEnvironment(
-            Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
+            Paths.get("python2"),
+            PythonVersion.of("CPython", "2.6"),
+            PythonBuckConfig.SECTION,
+            UnconfiguredTargetConfiguration.INSTANCE),
         cxxLibrary);
   }
 
@@ -1367,7 +1375,10 @@ public class IncrementalActionGraphScenarioTest {
     return new TestPythonPlatform(
         InternalFlavor.of("py3"),
         new PythonEnvironment(
-            Paths.get("python3"), PythonVersion.of("CPython", "3.5"), PythonBuckConfig.SECTION),
+            Paths.get("python3"),
+            PythonVersion.of("CPython", "3.5"),
+            PythonBuckConfig.SECTION,
+            UnconfiguredTargetConfiguration.INSTANCE),
         cxxLibrary);
   }
 }

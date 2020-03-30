@@ -5,14 +5,14 @@ java_immutables_library(
     srcs = glob(
         ["*.java"],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/cell:cell",
-        "//third-party/java/args4j:args4j",
-        "//third-party/java/pf4j:pf4j",
-    ],
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell:cell",
+        "//third-party/java/args4j:args4j",
+        "//third-party/java/pf4j:pf4j",
     ],
 )

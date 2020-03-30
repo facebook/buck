@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.buildinfo;
@@ -83,7 +83,7 @@ public class BuildInfoRecorderTest {
     buildInfoRecorder.writeMetadataToDisk(/* clearExistingMetadata */ false);
 
     onDiskBuildInfo = new DefaultOnDiskBuildInfo(BUILD_TARGET, filesystem, store);
-    assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key1", "value1");
+    assertOnDiskBuildInfoDoesNotHaveMetadata(onDiskBuildInfo, "key1");
     assertOnDiskBuildInfoHasMetadata(onDiskBuildInfo, "key2", "value2");
 
     buildInfoRecorder = createBuildInfoRecorder();
@@ -186,7 +186,7 @@ public class BuildInfoRecorderTest {
         String.format(
             "BuildInfoRecorder must record '%s:%s' to the artifact metadata.", key, value),
         value,
-        onDiskBuildInfo.getValue(key));
+        onDiskBuildInfo.getValue(key).getLeftOption());
   }
 
   private static void assertOnDiskBuildInfoHasBuildMetadata(
@@ -201,7 +201,7 @@ public class BuildInfoRecorderTest {
       OnDiskBuildInfo onDiskBuildInfo, String key) {
     assertFalse(
         String.format("BuildInfoRecorder should have cleared this metadata key: %s", key),
-        onDiskBuildInfo.getValue(key).isPresent());
+        onDiskBuildInfo.getValue(key).isLeft());
     assertFalse(
         String.format("BuildInfoRecorder should have cleared this metadata key: %s", key),
         onDiskBuildInfo.getBuildValue(key).isPresent());

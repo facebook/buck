@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -25,6 +25,8 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.PropertySaver;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.environment.EnvVariablesProvider;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -45,24 +47,21 @@ public class TestCommandIntegrationTest {
   private ProjectWorkspace workspace;
 
   private static Map<String, String> getCodeCoverageProperties() {
-    Path genDir = Paths.get("buck-out", "gen").toAbsolutePath();
+
     Path jacocoJar =
-        genDir.resolve(Paths.get("third-party", "java", "jacoco", "__agent__", "jacocoagent.jar"));
+        Paths.get(
+                Preconditions.checkNotNull(
+                    EnvVariablesProvider.getSystemEnv().get("JACOCO_AGENT_JAR")))
+            .toAbsolutePath();
     Path reportGenJar =
-        genDir.resolve(
-            Paths.get(
-                "src",
-                "com",
-                "facebook",
-                "buck",
-                "jvm",
-                "java",
-                "coverage",
-                "report-generator.jar"));
+        Paths.get(
+                Preconditions.checkNotNull(
+                    EnvVariablesProvider.getSystemEnv().get("REPORT_GENERATOR_JAR")))
+            .toAbsolutePath();
 
     return ImmutableMap.of(
-        "buck.jacoco_agent_jar", genDir.resolve(jacocoJar).toString(),
-        "buck.report_generator_jar", genDir.resolve(reportGenJar).toString());
+        "buck.jacoco_agent_jar", jacocoJar.toString(),
+        "buck.report_generator_jar", reportGenJar.toString());
   }
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -206,5 +205,37 @@ public class TestCommandIntegrationTest {
                 ".*PASS.*?MockTest2" + System.lineSeparator() + ".*",
                 Pattern.MULTILINE | Pattern.DOTALL)));
     Assert.assertThat(result.getStderr(), Matchers.containsString("TESTS PASSED"));
+  }
+
+  @Test
+  public void testLabelInclusiveFiltering() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
+    workspace.setUp();
+
+    // Run tests of foo, but only include label A
+    workspace.runBuckCommand("test", "//:foo", "--include", "A");
+    // Has label A
+    workspace.getBuildLog().assertTargetBuiltLocally("//test:wider_classpath_coverage_test");
+    // Has labels A and B
+    workspace.getBuildLog().assertTargetBuiltLocally("//test:simple_test");
+    // Has label B
+    workspace.getBuildLog().assertNoLogEntry("//test:test_setup_for_source_only_abi");
+  }
+
+  @Test
+  public void testLabelExclusiveFiltering() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "test_coverage", tmp);
+    workspace.setUp();
+
+    // Run tests of foo, but exclude label B
+    workspace.runBuckCommand("test", "//:foo", "--exclude", "B");
+    // Has label A
+    workspace.getBuildLog().assertTargetBuiltLocally("//test:wider_classpath_coverage_test");
+    // Has label A and B
+    workspace.getBuildLog().assertNoLogEntry("//test:simple_test");
+    // Has label B
+    workspace.getBuildLog().assertNoLogEntry("//test:test_setup_for_source_only_abi");
   }
 }

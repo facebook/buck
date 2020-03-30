@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -24,8 +24,8 @@ import com.facebook.buck.artifact_cache.NoopArtifactCache;
 import com.facebook.buck.artifact_cache.SingletonArtifactCacheFactory;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellName;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
@@ -258,12 +258,12 @@ public class CleanCommandTest {
           command.getConfigOverrides(ImmutableMap.of()).getForCell(CellName.ROOT_CELL_NAME));
     }
     BuckConfig buckConfig = buckConfigBuilder.build();
-    Cell cell =
+    Cells cell =
         new TestCellBuilder().setFilesystem(projectFilesystem).setBuckConfig(buckConfig).build();
     return createCommandRunnerParams(buckConfig, cell);
   }
 
-  private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cell cell) {
+  private CommandRunnerParams createCommandRunnerParams(BuckConfig buckConfig, Cells cells) {
     CloseableMemoizedSupplier<DepsAwareExecutor<? super ComputeResult, ?>>
         depsAwareExecutorSupplier =
             MainRunner.getDepsAwareExecutorSupplier(buckConfig, BuckEventBusForTests.newInstance());
@@ -271,7 +271,7 @@ public class CleanCommandTest {
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
         depsAwareExecutorSupplier.get(),
         new TestConsole(),
-        cell,
+        cells,
         new SingletonArtifactCacheFactory(new NoopArtifactCache()).newInstance(),
         BuckEventBusForTests.newInstance(),
         buckConfig,

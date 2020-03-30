@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.event.listener.stats.cache;
 
 import com.facebook.buck.artifact_cache.ArtifactCacheEvent;
@@ -20,14 +21,13 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent.Scheduled;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper.CacheRateStatsUpdateEvent;
 import com.google.common.eventbus.Subscribe;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 /** Tracks network related events and maintains stats about uploads/downloads/cache rate/etc. */
 public class NetworkStatsTracker {
@@ -38,9 +38,8 @@ public class NetworkStatsTracker {
   }
 
   /** Stats about remote artifact uploads. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractRemoteArtifactUploadStats {
+  @BuckStyleValue
+  public interface RemoteArtifactUploadStats {
     int getStarted();
 
     int getFailed();
@@ -79,13 +78,12 @@ public class NetworkStatsTracker {
 
   /** Get the current upload stats. */
   public RemoteArtifactUploadStats getRemoteArtifactUploadStats() {
-    return RemoteArtifactUploadStats.builder()
-        .setStarted(remoteArtifactUploadsStartedCount.get())
-        .setFailed(remoteArtifactUploadFailedCount.get())
-        .setUploaded(remoteArtifactUploadedCount.get())
-        .setScheduled(remoteArtifactUploadsScheduledCount.get())
-        .setTotalBytes(remoteArtifactTotalBytesUploaded.get())
-        .build();
+    return ImmutableRemoteArtifactUploadStats.of(
+        remoteArtifactUploadsStartedCount.get(),
+        remoteArtifactUploadFailedCount.get(),
+        remoteArtifactUploadedCount.get(),
+        remoteArtifactUploadsScheduledCount.get(),
+        remoteArtifactTotalBytesUploaded.get());
   }
 
   public boolean haveUploadsStarted() {
@@ -102,7 +100,7 @@ public class NetworkStatsTracker {
   }
 
   /** Get the current download stats. */
-  public RemoteDownloadStats getRemoteDownloadStats() {
+  public NetworkStatsKeeper.RemoteDownloadStats getRemoteDownloadStats() {
     return networkStatsKeeper.getRemoteDownloadStats();
   }
 

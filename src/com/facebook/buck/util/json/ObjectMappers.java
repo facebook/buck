@@ -1,25 +1,28 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.json;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
-import com.facebook.buck.core.model.targetgraph.raw.RawTargetNodeWithDeps;
+import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -51,6 +54,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ObjectMappers {
 
@@ -198,9 +202,12 @@ public class ObjectMappers {
      * Custom Path serializer that serializes using {@link Object#toString()} method and also
      * translates all {@link Path} implementations to use generic base type
      */
-    class PathSerializer extends ToStringSerializer {
-      public PathSerializer() {
-        super(Path.class);
+    class PathSerializer<P> extends ToStringSerializer {
+      private final Class<P> clazz;
+
+      public PathSerializer(Class<P> clazz) {
+        super(clazz);
+        this.clazz = clazz;
       }
 
       @Override
@@ -208,27 +215,46 @@ public class ObjectMappers {
           Object value, JsonGenerator g, SerializerProvider provider, TypeSerializer typeSer)
           throws IOException {
         WritableTypeId typeIdDef =
-            typeSer.writeTypePrefix(g, typeSer.typeId(value, Path.class, JsonToken.VALUE_STRING));
+            typeSer.writeTypePrefix(g, typeSer.typeId(value, clazz, JsonToken.VALUE_STRING));
         serialize(value, g, provider);
         typeSer.writeTypeSuffix(g, typeIdDef);
       }
     }
 
-    pathModule.addSerializer(Path.class, new PathSerializer());
-    pathModule.addDeserializer(
-        Path.class,
-        new FromStringDeserializer<Path>(Path.class) {
-          @Override
-          protected Path _deserialize(String value, DeserializationContext ctxt) {
-            return Paths.get(value);
-          }
+    pathModule.addSerializer(Path.class, new PathSerializer<>(Path.class));
+    pathModule.addSerializer(AbsPath.class, new PathSerializer<>(AbsPath.class));
+    pathModule.addSerializer(RelPath.class, new PathSerializer<>(RelPath.class));
 
-          @Override
-          protected Path _deserializeFromEmptyString() {
-            // by default it returns null but we want empty Path
-            return Paths.get("");
-          }
-        });
+    /** Deserialized for Path-like objects. */
+    class PathDeserializer<P> extends FromStringDeserializer<P> {
+
+      private final Function<String, P> get;
+      private final Supplier<P> empty;
+
+      public PathDeserializer(Class<P> clazz, Function<String, P> get, Supplier<P> empty) {
+        super(clazz);
+        this.get = get;
+        this.empty = empty;
+      }
+
+      @Override
+      protected P _deserialize(String value, DeserializationContext ctxt) {
+        return get.apply(value);
+      }
+
+      @Override
+      protected P _deserializeFromEmptyString() {
+        // by default it returns null but we want empty Path
+        return empty.get();
+      }
+    }
+
+    pathModule.addDeserializer(
+        Path.class, new PathDeserializer<>(Path.class, Paths::get, () -> Paths.get("")));
+    pathModule.addDeserializer(
+        AbsPath.class, new PathDeserializer<>(AbsPath.class, AbsPath::get, () -> AbsPath.get("")));
+    pathModule.addDeserializer(
+        RelPath.class, new PathDeserializer<>(RelPath.class, RelPath::get, () -> RelPath.get("")));
     mapper.registerModule(pathModule);
 
     return mapper;
@@ -245,11 +271,13 @@ public class ObjectMappers {
   }
 
   private static ObjectMapper addCustomModules(ObjectMapper mapper, boolean intern) {
-    // with this mixin RawTargetNode properties are flattened with RawTargetNodeWithDeps properties
+    // with this mixin UnconfiguredTargetNode properties are flattened with
+    // UnconfiguredTargetNodeWithDeps
+    // properties
     // for prettier view. It only works for non-typed serialization.
     mapper.addMixIn(
-        RawTargetNodeWithDeps.class,
-        RawTargetNodeWithDeps.RawTargetNodeWithDepsUnwrappedMixin.class);
+        UnconfiguredTargetNodeWithDeps.class,
+        UnconfiguredTargetNodeWithDeps.UnconfiguredTargetNodeWithDepsUnwrappedMixin.class);
 
     // Serialize and deserialize UnconfiguredBuildTarget as string
     SimpleModule buildTargetModule = new SimpleModule("BuildTarget");
@@ -264,7 +292,28 @@ public class ObjectMappers {
           }
         });
     mapper.registerModule(buildTargetModule);
+    mapper.registerModule(forwardRelativePathModule());
     return mapper;
+  }
+
+  private static SimpleModule forwardRelativePathModule() {
+    SimpleModule module = new SimpleModule();
+    module.addSerializer(ForwardRelativePath.class, new ToStringSerializer());
+    module.addDeserializer(
+        ForwardRelativePath.class,
+        new FromStringDeserializer<ForwardRelativePath>(ForwardRelativePath.class) {
+          @Override
+          protected ForwardRelativePath _deserialize(String value, DeserializationContext ctxt)
+              throws IOException {
+            return ForwardRelativePath.of(value);
+          }
+
+          @Override
+          protected ForwardRelativePath _deserializeFromEmptyString() throws IOException {
+            return ForwardRelativePath.EMPTY;
+          }
+        });
+    return module;
   }
 
   private static ObjectMapper create_with_type() {

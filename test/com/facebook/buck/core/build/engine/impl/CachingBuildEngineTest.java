@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.impl;
@@ -49,10 +49,8 @@ import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRule
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
-import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
-import com.facebook.buck.core.build.distributed.synchronization.impl.NoOpRemoteBuildRuleCompletionWaiter;
+import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.engine.BuildEngineBuildContext;
-import com.facebook.buck.core.build.engine.BuildEngineResult;
 import com.facebook.buck.core.build.engine.BuildResult;
 import com.facebook.buck.core.build.engine.BuildRuleStatus;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
@@ -107,7 +105,7 @@ import com.facebook.buck.core.rules.schedule.RuleScheduleInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -125,7 +123,6 @@ import com.facebook.buck.rules.keys.DependencyFileEntry;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
-import com.facebook.buck.rules.keys.RuleKeyAndInputs;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
@@ -145,7 +142,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TarInspector;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -159,8 +155,10 @@ import com.facebook.buck.util.concurrent.ResourceAmounts;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
+import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.util.zip.ZipConstants;
@@ -260,12 +258,11 @@ public class CachingBuildEngineTest {
     protected ProjectFilesystem filesystem;
     protected BuildInfoStoreManager buildInfoStoreManager;
     protected BuildInfoStore buildInfoStore;
-    protected RemoteBuildRuleCompletionWaiter defaultRemoteBuildRuleCompletionWaiter;
     protected FileHashCache fileHashCache;
     protected BuildEngineBuildContext buildContext;
     protected ActionGraphBuilder graphBuilder;
     protected BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
-    protected SourcePathResolver pathResolver;
+    protected SourcePathResolverAdapter pathResolver;
     protected DefaultRuleKeyFactory defaultRuleKeyFactory;
     protected InputBasedRuleKeyFactory inputBasedRuleKeyFactory;
     protected BuildRuleDurationTracker durationTracker;
@@ -276,16 +273,16 @@ public class CachingBuildEngineTest {
       buildInfoStoreManager = new BuildInfoStoreManager();
       Files.createDirectories(filesystem.resolve(filesystem.getBuckPaths().getScratchDir()));
       buildInfoStore = buildInfoStoreManager.get(filesystem);
-      defaultRemoteBuildRuleCompletionWaiter = new NoOpRemoteBuildRuleCompletionWaiter();
       fileHashCache =
           StackedFileHashCache.createDefaultHashCaches(filesystem, FileHashCacheMode.DEFAULT);
       buildContext =
-          BuildEngineBuildContext.builder()
-              .setBuildContext(FakeBuildContext.NOOP_CONTEXT)
-              .setArtifactCache(cache)
-              .setBuildId(new BuildId())
-              .setClock(new IncrementingFakeClock())
-              .build();
+          BuildEngineBuildContext.of(
+              FakeBuildContext.NOOP_CONTEXT,
+              cache,
+              new IncrementingFakeClock(),
+              new BuildId(),
+              ImmutableMap.of(),
+              false);
       buildContext.getEventBus().register(listener);
       graphBuilder = new TestActionGraphBuilder();
       pathResolver = graphBuilder.getSourcePathResolver();
@@ -298,16 +295,8 @@ public class CachingBuildEngineTest {
     }
 
     protected CachingBuildEngineFactory cachingBuildEngineFactory() {
-      return cachingBuildEngineFactory(defaultRemoteBuildRuleCompletionWaiter);
-    }
-
-    protected CachingBuildEngineFactory cachingBuildEngineFactory(
-        RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
       return new CachingBuildEngineFactory(
-              graphBuilder,
-              actionToBuildRuleResolver,
-              buildInfoStoreManager,
-              remoteBuildRuleCompletionWaiter)
+              graphBuilder, actionToBuildRuleResolver, buildInfoStoreManager)
           .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fileHashCache));
     }
 
@@ -403,7 +392,8 @@ public class CachingBuildEngineTest {
       assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
       buckEventBus.post(
           CommandEvent.finished(
-              CommandEvent.started("build", ImmutableList.of(), OptionalLong.empty(), 23L),
+              CommandEvent.started(
+                  "build", ImmutableList.of(), Paths.get(""), OptionalLong.empty(), 23L),
               ExitCode.SUCCESS));
       verifyAll();
 
@@ -533,20 +523,23 @@ public class CachingBuildEngineTest {
               buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
               buildContext.getBuildId().toString());
-      Path metadataDirectory =
-          BuildInfo.getPathToArtifactMetadataDirectory(buildRule.getBuildTarget(), filesystem);
+      Path artifactMetadataFile =
+          BuildInfo.getPathToArtifactMetadataFile(buildRule.getBuildTarget(), filesystem);
       ImmutableMap<Path, String> desiredZipEntries =
           ImmutableMap.of(
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
+              artifactMetadataFile,
+              ObjectMappers.WRITER.writeValueAsString(
+                  ImmutableMap.of(
+                      BuildInfo.MetadataKey.RECORDED_PATHS,
+                      ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
+                      BuildInfo.MetadataKey.RECORDED_PATH_HASHES,
+                      ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
+                      BuildInfo.MetadataKey.OUTPUT_SIZE,
+                      "0",
+                      BuildInfo.MetadataKey.OUTPUT_HASH,
+                      HashCode.fromInt(123).toString())),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
-              "Imagine this is the contents of a valid JAR file.",
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "0",
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
-              HashCode.fromInt(123).toString());
+              "Imagine this is the contents of a valid JAR file.");
       expect(
               artifactCache.fetchAsync(
                   eq(buildRule.getBuildTarget()),
@@ -555,12 +548,13 @@ public class CachingBuildEngineTest {
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
       BuildEngineBuildContext buildContext =
-          BuildEngineBuildContext.builder()
-              .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
-              .setClock(new DefaultClock())
-              .setBuildId(new BuildId())
-              .setArtifactCache(artifactCache)
-              .build();
+          BuildEngineBuildContext.of(
+              FakeBuildContext.withSourcePathResolver(pathResolver),
+              artifactCache,
+              new DefaultClock(),
+              new BuildId(),
+              ImmutableMap.of(),
+              false);
 
       // Build the rule!
       replayAll();
@@ -575,7 +569,8 @@ public class CachingBuildEngineTest {
             .getEventBus()
             .post(
                 CommandEvent.finished(
-                    CommandEvent.started("build", ImmutableList.of(), OptionalLong.empty(), 23L),
+                    CommandEvent.started(
+                        "build", ImmutableList.of(), Paths.get(""), OptionalLong.empty(), 23L),
                     ExitCode.SUCCESS));
 
         BuildResult result = buildResult.get();
@@ -624,18 +619,19 @@ public class CachingBuildEngineTest {
               buildContext.getBuildId().toString(),
               BuildInfo.MetadataKey.ORIGIN_BUILD_ID,
               buildContext.getBuildId().toString());
-      Path metadataDirectory =
-          BuildInfo.getPathToArtifactMetadataDirectory(buildRule.getBuildTarget(), filesystem);
       ImmutableMap<Path, String> desiredZipEntries =
           ImmutableMap.of(
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "0",
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
-              HashCode.fromInt(123).toString(),
+              BuildInfo.getPathToArtifactMetadataFile(buildRule.getBuildTarget(), filesystem),
+              ObjectMappers.WRITER.writeValueAsString(
+                  ImmutableMap.of(
+                      BuildInfo.MetadataKey.RECORDED_PATHS,
+                      ObjectMappers.WRITER.writeValueAsString(ImmutableList.of()),
+                      BuildInfo.MetadataKey.RECORDED_PATH_HASHES,
+                      ObjectMappers.WRITER.writeValueAsString(ImmutableMap.of()),
+                      BuildInfo.MetadataKey.OUTPUT_SIZE,
+                      "0",
+                      BuildInfo.MetadataKey.OUTPUT_HASH,
+                      HashCode.fromInt(123).toString())),
               Paths.get("buck-out/gen/src/com/facebook/orca/orca.jar"),
               "Imagine this is the contents of a valid JAR file.");
       expect(
@@ -646,12 +642,13 @@ public class CachingBuildEngineTest {
           .andDelegateTo(new FakeArtifactCacheThatWritesAZipFile(desiredZipEntries, metadata));
 
       BuildEngineBuildContext buildContext =
-          BuildEngineBuildContext.builder()
-              .setBuildContext(FakeBuildContext.withSourcePathResolver(pathResolver))
-              .setClock(new DefaultClock())
-              .setBuildId(new BuildId())
-              .setArtifactCache(artifactCache)
-              .build();
+          BuildEngineBuildContext.of(
+              FakeBuildContext.withSourcePathResolver(pathResolver),
+              artifactCache,
+              new DefaultClock(),
+              new BuildId(),
+              ImmutableMap.of(),
+              false);
 
       // Build the rule!
       replayAll();
@@ -665,7 +662,8 @@ public class CachingBuildEngineTest {
             .getEventBus()
             .post(
                 CommandEvent.finished(
-                    CommandEvent.started("build", ImmutableList.of(), OptionalLong.empty(), 23L),
+                    CommandEvent.started(
+                        "build", ImmutableList.of(), Paths.get(""), OptionalLong.empty(), 23L),
                     ExitCode.SUCCESS));
 
         BuildResult result = buildResult.get();
@@ -997,10 +995,10 @@ public class CachingBuildEngineTest {
           listeningDecorator(Executors.newFixedThreadPool(4));
       try (CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory().setExecutorService(executorService).build()) {
-        BuildEngineResult engineResultOne =
+        BuildEngine.BuildEngineResult engineResultOne =
             cachingBuildEngine.build(
                 buildContext, TestExecutionContext.newInstance(), interleavedRuleOne);
-        BuildEngineResult engineResultTwo =
+        BuildEngine.BuildEngineResult engineResultTwo =
             cachingBuildEngine.build(
                 buildContext, TestExecutionContext.newInstance(), interleavedRuleTwo);
         assertThat(engineResultOne.getResult().get().getStatus(), equalTo(BuildRuleStatus.SUCCESS));
@@ -1041,7 +1039,7 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
 
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
         assertThat(result.getFailure(), instanceOf(BuildRuleFailedException.class));
         Throwable cause = result.getFailure().getCause();
         assertThat(cause, instanceOf(StepFailedException.class));
@@ -1102,7 +1100,7 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
 
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
         assertThat(result.getFailure(), instanceOf(BuildRuleFailedException.class));
         Throwable cause = result.getFailure().getCause();
         assertThat(cause, instanceOf(StepFailedException.class));
@@ -1112,7 +1110,7 @@ public class CachingBuildEngineTest {
     }
 
     @Test
-    public void failedRuntimeDepsAreNotPropagatedWithKeepGoing() throws Exception {
+    public void failedRuntimeDepsArePropagatedWithKeepGoing() throws Exception {
       buildContext = this.buildContext.withKeepGoing(true);
       String description = "failing step";
       Step failingStep =
@@ -1144,7 +1142,7 @@ public class CachingBuildEngineTest {
                 .getResult()
                 .get();
 
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.SUCCESS));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
       }
     }
 
@@ -1577,7 +1575,7 @@ public class CachingBuildEngineTest {
                 .build(buildContext, TestExecutionContext.newInstance(), rule)
                 .getResult()
                 .get();
-        assertThat(result.getStatus(), equalTo(BuildRuleStatus.CANCELED));
+        assertThat(result.getStatus(), equalTo(BuildRuleStatus.FAIL));
         assertThat(
             Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep1.getBuildTarget()))
                 .getStatus(),
@@ -1585,7 +1583,7 @@ public class CachingBuildEngineTest {
         assertThat(
             Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep2.getBuildTarget()))
                 .getStatus(),
-            equalTo(BuildRuleStatus.CANCELED));
+            equalTo(BuildRuleStatus.FAIL));
         assertThat(
             Objects.requireNonNull(cachingBuildEngine.getBuildRuleResult(dep3.getBuildTarget()))
                 .getStatus(),
@@ -1803,9 +1801,8 @@ public class CachingBuildEngineTest {
             onDiskBuildInfo.getRuleKey(BuildInfo.MetadataKey.INPUT_BASED_RULE_KEY),
             equalTo(Optional.empty()));
         assertThat(
-            onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE), equalTo(Optional.of("6")));
-        assertThat(
-            onDiskBuildInfo.getHash(BuildInfo.MetadataKey.OUTPUT_HASH), equalTo(Optional.empty()));
+            onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE),
+            equalTo(Either.ofLeft("6")));
       }
     }
 
@@ -1840,17 +1837,22 @@ public class CachingBuildEngineTest {
       filesystem.mkdirs(metadataDirectory);
       Path outputPath = pathResolver.getRelativePath(rule.getSourcePathToOutput());
       filesystem.writeContentsToPath(
-          ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
-          metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS));
+          ObjectMappers.WRITER.writeValueAsString(
+              ImmutableList.of(BuildInfo.MetadataKey.RECORDED_PATHS, outputPath.toString())),
+          BuildInfo.getPathToArtifactMetadataFile(target, filesystem));
 
       Path artifact = tmp.newFile("artifact.zip");
       writeEntriesToArchive(
           artifact,
           ImmutableMap.of(
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "5", // Size of "stuff"
+              BuildInfo.getPathToArtifactMetadataFile(target, filesystem),
+              ObjectMappers.WRITER.writeValueAsString(
+                  ImmutableMap.of(
+                      BuildInfo.MetadataKey.RECORDED_PATHS,
+                      ObjectMappers.WRITER.writeValueAsString(
+                          ImmutableList.of(outputPath.toString())),
+                      BuildInfo.MetadataKey.OUTPUT_SIZE,
+                      "5")), // Size of "stuff"
               outputPath,
               "stuff"),
           ImmutableList.of(metadataDirectory));
@@ -1973,15 +1975,19 @@ public class CachingBuildEngineTest {
       writeEntriesToArchive(
           artifact,
           ImmutableMap.of(
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(outputPath.toString())),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
+              BuildInfo.getPathToArtifactMetadataFile(target, filesystem),
               ObjectMappers.WRITER.writeValueAsString(
-                  ImmutableMap.of(outputPath.toString(), HashCode.fromInt(123).toString())),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "5", // Size of "stuff"
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
-              HashCode.fromInt(123).toString(),
+                  ImmutableMap.of(
+                      BuildInfo.MetadataKey.RECORDED_PATHS,
+                      ObjectMappers.WRITER.writeValueAsString(
+                          ImmutableList.of(outputPath.toString())),
+                      BuildInfo.MetadataKey.RECORDED_PATH_HASHES,
+                      ObjectMappers.WRITER.writeValueAsString(
+                          ImmutableMap.of(outputPath.toString(), HashCode.fromInt(123).toString())),
+                      BuildInfo.MetadataKey.OUTPUT_SIZE,
+                      "5", // Size of "stuff"
+                      BuildInfo.MetadataKey.OUTPUT_HASH,
+                      HashCode.fromInt(123).toString())),
               outputPath,
               "stuff"),
           ImmutableList.of(metadataDirectory));
@@ -2408,13 +2414,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2506,13 +2512,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2579,13 +2585,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2656,13 +2662,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return inputsBefore::contains;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2746,13 +2752,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2833,13 +2839,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -2920,7 +2926,7 @@ public class CachingBuildEngineTest {
       return engine
           .ruleKeyFactories
           .calculateManifestKey(rule, eventBus)
-          .map(RuleKeyAndInputs::getRuleKey);
+          .map(DependencyFileRuleKeyFactory.RuleKeyAndInputs::getRuleKey);
     }
 
     @Test
@@ -2962,13 +2968,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return ImmutableSet.of(path)::contains;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -3067,13 +3073,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -3189,13 +3195,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -3299,13 +3305,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -3332,7 +3338,7 @@ public class CachingBuildEngineTest {
 
       // Calculate expected rule keys.
       RuleKey ruleKey = defaultRuleKeyFactory.build(rule);
-      RuleKeyAndInputs depFileKey =
+      DependencyFileRuleKeyFactory.RuleKeyAndInputs depFileKey =
           depFilefactory.build(
               rule, ImmutableList.of(DependencyFileEntry.fromSourcePath(input, pathResolver)));
 
@@ -3356,21 +3362,23 @@ public class CachingBuildEngineTest {
               .build(),
           byteArrayOutputStream.toByteArray());
       Path artifact = tmp.newFile("artifact.zip");
-      Path metadataDirectory = BuildInfo.getPathToArtifactMetadataDirectory(target, filesystem);
       writeEntriesToArchive(
           artifact,
           ImmutableMap.of(
               output,
               "stuff",
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATHS),
-              ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.RECORDED_PATH_HASHES),
+              BuildInfo.getPathToArtifactMetadataFile(target, filesystem),
               ObjectMappers.WRITER.writeValueAsString(
-                  ImmutableMap.of(output.toString(), HashCode.fromInt(123).toString())),
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_SIZE),
-              "5", // Size of "stuff"
-              metadataDirectory.resolve(BuildInfo.MetadataKey.OUTPUT_HASH),
-              HashCode.fromInt(123).toString()),
+                  ImmutableMap.of(
+                      BuildInfo.MetadataKey.RECORDED_PATHS,
+                      ObjectMappers.WRITER.writeValueAsString(ImmutableList.of(output.toString())),
+                      BuildInfo.MetadataKey.RECORDED_PATH_HASHES,
+                      ObjectMappers.WRITER.writeValueAsString(
+                          ImmutableMap.of(output.toString(), HashCode.fromInt(123).toString())),
+                      BuildInfo.MetadataKey.OUTPUT_SIZE,
+                      "5", // Size of "stuff"
+                      BuildInfo.MetadataKey.OUTPUT_HASH,
+                      HashCode.fromInt(123).toString()))),
           ImmutableList.of());
       cache.store(
           ArtifactInfo.builder()
@@ -3446,13 +3454,13 @@ public class CachingBuildEngineTest {
 
             @Override
             public Predicate<SourcePath> getCoveredByDepFilePredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> true;
             }
 
             @Override
             public Predicate<SourcePath> getExistenceOfInterestPredicate(
-                SourcePathResolver pathResolver) {
+                SourcePathResolverAdapter pathResolver) {
               return (SourcePath path) -> false;
             }
 
@@ -3571,13 +3579,14 @@ public class CachingBuildEngineTest {
       }
 
       @Override
-      public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+      public Predicate<SourcePath> getCoveredByDepFilePredicate(
+          SourcePathResolverAdapter pathResolver) {
         return (SourcePath path) -> true;
       }
 
       @Override
       public Predicate<SourcePath> getExistenceOfInterestPredicate(
-          SourcePathResolver pathResolver) {
+          SourcePathResolverAdapter pathResolver) {
         return (SourcePath path) -> false;
       }
 
@@ -3598,13 +3607,9 @@ public class CachingBuildEngineTest {
     @Test
     public void customWeights() throws Exception {
       BuildTarget target1 = BuildTargetFactory.newInstance("//:rule1");
-      ControlledRule rule1 =
-          new ControlledRule(
-              target1, filesystem, RuleScheduleInfo.builder().setJobsMultiplier(2).build());
+      ControlledRule rule1 = new ControlledRule(target1, filesystem, RuleScheduleInfo.of(2));
       BuildTarget target2 = BuildTargetFactory.newInstance("//:rule2");
-      ControlledRule rule2 =
-          new ControlledRule(
-              target2, filesystem, RuleScheduleInfo.builder().setJobsMultiplier(2).build());
+      ControlledRule rule2 = new ControlledRule(target2, filesystem, RuleScheduleInfo.of(2));
       ListeningMultiSemaphore semaphore =
           new ListeningMultiSemaphore(
               ResourceAmounts.of(3, 0, 0, 0), ResourceAllocationFairness.FAIR);
@@ -4176,7 +4181,7 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public Object initializeFromDisk(SourcePathResolver pathResolver) {
+    public Object initializeFromDisk(SourcePathResolverAdapter pathResolver) {
       return new Object();
     }
 
@@ -4215,12 +4220,14 @@ public class CachingBuildEngineTest {
     }
 
     @Override
-    public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+    public Predicate<SourcePath> getCoveredByDepFilePredicate(
+        SourcePathResolverAdapter pathResolver) {
       return path -> true;
     }
 
     @Override
-    public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+    public Predicate<SourcePath> getExistenceOfInterestPredicate(
+        SourcePathResolverAdapter pathResolver) {
       return path -> false;
     }
 
@@ -4261,7 +4268,7 @@ public class CachingBuildEngineTest {
         throw new RuntimeException(e);
       }
       return Futures.immediateFuture(
-          CacheResult.hit("dir", ArtifactCacheMode.dir).withMetadata(metadata));
+          CacheResult.hit("dir", ArtifactCacheMode.dir).withMetadata(Optional.of(metadata)));
     }
 
     @Override

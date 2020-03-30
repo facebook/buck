@@ -165,6 +165,45 @@ private static final long serialVersionUID = 0L;
 
             break;
           }
+          case 90: {
+            com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.Builder subBuilder = null;
+            if (executedActionInfo_ != null) {
+              subBuilder = executedActionInfo_.toBuilder();
+            }
+            executedActionInfo_ = input.readMessage(com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(executedActionInfo_);
+              executedActionInfo_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
+          case 98: {
+            com.facebook.buck.remoteexecution.proto.DebugInfo.Builder subBuilder = null;
+            if (debugInfo_ != null) {
+              subBuilder = debugInfo_.toBuilder();
+            }
+            debugInfo_ = input.readMessage(com.facebook.buck.remoteexecution.proto.DebugInfo.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(debugInfo_);
+              debugInfo_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
+          case 106: {
+            com.facebook.buck.remoteexecution.proto.ClientJobInfo.Builder subBuilder = null;
+            if (clientJobInfo_ != null) {
+              subBuilder = clientJobInfo_.toBuilder();
+            }
+            clientJobInfo_ = input.readMessage(com.facebook.buck.remoteexecution.proto.ClientJobInfo.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(clientJobInfo_);
+              clientJobInfo_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -369,7 +408,7 @@ private static final long serialVersionUID = 0L;
   private com.facebook.buck.remoteexecution.proto.ClientActionInfo clientActionInfo_;
   /**
    * <pre>
-   * Do not use index 9 - reserved for server side.
+   * 9 - Do not use, deprecated field.
    * </pre>
    *
    * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -379,7 +418,7 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <pre>
-   * Do not use index 9 - reserved for server side.
+   * 9 - Do not use, deprecated field.
    * </pre>
    *
    * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -389,13 +428,76 @@ private static final long serialVersionUID = 0L;
   }
   /**
    * <pre>
-   * Do not use index 9 - reserved for server side.
+   * 9 - Do not use, deprecated field.
    * </pre>
    *
    * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
    */
   public com.facebook.buck.remoteexecution.proto.ClientActionInfoOrBuilder getClientActionInfoOrBuilder() {
     return getClientActionInfo();
+  }
+
+  public static final int EXECUTED_ACTION_INFO_FIELD_NUMBER = 11;
+  private com.facebook.buck.remoteexecution.proto.ExecutedActionInfo executedActionInfo_;
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+   */
+  public boolean hasExecutedActionInfo() {
+    return executedActionInfo_ != null;
+  }
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.ExecutedActionInfo getExecutedActionInfo() {
+    return executedActionInfo_ == null ? com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.getDefaultInstance() : executedActionInfo_;
+  }
+  /**
+   * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.ExecutedActionInfoOrBuilder getExecutedActionInfoOrBuilder() {
+    return getExecutedActionInfo();
+  }
+
+  public static final int DEBUG_INFO_FIELD_NUMBER = 12;
+  private com.facebook.buck.remoteexecution.proto.DebugInfo debugInfo_;
+  /**
+   * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+   */
+  public boolean hasDebugInfo() {
+    return debugInfo_ != null;
+  }
+  /**
+   * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.DebugInfo getDebugInfo() {
+    return debugInfo_ == null ? com.facebook.buck.remoteexecution.proto.DebugInfo.getDefaultInstance() : debugInfo_;
+  }
+  /**
+   * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.DebugInfoOrBuilder getDebugInfoOrBuilder() {
+    return getDebugInfo();
+  }
+
+  public static final int CLIENT_JOB_INFO_FIELD_NUMBER = 13;
+  private com.facebook.buck.remoteexecution.proto.ClientJobInfo clientJobInfo_;
+  /**
+   * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+   */
+  public boolean hasClientJobInfo() {
+    return clientJobInfo_ != null;
+  }
+  /**
+   * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.ClientJobInfo getClientJobInfo() {
+    return clientJobInfo_ == null ? com.facebook.buck.remoteexecution.proto.ClientJobInfo.getDefaultInstance() : clientJobInfo_;
+  }
+  /**
+   * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+   */
+  public com.facebook.buck.remoteexecution.proto.ClientJobInfoOrBuilder getClientJobInfoOrBuilder() {
+    return getClientJobInfo();
   }
 
   private byte memoizedIsInitialized = -1;
@@ -438,6 +540,15 @@ private static final long serialVersionUID = 0L;
     }
     if (clientActionInfo_ != null) {
       output.writeMessage(10, getClientActionInfo());
+    }
+    if (executedActionInfo_ != null) {
+      output.writeMessage(11, getExecutedActionInfo());
+    }
+    if (debugInfo_ != null) {
+      output.writeMessage(12, getDebugInfo());
+    }
+    if (clientJobInfo_ != null) {
+      output.writeMessage(13, getClientJobInfo());
     }
     unknownFields.writeTo(output);
   }
@@ -483,6 +594,18 @@ private static final long serialVersionUID = 0L;
     if (clientActionInfo_ != null) {
       size += com.google.protobuf.CodedOutputStream
         .computeMessageSize(10, getClientActionInfo());
+    }
+    if (executedActionInfo_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(11, getExecutedActionInfo());
+    }
+    if (debugInfo_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(12, getDebugInfo());
+    }
+    if (clientJobInfo_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(13, getClientJobInfo());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -544,6 +667,21 @@ private static final long serialVersionUID = 0L;
       if (!getClientActionInfo()
           .equals(other.getClientActionInfo())) return false;
     }
+    if (hasExecutedActionInfo() != other.hasExecutedActionInfo()) return false;
+    if (hasExecutedActionInfo()) {
+      if (!getExecutedActionInfo()
+          .equals(other.getExecutedActionInfo())) return false;
+    }
+    if (hasDebugInfo() != other.hasDebugInfo()) return false;
+    if (hasDebugInfo()) {
+      if (!getDebugInfo()
+          .equals(other.getDebugInfo())) return false;
+    }
+    if (hasClientJobInfo() != other.hasClientJobInfo()) return false;
+    if (hasClientJobInfo()) {
+      if (!getClientJobInfo()
+          .equals(other.getClientJobInfo())) return false;
+    }
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -590,6 +728,18 @@ private static final long serialVersionUID = 0L;
     if (hasClientActionInfo()) {
       hash = (37 * hash) + CLIENT_ACTION_INFO_FIELD_NUMBER;
       hash = (53 * hash) + getClientActionInfo().hashCode();
+    }
+    if (hasExecutedActionInfo()) {
+      hash = (37 * hash) + EXECUTED_ACTION_INFO_FIELD_NUMBER;
+      hash = (53 * hash) + getExecutedActionInfo().hashCode();
+    }
+    if (hasDebugInfo()) {
+      hash = (37 * hash) + DEBUG_INFO_FIELD_NUMBER;
+      hash = (53 * hash) + getDebugInfo().hashCode();
+    }
+    if (hasClientJobInfo()) {
+      hash = (37 * hash) + CLIENT_JOB_INFO_FIELD_NUMBER;
+      hash = (53 * hash) + getClientJobInfo().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -782,6 +932,24 @@ private static final long serialVersionUID = 0L;
         clientActionInfo_ = null;
         clientActionInfoBuilder_ = null;
       }
+      if (executedActionInfoBuilder_ == null) {
+        executedActionInfo_ = null;
+      } else {
+        executedActionInfo_ = null;
+        executedActionInfoBuilder_ = null;
+      }
+      if (debugInfoBuilder_ == null) {
+        debugInfo_ = null;
+      } else {
+        debugInfo_ = null;
+        debugInfoBuilder_ = null;
+      }
+      if (clientJobInfoBuilder_ == null) {
+        clientJobInfo_ = null;
+      } else {
+        clientJobInfo_ = null;
+        clientJobInfoBuilder_ = null;
+      }
       return this;
     }
 
@@ -852,6 +1020,21 @@ private static final long serialVersionUID = 0L;
         result.clientActionInfo_ = clientActionInfo_;
       } else {
         result.clientActionInfo_ = clientActionInfoBuilder_.build();
+      }
+      if (executedActionInfoBuilder_ == null) {
+        result.executedActionInfo_ = executedActionInfo_;
+      } else {
+        result.executedActionInfo_ = executedActionInfoBuilder_.build();
+      }
+      if (debugInfoBuilder_ == null) {
+        result.debugInfo_ = debugInfo_;
+      } else {
+        result.debugInfo_ = debugInfoBuilder_.build();
+      }
+      if (clientJobInfoBuilder_ == null) {
+        result.clientJobInfo_ = clientJobInfo_;
+      } else {
+        result.clientJobInfo_ = clientJobInfoBuilder_.build();
       }
       onBuilt();
       return result;
@@ -927,6 +1110,15 @@ private static final long serialVersionUID = 0L;
       }
       if (other.hasClientActionInfo()) {
         mergeClientActionInfo(other.getClientActionInfo());
+      }
+      if (other.hasExecutedActionInfo()) {
+        mergeExecutedActionInfo(other.getExecutedActionInfo());
+      }
+      if (other.hasDebugInfo()) {
+        mergeDebugInfo(other.getDebugInfo());
+      }
+      if (other.hasClientJobInfo()) {
+        mergeClientJobInfo(other.getClientJobInfo());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1898,7 +2090,7 @@ private static final long serialVersionUID = 0L;
         com.facebook.buck.remoteexecution.proto.ClientActionInfo, com.facebook.buck.remoteexecution.proto.ClientActionInfo.Builder, com.facebook.buck.remoteexecution.proto.ClientActionInfoOrBuilder> clientActionInfoBuilder_;
     /**
      * <pre>
-     * Do not use index 9 - reserved for server side.
+     * 9 - Do not use, deprecated field.
      * </pre>
      *
      * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -1908,7 +2100,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Do not use index 9 - reserved for server side.
+     * 9 - Do not use, deprecated field.
      * </pre>
      *
      * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -1922,7 +2114,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Do not use index 9 - reserved for server side.
+     * 9 - Do not use, deprecated field.
      * </pre>
      *
      * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -1942,7 +2134,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Do not use index 9 - reserved for server side.
+     * 9 - Do not use, deprecated field.
      * </pre>
      *
      * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -1960,7 +2152,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Do not use index 9 - reserved for server side.
+     * 9 - Do not use, deprecated field.
      * </pre>
      *
      * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -1982,7 +2174,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Do not use index 9 - reserved for server side.
+     * 9 - Do not use, deprecated field.
      * </pre>
      *
      * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -2000,7 +2192,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Do not use index 9 - reserved for server side.
+     * 9 - Do not use, deprecated field.
      * </pre>
      *
      * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -2012,7 +2204,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Do not use index 9 - reserved for server side.
+     * 9 - Do not use, deprecated field.
      * </pre>
      *
      * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -2027,7 +2219,7 @@ private static final long serialVersionUID = 0L;
     }
     /**
      * <pre>
-     * Do not use index 9 - reserved for server side.
+     * 9 - Do not use, deprecated field.
      * </pre>
      *
      * <code>.facebook.remote_execution.ClientActionInfo client_action_info = 10;</code>
@@ -2044,6 +2236,357 @@ private static final long serialVersionUID = 0L;
         clientActionInfo_ = null;
       }
       return clientActionInfoBuilder_;
+    }
+
+    private com.facebook.buck.remoteexecution.proto.ExecutedActionInfo executedActionInfo_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.ExecutedActionInfo, com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.Builder, com.facebook.buck.remoteexecution.proto.ExecutedActionInfoOrBuilder> executedActionInfoBuilder_;
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+     */
+    public boolean hasExecutedActionInfo() {
+      return executedActionInfoBuilder_ != null || executedActionInfo_ != null;
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ExecutedActionInfo getExecutedActionInfo() {
+      if (executedActionInfoBuilder_ == null) {
+        return executedActionInfo_ == null ? com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.getDefaultInstance() : executedActionInfo_;
+      } else {
+        return executedActionInfoBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+     */
+    public Builder setExecutedActionInfo(com.facebook.buck.remoteexecution.proto.ExecutedActionInfo value) {
+      if (executedActionInfoBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        executedActionInfo_ = value;
+        onChanged();
+      } else {
+        executedActionInfoBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+     */
+    public Builder setExecutedActionInfo(
+        com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.Builder builderForValue) {
+      if (executedActionInfoBuilder_ == null) {
+        executedActionInfo_ = builderForValue.build();
+        onChanged();
+      } else {
+        executedActionInfoBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+     */
+    public Builder mergeExecutedActionInfo(com.facebook.buck.remoteexecution.proto.ExecutedActionInfo value) {
+      if (executedActionInfoBuilder_ == null) {
+        if (executedActionInfo_ != null) {
+          executedActionInfo_ =
+            com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.newBuilder(executedActionInfo_).mergeFrom(value).buildPartial();
+        } else {
+          executedActionInfo_ = value;
+        }
+        onChanged();
+      } else {
+        executedActionInfoBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+     */
+    public Builder clearExecutedActionInfo() {
+      if (executedActionInfoBuilder_ == null) {
+        executedActionInfo_ = null;
+        onChanged();
+      } else {
+        executedActionInfo_ = null;
+        executedActionInfoBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.Builder getExecutedActionInfoBuilder() {
+      
+      onChanged();
+      return getExecutedActionInfoFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ExecutedActionInfoOrBuilder getExecutedActionInfoOrBuilder() {
+      if (executedActionInfoBuilder_ != null) {
+        return executedActionInfoBuilder_.getMessageOrBuilder();
+      } else {
+        return executedActionInfo_ == null ?
+            com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.getDefaultInstance() : executedActionInfo_;
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.ExecutedActionInfo executed_action_info = 11;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.ExecutedActionInfo, com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.Builder, com.facebook.buck.remoteexecution.proto.ExecutedActionInfoOrBuilder> 
+        getExecutedActionInfoFieldBuilder() {
+      if (executedActionInfoBuilder_ == null) {
+        executedActionInfoBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.remoteexecution.proto.ExecutedActionInfo, com.facebook.buck.remoteexecution.proto.ExecutedActionInfo.Builder, com.facebook.buck.remoteexecution.proto.ExecutedActionInfoOrBuilder>(
+                getExecutedActionInfo(),
+                getParentForChildren(),
+                isClean());
+        executedActionInfo_ = null;
+      }
+      return executedActionInfoBuilder_;
+    }
+
+    private com.facebook.buck.remoteexecution.proto.DebugInfo debugInfo_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.DebugInfo, com.facebook.buck.remoteexecution.proto.DebugInfo.Builder, com.facebook.buck.remoteexecution.proto.DebugInfoOrBuilder> debugInfoBuilder_;
+    /**
+     * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+     */
+    public boolean hasDebugInfo() {
+      return debugInfoBuilder_ != null || debugInfo_ != null;
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.DebugInfo getDebugInfo() {
+      if (debugInfoBuilder_ == null) {
+        return debugInfo_ == null ? com.facebook.buck.remoteexecution.proto.DebugInfo.getDefaultInstance() : debugInfo_;
+      } else {
+        return debugInfoBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+     */
+    public Builder setDebugInfo(com.facebook.buck.remoteexecution.proto.DebugInfo value) {
+      if (debugInfoBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        debugInfo_ = value;
+        onChanged();
+      } else {
+        debugInfoBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+     */
+    public Builder setDebugInfo(
+        com.facebook.buck.remoteexecution.proto.DebugInfo.Builder builderForValue) {
+      if (debugInfoBuilder_ == null) {
+        debugInfo_ = builderForValue.build();
+        onChanged();
+      } else {
+        debugInfoBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+     */
+    public Builder mergeDebugInfo(com.facebook.buck.remoteexecution.proto.DebugInfo value) {
+      if (debugInfoBuilder_ == null) {
+        if (debugInfo_ != null) {
+          debugInfo_ =
+            com.facebook.buck.remoteexecution.proto.DebugInfo.newBuilder(debugInfo_).mergeFrom(value).buildPartial();
+        } else {
+          debugInfo_ = value;
+        }
+        onChanged();
+      } else {
+        debugInfoBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+     */
+    public Builder clearDebugInfo() {
+      if (debugInfoBuilder_ == null) {
+        debugInfo_ = null;
+        onChanged();
+      } else {
+        debugInfo_ = null;
+        debugInfoBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.DebugInfo.Builder getDebugInfoBuilder() {
+      
+      onChanged();
+      return getDebugInfoFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.DebugInfoOrBuilder getDebugInfoOrBuilder() {
+      if (debugInfoBuilder_ != null) {
+        return debugInfoBuilder_.getMessageOrBuilder();
+      } else {
+        return debugInfo_ == null ?
+            com.facebook.buck.remoteexecution.proto.DebugInfo.getDefaultInstance() : debugInfo_;
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.DebugInfo debug_info = 12;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.DebugInfo, com.facebook.buck.remoteexecution.proto.DebugInfo.Builder, com.facebook.buck.remoteexecution.proto.DebugInfoOrBuilder> 
+        getDebugInfoFieldBuilder() {
+      if (debugInfoBuilder_ == null) {
+        debugInfoBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.remoteexecution.proto.DebugInfo, com.facebook.buck.remoteexecution.proto.DebugInfo.Builder, com.facebook.buck.remoteexecution.proto.DebugInfoOrBuilder>(
+                getDebugInfo(),
+                getParentForChildren(),
+                isClean());
+        debugInfo_ = null;
+      }
+      return debugInfoBuilder_;
+    }
+
+    private com.facebook.buck.remoteexecution.proto.ClientJobInfo clientJobInfo_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.ClientJobInfo, com.facebook.buck.remoteexecution.proto.ClientJobInfo.Builder, com.facebook.buck.remoteexecution.proto.ClientJobInfoOrBuilder> clientJobInfoBuilder_;
+    /**
+     * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+     */
+    public boolean hasClientJobInfo() {
+      return clientJobInfoBuilder_ != null || clientJobInfo_ != null;
+    }
+    /**
+     * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ClientJobInfo getClientJobInfo() {
+      if (clientJobInfoBuilder_ == null) {
+        return clientJobInfo_ == null ? com.facebook.buck.remoteexecution.proto.ClientJobInfo.getDefaultInstance() : clientJobInfo_;
+      } else {
+        return clientJobInfoBuilder_.getMessage();
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+     */
+    public Builder setClientJobInfo(com.facebook.buck.remoteexecution.proto.ClientJobInfo value) {
+      if (clientJobInfoBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        clientJobInfo_ = value;
+        onChanged();
+      } else {
+        clientJobInfoBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+     */
+    public Builder setClientJobInfo(
+        com.facebook.buck.remoteexecution.proto.ClientJobInfo.Builder builderForValue) {
+      if (clientJobInfoBuilder_ == null) {
+        clientJobInfo_ = builderForValue.build();
+        onChanged();
+      } else {
+        clientJobInfoBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+     */
+    public Builder mergeClientJobInfo(com.facebook.buck.remoteexecution.proto.ClientJobInfo value) {
+      if (clientJobInfoBuilder_ == null) {
+        if (clientJobInfo_ != null) {
+          clientJobInfo_ =
+            com.facebook.buck.remoteexecution.proto.ClientJobInfo.newBuilder(clientJobInfo_).mergeFrom(value).buildPartial();
+        } else {
+          clientJobInfo_ = value;
+        }
+        onChanged();
+      } else {
+        clientJobInfoBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+     */
+    public Builder clearClientJobInfo() {
+      if (clientJobInfoBuilder_ == null) {
+        clientJobInfo_ = null;
+        onChanged();
+      } else {
+        clientJobInfo_ = null;
+        clientJobInfoBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ClientJobInfo.Builder getClientJobInfoBuilder() {
+      
+      onChanged();
+      return getClientJobInfoFieldBuilder().getBuilder();
+    }
+    /**
+     * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+     */
+    public com.facebook.buck.remoteexecution.proto.ClientJobInfoOrBuilder getClientJobInfoOrBuilder() {
+      if (clientJobInfoBuilder_ != null) {
+        return clientJobInfoBuilder_.getMessageOrBuilder();
+      } else {
+        return clientJobInfo_ == null ?
+            com.facebook.buck.remoteexecution.proto.ClientJobInfo.getDefaultInstance() : clientJobInfo_;
+      }
+    }
+    /**
+     * <code>.facebook.remote_execution.ClientJobInfo client_job_info = 13;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.facebook.buck.remoteexecution.proto.ClientJobInfo, com.facebook.buck.remoteexecution.proto.ClientJobInfo.Builder, com.facebook.buck.remoteexecution.proto.ClientJobInfoOrBuilder> 
+        getClientJobInfoFieldBuilder() {
+      if (clientJobInfoBuilder_ == null) {
+        clientJobInfoBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.facebook.buck.remoteexecution.proto.ClientJobInfo, com.facebook.buck.remoteexecution.proto.ClientJobInfo.Builder, com.facebook.buck.remoteexecution.proto.ClientJobInfoOrBuilder>(
+                getClientJobInfo(),
+                getParentForChildren(),
+                isClean());
+        clientJobInfo_ = null;
+      }
+      return clientJobInfoBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

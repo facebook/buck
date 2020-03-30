@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -21,6 +21,8 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -58,10 +60,9 @@ public final class CommonRuleKeyHasherTest {
 
   private static final RuleKey RULE_KEY_1 = new RuleKey("a002b39af204cdfaa5fdb67816b13867c32ac52c");
   private static final RuleKey RULE_KEY_2 = new RuleKey("b67816b13867c32ac52ca002b39af204cdfaa5fd");
-  private static final BuildTarget TARGET_1 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one");
+  private static final BuildTarget TARGET_1 = BuildTargetFactory.newInstance("//example/base:one");
   private static final BuildTarget TARGET_2 =
-      BuildTargetFactory.newInstance(Paths.get("/root"), "//example/base:one#flavor");
+      BuildTargetFactory.newInstance("//example/base:one#flavor");
 
   private CommonRuleKeyHasherTest() {}
 
@@ -227,8 +228,14 @@ public final class CommonRuleKeyHasherTest {
 
     @BeforeClass
     public static void setupFileSystems() {
-      filesystem1 = new FakeProjectFilesystem(Paths.get("first", "root"));
-      filesystem2 = new FakeProjectFilesystem(Paths.get("other", "root"));
+      filesystem1 =
+          new FakeProjectFilesystem(
+              CanonicalCellName.rootCell(),
+              AbsPath.of(Paths.get("first", "root").toAbsolutePath()));
+      filesystem2 =
+          new FakeProjectFilesystem(
+              CanonicalCellName.rootCell(),
+              AbsPath.of(Paths.get("other", "root").toAbsolutePath()));
     }
 
     @Test

@@ -1,16 +1,16 @@
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from __future__ import print_function
 
@@ -34,9 +34,10 @@ from collections import namedtuple
 from subprocess import CalledProcessError, check_output
 
 from ng import NailgunConnection, NailgunException
-from subprocutils import which
-from timing import monotonic_time_nanos
-from tracing import Tracing
+from programs.file_locks import exclusive_lock
+from programs.subprocutils import which
+from programs.timing import monotonic_time_nanos
+from programs.tracing import Tracing
 
 
 BUCKD_CLIENT_TIMEOUT_MILLIS = 180000
@@ -431,7 +432,7 @@ class BuckTool(object):
 
     @property
     def _use_buckd(self):
-        return not os.environ.get("NO_BUCKD")
+        return not os.environ.get("NO_BUCKD") or os.environ.get("NO_BUCKD") == "0"
 
     def _environ_for_buck(self):
         env = os.environ.copy()
@@ -450,9 +451,13 @@ class BuckTool(object):
             try:
                 # Get the number of columns in the terminal.
                 with open(os.devnull, "w") as devnull:
-                    stty_size_str = check_output(
-                        ["stty", "size"], stderr=devnull
-                    ).strip()
+                    # Make sure we get a string back in py3, but encoding isn't
+                    # valid in py2, so don't send in that case
+                    stty_size_str = (
+                        check_output(["stty", "size"], stderr=devnull)
+                        .decode("utf-8")
+                        .strip()
+                    )
                     stty_size = stty_size_str.split(" ")
                     if len(stty_size) >= 2:
                         env["BUCK_TERM_COLUMNS"] = stty_size[1]
@@ -684,8 +689,7 @@ class BuckTool(object):
                 path = cmd["path"].encode("utf8")
                 argv = [arg.encode("utf8") for arg in cmd["argv"]]
                 envp = {
-                    k.encode("utf8"): v.encode("utf8")
-                    for k, v in cmd["envp"].iteritems()
+                    k.encode("utf8"): v.encode("utf8") for k, v in cmd["envp"].items()
                 }
                 cwd = cmd["cwd"].encode("utf8")
                 if cmd["is_fix_script"]:
@@ -693,7 +697,7 @@ class BuckTool(object):
                 else:
                     return ExecuteTarget(exit_code, path, argv, envp, cwd)
 
-    def launch_buck(self, build_id, java_path, argv):
+    def launch_buck(self, build_id, client_cwd, java_path, argv):
         with Tracing("BuckTool.launch_buck"):
             with JvmCrashLogger(self, self._buck_project.root):
                 self._reporter.build_id = build_id
@@ -738,40 +742,49 @@ class BuckTool(object):
                         )
 
                 if use_buckd:
-                    need_start = True
-                    running_version = self._buck_project.get_running_buckd_version()
-                    running_jvm_args = self._buck_project.get_running_buckd_jvm_args()
-                    jvm_args = self._get_java_args(buck_version_uid)
-                    if running_version is None:
-                        logging.info("Starting new Buck daemon...")
-                    elif running_version != buck_version_uid:
-                        logging.info(
-                            "Restarting Buck daemon because Buck version has changed..."
+                    with exclusive_lock(
+                        self._buck_project.get_section_lock_path("buckd_start_stop"),
+                        wait=True,
+                    ):
+                        need_start = True
+                        running_version = self._buck_project.get_running_buckd_version()
+                        running_jvm_args = (
+                            self._buck_project.get_running_buckd_jvm_args()
                         )
-                    elif not self._is_buckd_running():
-                        logging.info(
-                            "Unable to connect to Buck daemon, restarting it..."
-                        )
-                    elif jvm_args != running_jvm_args:
-                        logging.info(
-                            "Restarting Buck daemon because JVM args have changed..."
-                        )
-                    else:
-                        need_start = False
-
-                    if need_start:
-                        self.kill_buckd()
-                        if not self.launch_buckd(
-                            java_path, jvm_args, buck_version_uid=buck_version_uid
-                        ):
-                            use_buckd = False
-                            self._reporter.no_buckd_reason = "daemon_failure"
-                            logging.warning(
-                                "Not using buckd because daemon failed to start."
+                        jvm_args = self._get_java_args(buck_version_uid)
+                        if running_version is None:
+                            logging.info("Starting new Buck daemon...")
+                        elif running_version != buck_version_uid:
+                            logging.info(
+                                "Restarting Buck daemon because Buck version has "
+                                "changed..."
                             )
+                        elif not self._is_buckd_running():
+                            logging.info(
+                                "Unable to connect to Buck daemon, restarting it..."
+                            )
+                        elif jvm_args != running_jvm_args:
+                            logging.info(
+                                "Restarting Buck daemon because JVM args have "
+                                "changed..."
+                            )
+                        else:
+                            need_start = False
+
+                        if need_start:
+                            self.kill_buckd()
+                            if not self.launch_buckd(
+                                java_path, jvm_args, buck_version_uid=buck_version_uid
+                            ):
+                                use_buckd = False
+                                self._reporter.no_buckd_reason = "daemon_failure"
+                                logging.warning(
+                                    "Not using buckd because daemon failed to start."
+                                )
 
                 env = self._environ_for_buck()
                 env["BUCK_BUILD_ID"] = build_id
+                env["BUCK_CLIENT_PWD"] = client_cwd
 
                 self._reporter.is_buckd = use_buckd
                 run_fn = (
@@ -893,7 +906,7 @@ class BuckTool(object):
 
             wait_seconds = 0.01
             repetitions = int(BUCKD_STARTUP_TIMEOUT_MILLIS / 1000.0 / wait_seconds)
-            for i in range(repetitions):
+            for _idx in range(repetitions):
                 if transport_exists(buckd_transport_file_path):
                     break
                 time.sleep(wait_seconds)
@@ -910,6 +923,8 @@ class BuckTool(object):
             # Save pid of running daemon
             self._buck_project.save_buckd_pid(process.pid)
 
+            logging.info("Buck daemon started.")
+
             return True
 
     def _get_repository(self):
@@ -921,7 +936,9 @@ class BuckTool(object):
 
 
     def kill_buckd(self):
-        with Tracing("BuckTool.kill_buckd"):
+        with Tracing("BuckTool.kill_buckd"), exclusive_lock(
+            self._buck_project.get_section_lock_path("buckd_kill"), wait=True
+        ):
             buckd_transport_file_path = (
                 self._buck_project.get_buckd_transport_file_path()
             )
@@ -975,7 +992,7 @@ class BuckTool(object):
             elif os.name == "nt":
                 # for Windows, we rely on transport to be closed to determine the process is done
                 # TODO(buck_team) implement wait for process and hard kill for Windows
-                for i in range(0, 300):
+                for _idx in range(0, 300):
                     if not transport_exists(buckd_transport_file_path):
                         break
                     time.sleep(0.01)
@@ -1010,47 +1027,55 @@ class BuckTool(object):
 
     def _get_java_args(self, version_uid, extra_default_options=None):
         with Tracing("BuckTool._get_java_args"):
-            java_args = [
-                "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
-                "-Djava.awt.headless=true",
-                "-Djna.nosys=true",
-                "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
-                "-Dbuck.test_util_no_tests_dir=true",
-                "-Dbuck.version_uid={0}".format(version_uid),
-                "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
-                "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
-                "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
-                "-Dbuck.git_commit_timestamp={0}".format(
-                    self._get_buck_version_timestamp()
-                ),
-                "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
-                "-Dbuck.base_buck_out_dir={0}".format(
-                    self._buck_project.get_buck_out_relative_dir()
-                ),
-            ]
+            java_args = []
 
             if "BUCK_DEFAULT_FILESYSTEM" not in os.environ and (
                 sys.platform == "darwin" or sys.platform.startswith("linux")
             ):
                 # Change default filesystem to custom filesystem for memory optimizations
                 # Calls like Paths.get() would return optimized Path implementation
+                if self.get_buck_compiled_java_version() >= 9:
+                    # In Java 9+, the default file system provider gets initialized in the middle of
+                    # loading the jar for the main class (bootstrapper.jar for Buck). Due to a
+                    # potential circular dependency, we can't place BuckFileSystemProvider in
+                    # bootstrapper.jar, or even in a separate jar on the regular classpath. To
+                    # ensure BuckFileSystemProvider is available early enough, we add it to the JVM
+                    # bootstrap classloader (not to be confused with Buck's bootstrapper) via the
+                    # bootclasspath. Note that putting everything in bootstrapper.jar and putting it
+                    # on the bootclasspath is problematic due to subtle classloader issues during
+                    # in-process Java compilation.
+                    #
+                    # WARNING: The JVM appears to be sensitive about where this argument appears in
+                    #          the argument list. It needs to come first, or it *sometimes* doesn't
+                    #          get picked up. We don't understand exactly when or why this occurs.
+                    java_args.append(
+                        "-Xbootclasspath/a:" + self._get_buckfilesystem_classpath()
+                    )
                 java_args.append(
                     "-Djava.nio.file.spi.DefaultFileSystemProvider="
                     "com.facebook.buck.core.filesystems.BuckFileSystemProvider"
                 )
 
-                # In Java 9+, the default file system provider gets initialized in the middle of
-                # loading the jar for the main class (bootstrapper.jar for Buck). Due to a potential
-                # circular dependency, we can't place BuckFileSystemProvider in bootstrapper.jar, or
-                # even in a separate jar on the regular classpath. To ensure BuckFileSystemProvider
-                # is available early enough, we add it to the JVM bootstrap classloader (not to be
-                # confused with Buck's bootstrapper) via the bootclasspath. Note that putting
-                # everything in bootstrapper.jar and putting it on the bootclasspath is problematic
-                # due to subtle classloader issues during in-process Java compilation.
-                if self.get_buck_compiled_java_version() >= 9:
-                    java_args.append(
-                        "-Xbootclasspath/a:" + self._get_buckfilesystem_classpath()
-                    )
+            java_args.extend(
+                [
+                    "-Xmx{0}m".format(JAVA_MAX_HEAP_SIZE_MB),
+                    "-Djava.awt.headless=true",
+                    "-Djna.nosys=true",
+                    "-Djava.util.logging.config.class=com.facebook.buck.cli.bootstrapper.LogConfig",
+                    "-Dbuck.test_util_no_tests_dir=true",
+                    "-Dbuck.version_uid={0}".format(version_uid),
+                    "-Dbuck.buckd_dir={0}".format(self._buck_project.buckd_dir),
+                    "-Dorg.eclipse.jetty.util.log.class=org.eclipse.jetty.util.log.JavaUtilLog",
+                    "-Dbuck.git_commit={0}".format(self._get_buck_version_uid()),
+                    "-Dbuck.git_commit_timestamp={0}".format(
+                        self._get_buck_version_timestamp()
+                    ),
+                    "-Dbuck.binary_hash={0}".format(self._get_buck_binary_hash()),
+                    "-Dbuck.base_buck_out_dir={0}".format(
+                        self._buck_project.get_buck_out_relative_dir()
+                    ),
+                ]
+            )
 
             resource_lock_path = self._get_resource_lock_path()
             if resource_lock_path is not None:
@@ -1078,10 +1103,13 @@ class BuckTool(object):
                 and os.environ.get("BUCK_DEBUG_MODE") != "0"
             ):
                 suspend = "n" if os.environ.get("BUCK_DEBUG_MODE") == "2" else "y"
+                port = "8888"
                 java_args.append(
                     "-agentlib:jdwp=transport=dt_socket,"
-                    "server=y,suspend=" + suspend + ",quiet=y,address=8888"
+                    "server=y,suspend=" + suspend + ",quiet=y,address=" + port
                 )
+                if suspend == "y":
+                    logging.info("Waiting for debugger on port {}...".format(port))
 
             if (
                 "BUCK_HTTP_PORT" in os.environ
@@ -1247,7 +1275,7 @@ def wait_for_process_posix(pid, timeout):
     )
 
     # poll 10 times a second
-    for i in range(0, int(timeout / 100)):
+    for _idx in range(0, int(timeout / 100)):
         if not pid_exists_posix(pid):
             return True
         time.sleep(0.1)

@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple.toolchain.impl;
@@ -56,10 +56,13 @@ import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
+import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableBiMap;
@@ -137,12 +140,10 @@ public class AppleCxxPlatforms {
       AppleConfig appleConfig,
       String toolName,
       String toolVersion) {
-    return VersionedTool.builder()
-        .setPath(
-            PathSourcePath.of(filesystem, getToolPath(toolName, toolSearchPaths, xcodeToolFinder)))
-        .setName(Joiner.on('-').join(ImmutableList.of("apple", toolName)))
-        .setVersion(appleConfig.getXcodeToolVersion(toolName, toolVersion))
-        .build();
+    return VersionedTool.of(
+        Joiner.on('-').join(ImmutableList.of("apple", toolName)),
+        PathSourcePath.of(filesystem, getToolPath(toolName, toolSearchPaths, xcodeToolFinder)),
+        appleConfig.getXcodeToolVersion(toolName, toolVersion));
   }
 
   @VisibleForTesting
@@ -268,6 +269,9 @@ public class AppleCxxPlatforms {
     Tool ibtool =
         getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "ibtool", version);
 
+    Tool libtool =
+        getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "libtool", version);
+
     Tool momc =
         getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "momc", version);
 
@@ -318,7 +322,7 @@ public class AppleCxxPlatforms {
     // https://github.com/facebook/buck/pull/1168: add the root cell's absolute path to the quote
     // include path, and also force it to be sanitized by all user rule keys.
     if (appleConfig.addCellPathToIquotePath()) {
-      sanitizerPaths.put(filesystem.getRootPath(), ".");
+      sanitizerPaths.put(filesystem.getRootPath().getPath(), ".");
       cflagsBuilder.add("-iquote", filesystem.getRootPath().toString());
     }
 
@@ -418,6 +422,9 @@ public class AppleCxxPlatforms {
         config.getHeaderVerificationOrIgnore().withPlatformWhitelist(whitelistBuilder.build());
     LOG.debug(
         "Headers verification platform whitelist: %s", headerVerification.getPlatformWhitelist());
+    ImmutableList<String> ldFlags =
+        ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build();
+    ImmutableList<Arg> cflagsArgs = ImmutableList.copyOf(StringArg.from(cflags));
 
     CxxPlatform cxxPlatform =
         CxxPlatforms.build(
@@ -433,24 +440,26 @@ public class AppleCxxPlatforms {
             new DefaultLinkerProvider(
                 LinkerProvider.Type.DARWIN,
                 new ConstantToolProvider(clangXxPath),
-                config.shouldCacheLinks()),
-            ImmutableList.<String>builder().addAll(cflags).addAll(ldflagsBuilder.build()).build(),
+                config.shouldCacheLinks(),
+                appleConfig.shouldLinkScrubConcurrently()),
+            StringArg.from(ldFlags),
             ImmutableMultimap.of(),
             strip,
             ArchiverProvider.from(new BsdArchiver(ar)),
             ArchiveContents.NORMAL,
             Optional.of(new ConstantToolProvider(ranlib)),
             new PosixNmSymbolNameTool(new ConstantToolProvider(nm)),
-            cflagsBuilder.build(),
+            cflagsArgs,
             ImmutableList.of(),
-            cflags,
+            cflagsArgs,
             ImmutableList.of(),
-            cflags,
+            cflagsArgs,
             ImmutableList.of(),
             "dylib",
             "%s.dylib",
             "a",
             "o",
+            Optional.empty(),
             compilerDebugPathSanitizer,
             macros,
             Optional.empty(),
@@ -464,10 +473,11 @@ public class AppleCxxPlatforms {
     AppleSdkPaths.Builder swiftSdkPathsBuilder = AppleSdkPaths.builder().from(sdkPaths);
     Optional<SwiftPlatform> swiftPlatform =
         getSwiftPlatform(
-            targetArchitecture
-                + "-apple-"
-                + applePlatform.getSwiftName().orElse(applePlatform.getName())
-                + minVersion,
+            SwiftTargetTriple.of(
+                targetArchitecture,
+                "apple",
+                applePlatform.getSwiftName().orElse(applePlatform.getName()),
+                minVersion),
             version,
             targetSdk,
             swiftSdkPathsBuilder.build(),
@@ -484,6 +494,7 @@ public class AppleCxxPlatforms {
         .setMinVersion(minVersion)
         .setBuildVersion(buildVersion)
         .setActool(actool)
+        .setLibtool(libtool)
         .setIbtool(ibtool)
         .setMomc(momc)
         .setCopySceneKitAssets(
@@ -503,7 +514,7 @@ public class AppleCxxPlatforms {
   }
 
   private static Optional<SwiftPlatform> getSwiftPlatform(
-      String targetArchitectureName,
+      SwiftTargetTriple swiftTarget,
       String version,
       AppleSdk sdk,
       AppleSdkPaths sdkPaths,
@@ -512,12 +523,7 @@ public class AppleCxxPlatforms {
       XcodeToolFinder xcodeToolFinder,
       ProjectFilesystem filesystem) {
     ImmutableList<String> swiftParams =
-        ImmutableList.of(
-            "-frontend",
-            "-sdk",
-            sdkPaths.getSdkPath().toString(),
-            "-target",
-            targetArchitectureName);
+        ImmutableList.of("-frontend", "-sdk", sdkPaths.getSdkPath().toString());
 
     String platformName = sdk.getApplePlatform().getName();
     ImmutableList.Builder<String> swiftStdlibToolParamsBuilder = ImmutableList.builder();
@@ -547,7 +553,7 @@ public class AppleCxxPlatforms {
     return swiftc.map(
         tool ->
             SwiftPlatformFactory.build(
-                sdk, sdkPaths, tool, swiftStdLibTool, shouldLinkSystemSwift));
+                sdk, sdkPaths, tool, swiftStdLibTool, shouldLinkSystemSwift, swiftTarget));
   }
 
   private static void applySourceLibrariesParamIfNeeded(
@@ -587,13 +593,7 @@ public class AppleCxxPlatforms {
     return xcodeToolFinder
         .getToolPath(toolSearchPaths, tool)
         .map(
-            input ->
-                VersionedTool.builder()
-                    .setPath(PathSourcePath.of(filesystem, input))
-                    .setName(tool)
-                    .setVersion(version)
-                    .setExtraArgs(params)
-                    .build());
+            input -> VersionedTool.of(tool, PathSourcePath.of(filesystem, input), version, params));
   }
 
   private static Path getToolPath(

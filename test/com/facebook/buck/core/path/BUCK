@@ -1,0 +1,12 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+standard_java_test(
+    name = "path",
+    deps = [
+        "//src/com/facebook/buck/core/exceptions:exceptions",
+        "//src/com/facebook/buck/core/filesystems:filesystems",
+        "//src/com/facebook/buck/core/path:path",
+        "//third-party/java/jimfs:jimfs",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -1,27 +1,26 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.swift;
 
-import static com.facebook.buck.core.model.UnflavoredBuildTargetView.BUILD_TARGET_PREFIX;
-
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
-import com.facebook.buck.core.model.impl.ImmutableUnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -37,16 +36,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.Objects;
 
 /** Pseudo linkable for representing Swift runtime library's linker arguments. */
 public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGroup {
 
   private static final String SWIFT_RUNTIME = "_swift_runtime";
 
-  private static final UnconfiguredBuildTargetView PSEUDO_BUILD_TARGET =
-      ImmutableUnconfiguredBuildTargetView.of(
-          Paths.get(SWIFT_RUNTIME), BUILD_TARGET_PREFIX + SWIFT_RUNTIME, SWIFT_RUNTIME);
+  private static final UnconfiguredBuildTarget PSEUDO_BUILD_TARGET =
+      UnconfiguredBuildTarget.of(
+          BaseName.ofPath(ForwardRelativePath.of(SWIFT_RUNTIME)), SWIFT_RUNTIME);
 
   private final SwiftPlatform swiftPlatform;
   private final BuildTarget buildTarget;
@@ -92,7 +91,27 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
                     return ImmutableMap.of();
                   }
                 },
-                NativeLinkableInfo.defaults().setShouldBeLinkedInAppleTestAndHost(true)));
+                NativeLinkableInfo.defaults().setShouldBeLinkedInAppleTestAndHost(true)) {
+
+              // TODO: As we end up creating multiple instances of this same target per-platform,
+              // override the hashcode and equals so that this works properly in sets/maps.
+              @Override
+              public int hashCode() {
+                return Objects.hash(getBuildTarget());
+              }
+
+              @Override
+              public boolean equals(Object obj) {
+                if (this == obj) {
+                  return true;
+                }
+                if (getClass() != obj.getClass()) {
+                  return false;
+                }
+                NativeLinkableInfo other = (NativeLinkableInfo) obj;
+                return Objects.equals(getBuildTarget(), other.getBuildTarget());
+              }
+            });
   }
 
   private NativeLinkableInput getNativeLinkableInput(Linker.LinkableDepType type) {

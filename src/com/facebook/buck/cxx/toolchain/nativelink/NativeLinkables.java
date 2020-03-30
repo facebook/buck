@@ -1,18 +1,19 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cxx.toolchain.nativelink;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -22,22 +23,24 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.graph.GraphTraversable;
 import com.facebook.buck.core.util.graph.TopologicalSort;
+import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Iterables;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /** Utility functions for interacting with {@link NativeLinkable} objects. */
 public class NativeLinkables {
@@ -45,7 +48,8 @@ public class NativeLinkables {
 
   /** @return the nodes found from traversing the given roots in topologically sorted order. */
   public static ImmutableList<? extends NativeLinkable> getTopoSortedNativeLinkables(
-      Iterable<? extends NativeLinkable> roots, GraphTraversable<NativeLinkable> depsFn) {
+      Iterable<? extends NativeLinkable> roots,
+      TopologicalSort.Traversable<NativeLinkable> depsFn) {
     // Topologically sort the rules.
     return TopologicalSort.snowflakeSort(
             roots, depsFn, Comparator.comparing(NativeLinkable::getBuildTarget))
@@ -148,7 +152,9 @@ public class NativeLinkables {
    * a preferred and requested linkage.
    */
   public static Linker.LinkableDepType getLinkStyle(
-      NativeLinkableGroup.Linkage preferredLinkage, Linker.LinkableDepType requestedLinkStyle) {
+      NativeLinkableGroup.Linkage preferredLinkage,
+      Linker.LinkableDepType requestedLinkStyle,
+      Optional<PicType> picTypeForSharedLinking) {
     Linker.LinkableDepType linkStyle;
     switch (preferredLinkage) {
       case SHARED:
@@ -157,6 +163,8 @@ public class NativeLinkables {
       case STATIC:
         linkStyle =
             requestedLinkStyle == Linker.LinkableDepType.STATIC
+                    || (picTypeForSharedLinking.isPresent()
+                        && picTypeForSharedLinking.get() == PicType.PDC)
                 ? Linker.LinkableDepType.STATIC
                 : Linker.LinkableDepType.STATIC_PIC;
         break;
@@ -167,6 +175,15 @@ public class NativeLinkables {
         throw new IllegalStateException();
     }
     return linkStyle;
+  }
+
+  /**
+   * Determine the final {@link com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType} given
+   * a preferred and requested linkage.
+   */
+  public static Linker.LinkableDepType getLinkStyle(
+      NativeLinkableGroup.Linkage preferredLinkage, Linker.LinkableDepType requestedLinkStyle) {
+    return getLinkStyle(preferredLinkage, requestedLinkStyle, Optional.empty());
   }
 
   /** Get the {@link NativeLinkableInput} for a {@link NativeLinkable}. */
@@ -256,12 +273,14 @@ public class NativeLinkables {
         getTransitiveNativeLinkables(graphBuilder, roots);
 
     SharedLibrariesBuilder builder = new SharedLibrariesBuilder();
-    nativeLinkables.stream()
-        .filter(
-            e ->
-                e.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC
-                    || (alwaysIncludeRoots && rootTargets.contains(e.getBuildTarget())))
-        .forEach(e -> builder.add(e, graphBuilder));
+    builder.addAll(
+        graphBuilder,
+        nativeLinkables.stream()
+            .filter(
+                e ->
+                    e.getPreferredLinkage() != NativeLinkableGroup.Linkage.STATIC
+                        || (alwaysIncludeRoots && rootTargets.contains(e.getBuildTarget())))
+            .collect(Collectors.toList()));
     return builder.build();
   }
 
@@ -273,9 +292,7 @@ public class NativeLinkables {
 
     private final Map<String, SourcePath> libraries = new LinkedHashMap<>();
 
-    /** Adds libraries from the given {@link NativeLinkableGroup}. */
-    public SharedLibrariesBuilder add(NativeLinkable linkable, ActionGraphBuilder graphBuilder) {
-      ImmutableMap<String, SourcePath> libs = linkable.getSharedLibraries(graphBuilder);
+    private SharedLibrariesBuilder add(ImmutableMap<String, SourcePath> libs) {
       for (Map.Entry<String, SourcePath> lib : libs.entrySet()) {
         SourcePath prev = libraries.put(lib.getKey(), lib.getValue());
         if (prev != null && !prev.equals(lib.getValue())) {
@@ -295,6 +312,17 @@ public class NativeLinkables {
               lib.getKey(), libTargetString, prevTargetString);
         }
       }
+      return this;
+    }
+
+    /** Adds libraries from the given {@link NativeLinkableGroup}s, potentially in parallel. */
+    public SharedLibrariesBuilder addAll(
+        ActionGraphBuilder graphBuilder, Collection<NativeLinkable> linkables) {
+      graphBuilder
+          .getParallelizer()
+          .maybeParallelizeTransform(
+              linkables, nativeLinkable -> nativeLinkable.getSharedLibraries(graphBuilder))
+          .forEach(this::add);
       return this;
     }
 

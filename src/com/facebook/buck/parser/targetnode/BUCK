@@ -9,6 +9,7 @@ java_immutables_library(
         "//src/com/facebook/buck/core/description/metadata:metadata",
         "//src/com/facebook/buck/core/graph/transformation:transformation",
         "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/pathformat:pathformat",

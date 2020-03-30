@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.query;
 
 import static org.junit.Assert.assertEquals;
@@ -20,7 +21,6 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.rules.macros.StringWithMacros;
-import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
@@ -42,7 +42,7 @@ public class AttrFilterFunctionTest {
 
   @Test
   public void singleStringWithMacroValue() throws QueryException {
-    queryEnvironment = new TestQueryEnvironment("a", strWithMacro("b"));
+    queryEnvironment = new TestQueryEnvironment("a", StringWithMacros.ofConstantString("b"));
     assertQuery("attrfilter('a', 'b', //x:y)", ImmutableSet.of(onlyTarget));
     assertQuery("attrfilter('a', 'z', //x:y)", ImmutableSet.of());
   }
@@ -58,7 +58,10 @@ public class AttrFilterFunctionTest {
   @Test
   public void listOfStringWithMacrosValue() throws QueryException {
     queryEnvironment =
-        new TestQueryEnvironment("a", ImmutableList.of(strWithMacro("b"), strWithMacro("c")));
+        new TestQueryEnvironment(
+            "a",
+            ImmutableList.of(
+                StringWithMacros.ofConstantString("b"), StringWithMacros.ofConstantString("c")));
     assertQuery("attrfilter('a', 'b', //x:y)", ImmutableSet.of(onlyTarget));
     assertQuery("attrfilter('a', 'c', //x:y)", ImmutableSet.of(onlyTarget));
     assertQuery("attrfilter('a', 'e', //x:y)", ImmutableSet.of());
@@ -69,10 +72,6 @@ public class AttrFilterFunctionTest {
 
     Set<QueryBuildTarget> result = queryExpr.eval(new NoopQueryEvaluator<>(), queryEnvironment);
     assertEquals(expected, result);
-  }
-
-  private StringWithMacros strWithMacro(String text) {
-    return StringWithMacros.of(ImmutableList.of(Either.ofLeft(text)));
   }
 
   private class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryBuildTarget> {

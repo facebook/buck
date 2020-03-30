@@ -48,6 +48,7 @@ java_immutables_library(
         "//src/com/facebook/buck/util/bser:bser",
         "//src/com/facebook/buck/util/concurrent:concurrent",
         "//src/com/facebook/buck/util/environment:platform",
+        "//src/com/facebook/buck/util/stream:stream",
         "//src/com/facebook/buck/util/timing:timing",
     ],
 )

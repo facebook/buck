@@ -1,22 +1,25 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.parser;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.graph.transformation.impl.GraphComputationStage;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.util.log.Logger;
@@ -41,7 +44,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
@@ -49,7 +51,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import junitparams.JUnitParamsRunner;
-import org.apache.commons.lang.NotImplementedException;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.After;
 import org.junit.Assume;
@@ -102,10 +103,11 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     }
     ProjectFilesystemView projectFilesystemView =
         filesystem.asView().withView(Paths.get("project"), ImmutableSet.of());
-    ImmutableSet<Path> watchedProjects = ImmutableSet.of(filesystem.resolve("project"));
+    ImmutableSet<AbsPath> watchedProjects =
+        ImmutableSet.of(AbsPath.of(filesystem.resolve("project")));
     BuildPackagePaths paths =
         transform(
-            key("", BuildTargetPattern.Kind.PACKAGE, "dir", ""),
+            key(CanonicalCellName.rootCell(), BuildTargetPattern.Kind.PACKAGE, "dir", ""),
             getComputationStages("BUCK", projectFilesystemView, watchedProjects));
 
     assertEquals(ImmutableSortedSet.of(Paths.get("dir")), paths.getPackageRoots());
@@ -117,7 +119,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
     ProjectFilesystemView projectFilesystemView =
         filesystem.asView().withView(Paths.get("project"), ImmutableSet.of());
-    ImmutableSet<Path> watchedProjects = ImmutableSet.of(filesystem.getRootPath());
+    ImmutableSet<AbsPath> watchedProjects = ImmutableSet.of(filesystem.getRootPath());
 
     thrown.expect(IsInstanceOf.instanceOf(FileSystemNotWatchedException.class));
     getComputationStages("BUCK", projectFilesystemView, watchedProjects);
@@ -139,7 +141,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     thrown.expect(ExecutionException.class);
     thrown.expectCause(IsInstanceOf.instanceOf(WatchmanQueryTimedOutException.class));
     transform(
-        key("", BuildTargetPattern.Kind.PACKAGE, "", ""),
+        key(CanonicalCellName.rootCell(), BuildTargetPattern.Kind.PACKAGE, "", ""),
         getComputationStages("BUCK", filesystem.asView(), stubWatchmanFactory));
   }
 
@@ -160,26 +162,27 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
                             query[1], query[1])));
 
               } else {
-                throw new NotImplementedException("Watchman query not implemented");
+                throw new RuntimeException("Watchman query not implemented");
               }
             });
 
     thrown.expect(ExecutionException.class);
     thrown.expectCause(IsInstanceOf.instanceOf(WatchmanQueryFailedException.class));
     transform(
-        key("", BuildTargetPattern.Kind.PACKAGE, "", ""),
+        key(CanonicalCellName.rootCell(), BuildTargetPattern.Kind.PACKAGE, "", ""),
         getComputationStages("BUCK", filesystem.asView(), stubWatchmanFactory));
   }
 
   @Override
   protected ImmutableList<GraphComputationStage<?, ?>> getComputationStages(String buildFileName) {
-    return getComputationStages(buildFileName, filesystem.asView(), ImmutableSet.of(tmp.getRoot()));
+    return getComputationStages(
+        buildFileName, filesystem.asView(), ImmutableSet.of(AbsPath.of(tmp.getRoot())));
   }
 
   private ImmutableList<GraphComputationStage<?, ?>> getComputationStages(
       String buildFileName,
       ProjectFilesystemView filesystemView,
-      ImmutableSet<Path> watchedProjects) {
+      ImmutableSet<AbsPath> watchedProjects) {
     Watchman watchman;
     try {
       watchman = createWatchmanClientFactory(watchedProjects);
@@ -197,7 +200,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
             new WatchmanBuildPackageComputation(buildFileName, filesystemView, watchman)));
   }
 
-  private Watchman createWatchmanClientFactory(ImmutableSet<Path> watchedProjects)
+  private Watchman createWatchmanClientFactory(ImmutableSet<AbsPath> watchedProjects)
       throws IOException, InterruptedException {
     long connectTimeoutNanos = TimeUnit.SECONDS.toNanos(5);
     long endTimeNanos = clock.nanoTime() + connectTimeoutNanos;
@@ -237,7 +240,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     public MockWatchmanFactory() {
       super(
           ImmutableMap.of(
-              tmp.getRoot(), ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
+              AbsPath.of(tmp.getRoot()),
+              ProjectWatch.of(tmp.getRoot().toString(), Optional.empty())),
           ImmutableSet.of(),
           ImmutableMap.of(),
           Optional.of(Paths.get("(MockWatchmanFactory socket)")),

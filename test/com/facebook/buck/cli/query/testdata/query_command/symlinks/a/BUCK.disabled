@@ -1,0 +1,9 @@
+genrule(
+    name = "a",
+    srcs = [
+        "inputs/a.txt",
+    ],
+    out = "a",
+    cmd = "touch $OUT",
+    visibility = ["PUBLIC"],
+)

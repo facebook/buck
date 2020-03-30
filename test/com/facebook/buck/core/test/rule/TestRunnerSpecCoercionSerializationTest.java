@@ -1,17 +1,17 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.test.rule;
@@ -49,12 +49,11 @@ public class TestRunnerSpecCoercionSerializationTest {
   private final CellPathResolver cellPathResolver = TestCellBuilder.createCellRoots(filesystem);
 
   private StringWithMacrosConverter getConverter(ActionGraphBuilder graphBuilder, BuildRule rule) {
-    return StringWithMacrosConverter.builder()
-        .setBuildTarget(rule.getBuildTarget())
-        .setCellPathResolver(cellPathResolver)
-        .setActionGraphBuilder(graphBuilder)
-        .addExpanders(new AbsoluteOutputMacroExpander())
-        .build();
+    return StringWithMacrosConverter.of(
+        rule.getBuildTarget(),
+        cellPathResolver.getCellNameResolver(),
+        graphBuilder,
+        ImmutableList.of(AbsoluteOutputMacroExpander.INSTANCE));
   }
 
   @Test
@@ -81,7 +80,9 @@ public class TestRunnerSpecCoercionSerializationTest {
                 StringWithMacrosUtils.format("int"),
                 ImmutableTestRunnerSpec.of(1),
                 StringWithMacrosUtils.format("double"),
-                ImmutableTestRunnerSpec.of(2.4)));
+                ImmutableTestRunnerSpec.of(2.4),
+                StringWithMacrosUtils.format("boolean"),
+                ImmutableTestRunnerSpec.of(true)));
 
     CoercedTestRunnerSpec coercedSpec =
         TestRunnerSpecCoercer.coerce(spec, getConverter(graphBuilder, rule));
@@ -104,7 +105,9 @@ public class TestRunnerSpecCoercionSerializationTest {
             "int",
             1,
             "double",
-            2.4);
+            2.4,
+            "boolean",
+            true);
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     JsonGenerator generator = ObjectMappers.createGenerator(outputStream).useDefaultPrettyPrinter();

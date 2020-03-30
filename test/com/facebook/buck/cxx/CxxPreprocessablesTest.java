@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -123,10 +123,21 @@ public class CxxPreprocessablesTest {
     // Verify that the resolveHeaderMap returns sane results.
     ImmutableMap<Path, SourcePath> expected =
         ImmutableMap.of(
-            target.getBasePath().resolve("foo/bar.h"), FakeSourcePath.of("header1.h"),
-            target.getBasePath().resolve("foo/hello.h"), FakeSourcePath.of("header2.h"));
+            target
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPathDefaultFileSystem()
+                    .resolve("foo/bar.h"),
+                FakeSourcePath.of("header1.h"),
+            target
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPathDefaultFileSystem()
+                    .resolve("foo/hello.h"),
+                FakeSourcePath.of("header2.h"));
     ImmutableMap<Path, SourcePath> actual =
-        CxxPreprocessables.resolveHeaderMap(target.getBasePath(), headerMap);
+        CxxPreprocessables.resolveHeaderMap(
+            target.getCellRelativeBasePath().getPath().toPathDefaultFileSystem(), headerMap);
     assertEquals(expected, actual);
   }
 
@@ -138,18 +149,18 @@ public class CxxPreprocessablesTest {
             new CxxBuckConfig(FakeBuckConfig.builder().setFilesystem(filesystem).build()));
 
     // Setup a simple CxxPreprocessorDep which contributes components to preprocessing.
-    BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:cpp1");
+    BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance("//:cpp1");
     CxxPreprocessorInput input1 =
         CxxPreprocessorInput.builder()
             .addRules(cppDepTarget1)
             .putPreprocessorFlags(CxxSource.Type.C, StringArg.of("-Dtest=yes"))
             .putPreprocessorFlags(CxxSource.Type.CXX, StringArg.of("-Dtest=yes"))
             .build();
-    BuildTarget depTarget1 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dep1");
+    BuildTarget depTarget1 = BuildTargetFactory.newInstance("//:dep1");
     FakeCxxPreprocessorDep dep1 = createFakeCxxPreprocessorDep(depTarget1, input1);
 
     // Setup another simple CxxPreprocessorDep which contributes components to preprocessing.
-    BuildTarget cppDepTarget2 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:cpp2");
+    BuildTarget cppDepTarget2 = BuildTargetFactory.newInstance("//:cpp2");
     CxxPreprocessorInput input2 =
         CxxPreprocessorInput.builder()
             .addRules(cppDepTarget2)
@@ -160,7 +171,7 @@ public class CxxPreprocessablesTest {
     FakeCxxPreprocessorDep dep2 = createFakeCxxPreprocessorDep(depTarget2, input2);
 
     // Create a normal dep which depends on the two CxxPreprocessorDep rules above.
-    BuildTarget depTarget3 = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:dep3");
+    BuildTarget depTarget3 = BuildTargetFactory.newInstance("//:dep3");
     CxxPreprocessorInput nothing = CxxPreprocessorInput.of();
     FakeCxxPreprocessorDep dep3 = createFakeCxxPreprocessorDep(depTarget3, nothing, dep1, dep2);
 
@@ -181,14 +192,13 @@ public class CxxPreprocessablesTest {
 
     // Setup up the main build target and build params, which some random dep.  We'll make
     // sure the dep doesn't get propagated to the symlink rule below.
-    BuildTarget target = BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar");
+    BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     Path root = Paths.get("root");
 
     // Setup a simple genrule we can wrap in a ExplicitBuildTargetSourcePath to model a input source
     // that is built by another rule.
     Genrule genrule =
-        GenruleBuilder.newGenruleBuilder(
-                BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:genrule"))
+        GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:genrule"))
             .setOut("foo/bar.o")
             .build(graphBuilder);
 

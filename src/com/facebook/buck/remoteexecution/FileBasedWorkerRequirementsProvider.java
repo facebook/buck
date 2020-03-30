@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution;
@@ -19,6 +19,7 @@ package com.facebook.buck.remoteexecution;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerPlatformType;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize;
@@ -65,12 +66,17 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
 
   private static final String NO_AUXILIARY_BUILD_TAG = "";
 
+  private final ProjectFilesystem projectFilesystem;
   private final String workerRequirementsFilename;
   private final boolean tryLargerWorkerOnOom;
   private final Cache<Path, Map<ImmutableActionTags, WorkerRequirements>> cache;
 
   public FileBasedWorkerRequirementsProvider(
-      String workerRequirementsFilename, boolean tryLargerWorkerOnOom, int cacheSize) {
+      ProjectFilesystem projectFilesystem,
+      String workerRequirementsFilename,
+      boolean tryLargerWorkerOnOom,
+      int cacheSize) {
+    this.projectFilesystem = projectFilesystem;
     this.workerRequirementsFilename = workerRequirementsFilename;
     this.tryLargerWorkerOnOom = tryLargerWorkerOnOom;
     cache =
@@ -101,7 +107,11 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
    */
   @Override
   public WorkerRequirements resolveRequirements(BuildTarget target, String auxiliaryBuildTag) {
-    Path filepath = target.getBasePath().resolve(workerRequirementsFilename);
+    // TODO(nga): must not ignore cell path
+    Path filepath =
+        projectFilesystem
+            .resolve(target.getCellRelativeBasePath().getPath())
+            .resolve(workerRequirementsFilename);
     if (!Files.exists(filepath)) {
       return resolveDefault();
     }
@@ -121,8 +131,7 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
                     MutableActionTags mutableTags =
                         MAPPER.readValue(reqsEntry.getKey(), MUTABLE_ACTION_TAGS_TYPE);
                     requirements.put(
-                        new ImmutableActionTags(
-                            mutableTags.ruleName, mutableTags.auxiliaryBuildTag),
+                        ImmutableActionTags.of(mutableTags.ruleName, mutableTags.auxiliaryBuildTag),
                         mapRequirements(reqsEntry.getValue()));
                   }
                   return requirements;
@@ -135,7 +144,7 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
                       .collect(
                           Collectors.toMap(
                               reqsEntry ->
-                                  new ImmutableActionTags(
+                                  ImmutableActionTags.of(
                                       reqsEntry.getKey(), NO_AUXILIARY_BUILD_TAG),
                               reqsEntry -> mapRequirements(reqsEntry.getValue())));
                 }
@@ -143,13 +152,13 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
 
       String ruleName = target.getShortNameAndFlavorPostfix();
       WorkerRequirements requirements =
-          requirementsMap.get(new ImmutableActionTags(ruleName, auxiliaryBuildTag));
+          requirementsMap.get(ImmutableActionTags.of(ruleName, auxiliaryBuildTag));
       if (requirements == null && !auxiliaryBuildTag.equals(NO_AUXILIARY_BUILD_TAG)) {
         LOG.debug(
             "No requirements found for rule=%s with auxiliary build tag=%s, trying without tag.",
             target.getFullyQualifiedName(), auxiliaryBuildTag);
         requirements =
-            requirementsMap.get(new ImmutableActionTags(ruleName, NO_AUXILIARY_BUILD_TAG));
+            requirementsMap.get(ImmutableActionTags.of(ruleName, NO_AUXILIARY_BUILD_TAG));
       }
       if (requirements == null) {
         LOG.debug(

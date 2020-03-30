@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.impl;
@@ -27,8 +27,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
@@ -39,7 +41,7 @@ import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.BaseToolchainProvider;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
@@ -76,30 +78,38 @@ import org.junit.Test;
 public class BuildableSerializerTest extends AbstractValueVisitorTest {
   private SourcePathRuleFinder ruleFinder;
   private CellPathResolver cellResolver;
-  private SourcePathResolver resolver;
+  private SourcePathResolverAdapter resolver;
   private CustomToolchainProvider toolchainProvider;
 
   @Before
   public void setUp() {
-    resolver = createStrictMock(SourcePathResolver.class);
+    resolver = createStrictMock(SourcePathResolverAdapter.class);
     ruleFinder = createStrictMock(SourcePathRuleFinder.class);
     cellResolver = createMock(CellPathResolver.class);
     toolchainProvider = new CustomToolchainProvider();
 
     expect(cellResolver.getKnownRoots())
         .andReturn(
-            ImmutableSortedSet.of(rootFilesystem.getRootPath(), otherFilesystem.getRootPath()))
+            ImmutableSortedSet.orderedBy(AbsPath.comparator())
+                .add(rootFilesystem.getRootPath(), otherFilesystem.getRootPath())
+                .build())
         .anyTimes();
 
     expect(cellResolver.getCanonicalCellName(rootFilesystem.getRootPath()))
         .andReturn(Optional.empty())
         .anyTimes();
+    expect(cellResolver.getCanonicalCellName(rootFilesystem.getRootPath().getPath()))
+        .andReturn(Optional.empty())
+        .anyTimes();
     expect(cellResolver.getCanonicalCellName(otherFilesystem.getRootPath()))
+        .andReturn(Optional.of("other"))
+        .anyTimes();
+    expect(cellResolver.getCanonicalCellName(otherFilesystem.getRootPath().getPath()))
         .andReturn(Optional.of("other"))
         .anyTimes();
 
     expect(cellResolver.getCellPathOrThrow(Optional.empty()))
-        .andReturn(rootFilesystem.getRootPath())
+        .andReturn(rootFilesystem.getRootPath().getPath())
         .anyTimes();
   }
 
@@ -113,7 +123,8 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     private Map<String, Toolchain> toolchains = new HashMap<>();
 
     @Override
-    public Toolchain getByName(String toolchainName) {
+    public Toolchain getByName(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
       if (toolchains.containsKey(toolchainName)) {
         return toolchains.get(toolchainName);
       }
@@ -121,18 +132,21 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     }
 
     @Override
-    public boolean isToolchainPresent(String toolchainName) {
+    public boolean isToolchainPresent(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
       return toolchains.containsKey(toolchainName);
     }
 
     @Override
-    public boolean isToolchainCreated(String toolchainName) {
-      return isToolchainPresent(toolchainName);
+    public boolean isToolchainCreated(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
+      return isToolchainPresent(toolchainName, toolchainTargetConfiguration);
     }
 
     @Override
-    public boolean isToolchainFailed(String toolchainName) {
-      return !isToolchainPresent(toolchainName);
+    public boolean isToolchainFailed(
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
+      return !isToolchainPresent(toolchainName, toolchainTargetConfiguration);
     }
 
     @Override
@@ -143,7 +157,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
     @Override
     public Optional<ToolchainInstantiationException> getToolchainInstantiationException(
-        String toolchainName) {
+        String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
       throw new UnsupportedOperationException();
     }
   }
@@ -216,6 +230,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
   @Test
   @Override
+  public void frameworkPath() throws IOException {
+    test(new WithFrameworkPath());
+  }
+
+  @Test
+  @Override
   public void simple() throws IOException {
     test(new Simple());
   }
@@ -242,8 +262,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Override
   public void complex() throws IOException {
     BuildRule mockRule = createStrictMock(BuildRule.class);
-    BuildTarget target =
-        BuildTargetFactory.newInstance(rootFilesystem.getRootPath(), "//some/build:target");
+    BuildTarget target = BuildTargetFactory.newInstance("//some/build:target");
     expect(ruleFinder.getRule((SourcePath) anyObject())).andReturn(Optional.of(mockRule));
     mockRule.getSourcePathToOutput();
     expectLastCall().andReturn(ExplicitBuildTargetSourcePath.of(target, Paths.get("and.path")));
@@ -291,6 +310,12 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Test
   public void nonHashableSourcePathContainer() throws Exception {
     test(new WithNonHashableSourcePathContainer());
+  }
+
+  @Override
+  @Test
+  public void outputLabel() throws Exception {
+    test(new WithOutputLabel());
   }
 
   @Override
@@ -441,7 +466,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
 
   private static class WithSourcePathResolver implements FakeBuildable {
     @CustomFieldBehavior({SourcePathResolverSerialization.class, ExcludeFromStringification.class})
-    private final SourcePathResolver resolver = null;
+    private final SourcePathResolverAdapter resolver = null;
   }
 
   @Test

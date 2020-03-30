@@ -1,26 +1,26 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.parser.buildtargetpattern;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
-import com.facebook.buck.core.model.CanonicalCellName;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.Flavor;
-import com.facebook.buck.core.model.ImmutableInternedUnconfiguredBuildTarget;
-import com.facebook.buck.core.model.ImmutableUnconfiguredBuildTarget;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.base.Splitter;
@@ -99,7 +99,7 @@ public class UnconfiguredBuildTargetParser {
     if (flavorSymbolPos < 0) {
       // assume no flavors
       flavorSymbolPos = target.length();
-      flavors = UnconfiguredBuildTarget.NO_FLAVORS;
+      flavors = FlavorSet.NO_FLAVORS.getSet();
     } else {
       String flavorsString = target.substring(flavorSymbolPos + 1);
       Stream<String> stream =
@@ -115,8 +115,7 @@ public class UnconfiguredBuildTargetParser {
           stream
               // potentially we could intern InternalFlavor object as well
               .map(flavor -> (Flavor) InternalFlavor.of(flavor))
-              .collect(
-                  ImmutableSortedSet.toImmutableSortedSet(UnconfiguredBuildTarget.FLAVOR_ORDERING));
+              .collect(ImmutableSortedSet.toImmutableSortedSet(FlavorSet.FLAVOR_ORDERING));
 
       check(
           !flavors.isEmpty(),
@@ -134,7 +133,7 @@ public class UnconfiguredBuildTargetParser {
         "should have '%s' followed by target name",
         BuildTargetLanguageConstants.TARGET_SYMBOL);
 
-    String baseName = target.substring(rootPos, targetSymbolPos);
+    BaseName baseName = BaseName.of(target.substring(rootPos, targetSymbolPos));
     String targetName = target.substring(targetSymbolPos + 1, flavorSymbolPos);
 
     check(
@@ -147,11 +146,8 @@ public class UnconfiguredBuildTargetParser {
         cellName.isEmpty()
             ? CanonicalCellName.rootCell()
             : CanonicalCellName.unsafeOf(Optional.of(cellName));
-    if (intern) {
-      return ImmutableInternedUnconfiguredBuildTarget.of(
-          canonicalCellName, baseName.intern(), targetName, flavors);
-    }
-    return ImmutableUnconfiguredBuildTarget.of(canonicalCellName, baseName, targetName, flavors);
+    return UnconfiguredBuildTarget.of(
+        canonicalCellName, baseName, targetName, FlavorSet.copyOf(flavors));
   }
 
   private static void check(boolean condition, String target, String message, Object... args)

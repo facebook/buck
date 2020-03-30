@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution.grpc;
@@ -22,7 +22,7 @@ import build.bazel.remote.execution.v2.Digest;
 import build.bazel.remote.execution.v2.ExecutionGrpc;
 import build.bazel.remote.execution.v2.ExecutionGrpc.ExecutionStub;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient;
 import com.facebook.buck.remoteexecution.RemoteExecutionClients;
@@ -45,7 +45,6 @@ import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.util.concurrent.TimeUnit;
-import org.immutables.value.Value;
 
 /** A RemoteExecution that sends jobs to a grpc-based remote execution service. */
 public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
@@ -57,9 +56,8 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
   private final MetadataProvider metadataProvider;
 
   /** A parsed read resource path. */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractParsedReadResource {
+  @BuckStyleValue
+  interface ParsedReadResource {
     String getInstanceName();
 
     Digest getDigest();
@@ -197,6 +195,6 @@ public class GrpcRemoteExecutionClients implements RemoteExecutionClients {
         protocol,
         buckEventBus,
         metadataProvider.get(),
-        strategyConfig);
+        strategyConfig.getOutputMaterializationThreads());
   }
 }

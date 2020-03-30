@@ -1,4 +1,4 @@
-load("//tools/build_rules:java_rules.bzl", "standard_java_test", "java_immutables_library")
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library", "standard_java_test")
 
 java_immutables_library(
     name = "testutil",
@@ -9,9 +9,6 @@ java_immutables_library(
             "*Test.java",
         ],
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/step:step",
-    ],
     visibility = ["//test/..."],
     deps = [
         "//src-gen:thrift",
@@ -60,6 +57,9 @@ java_immutables_library(
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
         "//third-party/java/junit:junit",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/step:step",
     ],
 )
 

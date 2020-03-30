@@ -1,0 +1,17 @@
+java_library(
+    name = "converter",
+    srcs = glob(["*.java"]),
+    tests = [
+        "//test/com/facebook/buck/core/artifact/converter:converter",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/core/model/impl:impl",
+        "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/artifact:artifact",
+        "//src/com/facebook/buck/core/rules/providers/collect:collect",
+        "//src/com/facebook/buck/core/sourcepath:sourcepath",
+    ],
+)

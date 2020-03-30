@@ -1,28 +1,29 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.rulekey.CustomFieldSerializationTag;
@@ -40,7 +41,7 @@ import com.facebook.buck.rules.modern.impl.BuildTargetTypeInfo;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Verify;
@@ -86,7 +87,7 @@ public class Serializer {
   private final ConcurrentHashMap<AddsToRuleKey, Either<HashCode, byte[]>> cache =
       new ConcurrentHashMap<>();
   private final SourcePathRuleFinder ruleFinder;
-  private final ImmutableMap<Path, Optional<String>> cellMap;
+  private final ImmutableMap<AbsPath, Optional<String>> cellMap;
   private final Delegate delegate;
   private final Path rootCellPath;
 
@@ -108,7 +109,7 @@ public class Serializer {
     this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
     this.cellMap =
         cellResolver.getKnownRoots().stream()
-            .collect(ImmutableMap.toImmutableMap(root -> root, cellResolver::getCanonicalCellName));
+            .collect(ImmutableMap.toImmutableMap(p -> p, cellResolver::getCanonicalCellName));
   }
 
   /**
@@ -320,9 +321,9 @@ public class Serializer {
         stream.writeBoolean(true);
         Path cellPath = rootCellPath;
         Optional<String> cellName = Optional.empty();
-        for (Map.Entry<Path, Optional<String>> candidate : cellMap.entrySet()) {
-          if (path.startsWith(candidate.getKey())) {
-            cellPath = candidate.getKey();
+        for (Map.Entry<AbsPath, Optional<String>> candidate : cellMap.entrySet()) {
+          if (path.startsWith(candidate.getKey().getPath())) {
+            cellPath = candidate.getKey().getPath();
             cellName = candidate.getValue();
           }
         }
@@ -428,12 +429,12 @@ public class Serializer {
 
     @Override
     public void visitTargetConfiguration(TargetConfiguration value) throws IOException {
-      if (value instanceof EmptyTargetConfiguration) {
+      if (value instanceof UnconfiguredTargetConfiguration) {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_EMPTY);
-      } else if (value instanceof DefaultTargetConfiguration) {
+      } else if (value instanceof RuleBasedTargetConfiguration) {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_DEFAULT);
         BuildTargetTypeInfo.INSTANCE.visit(
-            ((DefaultTargetConfiguration) value).getTargetPlatform(), this);
+            ((RuleBasedTargetConfiguration) value).getTargetPlatform(), this);
       } else if (value instanceof ConfigurationForConfigurationTargets) {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_CONFIGURATION);
       } else {

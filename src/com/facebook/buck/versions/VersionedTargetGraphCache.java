@@ -1,28 +1,29 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.versions;
 
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
@@ -32,9 +33,9 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 public class VersionedTargetGraphCache {
 
@@ -52,7 +53,8 @@ public class VersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       long timeoutSeconds,
-      TargetGraphCreationResult targetGraphCreationResult)
+      TargetGraphCreationResult targetGraphCreationResult,
+      Cells cells)
       throws VersionException, TimeoutException, InterruptedException {
 
     TargetGraphCreationResult versionedTargetGraph =
@@ -63,7 +65,8 @@ public class VersionedTargetGraphCache {
             depsAwareExecutor,
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
-            timeoutSeconds);
+            timeoutSeconds,
+            cells);
     return versionedTargetGraph;
   }
 
@@ -74,19 +77,20 @@ public class VersionedTargetGraphCache {
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       long timeoutSeconds,
       CacheStatsTracker statsTracker,
-      TargetGraphCreationResult targetGraphCreationResult)
+      TargetGraphCreationResult targetGraphCreationResult,
+      Cells cells)
       throws VersionException, TimeoutException, InterruptedException {
 
     CacheStatsTracker.CacheRequest request = statsTracker.startRequest();
 
     // If new inputs match old ones, we can used the cached graph, if present.
     VersionedTargetGraphInputs newInputs =
-        VersionedTargetGraphInputs.of(targetGraphCreationResult, versionUniverses);
+        ImmutableVersionedTargetGraphInputs.of(targetGraphCreationResult, versionUniverses);
     if (cachedVersionedTargetGraph != null
         && newInputs.equals(cachedVersionedTargetGraph.getInputs())) {
 
       VersionedTargetGraphCacheResult result =
-          VersionedTargetGraphCacheResult.of(
+          ImmutableVersionedTargetGraphCacheResult.of(
               ResultType.HIT, cachedVersionedTargetGraph.getTargetGraphCreationResult());
 
       request.recordHit();
@@ -111,10 +115,12 @@ public class VersionedTargetGraphCache {
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
             timeoutSeconds,
-            targetGraphCreationResult);
-    cachedVersionedTargetGraph = CachedVersionedTargetGraph.of(newInputs, newVersionedTargetGraph);
+            targetGraphCreationResult,
+            cells);
+    cachedVersionedTargetGraph =
+        ImmutableCachedVersionedTargetGraph.of(newInputs, newVersionedTargetGraph);
     VersionedTargetGraphCacheResult result =
-        VersionedTargetGraphCacheResult.of(resultType, newVersionedTargetGraph);
+        ImmutableVersionedTargetGraphCacheResult.of(resultType, newVersionedTargetGraph);
 
     request.recordLoadSuccess();
 
@@ -131,9 +137,10 @@ public class VersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult targetGraphCreationResult,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       CacheStatsTracker statsTracker,
-      BuckEventBus eventBus)
+      BuckEventBus eventBus,
+      Cells cells)
       throws VersionException, InterruptedException {
 
     VersionBuckConfig versionBuckConfig = new VersionBuckConfig(buckConfig);
@@ -158,7 +165,8 @@ public class VersionedTargetGraphCache {
                   unconfiguredBuildTargetFactory,
                   versionBuckConfig.getVersionTargetGraphTimeoutSeconds(),
                   statsTracker,
-                  targetGraphCreationResult);
+                  targetGraphCreationResult,
+                  cells);
           LOG.info("versioned target graph " + result.getType().getDescription());
           eventBus.post(result.getType().getEvent());
           return result;
@@ -190,7 +198,8 @@ public class VersionedTargetGraphCache {
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult targetGraphCreationResult,
-      CacheStatsTracker statsTracker)
+      CacheStatsTracker statsTracker,
+      Cells cells)
       throws VersionException, InterruptedException, TimeoutException {
     return getVersionedTargetGraph(
         depsAwareExecutor,
@@ -199,7 +208,8 @@ public class VersionedTargetGraphCache {
         unconfiguredBuildTargetFactory,
         20,
         statsTracker,
-        targetGraphCreationResult);
+        targetGraphCreationResult,
+        cells);
   }
 
   /**
@@ -207,9 +217,8 @@ public class VersionedTargetGraphCache {
    * any of these items changes between runs, we cannot use the cached versioned target graph and
    * must re-generate it.
    */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractVersionedTargetGraphInputs {
+  @BuckStyleValue
+  interface VersionedTargetGraphInputs {
 
     /** @return the un-versioned target graph to be transformed. */
     TargetGraphCreationResult getTargetGraphCreationResult();
@@ -222,9 +231,8 @@ public class VersionedTargetGraphCache {
    * Tuple to store the previously cached versioned target graph along with all inputs that affect
    * how it's generated (for invalidation detection).
    */
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractCachedVersionedTargetGraph {
+  @BuckStyleValue
+  interface CachedVersionedTargetGraph {
 
     /** @return any inputs which, when changed, may produce a different versioned target graph. */
     VersionedTargetGraphInputs getInputs();
@@ -233,9 +241,8 @@ public class VersionedTargetGraphCache {
     TargetGraphCreationResult getTargetGraphCreationResult();
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractVersionedTargetGraphCacheResult {
+  @BuckStyleValue
+  interface VersionedTargetGraphCacheResult {
 
     /** @return the type of result. */
     ResultType getType();

@@ -4,19 +4,14 @@ Buck
 Buck is a build tool. To see what Buck can do for you,
 check out the documentation at <http://buck.build/>.
 
-[![Build Status](https://travis-ci.org/facebook/buck.svg)](https://travis-ci.org/facebook/buck) [![Build status](https://ci.appveyor.com/api/projects/status/v64qh0cd2cp9uto8/branch/master?svg=true)](https://ci.appveyor.com/project/Facebook/buck/branch/master)
+[![Build Status](https://circleci.com/gh/facebook/buck.svg?style=svg)](https://circleci.com/gh/facebook/buck)
 
 Installation
 ------------
 
-First, clone the Buck repository:
-
-    git clone --depth 1 https://github.com/facebook/buck.git
-    cd buck
-
 Since Buck is used to build Buck, the initial build process involves 2 phases:
 
-##### 1. Bootstrap Buck with ant
+##### 1. Clone the Buck repository and bootstrap it with ant:
 
     git clone --depth 1 https://github.com/facebook/buck.git
     cd buck

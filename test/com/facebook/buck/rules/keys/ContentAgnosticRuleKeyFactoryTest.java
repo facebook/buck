@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -19,16 +19,16 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.Artifact;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.actions.Action;
+import com.facebook.buck.core.rules.actions.ActionExecutionResult;
 import com.facebook.buck.core.rules.actions.ActionRegistryForTests;
 import com.facebook.buck.core.rules.actions.FakeAction;
-import com.facebook.buck.core.rules.actions.ImmutableActionExecutionSuccess;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.impl.RuleAnalysisLegacyBuildRuleView;
 import com.facebook.buck.core.rules.providers.collect.impl.LegacyProviderInfoCollectionImpl;
@@ -39,7 +39,8 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.devtools.build.lib.events.Location;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -130,21 +131,22 @@ public class ContentAgnosticRuleKeyFactoryTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//:rule");
     ActionRegistryForTests actionRegistry = new ActionRegistryForTests(buildTarget);
-    Artifact artifact = actionRegistry.declareArtifact(filename);
+    Artifact artifact = actionRegistry.declareArtifact(filename, Location.BUILTIN);
 
     Action action =
         new FakeAction(
             actionRegistry,
-            ImmutableSet.of(ImmutableSourceArtifactImpl.of(sourcePath)),
-            ImmutableSet.of(artifact),
-            (ignored1, ignored2, ignored3) ->
-                ImmutableActionExecutionSuccess.of(
+            ImmutableSortedSet.of(),
+            ImmutableSortedSet.of(SourceArtifactImpl.of(sourcePath)),
+            ImmutableSortedSet.of(artifact),
+            (ignored, ignored1, ignored2, ignored3) ->
+                ActionExecutionResult.success(
                     Optional.empty(), Optional.empty(), ImmutableList.of()));
     BuildRule rule =
         new RuleAnalysisLegacyBuildRuleView(
             "rule",
             buildTarget,
-            action,
+            Optional.of(action),
             graphBuilder,
             fileSystem,
             LegacyProviderInfoCollectionImpl.of());

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -79,10 +79,15 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBundleFactory(androidBuckConfig)),
         new AndroidInstrumentationApkDescription(
-            javaConfig, proGuardConfig, cxxBuckConfig, dxConfig, toolchainProvider),
+            javaConfig,
+            proGuardConfig,
+            cxxBuckConfig,
+            dxConfig,
+            toolchainProvider,
+            androidBuckConfig),
         new AndroidInstrumentationTestDescription(config, toolchainProvider),
         new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory, toolchainProvider),
-        new AndroidPrebuiltAarDescription(toolchainProvider),
+        new AndroidPrebuiltAarDescription(toolchainProvider, androidBuckConfig),
         new AndroidResourceDescription(toolchainProvider, androidBuckConfig),
         new RobolectricTestDescription(
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
@@ -90,6 +95,6 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new NdkLibraryDescription(toolchainProvider),
         new NdkToolchainDescription(),
         new GenAidlDescription(),
-        new ApkGenruleDescription(toolchainProvider, sandboxExecutionStrategy));
+        new ApkGenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
   }
 }

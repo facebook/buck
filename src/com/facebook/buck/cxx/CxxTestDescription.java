@@ -1,22 +1,23 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -36,7 +37,7 @@ import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -48,6 +49,7 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.versions.Version;
@@ -122,7 +124,8 @@ public class CxxTestDescription
 
   private UnresolvedCxxPlatform getCxxPlatform(
       BuildTarget target, CxxBinaryDescription.CommonArg constructorArg) {
-    CxxPlatformsProvider cxxPlatformsProvider = getCxxPlatformsProvider();
+    CxxPlatformsProvider cxxPlatformsProvider =
+        getCxxPlatformsProvider(target.getTargetConfiguration());
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
 
@@ -191,7 +194,10 @@ public class CxxTestDescription
 
     if (buildTarget.getFlavors().contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)) {
       return CxxDescriptionEnhancer.createUberCompilationDatabase(
-          getCxxPlatformsProvider().getUnresolvedCxxPlatforms().getValue(buildTarget).isPresent()
+          getCxxPlatformsProvider(buildTarget.getTargetConfiguration())
+                  .getUnresolvedCxxPlatforms()
+                  .getValue(buildTarget)
+                  .isPresent()
               ? buildTarget
               : buildTarget.withAppendedFlavors(cxxPlatform.getFlavor()),
           projectFilesystem,
@@ -227,12 +233,11 @@ public class CxxTestDescription
                     cxxLinkAndCompileRules.executable, graphBuilder));
 
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .addExpanders(new LocationMacroExpander())
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            cellRoots.getCellNameResolver(),
+            graphBuilder,
+            ImmutableList.of(LocationMacroExpander.INSTANCE));
 
     // Supplier which expands macros in the passed in test environment.
     ImmutableMap<String, Arg> testEnv =
@@ -336,7 +341,7 @@ public class CxxTestDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractCxxTestDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
@@ -363,7 +368,8 @@ public class CxxTestDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
 
     if (flavors.isEmpty()) {
       return true;
@@ -385,7 +391,9 @@ public class CxxTestDescription
       return true;
     }
 
-    return getCxxPlatformsProvider().getUnresolvedCxxPlatforms().containsAnyOf(flavors)
+    return getCxxPlatformsProvider(toolchainTargetConfiguration)
+            .getUnresolvedCxxPlatforms()
+            .containsAnyOf(flavors)
         || !Sets.intersection(declaredPlatforms, flavors).isEmpty();
   }
 
@@ -406,13 +414,15 @@ public class CxxTestDescription
     return true;
   }
 
-  private CxxPlatformsProvider getCxxPlatformsProvider() {
+  private CxxPlatformsProvider getCxxPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        CxxPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        CxxPlatformsProvider.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
+  @RuleArg
   interface AbstractCxxTestDescriptionArg
       extends CxxBinaryDescription.CommonArg, HasContacts, HasTestTimeout {
     Optional<CxxTestType> getFramework();
@@ -429,5 +439,13 @@ public class CxxTestDescription
     ImmutableSortedSet<Path> getResources();
 
     ImmutableSet<SourcePath> getAdditionalCoverageTargets();
+
+    @Override
+    default CxxTestDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (CxxTestDescriptionArg) this;
+      }
+      return CxxTestDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
   }
 }

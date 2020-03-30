@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -90,7 +90,7 @@ public class HttpArtifactCacheTest {
       "{cache_name} encountered an error: {error_message}";
   private static final int ERROR_TEXT_LIMIT = 100;
 
-  private NetworkCacheArgs.Builder argsBuilder;
+  private ImmutableNetworkCacheArgs.Builder argsBuilder;
 
   private ResponseBody createResponseBody(
       ImmutableSet<RuleKey> ruleKeys,
@@ -138,7 +138,7 @@ public class HttpArtifactCacheTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(projectFilesystem);
     this.argsBuilder =
-        NetworkCacheArgs.builder()
+        ImmutableNetworkCacheArgs.builder()
             .setCacheName("http")
             .setCacheMode(ArtifactCacheMode.http)
             .setRepository("some_repository")
@@ -151,7 +151,7 @@ public class HttpArtifactCacheTest {
             .setUnconfiguredBuildTargetFactory(
                 target ->
                     new ParsingUnconfiguredBuildTargetViewFactory()
-                        .create(cellPathResolver, target))
+                        .create(target, cellPathResolver.getCellNameResolver()))
             .setProjectFilesystem(projectFilesystem)
             .setBuckEventBus(BUCK_EVENT_BUS)
             .setHttpWriteExecutorService(DIRECT_EXECUTOR_SERVICE)

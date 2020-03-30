@@ -1,24 +1,24 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.parser.buildtargetpattern;
 
-import com.facebook.buck.io.pathformat.PathFormatter;
+import com.facebook.buck.core.model.CellRelativePath;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
 import org.immutables.value.Value;
 
 /**
@@ -26,7 +26,7 @@ import org.immutables.value.Value;
  *
  * <p>Refer to {@link BuildTargetPatternParser} for acceptable pattern formats
  */
-@Value.Immutable(builder = false, copy = false, prehash = true)
+@BuckStylePrehashedValue
 public abstract class BuildTargetPattern {
 
   /** Type of a pattern */
@@ -59,23 +59,14 @@ public abstract class BuildTargetPattern {
     public abstract boolean isRecursive();
   }
 
-  /** Name of the cell that current pattern specifies targets in */
-  @Value.Parameter
-  public abstract String getCell();
+  /** Path to the package folder that is a root for all build targets matched by a pattern */
+  public abstract CellRelativePath getCellRelativeBasePath();
 
   /** Type of the parsed pattern */
-  @Value.Parameter
   public abstract Kind getKind();
 
-  /**
-   * Relative path to the package folder that is a root for all build targets matched by a pattern
-   */
-  @Value.Parameter
-  public abstract Path getBasePath();
-
   /** Target name in case pattern is single build target pattern; otherwise an empty string */
-  @Value.Parameter
-  public abstract String getTargetName();
+  public abstract String getLocalNameAndFlavors();
 
   /** Whether this is a '//package/...' pattern. */
   public boolean isRecursive() {
@@ -91,24 +82,22 @@ public abstract class BuildTargetPattern {
   protected void check() {
     switch (getKind()) {
       case SINGLE:
-        Preconditions.checkArgument(!getTargetName().equals(""));
+        Preconditions.checkArgument(!getLocalNameAndFlavors().equals(""));
+        Preconditions.checkArgument(!getLocalNameAndFlavors().startsWith("#"));
         break;
       case PACKAGE:
       case RECURSIVE:
-        Preconditions.checkArgument(getTargetName().equals(""));
+        Preconditions.checkArgument(getLocalNameAndFlavors().equals(""));
         break;
     }
   }
 
   @Override
   public String toString() {
-    String result =
-        getCell()
-            + BuildTargetLanguageConstants.ROOT_SYMBOL
-            + PathFormatter.pathWithUnixSeparators(getBasePath());
+    String result = getCellRelativeBasePath().toString();
     switch (getKind()) {
       case SINGLE:
-        return result + BuildTargetLanguageConstants.TARGET_SYMBOL + getTargetName();
+        return result + BuildTargetLanguageConstants.TARGET_SYMBOL + getLocalNameAndFlavors();
       case PACKAGE:
         return result + BuildTargetLanguageConstants.TARGET_SYMBOL;
       case RECURSIVE:
@@ -117,5 +106,10 @@ public abstract class BuildTargetPattern {
             + BuildTargetLanguageConstants.RECURSIVE_SYMBOL;
     }
     throw new IllegalStateException();
+  }
+
+  public static BuildTargetPattern of(
+      CellRelativePath cellRelativeBasePath, Kind kind, String localNameAndFlavors) {
+    return ImmutableBuildTargetPattern.of(cellRelativeBasePath, kind, localNameAndFlavors);
   }
 }

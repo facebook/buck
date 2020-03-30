@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="http://schemas.android.com/apk/res-auto">
+  <string
+      name="missing_in_default" 
+      description="This string is only defined in locale pt."
+  >USAR DADOS MÓVEIS</string>
+</resources>

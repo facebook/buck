@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
@@ -20,9 +21,11 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
@@ -72,8 +75,19 @@ public class ProjectFileWriter {
    * <p>Thus, if a file is absolutely located at: /Users/me/dev/MyProject/Header.h And the cell is:
    * /Users/me/dev/ Then this will create a path in the PBXProject mainGroup as: /MyProject/Header.h
    */
-  public ProjectFileWriter.Result writeSourcePath(SourcePath sourcePath) {
+  public ProjectFileWriter.Result writeSourcePath(
+      SourcePath sourcePath, Optional<Path> packagePath) {
     Path path = sourcePathResolver.apply(sourcePath);
+
+    // BuildTargetSourcePath indicates it's not a file but a build target (meaning it is generated)
+    // As a result, we want to move these from `buck-out` into a __generated__ workspace
+    // in order to make it easier for engineers to see which source files are generated.
+    if (sourcePath instanceof BuildTargetSourcePath && packagePath.isPresent()) {
+      Path fullPackagePath = packagePath.get();
+      String packageName = "-" + new File(fullPackagePath.toString()).getName();
+      path = fullPackagePath.resolve("GENERATED" + packageName).resolve(path.getFileName());
+    }
+
     SourceTreePath sourceTreePath =
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,

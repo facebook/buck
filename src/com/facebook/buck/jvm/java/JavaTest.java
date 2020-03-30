@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -34,7 +34,7 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -213,7 +213,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private JUnitStep getJUnitStep(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       TestRunningOptions options,
       Optional<Path> outDir,
       Optional<Path> robolectricLogPath,
@@ -233,7 +233,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     BuildId buildId = buckEventBus.getBuildId();
     TestSelectorList testSelectorList = options.getTestSelectorList();
     JUnitJvmArgs args =
-        JUnitJvmArgs.builder()
+        ImmutableJUnitJvmArgs.builder()
             .setTargetJavaVersion(targetJavaVersion)
             .setTestType(testType)
             .setDirectoryForTestResults(outDir)
@@ -244,7 +244,11 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setDebugEnabled(executionContext.isDebugEnabled())
             .setPathToJavaAgent(options.getPathToJavaAgent())
             .setBuildId(buildId)
-            .setBuckModuleBaseSourceCodePath(getBuildTarget().getBasePath())
+            .setBuckModuleBaseSourceCodePath(
+                getBuildTarget()
+                    .getCellRelativeBasePath()
+                    .getPath()
+                    .toPath(getProjectFilesystem().getFileSystem()))
             .setStdOutLogLevel(stdOutLogLevel)
             .setStdErrLogLevel(stdErrLogLevel)
             .setRobolectricLogPath(robolectricLogPath)
@@ -347,7 +351,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   ImmutableList<String> amendVmArgs(
       ImmutableList<String> existingVmArgs,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       Optional<TargetDevice> targetDevice,
       Optional<String> javaTempDir) {
     ImmutableList.Builder<String> vmArgs = ImmutableList.builder();
@@ -363,7 +367,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
    */
   protected void onAmendVmArgs(
       ImmutableList.Builder<String> vmArgsBuilder,
-      @SuppressWarnings("unused") SourcePathResolver pathResolver,
+      @SuppressWarnings("unused") SourcePathResolverAdapter pathResolver,
       Optional<TargetDevice> targetDevice) {
     if (!targetDevice.isPresent()) {
       return;
@@ -397,7 +401,9 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Callable<TestResults> interpretTestResults(
-      ExecutionContext context, SourcePathResolver pathResolver, boolean isUsingTestSelectors) {
+      ExecutionContext context,
+      SourcePathResolverAdapter pathResolver,
+      boolean isUsingTestSelectors) {
     ImmutableSet<String> contacts = getContacts();
     return () -> {
       // It is possible that this rule was not responsible for running any tests because all tests
@@ -452,7 +458,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     };
   }
 
-  private Set<String> getClassNamesForSources(SourcePathResolver pathResolver) {
+  private Set<String> getClassNamesForSources(SourcePathResolverAdapter pathResolver) {
     if (compiledClassFileFinder == null) {
       compiledClassFileFinder = new CompiledClassFileFinder(compiledTestsLibrary, pathResolver);
     }
@@ -546,7 +552,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Optional.empty(),
             getClassNamesForSources(buildContext.getSourcePathResolver()));
     return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
+        .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("junit")
         .setCommand(externalJunitStep.getShellCommandInternal(executionContext))
@@ -610,6 +616,6 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   public interface AdditionalClasspathEntriesProvider {
-    ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolver resolver);
+    ImmutableList<Path> getAdditionalClasspathEntries(SourcePathResolverAdapter resolver);
   }
 }

@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.event.listener;
 
 import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
@@ -24,9 +25,11 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.remoteexecution.event.RemoteBuildRuleExecutionEvent;
+import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.types.Pair;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.eventbus.Subscribe;
 import java.io.BufferedWriter;
@@ -66,7 +69,7 @@ public class CriticalPathEventListener implements BuckEventListener {
   private final Map<BuildTarget, CriticalPathNode> buildTargetToCriticalPathNodeMap =
       new HashMap<>();
 
-  private final Map<BuildTarget, Long> buildTargetToExecutionTimeMap = new HashMap<>();
+  private final Map<BuildTarget, ExecutionTimeInfo> buildTargetToExecutionTimeMap = new HashMap<>();
 
   public CriticalPathEventListener(Path outputPath) {
     this.outputPath = Objects.requireNonNull(outputPath);
@@ -77,7 +80,8 @@ public class CriticalPathEventListener implements BuckEventListener {
   public void subscribe(BuildRuleExecutionEvent.Finished event) {
     BuildTarget buildTarget = event.getTarget();
     long elapsedTimeMillis = TimeUnit.NANOSECONDS.toMillis(event.getElapsedTimeNano());
-    buildTargetToExecutionTimeMap.put(buildTarget, elapsedTimeMillis);
+    buildTargetToExecutionTimeMap.put(
+        buildTarget, ImmutableExecutionTimeInfo.of(elapsedTimeMillis, event.getNanoTime()));
   }
 
   /** Subscribes to {@link FinalizingBuildRuleEvent} events */
@@ -85,7 +89,10 @@ public class CriticalPathEventListener implements BuckEventListener {
   public void subscribe(FinalizingBuildRuleEvent event) {
     BuildRule buildRule = event.getBuildRule();
     BuildTarget buildTarget = buildRule.getBuildTarget();
-    handleBuildRule(buildRule, buildTargetToExecutionTimeMap.getOrDefault(buildTarget, 0L));
+    handleBuildRule(
+        buildRule,
+        buildTargetToExecutionTimeMap.getOrDefault(
+            buildTarget, ImmutableExecutionTimeInfo.of(0L, 0L)));
   }
 
   /** Subscribes to {@link RemoteBuildRuleExecutionEvent} events */
@@ -95,19 +102,20 @@ public class CriticalPathEventListener implements BuckEventListener {
         "RemoteBuildRuleExecutionEvent %s took: %s",
         event.getBuildRule().getFullyQualifiedName(), event.getExecutionDurationMs());
     buildTargetToExecutionTimeMap.put(
-        event.getBuildRule().getBuildTarget(), event.getExecutionDurationMs());
+        event.getBuildRule().getBuildTarget(),
+        ImmutableExecutionTimeInfo.of(event.getExecutionDurationMs(), event.getNanoTime()));
   }
 
   @VisibleForTesting
-  void handleBuildRule(BuildRule buildRule, long elapsedTime) {
+  void handleBuildRule(BuildRule buildRule, ExecutionTimeInfo executionTimeInfo) {
     Pair<Optional<BuildTarget>, Long> longestPathBeforeGivenRule =
         findTheLongestPathBeforeThisRule(buildRule);
     CriticalPathNode criticalPathNode =
-        new ImmutableCriticalPathNode(
-            elapsedTime + longestPathBeforeGivenRule.getSecond(),
-            elapsedTime,
+        ImmutableCriticalPathNode.of(
+            executionTimeInfo.getExecutionDurationMs() + longestPathBeforeGivenRule.getSecond(),
             buildRule.getType(),
-            longestPathBeforeGivenRule.getFirst().orElse(null));
+            longestPathBeforeGivenRule.getFirst().orElse(null),
+            executionTimeInfo);
 
     BuildTarget buildTarget = buildRule.getBuildTarget();
     buildTargetToCriticalPathNodeMap.put(buildTarget, criticalPathNode);
@@ -130,7 +138,10 @@ public class CriticalPathEventListener implements BuckEventListener {
       // tracking map
       CriticalPathNode criticalPathNode =
           buildTargetToCriticalPathNodeMap.computeIfAbsent(
-              buildTarget, ignore -> new ImmutableCriticalPathNode(0, 0, null, null));
+              buildTarget,
+              ignore ->
+                  ImmutableCriticalPathNode.of(
+                      0, null, null, ImmutableExecutionTimeInfo.of(0L, 0L)));
       long totalElapsedTime = criticalPathNode.getTotalElapsedTimeMs();
       if (totalElapsedTime > longestSoFar) {
         longestSoFar = totalElapsedTime;
@@ -162,7 +173,6 @@ public class CriticalPathEventListener implements BuckEventListener {
   /** Dumps critical path into the given {@code outputPath} */
   private void dumpCriticalPath() throws IOException {
     try (BufferedWriter writer = Files.newBufferedWriter(outputPath)) {
-      writeHeader(writer);
       for (Pair<BuildTarget, CriticalPathNode> pair : getCriticalPath()) {
         writer.write(convertToLine(pair));
         writer.newLine();
@@ -176,8 +186,11 @@ public class CriticalPathEventListener implements BuckEventListener {
         .map(
             pair -> {
               CriticalPathNode criticalPathNode = pair.getSecond();
-              return new ImmutableCriticalPathReportableNode(
-                  pair.getFirst(), criticalPathNode.getElapsedTimeMs(), criticalPathNode.getType());
+              return ImmutableCriticalPathReportableNode.of(
+                  pair.getFirst(),
+                  criticalPathNode.getExecutionTimeInfo().getExecutionDurationMs(),
+                  criticalPathNode.getExecutionTimeInfo().getEventNanoTime(),
+                  criticalPathNode.getType());
             })
         .collect(ImmutableList.toImmutableList());
   }
@@ -196,19 +209,20 @@ public class CriticalPathEventListener implements BuckEventListener {
     return criticalPathDeque;
   }
 
-  private void writeHeader(BufferedWriter writer) throws IOException {
-    writer.write(
-        String.format(
-            FORMAT, "Elapsed time", "Total time", "% in Total Time", "Rule Type", "Build Target"));
-    writer.newLine();
-    writer.write(Strings.repeat("-", 180));
-    writer.newLine();
-  }
-
   private String convertToLine(Pair<BuildTarget, CriticalPathNode> pair) {
-    CriticalPathNode criticalPathNode = pair.getSecond();
     BuildTarget buildTarget = pair.getFirst();
-    long elapsedTime = criticalPathNode.getElapsedTimeMs();
+    CriticalPathNode criticalPathNode = pair.getSecond();
+    try {
+      return String.format(
+          "%s: %s",
+          buildTarget.getFullyQualifiedName(),
+          ObjectMappers.WRITER.writeValueAsString(criticalPathNode));
+    } catch (JsonProcessingException e) {
+      LOG.info(
+          e, "Failed to process critical path node: " + pair.getFirst().getFullyQualifiedName());
+    }
+    long elapsedTime = criticalPathNode.getExecutionTimeInfo().getExecutionDurationMs();
+
     return String.format(
         FORMAT,
         elapsedTime,
@@ -227,12 +241,21 @@ public class CriticalPathEventListener implements BuckEventListener {
 
     long getTotalElapsedTimeMs();
 
-    long getElapsedTimeMs();
-
     @Nullable
     String getType();
 
     @Nullable
+    @JsonIgnore
     BuildTarget getPreviousNode();
+
+    ExecutionTimeInfo getExecutionTimeInfo();
+  }
+
+  /** */
+  @BuckStyleValue
+  interface ExecutionTimeInfo {
+    long getExecutionDurationMs();
+
+    long getEventNanoTime();
   }
 }

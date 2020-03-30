@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -19,12 +19,13 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -118,9 +119,10 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   }
 
   @Override
-  protected ImmutableList<String> getShellCommand(SourcePathResolver pathResolver, Path output) {
+  protected ImmutableList<String> getShellCommand(
+      SourcePathResolverAdapter pathResolver, Path output) {
     return ImmutableList.<String>builder()
-        .addAll(getExecutableCommand().getCommandPrefix(pathResolver))
+        .addAll(getExecutableCommand(OutputLabel.defaultLabel()).getCommandPrefix(pathResolver))
         .add("--gtest_color=no")
         .add("--gtest_output=xml:" + getProjectFilesystem().resolve(output))
         .build();
@@ -139,7 +141,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
     if (checkGTestTestList) {
       builder.add(
           new WriteTestListToFileStep(
-              getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()),
+              getExecutableCommand(OutputLabel.defaultLabel())
+                  .getCommandPrefix(buildContext.getSourcePathResolver()),
               buildContext.getBuildCellRootPath()));
     }
     return builder.build();

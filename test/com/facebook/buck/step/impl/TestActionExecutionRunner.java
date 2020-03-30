@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.step.impl;
@@ -19,6 +19,7 @@ package com.facebook.buck.step.impl;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction;
@@ -42,7 +43,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * Simple helper class that makes running an {@link Action} easier and allows tests to focus on
@@ -90,7 +90,7 @@ public class TestActionExecutionRunner {
       throws ActionCreationException, IOException {
 
     ActionExecutionStep step =
-        new ActionExecutionStep(action, false, new ArtifactFilesystem(projectFilesystem));
+        new ActionExecutionStep(action, new ArtifactFilesystem(projectFilesystem));
     BuckEventBus testEventBus = BuckEventBusForTests.newInstance();
     BuckEventBusForTests.CapturingConsoleEventListener consoleEventListener =
         new BuckEventBusForTests.CapturingConsoleEventListener();
@@ -98,21 +98,20 @@ public class TestActionExecutionRunner {
 
     StepExecutionResult executionResult =
         step.execute(
-            ExecutionContext.of(
-                Console.createNullConsole(),
-                testEventBus,
-                Platform.UNKNOWN,
-                ImmutableMap.of(),
-                new FakeJavaPackageFinder(),
-                ImmutableMap.of(),
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
-                TestCellPathResolver.get(projectFilesystem),
-                projectFilesystem.getRootPath(),
-                processExecutor,
-                projectFilesystemFactory));
+            ExecutionContext.builder()
+                .setConsole(Console.createNullConsole())
+                .setBuckEventBus(testEventBus)
+                .setPlatform(Platform.UNKNOWN)
+                .setEnvironment(ImmutableMap.of())
+                .setJavaPackageFinder(new FakeJavaPackageFinder())
+                .setExecutors(ImmutableMap.of())
+                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
+                .setCells(new TestCellBuilder().setFilesystem(projectFilesystem).build())
+                .setBuildCellRootPath(projectFilesystem.getRootPath().getPath())
+                .setProcessExecutor(processExecutor)
+                .setProjectFilesystemFactory(projectFilesystemFactory)
+                .build());
 
-    return new ImmutableExecutionDetails<>(action, consoleEventListener, executionResult);
+    return ImmutableExecutionDetails.of(action, consoleEventListener, executionResult);
   }
 }

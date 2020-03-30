@@ -1,13 +1,5 @@
-os_constraint_detector(
-    name = "os-detector",
-    visibility = [
-        "PUBLIC",
-    ],
-)
-
 constraint_setting(
     name = "os",
-    host_constraint_detector = ":os-detector",
     visibility = [
         "PUBLIC",
     ],
@@ -29,16 +21,16 @@ constraint_value(
     ],
 )
 
-cpu_constraint_detector(
-    name = "cpu-detector",
+constraint_setting(
+    name = "cpu",
     visibility = [
         "PUBLIC",
     ],
 )
 
-constraint_setting(
-    name = "cpu",
-    host_constraint_detector = ":cpu-detector",
+constraint_value(
+    name = "x86_32",
+    constraint_setting = ":cpu",
     visibility = [
         "PUBLIC",
     ],

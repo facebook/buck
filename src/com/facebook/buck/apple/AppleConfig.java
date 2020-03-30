@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -23,12 +23,13 @@ import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.BinaryBuildRuleToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.MoreSuppliers;
@@ -49,7 +50,6 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
-import org.immutables.value.Value;
 
 public class AppleConfig implements ConfigView<BuckConfig> {
 
@@ -70,6 +70,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
   private static final String FORCE_LOAD_LIBRARY_PATH = "force_load_library_path";
 
   public static final String BUILD_SCRIPT = "xcode_build_script";
+
+  public static final String LINK_SCRUB_CONCURRENTLY = "link_scrub_concurrently";
 
   private final BuckConfig delegate;
 
@@ -154,6 +156,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
                     delegate.resolveNonNullPathOutsideTheProjectFilesystem(Paths.get(string)))));
   }
 
+  public Optional<BuildTarget> getAppleToolchainSetTarget(TargetConfiguration targetConfiguration) {
+    return delegate.getBuildTarget(APPLE_SECTION, "toolchain_set_target", targetConfiguration);
+  }
+
   private static Path normalizePath(Path path) {
     try {
       return path.toRealPath();
@@ -219,7 +225,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public ToolProvider getCodesignProvider() {
     String codesignField = "codesign";
-    Optional<UnconfiguredBuildTargetView> target =
+    Optional<UnconfiguredBuildTarget> target =
         delegate.getMaybeUnconfiguredBuildTarget(APPLE_SECTION, codesignField);
     String source = String.format("[%s] %s", APPLE_SECTION, codesignField);
     if (target.isPresent()) {
@@ -278,8 +284,14 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return getOptionalPath(APPLE_SECTION, "device_helper_path");
   }
 
-  public Optional<BuildTarget> getAppleDeviceHelperTarget(TargetConfiguration targetConfiguration) {
-    return delegate.getBuildTarget(APPLE_SECTION, "device_helper_target", targetConfiguration);
+  /** Query buckconfig for device helper target. */
+  public Optional<BuildTarget> getAppleDeviceHelperTarget(
+      Optional<TargetConfiguration> targetConfiguration) {
+    // TODO(nga): ignores default_target_platform and configuration detectors
+    return delegate.getBuildTarget(
+        APPLE_SECTION,
+        "device_helper_target",
+        targetConfiguration.orElse(UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   public Path getProvisioningProfileSearchPath() {
@@ -488,11 +500,22 @@ public class AppleConfig implements ConfigView<BuckConfig> {
         .orElse(false);
   }
 
-  @Value.Immutable
-  @BuckStyleTuple
-  interface AbstractApplePackageConfig {
+  public boolean shouldUseModernBuildSystem() {
+    return delegate.getBooleanValue(APPLE_SECTION, "use_modern_build_system", true);
+  }
+
+  public boolean shouldLinkScrubConcurrently() {
+    return delegate.getBooleanValue(APPLE_SECTION, LINK_SCRUB_CONCURRENTLY, false);
+  }
+
+  @BuckStyleValue
+  interface ApplePackageConfig {
     String getCommand();
 
     String getExtension();
+
+    static ApplePackageConfig of(String command, String extension) {
+      return ImmutableApplePackageConfig.of(command, extension);
+    }
   }
 }

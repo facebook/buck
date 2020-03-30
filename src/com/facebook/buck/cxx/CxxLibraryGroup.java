@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -28,7 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.rules.impl.NoopBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
@@ -38,6 +38,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableCacheKey;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -45,8 +46,8 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.util.RichStream;
-import com.facebook.buck.util.function.TriFunction;
+import com.facebook.buck.util.function.QuadFunction;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -61,6 +62,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -85,8 +87,12 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       exportedLinkerFlags;
   private final BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
       postExportedLinkerFlags;
-  private final TriFunction<
-          ? super CxxPlatform, ActionGraphBuilder, SourcePathResolver, NativeLinkableInput>
+  private final QuadFunction<
+          ? super CxxPlatform,
+          ActionGraphBuilder,
+          SourcePathResolverAdapter,
+          Boolean,
+          NativeLinkableInput>
       linkTargetInput;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final ImmutableSet<FrameworkPath> frameworks;
@@ -126,7 +132,12 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
           exportedLinkerFlags,
       BiFunction<? super CxxPlatform, ActionGraphBuilder, Iterable<? extends Arg>>
           postExportedLinkerFlags,
-      TriFunction<? super CxxPlatform, ActionGraphBuilder, SourcePathResolver, NativeLinkableInput>
+      QuadFunction<
+              ? super CxxPlatform,
+              ActionGraphBuilder,
+              SourcePathResolverAdapter,
+              Boolean,
+              NativeLinkableInput>
           linkTargetInput,
       Optional<Pattern> supportedPlatformsRegex,
       ImmutableSet<FrameworkPath> frameworks,
@@ -239,61 +250,108 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     return transitiveCxxPreprocessorInputCache.getUnchecked(cxxPlatform, graphBuilder);
   }
 
+  private void forEachNativeLinkableDep(
+      BuildRuleResolver ruleResolver, Consumer<? super NativeLinkableGroup> consumer) {
+    if (!propagateLinkables) {
+      return;
+    }
+    deps.forEachForAllPlatforms(NativeLinkableGroups.filterConsumer(ruleResolver, consumer));
+  }
+
   @Override
   public Iterable<NativeLinkableGroup> getNativeLinkableDeps(BuildRuleResolver ruleResolver) {
+    // Repeated from `consume*` to avoid allocation.  Remove once relevant callers have been
+    // migrated.
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return RichStream.from(deps.getForAllPlatforms(ruleResolver))
-        .filter(NativeLinkableGroup.class)
-        .toImmutableList();
+    ImmutableList.Builder<NativeLinkableGroup> builder = ImmutableList.builder();
+    forEachNativeLinkableDep(ruleResolver, builder::add);
+    return builder.build();
+  }
+
+  private void forEachNativeLinkableDepForPlatform(
+      CxxPlatform cxxPlatform,
+      BuildRuleResolver ruleResolver,
+      Consumer<? super NativeLinkableGroup> consumer) {
+    if (!propagateLinkables) {
+      return;
+    }
+    if (!isPlatformSupported(cxxPlatform)) {
+      return;
+    }
+    deps.forEach(cxxPlatform, NativeLinkableGroups.filterConsumer(ruleResolver, consumer));
   }
 
   @Override
   public Iterable<NativeLinkableGroup> getNativeLinkableDepsForPlatform(
       CxxPlatform cxxPlatform, BuildRuleResolver ruleResolver) {
+    // Repeated from `consume*` to avoid allocation.  Remove once relevant callers have been
+    // migrated.
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-    return RichStream.from(deps.get(ruleResolver, cxxPlatform))
-        .filter(NativeLinkableGroup.class)
-        .toImmutableList();
+    ImmutableList.Builder<NativeLinkableGroup> builder = ImmutableList.builder();
+    forEachNativeLinkableDepForPlatform(cxxPlatform, ruleResolver, builder::add);
+    return builder.build();
+  }
+
+  private void forEachNativeLinkableExportedDep(
+      BuildRuleResolver ruleResolver, Consumer<? super NativeLinkableGroup> consumer) {
+    if (!propagateLinkables) {
+      return;
+    }
+    exportedDeps.forEachForAllPlatforms(
+        NativeLinkableGroups.filterConsumer(ruleResolver, consumer));
   }
 
   @Override
   public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDeps(
       BuildRuleResolver ruleResolver) {
+    // Repeated from `consume*` to avoid allocation.  Remove once relevant callers have been
+    // migrated.
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
-    return RichStream.from(exportedDeps.getForAllPlatforms(ruleResolver))
-        .filter(NativeLinkableGroup.class)
-        .toImmutableList();
+    ImmutableList.Builder<NativeLinkableGroup> builder = ImmutableList.builder();
+    forEachNativeLinkableExportedDep(ruleResolver, builder::add);
+    return builder.build();
+  }
+
+  private void forEachNativeLinkableExportedDepForPlatform(
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder,
+      Consumer<? super NativeLinkableGroup> consumer) {
+    if (!propagateLinkables) {
+      return;
+    }
+    if (!isPlatformSupported(cxxPlatform)) {
+      return;
+    }
+    exportedDeps.forEach(cxxPlatform, NativeLinkableGroups.filterConsumer(graphBuilder, consumer));
+    delegate
+        .requireDelegate(getBuildTarget(), cxxPlatform, graphBuilder)
+        .ifPresent(
+            d -> d.getNativeLinkableExportedDeps().ifPresent(deps -> deps.forEach(consumer)));
   }
 
   @Override
   public Iterable<? extends NativeLinkableGroup> getNativeLinkableExportedDepsForPlatform(
       CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
+    // Repeated from `consume*` to avoid allocation.  Remove once relevant callers have been
+    // migrated.
     if (!propagateLinkables) {
       return ImmutableList.of();
     }
     if (!isPlatformSupported(cxxPlatform)) {
       return ImmutableList.of();
     }
-
-    ImmutableList<NativeLinkableGroup> delegateLinkables =
-        delegate
-            .requireDelegate(getBuildTarget(), cxxPlatform, graphBuilder)
-            .flatMap(d -> d.getNativeLinkableExportedDeps())
-            .orElse(ImmutableList.of());
-
-    return RichStream.from(exportedDeps.get(graphBuilder, cxxPlatform))
-        .filter(NativeLinkableGroup.class)
-        .concat(RichStream.from(delegateLinkables))
-        .toImmutableList();
+    ImmutableList.Builder<NativeLinkableGroup> builder = ImmutableList.builder();
+    forEachNativeLinkableExportedDepForPlatform(cxxPlatform, graphBuilder, builder::add);
+    return builder.build();
   }
 
   private NativeLinkableInput computeNativeLinkableInputUncached(
@@ -445,14 +503,13 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return ImmutableMap.of();
     }
-    ImmutableMap.Builder<String, SourcePath> libs = ImmutableMap.builder();
     String sharedLibrarySoname =
-        CxxDescriptionEnhancer.getSharedLibrarySoname(soname, getBuildTarget(), cxxPlatform);
+        CxxDescriptionEnhancer.getSharedLibrarySoname(
+            soname, getBuildTarget(), cxxPlatform, getProjectFilesystem());
     BuildRule sharedLibraryBuildRule =
         requireBuildRule(
             graphBuilder, cxxPlatform.getFlavor(), CxxDescriptionEnhancer.SHARED_FLAVOR);
-    libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
-    return libs.build();
+    return ImmutableMap.of(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
   }
 
   @Override
@@ -463,7 +520,8 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public NativeLinkTargetMode getNativeLinkTargetMode(CxxPlatform cxxPlatform) {
     return NativeLinkTargetMode.library(
-        CxxDescriptionEnhancer.getSharedLibrarySoname(soname, getBuildTarget(), cxxPlatform));
+        CxxDescriptionEnhancer.getSharedLibrarySoname(
+            soname, getBuildTarget(), cxxPlatform, getProjectFilesystem()));
   }
 
   @Override
@@ -476,12 +534,16 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public NativeLinkableInput getNativeLinkTargetInput(
-      CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder, SourcePathResolver pathResolver) {
+      CxxPlatform cxxPlatform,
+      ActionGraphBuilder graphBuilder,
+      SourcePathResolverAdapter pathResolver,
+      boolean includePrivateLinkerFlags) {
     if (!isPlatformSupported(cxxPlatform)) {
       LOG.verbose("Skipping library %s on platform %s", this, cxxPlatform.getFlavor());
       return NativeLinkableInput.of();
     }
-    return linkTargetInput.apply(cxxPlatform, graphBuilder, pathResolver);
+    return linkTargetInput.apply(
+        cxxPlatform, graphBuilder, pathResolver, includePrivateLinkerFlags);
   }
 
   @Override

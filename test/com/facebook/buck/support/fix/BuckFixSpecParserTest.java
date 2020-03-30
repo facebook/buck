@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.support.fix;
 
 import static org.junit.Assert.assertEquals;
@@ -20,6 +21,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -140,7 +142,7 @@ public class BuckFixSpecParserTest {
     Path logDir = filesystem.getBuckPaths().getLogDir().resolve(buildCommandDir);
 
     BuckFixSpec expectedSpec =
-        new ImmutableBuckFixSpec(
+        ImmutableBuckFixSpec.of(
             buildCommandId,
             "build",
             0,
@@ -231,7 +233,7 @@ public class BuckFixSpecParserTest {
     Path logDir = filesystem.getBuckPaths().getLogDir().resolve(buildCommandDir);
 
     BuckFixSpec expectedSpec =
-        new ImmutableBuckFixSpec(
+        ImmutableBuckFixSpec.of(
             buildCommandId,
             "build",
             0,
@@ -289,11 +291,11 @@ public class BuckFixSpecParserTest {
 
     BuckFixSpec expectedSpec = expectedSpecWithException(expectedException, logDir);
 
-    Path fixSpecPath = filesystem.getRootPath().resolve(logDir).resolve("buck_fix_spec.json");
+    AbsPath fixSpecPath = filesystem.getRootPath().resolve(logDir).resolve("buck_fix_spec.json");
 
-    BuckFixSpecWriter.writeSpec(fixSpecPath, expectedSpec);
+    BuckFixSpecWriter.writeSpec(fixSpecPath.getPath(), expectedSpec);
 
-    BuckFixSpec spec = BuckFixSpecParser.parseFromFixSpecFile(fixSpecPath).getLeft();
+    BuckFixSpec spec = BuckFixSpecParser.parseFromFixSpecFile(fixSpecPath.getPath()).getLeft();
 
     /**
      * type information gets lost in the type Object of {@linkplain BuckFixSpec#getCommandData()},
@@ -317,7 +319,7 @@ public class BuckFixSpecParserTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "report", tempFolder);
     workspace.setUp();
 
-    Path fixSpecPath =
+    AbsPath fixSpecPath =
         filesystem
             .getRootPath()
             .resolve(filesystem.getBuckPaths().getLogDir())
@@ -325,13 +327,13 @@ public class BuckFixSpecParserTest {
             .resolve("buck_fix_spec.json");
 
     BuckFixSpecParser.FixSpecFailure failure =
-        BuckFixSpecParser.parseFromFixSpecFile(fixSpecPath).getRight();
+        BuckFixSpecParser.parseFromFixSpecFile(fixSpecPath.getPath()).getRight();
 
     assertEquals(BuckFixSpecParser.FixSpecFailure.MISSING_FIX_SPEC_FILE_IN_LOGS, failure);
   }
 
   private BuckFixSpec expectedSpecWithException(Optional<Exception> e, Path logDir) {
-    return new ImmutableBuckFixSpec(
+    return ImmutableBuckFixSpec.of(
         buildCommandId,
         "build",
         ExitCode.FATAL_GENERIC.getCode(),

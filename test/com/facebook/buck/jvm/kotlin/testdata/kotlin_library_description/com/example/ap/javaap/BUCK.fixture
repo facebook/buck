@@ -1,6 +1,6 @@
 java_annotation_processor(
     name = "ap",
-    processor_class = "",
+    processor_class = "com.example.ap.javaap.AnnotationProcessor",
     visibility = [
         "PUBLIC",
     ],

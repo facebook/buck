@@ -1,22 +1,22 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasProvidedDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
@@ -26,7 +26,9 @@ import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -34,8 +36,8 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.infer.ImmutableInferConfig;
+import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.infer.InferNullsafe;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
 import com.facebook.buck.infer.toolchain.InferToolchain;
@@ -73,25 +75,31 @@ public class JavaLibraryDescription
           JavaAbis.SOURCE_ONLY_ABI_FLAVOR,
           JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR);
 
+  private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final JavacFactory javacFactory;
   private final JavaConfiguredCompilerFactory defaultJavaCompilerFactory;
-  private final Optional<UnresolvedInferPlatform> unresolvedInferPlatform;
 
   public JavaLibraryDescription(
       ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+    this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.defaultJavaCompilerFactory =
         new JavaConfiguredCompilerFactory(this.javaBuckConfig, this.javacFactory);
-    this.unresolvedInferPlatform =
-        toolchainProvider
-            .getByNameIfPresent(InferToolchain.DEFAULT_NAME, InferToolchain.class)
-            .map(InferToolchain::getDefaultPlatform);
+  }
+
+  private Optional<UnresolvedInferPlatform> unresolvedInferPlatform(
+      ToolchainProvider toolchainProvider, TargetConfiguration toolchainTargetConfiguration) {
+    return toolchainProvider
+        .getByNameIfPresent(
+            InferToolchain.DEFAULT_NAME, toolchainTargetConfiguration, InferToolchain.class)
+        .map(InferToolchain::getDefaultPlatform);
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return SUPPORTED_FLAVORS.containsAll(flavors);
   }
 
@@ -110,14 +118,17 @@ public class JavaLibraryDescription
     // We know that the flavour we're being asked to create is valid, since the check is done when
     // creating the action graph from the target graph.
 
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             context
                 .getToolchainProvider()
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
             graphBuilder,
@@ -129,12 +140,14 @@ public class JavaLibraryDescription
           projectFilesystem,
           graphBuilder,
           javacOptions,
-          defaultJavaCompilerFactory.getExtraClasspathProvider(toolchainProvider),
-          unresolvedInferPlatform.orElseThrow(
-              () ->
-                  new HumanReadableException(
-                      "Cannot use #nullsafe flavor: infer platform not configured")),
-          new ImmutableInferConfig(javaBuckConfig.getDelegate()));
+          defaultJavaCompilerFactory.getExtraClasspathProvider(
+              toolchainProvider, buildTarget.getTargetConfiguration()),
+          unresolvedInferPlatform(toolchainProvider, buildTarget.getTargetConfiguration())
+              .orElseThrow(
+                  () ->
+                      new HumanReadableException(
+                          "Cannot use #nullsafe flavor: infer platform not configured")),
+          InferConfig.of(javaBuckConfig.getDelegate()));
     }
 
     if (flavors.contains(Javadoc.DOC_JAR)) {
@@ -215,7 +228,6 @@ public class JavaLibraryDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                context.getCellPathResolver(),
                 defaultJavaCompilerFactory,
                 javaBuckConfig,
                 args)
@@ -246,16 +258,18 @@ public class JavaLibraryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       JavaLibraryDescriptionArg constructorArg,
       Builder<BuildTarget> extraDepsBuilder,
       Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
 
-    unresolvedInferPlatform.ifPresent(
-        p ->
-            UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
-                targetGraphOnlyDepsBuilder, buildTarget, p));
+    unresolvedInferPlatform(toolchainProvider, buildTarget.getTargetConfiguration())
+        .ifPresent(
+            p ->
+                UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
+                    targetGraphOnlyDepsBuilder, buildTarget, p));
   }
 
   public interface CoreArg
@@ -288,7 +302,6 @@ public class JavaLibraryDescription
     ImmutableSortedSet<BuildTarget> getRuntimeDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractJavaLibraryDescriptionArg extends CoreArg {}
 }

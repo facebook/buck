@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -31,12 +32,12 @@ import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFact
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
+import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -49,9 +50,6 @@ import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.step.fs.MkdirStep;
-import com.facebook.buck.step.fs.RmStep;
-import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
@@ -63,6 +61,7 @@ import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -73,23 +72,20 @@ public class ApkGenruleTest {
       throws NoSuchBuildTargetException {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
-    BuildTarget libAndroidTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:lib-android");
+    BuildTarget libAndroidTarget = BuildTargetFactory.newInstance("//:lib-android");
     BuildRule androidLibRule =
         JavaLibraryBuilder.createBuilder(libAndroidTarget)
             .addSrc(Paths.get("java/com/facebook/util/Facebook.java"))
             .build(graphBuilder, filesystem);
 
-    BuildTarget keystoreTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//keystore:debug");
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//keystore:debug");
     Keystore keystore =
         KeystoreBuilder.createBuilder(keystoreTarget)
             .setStore(FakeSourcePath.of(filesystem, "keystore/debug.keystore"))
             .setProperties(FakeSourcePath.of(filesystem, "keystore/debug.keystore.properties"))
             .build(graphBuilder, filesystem);
 
-    AndroidBinaryBuilder.createBuilder(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//:fb4a"))
+    AndroidBinaryBuilder.createBuilder(BuildTargetFactory.newInstance("//:fb4a"))
         .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
         .setOriginalDeps(ImmutableSortedSet.of(androidLibRule.getBuildTarget()))
         .setKeystore(keystore.getBuildTarget())
@@ -102,20 +98,20 @@ public class ApkGenruleTest {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     FileSystem fileSystem = projectFilesystem.getRootPath().getFileSystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    SourcePathRuleFinder ruleFinder = graphBuilder;
     createSampleAndroidBinaryRule(graphBuilder, projectFilesystem);
 
     // From the Python object, create a ApkGenruleBuildRuleFactory to create a ApkGenrule.Builder
     // that builds a ApkGenrule from the Python object.
-    BuildTarget apkTarget =
-        BuildTargetFactory.newInstance(projectFilesystem.getRootPath(), "//:fb4a");
+    BuildTarget apkTarget = BuildTargetFactory.newInstance("//:fb4a");
 
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(
-            projectFilesystem.getRootPath(), "//src/com/facebook:sign_fb4a");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//src/com/facebook:sign_fb4a");
 
     ApkGenruleDescription description =
         new ApkGenruleDescription(
-            ApkGenruleBuilder.getToolchainProvider(), new NoSandboxExecutionStrategy());
+            ApkGenruleBuilder.getToolchainProvider(),
+            FakeBuckConfig.builder().build(),
+            new NoSandboxExecutionStrategy());
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()
             .setName(buildTarget.getShortName())
@@ -146,9 +142,11 @@ public class ApkGenruleTest {
     // Verify all of the observers of the Genrule.
     Path expectedApkOutput =
         projectFilesystem.resolve(
-            projectFilesystem.getBuckPaths().getGenDir()
-                + "/src/com/facebook/sign_fb4a/sign_fb4a.apk");
-    assertEquals(expectedApkOutput, apkGenrule.getAbsoluteOutputFilePath());
+            BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s")
+                .resolve("sign_fb4a.apk"));
+    assertEquals(
+        expectedApkOutput,
+        ruleFinder.getSourcePathResolver().getAbsolutePath(apkGenrule.getSourcePathToOutput()));
     assertEquals(
         "The apk that this rule is modifying must have the apk in its deps.",
         ImmutableSet.of(apkTarget.toString()),
@@ -157,11 +155,11 @@ public class ApkGenruleTest {
             .collect(ImmutableSet.toImmutableSet()));
     BuildContext buildContext =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(projectFilesystem.getRootPath());
+            .withBuildCellRootPath(projectFilesystem.getRootPath().getPath());
     assertThat(
         graphBuilder
             .getSourcePathResolver()
-            .filterInputsToCompareToOutput(apkGenrule.getSrcs().getPaths()),
+            .filterInputsToCompareToOutput(apkGenrule.getBuildable().getSrcs().getPaths()),
         Matchers.containsInAnyOrder(
             fileSystem.getPath("src/com/facebook/signer.py"),
             fileSystem.getPath("src/com/facebook/key.properties")));
@@ -171,86 +169,27 @@ public class ApkGenruleTest {
     MoreAsserts.assertStepsNames(
         "",
         ImmutableList.of(
-            "rm", "mkdir", "rm", "mkdir", "rm", "mkdir", "genrule_srcs_link_tree", "genrule"),
+            "rm",
+            "rm",
+            "mkdir",
+            "rm",
+            "mkdir",
+            "rm",
+            "mkdir",
+            "rm",
+            "mkdir",
+            "genrule_srcs_link_tree",
+            "genrule"),
         steps);
 
+    Optional<Step> maybeGenruleStep =
+        steps.stream().filter(step -> step instanceof AbstractGenruleStep).findFirst();
+    assertTrue(maybeGenruleStep.isPresent());
     ExecutionContext executionContext = newEmptyExecutionContext();
-    assertEquals(
-        RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    projectFilesystem,
-                    projectFilesystem
-                        .getBuckPaths()
-                        .getGenDir()
-                        .resolve("src/com/facebook/sign_fb4a")))
-            .withRecursive(true),
-        steps.get(0));
-    assertEquals(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(),
-                projectFilesystem,
-                projectFilesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/sign_fb4a"))),
-        steps.get(1));
-
-    assertEquals(
-        RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(),
-                    projectFilesystem,
-                    projectFilesystem
-                        .getBuckPaths()
-                        .getGenDir()
-                        .resolve("src/com/facebook/sign_fb4a__tmp")))
-            .withRecursive(true),
-        steps.get(2));
-    assertEquals(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(),
-                projectFilesystem,
-                projectFilesystem
-                    .getBuckPaths()
-                    .getGenDir()
-                    .resolve("src/com/facebook/sign_fb4a__tmp"))),
-        steps.get(3));
-
-    Path relativePathToSrcDir =
-        projectFilesystem.getBuckPaths().getGenDir().resolve("src/com/facebook/sign_fb4a__srcs");
-    assertEquals(
-        RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    buildContext.getBuildCellRootPath(), projectFilesystem, relativePathToSrcDir))
-            .withRecursive(true),
-        steps.get(4));
-    assertEquals(
-        MkdirStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                buildContext.getBuildCellRootPath(), projectFilesystem, relativePathToSrcDir)),
-        steps.get(5));
-
-    assertEquals(
-        new SymlinkTreeStep(
-            "genrule_srcs",
-            projectFilesystem,
-            relativePathToSrcDir,
-            ImmutableMap.of(
-                projectFilesystem.getPath("signer.py"),
-                projectFilesystem.getPath("src/com/facebook/signer.py"),
-                projectFilesystem.getPath("key.properties"),
-                projectFilesystem.getPath("src/com/facebook/key.properties"))),
-        steps.get(6));
-
-    Step genruleStep = steps.get(7);
-    assertTrue(genruleStep instanceof AbstractGenruleStep);
-    AbstractGenruleStep genruleCommand = (AbstractGenruleStep) genruleStep;
-    assertEquals("genrule", genruleCommand.getShortName());
+    AbstractGenruleStep genruleStep = (AbstractGenruleStep) maybeGenruleStep.get();
+    assertEquals("genrule", genruleStep.getShortName());
     ImmutableMap<String, String> environmentVariables =
-        genruleCommand.getEnvironmentVariables(executionContext);
+        genruleStep.getEnvironmentVariables(executionContext);
     assertEquals(
         new ImmutableMap.Builder<String, String>()
             .put(
@@ -262,11 +201,11 @@ public class ApkGenruleTest {
             .build(),
         environmentVariables);
 
-    Path scriptFilePath = genruleCommand.getScriptFilePath(executionContext);
-    String scriptFileContents = genruleCommand.getScriptFileContents(executionContext);
+    Path scriptFilePath = genruleStep.getScriptFilePath(executionContext);
+    String scriptFileContents = genruleStep.getScriptFileContents(executionContext);
     assertEquals(
         ImmutableList.of("/bin/bash", "-e", scriptFilePath.toString()),
-        genruleCommand.getShellCommand(executionContext));
+        genruleStep.getShellCommand(executionContext));
     assertEquals("python signer.py $APK key.properties > $OUT", scriptFileContents);
   }
 
@@ -284,10 +223,8 @@ public class ApkGenruleTest {
 
     @Override
     public ApkInfo getApkInfo() {
-      return ApkInfo.builder()
-          .setApkPath(FakeSourcePath.of("buck-out/gen/fb4a.apk"))
-          .setManifestPath(FakeSourcePath.of("spoof"))
-          .build();
+      return ImmutableApkInfo.of(
+          FakeSourcePath.of("spoof"), FakeSourcePath.of("buck-out/gen/fb4a.apk"), Optional.empty());
     }
   }
 }

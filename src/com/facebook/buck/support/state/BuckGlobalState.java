@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.support.state;
@@ -19,6 +19,7 @@ package com.facebook.buck.support.state;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.FileTreeCache;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphCache;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
@@ -76,7 +77,7 @@ public final class BuckGlobalState implements Closeable {
   private final VersionedTargetGraphCache versionedTargetGraphCache;
   private final ActionGraphCache actionGraphCache;
   private final RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler;
-  private final ImmutableMap<Path, WatchmanCursor> cursor;
+  private final ImmutableMap<AbsPath, WatchmanCursor> cursor;
   private final KnownRuleTypesProvider knownRuleTypesProvider;
   private final Clock clock;
   private final long startTime;
@@ -96,7 +97,7 @@ public final class BuckGlobalState implements Closeable {
       VersionedTargetGraphCache versionedTargetGraphCache,
       ActionGraphCache actionGraphCache,
       RuleKeyCacheRecycler<RuleKey> defaultRuleKeyFactoryCacheRecycler,
-      ImmutableMap<Path, WatchmanCursor> cursor,
+      ImmutableMap<AbsPath, WatchmanCursor> cursor,
       KnownRuleTypesProvider knownRuleTypesProvider,
       Clock clock,
       boolean usesWatchman) {
@@ -234,7 +235,7 @@ public final class BuckGlobalState implements Closeable {
     return fileEventBus;
   }
 
-  public ImmutableMap<Path, WatchmanCursor> getWatchmanCursor() {
+  public ImmutableMap<AbsPath, WatchmanCursor> getWatchmanCursor() {
     return cursor;
   }
 

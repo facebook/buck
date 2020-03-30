@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.swift;
@@ -49,8 +49,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.facebook.buck.swift.toolchain.SwiftPlatform;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.swift.toolchain.UnresolvedSwiftPlatform;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -78,7 +78,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final Optional<SourcePath> bridgingHeader;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final ImmutableSet<FrameworkPath> libraries;
-  private final FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain;
+  private final FlavorDomain<UnresolvedSwiftPlatform> swiftPlatformFlavorDomain;
   private final Optional<Pattern> supportedPlatformsRegex;
   private final Linkage linkage;
 
@@ -88,7 +88,7 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       Collection<? extends BuildRule> exportedDeps,
-      FlavorDomain<SwiftPlatform> swiftPlatformFlavorDomain,
+      FlavorDomain<UnresolvedSwiftPlatform> swiftPlatformFlavorDomain,
       Optional<SourcePath> bridgingHeader,
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
@@ -142,7 +142,13 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     }
     SwiftRuntimeNativeLinkableGroup swiftRuntimeNativeLinkable =
         new SwiftRuntimeNativeLinkableGroup(
-            swiftPlatformFlavorDomain.getValue(cxxPlatform.getFlavor()),
+            swiftPlatformFlavorDomain
+                .getValue(cxxPlatform.getFlavor())
+                .resolve(graphBuilder)
+                .orElseThrow(
+                    () ->
+                        new IllegalStateException(
+                            "swift platform does not exist: " + cxxPlatform.getFlavor().getName())),
             getBuildTarget().getTargetConfiguration());
     return RichStream.from(exportedDeps)
         .filter(NativeLinkableGroup.class)
@@ -200,7 +206,10 @@ class SwiftLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
     BuildRule sharedLibraryBuildRule = requireSwiftLinkRule(cxxPlatform.getFlavor());
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
-            Optional.empty(), sharedLibraryBuildRule.getBuildTarget(), cxxPlatform);
+            Optional.empty(),
+            sharedLibraryBuildRule.getBuildTarget(),
+            cxxPlatform,
+            getProjectFilesystem());
     libs.put(sharedLibrarySoname, sharedLibraryBuildRule.getSourcePathToOutput());
     return libs.build();
   }

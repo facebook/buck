@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
@@ -54,11 +55,11 @@ public class NdkLibraryTest {
   private ProjectFilesystem projectFilesystem;
 
   @Before
-  public void setUp() {
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
+  public void setUp() throws Exception {
 
     projectFilesystem =
         TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath());
+    AssumeAndroidPlatform.get(projectFilesystem).assumeNdkIsAvailable();
 
     executionContext = TestExecutionContext.newBuilder().build();
   }
@@ -96,18 +97,13 @@ public class NdkLibraryTest {
 
     assertTrue(ndkLibrary.isAsset());
     assertEquals(
-        projectFilesystem.getBuckPaths().getGenDir().resolve(basePath).resolve("__libbase"),
+        BuildTargetPaths.getGenPath(projectFilesystem, target, "__lib%s"),
         ndkLibrary.getLibraryPath());
 
     List<Step> steps = ndkLibrary.getBuildSteps(context, new FakeBuildableContext());
 
     String libbase =
-        projectFilesystem
-            .getBuckPaths()
-            .getScratchDir()
-            .resolve(basePath)
-            .resolve("__libbase")
-            .toString();
+        BuildTargetPaths.getScratchPath(projectFilesystem, target, "__lib%s").toString();
     MoreAsserts.assertShellCommands(
         "ndk_library() should invoke ndk-build on the given path with some -j value",
         ImmutableList.of(

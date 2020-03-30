@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
@@ -23,9 +23,9 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -34,8 +34,9 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxBinaryBuilder;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
@@ -62,9 +63,11 @@ import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -87,7 +90,10 @@ public class CxxPythonExtensionDescriptionTest {
     return new TestPythonPlatform(
         InternalFlavor.of("py-default"),
         new PythonEnvironment(
-            Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
+            Paths.get("python2"),
+            PythonVersion.of("CPython", "2.6"),
+            PythonBuckConfig.SECTION,
+            UnconfiguredTargetConfiguration.INSTANCE),
         Optional.empty());
   }
 
@@ -95,7 +101,10 @@ public class CxxPythonExtensionDescriptionTest {
     return new TestPythonPlatform(
         InternalFlavor.of("py2"),
         new PythonEnvironment(
-            Paths.get("python2"), PythonVersion.of("CPython", "2.6"), PythonBuckConfig.SECTION),
+            Paths.get("python2"),
+            PythonVersion.of("CPython", "2.6"),
+            PythonBuckConfig.SECTION,
+            UnconfiguredTargetConfiguration.INSTANCE),
         cxxLibrary);
   }
 
@@ -103,7 +112,10 @@ public class CxxPythonExtensionDescriptionTest {
     return new TestPythonPlatform(
         InternalFlavor.of("py3"),
         new PythonEnvironment(
-            Paths.get("python3"), PythonVersion.of("CPython", "3.5"), PythonBuckConfig.SECTION),
+            Paths.get("python3"),
+            PythonVersion.of("CPython", "3.5"),
+            PythonBuckConfig.SECTION,
+            UnconfiguredTargetConfiguration.INSTANCE),
         cxxLibrary);
   }
 
@@ -124,14 +136,17 @@ public class CxxPythonExtensionDescriptionTest {
 
     CxxPythonExtension normal = builder.build(graphBuilder, filesystem, targetGraph);
 
-    PythonPackageComponents normalComps =
-        normal.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertEquals(
         ImmutableSet.of(
             target
-                .getBasePath()
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPath(filesystem.getFileSystem())
                 .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName()))),
-        normalComps.getModules().keySet());
+        normal
+            .getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .map(modules -> modules.getComponents().keySet())
+            .orElseGet(ImmutableSortedSet::of));
 
     // Verify that explicitly setting works.
     BuildTarget target2 = BuildTargetFactory.newInstance("//:target2#py2");
@@ -146,13 +161,14 @@ public class CxxPythonExtensionDescriptionTest {
     targetGraph = TargetGraphFactory.newInstance(baseModuleBuilder.build());
     graphBuilder = new TestActionGraphBuilder(targetGraph);
     CxxPythonExtension baseModule = baseModuleBuilder.build(graphBuilder, filesystem, targetGraph);
-    PythonPackageComponents baseModuleComps =
-        baseModule.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertEquals(
         ImmutableSet.of(
             Paths.get(name)
                 .resolve(CxxPythonExtensionDescription.getExtensionName(target2.getShortName()))),
-        baseModuleComps.getModules().keySet());
+        baseModule
+            .getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .map(modules -> modules.getComponents().keySet())
+            .orElseGet(ImmutableSortedSet::of));
   }
 
   @Test
@@ -188,10 +204,10 @@ public class CxxPythonExtensionDescriptionTest {
             CxxPlatformUtils.DEFAULT_PLATFORM,
             Linker.LinkableDepType.SHARED,
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE);
+            UnconfiguredTargetConfiguration.INSTANCE);
 
     // Verify that the shared library dep propagated to the link rule.
-    extension.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+    extension.getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     BuildRule rule =
         graphBuilder.getRule(
             CxxPythonExtensionDescription.getExtensionTarget(
@@ -222,24 +238,26 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtension extension = builder.build(graphBuilder, filesystem, targetGraph);
 
     // Verify that we get the expected view from the python packageable interface.
-    PythonPackageComponents actualComponent =
-        extension.getPythonPackageComponents(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+    ImmutableMap<Path, SourcePath> modules =
+        extension
+            .getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
+            .map(PythonMappedComponents::getComponents)
+            .orElseGet(ImmutableSortedMap::of);
     BuildRule rule =
         graphBuilder.getRule(
             CxxPythonExtensionDescription.getExtensionTarget(
                 target, PY2.getFlavor(), CxxPlatformUtils.DEFAULT_PLATFORM_FLAVOR));
-    PythonPackageComponents expectedComponents =
-        PythonPackageComponents.of(
-            ImmutableMap.of(
-                target
-                    .getBasePath()
-                    .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName())),
-                rule.getSourcePathToOutput()),
-            ImmutableMap.of(),
-            ImmutableMap.of(),
-            ImmutableMultimap.of(),
-            Optional.of(false));
-    assertEquals(expectedComponents, actualComponent);
+
+    assertEquals(
+        ImmutableMap.of(
+            target
+                .getCellRelativeBasePath()
+                .getPath()
+                .toPath(filesystem.getFileSystem())
+                .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName())),
+            rule.getSourcePathToOutput()),
+        modules);
+    assertThat(extension.isPythonZipSafe(), Matchers.equalTo(Optional.of(false)));
   }
 
   @Test
@@ -263,7 +281,7 @@ public class CxxPythonExtensionDescriptionTest {
     ImmutableSortedSet.Builder<BuildTarget> builder = ImmutableSortedSet.naturalOrder();
     desc.findDepsForTargetFromConstructorArgs(
         BuildTargetFactory.newInstance("//foo:bar"),
-        createCellRoots(filesystem),
+        createCellRoots(filesystem).getCellNameResolver(),
         constructorArg,
         builder,
         ImmutableSortedSet.naturalOrder());
@@ -298,7 +316,7 @@ public class CxxPythonExtensionDescriptionTest {
         TargetGraphFactory.newInstance(
             python2Builder.build(), python3Builder.build(), builder.build());
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     python2Builder.build(graphBuilder, filesystem, targetGraph);
     python3Builder.build(graphBuilder, filesystem, targetGraph);
@@ -330,7 +348,7 @@ public class CxxPythonExtensionDescriptionTest {
             CxxTestUtils.createDefaultPlatforms());
     CxxPythonExtension rule = builder.build(graphBuilder);
     NativeLinkTarget nativeLinkTarget =
-        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         nativeLinkTarget.getNativeLinkTargetMode(),
         Matchers.equalTo(NativeLinkTargetMode.library()));
@@ -355,7 +373,7 @@ public class CxxPythonExtensionDescriptionTest {
     CxxPythonExtension rule =
         builder.setDeps(ImmutableSortedSet.of(dep.getBuildTarget())).build(graphBuilder);
     NativeLinkTarget nativeLinkTarget =
-        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(nativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),
@@ -379,7 +397,7 @@ public class CxxPythonExtensionDescriptionTest {
     python2Builder.build(graphBuilder, filesystem, targetGraph);
     CxxPythonExtension rule = builder.build(graphBuilder, filesystem, targetGraph);
     NativeLinkTarget nativeLinkTarget =
-        rule.getNativeLinkTarget(platform, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        rule.getNativeLinkTarget(platform, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(nativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),
@@ -397,13 +415,22 @@ public class CxxPythonExtensionDescriptionTest {
     builder.setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")));
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(TargetGraphFactory.newInstance(builder.build()));
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     CxxPythonExtension rule = builder.build(graphBuilder);
-    NativeLinkTarget nativeLinkTarget =
-        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
-    NativeLinkableInput input =
-        nativeLinkTarget.getNativeLinkTargetInput(graphBuilder, pathResolver);
-    assertThat(Arg.stringify(input.getArgs(), pathResolver), Matchers.hasItems("--flag"));
+    assertThat(
+        Arg.stringify(
+            rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true)
+                .getNativeLinkTargetInput(graphBuilder, pathResolver)
+                .getArgs(),
+            pathResolver),
+        Matchers.hasItems("--flag"));
+    assertThat(
+        Arg.stringify(
+            rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, false)
+                .getNativeLinkTargetInput(graphBuilder, pathResolver)
+                .getArgs(),
+            pathResolver),
+        Matchers.not(Matchers.hasItems("--flag")));
   }
 
   @Test
@@ -431,13 +458,13 @@ public class CxxPythonExtensionDescriptionTest {
                     .build())
             .build(graphBuilder);
     NativeLinkTarget py2NativeLinkTarget =
-        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(py2NativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),
         Matchers.hasItem(dep.getBuildTarget()));
     NativeLinkTarget py3NativeLinkTarget =
-        rule.getNativeLinkTarget(PY3, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
+        rule.getNativeLinkTarget(PY3, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(py3NativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
             .transform(d -> d.getBuildTarget()),
@@ -445,7 +472,7 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
-  public void platformDepsSeparateLinkage() {
+  public void platformDepsSeparateLinkage() throws IOException {
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(FakeBuckConfig.builder().build());
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);
 
@@ -487,10 +514,18 @@ public class CxxPythonExtensionDescriptionTest {
     PythonBinary binary3 = binary3Builder.build(graphBuilder);
 
     assertThat(
-        binary2.getComponents().getNativeLibraries().keySet(),
+        binary2
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllNativeLibraries()
+            .keySet(),
         Matchers.contains(Paths.get("libdep.so")));
     assertThat(
-        binary3.getComponents().getNativeLibraries().keySet(),
+        binary3
+            .getComponents()
+            .resolve(graphBuilder.getSourcePathResolver())
+            .getAllNativeLibraries()
+            .keySet(),
         Matchers.not(Matchers.contains(Paths.get("libdep.so"))));
   }
 

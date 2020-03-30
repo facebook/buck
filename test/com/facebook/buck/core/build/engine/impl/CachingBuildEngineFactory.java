@@ -1,23 +1,22 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.impl;
 
 import com.facebook.buck.core.build.action.resolver.BuildEngineActionToBuildRuleResolver;
-import com.facebook.buck.core.build.distributed.synchronization.RemoteBuildRuleCompletionWaiter;
 import com.facebook.buck.core.build.engine.cache.manager.BuildInfoStoreManager;
 import com.facebook.buck.core.build.engine.config.ResourceAwareSchedulingInfo;
 import com.facebook.buck.core.build.engine.delegate.CachingBuildEngineDelegate;
@@ -60,15 +59,12 @@ public class CachingBuildEngineFactory {
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
   private boolean logBuildRuleFailuresInline = true;
   private BuildInfoStoreManager buildInfoStoreManager;
-  private final RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter;
   private Optional<BuildRuleStrategy> customBuildRuleStrategy = Optional.empty();
 
   public CachingBuildEngineFactory(
       BuildRuleResolver buildRuleResolver,
       BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
-      BuildInfoStoreManager buildInfoStoreManager,
-      RemoteBuildRuleCompletionWaiter remoteBuildRuleCompletionWaiter) {
-    this.remoteBuildRuleCompletionWaiter = remoteBuildRuleCompletionWaiter;
+      BuildInfoStoreManager buildInfoStoreManager) {
     this.cachingBuildEngineDelegate = new LocalCachingBuildEngineDelegate(new DummyFileHashCache());
     this.executorService = toWeighted(MoreExecutors.newDirectExecutorService());
     this.buildRuleResolver = buildRuleResolver;
@@ -154,11 +150,9 @@ public class CachingBuildEngineFactory {
           actionToBuildRuleResolver,
           targetConfigurationSerializer,
           ruleKeyFactories.get(),
-          remoteBuildRuleCompletionWaiter,
           resourceAwareSchedulingInfo,
           RuleKeyDiagnostics.nop(),
-          logBuildRuleFailuresInline,
-          Optional.empty());
+          logBuildRuleFailuresInline);
     }
 
     return new CachingBuildEngine(
@@ -180,9 +174,7 @@ public class CachingBuildEngineFactory {
             cachingBuildEngineDelegate.getFileHashCache(),
             buildRuleResolver,
             inputFileSizeLimit,
-            new TrackedRuleKeyCache<>(new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker())),
-        remoteBuildRuleCompletionWaiter,
-        Optional.empty());
+            new TrackedRuleKeyCache<>(new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker())));
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {

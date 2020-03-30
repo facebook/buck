@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.macros;
@@ -111,7 +111,7 @@ public class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult>
   private char startQuote;
   private State returnState;
 
-  private MacroMatchResult.Builder currentResultBuilder;
+  private ImmutableMacroMatchResult.Builder currentResultBuilder;
   private StringBuilder buffer;
 
   @Nullable private MacroMatchResult next;
@@ -121,7 +121,7 @@ public class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult>
     this.parenthesesDepth = 0;
     this.state = State.SEARCHING;
     this.index = 0;
-    this.currentResultBuilder = MacroMatchResult.builder();
+    this.currentResultBuilder = ImmutableMacroMatchResult.builder();
     this.buffer = new StringBuilder();
     this.startQuote = '\0';
     this.returnState = this.state;
@@ -172,7 +172,7 @@ public class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult>
             return State.IN_ESCAPE_SEQUENCE;
           case '$':
             currentResultBuilder =
-                MacroMatchResult.builder().setStartIndex(index).setEscaped(false);
+                ImmutableMacroMatchResult.builder().setStartIndex(index).setEscaped(false);
             return State.FOUND_DOLLAR;
           default:
             return State.SEARCHING;
@@ -182,7 +182,7 @@ public class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult>
         switch (c) {
           case '$':
             currentResultBuilder =
-                MacroMatchResult.builder().setStartIndex(index - 1).setEscaped(true);
+                ImmutableMacroMatchResult.builder().setStartIndex(index - 1).setEscaped(true);
             return State.FOUND_DOLLAR;
           default:
             return returnState;
@@ -197,7 +197,7 @@ public class MacroFinderAutomaton extends UnmodifiableIterator<MacroMatchResult>
             return State.IN_ESCAPE_SEQUENCE;
           case '$':
             currentResultBuilder =
-                MacroMatchResult.builder().setStartIndex(index).setEscaped(false);
+                ImmutableMacroMatchResult.builder().setStartIndex(index).setEscaped(false);
             return State.FOUND_DOLLAR;
           default:
             return State.SEARCHING;

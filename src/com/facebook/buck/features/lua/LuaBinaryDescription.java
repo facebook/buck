@@ -1,23 +1,24 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -33,19 +34,17 @@ import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.Omnibus;
-import com.facebook.buck.cxx.OmnibusLibraries;
-import com.facebook.buck.cxx.OmnibusLibrary;
-import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -57,8 +56,8 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.python.CxxPythonExtension;
 import com.facebook.buck.features.python.PythonBinaryDescription;
+import com.facebook.buck.features.python.PythonMappedComponents;
 import com.facebook.buck.features.python.PythonPackagable;
-import com.facebook.buck.features.python.PythonPackageComponents;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.io.file.MorePaths;
@@ -66,7 +65,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.util.MoreMaps;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -327,19 +326,26 @@ public class LuaBinaryDescription
         } else if (rule instanceof CxxPythonExtension) {
           CxxPythonExtension extension = (CxxPythonExtension) rule;
           NativeLinkTarget target =
-              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder);
+              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false);
           pythonExtensions.put(target.getBuildTarget(), (CxxPythonExtension) rule);
           omnibusRoots.addIncludedRoot(target);
         } else if (rule instanceof PythonPackagable) {
           PythonPackagable packageable = (PythonPackagable) rule;
-          PythonPackageComponents components =
-              packageable.getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder);
-          builder.putAllPythonModules(
-              MoreMaps.transformKeys(components.getModules(), Object::toString));
-          builder.putAllNativeLibraries(
-              MoreMaps.transformKeys(components.getNativeLibraries(), Object::toString));
+          packageable
+              .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+              .ifPresent(
+                  modules -> {
+                    // TODO(agallagher): This doesn't support prebuilt python libs.
+                    if (modules instanceof PythonMappedComponents) {
+                      builder.putAllPythonModules(
+                          MoreMaps.transformKeys(
+                              ((PythonMappedComponents) modules).getComponents(),
+                              Object::toString));
+                    }
+                  });
           deps = packageable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
-          if (components.hasNativeCode(cxxPlatform)) {
+          if (packageable.doesPythonPackageDisallowOmnibus(
+              pythonPlatform, cxxPlatform, graphBuilder)) {
             for (BuildRule dep : deps) {
               if (dep instanceof NativeLinkableGroup) {
                 NativeLinkable linkable =
@@ -352,12 +358,12 @@ public class LuaBinaryDescription
         } else if (rule instanceof CxxLuaExtension) {
           CxxLuaExtension extension = (CxxLuaExtension) rule;
           luaExtensions.put(extension.getBuildTarget(), extension);
-          omnibusRoots.addIncludedRoot(extension.getTargetForPlatform(cxxPlatform));
+          omnibusRoots.addIncludedRoot(extension.getTargetForPlatform(cxxPlatform, false));
         } else if (rule instanceof NativeLinkableGroup) {
           NativeLinkable linkable =
               ((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
-          omnibusRoots.addPotentialRoot(linkable);
+          omnibusRoots.addPotentialRoot(linkable, false);
         }
         return deps;
       }
@@ -388,7 +394,7 @@ public class LuaBinaryDescription
 
       // Build the omnibus libraries.
       OmnibusRoots roots = omnibusRoots.build();
-      OmnibusLibraries libraries =
+      Omnibus.OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
               buildTarget,
               projectFilesystem,
@@ -402,7 +408,7 @@ public class LuaBinaryDescription
               roots.getExcludedRoots().values());
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
-      for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
+      for (Map.Entry<BuildTarget, Omnibus.OmnibusRoot> root : libraries.getRoots().entrySet()) {
 
         // If it's a Lua extension add it as a module.
         CxxLuaExtension luaExtension = luaExtensions.get(root.getKey());
@@ -443,7 +449,7 @@ public class LuaBinaryDescription
       }
 
       // Add all remaining libraries as native libraries.
-      for (OmnibusLibrary library : libraries.getLibraries()) {
+      for (Omnibus.OmnibusLibrary library : libraries.getLibraries()) {
         builder.putNativeLibraries(library.getSoname(), library.getPath());
       }
 
@@ -456,7 +462,9 @@ public class LuaBinaryDescription
         builder.putModules(extension.getModule(cxxPlatform), extension.getExtension(cxxPlatform));
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
-                extension.getTargetForPlatform(cxxPlatform).getNativeLinkTargetDeps(graphBuilder),
+                extension
+                    .getTargetForPlatform(cxxPlatform, true)
+                    .getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }
 
@@ -474,17 +482,18 @@ public class LuaBinaryDescription
       // For regular linking, add all extensions via the package components interface and their
       // python-platform specific deps to the native linkables.
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : pythonExtensions.entrySet()) {
-        PythonPackageComponents components =
-            entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder);
-        builder.putAllPythonModules(
-            MoreMaps.transformKeys(components.getModules(), Object::toString));
-        builder.putAllNativeLibraries(
-            MoreMaps.transformKeys(components.getNativeLibraries(), Object::toString));
+        entry
+            .getValue()
+            .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+            .ifPresent(
+                modules ->
+                    builder.putAllPythonModules(
+                        MoreMaps.transformKeys(modules.getComponents(), Object::toString)));
         nativeLinkableRoots.putAll(
             Maps.uniqueIndex(
                 entry
                     .getValue()
-                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder)
+                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, true)
                     .getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }
@@ -516,7 +525,7 @@ public class LuaBinaryDescription
       Path root,
       ImmutableMap<String, SourcePath> components) {
     return graphBuilder.addToIndex(
-        new SymlinkTree(
+        new MappedSymlinkTree(
             "lua_binary",
             linkTreeTarget,
             filesystem,
@@ -616,38 +625,17 @@ public class LuaBinaryDescription
       nativeLibsLinktree.add(symlinkTree);
     }
 
-    return new Tool() {
-      @AddToRuleKey private final LuaPackageComponents toolComponents = components;
-      @AddToRuleKey private final SourcePath toolStarter = starter;
-
-      @AddToRuleKey
-      private final NonHashableSourcePathContainer toolModulesLinkTree =
-          new NonHashableSourcePathContainer(modulesLinkTree.getSourcePathToOutput());
-
-      @AddToRuleKey
-      private final List<NonHashableSourcePathContainer> toolNativeLibsLinkTree =
-          nativeLibsLinktree.stream()
-              .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
-              .collect(ImmutableList.toImmutableList());
-
-      @AddToRuleKey
-      private final List<NonHashableSourcePathContainer> toolPythonModulesLinktree =
-          pythonModulesLinktree.stream()
-              .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
-              .collect(ImmutableList.toImmutableList());
-
-      @AddToRuleKey private final List<SourcePath> toolExtraInputs = extraInputs;
-
-      @Override
-      public ImmutableList<String> getCommandPrefix(SourcePathResolver resolver) {
-        return ImmutableList.of(resolver.getAbsolutePath(starter).toString());
-      }
-
-      @Override
-      public ImmutableMap<String, String> getEnvironment(SourcePathResolver resolver) {
-        return ImmutableMap.of();
-      }
-    };
+    return new LuaBinaryDescriptionTool(
+        components,
+        starter,
+        new NonHashableSourcePathContainer(modulesLinkTree.getSourcePathToOutput()),
+        nativeLibsLinktree.stream()
+            .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
+            .collect(ImmutableList.toImmutableList()),
+        pythonModulesLinktree.stream()
+            .map(linkTree -> new NonHashableSourcePathContainer(linkTree.getSourcePathToOutput()))
+            .collect(ImmutableList.toImmutableList()),
+        ImmutableList.copyOf(extraInputs));
   }
 
   private Tool getStandaloneBinary(
@@ -728,7 +716,10 @@ public class LuaBinaryDescription
   // Return the C/C++ platform to build against.
   private LuaPlatform getPlatform(BuildTarget target, AbstractLuaBinaryDescriptionArg arg) {
     LuaPlatformsProvider luaPlatformsProvider =
-        toolchainProvider.getByName(LuaPlatformsProvider.DEFAULT_NAME, LuaPlatformsProvider.class);
+        toolchainProvider.getByName(
+            LuaPlatformsProvider.DEFAULT_NAME,
+            target.getTargetConfiguration(),
+            LuaPlatformsProvider.class);
 
     FlavorDomain<LuaPlatform> luaPlatforms = luaPlatformsProvider.getLuaPlatforms();
 
@@ -755,7 +746,10 @@ public class LuaBinaryDescription
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider
-            .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+            .getByName(
+                PythonPlatformsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                PythonPlatformsProvider.class)
             .getPythonPlatforms();
     PythonPlatform pythonPlatform =
         pythonPlatforms
@@ -810,7 +804,7 @@ public class LuaBinaryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractLuaBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
@@ -827,9 +821,48 @@ public class LuaBinaryDescription
     NATIVE,
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractLuaBinaryDescriptionArg extends CommonDescriptionArg, HasDeclaredDeps {
+  /** Tool wrapping a LuaBinaryDescription, suitable for serialization. */
+  private static final class LuaBinaryDescriptionTool implements Tool {
+    @AddToRuleKey private final LuaPackageComponents toolComponents;
+    @AddToRuleKey private final SourcePath toolStarter;
+    @AddToRuleKey private final NonHashableSourcePathContainer toolModulesLinkTree;
+
+    @AddToRuleKey
+    private final ImmutableList<NonHashableSourcePathContainer> toolNativeLibsLinkTree;
+
+    @AddToRuleKey
+    private final ImmutableList<NonHashableSourcePathContainer> toolPythonModulesLinktree;
+
+    @AddToRuleKey private final ImmutableList<SourcePath> toolExtraInputs;
+
+    public LuaBinaryDescriptionTool(
+        LuaPackageComponents toolComponents,
+        SourcePath toolStarter,
+        NonHashableSourcePathContainer toolModulesLinkTree,
+        ImmutableList<NonHashableSourcePathContainer> toolNativeLibsLinkTree,
+        ImmutableList<NonHashableSourcePathContainer> toolPythonModulesLinktree,
+        ImmutableList<SourcePath> toolExtraInputs) {
+      this.toolComponents = toolComponents;
+      this.toolStarter = toolStarter;
+      this.toolModulesLinkTree = toolModulesLinkTree;
+      this.toolNativeLibsLinkTree = toolNativeLibsLinkTree;
+      this.toolPythonModulesLinktree = toolPythonModulesLinktree;
+      this.toolExtraInputs = toolExtraInputs;
+    }
+
+    @Override
+    public ImmutableList<String> getCommandPrefix(SourcePathResolverAdapter resolver) {
+      return ImmutableList.of(resolver.getAbsolutePath(toolStarter).toString());
+    }
+
+    @Override
+    public ImmutableMap<String, String> getEnvironment(SourcePathResolverAdapter resolver) {
+      return ImmutableMap.of();
+    }
+  }
+
+  @RuleArg
+  interface AbstractLuaBinaryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     String getMainModule();
 
     Optional<BuildTarget> getNativeStarterLibrary();

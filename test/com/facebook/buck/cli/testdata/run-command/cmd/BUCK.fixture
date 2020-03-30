@@ -12,3 +12,24 @@ sh_binary(
     name = "command",
     main = ":real_command",
 )
+
+python_binary(
+    name = "echo_var",
+    main = "echo_var.py",
+)
+
+command_alias(
+    name = "alias_echo_var",
+    exe = ":echo_var",
+    env = {
+        "VAR": "YES",
+    }
+)
+
+command_alias(
+    name = "alias_echo_var_override",
+    exe = ":alias_echo_var",
+    env = {
+        "VAR": "NO",
+    }
+)

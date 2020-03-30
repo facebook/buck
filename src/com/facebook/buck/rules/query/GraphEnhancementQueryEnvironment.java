@@ -1,23 +1,24 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.query;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -41,7 +42,7 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -83,19 +84,21 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   private final Optional<TargetGraph> targetGraph;
   private final TypeCoercerFactory typeCoercerFactory;
   private final QueryEnvironment.TargetEvaluator targetEvaluator;
+  private final CellNameResolver cellNameResolver;
 
   public GraphEnhancementQueryEnvironment(
       Optional<ActionGraphBuilder> graphBuilder,
       Optional<TargetGraph> targetGraph,
       TypeCoercerFactory typeCoercerFactory,
-      CellPathResolver cellNames,
+      CellNameResolver cellNames,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      String targetBaseName,
+      BaseName targetBaseName,
       Set<BuildTarget> declaredDeps,
       TargetConfiguration targetConfiguration) {
     this.graphBuilder = graphBuilder;
     this.targetGraph = targetGraph;
     this.typeCoercerFactory = typeCoercerFactory;
+    this.cellNameResolver = cellNames;
     this.targetEvaluator =
         new TargetEvaluator(
             cellNames,
@@ -186,14 +189,14 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
       QueryBuildTarget target, String attribute) {
     return QueryTargetAccessor.getTargetsInAttribute(
-        typeCoercerFactory, getNode(target), attribute);
+        typeCoercerFactory, getNode(target), attribute, cellNameResolver);
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
       QueryBuildTarget target, String attribute, Predicate<Object> predicate) {
     return QueryTargetAccessor.filterAttributeContents(
-        typeCoercerFactory, getNode(target), attribute, predicate);
+        typeCoercerFactory, getNode(target), attribute, predicate, cellNameResolver);
   }
 
   private TargetNode<?> getNode(QueryTarget target) {
@@ -269,16 +272,16 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
   }
 
   private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator {
-    private final CellPathResolver cellNames;
-    private final String targetBaseName;
+    private final CellNameResolver cellNames;
+    private final BaseName targetBaseName;
     private final ImmutableSet<BuildTarget> declaredDeps;
     private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
     private final TargetConfiguration targetConfiguration;
 
     private TargetEvaluator(
-        CellPathResolver cellNames,
+        CellNameResolver cellNames,
         UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-        String targetBaseName,
+        BaseName targetBaseName,
         Set<BuildTarget> declaredDeps,
         TargetConfiguration targetConfiguration) {
       this.cellNames = cellNames;
@@ -298,7 +301,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryB
       try {
         BuildTarget buildTarget =
             unconfiguredBuildTargetFactory
-                .createForBaseName(cellNames, targetBaseName, target)
+                .createForBaseName(targetBaseName, target, cellNames)
                 .configure(targetConfiguration);
         return ImmutableSet.of(QueryBuildTarget.of(buildTarget));
       } catch (BuildTargetParseException e) {

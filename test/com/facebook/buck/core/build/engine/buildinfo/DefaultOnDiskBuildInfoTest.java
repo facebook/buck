@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.buildinfo;
@@ -25,8 +25,8 @@ import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.timing.DefaultClock;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
@@ -52,7 +52,7 @@ public class DefaultOnDiskBuildInfoTest {
   public void whenMetadataEmptyStringThenGetValueReturnsEmptyString() throws IOException {
     setMetadata("KEY", "");
     DefaultOnDiskBuildInfo onDiskBuildInfo = createOnDiskBuildInfo();
-    assertThat(onDiskBuildInfo.getValue("KEY"), Matchers.equalTo(Optional.of("")));
+    assertThat(onDiskBuildInfo.getValue("KEY"), Matchers.equalTo(Either.ofLeft("")));
   }
 
   @Test
@@ -85,29 +85,6 @@ public class DefaultOnDiskBuildInfoTest {
     setMetadata("KEY", "Some Invalid Json");
     DefaultOnDiskBuildInfo onDiskBuildInfo = createOnDiskBuildInfo();
     assertThat(onDiskBuildInfo.getValues("KEY"), Matchers.equalTo(Optional.empty()));
-  }
-
-  @Test
-  public void whenMetadataValidHashThenGetHashReturnsHash() throws IOException {
-    String hash = "fac0fac1fac2fac3fac4fac5fac6fac7fac8fac9";
-    setMetadata("KEY", hash);
-    DefaultOnDiskBuildInfo onDiskBuildInfo = createOnDiskBuildInfo();
-    assertThat(
-        onDiskBuildInfo.getHash("KEY"), Matchers.equalTo(Optional.of(Sha1HashCode.of(hash))));
-  }
-
-  @Test
-  public void whenMetadataEmptyStringThenGetHashReturnsAbsent() throws IOException {
-    setMetadata("KEY", "");
-    DefaultOnDiskBuildInfo onDiskBuildInfo = createOnDiskBuildInfo();
-    assertThat(onDiskBuildInfo.getHash("KEY"), Matchers.equalTo(Optional.empty()));
-  }
-
-  @Test
-  public void whenMetadataInvalidHashThenGetHashReturnsAbsent() throws IOException {
-    setMetadata("KEY", "Not A Valid Hash");
-    DefaultOnDiskBuildInfo onDiskBuildInfo = createOnDiskBuildInfo();
-    assertThat(onDiskBuildInfo.getHash("KEY"), Matchers.equalTo(Optional.empty()));
   }
 
   @Test

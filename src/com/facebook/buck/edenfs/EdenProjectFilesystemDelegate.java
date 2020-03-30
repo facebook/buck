@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.edenfs;
@@ -24,7 +24,6 @@ import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -59,8 +58,6 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   /** Delegate to forward requests to for files that are outside of the {@link #mount}. */
   private final ProjectFilesystemDelegate delegate;
 
-  private final ImmutableList<Path> bindMounts;
-
   private final boolean disableSha1FastPath;
 
   private final boolean useXattr;
@@ -86,7 +83,6 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
       boolean useXattr) {
     this.mount = mount;
     this.delegate = delegate;
-    this.bindMounts = mount.getBindMounts();
     this.disableSha1FastPath = disableSha1FastPath;
     this.useXattr = useXattr;
   }
@@ -142,7 +138,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
         }
       }
     } catch (FileSystemException | IllegalArgumentException e) {
-      LOG.debug(e, "Failed when fetching SHA-1 for %s", path);
+      LOG.debug("Failed when fetching SHA-1 for %s", path);
     }
     return Optional.empty();
   }
@@ -150,7 +146,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   private Optional<Sha1HashCode> computeSha1ViaThrift(
       Path path, boolean retryWithRealPathIfEdenError) throws IOException {
     Optional<Path> entry = mount.getPathRelativeToProjectRoot(path);
-    if (entry.isPresent() && !isUnderBindMount(entry.get())) {
+    if (entry.isPresent()) {
       try {
         return Optional.of(mount.getSha1(entry.get()));
       } catch (TException | IOException e) {
@@ -168,15 +164,6 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
       }
     }
     return Optional.empty();
-  }
-
-  private boolean isUnderBindMount(Path pathRelativeToProjectRoot) {
-    for (Path bindMount : bindMounts) {
-      if (pathRelativeToProjectRoot.startsWith(bindMount)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   @Override

@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.pipeline.RulePipelineStateFactory;
 import com.facebook.buck.core.rules.pipeline.SupportsPipelining;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
@@ -123,6 +123,7 @@ public class DefaultJavaLibrary
   private final Optional<SourcePath> sourcePathForGeneratedAnnotationPath;
 
   private JavaClassHashesProvider javaClassHashesProvider;
+  private final boolean neverMarkAsUnusedDependency;
 
   public static DefaultJavaLibraryRules.Builder rulesBuilder(
       BuildTarget buildTarget,
@@ -130,7 +131,6 @@ public class DefaultJavaLibrary
       ToolchainProvider toolchainProvider,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      CellPathResolver cellPathResolver,
       ConfiguredCompilerFactory compilerFactory,
       @Nullable JavaBuckConfig javaBuckConfig,
       @Nullable JavaLibraryDescription.CoreArg args) {
@@ -140,7 +140,6 @@ public class DefaultJavaLibrary
         toolchainProvider,
         params,
         graphBuilder,
-        cellPathResolver,
         compilerFactory,
         javaBuckConfig,
         args);
@@ -171,7 +170,8 @@ public class DefaultJavaLibrary
       Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
       @Nullable CalculateSourceAbi sourceAbi,
       boolean isDesugarEnabled,
-      boolean isInterfaceMethodsDesugarEnabled) {
+      boolean isInterfaceMethodsDesugarEnabled,
+      boolean neverMarkAsUnusedDependency) {
     super(
         buildTarget,
         projectFilesystem,
@@ -222,6 +222,7 @@ public class DefaultJavaLibrary
             : new DefaultJavaAbiInfo(getSourcePathToOutput());
     this.abiJar = abiJar;
     this.sourceOnlyAbiJar = sourceOnlyAbiJar;
+    this.neverMarkAsUnusedDependency = neverMarkAsUnusedDependency;
 
     this.outputClasspathEntriesSupplier =
         MoreSuppliers.memoize(
@@ -378,7 +379,8 @@ public class DefaultJavaLibrary
    * @param pathResolver
    */
   @Override
-  public JavaLibrary.Data initializeFromDisk(SourcePathResolver pathResolver) throws IOException {
+  public JavaLibrary.Data initializeFromDisk(SourcePathResolverAdapter pathResolver)
+      throws IOException {
     // Warm up the jar contents. We just wrote the thing, so it should be in the filesystem cache
     javaAbiInfo.load(pathResolver);
     return JavaLibraryRules.initializeFromDisk(getBuildTarget(), getProjectFilesystem());
@@ -456,12 +458,14 @@ public class DefaultJavaLibrary
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(
+      SourcePathResolverAdapter pathResolver) {
     return getBuildable().getCoveredByDepFilePredicate(ruleFinder);
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(
+      SourcePathResolverAdapter pathResolver) {
     return getBuildable().getExistenceOfInterestPredicate();
   }
 
@@ -496,5 +500,10 @@ public class DefaultJavaLibrary
 
   public void setJavaClassHashesProvider(JavaClassHashesProvider javaClassHashesProvider) {
     this.javaClassHashesProvider = javaClassHashesProvider;
+  }
+
+  @Override
+  public boolean neverMarkAsUnusedDependency() {
+    return neverMarkAsUnusedDependency;
   }
 }

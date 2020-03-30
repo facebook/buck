@@ -1,18 +1,19 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cxx;
 
 import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
@@ -33,7 +34,6 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -94,16 +94,17 @@ public class CxxCompilationDatabaseIntegrationTest {
   public void binaryWithDependenciesCompilationDatabase() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_dep#compilation-database");
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargetPaths.getGenPath(filesystem, target, "__%s/compile_commands.json"),
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(), target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            workspace.getProjectFileSystem(),
             target.withFlavors(
                 InternalFlavor.of("default"), CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
@@ -170,7 +171,7 @@ public class CxxCompilationDatabaseIntegrationTest {
 
   @Test
   public void libraryCompilationDatabase() throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target =
         BuildTargetFactory.newInstance("//:library_with_header#default,compilation-database");
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
@@ -256,16 +257,16 @@ public class CxxCompilationDatabaseIntegrationTest {
   @Test
   public void testCompilationDatabase() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:test#default,compilation-database");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
     Path rootPath = tmp.getRoot();
     assertEquals(
-        BuildTargetPaths.getGenPath(filesystem, target, "__%s/compile_commands.json"),
+        BuildTargetPaths.getGenPath(
+            workspace.getProjectFileSystem(), target, "__%s/compile_commands.json"),
         rootPath.relativize(compilationDatabase));
 
     Path binaryHeaderSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(
-            filesystem,
+            workspace.getProjectFileSystem(),
             target.withFlavors(
                 InternalFlavor.of("default"), CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
@@ -286,19 +287,21 @@ public class CxxCompilationDatabaseIntegrationTest {
             .add("c++")
             .add("-I")
             .add(headerSymlinkTreePath(binaryHeaderSymlinkTreeFolder).toString())
-            .addAll(getExtraFlagsForHeaderMaps(filesystem))
+            .addAll(getExtraFlagsForHeaderMaps(workspace.getProjectFileSystem()))
             .addAll(COMPILER_SPECIFIC_FLAGS)
             .add("-fdebug-prefix-map=" + rootPath + "=.")
             .addAll(MORE_COMPILER_SPECIFIC_FLAGS)
             .add("-o")
             .add(
-                BuildTargetPaths.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o")
+                BuildTargetPaths.getGenPath(
+                        workspace.getProjectFileSystem(), compilationTarget, "%s/test.cpp.o")
                     .toString())
             .add("-c")
             .add("-MD")
             .add("-MF")
             .add(
-                BuildTargetPaths.getGenPath(filesystem, compilationTarget, "%s/test.cpp.o.dep")
+                BuildTargetPaths.getGenPath(
+                        workspace.getProjectFileSystem(), compilationTarget, "%s/test.cpp.o.dep")
                     .toString())
             .add(Paths.get(path).toString())
             .build());
@@ -308,8 +311,8 @@ public class CxxCompilationDatabaseIntegrationTest {
   public void testUberCompilationDatabase() throws IOException {
     BuildTarget target =
         BuildTargetFactory.newInstance("//:test#default,uber-compilation-database");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
     Path compilationDatabase = workspace.buildAndReturnOutput(target.getFullyQualifiedName());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     Path rootPath = tmp.getRoot();
     assertEquals(
         BuildTargetPaths.getGenPath(
@@ -360,11 +363,11 @@ public class CxxCompilationDatabaseIntegrationTest {
   @Test
   public void compilationDatabaseFetchedFromCacheAlsoFetchesSymlinkTreeOrHeaderMap()
       throws IOException {
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
-
     // This test only fails if the directory cache is enabled and we don't update
     // the header map/symlink tree correctly when fetching from the cache.
     workspace.enableDirCache();
+
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     addLibraryHeaderFiles(workspace);
 
@@ -419,7 +422,7 @@ public class CxxCompilationDatabaseIntegrationTest {
             this, "compilation_database_with_deps", tmp);
     workspace.setUp();
     workspace.writeContentsToPath("[cxx]\ngtest_dep = //:fake-gtest", ".buckconfig");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     // This test only fails if the directory cache is enabled and we don't update
     // the header map/symlink tree correctly when fetching from the cache.
@@ -486,7 +489,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget headerTarget = BuildTargetFactory.newInstance("//dep1:header");
     Path header = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, headerTarget, "%s"));
     assertThat(Files.exists(header), is(true));
@@ -513,7 +516,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     workspace.runBuckCommand("clean", "--keep-cache").assertSuccess();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
 
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget sourceTarget = BuildTargetFactory.newInstance("//dep1:source");
     Path source = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, sourceTarget, "%s"));
     assertThat(Files.exists(source), is(true));

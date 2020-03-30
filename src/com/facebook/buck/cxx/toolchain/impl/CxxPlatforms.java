@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain.impl;
@@ -34,6 +34,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.ElfSharedLibraryInterfaceParams;
 import com.facebook.buck.cxx.toolchain.HeaderVerification;
+import com.facebook.buck.cxx.toolchain.MachoDylibStubParams;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PosixNmSymbolNameTool;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
@@ -42,6 +43,8 @@ import com.facebook.buck.cxx.toolchain.SymbolNameTool;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -72,10 +75,14 @@ public class CxxPlatforms {
   private CxxPlatforms() {}
 
   private static Optional<SharedLibraryInterfaceParams> getSharedLibraryInterfaceParams(
-      CxxBuckConfig config, Platform platform) {
+      CxxBuckConfig config, Platform platform, Optional<Tool> stripTool) {
     Optional<SharedLibraryInterfaceParams> sharedLibraryInterfaceParams = Optional.empty();
-    SharedLibraryInterfaceParams.Type type = config.getSharedLibraryInterfaces();
-    if (type != SharedLibraryInterfaceParams.Type.DISABLED) {
+    Optional<SharedLibraryInterfaceParams.Type> type = config.getSharedLibraryInterfaces();
+    if (!type.isPresent()) {
+      return Optional.empty();
+    }
+
+    if (type.get() != SharedLibraryInterfaceParams.Type.DISABLED) {
       switch (platform) {
         case LINUX:
           sharedLibraryInterfaceParams =
@@ -83,8 +90,16 @@ public class CxxPlatforms {
                   ElfSharedLibraryInterfaceParams.of(
                       config.getObjcopy().get(),
                       config.getIndependentShlibInterfacesLdflags().orElse(ImmutableList.of()),
-                      type == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
+                      type.get() == SharedLibraryInterfaceParams.Type.DEFINED_ONLY));
           break;
+
+        case MACOS:
+          if (!stripTool.isPresent()) {
+            break;
+          }
+          sharedLibraryInterfaceParams = Optional.of(MachoDylibStubParams.of(stripTool.get()));
+          break;
+
           // $CASES-OMITTED$
         default:
       }
@@ -103,23 +118,24 @@ public class CxxPlatforms {
       PreprocessorProvider cpp,
       PreprocessorProvider cxxpp,
       LinkerProvider ld,
-      Iterable<String> ldFlags,
-      ImmutableMultimap<Linker.LinkableDepType, String> runtimeLdflags,
+      Iterable<Arg> ldFlags,
+      ImmutableMultimap<Linker.LinkableDepType, Arg> runtimeLdflags,
       Tool strip,
       ArchiverProvider ar,
       ArchiveContents archiveContents,
       Optional<ToolProvider> ranlib,
       SymbolNameTool nm,
-      ImmutableList<String> asflags,
-      ImmutableList<String> asppflags,
-      ImmutableList<String> cflags,
-      ImmutableList<String> cppflags,
-      ImmutableList<String> cxxflags,
-      ImmutableList<String> cxxppflags,
+      ImmutableList<Arg> asflags,
+      ImmutableList<Arg> asppflags,
+      ImmutableList<Arg> cflags,
+      ImmutableList<Arg> cppflags,
+      ImmutableList<Arg> cxxflags,
+      ImmutableList<Arg> cxxppflags,
       String sharedLibraryExtension,
       String sharedLibraryVersionedExtensionFormat,
       String staticLibraryExtension,
       String objectFileExtension,
+      Optional<SharedLibraryInterfaceParams> defaultSharedLibraryInterfaceParams,
       DebugPathSanitizer compilerDebugPathSanitizer,
       ImmutableMap<String, String> flagMacros,
       Optional<String> binaryExtension,
@@ -137,6 +153,8 @@ public class CxxPlatforms {
         binaryExtension = config.getBinaryExtension();
       }
     }
+
+    Tool stripTool = config.getStrip().orElse(strip);
 
     builder
         .setFlavor(flavor)
@@ -157,7 +175,7 @@ public class CxxPlatforms {
         .setRuntimeLdflags(runtimeLdflags)
         .setAr(config.getArchiverProvider(platform).orElse(ar))
         .setRanlib(config.getRanlib().isPresent() ? config.getRanlib() : ranlib)
-        .setStrip(config.getStrip().orElse(strip))
+        .setStrip(stripTool)
         .setBinaryExtension(binaryExtension)
         .setSharedLibraryExtension(
             config.getSharedLibraryExtension().orElse(sharedLibraryExtension))
@@ -183,7 +201,10 @@ public class CxxPlatforms {
 
     builder.setArchiveContents(config.getArchiveContents().orElse(archiveContents));
 
-    builder.setSharedLibraryInterfaceParams(getSharedLibraryInterfaceParams(config, platform));
+    Optional<SharedLibraryInterfaceParams> sharedLibParams =
+        getSharedLibraryInterfaceParams(config, platform, Optional.of(stripTool));
+    builder.setSharedLibraryInterfaceParams(
+        sharedLibParams.isPresent() ? sharedLibParams : defaultSharedLibraryInterfaceParams);
 
     builder.addAllCflags(cflags);
     builder.addAllCxxflags(cxxflags);
@@ -229,6 +250,7 @@ public class CxxPlatforms {
         defaultPlatform.getSharedLibraryVersionedExtensionFormat(),
         defaultPlatform.getStaticLibraryExtension(),
         defaultPlatform.getObjectFileExtension(),
+        defaultPlatform.getSharedLibraryInterfaceParams(),
         defaultPlatform.getCompilerDebugPathSanitizer(),
         defaultPlatform.getFlagMacros(),
         defaultPlatform.getBinaryExtension(),
@@ -264,21 +286,21 @@ public class CxxPlatforms {
 
   public static void addToolFlagsFromConfig(CxxBuckConfig config, CxxPlatform.Builder builder) {
     builder
-        .addAllAsflags(config.getAsflags().orElse(DEFAULT_ASFLAGS))
-        .addAllAsppflags(config.getAsppflags().orElse(DEFAULT_ASPPFLAGS))
-        .addAllCflags(config.getCflags().orElse(DEFAULT_CFLAGS))
-        .addAllCxxflags(config.getCxxflags().orElse(DEFAULT_CXXFLAGS))
-        .addAllCppflags(config.getCppflags().orElse(DEFAULT_CPPFLAGS))
-        .addAllCxxppflags(config.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS))
-        .addAllCudaflags(config.getCudaflags().orElse(DEFAULT_CUDAFLAGS))
-        .addAllCudappflags(config.getCudappflags().orElse(DEFAULT_CUDAPPFLAGS))
-        .addAllHipflags(config.getHipflags().orElse(DEFAULT_HIPFLAGS))
-        .addAllHipppflags(config.getHipppflags().orElse(DEFAULT_HIPPPFLAGS))
-        .addAllAsmflags(config.getAsmflags().orElse(DEFAULT_ASMFLAGS))
-        .addAllAsmppflags(config.getAsmppflags().orElse(DEFAULT_ASMPPFLAGS))
-        .addAllLdflags(config.getLdflags().orElse(DEFAULT_LDFLAGS))
-        .addAllArflags(config.getArflags().orElse(DEFAULT_ARFLAGS))
-        .addAllRanlibflags(config.getRanlibflags().orElse(DEFAULT_RANLIBFLAGS));
+        .addAllAsflags(StringArg.from(config.getAsflags().orElse(DEFAULT_ASFLAGS)))
+        .addAllAsppflags(StringArg.from(config.getAsppflags().orElse(DEFAULT_ASPPFLAGS)))
+        .addAllCflags(StringArg.from(config.getCflags().orElse(DEFAULT_CFLAGS)))
+        .addAllCxxflags(StringArg.from(config.getCxxflags().orElse(DEFAULT_CXXFLAGS)))
+        .addAllCppflags(StringArg.from(config.getCppflags().orElse(DEFAULT_CPPFLAGS)))
+        .addAllCxxppflags(StringArg.from(config.getCxxppflags().orElse(DEFAULT_CXXPPFLAGS)))
+        .addAllCudaflags(StringArg.from(config.getCudaflags().orElse(DEFAULT_CUDAFLAGS)))
+        .addAllCudappflags(StringArg.from(config.getCudappflags().orElse(DEFAULT_CUDAPPFLAGS)))
+        .addAllHipflags(StringArg.from(config.getHipflags().orElse(DEFAULT_HIPFLAGS)))
+        .addAllHipppflags(StringArg.from(config.getHipppflags().orElse(DEFAULT_HIPPPFLAGS)))
+        .addAllAsmflags(StringArg.from(config.getAsmflags().orElse(DEFAULT_ASMFLAGS)))
+        .addAllAsmppflags(StringArg.from(config.getAsmppflags().orElse(DEFAULT_ASMPPFLAGS)))
+        .addAllLdflags(StringArg.from(config.getLdflags().orElse(DEFAULT_LDFLAGS)))
+        .addAllArflags(StringArg.from(config.getArflags().orElse(DEFAULT_ARFLAGS)))
+        .addAllRanlibflags(StringArg.from(config.getRanlibflags().orElse(DEFAULT_RANLIBFLAGS)));
   }
 
   /** Returns the configured default cxx platform. */

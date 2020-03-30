@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.rust;
@@ -20,10 +20,10 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
@@ -67,30 +67,31 @@ public class RustToolchainFactoryTest {
             filesystem,
             new FakeProcessExecutor(),
             new AlwaysFoundExecutableFinder(),
-            TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
     RustToolchainFactory factory = new RustToolchainFactory();
     Optional<RustToolchain> toolchain =
-        factory.createToolchain(toolchainProvider, toolchainCreationContext);
+        factory.createToolchain(
+            toolchainProvider, toolchainCreationContext, UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         toolchain
             .get()
             .getDefaultRustPlatform()
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)
             .getCxxPlatform(),
         Matchers.equalTo(
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.resolve(
-                new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)));
+                new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)));
     assertThat(
         toolchain.get().getRustPlatforms().getValues().stream()
             .map(
                 p ->
-                    p.resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)
+                    p.resolve(
+                            new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)
                         .getCxxPlatform())
             .collect(ImmutableList.toImmutableList()),
         Matchers.contains(
             CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM.resolve(
-                new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)));
+                new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)));
   }
 
   @Test
@@ -129,26 +130,26 @@ public class RustToolchainFactoryTest {
             filesystem,
             processExecutor,
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     RustToolchainFactory factory = new RustToolchainFactory();
     Optional<RustToolchain> toolchain =
-        factory.createToolchain(toolchainProvider, toolchainCreationContext);
+        factory.createToolchain(
+            toolchainProvider, toolchainCreationContext, UnconfiguredTargetConfiguration.INSTANCE);
     RustPlatform platform =
         toolchain
             .get()
             .getRustPlatforms()
             .getValue(custom)
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE);
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     assertThat(
         toolchain
             .get()
             .getRustPlatforms()
             .getValue(custom)
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getRustCompiler()
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver.getSourcePathResolver()),
         Matchers.contains(filesystem.resolve(compiler).toString()));
     assertThat(
@@ -156,15 +157,16 @@ public class RustToolchainFactoryTest {
             .get()
             .getRustPlatforms()
             .getValue(custom)
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getLinker()
             .get()
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver.getSourcePathResolver()),
         Matchers.contains(filesystem.resolve(linker).toString()));
     assertThat(
         platform.getCxxPlatform(),
         Matchers.equalTo(
-            cxxPlatform.resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)));
+            cxxPlatform.resolve(
+                new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)));
   }
 }

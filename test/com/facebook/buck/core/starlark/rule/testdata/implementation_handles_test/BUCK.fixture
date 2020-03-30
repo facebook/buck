@@ -1,0 +1,89 @@
+load("//:defs.bzl", "nontest_error_rule", "test_error_rule_test", "test_rule_wrapper")
+
+test_rule_wrapper(
+    name = "implicit_default_implicit_run_implicit_test_info",
+    default_info = False,
+    run_info = False,
+    test_info = False,
+    contacts = ["foo@example.com", "bar@example.com", "foo@example.com"],
+    infer_run_info = True,
+)
+
+test_rule_wrapper(
+    name = "implicit_default_implicit_run_test_info",
+    default_info = False,
+    run_info = False,
+    test_info = True,
+    infer_run_info = True,
+)
+
+test_rule_wrapper(
+    name = "implicit_default_run_implicit_test_info",
+    default_info = False,
+    run_info = True,
+    test_info = False,
+    infer_run_info = False,
+)
+
+test_rule_wrapper(
+    name = "implicit_default_run_test_info",
+    default_info = False,
+    run_info = True,
+    test_info = True,
+    infer_run_info = False,
+)
+
+test_rule_wrapper(
+    name = "default_implicit_run_implicit_test_info",
+    default_info = True,
+    run_info = False,
+    test_info = False,
+    infer_run_info = True,
+)
+
+test_rule_wrapper(
+    name = "default_implicit_run_test_info",
+    default_info = True,
+    run_info = False,
+    test_info = True,
+    infer_run_info = True,
+)
+
+test_rule_wrapper(
+    name = "default_run_implicit_test_info",
+    default_info = True,
+    run_info = True,
+    test_info = False,
+    infer_run_info = False,
+)
+
+test_rule_wrapper(
+    name = "default_run_test_info",
+    default_info = True,
+    run_info = True,
+    test_info = True,
+    infer_run_info = False,
+)
+
+test_rule_wrapper(
+    name = "failing_test",
+    default_info = True,
+    run_info = True,
+    test_info = True,
+    exit_code = 1,
+    infer_run_info = False,
+)
+
+test_error_rule_test(
+    name = "test_without_run_info",
+    test_info = True,
+    run_info = False,
+    num_outputs = 1,
+)
+
+nontest_error_rule(
+    name = "nontest_with_test",
+    test_info = True,
+    run_info = True,
+    num_outputs = 1,
+)

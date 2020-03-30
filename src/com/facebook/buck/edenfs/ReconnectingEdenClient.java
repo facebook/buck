@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.edenfs;
@@ -86,7 +86,7 @@ final class ReconnectingEdenClient implements EdenClient {
 
   @Override
   public List<SHA1Result> getSHA1(String mountPoint, List<String> paths)
-      throws IOException, TException {
+      throws IOException, TException, EdenError {
     try {
       return attemptGetSHA1(mountPoint, paths);
     } catch (TException e) {
@@ -101,23 +101,6 @@ final class ReconnectingEdenClient implements EdenClient {
     List<SHA1Result> sha1s = getConnectedClient().getSHA1(mountPoint, paths);
     lastSuccessfulRequest = clock.currentTimeMillis();
     return sha1s;
-  }
-
-  @Override
-  public List<String> getBindMounts(String mountPoint) throws IOException, TException {
-    try {
-      return attemptGetBindMounts(mountPoint);
-    } catch (TException e) {
-      investigateAndPossiblyRethrowException(e);
-    }
-
-    return attemptGetBindMounts(mountPoint);
-  }
-
-  private List<String> attemptGetBindMounts(String mountPoint) throws IOException, TException {
-    List<String> bindMounts = getConnectedClient().getBindMounts(mountPoint);
-    lastSuccessfulRequest = clock.currentTimeMillis();
-    return bindMounts;
   }
 
   @Override

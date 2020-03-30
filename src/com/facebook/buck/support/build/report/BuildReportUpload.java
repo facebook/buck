@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.support.build.report;
 
 import com.facebook.buck.core.config.BuckConfig;
@@ -20,7 +21,6 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.util.config.Config;
@@ -78,10 +78,10 @@ public class BuildReportUpload {
   private void uploadInBackground(
       Config config, ListenableFuture<Optional<FullVersionControlStats>> vcStatsFuture) {
     BuildReportUploadActionArgs args =
-        new ImmutableBuildReportUploadActionArgs(config, buildReportUploader, vcStatsFuture);
+        ImmutableBuildReportUploadActionArgs.of(config, buildReportUploader, vcStatsFuture);
 
     BackgroundTask<BuildReportUploadActionArgs> task =
-        ImmutableBackgroundTask.of("BuildReportUpload", new BuildReportUploadAction(), args);
+        BackgroundTask.of("BuildReportUpload", new BuildReportUploadAction(), args);
 
     managerScope.schedule(task);
   }
@@ -107,7 +107,7 @@ public class BuildReportUpload {
         LOG.warn("Uploading build report without version control stats");
       }
 
-      FullBuildReport buildReport = new ImmutableFullBuildReport(args.getConfig(), vcStats);
+      FullBuildReport buildReport = ImmutableFullBuildReport.of(args.getConfig(), vcStats);
       try {
         args.getBuildReportUploader().uploadReport(buildReport);
       } catch (IOException e) {

@@ -24,7 +24,6 @@ standard_java_test(
         "//src/com/facebook/buck/counters:counters",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
-        "//src/com/facebook/buck/distributed:distributed",
         "//src/com/facebook/buck/doctor/config:config",
         "//src/com/facebook/buck/event:event",
         "//src/com/facebook/buck/event:interfaces",
@@ -91,6 +90,7 @@ standard_java_test(
         "//src/com/facebook/buck/worker:worker_pool_factory",
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/android:testutil",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//third-party/java/aether:aether-api",
@@ -121,21 +121,11 @@ standard_java_test(
 )
 
 python_test(
-    name = "check-allowed-entries-in-testrunner-jar",
+    name = "test-entries-in-testrunner-jar",
     srcs = [
         "check-allowed-entries-in-archive.py",
     ],
     resources = [
         "//src/com/facebook/buck/testrunner:testrunner-bin-fixed",
-    ],
-)
-
-python_test(
-    name = "java_version_test",
-    srcs = [
-        "java_version_test.py",
-    ],
-    deps = [
-        "//test/com/facebook/buck/testutil/integration:integration-py",
     ],
 )

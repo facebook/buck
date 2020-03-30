@@ -1,23 +1,24 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -29,7 +30,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
@@ -50,7 +51,7 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.collect.FluentIterable;
@@ -318,7 +319,8 @@ public class OcamlRuleBuilder {
                 .getCCompiler()
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
             ocamlPlatform
-                .getCxxCompiler()
+                .getCxxPlatform()
+                .getLd()
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
             bytecodeOnly));
   }
@@ -436,7 +438,7 @@ public class OcamlRuleBuilder {
                     .resolve(graphBuilder, buildTarget.getTargetConfiguration()))
             .build();
 
-    Path baseDir = projectFilesystem.getRootPath().toAbsolutePath();
+    AbsPath baseDir = projectFilesystem.getRootPath();
     ImmutableMap<Path, ImmutableList<Path>> mlInput = getMLInputWithDeps(baseDir, ocamlContext);
 
     ImmutableList<SourcePath> cInput = getCInput(graphBuilder.getSourcePathResolver(), srcs);
@@ -464,14 +466,14 @@ public class OcamlRuleBuilder {
   }
 
   private static ImmutableList<SourcePath> getCInput(
-      SourcePathResolver resolver, ImmutableList<SourcePath> input) {
+      SourcePathResolverAdapter resolver, ImmutableList<SourcePath> input) {
     return input.stream()
         .filter(OcamlUtil.sourcePathExt(resolver, OcamlCompilables.OCAML_C))
         .collect(ImmutableList.toImmutableList());
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(
-      Path baseDir, OcamlBuildContext ocamlContext) {
+      AbsPath baseDir, OcamlBuildContext ocamlContext) {
 
     ImmutableList<String> ocamlDepFlags =
         ImmutableList.<String>builder()
@@ -523,12 +525,12 @@ public class OcamlRuleBuilder {
   }
 
   private static Optional<String> executeProcessAndGetStdout(
-      Path baseDir, ImmutableList<String> cmd) throws IOException, InterruptedException {
+      AbsPath baseDir, ImmutableList<String> cmd) throws IOException, InterruptedException {
     ImmutableSet.Builder<ProcessExecutor.Option> options = ImmutableSet.builder();
     options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor exe = new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutorParams params =
-        ProcessExecutorParams.builder().setCommand(cmd).setDirectory(baseDir).build();
+        ProcessExecutorParams.builder().setCommand(cmd).setDirectory(baseDir.getPath()).build();
     ProcessExecutor.Result result =
         exe.launchAndExecute(
             params,

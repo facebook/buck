@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -39,16 +38,15 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
 
   @Test
   public void testCxxLibraryDep() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_instrumentation_apk_integration_test", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
     String target = "//:app_cxx_lib_dep";
     workspace.runBuckCommand("build", target).assertSuccess();
@@ -58,13 +56,13 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
             workspace.getPath(
                 BuildTargetPaths.getGenPath(
                     filesystem, BuildTargetFactory.newInstance(target), "%s.apk")));
-    if (AssumeAndroidPlatform.isArmAvailable()) {
+    if (AssumeAndroidPlatform.get(workspace).isArmAvailable()) {
       zipInspector.assertFileExists("lib/armeabi/libcxx.so");
       zipInspector.assertFileExists("lib/armeabi/libgnustl_shared.so");
     }
     zipInspector.assertFileExists("lib/armeabi-v7a/libcxx.so");
     zipInspector.assertFileExists("lib/x86/libcxx.so");
-    if (AssumeAndroidPlatform.isGnuStlAvailable()) {
+    if (AssumeAndroidPlatform.get(workspace).isGnuStlAvailable()) {
       zipInspector.assertFileExists("lib/armeabi-v7a/libgnustl_shared.so");
       zipInspector.assertFileExists("lib/x86/libgnustl_shared.so");
     } else {
@@ -75,13 +73,13 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
 
   @Test
   public void instrumentationApkCannotTestAnotherInstrumentationApk() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
-    AssumeAndroidPlatform.assumeNdkIsAvailable();
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "android_instrumentation_apk_integration_test", tmpFolder);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
     setWorkspaceCompilationMode(workspace);
 
     ProcessResult result =

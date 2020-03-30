@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -22,6 +22,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -36,8 +37,6 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
@@ -48,6 +47,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -89,7 +89,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sanitizeWorkingDirectory() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path lib = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple.a"));
     String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
@@ -97,7 +97,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
     // ...
     ProjectWorkspace longPwdWorkspace = setupWorkspace(tmp_long_pwd);
-    ProjectFilesystem longPwdFilesystem = new FakeProjectFilesystem();
+    ProjectFilesystem longPwdFilesystem = workspace.getProjectFileSystem();
     longPwdWorkspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path longPwdLib =
         longPwdWorkspace.getPath(
@@ -110,7 +110,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void sanitizeWorkingDirectoryWhenBuildingAssembly() throws IOException {
     BuildTarget target = BuildTargetFactory.newInstance("//:simple_assembly#default,static");
-    ProjectFilesystem filesystem = new FakeProjectFilesystem();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     ProcessResult processResult = workspace.runBuckBuild(target.getFullyQualifiedName());
     processResult.assertSuccess();
     Path lib =
@@ -124,8 +124,6 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void sanitizeSymlinkedWorkingDirectory() throws IOException {
     TemporaryFolder folder = new TemporaryFolder();
     folder.create();
-    ProjectFilesystem filesystem =
-        TestProjectFilesystems.createProjectFilesystem(folder.getRoot().toPath());
 
     // Setup up a symlink to our working directory.
     Path symlinkedRoot = folder.getRoot().toPath().resolve("symlinked-root");
@@ -144,7 +142,10 @@ public class CxxPreprocessAndCompileIntegrationTest {
         .assertSuccess();
 
     // Verify that we still sanitized this path correctly.
-    Path lib = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple.a"));
+    Path lib =
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(), target, "%s/libsimple.a"));
     String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
     assertFalse(lib.toString(), contents.contains(symlinkedRoot.toString()));
@@ -156,8 +157,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedSourceDoesNotChange() throws Exception {
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
-    BuildTarget target =
-        BuildTargetFactory.newInstance(workspace.getDestPath(), "//:binary_using_generated_source");
+    BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_source");
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:gensource");
     String sourceName = "bar.cpp";
@@ -723,5 +723,28 @@ public class CxxPreprocessAndCompileIntegrationTest {
     workspace
         .runBuckBuild("-c", "test.header=first.h", "-c", "test.flag=-DBAR", "//:first")
         .assertSuccess();
+  }
+
+  @Test
+  public void depfilePathsRelative() throws IOException {
+    String targetName = "//:binary_using_location_include_path";
+    BuildTarget target = BuildTargetFactory.newInstance(targetName);
+
+    // Run the build and verify that the C++ source was preprocessed.
+    Path output =
+        workspace.buildAndReturnOutput("--config", "build.depfiles=enabled", target.toString());
+    Path parentFolder = output.getParent();
+    String[] listFiles =
+        parentFolder
+            .toFile()
+            .list(
+                (dir, name) ->
+                    name.startsWith("binary_using_location_include_path#compile-foo.cpp."));
+    assertTrue(listFiles != null && listFiles.length == 1);
+    Path depfile = parentFolder.resolve(listFiles[0]).resolve("foo.cpp.o.dep");
+    ProjectFilesystem projectFileSystem = workspace.getProjectFileSystem();
+    String depfileContent =
+        projectFileSystem.readFileIfItExists(depfile).orElseThrow(FileNotFoundException::new);
+    assertFalse(depfileContent.contains(projectFileSystem.getRootPath().toString()));
   }
 }

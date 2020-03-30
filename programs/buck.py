@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 
 from __future__ import print_function
@@ -30,9 +30,9 @@ import zipfile
 from multiprocessing import Queue
 from subprocess import check_output
 
-from buck_logging import setup_logging
-from buck_project import BuckProject, NoBuckConfigFoundException
-from buck_tool import (
+from programs.buck_logging import setup_logging
+from programs.buck_project import BuckProject, NoBuckConfigFoundException
+from programs.buck_tool import (
     BuckDaemonErrorException,
     BuckStatusReporter,
     ExecuteTarget,
@@ -40,10 +40,10 @@ from buck_tool import (
     ExitCodeCallable,
     install_signal_handlers,
 )
-from java_lookup import get_java_path
-from java_version import get_java_major_version
-from subprocutils import propagate_failure
-from tracing import Tracing
+from programs.java_lookup import get_java_path
+from programs.java_version import get_java_major_version
+from programs.subprocutils import propagate_failure
+from programs.tracing import Tracing
 
 
 if sys.version_info < (2, 7):
@@ -118,12 +118,14 @@ def _try_to_verify_java_version(
     try:
         java_version = _get_java_version(java_path)
         if java_version and java_version != required_java_version:
-            warning = "You're using Java {}, but Buck requires Java {}.\nPlease follow \
-https://buck.build/setup/getting_started.html \
-to properly setup your local environment and avoid build issues.".format(
+            warning = "You're using Java {}, but Buck requires Java {}.".format(
                 java_version, required_java_version
             )
-
+            # warning += (
+            #     " Please update JAVA_HOME if it's pointing at the wrong version of Java."
+            #     + "\nPlease follow https://buck.build/setup/getting_started.html"
+            #     + " to properly setup your local environment and avoid build issues."
+            # )
     except:
         # checking Java version is brittle and as such is best effort
         warning = "Cannot verify that installed Java version at '{}' \
@@ -188,11 +190,11 @@ def main(argv, reporter):
         # Try to detect if we're running a PEX by checking if we were invoked
         # via a zip file.
         if zipfile.is_zipfile(argv[0]):
-            from buck_package import BuckPackage
+            from programs.buck_package import BuckPackage
 
             return BuckPackage(p, reporter)
         else:
-            from buck_repo import BuckRepo
+            from programs.buck_repo import BuckRepo
 
             return BuckRepo(THIS_DIR, p, reporter)
 
@@ -222,7 +224,7 @@ def main(argv, reporter):
                         java_version_status_queue, java_path, required_java_version
                     )
 
-                    return buck_repo.launch_buck(build_id, java_path, argv)
+                    return buck_repo.launch_buck(build_id, os.getcwd(), java_path, argv)
     finally:
         if tracing_dir:
             Tracing.write_to_dir(tracing_dir, build_id)

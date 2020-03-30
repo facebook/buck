@@ -1,23 +1,24 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -35,13 +36,12 @@ import com.facebook.buck.core.rules.impl.SymlinkTree;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
-import com.facebook.buck.cxx.toolchain.linker.impl.WindowsLinker;
 import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
@@ -49,6 +49,10 @@ import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
+import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.rules.macros.ExecutableMacroExpander;
+import com.facebook.buck.rules.macros.ExecutableTargetMacro;
+import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.versions.HasVersionUniverse;
@@ -56,8 +60,8 @@ import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -145,34 +149,18 @@ public class PythonBinaryDescription
       ImmutableSet<String> preloadLibraries,
       PackageStyle packageStyle) {
 
-    // We don't currently support targeting Windows.
-    if (cxxPlatform.getLd().resolve(graphBuilder, buildTarget.getTargetConfiguration())
-        instanceof WindowsLinker) {
-      throw new HumanReadableException(
-          "%s: cannot build in-place python binaries for Windows (%s)",
-          buildTarget, cxxPlatform.getFlavor());
-    }
-
-    // Add in any missing init modules into the python components.
     SourcePath emptyInit = createEmptyInitModule(buildTarget, projectFilesystem, graphBuilder);
-    components = components.withModules(addMissingInitModules(components.getModules(), emptyInit));
-
     BuildTarget linkTreeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("link-tree"));
     Path linkTreeRoot = BuildTargetPaths.getGenPath(projectFilesystem, linkTreeTarget, "%s");
     SymlinkTree linkTree =
         graphBuilder.addToIndex(
-            new PythonSymlinkTree(
+            new SymlinkTree(
                 "python_in_place_binary",
                 linkTreeTarget,
                 projectFilesystem,
+                graphBuilder,
                 linkTreeRoot,
-                ImmutableMap.<Path, SourcePath>builder()
-                    .putAll(components.getModules())
-                    .putAll(components.getResources())
-                    .putAll(components.getNativeLibraries())
-                    .build(),
-                components.getModuleDirs(),
-                graphBuilder));
+                components.withDefaultInitPy(emptyInit).asSymlinks()));
 
     return new PythonInPlaceBinary(
         buildTarget,
@@ -192,6 +180,7 @@ public class PythonBinaryDescription
   }
 
   PythonBinary createPackageRule(
+      CellPathResolver cellRoots,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
@@ -201,7 +190,7 @@ public class PythonBinaryDescription
       String mainModule,
       Optional<String> extension,
       PythonPackageComponents components,
-      ImmutableList<String> buildArgs,
+      ImmutableList<StringWithMacros> buildArgs,
       PythonBuckConfig.PackageStyle packageStyle,
       ImmutableSet<String> preloadLibraries) {
 
@@ -222,6 +211,16 @@ public class PythonBinaryDescription
             packageStyle);
 
       case STANDALONE:
+        StringWithMacrosConverter macrosConverter =
+            StringWithMacrosConverter.of(
+                buildTarget,
+                cellRoots.getCellNameResolver(),
+                graphBuilder,
+                ImmutableList.of(
+                    LocationMacroExpander.INSTANCE,
+                    new ExecutableMacroExpander<>(ExecutableMacro.class),
+                    new ExecutableMacroExpander<>(ExecutableTargetMacro.class)),
+                Optional.empty());
         return new PythonPackagedBinary(
             buildTarget,
             projectFilesystem,
@@ -229,9 +228,14 @@ public class PythonBinaryDescription
             params.getDeclaredDeps(),
             pythonPlatform,
             toolchainProvider
-                .getByName(PexToolProvider.DEFAULT_NAME, PexToolProvider.class)
+                .getByName(
+                    PexToolProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    PexToolProvider.class)
                 .getPexTool(graphBuilder, buildTarget.getTargetConfiguration()),
-            buildArgs,
+            buildArgs.stream()
+                .map(macrosConverter::convert)
+                .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig
                 .getPexExecutor(graphBuilder, buildTarget.getTargetConfiguration())
                 .orElse(pythonPlatform.getEnvironment()),
@@ -251,7 +255,10 @@ public class PythonBinaryDescription
   private UnresolvedCxxPlatform getCxxPlatform(
       BuildTarget target, AbstractPythonBinaryDescriptionArg args) {
     CxxPlatformsProvider cxxPlatformsProvider =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            target.getTargetConfiguration(),
+            CxxPlatformsProvider.class);
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         cxxPlatformsProvider.getUnresolvedCxxPlatforms();
     return cxxPlatforms
@@ -274,35 +281,34 @@ public class PythonBinaryDescription
     }
     Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
 
-    String mainModule;
-    ImmutableMap.Builder<Path, SourcePath> modules = ImmutableMap.builder();
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
 
     // If `main` is set, add it to the map of modules for this binary and also set it as the
     // `mainModule`, otherwise, use the explicitly set main module.
+    String mainModule;
+    Optional<PythonMappedComponents> modules;
     if (args.getMain().isPresent()) {
       LOG.info(
           "%s: parameter `main` is deprecated, please use `main_module` instead.", buildTarget);
       String mainName =
           graphBuilder.getSourcePathResolver().getSourcePathName(buildTarget, args.getMain().get());
       Path main = baseModule.resolve(mainName);
-      modules.put(baseModule.resolve(mainName), args.getMain().get());
       mainModule = PythonUtil.toModuleName(buildTarget, main.toString());
+      modules =
+          Optional.of(
+              PythonMappedComponents.of(
+                  ImmutableSortedMap.of(baseModule.resolve(mainName), args.getMain().get())));
     } else {
       mainModule = args.getMainModule().get();
+      modules = Optional.empty();
     }
-    // Build up the list of all components going into the python binary.
-    PythonPackageComponents binaryPackageComponents =
-        PythonPackageComponents.of(
-            modules.build(),
-            /* resources */ ImmutableMap.of(),
-            /* nativeLibraries */ ImmutableMap.of(),
-            /* moduleDirs */ ImmutableMultimap.of(),
-            /* zipSafe */ args.getZipSafe());
 
     FlavorDomain<PythonPlatform> pythonPlatforms =
         toolchainProvider
-            .getByName(PythonPlatformsProvider.DEFAULT_NAME, PythonPlatformsProvider.class)
+            .getByName(
+                PythonPlatformsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                PythonPlatformsProvider.class)
             .getPythonPlatforms();
 
     // Extract the platforms from the flavor, falling back to the default platforms if none are
@@ -318,15 +324,29 @@ public class PythonBinaryDescription
     CxxPlatform cxxPlatform =
         getCxxPlatform(buildTarget, args)
             .resolve(graphBuilder, buildTarget.getTargetConfiguration());
-    CellPathResolver cellRoots = context.getCellPathResolver();
+
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
+
+    // Build up the list of all components going into the python binary.
+    PythonPackagable root =
+        ImmutablePythonBinaryPackagable.of(
+            buildTarget,
+            projectFilesystem,
+            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
+                .stream()
+                .map(graphBuilder::getRule)
+                .collect(ImmutableList.toImmutableList()),
+            modules,
+            Optional.empty(),
+            args.getZipSafe());
+
+    CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.builder()
-            .setBuildTarget(buildTarget)
-            .setCellPathResolver(cellRoots)
-            .setActionGraphBuilder(graphBuilder)
-            .setExpanders(PythonUtil.MACRO_EXPANDERS)
-            .build();
+        StringWithMacrosConverter.of(
+            buildTarget,
+            cellRoots.getCellNameResolver(),
+            graphBuilder,
+            PythonUtil.macroExpanders(context.getTargetGraph()));
     PythonPackageComponents allPackageComponents =
         PythonUtil.getAllComponents(
             cellRoots,
@@ -334,11 +354,7 @@ public class PythonBinaryDescription
             projectFilesystem,
             params,
             graphBuilder,
-            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
-                .stream()
-                .map(graphBuilder::getRule)
-                .collect(ImmutableList.toImmutableList()),
-            binaryPackageComponents,
+            root,
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,
@@ -346,8 +362,10 @@ public class PythonBinaryDescription
                 .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
-            args.getPreloadDeps());
+            args.getPreloadDeps(),
+            args.getCompile().orElse(false));
     return createPackageRule(
+        cellRoots,
         buildTarget,
         projectFilesystem,
         params,
@@ -365,7 +383,7 @@ public class PythonBinaryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractPythonBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
@@ -390,10 +408,9 @@ public class PythonBinaryDescription
     return true;
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractPythonBinaryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps, HasTests, HasVersionUniverse {
+      extends BuildRuleArg, HasDeclaredDeps, HasTests, HasVersionUniverse {
     Optional<SourcePath> getMain();
 
     Optional<String> getMainModule();
@@ -407,7 +424,7 @@ public class PythonBinaryDescription
 
     Optional<Boolean> getZipSafe();
 
-    ImmutableList<String> getBuildArgs();
+    ImmutableList<StringWithMacros> getBuildArgs();
 
     Optional<String> getPlatform();
 
@@ -420,5 +437,7 @@ public class PythonBinaryDescription
     ImmutableList<StringWithMacros> getLinkerFlags();
 
     Optional<String> getExtension();
+
+    Optional<Boolean> getCompile();
   }
 }

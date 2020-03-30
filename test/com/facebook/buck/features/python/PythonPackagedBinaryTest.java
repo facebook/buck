@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
@@ -21,6 +21,7 @@ import static org.junit.Assert.assertNotEquals;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -40,13 +41,12 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -86,17 +86,18 @@ public class PythonPackagedBinaryTest {
             new PythonEnvironment(
                 Paths.get("fake_python"),
                 PythonVersion.of("CPython", "2.7"),
-                PythonBuckConfig.SECTION),
+                PythonBuckConfig.SECTION,
+                UnconfiguredTargetConfiguration.INSTANCE),
             "main",
-            PythonPackageComponents.of(
-                ImmutableMap.of(
-                    Paths.get(main), PathSourcePath.of(projectFilesystem, mainSrc),
-                    Paths.get(mod1), PathSourcePath.of(projectFilesystem, src1),
-                    Paths.get(mod2), PathSourcePath.of(projectFilesystem, src2)),
-                ImmutableMap.of(),
-                ImmutableMap.of(),
-                ImmutableMultimap.of(),
-                Optional.empty()),
+            new PythonPackageComponents.Builder()
+                .putModules(
+                    target,
+                    PythonMappedComponents.of(
+                        ImmutableSortedMap.of(
+                            Paths.get(main), PathSourcePath.of(projectFilesystem, mainSrc),
+                            Paths.get(mod1), PathSourcePath.of(projectFilesystem, src1),
+                            Paths.get(mod2), PathSourcePath.of(projectFilesystem, src2))))
+                .build(),
             ImmutableSortedSet.of(),
             /* cache */ true,
             /* legacyOutputPath */ false);

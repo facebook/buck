@@ -1,8 +1,8 @@
+load("//:skylark_library.bzl", "skylark_library")
+
 licenses(["notice"])
 
 package(default_visibility = ["//:__pkg__"])
-
-load("//:skylark_library.bzl", "skylark_library")
 
 filegroup(
     name = "test_deps",

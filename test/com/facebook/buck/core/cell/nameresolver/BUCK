@@ -1,0 +1,15 @@
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
+    visibility = [
+        "//test/...",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/cell/nameresolver:nameresolver",
+        "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
+    ],
+)

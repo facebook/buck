@@ -13,15 +13,3 @@
 # limitations under the License.
 
 """Index from which multiple modules can be loaded."""
-
-load("//lib:collections.bzl", "collections")
-load("//lib:dicts.bzl", "dicts")
-load("//lib:paths.bzl", "paths")
-load("//lib:selects.bzl", "selects")
-load("//lib:sets.bzl", "sets")
-load("//lib:shell.bzl", "shell")
-load("//lib:structs.bzl", "structs")
-
-# The unittest module is treated differently to give more convenient names to
-# the assert functions, while keeping them in the same .bzl file.
-load("//lib:unittest.bzl", "asserts", "unittest")

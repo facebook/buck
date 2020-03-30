@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules.impl;
@@ -25,9 +25,11 @@ import com.facebook.buck.core.rules.attr.HasRuntimeDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.SortedSet;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -47,19 +49,17 @@ import javax.annotation.Nullable;
  */
 public final class DependencyAggregation extends AbstractBuildRule implements HasRuntimeDeps {
 
-  private final ImmutableSortedSet<BuildRule> deps;
+  private final Supplier<ImmutableSortedSet<BuildRule>> deps;
 
   public DependencyAggregation(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      ImmutableSortedSet<BuildRule> deps) {
+      BuildTarget buildTarget, ProjectFilesystem projectFilesystem, Iterable<BuildRule> deps) {
     super(buildTarget, projectFilesystem);
-    this.deps = deps;
+    this.deps = Suppliers.memoize(() -> ImmutableSortedSet.copyOf(deps));
   }
 
   @Override
   public SortedSet<BuildRule> getBuildDeps() {
-    return deps;
+    return deps.get();
   }
 
   @Override
@@ -84,6 +84,6 @@ public final class DependencyAggregation extends AbstractBuildRule implements Ha
   // change).
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return deps.stream().map(BuildRule::getBuildTarget);
+    return deps.get().stream().map(BuildRule::getBuildTarget);
   }
 }

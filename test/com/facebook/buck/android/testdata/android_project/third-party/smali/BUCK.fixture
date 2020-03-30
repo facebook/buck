@@ -5,34 +5,34 @@
 
 # disassembles and/or dumps a dex file.
 java_binary(
-  name = 'baksmali',
-  main_class = 'org.jf.baksmali.Main',
-  deps = [
-    ':baksmali-library',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "baksmali",
+    main_class = "org.jf.baksmali.Main",
+    deps = [
+        ":baksmali-library",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 # assembles a set of smali files into a dex file.
 java_binary(
-  name = 'smali',
-  main_class = 'org.jf.smali.Main',
-  deps = [
-    ':smali-library',
-  ],
-  visibility = [
-    'PUBLIC',
-  ],
+    name = "smali",
+    main_class = "org.jf.smali.Main",
+    deps = [
+        ":smali-library",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
 )
 
 prebuilt_jar(
-  name = 'baksmali-library',
-  binary_jar = 'baksmali-2.2.4.jar',
+    name = "baksmali-library",
+    binary_jar = "baksmali-2.2.4.jar",
 )
 
 prebuilt_jar(
-  name = 'smali-library',
-  binary_jar = 'smali-2.2.4.jar',
+    name = "smali-library",
+    binary_jar = "smali-2.2.4.jar",
 )

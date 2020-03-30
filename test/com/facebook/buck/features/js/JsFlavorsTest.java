@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.js;
@@ -20,9 +20,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.FlavorDomainException;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import org.junit.BeforeClass;
@@ -35,7 +39,10 @@ public class JsFlavorsTest {
 
   @BeforeClass
   public static void setupDescriptions() {
-    bundleDescription = new JsBundleDescription(new ToolchainProviderBuilder().build());
+    bundleDescription =
+        new JsBundleDescription(
+            new ToolchainProviderBuilder().build(),
+            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()));
     libraryDescription = new JsLibraryDescription();
   }
 
@@ -112,18 +119,31 @@ public class JsFlavorsTest {
 
   @Test
   public void testBundleFlavors() {
-    assertTrue(bundleDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES)));
-    assertTrue(bundleDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED)));
-    assertFalse(libraryDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES)));
-    assertFalse(libraryDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED)));
+    assertTrue(
+        bundleDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES), UnconfiguredTargetConfiguration.INSTANCE));
+    assertTrue(
+        bundleDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED),
+            UnconfiguredTargetConfiguration.INSTANCE));
+    assertFalse(
+        libraryDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES), UnconfiguredTargetConfiguration.INSTANCE));
+    assertFalse(
+        libraryDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED),
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @Test
   public void testBundleFlavorsWithOtherFlavors() {
     assertTrue(
         bundleDescription.hasFlavors(
-            ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES, JsFlavors.RELEASE)));
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_FILES, JsFlavors.RELEASE),
+            UnconfiguredTargetConfiguration.INSTANCE));
     assertTrue(
-        bundleDescription.hasFlavors(ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.IOS)));
+        bundleDescription.hasFlavors(
+            ImmutableSet.of(JsFlavors.RAM_BUNDLE_INDEXED, JsFlavors.IOS),
+            UnconfiguredTargetConfiguration.INSTANCE));
   }
 }

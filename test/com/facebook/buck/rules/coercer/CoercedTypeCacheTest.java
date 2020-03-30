@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
@@ -21,7 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.description.arg.Hint;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.util.Optional;
@@ -29,6 +29,9 @@ import org.immutables.value.Value;
 import org.junit.Test;
 
 public class CoercedTypeCacheTest {
+  private final CoercedTypeCache coercedTypeCache =
+      new DefaultTypeCoercerFactory().getCoercedTypeCache();
+
   @Test
   public void requiredIsNotOptional() {
     assertFalse(getParamInfo("required").isOptional());
@@ -72,9 +75,7 @@ public class CoercedTypeCacheTest {
             "nonInput",
             "required"),
         ImmutableSortedSet.copyOf(
-            CoercedTypeCache.extractForImmutableBuilder(
-                    Dto.Builder.class, new DefaultTypeCoercerFactory())
-                .keySet()));
+            coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).keySet()));
   }
 
   @Test
@@ -94,9 +95,7 @@ public class CoercedTypeCacheTest {
             "non_dep",
             "non_input",
             "required"),
-        CoercedTypeCache.extractForImmutableBuilder(
-                Dto.Builder.class, new DefaultTypeCoercerFactory())
-            .values().stream()
+        coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).values().stream()
             .map(ParamInfo::getPythonName)
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
@@ -156,8 +155,7 @@ public class CoercedTypeCacheTest {
     String getConsistentOverriddenInterfaceNonInput();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   abstract static class AbstractDto implements DtoInterface {
     abstract Optional<String> getOptional();
 
@@ -189,9 +187,7 @@ public class CoercedTypeCacheTest {
     public abstract String getConsistentOverriddenInterfaceNonInput();
   }
 
-  private static ParamInfo getParamInfo(String name) {
-    return CoercedTypeCache.extractForImmutableBuilder(
-            Dto.Builder.class, new DefaultTypeCoercerFactory())
-        .get(name);
+  private ParamInfo<?> getParamInfo(String name) {
+    return coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).get(name);
   }
 }

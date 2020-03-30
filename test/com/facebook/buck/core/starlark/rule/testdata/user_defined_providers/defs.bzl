@@ -12,10 +12,10 @@ def _write_output(ctx, path, ci):
     return f
 
 def _root_rule_impl(ctx):
-    root_ci = ContentInfo(path="root", content="root content")
+    root_ci = ContentInfo(path = "root", content = "root content")
     return [
-        ContentInfo(content="from_root content"),
-        DefaultInfo(named_outputs={}, default_outputs=[_write_output(ctx, "root", root_ci)]),
+        ContentInfo(content = "from_root content"),
+        DefaultInfo(named_outputs = {}, default_outputs = [_write_output(ctx, "root", root_ci)]),
     ]
 
 def _non_root_rule_impl(ctx):
@@ -29,7 +29,7 @@ def _non_root_rule_impl(ctx):
         path = "from_{}".format(ctx.label.name),
         content = "{} + from_{} content".format(ci.content, ctx.label.name),
     )
-    return [new_ci, DefaultInfo(named_outputs={}, default_outputs=[f])]
+    return [new_ci, DefaultInfo(named_outputs = {}, default_outputs = [f])]
 
 root_rule = rule(
     attrs = {},
@@ -42,7 +42,7 @@ non_root_rule = rule(
 )
 
 def _content_info_impl(ctx):
-    ret = [DefaultInfo(named_outputs={}, default_outputs=[])]
+    ret = [DefaultInfo(named_outputs = {}, default_outputs = [])]
     if ctx.attr.ci:
         ret.append(ContentInfo())
     return ret

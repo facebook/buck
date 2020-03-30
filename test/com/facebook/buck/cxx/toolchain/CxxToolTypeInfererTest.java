@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain;
@@ -30,6 +30,15 @@ public class CxxToolTypeInfererTest {
         CxxToolTypeInferer.getTypeFromVersionOutput(
             ImmutableList.of(
                 "clang version 3.7.1 ", "Target: x86_64-unknown-linux-gnu", "Thread model: posix")),
+        Matchers.is(CxxToolProvider.Type.CLANG));
+    assertThat(
+        CxxToolTypeInferer.getTypeFromVersionOutput(
+            ImmutableList.of(
+                "Apple clang version 11.0.0 (clang-1100.0.33.8) ",
+                "Target: x86_64-apple-darwin18.7.0",
+                "Thread model: posix",
+                "InstalledDir: /Applications/Xcode_11.0.0_fb.app/Contents/Developer/Toolchains/",
+                "XcodeDefault.xctoolchain/usr/bin")),
         Matchers.is(CxxToolProvider.Type.CLANG));
     assertThat(
         CxxToolTypeInferer.getTypeFromVersionOutput(

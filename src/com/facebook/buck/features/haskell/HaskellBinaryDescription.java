@@ -1,23 +1,24 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
@@ -26,17 +27,18 @@ import com.facebook.buck.core.model.FlavorConvertible;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
-import com.facebook.buck.core.rules.impl.SymlinkTree;
+import com.facebook.buck.core.rules.impl.MappedSymlinkTree;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
@@ -51,9 +53,10 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.util.MoreIterables;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -103,7 +106,8 @@ public class HaskellBinaryDescription
 
   // Return the C/C++ platform to build against.
   private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellBinaryDescriptionArg arg) {
-    HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
+    HaskellPlatformsProvider haskellPlatformsProvider =
+        getHaskellPlatformsProvider(target.getTargetConfiguration());
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
@@ -203,7 +207,7 @@ public class HaskellBinaryDescription
     if (depType == Linker.LinkableDepType.SHARED) {
 
       // Create a symlink tree with for all shared libraries needed by this binary.
-      SymlinkTree sharedLibraries =
+      MappedSymlinkTree sharedLibraries =
           graphBuilder.addToIndex(
               CxxDescriptionEnhancer.createSharedLibrarySymlinkTree(
                   buildTarget,
@@ -302,7 +306,7 @@ public class HaskellBinaryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractHaskellBinaryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
@@ -320,8 +324,11 @@ public class HaskellBinaryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
-    if (getHaskellPlatformsProvider().getHaskellPlatforms().containsAnyOf(flavors)) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    if (getHaskellPlatformsProvider(toolchainTargetConfiguration)
+        .getHaskellPlatforms()
+        .containsAnyOf(flavors)) {
       return true;
     }
 
@@ -334,9 +341,12 @@ public class HaskellBinaryDescription
     return false;
   }
 
-  private HaskellPlatformsProvider getHaskellPlatformsProvider() {
+  private HaskellPlatformsProvider getHaskellPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
+        HaskellPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        HaskellPlatformsProvider.class);
   }
 
   protected enum Type implements FlavorConvertible {
@@ -364,9 +374,8 @@ public class HaskellBinaryDescription
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
-  interface AbstractHaskellBinaryDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
+  @RuleArg
+  interface AbstractHaskellBinaryDescriptionArg extends BuildRuleArg, HasDepsQuery {
 
     @Value.Default
     default SourceSortedSet getSrcs() {
@@ -406,6 +415,14 @@ public class HaskellBinaryDescription
     @Value.Default
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getGhciPlatformPreloadDeps() {
       return PatternMatchedCollection.of();
+    }
+
+    @Override
+    default HaskellBinaryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (HaskellBinaryDescriptionArg) this;
+      }
+      return HaskellBinaryDescriptionArg.builder().from(this).setDepsQuery(query).build();
     }
   }
 }

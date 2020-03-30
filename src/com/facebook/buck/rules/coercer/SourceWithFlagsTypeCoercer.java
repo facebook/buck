@@ -1,40 +1,45 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
-import java.nio.file.Path;
+import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 
 /** A type coercer to handle source entries with a list of flags. */
-public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> {
-  private final TypeCoercer<SourcePath> sourcePathTypeCoercer;
-  private final TypeCoercer<ImmutableList<String>> flagsTypeCoercer;
-  private final TypeCoercer<Pair<SourcePath, ImmutableList<String>>> sourcePathWithFlagsTypeCoercer;
+public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWithFlags> {
+  private final TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer;
+  private final TypeCoercer<ImmutableList<String>, ImmutableList<String>> flagsTypeCoercer;
+  private final TypeCoercer<
+          Pair<UnconfiguredSourcePath, ImmutableList<String>>,
+          Pair<SourcePath, ImmutableList<String>>>
+      sourcePathWithFlagsTypeCoercer;
 
   SourceWithFlagsTypeCoercer(
-      TypeCoercer<SourcePath> sourcePathTypeCoercer,
-      TypeCoercer<ImmutableList<String>> flagsTypeCoercer) {
+      TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer,
+      TypeCoercer<ImmutableList<String>, ImmutableList<String>> flagsTypeCoercer) {
     this.sourcePathTypeCoercer = sourcePathTypeCoercer;
     this.flagsTypeCoercer = flagsTypeCoercer;
     this.sourcePathWithFlagsTypeCoercer =
@@ -42,8 +47,13 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
   }
 
   @Override
-  public Class<SourceWithFlags> getOutputClass() {
-    return SourceWithFlags.class;
+  public TypeToken<SourceWithFlags> getOutputType() {
+    return TypeToken.of(SourceWithFlags.class);
+  }
+
+  @Override
+  public TypeToken<Object> getUnconfiguredType() {
+    return TypeToken.of(Object.class);
   }
 
   @Override
@@ -52,17 +62,28 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
   }
 
   @Override
-  public void traverse(CellPathResolver cellRoots, SourceWithFlags object, Traversal traversal) {
+  public void traverse(CellNameResolver cellRoots, SourceWithFlags object, Traversal traversal) {
     sourcePathTypeCoercer.traverse(cellRoots, object.getSourcePath(), traversal);
     flagsTypeCoercer.traverse(cellRoots, ImmutableList.copyOf(object.getFlags()), traversal);
   }
 
   @Override
-  public SourceWithFlags coerce(
-      CellPathResolver cellRoots,
+  public Object coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    return object;
+  }
+
+  @Override
+  public SourceWithFlags coerce(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
       Object object)
       throws CoerceFailedException {
     if (object instanceof SourceWithFlags) {
@@ -72,21 +93,31 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<SourceWithFlags> 
     // We're expecting one of two types here. They can be differentiated pretty easily.
     if (object instanceof String) {
       return SourceWithFlags.of(
-          sourcePathTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object));
+          sourcePathTypeCoercer.coerceBoth(
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object));
     }
 
     // If we get this far, we're dealing with a Pair of a SourcePath and a String.
     if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
       Pair<SourcePath, ImmutableList<String>> sourcePathWithFlags =
-          sourcePathWithFlagsTypeCoercer.coerce(
-              cellRoots, filesystem, pathRelativeToProjectRoot, targetConfiguration, object);
+          sourcePathWithFlagsTypeCoercer.coerceBoth(
+              cellRoots,
+              filesystem,
+              pathRelativeToProjectRoot,
+              targetConfiguration,
+              hostConfiguration,
+              object);
       return SourceWithFlags.of(sourcePathWithFlags.getFirst(), sourcePathWithFlags.getSecond());
     }
 
     throw CoerceFailedException.simple(
         object,
-        getOutputClass(),
+        getOutputType(),
         "input should be either a source path or a pair of a source path and a list of flags");
   }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -23,9 +23,6 @@ import com.facebook.buck.core.test.event.TestRunEvent;
 import com.facebook.buck.core.test.event.TestStatusMessageEvent;
 import com.facebook.buck.core.test.event.TestSummaryEvent;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.distributed.DistBuildCreatedEvent;
-import com.facebook.buck.distributed.build_client.DistBuildSuperConsoleEvent;
-import com.facebook.buck.distributed.build_client.StampedeConsoleEvent;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.CommandEvent.Finished;
@@ -37,23 +34,19 @@ import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.RuleKeyCalculationEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
 import com.facebook.buck.event.listener.interfaces.AdditionalConsoleLineProvider;
-import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper;
-import com.facebook.buck.event.listener.stats.cache.CacheRateStatsKeeper.CacheRateStatsUpdateEvent;
-import com.facebook.buck.event.listener.stats.stampede.DistBuildTrackedStatus;
 import com.facebook.buck.event.listener.util.EventInterval;
 import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
+import com.facebook.buck.rules.modern.builders.HybridLocalEvent;
 import com.facebook.buck.step.StepEvent;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestStatusMessage;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
 import com.facebook.buck.test.result.type.ResultType;
-import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableSet;
@@ -61,10 +54,8 @@ import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -78,6 +69,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.logging.Level;
+import javax.annotation.concurrent.GuardedBy;
 
 /** Console that provides rich, updating ansi output about the current build. */
 public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListener {
@@ -97,7 +89,12 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private final Function<Long, String> formatTimeFunction;
 
   private final ConcurrentMap<Long, ConcurrentLinkedDeque<LeafEvent>> threadsToRunningStep;
+
+  @GuardedBy("this")
   private final ConcurrentMap<BuildTarget, RemoteExecutionActionEvent.Started> eventsByTargets;
+
+  @GuardedBy("this")
+  private final Set<BuildTarget> stolenTargets;
 
   private final ConcurrentMap<Long, Optional<? extends TestSummaryEvent>>
       threadsToRunningTestSummaryEvent;
@@ -138,10 +135,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   private long minimumDurationMillisecondsToShowActionGraph;
   private long minimumDurationMillisecondsToShowWatchman;
   private boolean hideEmptyDownload;
-
-  private volatile Optional<DistBuildSuperConsoleEvent> stampedeSuperConsoleEvent =
-      Optional.empty();
-  private Optional<String> stampedeIdLogLine = Optional.empty();
 
   private final Set<String> actionGraphCacheMessage = new HashSet<>();
 
@@ -225,6 +218,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
     this.threadsToRunningStep = new ConcurrentHashMap<>(executionEnvironment.getAvailableCores());
     this.eventsByTargets = new ConcurrentHashMap<>();
+    this.stolenTargets = ConcurrentHashMap.newKeySet();
 
     this.testFormatter =
         new TestResultFormatter(
@@ -317,7 +311,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
             /* suffix */ Optional.empty(),
             currentTimeMillis,
             actionGraphEvents.values(),
-            getEstimatedProgressOfParsingBuckFiles(),
+            getEstimatedProgressOfCreatingActionGraph(),
             Optional.of(this.minimumDurationMillisecondsToShowActionGraph),
             lines);
 
@@ -343,39 +337,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     }
     if (anyErrorsPrinted.get() && threadLineLimitOnError < maxThreadLines) {
       maxThreadLines = threadLineLimitOnError;
-    }
-
-    String localBuildLinePrefix = "Building";
-
-    if (stampedeSuperConsoleEvent.isPresent()) {
-      localBuildLinePrefix = distStatsTracker.getLocalBuildLinePrefix();
-
-      stampedeIdLogLine.ifPresent(lines::add);
-      stampedeSuperConsoleEvent
-          .get()
-          .getMessage()
-          .ifPresent(msg -> lines.add(ansi.asInformationText(msg)));
-      long distBuildMs =
-          logEventInterval(
-              "Distributed Build",
-              getOptionalDistBuildLineSuffix(),
-              currentTimeMillis,
-              0,
-              this.distBuildStarted,
-              this.distBuildFinished,
-              distStatsTracker.getApproximateProgress(),
-              Optional.empty(),
-              lines);
-
-      if (distBuildMs == UNFINISHED_EVENT_PAIR) {
-        MultiStateRenderer renderer;
-
-        renderer =
-            new DistBuildSlaveStateRenderer(
-                ansi, currentTimeMillis, distStatsTracker.getSlaveStatuses());
-
-        renderLinesWithMaybeCompression(renderer, lines, maxThreadLines, true);
-      }
     }
 
     for (AdditionalConsoleLineProvider provider : additionalConsoleLineProviders) {
@@ -404,13 +365,13 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
 
     long totalBuildMs =
         logEventInterval(
-            localBuildLinePrefix,
+            "Building",
             getOptionalBuildLineSuffix(),
             currentTimeMillis,
             offsetMs, // parseTime,
             this.buildStarted,
             this.buildFinished,
-            getApproximateLocalBuildProgress(),
+            getApproximateBuildProgress(),
             Optional.empty(),
             lines);
 
@@ -510,15 +471,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       if (buildStarted != null && buildFinished != null) {
         long durationMs = buildFinished.getTimestampMillis() - buildStarted.getTimestampMillis();
         String finalLine = "  Total time: " + formatElapsedTime(durationMs);
-        if (distBuildStarted != null) {
-          // Stampede build. We need to print final status to reduce confusion from remote errors.
-          finalLine += ". ";
-          if (buildFinished.getExitCode() == ExitCode.SUCCESS) {
-            finalLine += ansi.asGreenText("Build successful.");
-          } else {
-            finalLine += ansi.asErrorText("Build failed.");
-          }
-        }
         lines.add(finalLine);
       }
     } else {
@@ -531,60 +483,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
         lines.add("  Total time: " + formatElapsedTime(durationMs));
       }
     }
-  }
-
-  private Optional<String> getOptionalDistBuildLineSuffix() {
-    List<String> columns = new ArrayList<>();
-    DistBuildTrackedStatus distBuildStatus = distStatsTracker.getTrackedStatus();
-
-    if (!distBuildStatus.hasRemoteStatus()) {
-      columns.add("remote status: init");
-    } else {
-      distBuildStatus
-          .getStatus()
-          .ifPresent(status -> columns.add("remote status: " + status.toLowerCase()));
-
-      int totalUploadErrorsCount = 0;
-      for (CacheRateStatsUpdateEvent slaveCacheStat : distBuildStatus.getSlaveCacheStats()) {
-        totalUploadErrorsCount += slaveCacheStat.getCacheErrorCount();
-      }
-
-      if (distBuildStatus.getTotalRulesCount() > 0) {
-        columns.add(
-            String.format(
-                "%d/%d jobs",
-                distBuildStatus.getFinishedRulesCount(), distBuildStatus.getTotalRulesCount()));
-      }
-
-      CacheRateStatsKeeper.CacheRateStatsUpdateEvent aggregatedCacheStats =
-          CacheRateStatsKeeper.getAggregatedCacheRateStats(distBuildStatus.getSlaveCacheStats());
-
-      if (aggregatedCacheStats.getTotalRulesCount() != 0) {
-        columns.add(String.format("%.1f%% cache miss", aggregatedCacheStats.getCacheMissRate()));
-
-        if (aggregatedCacheStats.getCacheErrorCount() != 0) {
-          columns.add(
-              String.format(
-                  "%d [%.1f%%] cache errors",
-                  aggregatedCacheStats.getCacheErrorCount(),
-                  aggregatedCacheStats.getCacheErrorRate()));
-        }
-      }
-
-      if (totalUploadErrorsCount > 0) {
-        columns.add(String.format("%d upload errors", totalUploadErrorsCount));
-      }
-    }
-
-    String localStatus = String.format("local status: %s", distBuildStatus.getLocalStatus());
-    String remoteStatusAndSummary = String.join(", ", columns);
-    if (remoteStatusAndSummary.length() == 0) {
-      return Optional.of(localStatus);
-    }
-
-    String parseLine;
-    parseLine = remoteStatusAndSummary + "; " + localStatus;
-    return Strings.isNullOrEmpty(parseLine) ? Optional.empty() : Optional.of(parseLine);
   }
 
   /**
@@ -616,8 +514,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
     ImmutableList<Long> threadIds = renderer.getSortedIds(sortByTime);
     for (int i = 0; i < fullLines; ++i) {
       long threadId = threadIds.get(i);
-      LINE_BUILDER.setLength(0);
-      lines.add(renderer.renderStatusLine(threadId, LINE_BUILDER));
+      lines.add(renderer.renderStatusLine(threadId));
       numLinesRendered++;
     }
     if (useCompressedLine) {
@@ -662,8 +559,7 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       if (numLinesAlreadyRendered + numNewLinesRendered >= maxLines) {
         return numNewLinesRendered;
       }
-      LINE_BUILDER.setLength(0);
-      lines.add(renderer.renderStatusLine(id, LINE_BUILDER));
+      lines.add(renderer.renderStatusLine(id));
       numNewLinesRendered++;
     }
 
@@ -736,16 +632,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   @Subscribe
   public void ruleKeyCalculationFinished(RuleKeyCalculationEvent.Finished finished) {
     runningStepFinished(finished.getThreadId());
-  }
-
-  @Subscribe
-  public void onDistBuildCreatedEvent(DistBuildCreatedEvent event) {
-    stampedeIdLogLine = Optional.of(event.getConsoleLogLine());
-  }
-
-  @Subscribe
-  public void onDistBuildSuperConsoleEvent(DistBuildSuperConsoleEvent event) {
-    stampedeSuperConsoleEvent = Optional.of(event);
   }
 
   /** When a new cache event is about to start. */
@@ -889,13 +775,6 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  public void logStampedeConsoleEvent(StampedeConsoleEvent event) {
-    if (stampedeSuperConsoleEvent.isPresent()) {
-      logEvent(event.getConsoleEvent());
-    }
-  }
-
-  @Subscribe
   public void forceRender(@SuppressWarnings("unused") FlushConsoleEvent event) {
     renderingConsole.render();
   }
@@ -969,12 +848,20 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
   }
 
   @Subscribe
-  public void onActionEventStarted(RemoteExecutionActionEvent.Started event) {
-    eventsByTargets.put(event.getBuildTarget(), event);
+  public synchronized void onActionEventStarted(RemoteExecutionActionEvent.Started event) {
+    if (!stolenTargets.contains(event.getBuildTarget())) {
+      eventsByTargets.put(event.getBuildTarget(), event);
+    }
   }
 
   @Subscribe
   public void onActionEventTerminated(RemoteExecutionActionEvent.Terminal event) {
+    eventsByTargets.remove(event.getBuildTarget());
+  }
+
+  @Subscribe
+  public synchronized void onActionEventStolen(HybridLocalEvent.Stolen event) {
+    stolenTargets.add(event.getBuildTarget());
     eventsByTargets.remove(event.getBuildTarget());
   }
 

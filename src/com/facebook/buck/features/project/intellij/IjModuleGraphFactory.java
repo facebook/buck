@@ -1,21 +1,22 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -73,7 +74,7 @@ public final class IjModuleGraphFactory {
                         input.getDescription().getClass()))
             .filter(
                 targetNode -> {
-                  CommonDescriptionArg arg = (CommonDescriptionArg) targetNode.getConstructorArg();
+                  BuildRuleArg arg = (BuildRuleArg) targetNode.getConstructorArg();
                   return !arg.labelsContainsAnyOf(ignoredTargetLabels);
                 })
             // Experimental support for generating modules outside the project root
@@ -87,14 +88,21 @@ public final class IjModuleGraphFactory {
                 ? nodes
                 : nodes.filter(
                     targetNode ->
-                        shouldConvertToIjModule(projectConfig.getProjectRoot(), targetNode)))
+                        shouldConvertToIjModule(
+                            projectFilesystem, projectConfig.getProjectRoot(), targetNode)))
             .collect(
                 ImmutableListMultimap.toImmutableListMultimap(
                     targetNode ->
-                        projectFilesystem.relativize(
-                            targetNode
-                                .getFilesystem()
-                                .resolve(targetNode.getBuildTarget().getBasePath())),
+                        projectFilesystem
+                            .relativize(
+                                targetNode
+                                    .getFilesystem()
+                                    .resolve(
+                                        targetNode
+                                            .getBuildTarget()
+                                            .getCellRelativeBasePath()
+                                            .getPath()))
+                            .getPath(),
                     targetNode -> targetNode));
 
     AggregationTree aggregationTree =
@@ -125,8 +133,14 @@ public final class IjModuleGraphFactory {
     return moduleByBuildTarget.build();
   }
 
-  private static boolean shouldConvertToIjModule(String projectRoot, TargetNode<?> targetNode) {
-    return targetNode.getBuildTarget().getBasePath().startsWith(projectRoot);
+  private static boolean shouldConvertToIjModule(
+      ProjectFilesystem projectFilesystem, String projectRoot, TargetNode<?> targetNode) {
+    return targetNode
+        .getBuildTarget()
+        .getCellRelativeBasePath()
+        .getPath()
+        .toPath(projectFilesystem.getFileSystem())
+        .startsWith(projectRoot);
   }
 
   private static AggregationTree createAggregationTree(
@@ -230,8 +244,7 @@ public final class IjModuleGraphFactory {
     Optional<Path> extraCompileOutputRootPath = projectConfig.getExtraCompilerOutputModulesPath();
 
     Set<IjModule> seenModules = new HashSet<>();
-    for (Map.Entry<BuildTarget, IjModule> ruleAndModule : rulesToModules.entrySet()) {
-      IjModule module = ruleAndModule.getValue();
+    for (IjModule module : rulesToModules.values()) {
       if (!seenModules.add(module)) {
         continue;
       }
@@ -254,7 +267,7 @@ public final class IjModuleGraphFactory {
         BuildTarget depBuildTarget = entry.getKey();
         TargetNode<?> depTargetNode = targetGraph.get(depBuildTarget);
 
-        CommonDescriptionArg arg = (CommonDescriptionArg) depTargetNode.getConstructorArg();
+        BuildRuleArg arg = (BuildRuleArg) depTargetNode.getConstructorArg();
         if (arg.labelsContainsAnyOf(ignoredTargetLabels)) {
           continue;
         }

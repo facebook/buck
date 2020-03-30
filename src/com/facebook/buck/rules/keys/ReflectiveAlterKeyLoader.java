@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -22,11 +22,11 @@ import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.MissingExcludeReporter;
 import com.facebook.buck.core.rules.actions.AbstractAction;
 import com.facebook.buck.core.rules.actions.Action;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleImmutable;
-import com.facebook.buck.core.util.immutables.BuckStylePackageVisibleTuple;
-import com.facebook.buck.core.util.immutables.BuckStyleTuple;
+import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
+import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheLoader;
 import com.google.common.collect.ImmutableCollection;
@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -88,23 +89,27 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
   private void getExtractorsForActions(
       Class<? extends Action> current,
       ImmutableSortedMap.Builder<ValueExtractor, AlterRuleKey> sortedExtractors) {
-
-    /**
-     * We skip adding any fields in {@link AbstractAction} since {@link RuleKeyFieldLoader} takes
-     * care of the generic {@link Action} interface based rule keys
-     */
-    if (AbstractAction.class.equals(current)) {
-      return;
-    }
-
     for (Field field : current.getDeclaredFields()) {
-      try {
-        AbstractAction.class.getDeclaredField(field.getName());
-      } catch (NoSuchFieldException e) {
-        field.setAccessible(true);
-        ValueExtractor valueExtractor = new FieldValueExtractor(field);
-        sortedExtractors.put(valueExtractor, createAlterRuleKey(valueExtractor, false));
+      Preconditions.checkArgument(
+          Modifier.isFinal(field.getModifiers()),
+          "All fields of Action must be final but %s.%s is not.",
+          current.getSimpleName(),
+          field.getName());
+      AddToRuleKey annotation = field.getAnnotation(AddToRuleKey.class);
+      if (annotation == null) {
+        // Only AbstractAction gets to hide fields from its rulekey.
+        if (AbstractAction.class.equals(current)) {
+          continue;
+        }
+        throw new RuntimeException(
+            String.format(
+                "All fields of Action must annotated with @AddToRuleKey.",
+                current.getSimpleName(),
+                field.getName()));
       }
+      field.setAccessible(true);
+      ValueExtractor valueExtractor = new FieldValueExtractor(field);
+      sortedExtractors.put(valueExtractor, createAlterRuleKey(valueExtractor, false));
     }
   }
 
@@ -132,6 +137,10 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
       method.setAccessible(true);
       AddToRuleKey annotation = method.getAnnotation(AddToRuleKey.class);
       if (annotation != null) {
+        if (method.isSynthetic()) {
+          continue;
+        }
+
         Preconditions.checkState(
             hasImmutableAnnotation(current) && AddsToRuleKey.class.isAssignableFrom(current),
             "AddToRuleKey can only be applied to methods of Immutables. It cannot be applied to %s.%s(...)",
@@ -154,11 +163,11 @@ class ReflectiveAlterKeyLoader extends CacheLoader<Class<?>, ImmutableCollection
   private boolean hasImmutableAnnotation(Class<?> current) {
     // Value.Immutable only has CLASS retention, so we need to detect this based on our own
     // annotations.
-    return current.getAnnotation(BuckStyleImmutable.class) != null
-        || current.getAnnotation(BuckStylePackageVisibleImmutable.class) != null
-        || current.getAnnotation(BuckStylePackageVisibleTuple.class) != null
-        || current.getAnnotation(BuckStyleTuple.class) != null
-        || current.getAnnotation(BuckStyleValue.class) != null;
+    return current.getAnnotation(RuleArg.class) != null
+        || current.getAnnotation(BuckStylePrehashedValue.class) != null
+        || current.getAnnotation(BuckStyleValueWithBuilder.class) != null
+        || current.getAnnotation(BuckStyleValue.class) != null
+        || current.getAnnotation(ImmutableInfo.class) != null;
   }
 
   private AlterRuleKey createAlterRuleKey(ValueExtractor valueExtractor, boolean stringify) {

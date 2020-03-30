@@ -1,37 +1,39 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.arg.HasProvidedDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
-import com.facebook.buck.infer.ImmutableInferConfig;
+import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.infer.InferNullsafe;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
 import com.facebook.buck.infer.toolchain.InferToolchain;
@@ -46,11 +48,13 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.JavacOptionsFactory;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
+import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.util.MoreFunctions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
+import java.util.function.Function;
 import org.immutables.value.Value;
 
 public class AndroidLibraryDescription
@@ -71,7 +75,8 @@ public class AndroidLibraryDescription
   private final JavaBuckConfig javaBuckConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
   private final JavacFactory javacFactory;
-  private final Optional<UnresolvedInferPlatform> unresolvedInferPlatform;
+  private final Function<TargetConfiguration, Optional<UnresolvedInferPlatform>>
+      unresolvedInferPlatform;
 
   public AndroidLibraryDescription(
       JavaBuckConfig javaBuckConfig,
@@ -81,9 +86,15 @@ public class AndroidLibraryDescription
     this.compilerFactory = compilerFactory;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.unresolvedInferPlatform =
-        toolchainProvider
-            .getByNameIfPresent(InferToolchain.DEFAULT_NAME, InferToolchain.class)
-            .map(InferToolchain::getDefaultPlatform);
+        MoreFunctions.memoize(
+            toolchainTargetConfiguration -> {
+              return toolchainProvider
+                  .getByNameIfPresent(
+                      InferToolchain.DEFAULT_NAME,
+                      toolchainTargetConfiguration,
+                      InferToolchain.class)
+                  .map(InferToolchain::getDefaultPlatform);
+            });
   }
 
   @Override
@@ -114,15 +125,21 @@ public class AndroidLibraryDescription
     JavacOptions javacOptions =
         JavacOptionsFactory.create(
             toolchainProvider
-                .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+                .getByName(
+                    JavacOptionsProvider.DEFAULT_NAME,
+                    buildTarget.getTargetConfiguration(),
+                    JavacOptionsProvider.class)
                 .getJavacOptions(),
             buildTarget,
             context.getActionGraphBuilder(),
             args);
     ConfiguredCompilerFactory compilerFactory =
-        this.compilerFactory.getCompiler(args.getLanguage().orElse(JvmLanguage.JAVA), javacFactory);
+        this.compilerFactory.getCompiler(
+            args.getLanguage().orElse(JvmLanguage.JAVA),
+            javacFactory,
+            buildTarget.getTargetConfiguration());
 
-    ImmutableSortedSet<Flavor> flavors = buildTarget.getFlavors();
+    FlavorSet flavors = buildTarget.getFlavors();
 
     if (flavors.contains(InferNullsafe.INFER_NULLSAFE)) {
       return InferNullsafe.create(
@@ -130,12 +147,15 @@ public class AndroidLibraryDescription
           projectFilesystem,
           context.getActionGraphBuilder(),
           javacOptions,
-          compilerFactory.getExtraClasspathProvider(toolchainProvider),
-          unresolvedInferPlatform.orElseThrow(
-              () ->
-                  new HumanReadableException(
-                      "Cannot use #nullsafe flavor: infer platform not configured")),
-          new ImmutableInferConfig(javaBuckConfig.getDelegate()));
+          compilerFactory.getExtraClasspathProvider(
+              toolchainProvider, buildTarget.getTargetConfiguration()),
+          unresolvedInferPlatform
+              .apply(buildTarget.getTargetConfiguration())
+              .orElseThrow(
+                  () ->
+                      new HumanReadableException(
+                          "Cannot use #nullsafe flavor: infer platform not configured")),
+          InferConfig.of(javaBuckConfig.getDelegate()));
     }
 
     AndroidLibrary.Builder androidLibraryBuilder =
@@ -145,7 +165,6 @@ public class AndroidLibraryDescription
             toolchainProvider,
             params,
             context.getActionGraphBuilder(),
-            context.getCellPathResolver(),
             javaBuckConfig,
             javacFactory,
             javacOptions,
@@ -161,7 +180,8 @@ public class AndroidLibraryDescription
   }
 
   @Override
-  public boolean hasFlavors(ImmutableSet<Flavor> flavors) {
+  public boolean hasFlavors(
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     return flavors.isEmpty()
         || flavors.equals(ImmutableSet.of(JavaLibrary.SRC_JAR))
         || flavors.equals(ImmutableSet.of(DUMMY_R_DOT_JAVA_FLAVOR))
@@ -175,20 +195,26 @@ public class AndroidLibraryDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractAndroidLibraryDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     compilerFactory
-        .getCompiler(constructorArg.getLanguage().orElse(JvmLanguage.JAVA), javacFactory)
+        .getCompiler(
+            constructorArg.getLanguage().orElse(JvmLanguage.JAVA),
+            javacFactory,
+            buildTarget.getTargetConfiguration())
         .addTargetDeps(
             buildTarget.getTargetConfiguration(), extraDepsBuilder, targetGraphOnlyDepsBuilder);
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, constructorArg);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, constructorArg, buildTarget.getTargetConfiguration());
 
-    unresolvedInferPlatform.ifPresent(
-        p ->
-            UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
-                targetGraphOnlyDepsBuilder, buildTarget, p));
+    unresolvedInferPlatform
+        .apply(buildTarget.getTargetConfiguration())
+        .ifPresent(
+            p ->
+                UnresolvedInferPlatform.addParseTimeDepsToInferFlavored(
+                    targetGraphOnlyDepsBuilder, buildTarget, p));
   }
 
   public interface CoreArg
@@ -208,7 +234,23 @@ public class AndroidLibraryDescription
     Optional<String> getFinalRName();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
-  interface AbstractAndroidLibraryDescriptionArg extends CoreArg {}
+  @RuleArg
+  interface AbstractAndroidLibraryDescriptionArg extends CoreArg {
+
+    @Override
+    default AndroidLibraryDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (AndroidLibraryDescriptionArg) this;
+      }
+      return AndroidLibraryDescriptionArg.builder().from(this).setDepsQuery(query).build();
+    }
+
+    @Override
+    default AndroidLibraryDescriptionArg withProvidedDepsQuery(Query query) {
+      if (getProvidedDepsQuery().equals(Optional.of(query))) {
+        return (AndroidLibraryDescriptionArg) this;
+      }
+      return AndroidLibraryDescriptionArg.builder().from(this).setProvidedDepsQuery(query).build();
+    }
+  }
 }

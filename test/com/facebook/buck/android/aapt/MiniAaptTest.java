@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android.aapt;
@@ -30,7 +30,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -67,7 +67,8 @@ public class MiniAaptTest {
           .build();
 
   private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private final SourcePathResolver resolver = new TestActionGraphBuilder().getSourcePathResolver();
+  private final SourcePathResolverAdapter resolver =
+      new TestActionGraphBuilder().getSourcePathResolver();
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -376,10 +377,10 @@ public class MiniAaptTest {
                 IdType.INT, RType.DRAWABLE, "custom_drawable", CustomDrawableType.CUSTOM)));
   }
 
-  @Test
-  public void testParsingGrayscaleImage() throws IOException, ResourceParseException {
+  private void testParsingGrayscaleImageImpl(String normalFilename, String grayscaleFilename)
+      throws IOException, ResourceParseException {
     ImmutableList<String> lines = ImmutableList.<String>builder().add("").build();
-    filesystem.writeLinesToPath(lines, Paths.get("fbui_tomato.png"));
+    filesystem.writeLinesToPath(lines, Paths.get(normalFilename));
 
     MiniAapt aapt =
         new MiniAapt(
@@ -390,7 +391,7 @@ public class MiniAaptTest {
             ImmutableSet.of(),
             /* isGrayscaleImageProcessingEnabled */ true,
             MiniAapt.ResourceCollectionType.R_DOT_TXT);
-    aapt.processDrawables(filesystem, Paths.get("fbui_tomato.g.png"));
+    aapt.processDrawables(filesystem, Paths.get(grayscaleFilename));
 
     Set<RDotTxtEntry> definitions =
         ((RDotTxtResourceCollector) aapt.getResourceCollector()).getResources();
@@ -404,6 +405,12 @@ public class MiniAaptTest {
                     RType.DRAWABLE,
                     "fbui_tomato",
                     CustomDrawableType.GRAYSCALE_IMAGE))));
+  }
+
+  @Test
+  public void testParsingGrayscaleImage() throws IOException, ResourceParseException {
+    testParsingGrayscaleImageImpl("fbui_tomato.png", "fbui_tomato.g.png");
+    testParsingGrayscaleImageImpl("fbui_tomato.png", "fbui_tomato_g.png");
   }
 
   @Test(expected = ResourceParseException.class)

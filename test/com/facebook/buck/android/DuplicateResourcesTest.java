@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -24,10 +24,12 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.actiongraph.ActionGraphAndBuilder;
 import com.facebook.buck.core.model.actiongraph.computation.ActionGraphProviderBuilder;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -41,8 +43,8 @@ import com.facebook.buck.jvm.java.KeystoreDescriptionArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -95,16 +97,16 @@ public class DuplicateResourcesTest {
    */
   @Before
   public void makeRules() {
-    filesystem = new FakeProjectFilesystem(tmp.getRoot());
+    filesystem = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp.getRoot());
 
-    mainResTarget = BuildTargetFactory.newInstance(filesystem, "//main_app:res");
-    directDepResTarget = BuildTargetFactory.newInstance(filesystem, "//direct_dep:res");
-    transitiveDepResTarget = BuildTargetFactory.newInstance(filesystem, "//transitive_dep:res");
-    transitiveDepLibTarget = BuildTargetFactory.newInstance(filesystem, "//transitive_dep:library");
-    bottomDepResTarget = BuildTargetFactory.newInstance(filesystem, "//bottom_dep:res");
-    androidLibraryTarget = BuildTargetFactory.newInstance(filesystem, "//direct_dep:library");
-    androidBinaryTarget = BuildTargetFactory.newInstance(filesystem, "//main_app:binary");
-    keystoreTarget = BuildTargetFactory.newInstance(filesystem, "//main_app:keystore");
+    mainResTarget = BuildTargetFactory.newInstance("//main_app:res");
+    directDepResTarget = BuildTargetFactory.newInstance("//direct_dep:res");
+    transitiveDepResTarget = BuildTargetFactory.newInstance("//transitive_dep:res");
+    transitiveDepLibTarget = BuildTargetFactory.newInstance("//transitive_dep:library");
+    bottomDepResTarget = BuildTargetFactory.newInstance("//bottom_dep:res");
+    androidLibraryTarget = BuildTargetFactory.newInstance("//direct_dep:library");
+    androidBinaryTarget = BuildTargetFactory.newInstance("//main_app:binary");
+    keystoreTarget = BuildTargetFactory.newInstance("//main_app:keystore");
 
     mainRes =
         AndroidResourceBuilder.createBuilder(mainResTarget)
@@ -210,8 +212,12 @@ public class DuplicateResourcesTest {
 
     List<Matcher<? super String>> expectedSubslice = new ArrayList<>();
     for (String path : paths) {
+      BuildTarget buildTarget = BuildTargetFactory.newInstance("//:" + path);
       expectedSubslice.add(Matchers.is("-S"));
-      expectedSubslice.add(Matchers.is("buck-out/gen/" + path + "/res#resources-symlink-tree/res"));
+      expectedSubslice.add(
+          Matchers.is(
+              BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s")
+                  + "/res#resources-symlink-tree/res"));
     }
 
     assertThat(
@@ -254,6 +260,7 @@ public class DuplicateResourcesTest {
                         AndroidBinaryBuilder.createToolchainProviderForAndroidBinary())
                     .setFilesystem(filesystem)
                     .build()
+                    .getRootCell()
                     .getCellProvider())
             .build()
             .getFreshActionGraph(

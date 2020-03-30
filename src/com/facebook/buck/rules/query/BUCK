@@ -1,7 +1,7 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 TYPES_SRCS = [
-    "AbstractQuery.java",
+    "Query.java",
 ]
 
 java_immutables_library(
@@ -22,9 +22,6 @@ UTILS_SRCS = [
 java_immutables_library(
     name = "utils",
     srcs = UTILS_SRCS,
-    exported_deps = [
-        "//src/com/facebook/buck/core/rules:rules",
-    ],
     visibility = [
         "PUBLIC",
     ],
@@ -49,6 +46,9 @@ java_immutables_library(
         "//src/com/facebook/buck/util:util",
         "//third-party/java/guava:guava",
     ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/rules:rules",
+    ],
 )
 
 java_library(
@@ -57,9 +57,6 @@ java_library(
         ["*.java"],
         exclude = TYPES_SRCS + UTILS_SRCS,
     ),
-    exported_deps = [
-        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
-    ],
     tests = [
         "//test/com/facebook/buck/rules/query:query",
     ],
@@ -81,6 +78,10 @@ java_library(
         "//src/com/facebook/buck/rules/coercer:interface",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util:util",
+        "//src/com/facebook/buck/util/stream:stream",
         "//third-party/java/guava:guava",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
     ],
 )

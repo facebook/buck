@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -20,6 +20,8 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -27,9 +29,9 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.cxx.AbstractCxxSource.Type;
+import com.facebook.buck.cxx.CxxSource.Type;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -99,13 +101,18 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     this.precompiledHeaderRule = precompiledHeaderRule;
     Preconditions.checkArgument(
         !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR)
-            || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+            || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors().getSet()),
         "CxxPreprocessAndCompile should not be created with CxxStrip flavors");
     Preconditions.checkArgument(
-        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
+        !LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors().getSet()),
         "CxxPreprocessAndCompile %s should not be created with LinkerMapMode flavor (%s)",
         this,
         LinkerMapMode.FLAVOR_DOMAIN);
+  }
+
+  @Override
+  public String getType() {
+    return CxxSourceTypes.toName(getBuildable().inputType) + "_preprocess_and_compile";
   }
 
   /** @return a {@link CxxPreprocessAndCompile} step that compiles the given preprocessed source. */
@@ -162,7 +169,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     return Impl.getDepFilePath(getOutputPathResolver().resolvePath(getBuildable().output));
   }
 
-  public Path getRelativeInputPath(SourcePathResolver resolver) {
+  private RelPath getRelativeInputPaths(SourcePathResolverAdapter resolver) {
     // For caching purposes, the path passed to the compiler is relativized by the absolute path by
     // the current cell root, so that file references emitted by the compiler would not change if
     // the repo is checked out into different places on disk.
@@ -170,7 +177,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
   }
 
   /** Returns the original path of the source file relative to its own project root */
-  public String getSourceInputPath(SourcePathResolver resolver) {
+  public String getSourceInputPath(SourcePathResolverAdapter resolver) {
     return resolver.getSourcePathName(getBuildable().targetName, getBuildable().input);
   }
 
@@ -211,13 +218,15 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
   }
 
   @Override
-  public Predicate<SourcePath> getCoveredByDepFilePredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getCoveredByDepFilePredicate(
+      SourcePathResolverAdapter pathResolver) {
     return Depfiles.getCoveredByDepFilePredicate(
         getPreprocessorDelegate(), Optional.of(getCompilerDelegate()));
   }
 
   @Override
-  public Predicate<SourcePath> getExistenceOfInterestPredicate(SourcePathResolver pathResolver) {
+  public Predicate<SourcePath> getExistenceOfInterestPredicate(
+      SourcePathResolverAdapter pathResolver) {
     return (SourcePath path) -> false;
   }
 
@@ -240,7 +249,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                 preprocessorDelegate.getHeaderPathNormalizer(context),
                 preprocessorDelegate.getHeaderVerification(),
                 getDepFilePath(),
-                getRelativeInputPath(context.getSourcePathResolver()),
+                getRelativeInputPaths(context.getSourcePathResolver()).getPath(),
                 output,
                 compilerDelegate.getDependencyTrackingMode(),
                 compilerDelegate.getCompiler().getUseUnixPathSeparator());
@@ -315,7 +324,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         boolean useArgfile) {
-      SourcePathResolver resolver = context.getSourcePathResolver();
+      SourcePathResolverAdapter resolver = context.getSourcePathResolver();
       // If we're compiling, this will just be empty.
       HeaderPathNormalizer headerPathNormalizer =
           preprocessDelegate
@@ -328,9 +337,10 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
               .orElseGet(CxxToolFlags::of);
 
       ImmutableList<Arg> arguments =
-          compilerDelegate.getArguments(preprocessorDelegateFlags, filesystem.getRootPath());
+          compilerDelegate.getArguments(
+              preprocessorDelegateFlags, filesystem.getRootPath().getPath());
 
-      Path relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
+      RelPath relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
       Path resolvedOutput = outputPathResolver.resolvePath(output);
 
       return new CxxPreprocessAndCompileStep(
@@ -344,7 +354,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
           CxxSourceTypes.supportsDepFiles(inputType)
               ? preprocessDelegate.map(ignored -> getDepFilePath(resolvedOutput))
               : Optional.empty(),
-          relativeInputPath,
+          relativeInputPath.getPath(),
           inputType,
           new CxxPreprocessAndCompileStep.ToolCommand(
               compilerDelegate.getCommandPrefix(resolver),
@@ -358,11 +368,10 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
           compilerDelegate.getPreArgfileArgs(),
           compilerDelegate.getCompiler(),
           Optional.of(
-              CxxLogInfo.builder()
-                  .setTarget(targetName)
-                  .setSourcePath(relativeInputPath)
-                  .setOutputPath(resolvedOutput)
-                  .build()));
+              ImmutableCxxLogInfo.of(
+                  Optional.ofNullable(targetName),
+                  Optional.ofNullable(relativeInputPath.getPath()),
+                  Optional.ofNullable(resolvedOutput))));
     }
 
     static Path getDepFilePath(Path outputPath) {
@@ -391,9 +400,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
               new AbstractExecutionStep("verify_cxx_outputs") {
                 @Override
                 public StepExecutionResult execute(ExecutionContext executionContext) {
-                  Path outputPath =
-                      filesystem.getRootPath().toAbsolutePath().resolve(resolvedOutput);
-                  if (!Files.exists(outputPath)) {
+                  AbsPath outputPath = filesystem.getRootPath().resolve(resolvedOutput);
+                  if (!Files.exists(outputPath.getPath())) {
                     LOG.warn(
                         new NoSuchFileException(outputPath.toString()),
                         "Compile step was successful but output file: "

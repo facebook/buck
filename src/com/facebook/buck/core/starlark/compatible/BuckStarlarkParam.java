@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.compatible;
 
 import com.google.common.primitives.Primitives;
@@ -29,26 +30,34 @@ import javax.annotation.Nullable;
 @SuppressWarnings("all")
 class BuckStarlarkParam implements Param {
 
-  public static final BuckStarlarkParam NONE = new BuckStarlarkParam("", Object.class, "");
+  public static final BuckStarlarkParam NONE = new BuckStarlarkParam("", Object.class, "", true);
 
   private final String name;
   private final Class<?> type;
   private final String defaultSkylarkValue;
+  private final boolean noneable;
 
-  private BuckStarlarkParam(String name, Class<?> type, String defaultSkylarkValue) {
+  private BuckStarlarkParam(
+      String name, Class<?> type, String defaultSkylarkValue, boolean noneable) {
     this.name = name;
     this.type = type;
     this.defaultSkylarkValue = defaultSkylarkValue;
+    this.noneable = noneable;
   }
 
   /**
    * @param parameter the parameter type class
    * @param namedParameter the name of the parameter, if any
+   * @param defaultSkylarkValue the string represetnation of the default skylark value
+   * @param noneable whether this parameter can accept `None`
    * @return an instance of the skylark annotation representing a parameter of the given type and
    *     name
    */
   static BuckStarlarkParam fromParam(
-      Class<?> parameter, @Nullable String namedParameter, @Nullable String defaultSkylarkValue) {
+      Class<?> parameter,
+      @Nullable String namedParameter,
+      @Nullable String defaultSkylarkValue,
+      boolean noneable) {
     if (namedParameter == null) {
       namedParameter = "";
     }
@@ -59,7 +68,7 @@ class BuckStarlarkParam implements Param {
     if (type.isPrimitive()) {
       type = Primitives.wrap(type);
     }
-    return new BuckStarlarkParam(namedParameter, type, defaultSkylarkValue);
+    return new BuckStarlarkParam(namedParameter, type, defaultSkylarkValue, noneable);
   }
 
   @Override
@@ -84,7 +93,7 @@ class BuckStarlarkParam implements Param {
 
   @Override
   public boolean noneable() {
-    return false;
+    return noneable;
   }
 
   @Override

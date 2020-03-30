@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -32,8 +32,8 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -50,7 +50,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -59,7 +59,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.core.HasClasspathEntries;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.core.JavaLibrary;
-import com.facebook.buck.jvm.java.AbstractJavacPluginProperties.Type;
+import com.facebook.buck.jvm.java.JavacPluginProperties.Type;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
@@ -75,11 +75,11 @@ import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ErrorLogger;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.hashing.FileHashLoader;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.google.common.base.Charsets;
@@ -129,8 +129,11 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     annotationScenarioGenPath =
         filesystem
-            .resolve(filesystem.getBuckPaths().getAnnotationDir())
-            .resolve("android/java/src/com/facebook/__fb_gen__")
+            .resolve(
+                CompilerOutputPaths.of(
+                        BuildTargetFactory.newInstance("//android/java/src/com/facebook:fb"),
+                        filesystem)
+                    .getAnnotationPath())
             .toAbsolutePath()
             .toString();
   }
@@ -480,14 +483,12 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     JavaLibrary libraryOneRule = (JavaLibrary) graphBuilder.requireRule(libraryOneTarget);
     JavaLibrary parentRule = (JavaLibrary) graphBuilder.requireRule(parentTarget);
 
-    Path root = libraryOneRule.getProjectFilesystem().getRootPath();
+    AbsPath root = libraryOneRule.getProjectFilesystem().getRootPath();
     assertEquals(
         ImmutableSet.of(
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
         resolve(parentRule.getTransitiveClasspaths(), graphBuilder.getSourcePathResolver()));
   }
 
@@ -798,7 +799,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         TargetGraphFactory.newInstance(
             notIncludedNode, includedNode, libraryOneNode, libraryTwoNode, parentNode);
     graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     BuildRule notIncluded = graphBuilder.requireRule(notIncludedNode.getBuildTarget());
     BuildRule included = graphBuilder.requireRule(includedNode.getBuildTarget());
@@ -806,57 +807,47 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     BuildRule libraryTwo = graphBuilder.requireRule(libraryTwoTarget);
     BuildRule parent = graphBuilder.requireRule(parentTarget);
 
-    Path root = parent.getProjectFilesystem().getRootPath();
+    AbsPath root = parent.getProjectFilesystem().getRootPath();
     assertEquals(
         "A java_library that depends on //:libone should include only libone.jar in its "
             + "classpath when compiling itself.",
         ImmutableSet.of(
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem))),
         resolve(getJavaLibrary(notIncluded).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         ImmutableSet.of(
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
         resolve(getJavaLibrary(included).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         ImmutableSet.of(
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
         resolve(getJavaLibrary(libraryOne).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         "//:libtwo exports its deps, so a java_library that depends on //:libtwo should include "
             + "both libone.jar and libtwo.jar in its classpath when compiling itself.",
         ImmutableSet.of(
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-            root.resolve(
-                AbstractCompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem))),
         resolve(getJavaLibrary(libraryTwo).getOutputClasspaths(), pathResolver));
 
     assertEquals(
         "A java_binary that depends on //:parent should include libone.jar, libtwo.jar and "
             + "parent.jar.",
-        ImmutableSet.<Path>builder()
+        ImmutableSet.<AbsPath>builder()
             .add(
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
-                root.resolve(
-                    AbstractCompilerOutputPaths.getOutputJarPath(parentTarget, filesystem)))
+                root.resolve(CompilerOutputPaths.getOutputJarPath(includedTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(nonIncludedTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(libraryOneTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(libraryTwoTarget, filesystem)),
+                root.resolve(CompilerOutputPaths.getOutputJarPath(parentTarget, filesystem)))
             .build(),
         resolve(getJavaLibrary(parent).getTransitiveClasspaths(), pathResolver));
 
@@ -875,7 +866,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         "A java_library that depends on //:parent should include only parent.jar in its "
             + "-classpath when compiling itself.",
         ImmutableSet.of(
-            root.resolve(AbstractCompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
+            root.resolve(CompilerOutputPaths.getOutputJarPath(parentTarget, filesystem))),
         resolve(getJavaLibrary(parent).getOutputClasspaths(), pathResolver));
   }
 
@@ -926,7 +917,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
+            Optional.of(JavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of());
 
     BuildContext buildContext = createBuildContext();
@@ -949,7 +940,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(AbstractJavacOptions.SpoolMode.DIRECT_TO_JAR),
+            Optional.of(JavacOptions.SpoolMode.DIRECT_TO_JAR),
             /* postprocessClassesCommands */ ImmutableList.of("process_class_files.py"));
 
     BuildContext buildContext = createBuildContext();
@@ -972,7 +963,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             /* srcs */ ImmutableSortedSet.of("foo/Bar.java"),
             /* deps */ ImmutableSortedSet.of(),
             /* exportedDeps */ ImmutableSortedSet.of(),
-            Optional.of(AbstractJavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
+            Optional.of(JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK),
             /* postprocessClassesCommands */ ImmutableList.of());
 
     BuildContext buildContext = createBuildContext();
@@ -989,7 +980,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   public void testInputBasedRuleKeySourceChange() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder = graphBuilder;
-    SourcePathResolver pathResolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleFinder.getSourcePathResolver();
 
     // Setup a Java library consuming a source generated by a genrule and grab its rule key.
     BuildRule genSrc =
@@ -1066,7 +1057,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(depNode, libraryNode);
     graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathRuleFinder ruleFinder = graphBuilder;
-    SourcePathResolver pathResolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleFinder.getSourcePathResolver();
 
     JavaLibrary dep = (JavaLibrary) graphBuilder.requireRule(depNode.getBuildTarget());
     JavaLibrary library = (JavaLibrary) graphBuilder.requireRule(libraryNode.getBuildTarget());
@@ -1156,7 +1147,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(exportedDepNode, depNode, libraryNode);
     graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathRuleFinder ruleFinder = graphBuilder;
-    SourcePathResolver pathResolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleFinder.getSourcePathResolver();
 
     JavaLibrary exportedDep =
         (JavaLibrary) graphBuilder.requireRule(BuildTargetFactory.newInstance("//:edep"));
@@ -1258,7 +1249,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         TargetGraphFactory.newInstance(exportedDepNode, dep2Node, dep1Node, libraryNode);
     graphBuilder = new TestActionGraphBuilder(targetGraph);
     SourcePathRuleFinder ruleFinder = graphBuilder;
-    SourcePathResolver pathResolver = ruleFinder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleFinder.getSourcePathResolver();
 
     JavaLibrary exportedDep =
         (JavaLibrary) graphBuilder.requireRule(BuildTargetFactory.newInstance("//:edep"));
@@ -1333,7 +1324,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       ImmutableSet<String> srcs,
       ImmutableSortedSet<BuildRule> deps,
       ImmutableSortedSet<BuildRule> exportedDeps,
-      Optional<AbstractJavacOptions.SpoolMode> spoolMode,
+      Optional<JavacOptions.SpoolMode> spoolMode,
       ImmutableList<String> postprocessClassesCommands)
       throws NoSuchBuildTargetException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
@@ -1365,7 +1356,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                 new ToolchainProviderBuilder().build(),
                 buildRuleParams,
                 graphBuilder,
-                TestCellBuilder.createCellRoots(filesystem),
                 new JavaConfiguredCompilerFactory(
                     testJavaBuckConfig, JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                 testJavaBuckConfig,
@@ -1481,7 +1471,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(javacNode, ruleNode);
     graphBuilder = new TestActionGraphBuilder(targetGraph);
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     BuildRule javac = graphBuilder.requireRule(javacTarget);
     BuildRule rule = graphBuilder.requireRule(libraryOneTarget);
@@ -1601,19 +1591,19 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   // standard javac plugin, test scenarios.
   private class TestJavaPluginScenario {
 
-    private final AbstractJavacPluginParams.Builder annotationProcessorParams;
-    private final AbstractJavacPluginParams.Builder standardJavacPluginParams;
+    private final JavacPluginParams.Builder annotationProcessorParams;
+    private final JavacPluginParams.Builder standardJavacPluginParams;
 
     public TestJavaPluginScenario() {
       annotationProcessorParams = JavacPluginParams.builder();
       standardJavacPluginParams = JavacPluginParams.builder();
     }
 
-    public AbstractJavacPluginParams.Builder getAnnotationProcessingParamsBuilder() {
+    public JavacPluginParams.Builder getAnnotationProcessingParamsBuilder() {
       return annotationProcessorParams;
     }
 
-    public AbstractJavacPluginParams.Builder getStandardJavacPluginParamsBuilder() {
+    public JavacPluginParams.Builder getStandardJavacPluginParamsBuilder() {
       return standardJavacPluginParams;
     }
 
@@ -1696,7 +1686,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                   new ToolchainProviderBuilder().build(),
                   buildRuleParams,
                   graphBuilder,
-                  TestCellBuilder.createCellRoots(projectFilesystem),
                   new JavaConfiguredCompilerFactory(
                       testJavaBuckConfig,
                       JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
@@ -1732,8 +1721,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
   }
 
-  private static ImmutableSet<Path> resolve(
-      ImmutableSet<SourcePath> paths, SourcePathResolver resolver) {
-    return paths.stream().map(resolver::getAbsolutePath).collect(ImmutableSet.toImmutableSet());
+  private static ImmutableSet<AbsPath> resolve(
+      ImmutableSet<SourcePath> paths, SourcePathResolverAdapter resolver) {
+    return paths.stream()
+        .map(sourcePath -> AbsPath.of(resolver.getAbsolutePath(sourcePath)))
+        .collect(ImmutableSet.toImmutableSet());
   }
 }

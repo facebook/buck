@@ -1,22 +1,21 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -24,10 +23,12 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
+import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.JavaBuckConfig.SourceAbiVerificationMode;
 import com.facebook.buck.jvm.java.JavaBuckConfig.UnusedDependenciesAction;
@@ -45,11 +46,7 @@ import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
-@Value.Immutable
-@Value.Style(
-    overshadowImplementation = true,
-    init = "set*",
-    visibility = Value.Style.ImplementationVisibility.PACKAGE)
+@BuckStyleValueWithBuilder
 public abstract class DefaultJavaLibraryRules {
   public interface DefaultJavaLibraryConstructor {
     DefaultJavaLibrary newInstance(
@@ -72,7 +69,8 @@ public abstract class DefaultJavaLibraryRules {
         Optional<UnusedDependenciesFinderFactory> unusedDependenciesFinderFactory,
         @Nullable CalculateSourceAbi previousRuleInPipeline,
         boolean isDesugarEnabled,
-        boolean isInterfaceMethodsDesugarEnabled);
+        boolean isInterfaceMethodsDesugarEnabled,
+        boolean neverMarkAsUnusedDependency);
   }
 
   @org.immutables.builder.Builder.Parameter
@@ -98,11 +96,8 @@ public abstract class DefaultJavaLibraryRules {
   @org.immutables.builder.Builder.Parameter
   abstract ActionGraphBuilder getActionGraphBuilder();
 
-  @org.immutables.builder.Builder.Parameter
-  abstract CellPathResolver getCellPathResolver();
-
   @Value.Lazy
-  SourcePathResolver getSourcePathResolver() {
+  SourcePathResolverAdapter getSourcePathResolver() {
     return getActionGraphBuilder().getSourcePathResolver();
   }
 
@@ -409,23 +404,23 @@ public abstract class DefaultJavaLibraryRules {
 
     if (unusedDependenciesAction != UnusedDependenciesAction.IGNORE
         && getConfiguredCompilerFactory().trackClassUsage(getJavacOptions())) {
-      ProjectFilesystem projectFilesystem = getProjectFilesystem();
-      BuildTarget buildTarget = getLibraryTarget();
-      SourcePathResolver sourcePathResolver = getSourcePathResolver();
       BuildRuleResolver buildRuleResolver = getActionGraphBuilder();
 
       unusedDependenciesFinderFactory =
           Optional.of(
-              () ->
-                  UnusedDependenciesFinder.of(
-                      buildTarget,
-                      projectFilesystem,
+              new UnusedDependenciesFinderFactory(
+                  Objects.requireNonNull(getJavaBuckConfig())
+                      .getUnusedDependenciesBuildozerString(),
+                  Objects.requireNonNull(getJavaBuckConfig())
+                      .isUnusedDependenciesOnlyPrintCommands(),
+                  UnusedDependenciesFinder.getDependencies(
                       buildRuleResolver,
-                      getCellPathResolver(),
-                      CompilerOutputPaths.getDepFilePath(buildTarget, projectFilesystem),
-                      Objects.requireNonNull(getDeps()),
-                      sourcePathResolver,
-                      unusedDependenciesAction));
+                      buildRuleResolver.getAllRules(
+                          Objects.requireNonNull(getDeps()).getDepTargets())),
+                  UnusedDependenciesFinder.getDependencies(
+                      buildRuleResolver,
+                      buildRuleResolver.getAllRules(
+                          Objects.requireNonNull(getDeps()).getProvidedDepTargets()))));
     }
 
     DefaultJavaLibrary libraryRule =
@@ -450,7 +445,8 @@ public abstract class DefaultJavaLibraryRules {
                 unusedDependenciesFinderFactory,
                 sourceAbiRule,
                 isDesugarRequired(),
-                getConfiguredCompilerFactory().shouldDesugarInterfaceMethods());
+                getConfiguredCompilerFactory().shouldDesugarInterfaceMethods(),
+                getArgs() != null && getArgs().getNeverMarkAsUnusedDependency().orElse(false));
 
     getActionGraphBuilder().addToIndex(libraryRule);
     return libraryRule;
@@ -543,7 +539,7 @@ public abstract class DefaultJavaLibraryRules {
 
   @Value.Lazy
   DefaultJavaLibraryClasspaths getClasspaths() {
-    return DefaultJavaLibraryClasspaths.builder(getActionGraphBuilder())
+    return ImmutableDefaultJavaLibraryClasspaths.builder(getActionGraphBuilder())
         .setBuildRuleParams(getInitialParams())
         .setDeps(Objects.requireNonNull(getDeps()))
         .setCompileAgainstLibraryType(getCompileAgainstLibraryType())
@@ -692,7 +688,6 @@ public abstract class DefaultJavaLibraryRules {
         ToolchainProvider toolchainProvider,
         BuildRuleParams initialParams,
         ActionGraphBuilder graphBuilder,
-        CellPathResolver cellPathResolver,
         ConfiguredCompilerFactory configuredCompilerFactory,
         @Nullable JavaBuckConfig javaBuckConfig,
         @Nullable JavaLibraryDescription.CoreArg args) {
@@ -702,7 +697,6 @@ public abstract class DefaultJavaLibraryRules {
           toolchainProvider,
           initialParams,
           graphBuilder,
-          cellPathResolver,
           configuredCompilerFactory,
           getUnusedDependenciesAction(javaBuckConfig, args),
           javaBuckConfig,

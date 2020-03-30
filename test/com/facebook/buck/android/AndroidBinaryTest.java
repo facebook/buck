@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -35,7 +35,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.FakeJavaLibrary;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
@@ -72,7 +72,7 @@ public class AndroidBinaryTest {
   @Test
   public void testAndroidBinaryNoDx() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
 
     // Two android_library deps, neither with an assets directory.
@@ -117,8 +117,8 @@ public class AndroidBinaryTest {
 
     androidBinary
         .getEnhancementResult()
-        .getDexMergeRule()
-        .getRight()
+        .getNonPreDexedDex()
+        .get()
         .addProguardCommands(
             packageableCollection.getClasspathEntriesToDex().stream()
                 .map(pathResolver::getRelativePath)
@@ -135,12 +135,12 @@ public class AndroidBinaryTest {
             InternalFlavor.of(APKModuleGraph.ROOT_APKMODULE_NAME));
     Path aaptProguardDir =
         BuildTargetPaths.getGenPath(
-            androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard/");
+            androidBinary.getProjectFilesystem(), aaptPackageTarget, "%s/proguard");
 
     Path proguardOutputDir =
-        androidBinary.getEnhancementResult().getDexMergeRule().getRight().getProguardConfigDir();
+        androidBinary.getEnhancementResult().getNonPreDexedDex().get().getProguardConfigDir();
     Path proguardInputsDir =
-        androidBinary.getEnhancementResult().getDexMergeRule().getRight().getProguardInputsDir();
+        androidBinary.getEnhancementResult().getNonPreDexedDex().get().getProguardInputsDir();
     ImmutableSet<Path> expectedRecordedArtifacts =
         ImmutableSet.of(
             proguardOutputDir.resolve("configuration.txt"),
@@ -177,15 +177,13 @@ public class AndroidBinaryTest {
                 BuildTargetPaths.getGenPath(
                         libraryOneRule.getProjectFilesystem(),
                         libraryOneRule.getBuildTarget(),
-                        "lib__%s__output/")
+                        "lib__%s__output")
                     .resolve(
                         libraryOne.getBuildTarget().getShortNameAndFlavorPostfix()
                             + "-obfuscated.jar"))),
         ImmutableSet.of(
-            libraryTwo
-                .getBuildTarget()
-                .getUnflavoredBuildTarget()
-                .getCellPath()
+            androidBinary
+                .getProjectFilesystem()
                 .resolve(
                     BuildTargetPaths.getGenPath(
                             libraryTwoRule.getProjectFilesystem(),
@@ -248,7 +246,7 @@ public class AndroidBinaryTest {
   @Test
   public void testGetUnsignedApkPath() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     Keystore keystore = addKeystoreRule(graphBuilder);
 
     BuildTarget targetInRootDirectory = BuildTargetFactory.newInstance("//:fb4a");
@@ -341,8 +339,8 @@ public class AndroidBinaryTest {
             .resolve(".dex/classes.dex");
     splitDexRule
         .getEnhancementResult()
-        .getDexMergeRule()
-        .getRight()
+        .getNonPreDexedDex()
+        .get()
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),
@@ -366,8 +364,8 @@ public class AndroidBinaryTest {
 
   @Test
   public void testDexingCommandWithIntraDexReorder() {
-    SourcePath reorderTool = FakeSourcePath.of("/tools#reorder_tool");
-    SourcePath reorderData = FakeSourcePath.of("/tools#reorder_data");
+    SourcePath reorderTool = FakeSourcePath.of("tools#reorder_tool");
+    SourcePath reorderData = FakeSourcePath.of("tools#reorder_data");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     AndroidBinary splitDexRule =
         AndroidBinaryBuilder.createBuilder(
@@ -394,8 +392,8 @@ public class AndroidBinaryTest {
             .resolve(".dex/classes.dex");
     splitDexRule
         .getEnhancementResult()
-        .getDexMergeRule()
-        .getRight()
+        .getNonPreDexedDex()
+        .get()
         .addDexingSteps(
             classpath,
             Suppliers.ofInstance(ImmutableMap.of()),

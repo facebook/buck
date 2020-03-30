@@ -1,21 +1,22 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -26,7 +27,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.tool.impl.HashedFileTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ToolProviders;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.ArchiverProvider;
@@ -44,6 +45,8 @@ import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
+import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.args.StringArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -124,7 +127,7 @@ public class CxxToolchainDescription
             compilerType,
             ToolType.AS,
             preferDependencyTree));
-    cxxPlatform.setAsflags(args.getAssemblerFlags());
+    cxxPlatform.setAsflags(StringArg.from(args.getAssemblerFlags()));
 
     cxxPlatform.setAspp(
         new PreprocessorProvider(
@@ -137,7 +140,7 @@ public class CxxToolchainDescription
             compilerType,
             ToolType.CC,
             preferDependencyTree));
-    cxxPlatform.setCflags(args.getCCompilerFlags());
+    cxxPlatform.setCflags(StringArg.from(args.getCCompilerFlags()));
 
     cxxPlatform.setCxx(
         new CompilerProvider(
@@ -145,7 +148,7 @@ public class CxxToolchainDescription
             compilerType,
             ToolType.CXX,
             preferDependencyTree));
-    cxxPlatform.setCxxflags(args.getCxxCompilerFlags());
+    cxxPlatform.setCxxflags(StringArg.from(args.getCxxCompilerFlags()));
 
     cxxPlatform.setCpp(
         new PreprocessorProvider(
@@ -163,34 +166,37 @@ public class CxxToolchainDescription
 
     if (linkerType == LinkerProvider.Type.GNU) {
       cxxPlatform.setLdflags(
-          ImmutableList.<String>builder()
+          ImmutableList.<Arg>builder()
               // Add a deterministic build ID.
-              .add("-Wl,--build-id")
-              .addAll(args.getLinkerFlags())
+              .add(StringArg.of("-Wl,--build-id"))
+              .addAll(StringArg.from(args.getLinkerFlags()))
               .build());
     } else {
       // TODO(cjhopman): We should force build ids by default for all linkers.
-      cxxPlatform.setLdflags(args.getLinkerFlags());
+      cxxPlatform.setLdflags(StringArg.from(args.getLinkerFlags()));
     }
 
     cxxPlatform.setAr(
         ArchiverProvider.from(
             ToolProviders.getToolProvider(args.getArchiver()), args.getArchiverType()));
-    cxxPlatform.setArflags(args.getArchiverFlags());
+    cxxPlatform.setArflags(StringArg.from(args.getArchiverFlags()));
 
     cxxPlatform.setStrip(
         ToolProviders.getToolProvider(args.getStrip())
             .resolve(ruleResolver, buildTarget.getTargetConfiguration()));
-    cxxPlatform.setStripFlags(args.getStripFlags());
+    cxxPlatform.setStripFlags(StringArg.from(args.getStripFlags()));
 
     cxxPlatform.setRanlib(args.getRanlib().map(ToolProviders::getToolProvider));
-    cxxPlatform.setRanlibflags(args.getRanlibFlags());
+    cxxPlatform.setRanlibflags(StringArg.from(args.getRanlibFlags()));
 
-    ListMultimap<LinkableDepType, String> runtimeLdFlags =
+    ListMultimap<LinkableDepType, Arg> runtimeLdFlags =
         Multimaps.newListMultimap(new LinkedHashMap<>(), ArrayList::new);
-    runtimeLdFlags.putAll(LinkableDepType.STATIC, args.getStaticDepRuntimeLdFlags());
-    runtimeLdFlags.putAll(LinkableDepType.STATIC_PIC, args.getStaticPicDepRuntimeLdFlags());
-    runtimeLdFlags.putAll(LinkableDepType.SHARED, args.getSharedDepRuntimeLdFlags());
+    runtimeLdFlags.putAll(
+        LinkableDepType.STATIC, StringArg.from(args.getStaticDepRuntimeLdFlags()));
+    runtimeLdFlags.putAll(
+        LinkableDepType.STATIC_PIC, StringArg.from(args.getStaticPicDepRuntimeLdFlags()));
+    runtimeLdFlags.putAll(
+        LinkableDepType.SHARED, StringArg.from(args.getSharedDepRuntimeLdFlags()));
     cxxPlatform.setRuntimeLdflags(runtimeLdFlags);
 
     cxxPlatform.setSymbolNameTool(
@@ -203,11 +209,11 @@ public class CxxToolchainDescription
     cxxPlatform.setHeaderVerification(
         HeaderVerification.of(
             HeaderVerification.Mode.ERROR,
-            ImmutableList.of(),
+            ImmutableSortedSet.of(),
             // Ideally we don't allow any whitelisting (the user-configured platform can implement
             // its own filtering of the produced depfiles), but currently we are relaxing this
             // restriction.
-            args.getHeadersWhitelist()));
+            ImmutableSortedSet.copyOf(args.getHeadersWhitelist())));
 
     SharedLibraryInterfaceParams.Type sharedLibraryInterfaceType =
         args.getSharedLibraryInterfaceType();
@@ -248,9 +254,8 @@ public class CxxToolchainDescription
    * are not yet exposed/implemented, and others have been slightly renamed or exposed slightly
    * differently to be more restricted or more descriptive or more maintainable.
    */
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractCxxToolchainDescriptionArg extends CommonDescriptionArg {
+  @RuleArg
+  interface AbstractCxxToolchainDescriptionArg extends BuildRuleArg {
     /** When building or creating a project, create symlinks for the public headers if it's true. */
     @Value.Default
     default boolean getPrivateHeadersSymlinksEnabled() {

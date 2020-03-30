@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -28,6 +28,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -70,9 +71,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     FakeJavaLibrary javaLibraryRule =
         new FakeJavaLibrary(
-            BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar"),
-            filesystem,
-            ImmutableSortedSet.of()) {
+            BuildTargetFactory.newInstance("//foo:bar"), filesystem, ImmutableSortedSet.of()) {
           @Override
           public ImmutableSortedMap<String, HashCode> getClassNamesToHashes() {
             return ImmutableSortedMap.of("com/example/Foo", HashCode.fromString("cafebabe"));
@@ -85,7 +84,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
 
     BuildContext context =
         FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver())
-            .withBuildCellRootPath(filesystem.getRootPath());
+            .withBuildCellRootPath(filesystem.getRootPath().getPath());
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
     Path dexOutput =
@@ -111,8 +110,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             Paths.get(""),
             Paths.get(""));
 
-    BuildTarget buildTarget =
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//foo:bar#dex");
+    BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
             buildTarget, filesystem, graphBuilder, androidPlatformTarget, javaLibraryRule);
@@ -151,11 +149,11 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
   }
 
   private void createFiles(ProjectFilesystem filesystem, String... paths) throws IOException {
-    Path root = filesystem.getRootPath();
+    AbsPath root = filesystem.getRootPath();
     for (String path : paths) {
-      Path resolved = root.resolve(path);
-      Files.createDirectories(resolved.getParent());
-      Files.write(resolved, "".getBytes(UTF_8));
+      AbsPath resolved = root.resolve(path);
+      Files.createDirectories(resolved.getParent().getPath());
+      Files.write(resolved.getPath(), "".getBytes(UTF_8));
     }
   }
 

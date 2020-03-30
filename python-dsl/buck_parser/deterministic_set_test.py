@@ -1,16 +1,16 @@
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import random
 import unittest
@@ -25,7 +25,7 @@ class DeterministicSetTest(unittest.TestCase):
     def test_depset_iteration_order_is_sorted(self):
         # depset contract does not state that the order is sorted, but
         # currently the easiest way to implement determinism is to sort
-        random_elements = [random.shuffle(range(99))]
+        random_elements = [random.shuffle(list(range(99)))]
         self.assertEqual(
             list(DeterministicSet(random_elements)), sorted(random_elements)
         )

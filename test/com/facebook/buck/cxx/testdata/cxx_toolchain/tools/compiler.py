@@ -1,12 +1,14 @@
+#!/usr/bin/env python3
+
 import sys
 
-import impl
-from impl import StripQuotesAction
+from tools import impl
+
 
 parser = impl.argparser()
 # We just need to know the input file, the output location and the depfile location
-parser.add_argument("-o", dest="output", action=StripQuotesAction)
-parser.add_argument("-MF", dest="depfile", action=StripQuotesAction)
+parser.add_argument("-o", dest="output", action=impl.StripQuotesAction)
+parser.add_argument("-MF", dest="depfile", action=impl.StripQuotesAction)
 
 (options, args) = parser.parse_known_args()
 

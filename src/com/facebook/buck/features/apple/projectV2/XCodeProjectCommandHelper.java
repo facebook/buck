@@ -1,23 +1,24 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.apple.AppleBinaryDescription;
 import com.facebook.buck.apple.AppleBundleDescription;
+import com.facebook.buck.apple.AppleBundleDescriptionArg;
 import com.facebook.buck.apple.AppleConfig;
 import com.facebook.buck.apple.AppleLibraryDescription;
 import com.facebook.buck.apple.XCodeDescriptions;
@@ -27,17 +28,18 @@ import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.CanonicalCellName;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.ImmutableUnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.NoSuchTargetException;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -49,12 +51,14 @@ import com.facebook.buck.core.rules.config.registry.impl.ConfigurationRuleRegist
 import com.facebook.buck.core.rules.resolver.impl.MultiThreadedActionGraphBuilder;
 import com.facebook.buck.core.rules.transformer.impl.DefaultTargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal.CycleException;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.impl.LegacyToolchainProvider;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.features.apple.common.PathOutputPresenter;
@@ -64,10 +68,10 @@ import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -76,9 +80,9 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.ProcessManager;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.collect.MoreSets;
 import com.facebook.buck.util.config.Configs;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.annotations.VisibleForTesting;
@@ -96,9 +100,11 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -123,7 +129,7 @@ public class XCodeProjectCommandHelper {
   private final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
   private final Cell cell;
-  private final TargetConfiguration targetConfiguration;
+  private final Optional<TargetConfiguration> targetConfiguration;
   private final ImmutableSet<Flavor> appleCxxFlavors;
   private final RuleKeyConfiguration ruleKeyConfiguration;
   private final Console console;
@@ -157,7 +163,7 @@ public class XCodeProjectCommandHelper {
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       Cell cell,
       RuleKeyConfiguration ruleKeyConfiguration,
-      TargetConfiguration targetConfiguration,
+      Optional<TargetConfiguration> targetConfiguration,
       Console console,
       Optional<ProcessManager> processManager,
       ImmutableMap<String, String> environment,
@@ -213,7 +219,7 @@ public class XCodeProjectCommandHelper {
                 buckConfig.getView(ParserConfig.class).getDefaultFlavorsMode())
             .build();
 
-    this.focusedTargetMatcher = new FocusedTargetMatcher(focus, cell.getCanonicalName().getName());
+    this.focusedTargetMatcher = new FocusedTargetMatcher(focus, cell.getCellNameResolver());
   }
 
   public ExitCode parseTargetsAndRunXCodeGenerator() throws IOException, InterruptedException {
@@ -276,7 +282,7 @@ public class XCodeProjectCommandHelper {
     if (sharedLibrariesInBundles) {
       sharedLibraryToBundle =
           Optional.of(
-              ProjectGenerator.computeSharedLibrariesToBundles(
+              computeSharedLibrariesToBundles(
                   targetGraphCreationResult.getTargetGraph().getNodes(),
                   targetGraphCreationResult.getTargetGraph()));
     }
@@ -292,6 +298,40 @@ public class XCodeProjectCommandHelper {
     LOG.debug("Xcode project generation: Run the project generator");
 
     return runXcodeProjectGenerator(targetGraphCreationResult, sharedLibraryToBundle);
+  }
+
+  /** Generate a mapping from libraries to the framework bundles that include them. */
+  static ImmutableMap<BuildTarget, TargetNode<?>> computeSharedLibrariesToBundles(
+      ImmutableSet<TargetNode<?>> targetNodes, TargetGraph targetGraph)
+      throws HumanReadableException {
+
+    Map<BuildTarget, TargetNode<?>> sharedLibraryToBundle = new HashMap<>();
+    for (TargetNode<?> targetNode : targetNodes) {
+      Optional<TargetNode<CxxLibraryDescription.CommonArg>> binaryNode =
+          TargetNodes.castArg(targetNode, AppleBundleDescriptionArg.class)
+              .flatMap(bundleNode -> bundleNode.getConstructorArg().getBinary())
+              .map(target -> targetGraph.get(target))
+              .flatMap(node -> TargetNodes.castArg(node, CxxLibraryDescription.CommonArg.class));
+      if (!binaryNode.isPresent()) {
+        continue;
+      }
+      CxxLibraryDescription.CommonArg arg = binaryNode.get().getConstructorArg();
+      if (arg.getPreferredLinkage().equals(Optional.of(NativeLinkableGroup.Linkage.SHARED))) {
+        BuildTarget binaryBuildTargetWithoutFlavors =
+            binaryNode.get().getBuildTarget().withoutFlavors();
+        if (sharedLibraryToBundle.containsKey(binaryBuildTargetWithoutFlavors)) {
+          throw new HumanReadableException(
+              String.format(
+                  "Library %s is declared as the 'binary' of multiple bundles:\n first bundle: %s\n second bundle: %s",
+                  binaryBuildTargetWithoutFlavors,
+                  sharedLibraryToBundle.get(binaryBuildTargetWithoutFlavors).getBuildTarget(),
+                  targetNode.getBuildTarget()));
+        } else {
+          sharedLibraryToBundle.put(binaryBuildTargetWithoutFlavors, targetNode);
+        }
+      }
+    }
+    return ImmutableMap.copyOf(sharedLibraryToBundle);
   }
 
   private static String getIDEForceKillSectionName() {
@@ -370,21 +410,21 @@ public class XCodeProjectCommandHelper {
 
     LOG.debug("Xcode project generation: Generates workspaces for targets");
 
-    ImmutableSet<BuildTarget> requiredBuildTargets =
+    ImmutableList<Result> results =
         generateWorkspacesForTargets(
-                buckEventBus,
-                pluginManager,
-                cell,
-                buckConfig,
-                ruleKeyConfiguration,
-                executorService,
-                targetGraphCreationResult,
-                options,
-                appleCxxFlavors,
-                focusedTargetMatcher,
-                outputPresenter,
-                sharedLibraryToBundle)
-            .stream()
+            buckEventBus,
+            pluginManager,
+            cell,
+            buckConfig,
+            ruleKeyConfiguration,
+            executorService,
+            targetGraphCreationResult,
+            options,
+            appleCxxFlavors,
+            focusedTargetMatcher,
+            sharedLibraryToBundle);
+    ImmutableSet<BuildTarget> requiredBuildTargets =
+        results.stream()
             .flatMap(b -> b.getBuildTargets().stream())
             .collect(ImmutableSet.toImmutableSet());
     if (!requiredBuildTargets.isEmpty()) {
@@ -393,28 +433,12 @@ public class XCodeProjectCommandHelper {
               .map(
                   target -> {
                     // TODO(T47190884): Use our NewCellPathResolver to look up the path.
-                    if (!target.getCellPath().equals(cell.getRoot())) {
-                      try {
-                        CanonicalCellName cellName =
-                            cell.getNewCellPathResolver()
-                                .getCanonicalCellName(target.getCellPath());
+                    if (!target.getCell().equals(cell.getCanonicalName())) {
+                      CanonicalCellName cellName = target.getCell();
 
-                        return target.withUnflavoredBuildTarget(
-                            ImmutableUnflavoredBuildTargetView.of(
-                                target.getCellPath(),
-                                cellName,
-                                target.getBaseName(),
-                                target.getShortName()));
-                      } catch (Exception e) {
-                        throw new BuckUncheckedExecutionException(
-                            e,
-                            "When trying to find cell name for cell path while constructing parameters to "
-                                + "build dependencies for project generation. "
-                                + "Build target: "
-                                + target
-                                + " cell path: "
-                                + target.getCellPath());
-                      }
+                      return target.withUnflavoredBuildTarget(
+                          UnflavoredBuildTarget.of(
+                              cellName, target.getBaseName(), target.getShortName()));
                     } else {
                       return target;
                     }
@@ -423,17 +447,46 @@ public class XCodeProjectCommandHelper {
               .toImmutableList();
       exitCode = buildRunner.apply(arguments);
     }
+
+    // Write all output paths to stdout if requested.
+    // IMPORTANT: this shuts down RenderingConsole since it writes to stdout.
+    // (See DirtyPrintStreamDecorator and note how RenderingConsole uses it.)
+    // Thus this must be the *last* thing we do, or we disable progress UI.
+    //
+    // This is still not the "right" way to do this; we should probably use
+    // RenderingConsole#printToStdOut since it ensures we do one last render.
+    for (Result result : results) {
+      outputPresenter.present(
+          result.inputTarget.getFullyQualifiedName(), result.outputRelativePath);
+    }
+
     return exitCode;
   }
 
   /** A result with metadata about the subcommand helper's output. */
   public static class Result {
+    private final BuildTarget inputTarget;
+    private final Path outputRelativePath;
     private final PBXProject project;
     private final ImmutableSet<BuildTarget> buildTargets;
 
-    public Result(PBXProject project, ImmutableSet<BuildTarget> buildTargets) {
+    public Result(
+        BuildTarget inputTarget,
+        Path outputRelativePath,
+        PBXProject project,
+        ImmutableSet<BuildTarget> buildTargets) {
+      this.inputTarget = inputTarget;
+      this.outputRelativePath = outputRelativePath;
       this.project = project;
       this.buildTargets = buildTargets;
+    }
+
+    public BuildTarget getInputTarget() {
+      return inputTarget;
+    }
+
+    public Path getOutputRelativePath() {
+      return outputRelativePath;
     }
 
     public PBXProject getProject() {
@@ -457,7 +510,6 @@ public class XCodeProjectCommandHelper {
       ProjectGeneratorOptions options,
       ImmutableSet<Flavor> appleCxxFlavors,
       FocusedTargetMatcher focusedTargetMatcher, // @audited(chatatap)]
-      PathOutputPresenter presenter,
       Optional<ImmutableMap<BuildTarget, TargetNode<?>>> sharedLibraryToBundle)
       throws IOException, InterruptedException {
 
@@ -491,12 +543,15 @@ public class XCodeProjectCommandHelper {
 
       CxxPlatformsProvider cxxPlatformsProvider =
           cell.getToolchainProvider()
-              .getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+              .getByName(
+                  CxxPlatformsProvider.DEFAULT_NAME,
+                  inputTarget.getTargetConfiguration(),
+                  CxxPlatformsProvider.class);
 
       CxxPlatform defaultCxxPlatform =
           LegacyToolchainProvider.getLegacyTotallyUnsafe(
               cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform());
-      Cell workspaceCell = cell.getCell(inputTarget);
+      Cell workspaceCell = cell.getCell(inputTarget.getCell());
       WorkspaceAndProjectGenerator generator =
           new WorkspaceAndProjectGenerator(
               xcodeDescriptions,
@@ -521,20 +576,23 @@ public class XCodeProjectCommandHelper {
       Objects.requireNonNull(
           executorService, "CommandRunnerParams does not have executor for PROJECT pool");
       WorkspaceAndProjectGenerator.Result result =
-          generator.generateWorkspaceAndDependentProjects();
+          generator.generateWorkspaceAndDependentProjects(executorService);
 
       ImmutableSet<BuildTarget> requiredBuildTargetsForWorkspace =
           generator.getRequiredBuildTargets();
-      LOG.debug(
+      LOG.verbose(
           "Required build targets for workspace %s: %s",
           inputTarget, requiredBuildTargetsForWorkspace);
 
-      Path absolutePath = workspaceCell.getFilesystem().resolve(result.getWorkspacePath());
-      Path relativePath = cell.getFilesystem().relativize(absolutePath);
-      presenter.present(inputTarget.getFullyQualifiedName(), relativePath);
+      Path absolutePath = workspaceCell.getFilesystem().resolve(result.workspacePath);
+      RelPath relativePath = cell.getFilesystem().relativize(absolutePath);
 
       generationResultsBuilder.add(
-          new Result(result.getProject(), requiredBuildTargetsForWorkspace));
+          new Result(
+              inputTarget,
+              relativePath.getPath(),
+              result.project,
+              requiredBuildTargetsForWorkspace));
     }
 
     return generationResultsBuilder.build();
@@ -595,8 +653,7 @@ public class XCodeProjectCommandHelper {
                         + "If you would like to always kill Xcode, use '%s'.\n",
                     cell.getFilesystem()
                         .getRootPath()
-                        .resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME)
-                        .toAbsolutePath(),
+                        .resolve(Configs.DEFAULT_BUCK_CONFIG_OVERRIDE_FILE_NAME),
                     getIDEForceKillSectionName(),
                     getIDEForceKillFieldName(),
                     IDEForceKill.NEVER.toString().toLowerCase(),
@@ -690,7 +747,8 @@ public class XCodeProjectCommandHelper {
               unconfiguredBuildTargetFactory,
               targetGraphCreationResult,
               targetConfiguration,
-              buckEventBus);
+              buckEventBus,
+              new Cells(cell));
     }
     return targetGraphCreationResult.withBuildTargets(originalBuildTargets);
   }

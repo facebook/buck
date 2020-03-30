@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
@@ -40,6 +41,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
@@ -50,19 +52,27 @@ import javax.annotation.Nullable;
  */
 public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExportable {
 
+  private static final String TEST_RULE_SUFFIX = "_test";
+
   private boolean isExported = false;
   @Nullable private String name = null;
   @Nullable private Label label = null;
   @Nullable private String exportedName = null;
   private final BaseFunction implementation;
   private final ImmutableMap<String, Attribute<?>> attrs;
-  private final ImmutableMap<String, ParamInfo> params;
+  private final Set<String> hiddenImplicitAttributes;
+  private final boolean shouldInferRunInfo;
+  private final boolean shouldBeTestRule;
+  private final ImmutableMap<String, ParamInfo<?>> params;
 
   private SkylarkUserDefinedRule(
       FunctionSignature.WithValues<Object, SkylarkType> signature,
       Location location,
       BaseFunction implementation,
-      ImmutableMap<String, Attribute<?>> attrs) {
+      ImmutableMap<String, Attribute<?>> attrs,
+      Set<String> hiddenImplicitAttributes,
+      boolean shouldInferRunInfo,
+      boolean shouldBeTestRule) {
     /**
      * The name is incomplete until {@link #export(Label, String)} is called, so we know what is on
      * the left side of the assignment operator to create a function name
@@ -70,11 +80,14 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     super("<incomplete rule>", signature, location);
     this.implementation = implementation;
     this.attrs = attrs;
+    this.hiddenImplicitAttributes = hiddenImplicitAttributes;
+    this.shouldInferRunInfo = shouldInferRunInfo;
+    this.shouldBeTestRule = shouldBeTestRule;
     this.params =
         getAttrs().entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
-                    Map.Entry::getKey, e -> new SkylarkParamInfo(e.getKey(), e.getValue())));
+                    Map.Entry::getKey, e -> new SkylarkParamInfo<>(e.getKey(), e.getValue())));
   }
 
   @Override
@@ -111,7 +124,6 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       builder.put(name, args[i]);
       i++;
     }
-
     parseContext.recordRule(builder.build(), ast);
     return Runtime.NONE;
   }
@@ -137,7 +149,10 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       Location location,
       BaseFunction implementation,
       ImmutableMap<String, Attribute<?>> implicitAttributes,
-      Map<String, AttributeHolder> attrs)
+      Set<String> hiddenImplicitAttributes,
+      Map<String, AttributeHolder> attrs,
+      boolean inferRunInfo,
+      boolean test)
       throws EvalException {
 
     validateImplementation(location, implementation);
@@ -147,7 +162,14 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
 
     FunctionSignature.WithValues<Object, SkylarkType> signature =
         createSignature(validatedAttrs, location);
-    return new SkylarkUserDefinedRule(signature, location, implementation, validatedAttrs);
+    return new SkylarkUserDefinedRule(
+        signature,
+        location,
+        implementation,
+        validatedAttrs,
+        hiddenImplicitAttributes,
+        inferRunInfo,
+        test);
   }
 
   private static void validateImplementation(Location location, BaseFunction implementation)
@@ -271,13 +293,37 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         "Tried to get exported name before function has been assigned to a variable and exported");
   }
 
+  /** Whether RunInfo should be inferred for this rule */
+  public boolean shouldInferRunInfo() {
+    return shouldInferRunInfo;
+  }
+
+  /** Whether this rule is expected to be a test rule or not */
+  public boolean shouldBeTestRule() {
+    return shouldBeTestRule;
+  }
+
   @Override
   public boolean isExported() {
     return isExported;
   }
 
   @Override
-  public void export(Label extensionLabel, String exportedName) {
+  public void export(Label extensionLabel, String exportedName) throws EvalException {
+    if (exportedName.endsWith(TEST_RULE_SUFFIX) && !shouldBeTestRule()) {
+      throw new EvalException(
+          location,
+          String.format(
+              "Only rules with `test = True` may end with `%s`. Got %s",
+              TEST_RULE_SUFFIX, exportedName));
+    }
+    if (!exportedName.endsWith(TEST_RULE_SUFFIX) && shouldBeTestRule()) {
+      throw new EvalException(
+          location,
+          String.format(
+              "Rules with `test = True` must end with `%s`. Got %s",
+              TEST_RULE_SUFFIX, exportedName));
+    }
     this.name = UserDefinedRuleNames.getIdentifier(extensionLabel, exportedName);
     this.label = extensionLabel;
     this.exportedName = exportedName;
@@ -295,8 +341,12 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   /** Get ParamInfo objects for all of the {@link Attribute}s provided to this instance */
-  public ImmutableMap<String, ParamInfo> getAllParamInfo() {
+  public ImmutableMap<String, ParamInfo<?>> getAllParamInfo() {
     return params;
+  }
+
+  public Set<String> getHiddenImplicitAttributes() {
+    return hiddenImplicitAttributes;
   }
 
   private static class MandatoryComparator implements Comparator<Map.Entry<String, Attribute<?>>> {
@@ -307,10 +357,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         Map.Entry<String, Attribute<?>> left, Map.Entry<String, Attribute<?>> right) {
       Attribute<?> leftAttr = left.getValue();
       Attribute<?> rightAttr = right.getValue();
-      if (leftAttr == rightAttr) {
-        return 0;
-      }
-      if (leftAttr.equals(rightAttr)) {
+
+      if (left.getKey().equals(right.getKey())) {
         return 0;
       }
       if ("name".equals(left.getKey())) {
@@ -320,7 +368,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         return 1;
       }
       if (leftAttr.getMandatory() == rightAttr.getMandatory()) {
-        return 0;
+        return left.getKey().compareTo(right.getKey());
       }
       return leftAttr.getMandatory() ? -1 : 1;
     }

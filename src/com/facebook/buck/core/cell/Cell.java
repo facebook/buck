@@ -1,26 +1,26 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.cell;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.CanonicalCellName;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetView;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemView;
@@ -28,7 +28,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * Represents a single checkout of a code base. Two cells model the same code base if their
@@ -38,7 +37,7 @@ import java.util.Optional;
  */
 public interface Cell {
 
-  ImmutableSortedSet<Path> getKnownRootsOfAllCells();
+  ImmutableSortedSet<AbsPath> getKnownRootsOfAllCells();
 
   CanonicalCellName getCanonicalName();
 
@@ -60,19 +59,13 @@ public interface Cell {
 
   ToolchainProvider getToolchainProvider();
 
-  Path getRoot();
+  AbsPath getRoot();
 
   Cell getCellIgnoringVisibilityCheck(Path cellPath);
 
   Cell getCell(Path cellPath);
 
-  Cell getCell(UnconfiguredBuildTargetView target);
-
-  Cell getCell(BuildTarget target);
-
-  Optional<Cell> getCellIfKnown(BuildTarget target);
-
-  Optional<Cell> getCellIfKnown(UnconfiguredBuildTargetView target);
+  Cell getCell(CanonicalCellName cellName);
 
   /**
    * Returns a list of all cells, including this cell. If this cell is the root, getAllCells will
@@ -82,7 +75,7 @@ public interface Cell {
   ImmutableList<Cell> getAllCells();
 
   /** @return all loaded {@link Cell}s that are children of this {@link Cell}. */
-  ImmutableMap<Path, Cell> getLoadedCells();
+  ImmutableMap<AbsPath, Cell> getLoadedCells();
 
   CellPathResolver getCellPathResolver();
 
@@ -93,8 +86,8 @@ public interface Cell {
   NewCellPathResolver getNewCellPathResolver();
 
   /**
-   * Return the {@link com.facebook.buck.core.cell.CellNameResolver} for this cell. This can be used
-   * to resolve user-provided cell aliases to their canonical names.
+   * Return the {@link CellNameResolver} for this cell. This can be used to resolve user-provided
+   * cell aliases to their canonical names.
    */
   CellNameResolver getCellNameResolver();
 }

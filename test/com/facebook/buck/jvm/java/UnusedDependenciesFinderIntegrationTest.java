@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -51,10 +51,14 @@ public class UnusedDependenciesFinderIntegrationTest {
     processResult.assertSuccess();
     assertThat(
         processResult.getStderr(),
-        Matchers.allOf(
-            Matchers.containsString(
-                "Target //:bar_with_dep is declared with unused targets in deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+        Matchers.containsString(
+            "Target //:bar_with_dep is declared with unused targets in deps: \n"
+                + "buck//third-party/java/jsr:jsr305\n"
+                + "\n"
+                + "Please remove them. You may be able to use the following commands: \n"
+                + "buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep\n"
+                + "\n"
+                + "If you are sure that these targets are required, then you may add them as `runtime_deps` instead and they will no longer be detected as unused.\n"));
   }
 
   @Test
@@ -69,7 +73,29 @@ public class UnusedDependenciesFinderIntegrationTest {
         Matchers.allOf(
             Matchers.containsString(
                 "Target //:bar_with_dep is declared with unused targets in deps:"),
-            Matchers.containsString("buck//third-party/java/jsr:jsr305")));
+            Matchers.containsString(
+                "buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep")));
+  }
+
+  @Test
+  public void testFailBuildWithSpecifiedBuildozerPath() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=fail",
+            "-c",
+            "java.unused_dependencies_buildozer_path=/some/path/buildozer",
+            ":bar_with_dep");
+
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.allOf(
+            Matchers.containsString(
+                "Target //:bar_with_dep is declared with unused targets in deps:"),
+            Matchers.containsString(
+                "/some/path/buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep")));
   }
 
   @Test
@@ -261,6 +287,15 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
+  public void testDoNotFailForRuntimeDeps() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build", "-c", "java.unused_dependencies_action=fail", ":bar_with_runtime_dep");
+
+    processResult.assertSuccess();
+  }
+
+  @Test
   public void testDoNotFailForNonJavaLibraryDeps() {
     ProcessResult processResult =
         workspace.runBuckCommand("build", "-c", "java.unused_dependencies_action=fail", ":res_dep");
@@ -280,5 +315,55 @@ public class UnusedDependenciesFinderIntegrationTest {
             ":bar_with_dep");
 
     processResult.assertSuccess();
+  }
+
+  @Test
+  public void testDoNotFailIfMarkedAsNeverUnused() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=fail",
+            ":bar_with_dep_marked_as_never_unused");
+
+    processResult.assertSuccess();
+  }
+
+  @Test
+  public void testFailBuildForDepThatHasExportedDepThatIsAFirstOrderDepAnyway() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build", "-c", "java.unused_dependencies_action=fail", ":barmeh_with_unused_dep");
+
+    processResult.assertFailure();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.allOf(
+            Matchers.containsString(
+                "Target //:barmeh_with_unused_dep is declared with unused targets in deps:"),
+            Matchers.containsString(
+                "buildozer 'remove deps //:dep_with_exported_dep' //:barmeh_with_unused_dep")));
+  }
+
+  @Test
+  public void testShowCommandOnly() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=warn",
+            "-c",
+            "java.unused_dependencies_only_print_commands=true",
+            ":bar_with_dep");
+
+    processResult.assertSuccess();
+    assertThat(
+        processResult.getStderr(),
+        Matchers.allOf(
+            Matchers.containsString(
+                "buildozer 'remove deps buck//third-party/java/jsr:jsr305' //:bar_with_dep"),
+            Matchers.not(
+                Matchers.containsString(
+                    "Target //:bar_with_dep is declared with unused targets in deps: "))));
   }
 }

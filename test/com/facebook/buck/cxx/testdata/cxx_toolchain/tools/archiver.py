@@ -1,6 +1,9 @@
+#!/usr/bin/env python3
+
 import sys
 
-import impl
+from tools import impl
+
 
 parser = impl.argparser()
 (options, args) = parser.parse_known_args()

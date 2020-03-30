@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.compatible;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -39,6 +40,7 @@ import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -61,19 +63,53 @@ public abstract class BuckStarlarkFunction
    * @param methodName the function name exposed to skylark
    * @param constructor the constructor that we will call as a method
    * @param namedParams a list of named parameters for skylark. The names are mapped in order to the
+   *     parameters of {@code constructor}
+   * @param defaultSkylarkValues a list of default values for parameters in skylark. The names are
+   *     mapped in order to the parameters of {@code constructor}
    */
   public BuckStarlarkFunction(
       String methodName,
       Constructor<?> constructor,
       List<String> namedParams,
-      List<String> defaultSkylarkValues) {
+      List<String> defaultSkylarkValues,
+      Set<String> noneableParams) {
     try {
       this.method = lookup.unreflectConstructor(constructor);
     } catch (IllegalAccessException e) {
       throw new IllegalStateException("Unable to access the supplied constructor", e);
     }
     this.methodDescriptor =
-        inferMethodDescriptor(methodName, method, namedParams, defaultSkylarkValues);
+        inferMethodDescriptor(
+            methodName, method, namedParams, defaultSkylarkValues, noneableParams);
+  }
+
+  /**
+   * Creates a new skylark callable function of the given name that invokes the method handle. The
+   * named parameters for skylark is the list of namedParams, which is mapped in order to the end of
+   * the parameter list for the method handle.
+   *
+   * @param methodName the function name exposed to skylark
+   * @param method a method that will eventually be called in {@link #call(List, Map,
+   *     FuncallExpression, Environment)}
+   * @param namedParams a list of named parameters for skylark. The names are mapped in order to the
+   *     parameters of {@code method}
+   * @param defaultSkylarkValues a list of default values for parameters in skylark. The values are
+   *     mapped in order to the parameters of {@code method}
+   */
+  public BuckStarlarkFunction(
+      String methodName,
+      Method method,
+      List<String> namedParams,
+      List<String> defaultSkylarkValues,
+      Set<String> noneableParams) {
+    try {
+      this.method = lookup.unreflect(method);
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException("Unable to access the supplied method", e);
+    }
+    this.methodDescriptor =
+        inferMethodDescriptor(
+            methodName, this.method, namedParams, defaultSkylarkValues, noneableParams);
   }
 
   /**
@@ -89,11 +125,13 @@ public abstract class BuckStarlarkFunction
   BuckStarlarkFunction(
       String methodName,
       ImmutableList<String> namedParams,
-      ImmutableList<String> defaultSkylarkValues)
+      ImmutableList<String> defaultSkylarkValues,
+      Set<String> noneableParams)
       throws Throwable {
     this.method = lookup.unreflect(findMethod(methodName)).bindTo(this);
     this.methodDescriptor =
-        inferMethodDescriptor(methodName, method, namedParams, defaultSkylarkValues);
+        inferMethodDescriptor(
+            methodName, method, namedParams, defaultSkylarkValues, noneableParams);
   }
 
   /**
@@ -104,7 +142,8 @@ public abstract class BuckStarlarkFunction
       String methodName,
       MethodHandle method,
       List<String> namedParams,
-      List<String> defaultSkylarkValues) {
+      List<String> defaultSkylarkValues,
+      Set<String> noneableParams) {
 
     try {
       return MethodDescriptor.of(
@@ -114,7 +153,7 @@ public abstract class BuckStarlarkFunction
                        Method object to use in many cases (e.g. if the MethodHandle is a
                        constructor). */
           inferSkylarkCallableAnnotationFromMethod(
-              methodName, method, namedParams, defaultSkylarkValues),
+              methodName, method, namedParams, defaultSkylarkValues, noneableParams),
           BuckStarlark.BUCK_STARLARK_SEMANTICS);
     } catch (NoSuchMethodException e) {
       throw new IllegalStateException();
@@ -223,8 +262,10 @@ public abstract class BuckStarlarkFunction
       String methodName,
       MethodHandle method,
       List<String> namedParams,
-      List<String> defaultSkylarkValues) {
-    return BuckStarlarkCallable.fromMethod(methodName, method, namedParams, defaultSkylarkValues);
+      List<String> defaultSkylarkValues,
+      Set<String> noneableParams) {
+    return BuckStarlarkCallable.fromMethod(
+        methodName, method, namedParams, defaultSkylarkValues, noneableParams);
   }
 
   // a fake method to hand to the MethodDescriptor that this uses.

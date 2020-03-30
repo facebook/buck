@@ -1,17 +1,17 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
@@ -74,8 +74,8 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public BuildFileManifest getBuildFileManifest(Path buildFile) {
-      processCall("getBuildFileManifest");
+    public BuildFileManifest getManifest(Path buildFile) {
+      processCall("getManifest");
       return null;
     }
 
@@ -131,7 +131,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
     @Override
     @SuppressWarnings("unused")
-    public BuildFileManifest getBuildFileManifest(Path buildFile) {
+    public BuildFileManifest getManifest(Path buildFile) {
       waitLatch();
       return null;
     }
@@ -176,8 +176,7 @@ public class ConcurrentProjectBuildFileParserTest {
       List<ListenableFuture<?>> futures = new ArrayList<>(ITERATIONS * 3);
 
       for (int i = 0; i < ITERATIONS; i++) {
-        futures.add(
-            executorService.submit(() -> buildFileParser.getBuildFileManifest(Paths.get(""))));
+        futures.add(executorService.submit(() -> buildFileParser.getManifest(Paths.get(""))));
         futures.add(executorService.submit(() -> buildFileParser.getIncludedFiles(Paths.get(""))));
         futures.add(
             executorService.submit(
@@ -257,8 +256,7 @@ public class ConcurrentProjectBuildFileParserTest {
         ListeningExecutorService executorService =
             MoreExecutors.listeningDecorator(fixedThreadExecutor);
         for (int i = 0; i < threads; i++) {
-          futures.add(
-              executorService.submit(() -> buildFileParser.getBuildFileManifest(Paths.get(""))));
+          futures.add(executorService.submit(() -> buildFileParser.getManifest(Paths.get(""))));
         }
         Futures.allAsList(futures).get();
       }

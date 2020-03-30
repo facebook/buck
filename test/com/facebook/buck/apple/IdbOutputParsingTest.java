@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.apple;
 
 import static org.hamcrest.Matchers.empty;
@@ -73,15 +74,15 @@ public class IdbOutputParsingTest {
     }
 
     // Get the expected result
-    ImmutableIdbFailureInfo empty = new ImmutableIdbFailureInfo("", "", 0);
+    ImmutableIdbFailureInfo empty = ImmutableIdbFailureInfo.of("", "", 0);
     ImmutableIdbFailureInfo failure =
-        new ImmutableIdbFailureInfo(
+        ImmutableIdbFailureInfo.of(
             "((pictureType != FBActorProfilePictureTypePage) is true) failed",
             "Libraries/FBActorKit/FBActorKitTests/FBActorKitTests.m",
             58);
     ImmutableSet<ImmutableIdbTestResult> expectedResult =
         ImmutableSet.of(
-            new ImmutableIdbTestResult(
+            ImmutableIdbTestResult.of(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForActor",
@@ -91,7 +92,7 @@ public class IdbOutputParsingTest {
                 false,
                 empty,
                 new String[0]),
-            new ImmutableIdbTestResult(
+            ImmutableIdbTestResult.of(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForEvent",
@@ -101,7 +102,7 @@ public class IdbOutputParsingTest {
                 false,
                 empty,
                 new String[0]),
-            new ImmutableIdbTestResult(
+            ImmutableIdbTestResult.of(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForGroup",
@@ -111,7 +112,7 @@ public class IdbOutputParsingTest {
                 false,
                 empty,
                 new String[0]),
-            new ImmutableIdbTestResult(
+            ImmutableIdbTestResult.of(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForNilActor",
@@ -121,7 +122,7 @@ public class IdbOutputParsingTest {
                 false,
                 empty,
                 new String[0]),
-            new ImmutableIdbTestResult(
+            ImmutableIdbTestResult.of(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForPage",
@@ -131,7 +132,7 @@ public class IdbOutputParsingTest {
                 false,
                 failure,
                 new String[0]),
-            new ImmutableIdbTestResult(
+            ImmutableIdbTestResult.of(
                 "FBActorKitTests",
                 "FBActorKitTests",
                 "testActorProfilePictureForPlace",

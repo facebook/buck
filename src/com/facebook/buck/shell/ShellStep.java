@@ -1,25 +1,25 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.shell;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
-import com.facebook.buck.step.ImmutableStepExecutionResult;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -85,6 +85,10 @@ public abstract class ShellStep implements Step {
     }
   }
 
+  protected ShellStep(AbsPath workingDirectory) {
+    this(workingDirectory.getPath());
+  }
+
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws InterruptedException, IOException {
@@ -132,7 +136,7 @@ public abstract class ShellStep implements Step {
           stderr.orElse(""));
     }
 
-    return ImmutableStepExecutionResult.builder()
+    return StepExecutionResult.builder()
         .setExitCode(exitCode)
         .setExecutedCommand(result.getCommand())
         .setStderr(stderr)
@@ -223,7 +227,8 @@ public abstract class ShellStep implements Step {
   }
 
   @SuppressWarnings("unused")
-  protected Optional<String> getStdin(ExecutionContext context) throws InterruptedException {
+  protected Optional<String> getStdin(ExecutionContext context)
+      throws InterruptedException, IOException {
     return Optional.empty();
   }
 

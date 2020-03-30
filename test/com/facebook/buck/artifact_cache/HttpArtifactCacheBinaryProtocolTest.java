@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -92,7 +92,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
     ByteArrayInputStream fetchResponseInputStream =
         new ByteArrayInputStream(fetchResponseOutputStream.toByteArray());
     ByteArrayOutputStream fetchResponsePayload = new ByteArrayOutputStream();
-    FetchResponseReadResult responseReadResult =
+    HttpArtifactCacheBinaryProtocol.FetchResponseReadResult responseReadResult =
         HttpArtifactCacheBinaryProtocol.readFetchResponse(
             new DataInputStream(fetchResponseInputStream), fetchResponsePayload);
 
@@ -125,7 +125,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
     try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         DataInputStream inputStream = new DataInputStream(new ByteArrayInputStream(expectedData))) {
-      FetchResponseReadResult result =
+      HttpArtifactCacheBinaryProtocol.FetchResponseReadResult result =
           HttpArtifactCacheBinaryProtocol.readFetchResponse(inputStream, outputStream);
       assertThat(result.getRuleKeys(), Matchers.contains(ruleKey));
       assertThat(outputStream.toByteArray(), Matchers.equalTo(data.getBytes(Charsets.UTF_8)));
@@ -199,7 +199,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
     storeRequest.write(storeRequestOutputStream);
 
     ByteArrayOutputStream storeRequestPayloadStream = new ByteArrayOutputStream();
-    StoreResponseReadResult readStoreRequest =
+    HttpArtifactCacheBinaryProtocol.StoreResponseReadResult readStoreRequest =
         HttpArtifactCacheBinaryProtocol.readStoreRequest(
             new DataInputStream(new ByteArrayInputStream(storeRequestOutputStream.toByteArray())),
             storeRequestPayloadStream);
@@ -236,7 +236,8 @@ public class HttpArtifactCacheBinaryProtocolTest {
     assertThat(storeRequest.getContentLength(), Matchers.is(178L));
 
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    StoreWriteResult writeResult = storeRequest.write(byteArrayOutputStream);
+    HttpArtifactCacheBinaryProtocol.StoreWriteResult writeResult =
+        storeRequest.write(byteArrayOutputStream);
     assertThat(
         writeResult.getArtifactContentHashCode(),
         Matchers.equalTo(HashCode.fromString("2c0b14a4")));

@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.testutil.integration;
@@ -38,7 +38,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.module.TestBuckModuleManagerFactory;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
@@ -105,6 +105,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.hamcrest.Matchers;
 import org.pf4j.PluginManager;
@@ -178,7 +179,16 @@ public class ProjectWorkspace extends AbstractWorkspace {
     if (projectFilesystemAndConfig == null) {
       Config config =
           Configs.createDefaultConfig(
-              destPath, Configs.getRepoConfigurationFiles(destPath), RawConfig.of());
+              destPath,
+              Configs.getRepoConfigurationFiles(destPath),
+              RawConfig.of(
+                  ImmutableMap.of(
+                      "project",
+                      ImmutableMap.of(
+                          "buck_out_include_target_config_hash",
+                          Boolean.toString(
+                              TestProjectFilesystems
+                                  .BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST)))));
       projectFilesystemAndConfig =
           new ProjectFilesystemAndConfig(
               TestProjectFilesystems.createProjectFilesystem(destPath, config), config);
@@ -194,9 +204,17 @@ public class ProjectWorkspace extends AbstractWorkspace {
       addBuckConfigLocalOption("repositories", "buck", bucklibRoot.toString());
     }
 
-    // Enable the JUL build log.  This log is very verbose but rarely useful,
-    // so it's disabled by default.
-    addBuckConfigLocalOption("log", "jul_build_log", "true");
+    addBuckConfigLocalOptions(
+        ImmutableMap.of(
+            // Enable the JUL build log.  This log is very verbose but rarely useful,
+            // so it's disabled by default.
+            "log", ImmutableMap.of("jul_build_log", "true"),
+            // Enable hashed buck-out paths in test until it is turned on by default for everyone
+            "project",
+                ImmutableMap.of(
+                    "buck_out_include_target_config_hash",
+                    Boolean.toString(
+                        TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST))));
 
     isSetUp = true;
     return this;
@@ -262,14 +280,15 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ProcessResult runBuckBuild(Optional<NGContext> context, String... args) {
-    return runBuckBuild(context, this.destPath, args);
+    return runBuckBuild(context, this.destPath, ImmutableMap.of(), args);
   }
 
-  public ProcessResult runBuckBuild(Optional<NGContext> context, Path root, String... args) {
+  public ProcessResult runBuckBuild(
+      Optional<NGContext> context, Path root, ImmutableMap<String, String> env, String... args) {
     String[] totalArgs = new String[args.length + 1];
     totalArgs[0] = "build";
     System.arraycopy(args, 0, totalArgs, 1, args.length);
-    return runBuckCommand(context, root, totalArgs);
+    return runBuckCommand(context, root, env, totalArgs);
   }
 
   public ProcessResult runBuckTest(String... args) {
@@ -279,20 +298,16 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return runBuckCommand(totalArgs);
   }
 
-  public ProcessResult runBuckDistBuildRun(String... args) {
-    String[] totalArgs = new String[args.length + 2];
-    totalArgs[0] = "distbuild";
-    totalArgs[1] = "run";
-    System.arraycopy(args, 0, totalArgs, 2, args.length);
-    return runBuckCommand(totalArgs);
-  }
-
   private ImmutableMap<String, String> buildMultipleAndReturnStringOutputs(
-      Optional<NGContext> context, Path buildRoot, String... args) {
+      Optional<NGContext> context,
+      Path buildRoot,
+      ImmutableMap<String, String> env,
+      String... args) {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.
     ImmutableList<String> buildArgs =
-        ImmutableList.<String>builder().add("--show-output").add(args).build();
-    ProcessResult buildResult = runBuckBuild(context, buildRoot, buildArgs.toArray(new String[0]));
+        ImmutableList.<String>builder().add("--show-outputs").add(args).build();
+    ProcessResult buildResult =
+        runBuckBuild(context, buildRoot, env, buildArgs.toArray(new String[0]));
     buildResult.assertSuccess();
 
     // Build outputs are contained on stdout
@@ -317,7 +332,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
     ImmutableMap.Builder<String, String> builder = ImmutableMap.builder();
     for (String line : lines) {
       List<String> fields = lineSplitter.splitToList(line);
-      assertThat(fields, Matchers.hasSize(2));
+      assertThat(
+          String.format("Target %s has no outputs.", fields.isEmpty() ? "" : fields.get(0)),
+          fields,
+          Matchers.hasSize(2));
       builder.put(fields.get(0), fields.get(1));
     }
 
@@ -330,15 +348,22 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(
       Optional<NGContext> context, String... args) {
-    return buildMultipleAndReturnOutputs(context, this.destPath, args);
+    return buildMultipleAndReturnOutputs(context, this.destPath, ImmutableMap.of(), args);
   }
 
   public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(
-      Optional<NGContext> context, Path buildRoot, String[] args) {
-    return buildMultipleAndReturnStringOutputs(context, buildRoot, args).entrySet().stream()
+      Optional<NGContext> context,
+      Path buildRoot,
+      ImmutableMap<String, String> env,
+      String[] args) {
+    return buildMultipleAndReturnStringOutputs(context, buildRoot, env, args).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> buildRoot.resolve(entry.getValue())));
+  }
+
+  public Path buildAndReturnOutput(Map<String, String> env, String... args) {
+    return buildAndReturnOutput(Optional.empty(), args);
   }
 
   public Path buildAndReturnOutput(String... args) {
@@ -354,7 +379,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public Path buildAndReturnOutput(Optional<NGContext> context, Path buildRoot, String[] args) {
-    ImmutableMap<String, Path> outputs = buildMultipleAndReturnOutputs(context, buildRoot, args);
+    ImmutableMap<String, Path> outputs =
+        buildMultipleAndReturnOutputs(context, buildRoot, ImmutableMap.of(), args);
 
     // Verify we only have a single output.
     assertThat(
@@ -373,7 +399,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   public ImmutableMap<String, Path> buildMultipleAndReturnRelativeOutputs(
       Path root, String[] args) {
-    return buildMultipleAndReturnStringOutputs(Optional.empty(), root, args).entrySet().stream()
+    return buildMultipleAndReturnStringOutputs(Optional.empty(), root, ImmutableMap.of(), args)
+        .entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 entry -> entry.getKey(), entry -> Paths.get(entry.getValue())));
@@ -460,8 +487,15 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ProcessResult runBuckCommand(Optional<NGContext> context, Path repoRoot, String... args) {
-    return runBuckCommandWithEnvironmentOverridesAndContext(
-        repoRoot, context, ImmutableMap.of(), args);
+    return runBuckCommand(context, repoRoot, ImmutableMap.of(), args);
+  }
+
+  public ProcessResult runBuckCommand(
+      Optional<NGContext> context,
+      Path repoRoot,
+      ImmutableMap<String, String> env,
+      String... args) {
+    return runBuckCommandWithEnvironmentOverridesAndContext(repoRoot, context, env, args);
   }
 
   public ProcessResult runBuckdCommand(String... args) throws IOException {
@@ -543,6 +577,9 @@ public class ProjectWorkspace extends AbstractWorkspace {
         }
       }
       envBuilder.putAll(environmentOverrides);
+      envBuilder.put(
+          "BUCK_CLIENT_PWD",
+          repoRoot.toAbsolutePath().resolve(relativeWorkingDir).normalize().toString());
 
       ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
       BackgroundTaskManager manager = AsyncBackgroundTaskManager.of();
@@ -730,17 +767,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
     ExecutableFinder executableFinder = new ExecutableFinder();
 
     ToolchainProviderFactory toolchainProviderFactory =
-        new DefaultToolchainProviderFactory(
-            pluginManager,
-            env,
-            processExecutor,
-            executableFinder,
-            () -> EmptyTargetConfiguration.INSTANCE);
+        new DefaultToolchainProviderFactory(pluginManager, env, processExecutor, executableFinder);
 
     return LocalCellProviderFactory.create(
             filesystem,
             buckConfig,
-            CellConfig.of(),
+            CellConfig.EMPTY_INSTANCE,
             rootCellCellPathResolver.getPathMapping(),
             rootCellCellPathResolver,
             TestBuckModuleManagerFactory.create(pluginManager),
@@ -751,11 +783,16 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public BuildTarget newBuildTarget(String fullyQualifiedName) throws IOException {
-    return BuildTargetFactory.newInstance(
-        asCell().getFilesystem().getRootPath(), fullyQualifiedName);
+    return BuildTargetFactory.newInstance(fullyQualifiedName);
   }
 
   public void assertFilesEqual(Path expected, Path actual) throws IOException {
+    assertFilesEqual(expected, actual, s -> s);
+  }
+
+  private void assertFilesEqual(
+      Path expected, Path actual, Function<String, String> normalizeObservedContent)
+      throws IOException {
     if (!expected.isAbsolute()) {
       expected = templatePath.resolve(expected);
     }
@@ -826,27 +863,68 @@ public class ProjectWorkspace extends AbstractWorkspace {
               observedObject);
           break;
         } else {
-          assertFileContentsEqual(expected, actual);
+          assertFileContentsEqual(expected, actual, false, normalizeObservedContent);
         }
         break;
-
+      case "iml":
+      case "xml":
+        assertFileContentsEqual(expected, actual, true, normalizeObservedContent);
+        break;
       default:
-        assertFileContentsEqual(expected, actual);
+        assertFileContentsEqual(expected, actual, false, normalizeObservedContent);
     }
   }
 
-  private void assertFileContentsEqual(Path expectedFile, Path observedFile) throws IOException {
+  private enum FileType {
+    DEFAULT,
+    XML,
+    JSLIB,
+  }
+
+  private void assertFileContentsEqual(
+      Path expectedFile,
+      Path observedFile,
+      boolean isXml,
+      Function<String, String> normalizeObservedContent)
+      throws IOException {
     String cleanPathToObservedFile =
         MoreStrings.withoutSuffix(
             templatePath.relativize(expectedFile).toString(), EXPECTED_SUFFIX);
 
     String expectedFileContent = getFileContents(expectedFile);
     String observedFileContent = new String(Files.readAllBytes(observedFile), UTF_8);
+
     // It is possible, on Windows, to have Git keep "\n"-style newlines, or convert them to
     // "\r\n"-style newlines.  Support both ways by normalizing to "\n"-style newlines.
     // See https://help.github.com/articles/dealing-with-line-endings/ for more information.
     expectedFileContent = expectedFileContent.replace("\r\n", "\n");
     observedFileContent = observedFileContent.replace("\r\n", "\n");
+
+    if (isXml) {
+      // `javax.xml.Transformer` has different (buggy) behavior on Java 9+ vs. Java 8-. See
+      // http://java9.wtf/xml-transformer/ for the details. In Java 9+, spurious empty lines get
+      // inserted, and leading whitespacing can be different, so we normalize before comparison.
+      // This has apparently been fixed in Java 14 (see JDK-8223291).
+
+      // Remove leading whitespace.
+      expectedFileContent = expectedFileContent.replaceAll("(?m)^[ \t]+", "");
+      observedFileContent = observedFileContent.replaceAll("(?m)^[ \t]+", "");
+
+      // Remove empty lines.
+      expectedFileContent = expectedFileContent.replaceAll("\n+", "\n");
+      observedFileContent = observedFileContent.replaceAll("\n+", "\n");
+    }
+
+    // buck-out dir contains a config hash that can't be hardcoded to expected files.
+    observedFileContent =
+        BuckOutConfigHashPlaceholder.replaceHashByPlaceholder(observedFileContent);
+
+    observedFileContent = normalizeObservedContent.apply(observedFileContent);
+
+    // TODO(gabrielrc): Remove this after we land the new config hash changes
+    observedFileContent = BuckOutConfigHashPlaceholder.removePlaceholder(observedFileContent);
+    expectedFileContent = BuckOutConfigHashPlaceholder.removePlaceholder(expectedFileContent);
+
     assertEquals(
         String.format(
             "In %s, expected content of %s to match that of %s.",
@@ -862,7 +940,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
    * @param templateSubdirectory An optional subdirectory to check. Only files in this directory
    *     will be compared.
    */
-  private void assertPathsEqual(Path templateSubdirectory, Path destinationSubdirectory)
+  private void assertPathsEqual(
+      Path templateSubdirectory,
+      Path destinationSubdirectory,
+      Function<String, String> normalizeObservedContent)
       throws IOException {
     SimpleFileVisitor<Path> copyDirVisitor =
         new SimpleFileVisitor<Path>() {
@@ -876,7 +957,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   destinationSubdirectory.resolve(templateSubdirectory.relativize(file));
               Path directory = generatedFileWithSuffix.getParent();
               Path observedFile = directory.resolve(MorePaths.getNameWithoutExtension(file));
-              assertFilesEqual(file, observedFile);
+              assertFilesEqual(file, observedFile, normalizeObservedContent);
             }
             return FileVisitResult.CONTINUE;
           }
@@ -886,12 +967,32 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public void verify(Path templateSubdirectory, Path destinationSubdirectory) throws IOException {
-    assertPathsEqual(
-        templatePath.resolve(templateSubdirectory), destPath.resolve(destinationSubdirectory));
+    verify(templateSubdirectory, destinationSubdirectory, s -> s);
   }
 
   public void verify() throws IOException {
-    assertPathsEqual(templatePath, destPath);
+    assertPathsEqual(templatePath, destPath, s -> s);
+  }
+
+  public void verify(
+      Path templateSubdirectory,
+      Path destinationSubdirectory,
+      Function<String, String> normalizeObservedContent)
+      throws IOException {
+    assertPathsEqual(
+        templatePath.resolve(templateSubdirectory),
+        destPath.resolve(destinationSubdirectory),
+        normalizeObservedContent);
+  }
+
+  public Path getGenPath(BuildTarget buildTarget, String format) throws IOException {
+    return getProjectFileSystem()
+        .resolve(BuildTargetPaths.getGenPath(getProjectFileSystem(), buildTarget, format));
+  }
+
+  public Path getScratchPath(BuildTarget buildTarget, String format) throws IOException {
+    return getProjectFileSystem()
+        .resolve(BuildTargetPaths.getScratchPath(getProjectFileSystem(), buildTarget, format));
   }
 
   public void verify(Path subdirectory) throws IOException {
@@ -899,6 +1000,22 @@ public class ProjectWorkspace extends AbstractWorkspace {
         !subdirectory.isAbsolute(),
         "'verify(subdirectory)' takes a relative path, but received '%s'",
         subdirectory);
-    assertPathsEqual(templatePath.resolve(subdirectory), destPath.resolve(subdirectory));
+    assertPathsEqual(templatePath.resolve(subdirectory), destPath.resolve(subdirectory), s -> s);
+  }
+
+  /**
+   * Add the correct environment variable to emulate executing buck wrapper from a working directory
+   */
+  public static ImmutableMap<String, String> setAbsoluteClientWorkingDir(
+      Path workingDir, ImmutableMap<String, String> existingEnv) {
+    ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
+    envBuilder.put("BUCK_CLIENT_PWD", workingDir.toAbsolutePath().toString());
+    existingEnv.forEach(
+        (k, v) -> {
+          if (!k.equals("BUCK_CLIENT_PWD")) {
+            envBuilder.put(k, v);
+          }
+        });
+    return envBuilder.build();
   }
 }

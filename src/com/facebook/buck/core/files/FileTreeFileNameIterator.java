@@ -1,17 +1,17 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.files;
@@ -100,6 +100,19 @@ public class FileTreeFileNameIterator implements Iterator<Path> {
 
       Path candidate = next.getPath().resolve(fileName);
       if (next.getDirectoryList().getFiles().contains(candidate)) {
+        nextPath = candidate;
+        return;
+      }
+
+      // Technically, symlink may be not a file, but a directory
+      // Because it is really expensive to check it by querying file system, we assume this is
+      // a file. This stands true as along as this class is used for searching of build files, as
+      // having a folder with exact same name as build file is an error anyways.
+      //
+      // This is still a hack as in case of symlinks file trees will not be properly invalidated
+      //
+      // Ideally, we want to forbid using symlinks in Buck.
+      if (next.getDirectoryList().getSymlinks().contains(candidate)) {
         nextPath = candidate;
         return;
       }

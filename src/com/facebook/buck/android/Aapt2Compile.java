@@ -1,28 +1,29 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -46,8 +47,14 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       Tool aapt2ExecutableTool,
-      SourcePath resDir) {
-    super(buildTarget, projectFilesystem, ruleFinder, new Impl(aapt2ExecutableTool, resDir));
+      SourcePath resDir,
+      boolean skipCrunchPngs,
+      boolean failOnLegacyErrors) {
+    super(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        new Impl(aapt2ExecutableTool, resDir, skipCrunchPngs, failOnLegacyErrors));
   }
 
   /** internal buildable implementation */
@@ -59,10 +66,18 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
     @AddToRuleKey private final Tool aapt2ExecutableTool;
     @AddToRuleKey private final SourcePath resDir;
     @AddToRuleKey private final OutputPath output = new OutputPath("resources.flata");
+    @AddToRuleKey private final boolean skipCrunchPngs;
+    @AddToRuleKey private final boolean failOnLegacyErrors;
 
-    private Impl(Tool aapt2ExecutableTool, SourcePath resDir) {
+    private Impl(
+        Tool aapt2ExecutableTool,
+        SourcePath resDir,
+        boolean skipCrunchPngs,
+        boolean failOnLegacyErrors) {
       this.aapt2ExecutableTool = aapt2ExecutableTool;
       this.resDir = resDir;
+      this.skipCrunchPngs = skipCrunchPngs;
+      this.failOnLegacyErrors = failOnLegacyErrors;
     }
 
     @Override
@@ -73,14 +88,16 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
         BuildCellRelativePathFactory buildCellPathFactory) {
 
       Path outputPath = outputPathResolver.resolvePath(output);
-      SourcePathResolver sourcePathResolver = buildContext.getSourcePathResolver();
+      SourcePathResolverAdapter sourcePathResolverAdapter = buildContext.getSourcePathResolver();
 
       Aapt2CompileStep aapt2CompileStep =
           new Aapt2CompileStep(
               filesystem.getRootPath(),
-              aapt2ExecutableTool.getCommandPrefix(sourcePathResolver),
-              sourcePathResolver.getAbsolutePath(resDir),
-              outputPath);
+              aapt2ExecutableTool.getCommandPrefix(sourcePathResolverAdapter),
+              sourcePathResolverAdapter.getRelativePath(resDir),
+              outputPath,
+              skipCrunchPngs,
+              failOnLegacyErrors);
       ZipScrubberStep zipScrubberStep = ZipScrubberStep.of(filesystem.resolve(outputPath));
       return ImmutableList.of(aapt2CompileStep, zipScrubberStep);
     }
@@ -90,16 +107,22 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
     private final ImmutableList<String> commandPrefix;
     private final Path resDirPath;
     private final Path outputPath;
+    private final boolean skipCrunchPngs;
+    private final boolean failOnLegacyErrors;
 
     Aapt2CompileStep(
-        Path workingDirectory,
+        AbsPath workingDirectory,
         ImmutableList<String> commandPrefix,
         Path resDirPath,
-        Path outputPath) {
+        Path outputPath,
+        boolean skipCrunchPngs,
+        boolean failOnLegacyErrors) {
       super(workingDirectory);
       this.commandPrefix = commandPrefix;
       this.resDirPath = resDirPath;
       this.outputPath = outputPath;
+      this.skipCrunchPngs = skipCrunchPngs;
+      this.failOnLegacyErrors = failOnLegacyErrors;
     }
 
     @Override
@@ -112,7 +135,12 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
       ImmutableList.Builder<String> builder = ImmutableList.builder();
       builder.addAll(commandPrefix);
       builder.add("compile");
-      builder.add("--legacy"); // TODO(dreiss): Maybe make this an option?
+      if (!failOnLegacyErrors) {
+        builder.add("--legacy");
+      }
+      if (skipCrunchPngs) {
+        builder.add("--no-crunch");
+      }
       builder.add("-o");
       builder.add(outputPath.toString());
       builder.add("--dir");

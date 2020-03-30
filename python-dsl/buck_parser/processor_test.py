@@ -1,28 +1,31 @@
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 import contextlib
 import json
 import os
 import shutil
+import sys
 import tempfile
 import unittest
 from typing import Sequence
 
 from pywatchman import WatchmanError
-from six import iteritems
-from six.moves import StringIO, builtins
+from six import BytesIO, iteritems
+from six.moves import builtins
 
 from .buck import (
     BuildFileFailError,
@@ -54,7 +57,7 @@ def foo_rule(
 
 def extract_from_results(name, results):
     for result in results:
-        if result.keys() == [name]:
+        if len(result.keys()) == 1 and name in result:
             return result[name]
     raise ValueError(str(results))
 
@@ -89,9 +92,23 @@ def with_env(varname, value=None):
 
 
 @contextlib.contextmanager
-def with_envs(envs):
+def with_envs_py2(envs):
     with contextlib.nested(*[with_env(n, v) for n, v in iteritems(envs)]):
         yield
+
+
+@contextlib.contextmanager
+def with_envs_py3(envs):
+    with contextlib.ExitStack() as stack:
+        for n, v in iteritems(envs):
+            stack.enter_context(with_env(n, v))
+        yield
+
+
+if sys.version_info[0] == 2:
+    with_envs = with_envs_py2
+else:
+    with_envs = with_envs_py3
 
 
 class ProjectFile(object):
@@ -445,9 +462,7 @@ class BuckTest(unittest.TestCase):
         java_file = ProjectFile(self.project_root, path="Foo.java", contents=())
         self.write_files(build_file, java_file)
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
-        diagnostics = []
-        rules = []
-        fake_stdout = StringIO()
+        fake_stdout = BytesIO()
         with build_file_processor.with_builtins(builtins.__dict__):
             self.assertRaises(
                 WatchmanError,
@@ -564,7 +579,7 @@ class BuckTest(unittest.TestCase):
 
         class FakeWatchmanClient:
             def query(self, *args):
-                return {"warning": warnings.next(), "files": glob_results.next()}
+                return {"warning": next(warnings), "files": next(glob_results)}
 
             def close(self):
                 pass
@@ -611,7 +626,7 @@ class BuckTest(unittest.TestCase):
     def test_watchman_glob_returns_basestring_instead_of_unicode(self):
         class FakeWatchmanClient:
             def query(self, *args):
-                return {"files": [u"Foo.java"]}
+                return {"files": ["Foo.java"]}
 
             def close(self):
                 pass
@@ -884,7 +899,7 @@ class BuckTest(unittest.TestCase):
             with self.assertRaisesRegexp(
                 TypeError, "got an unexpected keyword argument 'name'"
             ):
-                rules = build_file_processor.process(
+                build_file_processor.process(
                     build_file.root, build_file.prefix, build_file.path, [], None
                 )
 
@@ -977,7 +992,8 @@ class BuckTest(unittest.TestCase):
             rules = build_file_processor.process(
                 build_file.root, build_file.prefix, build_file.path, diagnostics, None
             )
-            self.assertEqual(rules[0].get("name"), "True")
+            matching = [rule for rule in rules if rule.get("name") == "True"]
+            self.assertEqual(len(matching), 1)
 
     def test_rule_exists_invoked_from_extension_detects_existing_rule(self):
         package_dir = os.path.join(self.project_root, "pkg")
@@ -1191,10 +1207,14 @@ class BuckTest(unittest.TestCase):
         Verify that `allow_unsafe_import()` allows to import specified modules
         """
         # Importing httplib results in `__import__()` calls for other modules, e.g. socket, sys
+        extra_import = "httplib" if sys.version_info[0] == 2 else "http"
         build_file = ProjectFile(
             self.project_root,
             path="BUCK",
-            contents=("with allow_unsafe_import():", "    import math, httplib"),
+            contents=(
+                "with allow_unsafe_import():",
+                "    import math, {}".format(extra_import),
+            ),
         )
         self.write_files(build_file)
         build_file_processor = self.create_build_file_processor()
@@ -1430,18 +1450,20 @@ class BuckTest(unittest.TestCase):
         self.assertEqual(
             BuildInclude(
                 cell_name="foo",
+                label="@foo//bar/baz.bzl",
                 path=os.path.abspath(
-                    os.path.join(self.project_root, "../cell/bar/baz")
+                    os.path.join(self.project_root, "../cell/bar/baz.bzl")
                 ),
             ),
-            build_file_processor._resolve_include("foo//bar/baz"),
+            build_file_processor._resolve_include("foo//bar/baz.bzl"),
         )
         self.assertEqual(
             BuildInclude(
                 cell_name="",
-                path=os.path.abspath(os.path.join(self.project_root, "bar/baz")),
+                label="//bar/baz.bzl",
+                path=os.path.abspath(os.path.join(self.project_root, "bar/baz.bzl")),
             ),
-            build_file_processor._resolve_include("//bar/baz"),
+            build_file_processor._resolve_include("//bar/baz.bzl"),
         )
 
     def test_load_path_is_resolved(self):
@@ -1470,10 +1492,13 @@ class BuckTest(unittest.TestCase):
                 "foo": os.path.abspath(os.path.join(self.project_root, "../cell"))
             }
         )
-        build_file_processor._current_build_env = IncludeContext("foo", "some_lib.bzl")
+        build_file_processor._current_build_env = IncludeContext(
+            "foo", "some_lib.bzl", "@foo//:some_lib.bzl"
+        )
         self.assertEqual(
             BuildInclude(
                 cell_name="foo",
+                label="@foo//bar:baz",
                 path=os.path.abspath(
                     os.path.join(self.project_root, "../cell/bar/baz")
                 ),
@@ -1488,11 +1513,12 @@ class BuckTest(unittest.TestCase):
             }
         )
         build_file_processor._current_build_env = IncludeContext(
-            "foo.cell", "some_lib.bzl"
+            "foo.cell", "some_lib.bzl", "@foo.cell//:some_lib.bzl"
         )
         self.assertEqual(
             BuildInclude(
                 cell_name="foo.cell",
+                label="@foo.cell//bar:baz",
                 path=os.path.abspath(
                     os.path.join(self.project_root, "../cell/bar/baz")
                 ),
@@ -1507,11 +1533,12 @@ class BuckTest(unittest.TestCase):
             }
         )
         build_file_processor._current_build_env = IncludeContext(
-            "foo-cell", "some_lib.bzl"
+            "foo-cell", "some_lib.bzl", "@foo-cell//:some_lib.bzl"
         )
         self.assertEqual(
             BuildInclude(
                 cell_name="foo-cell",
+                label="@foo-cell//bar:baz",
                 path=os.path.abspath(
                     os.path.join(self.project_root, "../cell/bar/baz")
                 ),
@@ -1528,6 +1555,7 @@ class BuckTest(unittest.TestCase):
         self.assertEqual(
             BuildInclude(
                 cell_name="foo",
+                label="@foo//bar:baz",
                 path=os.path.abspath(
                     os.path.join(self.project_root, "../cell/bar/baz")
                 ),
@@ -1537,7 +1565,7 @@ class BuckTest(unittest.TestCase):
 
     def test_json_encoding_failure(self):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
-        fake_stdout = StringIO()
+        fake_stdout = BytesIO()
         build_file = ProjectFile(
             self.project_root,
             path="BUCK",
@@ -1675,7 +1703,7 @@ class BuckTest(unittest.TestCase):
         with processor.with_builtins(builtins.__dict__):
             with self.assertRaises(KeyError) as e:
                 processor.process(self.project_root, None, "BUCK_fail", [], None)
-            self.assertEqual(e.exception.message, expected_msg)
+            self.assertEqual(str(e.exception), repr(expected_msg))
 
     def test_cannot_load_non_existent_symbol_by_keyword(self):
         defs_file = ProjectFile(
@@ -1699,7 +1727,7 @@ class BuckTest(unittest.TestCase):
         with processor.with_builtins(builtins.__dict__):
             with self.assertRaises(KeyError) as e:
                 processor.process(self.project_root, None, "BUCK_fail", [], None)
-            self.assertEqual(e.exception.message, expected_msg)
+            self.assertEqual(str(e.exception), repr(expected_msg))
 
     def test_fail_function_throws_an_error(self):
         build_file = ProjectFile(
@@ -1768,7 +1796,7 @@ class BuckTest(unittest.TestCase):
 
     def test_json_encoding_skips_None(self):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
-        fake_stdout = StringIO()
+        fake_stdout = BytesIO()
         build_file = ProjectFile(
             self.project_root,
             path="BUCK",
@@ -1800,7 +1828,7 @@ foo_rule(
 
     def test_json_encoding_list_like_object(self):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
-        fake_stdout = StringIO()
+        fake_stdout = BytesIO()
         build_file = ProjectFile(
             self.project_root,
             path="BUCK",
@@ -1846,12 +1874,12 @@ foo_rule(
         decoded_result = json.loads(result)
         self.assertEqual([], decoded_result.get("diagnostics", []))
         self.assertEqual(
-            [u"Foo.java", u"Foo.c"], decoded_result["values"][0].get("srcs", [])
+            ["Foo.java", "Foo.c"], decoded_result["values"][0].get("srcs", [])
         )
 
     def test_json_encoding_dict_like_object(self):
         build_file_processor = self.create_build_file_processor(extra_funcs=[foo_rule])
-        fake_stdout = StringIO()
+        fake_stdout = BytesIO()
         build_file = ProjectFile(
             self.project_root,
             path="BUCK",
@@ -1898,7 +1926,7 @@ foo_rule(
         decoded_result = json.loads(result)
         self.assertEqual([], decoded_result.get("diagnostics", []))
         self.assertEqual(
-            {u"foo": u"bar", u"baz": u"blech"},
+            {"foo": "bar", "baz": "blech"},
             decoded_result["values"][0].get("options", {}),
         )
 

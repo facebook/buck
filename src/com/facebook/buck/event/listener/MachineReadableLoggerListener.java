@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -31,25 +31,32 @@ import com.facebook.buck.artifact_cache.HttpArtifactCacheEvent;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.build.event.BuildRuleExecutionEvent;
+import com.facebook.buck.core.model.BuildId;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.ActionGraphEvent;
+import com.facebook.buck.event.ArtifactCompressionEvent;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ParsingEvent;
 import com.facebook.buck.event.WatchmanStatusEvent;
+import com.facebook.buck.event.chrome_trace.ChromeTraceBuckConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.log.PerfTimesStats;
 import com.facebook.buck.log.views.JsonViews;
 import com.facebook.buck.parser.ParseEvent;
+import com.facebook.buck.remoteexecution.event.RemoteExecutionActionEvent;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
-import com.facebook.buck.support.build.report.BuildReportFileUploader;
+import com.facebook.buck.support.jvm.GCCollectionEvent;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.trace.uploader.launcher.UploaderLauncher;
+import com.facebook.buck.util.trace.uploader.types.CompressionType;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsEvent;
 import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -63,6 +70,7 @@ import java.io.BufferedOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
@@ -71,7 +79,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 public class MachineReadableLoggerListener implements BuckEventListener {
 
@@ -85,8 +92,11 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ProjectFilesystem filesystem;
   private final ObjectWriter objectWriter;
   private BufferedOutputStream outputStream;
-  private final Optional<BuildReportFileUploader> buildReportFileUploader;
 
+  private final ChromeTraceBuckConfig chromeTraceConfig;
+  private final Path logFilePath;
+  private final Path logDirectoryPath;
+  private final BuildId buildId;
   private final TaskManagerCommandScope managerScope;
 
   private ConcurrentMap<ArtifactCacheMode, AtomicInteger> cacheModeHits = Maps.newConcurrentMap();
@@ -110,13 +120,19 @@ public class MachineReadableLoggerListener implements BuckEventListener {
       ProjectFilesystem filesystem,
       ExecutorService executor,
       ImmutableSet<ArtifactCacheMode> cacheModes,
-      Optional<BuildReportFileUploader> buildReportFileUploader,
+      ChromeTraceBuckConfig chromeTraceConfig,
+      Path logFilePath,
+      Path logDirectoryPath,
+      BuildId buildId,
       TaskManagerCommandScope managerScope)
       throws FileNotFoundException {
     this.info = info;
     this.filesystem = filesystem;
     this.executor = executor;
-    this.buildReportFileUploader = buildReportFileUploader;
+    this.chromeTraceConfig = chromeTraceConfig;
+    this.logFilePath = logFilePath;
+    this.logDirectoryPath = logDirectoryPath;
+    this.buildId = buildId;
     this.managerScope = managerScope;
 
     for (ArtifactCacheMode mode : cacheModes) {
@@ -181,12 +197,62 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   @Subscribe
   public void buildRuleEventFinishedRuleCalc(BuildRuleEvent.FinishedRuleKeyCalc event) {
-    writeToLog("BuildRuleEvent.StartedRuleKeyCalc", event);
+    writeToLog("BuildRuleEvent.FinishedRuleKeyCalc", event);
   }
 
   @Subscribe
   public void buildRuleEventWillBuildLocally(BuildRuleEvent.WillBuildLocally event) {
     writeToLog("BuildRuleEvent.WillBuildLocally", event);
+  }
+
+  @Subscribe
+  public void buildRuleExecutionStartedEvent(BuildRuleExecutionEvent.Started event) {
+    writeToLog("ExecutionStarted", event);
+  }
+
+  @Subscribe
+  public void buildRuleExecutionFinishedEvent(BuildRuleExecutionEvent.Finished event) {
+    writeToLog("ExecutionFinished", event);
+  }
+
+  @Subscribe
+  public void buildRuleRemoteExecutionStartedEvent(RemoteExecutionActionEvent.Started event) {
+    writeToLog("RemoteExecutionStarted", event);
+  }
+
+  @Subscribe
+  public void buildRuleRemoteExecutionFinishedEvent(RemoteExecutionActionEvent.Finished event) {
+    writeToLog("RemoteExecutionFinished", event);
+  }
+
+  @Subscribe
+  public void buildRuleRemoteExecutionScheduledEvent(RemoteExecutionActionEvent.Scheduled event) {
+    writeToLog("RemoteExecutionScheduled", event);
+  }
+
+  @Subscribe
+  public void buildRuleRemoteExecutionTerminalEvent(RemoteExecutionActionEvent.Terminal event) {
+    writeToLog("RemoteExecutionTerminal", event);
+  }
+
+  @Subscribe
+  public void actionGraphStartedEvent(ActionGraphEvent.Started event) {
+    writeToLog("BuildActionGraphStarted", event);
+  }
+
+  @Subscribe
+  public void actionGraphFinishedEvent(ActionGraphEvent.Finished event) {
+    writeToLog("BuildActionGraphFinished", event);
+  }
+
+  @Subscribe
+  public void artifactCompressionStarted(ArtifactCompressionEvent.Started event) {
+    writeToLog(event.getEventName(), event);
+  }
+
+  @Subscribe
+  public void artifactCompressionFinished(ArtifactCompressionEvent.Finished event) {
+    writeToLog(event.getEventName(), event);
   }
 
   @Subscribe
@@ -222,7 +288,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Subscribe
-  public void commandFinished(CommandEvent.Finished event) {
+  public void garbageCollection(GCCollectionEvent event) {
+    writeToLog(event.getEventName(), event);
+  }
+
+  @Subscribe
+  public synchronized void commandFinished(CommandEvent.Finished event) {
     exitCode = Optional.of(event.getExitCode());
   }
 
@@ -232,12 +303,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Subscribe
-  public synchronized void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
+  public void watchmanFileCreation(WatchmanStatusEvent.FileCreation event) {
     writeToLog("FileCreate", event);
   }
 
   @Subscribe
-  public synchronized void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
+  public void watchmanFileDeletion(WatchmanStatusEvent.FileDeletion event) {
     writeToLog("FileDelete", event);
   }
 
@@ -247,12 +318,12 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Subscribe
-  public synchronized void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
+  public void symlinkInvalidation(ParsingEvent.SymlinkInvalidation event) {
     writeToLog("SymlinkInvalidation", event);
   }
 
   @Subscribe
-  public synchronized void environmentalChange(ParsingEvent.EnvVariableChange event) {
+  public void environmentalChange(ParsingEvent.EnvVariableChange event) {
     writeToLog("EnvChange", event);
   }
 
@@ -282,7 +353,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     executor.submit(() -> writeToLogImpl(prefix, obj));
   }
 
-  private void writeToLogImpl(String prefix, Object obj) {
+  private synchronized void writeToLogImpl(String prefix, Object obj) {
     try {
       outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
       objectWriter.without(Feature.AUTO_CLOSE_TARGET).writeValue(outputStream, obj);
@@ -296,7 +367,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   @Override
-  public void close() {
+  public synchronized void close() {
     executor.submit(
         () -> {
           try {
@@ -331,13 +402,18 @@ public class MachineReadableLoggerListener implements BuckEventListener {
         });
 
     MachineReadableLoggerListenerCloseArgs args =
-        MachineReadableLoggerListenerCloseArgs.of(
+        ImmutableMachineReadableLoggerListenerCloseArgs.of(
             executor,
-            buildReportFileUploader,
-            info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME));
+            info.getLogDirectoryPath().resolve(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME),
+            chromeTraceConfig.getLogUploadMode().shouldUploadLogs(exitCode)
+                ? chromeTraceConfig.getTraceUploadUri()
+                : Optional.empty(),
+            logDirectoryPath,
+            logFilePath,
+            buildId);
 
     BackgroundTask<MachineReadableLoggerListenerCloseArgs> task =
-        ImmutableBackgroundTask.of(
+        BackgroundTask.of(
             "MachineReadableLoggerListener_close",
             new MachineReadableLoggerListenerCloseAction(),
             args);
@@ -354,11 +430,15 @@ public class MachineReadableLoggerListener implements BuckEventListener {
     public void run(MachineReadableLoggerListenerCloseArgs args) {
       args.getExecutor().shutdown();
 
-      args.getBuildReportFileUploader()
-          .ifPresent(
-              uploader ->
-                  uploader.uploadFile(
-                      args.getMachineReadableLogFilePath(), "machine_readable_log"));
+      if (args.getTraceUploadURI().isPresent()) {
+        UploaderLauncher.uploadInBackground(
+            args.getBuildId(),
+            args.getMachineReadableLogFilePath(),
+            "machine_readable_log",
+            args.getTraceUploadURI().get(),
+            args.getLogDirectoryPath().resolve("upload-machine-readable-log.log"),
+            CompressionType.GZIP);
+      }
 
       // Allow SHUTDOWN_TIMEOUT_SECONDS seconds for already scheduled writeToLog calls
       // to complete.
@@ -375,16 +455,18 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   /** Arguments to {@link MachineReadableLoggerListenerCloseAction}. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractMachineReadableLoggerListenerCloseArgs {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class MachineReadableLoggerListenerCloseArgs {
     public abstract ExecutorService getExecutor();
 
-    @Value.Parameter
-    public abstract Optional<BuildReportFileUploader> getBuildReportFileUploader();
-
-    @Value.Parameter
     public abstract Path getMachineReadableLogFilePath();
+
+    public abstract Optional<URI> getTraceUploadURI();
+
+    public abstract Path getLogDirectoryPath();
+
+    public abstract Path getLogFilePath();
+
+    public abstract BuildId getBuildId();
   }
 }

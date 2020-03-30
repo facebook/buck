@@ -1,0 +1,7 @@
+load("//complex:bar.bzl", "some_rule", "some_rule_wrapper")
+load("//complex:foo.bzl", "complex_rule", "complex_rule_wrapper")
+
+complex_rule_wrapper(name = "complex_rule_wrapper", value = "val")
+complex_rule(name = "complex_rule", value = "val")
+some_rule_wrapper(name = "some_rule_wrapper", value = "val")
+some_rule(name = "some_rule", value = "val")

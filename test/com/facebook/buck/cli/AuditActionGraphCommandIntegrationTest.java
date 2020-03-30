@@ -1,21 +1,24 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -55,13 +58,19 @@ public class AuditActionGraphCommandIntegrationTest {
                 .put("name", "//:bin")
                 .put("type", "genrule")
                 .put("buildDeps", ImmutableList.of("//:other"))
-                .put("outputPath", getPath("buck-out", "gen", "bin", "bin"))
+                .put(
+                    "outputPath",
+                    getLegacyGenPathForTarget("//:bin", workspace, "").resolve("bin").toString())
                 .build(),
             ImmutableMap.builder()
                 .put("name", "//:other")
                 .put("type", "genrule")
                 .put("buildDeps", ImmutableList.of())
-                .put("outputPath", getPath("buck-out", "gen", "other", "other"))
+                .put(
+                    "outputPath",
+                    getLegacyGenPathForTarget("//:other", workspace, "")
+                        .resolve("other")
+                        .toString())
                 .build()));
   }
 
@@ -88,7 +97,9 @@ public class AuditActionGraphCommandIntegrationTest {
                 .put("type", "python_packaged_binary")
                 .put("buildDeps", ImmutableList.of())
                 .put("runtimeDeps", ImmutableList.of("//:pylib"))
-                .put("outputPath", getPath("buck-out", "gen", "pybin.pex"))
+                .put(
+                    "outputPath",
+                    getLegacyGenPathForTarget("//:pybin", workspace, ".pex").toString())
                 .build(),
             ImmutableMap.builder()
                 .put("name", "//:pylib")
@@ -106,9 +117,7 @@ public class AuditActionGraphCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result =
-        workspace
-            .runBuckCommand("audit", "actiongraph", "//:pybin")
-            .assertSuccess();
+        workspace.runBuckCommand("audit", "actiongraph", "//:pybin").assertSuccess();
 
     String json = result.getStdout();
     List<Map<String, Object>> root =
@@ -120,7 +129,9 @@ public class AuditActionGraphCommandIntegrationTest {
                 .put("name", "//:pybin")
                 .put("type", "python_packaged_binary")
                 .put("buildDeps", ImmutableList.of())
-                .put("outputPath", getPath("buck-out", "gen", "pybin.pex"))
+                .put(
+                    "outputPath",
+                    getLegacyGenPathForTarget("//:pybin", workspace, ".pex").toString())
                 .build(),
             ImmutableMap.builder()
                 .put("name", "//:pylib")
@@ -161,11 +172,12 @@ public class AuditActionGraphCommandIntegrationTest {
     Assert.assertThat(json, Matchers.endsWith("}" + System.lineSeparator()));
   }
 
-  private String getPath(String... parts) {
-    Path p = tmp.getRoot();
-    for (String part : parts) {
-      p = p.resolve(part);
-    }
-    return p.toString();
+  private Path getLegacyGenPathForTarget(
+      String buildTarget, ProjectWorkspace workspace, String suffix) throws IOException {
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    Path genDir =
+        BuildTargetPaths.getGenPath(
+            filesystem, BuildTargetFactory.newInstance(buildTarget), "%s" + suffix);
+    return tmp.getRoot().resolve(genDir);
   }
 }

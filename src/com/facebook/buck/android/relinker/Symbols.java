@@ -1,21 +1,22 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.android.relinker;
 
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -88,13 +89,13 @@ public class Symbols {
   }
 
   public static Symbols getDynamicSymbols(
-      ProcessExecutor executor, Tool objdump, SourcePathResolver resolver, Path lib)
+      ProcessExecutor executor, Tool objdump, SourcePathResolverAdapter resolver, Path lib)
       throws IOException, InterruptedException {
     return getSymbols(executor, objdump, resolver, lib, "-T");
   }
 
   public static Symbols getNormalSymbols(
-      ProcessExecutor executor, Tool objdump, SourcePathResolver resolver, Path lib)
+      ProcessExecutor executor, Tool objdump, SourcePathResolverAdapter resolver, Path lib)
       throws IOException, InterruptedException {
     return getSymbols(executor, objdump, resolver, lib, "-t");
   }
@@ -102,7 +103,7 @@ public class Symbols {
   private static Symbols getSymbols(
       ProcessExecutor executor,
       Tool objdump,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Path lib,
       String symbolFlag)
       throws IOException, InterruptedException {
@@ -142,7 +143,7 @@ public class Symbols {
   }
 
   public static ImmutableSet<String> getDtNeeded(
-      ProcessExecutor executor, Tool objdump, SourcePathResolver resolver, Path lib)
+      ProcessExecutor executor, Tool objdump, SourcePathResolverAdapter resolver, Path lib)
       throws IOException, InterruptedException {
     ImmutableSet.Builder<String> builder = ImmutableSet.builder();
 
@@ -177,7 +178,7 @@ public class Symbols {
   private static void runObjdump(
       ProcessExecutor executor,
       Tool objdump,
-      SourcePathResolver resolver,
+      SourcePathResolverAdapter resolver,
       Path lib,
       ImmutableList<String> flags,
       LineProcessor<Unit> lineProcessor)

@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.apple.projectV2;
 
 import static org.junit.Assert.assertEquals;
@@ -21,11 +22,17 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleLibraryBuilder;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.rules.ActionGraphBuilder;
+import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.features.halide.HalideLibraryBuilder;
@@ -48,7 +55,7 @@ import org.junit.Test;
 public class BuildConfigurationTest {
 
   private ProjectFilesystem projectFilesystem;
-  private Cell cell;
+  private Cells cell;
   private BuildTarget fooBuildTarget;
 
   @Before
@@ -58,15 +65,18 @@ public class BuildConfigurationTest {
     projectFilesystem = new FakeProjectFilesystem(new DefaultClock());
     cell = (new TestCellBuilder()).setFilesystem(projectFilesystem).build();
 
-    fooBuildTarget = BuildTargetFactory.newInstance(cell.getRoot(), "//bar:foo");
+    fooBuildTarget = BuildTargetFactory.newInstance("//bar:foo");
   }
 
   @Test
   public void testWriteBuildConfigurationsForTarget() throws IOException {
     TargetNode fooTargetNode = AppleLibraryBuilder.createBuilder(fooBuildTarget).build();
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(fooTargetNode);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
-    XCodeNativeTargetAttributes.Builder nativeTargetAttributes =
-        XCodeNativeTargetAttributes.builder()
+    ImmutableXCodeNativeTargetAttributes.Builder nativeTargetAttributes =
+        ImmutableXCodeNativeTargetAttributes.builder()
             .setAppleConfig(AppleProjectHelper.createDefaultAppleConfig(projectFilesystem));
     ImmutableSet.Builder<String> targetConfigNamesBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<Path> xcconfigPathsBuilder = ImmutableSet.builder();
@@ -82,6 +92,7 @@ public class BuildConfigurationTest {
         fooTargetNode,
         fooBuildTarget,
         CxxPlatformUtils.DEFAULT_PLATFORM,
+        pathResolver,
         nativeTargetAttributes,
         overrideBuildSettings,
         buckXcodeBuildSettings,
@@ -184,7 +195,9 @@ public class BuildConfigurationTest {
     Path xcconfigPath =
         BuildConfiguration.getXcconfigPath(
             projectFilesystem, fooBuildTarget, BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
-    assertEquals(Paths.get("buck-out/gen/bar/foo-Debug.xcconfig"), xcconfigPath);
+    assertEquals(
+        BuildTargetPaths.getGenPath(projectFilesystem, fooBuildTarget, "%s-Debug.xcconfig"),
+        xcconfigPath);
   }
 
   @Test

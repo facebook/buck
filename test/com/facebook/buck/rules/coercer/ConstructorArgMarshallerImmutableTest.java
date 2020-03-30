@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
@@ -22,44 +22,50 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
-import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
-import com.facebook.buck.core.model.impl.DefaultTargetConfiguration;
-import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
+import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
-import com.facebook.buck.core.model.platform.impl.DefaultPlatform;
-import com.facebook.buck.core.model.platform.impl.MultiPlatform;
-import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
-import com.facebook.buck.core.rules.knowntypes.KnownRuleTypes;
-import com.facebook.buck.core.rules.platform.DummyConfigurationRule;
-import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
+import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
+import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
+import com.facebook.buck.core.select.Selector;
+import com.facebook.buck.core.select.SelectorKey;
+import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
+import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
+import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
+import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.DefaultSelectableConfigurationContext;
-import com.facebook.buck.parser.syntax.ImmutableListWithSelects;
-import com.facebook.buck.parser.syntax.ImmutableSelectorValue;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -82,43 +88,61 @@ import org.junit.rules.ExpectedException;
 public class ConstructorArgMarshallerImmutableTest {
 
   public static final BuildTarget TARGET = BuildTargetFactory.newInstance("//example/path:three");
-  private Path basePath;
   private ConstructorArgMarshaller marshaller;
   private ProjectFilesystem filesystem;
-  private KnownRuleTypes knownRuleTypes;
 
   @Rule public ExpectedException expected = ExpectedException.none();
 
   @Before
   public void setUpInspector() {
-    basePath = Paths.get("example", "path");
-    marshaller = new DefaultConstructorArgMarshaller(new DefaultTypeCoercerFactory());
+    marshaller = new DefaultConstructorArgMarshaller();
     filesystem = new FakeProjectFilesystem();
-    knownRuleTypes = KnownNativeRuleTypes.of(ImmutableList.of(), ImmutableList.of());
   }
 
-  RuleType ruleType(Class<?> dtoClass) {
-    return RuleType.of(
-        CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, dtoClass.getName()),
-        AbstractRuleType.Kind.BUILD);
+  private <T extends BuildRuleArg> T invokePopulate2(
+      Class<T> constructorClass,
+      Map<String, ?> attributes,
+      ImmutableSet.Builder<BuildTarget> declaredDeps)
+      throws CoerceFailedException {
+    HashMap<String, Object> attributesWithName = new HashMap<>(attributes);
+    attributesWithName.putIfAbsent("name", "the name");
+
+    ImmutableSet.Builder<BuildTarget> configurationDeps = ImmutableSet.builder();
+    T result =
+        marshaller.populate(
+            createCellRoots(filesystem).getCellNameResolver(),
+            filesystem,
+            new ThrowingSelectorListResolver(),
+            new ThrowingTargetConfigurationTransformer(),
+            new ThrowingSelectableConfigurationContext(),
+            TARGET,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            DependencyStack.root(),
+            builder(constructorClass),
+            declaredDeps,
+            configurationDeps,
+            attributesWithName);
+    assertEquals(ImmutableSet.of(), configurationDeps.build());
+    return result;
   }
 
-  <T extends ConstructorArg> ConstructorArgBuilder<T> builder(Class<T> dtoClass) {
-    return knownRuleTypes.getConstructorArgBuilder(
-        new DefaultTypeCoercerFactory(), ruleType(dtoClass), dtoClass, TARGET);
+  private <T extends BuildRuleArg> T invokePopulate(
+      Class<T> constructorClass, Map<String, ?> attributes) throws CoerceFailedException {
+    ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
+    T result = invokePopulate2(constructorClass, attributes, declaredDeps);
+    assertEquals(ImmutableSet.of(), declaredDeps.build());
+    return result;
+  }
+
+  <T extends ConstructorArg> DataTransferObjectDescriptor<T> builder(Class<T> dtoClass) {
+    return new DefaultTypeCoercerFactory().getConstructorArgDescriptor(dtoClass);
   }
 
   @Test
   public void shouldPopulateAStringValue() throws Exception {
 
     DtoWithString built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithString.class),
-            ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("string", "cheese"));
+        invokePopulate(DtoWithString.class, ImmutableMap.<String, Object>of("string", "cheese"));
 
     assertEquals("cheese", built.getString());
   }
@@ -126,12 +150,8 @@ public class ConstructorArgMarshallerImmutableTest {
   @Test
   public void shouldPopulateABooleanValue() throws Exception {
     DtoWithBoolean built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithBoolean.class),
-            ImmutableSet.builder(),
+        invokePopulate(
+            DtoWithBoolean.class,
             ImmutableMap.<String, Object>of(
                 "booleanOne", true,
                 "booleanTwo", true));
@@ -143,49 +163,22 @@ public class ConstructorArgMarshallerImmutableTest {
   @Test
   public void shouldPopulateBuildTargetValues() throws Exception {
     DtoWithBuildTargets built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithBuildTargets.class),
-            ImmutableSet.builder(),
+        invokePopulate(
+            DtoWithBuildTargets.class,
             ImmutableMap.<String, Object>of(
-                "target", "//cake:walk",
-                "local", ":fish"));
+                "target", UnconfiguredBuildTargetParser.parse("//cake:walk"),
+                "local", UnconfiguredBuildTargetParser.parse("//example/path:fish")));
 
-    assertEquals(
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//cake:walk"), built.getTarget());
-    assertEquals(
-        BuildTargetFactory.newInstance(filesystem.getRootPath(), "//example/path:fish"),
-        built.getLocal());
+    assertEquals(BuildTargetFactory.newInstance("//cake:walk"), built.getTarget());
+    assertEquals(BuildTargetFactory.newInstance("//example/path:fish"), built.getLocal());
   }
 
   @Test
   public void shouldPopulateANumericValue() throws Exception {
     DtoWithLong built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithLong.class),
-            ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("number", 42L));
+        invokePopulate(DtoWithLong.class, ImmutableMap.<String, Object>of("number", 42L));
 
     assertEquals(42, built.getNumber());
-  }
-
-  @Test
-  public void shouldPopulateAPathValue() throws Exception {
-    DtoWithPath built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithPath.class),
-            ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("path", "Fish.java"));
-
-    assertEquals(Paths.get("example/path", "Fish.java"), built.getPath());
   }
 
   @Test
@@ -193,15 +186,15 @@ public class ConstructorArgMarshallerImmutableTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//example/path:peas");
     DtoWithSourcePaths built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithSourcePaths.class),
-            ImmutableSet.builder(),
+        invokePopulate(
+            DtoWithSourcePaths.class,
             ImmutableMap.<String, Object>of(
-                "filePath", "cheese.txt",
-                "targetPath", ":peas"));
+                "filePath",
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                    "example/path/cheese.txt"),
+                "targetPath",
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                    "//example/path:peas")));
 
     assertEquals(
         PathSourcePath.of(projectFilesystem, Paths.get("example/path/cheese.txt")),
@@ -216,43 +209,21 @@ public class ConstructorArgMarshallerImmutableTest {
 
     // Note: the ordering is reversed from the natural ordering
     DtoWithImmutableSortedSet built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithImmutableSortedSet.class),
-            ImmutableSet.builder(),
+        invokePopulate(
+            DtoWithImmutableSortedSet.class,
             ImmutableMap.<String, Object>of(
-                "stuff", ImmutableList.of("//please/go:here", ":there")));
+                "stuff",
+                ImmutableList.of(
+                    t1.getUnconfiguredBuildTarget(), t2.getUnconfiguredBuildTarget())));
 
     assertEquals(ImmutableSortedSet.of(t2, t1), built.getStuff());
   }
 
   @Test
-  public void shouldPopulateSets() throws Exception {
-    DtoWithSetOfPaths built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithSetOfPaths.class),
-            ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("paths", ImmutableList.of("one", "two")));
-
-    assertEquals(
-        ImmutableSet.of(Paths.get("example/path/one"), Paths.get("example/path/two")),
-        built.getPaths());
-  }
-
-  @Test
   public void shouldPopulateLists() throws Exception {
     DtoWithListOfStrings built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithListOfStrings.class),
-            ImmutableSet.builder(),
+        invokePopulate(
+            DtoWithListOfStrings.class,
             ImmutableMap.<String, Object>of("list", ImmutableList.of("alpha", "beta")));
 
     assertEquals(ImmutableList.of("alpha", "beta"), built.getList());
@@ -260,10 +231,10 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @Test
   public void onlyFieldNamedDepsAreConsideredDeclaredDeps() throws Exception {
-    String dep = "//is/a/declared:dep";
-    String notDep = "//is/not/a/declared:dep";
+    UnconfiguredBuildTarget dep = UnconfiguredBuildTargetParser.parse("//is/a/declared:dep");
+    UnconfiguredBuildTarget notDep = UnconfiguredBuildTargetParser.parse("//is/not/a/declared:dep");
 
-    BuildTarget declaredDep = BuildTargetFactory.newInstance(dep);
+    BuildTarget declaredDep = dep.configure(UnconfiguredTargetConfiguration.INSTANCE);
 
     Map<String, Object> args = new HashMap<>();
     args.put("deps", ImmutableList.of(dep));
@@ -271,14 +242,7 @@ public class ConstructorArgMarshallerImmutableTest {
 
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
-    DtoWithDepsAndNotDeps built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithDepsAndNotDeps.class),
-            declaredDeps,
-            args);
+    DtoWithDepsAndNotDeps built = invokePopulate2(DtoWithDepsAndNotDeps.class, args, declaredDeps);
 
     assertEquals(ImmutableSet.of(declaredDep), declaredDeps.build());
     assertEquals(ImmutableSet.of(declaredDep), built.getDeps());
@@ -286,34 +250,21 @@ public class ConstructorArgMarshallerImmutableTest {
 
   @Test
   public void fieldsWithIsDepEqualsFalseHintAreNotTreatedAsDeps() throws Exception {
-    String dep = "//should/be:ignored";
+    UnconfiguredBuildTarget dep = UnconfiguredBuildTargetParser.parse("//should/be:ignored");
     Map<String, Object> args = ImmutableMap.of("deps", ImmutableList.of(dep));
 
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
 
-    DtoWithFakeDeps built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithFakeDeps.class),
-            declaredDeps,
-            args);
+    DtoWithFakeDeps built = invokePopulate2(DtoWithFakeDeps.class, args, declaredDeps);
 
     assertEquals(ImmutableSet.of(), declaredDeps.build());
-    assertEquals(ImmutableSet.of(BuildTargetFactory.newInstance(dep)), built.getDeps());
+    assertEquals(
+        ImmutableSet.of(dep.configure(UnconfiguredTargetConfiguration.INSTANCE)), built.getDeps());
   }
 
   @Test
   public void collectionsAreOptional() throws Exception {
-    DtoWithCollections built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithCollections.class),
-            ImmutableSet.builder(),
-            ImmutableMap.of());
+    DtoWithCollections built = invokePopulate(DtoWithCollections.class, ImmutableMap.of());
 
     assertEquals(ImmutableSet.of(), built.getSet());
     assertEquals(ImmutableSet.of(), built.getImmutableSet());
@@ -331,14 +282,7 @@ public class ConstructorArgMarshallerImmutableTest {
     // Deliberately not populating args
     Map<String, Object> args = ImmutableMap.of();
 
-    DtoWithOptionalSetOfStrings built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithOptionalSetOfStrings.class),
-            ImmutableSet.builder(),
-            args);
+    DtoWithOptionalSetOfStrings built = invokePopulate(DtoWithOptionalSetOfStrings.class, args);
 
     assertEquals(Optional.empty(), built.getStrings());
   }
@@ -351,13 +295,7 @@ public class ConstructorArgMarshallerImmutableTest {
     expected.expectMessage(containsString("booleanOne"));
     expected.expectMessage(containsString("booleanTwo"));
 
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        builder(DtoWithBoolean.class),
-        ImmutableSet.builder(),
-        ImmutableMap.of());
+    invokePopulate(DtoWithBoolean.class, ImmutableMap.of());
   }
 
   @Test
@@ -366,88 +304,28 @@ public class ConstructorArgMarshallerImmutableTest {
     expected.expectMessage(containsString(TARGET.getFullyQualifiedName()));
     expected.expectMessage(containsString("NOT THE SECRETS"));
 
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        builder(DtoWithCheck.class),
-        ImmutableSet.builder(),
-        ImmutableMap.of("string", "secrets"));
+    invokePopulate(DtoWithCheck.class, ImmutableMap.of("string", "secrets"));
   }
 
   @Test
   public void noErrorsOnGoodChecks() throws Exception {
     DtoWithCheck built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithCheck.class),
-            ImmutableSet.builder(),
-            ImmutableMap.of("string", "not secrets"));
+        invokePopulate(DtoWithCheck.class, ImmutableMap.of("string", "not secrets"));
     assertEquals("not secrets", built.getString());
-  }
-
-  @Test(expected = ParamInfoException.class)
-  public void shouldBeAnErrorToAttemptToSetASingleValueToACollection() throws Exception {
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        builder(DtoWithString.class),
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("string", ImmutableList.of("a", "b")));
-  }
-
-  @Test(expected = ParamInfoException.class)
-  public void shouldBeAnErrorToAttemptToSetACollectionToASingleValue() throws Exception {
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        builder(DtoWithSetOfStrings.class),
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("strings", "isn't going to happen"));
-  }
-
-  @Test(expected = ParamInfoException.class)
-  public void shouldBeAnErrorToSetTheWrongTypeOfValueInACollection() throws Exception {
-    marshaller.populate(
-        createCellRoots(filesystem),
-        filesystem,
-        TARGET,
-        builder(DtoWithSetOfStrings.class),
-        ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("strings", ImmutableSet.of(true, false)));
-  }
-
-  @Test
-  public void shouldNormalizePaths() throws Exception {
-    DtoWithPath built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithPath.class),
-            ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("path", "./bar/././fish.txt"));
-
-    assertEquals(basePath.resolve("bar/fish.txt").normalize(), built.getPath());
   }
 
   @Test
   public void shouldSetBuildTargetParameters() throws Exception {
     DtoWithBuildTargetList built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithBuildTargetList.class),
-            ImmutableSet.builder(),
+        invokePopulate(
+            DtoWithBuildTargetList.class,
             ImmutableMap.<String, Object>of(
-                "single", "//com/example:cheese",
-                "sameBuildFileTarget", ":cake",
-                "targets", ImmutableList.of(":cake", "//com/example:cheese")));
+                "single", UnconfiguredBuildTargetParser.parse("//com/example:cheese"),
+                "sameBuildFileTarget", UnconfiguredBuildTargetParser.parse("//example/path:cake"),
+                "targets",
+                    ImmutableList.of(
+                        UnconfiguredBuildTargetParser.parse("//example/path:cake"),
+                        UnconfiguredBuildTargetParser.parse("//com/example:cheese"))));
 
     BuildTarget cheese = BuildTargetFactory.newInstance("//com/example:cheese");
     BuildTarget cake = BuildTargetFactory.newInstance("//example/path:cake");
@@ -464,24 +342,19 @@ public class ConstructorArgMarshallerImmutableTest {
     ImmutableMap<String, Object> args =
         ImmutableMap.<String, Object>builder()
             .put("required", "cheese")
-            .put("notRequired", "cake")
+            .put("notRequired", Optional.of("cake"))
             // Long because that's what comes from python.
-            .put("num", 42L)
-            .put("optionalLong", 88L)
+            .put("num", 42)
+            .put("optionalLong", Optional.of(88L))
             .put("needed", true)
             // Skipping optional boolean.
-            .put("aSrcPath", ":path")
-            .put("aPath", "./File.java")
-            .put("notAPath", "./NotFile.java")
+            .put(
+                "aSrcPath",
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//example/path:path"))
+            .put("aPath", Paths.get("./File.java"))
+            .put("notAPath", Optional.of(Paths.get("example/path/NotFile.java")))
             .build();
-    DtoWithVariousTypes built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithVariousTypes.class),
-            ImmutableSet.builder(),
-            args);
+    DtoWithVariousTypes built = invokePopulate(DtoWithVariousTypes.class, args);
 
     assertEquals("cheese", built.getRequired());
     assertEquals("cake", built.getNotRequired().get());
@@ -500,14 +373,7 @@ public class ConstructorArgMarshallerImmutableTest {
     Map<String, Object> args = new HashMap<>();
     args.put("defaultString", null);
     args.put("defaultSourcePath", null);
-    DtoWithOptionalValues built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithOptionalValues.class),
-            ImmutableSet.builder(),
-            args);
+    DtoWithOptionalValues built = invokePopulate(DtoWithOptionalValues.class, args);
 
     assertEquals(Optional.empty(), built.getNoString());
     assertEquals(Optional.empty(), built.getDefaultString());
@@ -521,14 +387,7 @@ public class ConstructorArgMarshallerImmutableTest {
     Map<String, Object> args = new HashMap<>();
     args.put("something", null);
     args.put("things", null);
-    DtoWithDefaultValues built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithDefaultValues.class),
-            ImmutableSet.builder(),
-            args);
+    DtoWithDefaultValues built = invokePopulate(DtoWithDefaultValues.class, args);
 
     assertEquals("foo", built.getSomething());
     assertEquals(ImmutableList.of("bar"), built.getThings());
@@ -542,16 +401,9 @@ public class ConstructorArgMarshallerImmutableTest {
     Map<String, Object> args = new HashMap<>();
     args.put("something", "bar");
     args.put("things", ImmutableList.of("qux", "quz"));
-    args.put("more", 1234L);
+    args.put("more", 1234);
     args.put("beGood", false);
-    DtoWithDefaultValues built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithDefaultValues.class),
-            ImmutableSet.builder(),
-            args);
+    DtoWithDefaultValues built = invokePopulate(DtoWithDefaultValues.class, args);
 
     assertEquals("bar", built.getSomething());
     assertEquals(ImmutableList.of("qux", "quz"), built.getThings());
@@ -562,14 +414,18 @@ public class ConstructorArgMarshallerImmutableTest {
   @Test
   public void shouldResolveCollectionOfSourcePathsRelativeToTarget() throws Exception {
     DtoWithSetOfSourcePaths built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithSetOfSourcePaths.class),
-            ImmutableSet.builder(),
+        invokePopulate(
+            DtoWithSetOfSourcePaths.class,
             ImmutableMap.<String, Object>of(
-                "srcs", ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py")));
+                "srcs",
+                ImmutableList.of("main.py", "lib/__init__.py", "lib/manifest.py").stream()
+                    .map(
+                        p ->
+                            new UnconfiguredSourcePath.Path(
+                                CellRelativePath.of(
+                                    CanonicalCellName.rootCell(),
+                                    ForwardRelativePath.of("example/path/" + p))))
+                    .collect(ImmutableList.toImmutableList())));
 
     ImmutableSet<String> observedValues =
         built.getSrcs().stream()
@@ -586,12 +442,8 @@ public class ConstructorArgMarshallerImmutableTest {
   @Test
   public void derivedMethodsAreIgnored() throws Exception {
     DtoWithDerivedAndOrdinaryMethods built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithDerivedAndOrdinaryMethods.class),
-            ImmutableSet.builder(),
+        invokePopulate(
+            DtoWithDerivedAndOrdinaryMethods.class,
             ImmutableMap.<String, Object>of("string", "tamarins"));
     assertEquals("tamarins", built.getString());
     assertEquals("TAMARINS", built.getUpper());
@@ -601,12 +453,8 @@ public class ConstructorArgMarshallerImmutableTest {
   @Test
   public void specifyingDerivedValuesIsIgnored() throws Exception {
     DtoWithDerivedAndOrdinaryMethods built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(DtoWithDerivedAndOrdinaryMethods.class),
-            ImmutableSet.builder(),
+        invokePopulate(
+            DtoWithDerivedAndOrdinaryMethods.class,
             ImmutableMap.<String, Object>of(
                 "string", "tamarins",
                 "upper", "WRONG"));
@@ -617,26 +465,15 @@ public class ConstructorArgMarshallerImmutableTest {
   @Test
   public void defaultMethodFallsBackToDefault() throws Exception {
     InheritsFromHasDefaultMethod built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(InheritsFromHasDefaultMethod.class),
-            ImmutableSet.builder(),
-            ImmutableMap.of());
+        invokePopulate(InheritsFromHasDefaultMethod.class, ImmutableMap.of());
     assertEquals("foo", built.getString());
   }
 
   @Test
   public void defaultMethodCanBeSpecified() throws Exception {
     InheritsFromHasDefaultMethod built =
-        marshaller.populate(
-            createCellRoots(filesystem),
-            filesystem,
-            TARGET,
-            builder(InheritsFromHasDefaultMethod.class),
-            ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("string", "bar"));
+        invokePopulate(
+            InheritsFromHasDefaultMethod.class, ImmutableMap.<String, Object>of("string", "bar"));
     assertEquals("bar", built.getString());
   }
 
@@ -647,20 +484,33 @@ public class ConstructorArgMarshallerImmutableTest {
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
                 ImmutableList.of(new TestSelectable(selectableTarget, true))));
-    ImmutableListWithSelects selectorList =
-        ImmutableListWithSelects.of(
+    SelectorList<?> selectorList =
+        new SelectorList<>(
             ImmutableList.of(
-                ImmutableSelectorValue.of(
-                    ImmutableMap.of("DEFAULT", "string1", "//x:y", "string2"), ""),
-                ImmutableSelectorValue.of(
-                    ImmutableMap.of("DEFAULT", "string3", "//x:y", "string4"), "")),
-            ImmutableMap.class);
-    TargetPlatformResolver targetPlatformResolver = configuration -> DefaultPlatform.INSTANCE;
+                new Selector<>(
+                    ImmutableMap.of(
+                        SelectorKey.DEFAULT,
+                        "string1",
+                        new SelectorKey(
+                            ConfigurationBuildTargetFactoryForTests.newInstance("//x:y")),
+                        "string2"),
+                    ImmutableSet.of(),
+                    ""),
+                new Selector<>(
+                    ImmutableMap.of(
+                        SelectorKey.DEFAULT,
+                        "string3",
+                        new SelectorKey(
+                            ConfigurationBuildTargetFactoryForTests.newInstance("//x:y")),
+                        "string4"),
+                    ImmutableSet.of(),
+                    "")));
+    TargetPlatformResolver targetPlatformResolver =
+        (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
-            new RuleBasedConstraintResolver(DummyConfigurationRule::of),
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             targetPlatformResolver);
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
@@ -668,17 +518,19 @@ public class ConstructorArgMarshallerImmutableTest {
     ImmutableSet.Builder<BuildTarget> configurationDeps = ImmutableSet.builder();
 
     DtoWithString dto =
-        marshaller.populateWithConfiguringAttributes(
-            createCellRoots(filesystem),
+        marshaller.populate(
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,
             selectableConfigurationContext,
             TARGET,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            DependencyStack.root(),
             builder(DtoWithString.class),
             declaredDeps,
             configurationDeps,
-            ImmutableMap.<String, Object>of("string", selectorList));
+            ImmutableMap.<String, Object>of("string", selectorList, "name", "unused"));
 
     assertEquals("string2string4", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());
@@ -690,20 +542,23 @@ public class ConstructorArgMarshallerImmutableTest {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
-        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
+        new MultiPlatformTargetConfigurationTransformer(
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     DtoWithString dto =
-        marshaller.populateWithConfiguringAttributes(
-            createCellRoots(filesystem),
+        marshaller.populate(
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,
             NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            DependencyStack.root(),
             builder(DtoWithString.class),
             declaredDeps,
             ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("string", "value"));
+            ImmutableMap.<String, Object>of("string", "value", "name", "zzz"));
     assertEquals("value", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());
   }
@@ -713,20 +568,24 @@ public class ConstructorArgMarshallerImmutableTest {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
-        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
+        new MultiPlatformTargetConfigurationTransformer(
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     BuildTarget dep = BuildTargetFactory.newInstance("//a/b:c");
-    marshaller.populateWithConfiguringAttributes(
-        createCellRoots(filesystem),
+    marshaller.populate(
+        createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         selectorListResolver,
         targetConfigurationTransformer,
         NonCopyingSelectableConfigurationContext.INSTANCE,
         TARGET,
+        UnconfiguredTargetConfiguration.INSTANCE,
+        DependencyStack.root(),
         builder(DtoWithDepsAndNotDeps.class),
         declaredDeps,
         ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of("deps", ImmutableList.of("//a/b:c")));
+        ImmutableMap.<String, Object>of(
+            "deps", ImmutableList.of(dep.getUnconfiguredBuildTarget()), "name", "myname"));
     assertEquals(ImmutableSet.of(dep), declaredDeps.build());
   }
 
@@ -735,19 +594,22 @@ public class ConstructorArgMarshallerImmutableTest {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
     TargetConfigurationTransformer targetConfigurationTransformer =
-        new MultiPlatformTargetConfigurationTransformer(configuration -> DefaultPlatform.INSTANCE);
+        new MultiPlatformTargetConfigurationTransformer(
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
     DtoWithOptionalSetOfStrings dto =
-        marshaller.populateWithConfiguringAttributes(
-            createCellRoots(filesystem),
+        marshaller.populate(
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,
             NonCopyingSelectableConfigurationContext.INSTANCE,
             TARGET,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            DependencyStack.root(),
             builder(DtoWithOptionalSetOfStrings.class),
             ImmutableSet.builder(),
             ImmutableSet.builder(),
-            ImmutableMap.of());
+            ImmutableMap.of("name", "something"));
     assertFalse(dto.getStrings().isPresent());
   }
 
@@ -762,8 +624,8 @@ public class ConstructorArgMarshallerImmutableTest {
     BuildTarget nestedPlatform2Target =
         ConfigurationBuildTargetFactoryForTests.newInstance("//platform:nested_platform_2");
 
-    MultiPlatform multiPlatform =
-        new MultiPlatform(
+    FakeMultiPlatform multiPlatform =
+        new FakeMultiPlatform(
             multiPlatformTarget,
             new ConstraintBasedPlatform(basePlatformTarget, ImmutableSet.of()),
             ImmutableList.of(
@@ -771,62 +633,96 @@ public class ConstructorArgMarshallerImmutableTest {
                 new ConstraintBasedPlatform(nestedPlatform2Target, ImmutableSet.of())));
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());
-    TargetPlatformResolver targetPlatformResolver = configuration -> multiPlatform;
+    TargetPlatformResolver targetPlatformResolver =
+        (configuration, dependencyStack) -> multiPlatform;
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
     SelectableConfigurationContext selectableConfigurationContext =
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
-            new RuleBasedConstraintResolver(DummyConfigurationRule::of),
-            ImmutableDefaultTargetConfiguration.of(multiPlatformTarget),
+            RuleBasedTargetConfiguration.of(multiPlatformTarget),
             targetPlatformResolver);
 
     DtoWithSplit dto =
-        marshaller.populateWithConfiguringAttributes(
-            createCellRoots(filesystem),
+        marshaller.populate(
+            createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
             targetConfigurationTransformer,
             selectableConfigurationContext,
             TARGET,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            DependencyStack.root(),
             builder(DtoWithSplit.class),
             ImmutableSet.builder(),
             ImmutableSet.builder(),
-            ImmutableMap.of("deps", ImmutableList.of("//a/b:c")));
+            ImmutableMap.of(
+                "deps",
+                ImmutableList.of(UnconfiguredBuildTargetParser.parse("//a/b:c")),
+                "name",
+                "testtesttest"));
 
     assertEquals(3, dto.getDeps().size());
     assertEquals(
         ImmutableSet.of(multiPlatformTarget, nestedPlatform1Target, nestedPlatform2Target),
         dto.getDeps().stream()
             .map(BuildTarget::getTargetConfiguration)
-            .map(DefaultTargetConfiguration.class::cast)
-            .map(DefaultTargetConfiguration::getTargetPlatform)
+            .map(RuleBasedTargetConfiguration.class::cast)
+            .map(RuleBasedTargetConfiguration::getTargetPlatform)
             .collect(ImmutableSet.toImmutableSet()));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithString implements ConstructorArg {
+  @Test
+  public void populateWithExecSwitch() throws Exception {
+    SelectorListResolver selectorListResolver =
+        new DefaultSelectorListResolver(new TestSelectableResolver());
+    TargetConfigurationTransformer targetConfigurationTransformer =
+        new MultiPlatformTargetConfigurationTransformer(
+            (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
+    RuleBasedTargetConfiguration execConfiguration =
+        RuleBasedTargetConfiguration.of(
+            ConfigurationBuildTargetFactoryForTests.newInstance("//:p"));
+    DtoWithExec d =
+        marshaller.populate(
+            createCellRoots(filesystem).getCellNameResolver(),
+            filesystem,
+            selectorListResolver,
+            targetConfigurationTransformer,
+            NonCopyingSelectableConfigurationContext.INSTANCE,
+            TARGET,
+            execConfiguration,
+            DependencyStack.root(),
+            builder(DtoWithExec.class),
+            ImmutableSet.builder(),
+            ImmutableSet.builder(),
+            ImmutableMap.of(
+                "name",
+                TARGET.getShortName(),
+                "compiler",
+                UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//tools:compiler")));
+    BuildTargetSourcePath compiler = (BuildTargetSourcePath) d.getCompiler();
+    assertEquals(execConfiguration, compiler.getTarget().getTargetConfiguration());
+  }
+
+  @RuleArg
+  abstract static class AbstractDtoWithString implements BuildRuleArg {
     abstract String getString();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithBoolean implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithBoolean implements BuildRuleArg {
     abstract boolean getBooleanOne();
 
     abstract boolean isBooleanTwo();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithListOfStrings implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithListOfStrings implements BuildRuleArg {
     abstract List<String> getList();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithFakeDeps implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithFakeDeps implements BuildRuleArg {
     @Hint(isDep = false)
     abstract Set<BuildTarget> getDeps();
 
@@ -834,9 +730,8 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract Set<BuildTarget> getProvidedDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithCollections implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithCollections implements BuildRuleArg {
     abstract Set<String> getSet();
 
     abstract ImmutableSet<String> getImmutableSet();
@@ -856,81 +751,69 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract ImmutableMap<String, String> getImmutableMap();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithOptionalSetOfStrings implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithOptionalSetOfStrings implements BuildRuleArg {
     abstract Optional<Set<String>> getStrings();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithSetOfStrings implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithSetOfStrings implements BuildRuleArg {
     abstract Set<String> getStrings();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithPath implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithPath implements BuildRuleArg {
     abstract Path getPath();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractEmptyImmutableDto implements ConstructorArg {}
+  @RuleArg
+  abstract static class AbstractEmptyImmutableDto implements BuildRuleArg {}
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithBuildTargets implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithBuildTargets implements BuildRuleArg {
     abstract BuildTarget getTarget();
 
     abstract BuildTarget getLocal();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithLong implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithLong implements BuildRuleArg {
     abstract long getNumber();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithSourcePaths implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithSourcePaths implements BuildRuleArg {
     abstract SourcePath getFilePath();
 
     abstract SourcePath getTargetPath();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithImmutableSortedSet implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithImmutableSortedSet implements BuildRuleArg {
     abstract ImmutableSortedSet<BuildTarget> getStuff();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithDeclaredDeps implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithDeclaredDeps implements BuildRuleArg {
     abstract ImmutableSet<BuildTarget> getDeps();
 
     abstract ImmutableSet<SourcePath> getPaths();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithSetOfPaths implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithSetOfPaths implements BuildRuleArg {
     abstract Set<Path> getPaths();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithDepsAndNotDeps implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithDepsAndNotDeps implements BuildRuleArg {
     abstract Set<BuildTarget> getDeps();
 
     abstract Set<BuildTarget> getNotDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithBuildTargetList implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithBuildTargetList implements BuildRuleArg {
     abstract BuildTarget getSingle();
 
     abstract BuildTarget getSameBuildFileTarget();
@@ -938,9 +821,8 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract List<BuildTarget> getTargets();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithVariousTypes implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithVariousTypes implements BuildRuleArg {
     abstract String getRequired();
 
     abstract Optional<String> getNotRequired();
@@ -962,9 +844,8 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract Optional<Path> getNotAPath();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithOptionalValues implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithOptionalValues implements BuildRuleArg {
     abstract Optional<String> getNoString();
 
     abstract Optional<String> getDefaultString();
@@ -974,9 +855,8 @@ public class ConstructorArgMarshallerImmutableTest {
     abstract Optional<SourcePath> getDefaultSourcePath();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithDefaultValues implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithDefaultValues implements BuildRuleArg {
     @Value.Default
     public String getSomething() {
       return "foo";
@@ -998,15 +878,13 @@ public class ConstructorArgMarshallerImmutableTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithSetOfSourcePaths implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithSetOfSourcePaths implements BuildRuleArg {
     abstract ImmutableSortedSet<SourcePath> getSrcs();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithCheck implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithCheck implements BuildRuleArg {
     abstract String getString();
 
     @Value.Check
@@ -1015,9 +893,8 @@ public class ConstructorArgMarshallerImmutableTest {
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithDerivedAndOrdinaryMethods implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithDerivedAndOrdinaryMethods implements BuildRuleArg {
     abstract String getString();
 
     public String getConstant() {
@@ -1030,21 +907,25 @@ public class ConstructorArgMarshallerImmutableTest {
     }
   }
 
-  interface HasDefaultMethod extends ConstructorArg {
+  interface HasDefaultMethod extends BuildRuleArg {
     @Value.Default
     default String getString() {
       return "foo";
     }
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractInheritsFromHasDefaultMethod extends HasDefaultMethod {}
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDtoWithSplit implements ConstructorArg {
+  @RuleArg
+  abstract static class AbstractDtoWithSplit implements BuildRuleArg {
     @Hint(splitConfiguration = true)
     abstract ImmutableSortedSet<BuildTarget> getDeps();
+  }
+
+  @RuleArg
+  abstract static class AbstractDtoWithExec implements BuildRuleArg {
+    @Hint(execConfiguration = true)
+    abstract SourcePath getCompiler();
   }
 }

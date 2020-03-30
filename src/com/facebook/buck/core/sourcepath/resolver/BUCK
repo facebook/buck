@@ -4,6 +4,11 @@ java_immutables_library(
     name = "resolver",
     srcs = [
         "SourcePathResolver.java",
+        "SourcePathResolverAdapter.java",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//third-party/java/guava:guava",
     ],
     exported_deps = [
         "//src/com/facebook/buck/core/io:io",
@@ -11,9 +16,5 @@ java_immutables_library(
         "//src/com/facebook/buck/core/sourcepath:sourcepath",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/io/filesystem:filesystem",
-    ],
-    visibility = ["PUBLIC"],
-    deps = [
-        "//third-party/java/guava:guava",
     ],
 )

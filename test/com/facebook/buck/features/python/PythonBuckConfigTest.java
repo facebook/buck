@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
@@ -20,8 +20,10 @@ import static org.hamcrest.Matchers.containsString;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -57,7 +59,11 @@ public class PythonBuckConfigTest {
     Path projectDir = Files.createTempDirectory("project");
     Path pexExecuter = Paths.get("pex-executer");
     ProjectFilesystem projectFilesystem =
-        new FakeProjectFilesystem(FakeClock.doNotCare(), projectDir, ImmutableSet.of(pexExecuter));
+        new FakeProjectFilesystem(
+            FakeClock.doNotCare(),
+            CanonicalCellName.rootCell(),
+            AbsPath.of(projectDir),
+            ImmutableSet.of(pexExecuter));
     Files.createFile(projectFilesystem.resolve(pexExecuter));
     assertTrue(
         "Should be able to set file executable",
@@ -72,7 +78,7 @@ public class PythonBuckConfigTest {
                 .build());
     assertThat(
         config
-            .getPexExecutor(resolver, EmptyTargetConfiguration.INSTANCE)
+            .getPexExecutor(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .get()
             .getCommandPrefix(resolver.getSourcePathResolver()),
         Matchers.contains(projectDir.resolve(pexExecuter).toString()));

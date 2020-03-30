@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -90,7 +90,7 @@ public class XctoolRunTestsStepTest {
                     "-logicTest",
                     "/path/to/Foo.xctest"))
             .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
@@ -142,7 +142,7 @@ public class XctoolRunTestsStepTest {
                     "-logicTest",
                     "/path/to/Foo.xctest"))
             .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolFailure = new FakeProcess(42, "", "Something went terribly wrong\n");
@@ -202,7 +202,7 @@ public class XctoolRunTestsStepTest {
                     "-appTest",
                     "/path/to/FooAppTest.xctest:/path/to/Foo.app"))
             .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
@@ -259,7 +259,7 @@ public class XctoolRunTestsStepTest {
                     "-uiTest",
                     "/path/to/FooAppTest.xctest:/path/to/Foo.app:/path/to/Target.app"))
             .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
@@ -316,7 +316,7 @@ public class XctoolRunTestsStepTest {
                     "-appTest",
                     "/path/to/FooAppTest.xctest:/path/to/Foo.app"))
             .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
@@ -369,7 +369,7 @@ public class XctoolRunTestsStepTest {
                     "-logicTest",
                     "/path/to/Foo.xctest"))
             .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     // Test failure is indicated by xctool exiting with exit code 1, so it shouldn't
@@ -424,7 +424,7 @@ public class XctoolRunTestsStepTest {
                     "-logicTest",
                     "/path/to/Foo.xctest"))
             .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolFailure = new FakeProcess(400, "", "");
@@ -481,7 +481,7 @@ public class XctoolRunTestsStepTest {
                     "/path/to/BarTest.xctest",
                     "-listTestsOnly"))
             .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     try (InputStream stdout =
@@ -508,7 +508,7 @@ public class XctoolRunTestsStepTest {
                   "-only",
                   "/path/to/BarTest.xctest:BarTest/testYetAnotherMagicValue")
               .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-              .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+              .setDirectory(projectFilesystem.getRootPath().getPath())
               .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
               .build();
       FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");
@@ -572,7 +572,7 @@ public class XctoolRunTestsStepTest {
                     "/path/to/BarTest.xctest",
                     "-listTestsOnly"))
             .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolListTestsFailureProcess =
@@ -637,7 +637,7 @@ public class XctoolRunTestsStepTest {
                     "/path/to/BarTest.xctest",
                     "-listTestsOnly"))
             .setEnvironment(ImmutableMap.of("DEVELOPER_DIR", "/path/to/developer/dir"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     try (InputStream stdout =
@@ -704,7 +704,7 @@ public class XctoolRunTestsStepTest {
                     "XCTOOL_TEST_ENV_TEST_LOG_LEVEL", "verbose",
                     "XCTOOL_TEST_ENV_FB_REFERENCE_IMAGE_DIR", "/path/to/snapshotimages",
                     "LLVM_PROFILE_FILE", "/tmp/some.profraw"))
-            .setDirectory(projectFilesystem.getRootPath().toAbsolutePath())
+            .setDirectory(projectFilesystem.getRootPath().getPath())
             .setRedirectOutput(ProcessBuilder.Redirect.PIPE)
             .build();
     FakeProcess fakeXctoolSuccess = new FakeProcess(0, "", "");

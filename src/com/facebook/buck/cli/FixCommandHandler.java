@@ -1,21 +1,23 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.doctor.BuildLogHelper;
@@ -26,7 +28,6 @@ import com.facebook.buck.support.fix.BuckFixSpecParser;
 import com.facebook.buck.support.fix.BuckFixSpecWriter;
 import com.facebook.buck.support.fix.BuckRunSpec;
 import com.facebook.buck.support.fix.FixBuckConfig;
-import com.facebook.buck.support.fix.ImmutableBuckRunSpec;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
@@ -179,12 +180,13 @@ public class FixCommandHandler {
     }
 
     Path runPath = commandArgsPath.get();
-    Path repositoryRoot = filesystem.getRootPath();
+    AbsPath repositoryRoot = filesystem.getRootPath();
 
     ImmutableList<String> fixScript =
-        fixConfig.getInterpolatedFixScript(fixConfig.getFixScript().get(), repositoryRoot, fixPath);
+        fixConfig.getInterpolatedFixScript(
+            fixConfig.getFixScript().get(), repositoryRoot.getPath(), fixPath);
 
-    BuckRunSpec runSpec = new ImmutableBuckRunSpec(fixScript, environment, repositoryRoot, true);
+    BuckRunSpec runSpec = BuckRunSpec.of(fixScript, environment, repositoryRoot.getPath(), true);
 
     // If the fix command was invoked automatically, make sure to tell users how they can
     // run buck fix on this specific build id manually with the `buck fix` command
@@ -228,7 +230,7 @@ public class FixCommandHandler {
 
       Path specPath =
           BuckFixSpecWriter.writeSpecToLogDir(
-              filesystem.getRootPath(), invocationInfo, fixSpec.getLeft());
+              filesystem.getRootPath().getPath(), invocationInfo, fixSpec.getLeft());
       LOG.info("wrote fix spec file to: %s", specPath);
 
       return Optional.of(fixSpec.getLeft());

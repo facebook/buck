@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.event.listener;
 
 import static org.junit.Assert.assertEquals;
@@ -45,19 +46,19 @@ public class RemoteExecutionStateRendererTest {
 
   @Test
   public void testGetSortedIds_NonEmptyTargets() {
-    testRenderer = createTestRenderer(createBuildTargets(4));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)));
     assertEquals(ImmutableList.of(0L, 1L, 2L, 3L), testRenderer.getSortedIds(/* unused= */ false));
   }
 
   @Test
   public void testGetSortedIds_EmptyTargets() {
-    testRenderer = createTestRenderer(createBuildTargets(0));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(0)));
     assertEquals(ImmutableList.of(), testRenderer.getSortedIds(/* unused= */ false));
   }
 
   @Test
   public void testTargetsGetFilteredByElapsedTime() {
-    testRenderer = createTestRenderer(createBuildTargets(9));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(9)));
     // Timestamps are 2100, 2200, 2300, 2400, 2500, 2600, 2700, 2800, 2900; last three should be
     // filtered out
     assertEquals(
@@ -67,13 +68,13 @@ public class RemoteExecutionStateRendererTest {
   @Test
   public void testRenderStatusLine() {
     int numTargets = 4;
-    testRenderer = createTestRenderer(createBuildTargets(numTargets));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(numTargets)));
 
     for (int i = 0; i < numTargets; i++) {
       // e.g. [RE]  - //:target0... 0.9s
       assertEquals(
           "[RE]  - //:target" + i + "... 0." + (9 - i) + "s",
-          testRenderer.renderStatusLine(Long.valueOf(i), new StringBuilder()));
+          testRenderer.renderStatusLine(Long.valueOf(i)));
     }
   }
 
@@ -81,32 +82,32 @@ public class RemoteExecutionStateRendererTest {
   public void testRenderStatusLine_ThrowsExceptionIfGivenIdIsInvalid() {
     expectedException.expect(IllegalArgumentException.class);
     expectedException.expectMessage("Received invalid targetId.");
-    testRenderer = createTestRenderer(createBuildTargets(4));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)));
 
-    testRenderer.renderStatusLine(4L, new StringBuilder());
+    testRenderer.renderStatusLine(4L);
   }
 
   @Test
   public void testRenderShortStatus_ThrowsExceptionIfGivenIdIsInvalid() {
     expectedException.expect(IllegalArgumentException.class);
     expectedException.expectMessage("Received invalid targetId.");
-    testRenderer = createTestRenderer(createBuildTargets(4));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(4)));
 
-    testRenderer.renderStatusLine(-1L, new StringBuilder());
+    testRenderer.renderStatusLine(-1L);
   }
 
   @Test
   public void testRenderShortStatus() {
     int numTargets = 4;
-    testRenderer = createTestRenderer(createBuildTargets(numTargets));
+    testRenderer = createTestRenderer(getEvents(createBuildTargets(numTargets)));
 
     for (int i = 0; i < numTargets; i++) {
       assertEquals("[RE] [.]", testRenderer.renderShortStatus(Long.valueOf(i)));
     }
   }
 
-  private ImmutableList<RemoteExecutionActionEvent.Started> createBuildTargets(int numTargets) {
-    ImmutableList.Builder<RemoteExecutionActionEvent.Started> builder = ImmutableList.builder();
+  private ImmutableList<BuildTargetWrapper> createBuildTargets(int numTargets) {
+    ImmutableList.Builder<BuildTargetWrapper> builder = ImmutableList.builder();
 
     long startTimeMillis = 2100;
     for (int i = 0; i < numTargets; i++) {
@@ -117,7 +118,7 @@ public class RemoteExecutionStateRendererTest {
       EasyMock.expect(mockEvent.getBuildTarget()).andReturn(target).anyTimes();
       EasyMock.replay(mockEvent);
       startTimeMillis += 100L;
-      builder.add(mockEvent);
+      builder.add(new BuildTargetWrapper(target, mockEvent));
     }
 
     return builder.build();
@@ -133,5 +134,21 @@ public class RemoteExecutionStateRendererTest {
         MINIMUM_DURATION_MILLIS,
         MAX_CONCURRENT_EXECUTIONS,
         buildTargets);
+  }
+
+  private ImmutableList<RemoteExecutionActionEvent.Started> getEvents(
+      ImmutableList<BuildTargetWrapper> wrappers) {
+    return ImmutableList.copyOf(
+        wrappers.stream().map(w -> w.event).toArray(RemoteExecutionActionEvent.Started[]::new));
+  }
+
+  private static class BuildTargetWrapper {
+    private final BuildTarget target;
+    private final RemoteExecutionActionEvent.Started event;
+
+    private BuildTargetWrapper(BuildTarget target, RemoteExecutionActionEvent.Started event) {
+      this.target = target;
+      this.event = event;
+    }
   }
 }

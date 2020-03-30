@@ -6,6 +6,20 @@ genrule(
 )
 
 genrule(
+    name = "bar_with_multiple_outputs",
+    outs = {
+        "output1": [
+            "bar",
+        ],
+        "output2": [
+            "baz",
+        ],
+    },
+    bash = "touch $OUT/bar && touch $OUT/baz",
+    cmd_exe = "(echo something)>%OUT%\\bar && (echo something)>%OUT%\\baz",
+)
+
+genrule(
     name = "foo",
     srcs = [
         ":bar",

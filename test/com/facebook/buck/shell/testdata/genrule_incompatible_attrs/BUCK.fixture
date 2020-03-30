@@ -1,0 +1,9 @@
+genrule(
+    name = "binary",
+    out = "out.bat",
+    outs = {
+        "label": ["out.bat"],
+    },
+    bash = "(echo \"#!/bin/sh\"; echo \"echo hi\") > $OUT && chmod +x $OUT",
+    cmd_exe = "powershell -Command \"Out-File -FilePath $env:OUT -Encoding ascii -InputObject \\\"exit 0\\\"\"",
+)

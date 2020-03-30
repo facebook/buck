@@ -15,7 +15,7 @@ for pkg in ["primary", "secondary1", "secondary2"]:
         package = "com." + pkg,
         res = {
             "values/all.xml": ":generate_" + pkg,
-        }
+        },
     )
 
     genrule(

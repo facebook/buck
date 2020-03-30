@@ -1,26 +1,30 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.filesystem.impl;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.EmbeddedCellBuckOutInfo;
 import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.PathMatcher;
+import com.facebook.buck.io.filesystem.ProjectFilesystemDelegatePair;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.windowsfs.WindowsFS;
@@ -57,24 +61,44 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
   @Override
   public DefaultProjectFilesystem createProjectFilesystem(
-      Path root, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
-    BuckPaths buckPaths = getConfiguredBuckPaths(root, config, embeddedCellBuckOutInfo);
+      CanonicalCellName cellName,
+      AbsPath root,
+      Config config,
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
+      boolean buckOutIncludeTargetConfigHash) {
+    BuckPaths buckPaths =
+        getConfiguredBuckPaths(
+            cellName,
+            root.getPath(),
+            config,
+            embeddedCellBuckOutInfo,
+            buckOutIncludeTargetConfigHash);
+    ProjectFilesystemDelegatePair delegatePair =
+        ProjectFilesystemDelegateFactory.newInstance(root.getPath(), config);
     return new DefaultProjectFilesystem(
         root,
-        extractIgnorePaths(root, config, buckPaths, embeddedCellBuckOutInfo),
+        extractIgnorePaths(root.getPath(), config, buckPaths, embeddedCellBuckOutInfo),
         buckPaths,
-        ProjectFilesystemDelegateFactory.newInstance(root, config),
+        delegatePair.getGeneralDelegate(),
+        delegatePair,
         getWindowsFSInstance());
   }
 
   @Override
-  public DefaultProjectFilesystem createProjectFilesystem(Path root, Config config) {
-    return createProjectFilesystem(root, config, Optional.empty());
+  public DefaultProjectFilesystem createProjectFilesystem(
+      CanonicalCellName cellName,
+      AbsPath root,
+      Config config,
+      boolean buckOutIncludeTargetConfigHash) {
+    return createProjectFilesystem(
+        cellName, root, config, Optional.empty(), buckOutIncludeTargetConfigHash);
   }
 
   @Override
-  public DefaultProjectFilesystem createProjectFilesystem(Path root) {
-    return createProjectFilesystem(root, new Config());
+  public DefaultProjectFilesystem createProjectFilesystem(
+      CanonicalCellName cellName, AbsPath root, boolean buckOutIncludeTargetCofigHash) {
+    final Config config = new Config();
+    return createProjectFilesystem(cellName, root, config, buckOutIncludeTargetCofigHash);
   }
 
   private static ImmutableSet<PathMatcher> extractIgnorePaths(
@@ -86,7 +110,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
 
     FileSystem rootFs = root.getFileSystem();
 
-    builder.add(RecursiveFileMatcher.of(rootFs.getPath(".idea")));
+    builder.add(RecursiveFileMatcher.of(RelPath.of(rootFs.getPath(".idea"))));
 
     String projectKey = "project";
     String ignoreKey = "ignore";
@@ -136,11 +160,12 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       if (pathToAdd.isAbsolute()) {
         pathToAdd = root.relativize(pathToAdd);
       }
-      builder.add(RecursiveFileMatcher.of(pathToAdd));
+      builder.add(RecursiveFileMatcher.of(RelPath.of(pathToAdd)));
     }
   }
 
-  private static Optional<String> getConfiguredBuckOut(BuckPaths defaultBuckPaths, Config config) {
+  private static Path getConfiguredBuckOut(
+      Optional<String> configuredBuckOut, Path buckOutPath, Path rootPath) {
     // You currently cannot truly configure the BuckOut directory today.
     // The use of ConfiguredBuckOut and project.buck_out here is IMHO
     // confusingly "partial" support for this feature.
@@ -150,37 +175,42 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     // us to ensure any ConfiguredBuckOut is a relative path underneath our
     // top-level BuckOut (which happily enough, FBCode already does for their current
     // use: "buck-out/dev"). We enforce that relativity here in a disgusting way.
-    Optional<String> configuredBuckOut = config.get("project", "buck_out");
+    String buckOut = buckOutPath.toString();
     if (configuredBuckOut.isPresent()) {
       String value = configuredBuckOut.get();
-      String buckOut = defaultBuckPaths.getBuckOut().toString();
       if (value.startsWith(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME)
           && buckOut != BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME) {
-        configuredBuckOut =
-            Optional.of(value.replace(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME, buckOut));
+        value = value.replace(BuckConstant.DEFAULT_BUCK_OUT_DIR_NAME, buckOut);
       }
+
+      return rootPath.getFileSystem().getPath(value);
     }
 
-    return configuredBuckOut;
+    return buckOutPath;
   }
 
   private static BuckPaths getConfiguredBuckPaths(
-      Path rootPath, Config config, Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo) {
-    BuckPaths buckPaths = BuckPaths.createDefaultBuckPaths(rootPath);
+      CanonicalCellName cellName,
+      Path rootPath,
+      Config config,
+      Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo,
+      boolean buckOutIncludeTargetConfigHash) {
+    BuckPaths buckPaths =
+        BuckPaths.createDefaultBuckPaths(cellName, rootPath, buckOutIncludeTargetConfigHash);
+    Optional<String> configuredProjectBuckOut = config.get("project", "buck_out");
+
     if (embeddedCellBuckOutInfo.isPresent()) {
-      Path cellBuckOut = embeddedCellBuckOutInfo.get().getCellBuckOut();
-      buckPaths =
-          buckPaths
-              .withConfiguredBuckOut(rootPath.relativize(cellBuckOut))
-              .withBuckOut(rootPath.relativize(cellBuckOut));
+      Path buckOut = embeddedCellBuckOutInfo.get().getCellBuckOut();
+      buckOut = rootPath.relativize(buckOut);
+      buckPaths = buckPaths.withConfiguredBuckOut(buckOut).withBuckOut(buckOut);
     } else {
-      Optional<String> configuredBuckOut = getConfiguredBuckOut(buckPaths, config);
-      if (configuredBuckOut.isPresent()) {
-        buckPaths =
-            buckPaths.withConfiguredBuckOut(
-                rootPath.getFileSystem().getPath(configuredBuckOut.get()));
+      Path buckOut = buckPaths.getBuckOut();
+      if (configuredProjectBuckOut.isPresent()) {
+        buckOut = getConfiguredBuckOut(configuredProjectBuckOut, buckOut, rootPath);
+        buckPaths = buckPaths.withConfiguredBuckOut(buckOut);
       }
     }
+
     return buckPaths;
   }
 
@@ -202,17 +232,19 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   @Override
-  public DefaultProjectFilesystem createOrThrow(Path path) {
+  public DefaultProjectFilesystem createOrThrow(
+      CanonicalCellName cellName, AbsPath path, boolean buckOutIncludeTargetCofigHash) {
     try {
       // toRealPath() is necessary to resolve symlinks, allowing us to later
       // check whether files are inside or outside of the project without issue.
-      return createProjectFilesystem(path.toRealPath().normalize());
+      return createProjectFilesystem(
+          cellName, path.toRealPath().normalize(), buckOutIncludeTargetCofigHash);
     } catch (IOException e) {
       throw new HumanReadableException(
           String.format(
               ("Failed to resolve project root [%s]."
                   + "Check if it exists and has the right permissions."),
-              path.toAbsolutePath()),
+              path),
           e);
     }
   }

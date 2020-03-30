@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.skylark.function;
@@ -72,7 +72,30 @@ public interface SkylarkRuleFunctionsApi {
             type = SkylarkDict.class,
             positional = false,
             named = true,
-            doc = "A mapping of parameter names to the type of value that is expected")
+            doc = "A mapping of parameter names to the type of value that is expected"),
+        @Param(
+            name = "infer_run_info",
+            type = Boolean.class,
+            positional = false,
+            named = true,
+            defaultValue = "False",
+            doc =
+                "Whether a RunInfo provider should be inferred for this rule. If false, "
+                    + "`implementation` must return a RunInfo provider in order to make the target "
+                    + "executable. If true, the `implementation` function MUST not return a RunInfo "
+                    + "provider. One will be created based on DefaultInfo. If a RunInfo instance "
+                    + "cannot be inferred (e.g. if more than one default output was declared), "
+                    + "an error will occur. "),
+        @Param(
+            name = "test",
+            type = Boolean.class,
+            positional = false,
+            named = true,
+            defaultValue = "False",
+            doc =
+                "Whether this rule is a test rule or not. If true, a TestInfo and RunInfo provider "
+                    + "must be returned. If a TestInfo provider is not returned, Buck will attempt "
+                    + "to create one from various implicit parameters.")
       },
       useEnvironment = true,
       useAst = true,
@@ -80,6 +103,8 @@ public interface SkylarkRuleFunctionsApi {
   SkylarkUserDefinedRule rule(
       BaseFunction implementation,
       SkylarkDict<String, AttributeHolder> attrs,
+      boolean executable,
+      boolean test,
       Location loc,
       FuncallExpression ast,
       Environment env)

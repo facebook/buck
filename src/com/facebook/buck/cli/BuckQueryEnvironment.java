@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -19,7 +19,11 @@ package com.facebook.buck.cli;
 import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
 
 import com.facebook.buck.cli.OwnersReport.Builder;
+import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.QueryTarget;
@@ -29,9 +33,10 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversal;
+import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
+import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.GraphTraversable;
+import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
@@ -44,6 +49,7 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconfiguredTargetToTargetUniquenessChecker;
 import com.facebook.buck.query.AllPathsFunction;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.AttrRegexFilterFunction;
@@ -65,6 +71,7 @@ import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.QueryTargetAccessor;
 import com.facebook.buck.util.MoreExceptions;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Functions;
@@ -80,7 +87,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -137,6 +143,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   // traverses the graph in parallel.
   private MutableDirectedGraph<TargetNode<?>> graph = MutableDirectedGraph.createConcurrent();
   private Map<BuildTarget, TargetNode<?>> targetsToNodes = new ConcurrentHashMap<>();
+  private TemporaryUnconfiguredTargetToTargetUniquenessChecker checker;
 
   @VisibleForTesting
   protected BuckQueryEnvironment(
@@ -164,6 +171,9 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     this.targetPatternEvaluator = targetPatternEvaluator;
     this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator);
     this.typeCoercerFactory = typeCoercerFactory;
+    this.checker =
+        TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(
+            BuildBuckConfig.of(rootCell.getBuckConfig()).shouldBuckOutIncludeTargetConfigHash());
   }
 
   public static BuckQueryEnvironment from(
@@ -187,13 +197,18 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   public static BuckQueryEnvironment from(
       CommandRunnerParams params, PerBuildState parserState, ParsingContext parsingContext) {
     return from(
-        params.getCell(),
+        params.getCells().getRootCell(),
         OwnersReport.builder(
-            params.getCell(), params.getParser(), parserState, params.getTargetConfiguration()),
+            params.getCells().getRootCell(),
+            params.getClientWorkingDir(),
+            params.getParser(),
+            parserState,
+            params.getTargetConfiguration()),
         params.getParser(),
         parserState,
         new TargetPatternEvaluator(
-            params.getCell(),
+            params.getCells().getRootCell(),
+            params.getClientWorkingDir(),
             params.getBuckConfig(),
             params.getParser(),
             // We disable mapping //path/to:lib to //path/to:lib#default,static
@@ -251,7 +266,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     }
 
     try {
-      return parser.getTargetNode(parserState, buildTarget);
+      return parser.getTargetNodeAssertCompatible(
+          parserState, buildTarget, DependencyStack.top(buildTarget));
     } catch (BuildFileParseException e) {
       throw new QueryException(e, "Error getting target node for %s\n%s", target, e.getMessage());
     }
@@ -319,7 +335,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   public Set<QueryFileTarget> getInputs(QueryBuildTarget target) throws QueryException {
     TargetNode<?> node = getNode(target);
     BuildTarget buildTarget = target.getBuildTarget();
-    Cell cell = rootCell.getCell(buildTarget);
+    Cell cell = rootCell.getCell(buildTarget.getCell());
     return node.getInputs().stream()
         .map(
             path ->
@@ -327,7 +343,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
                     cell.getFilesystem(),
                     MorePaths.relativize(
                         rootCell.getFilesystem().getRootPath(),
-                        cell.getFilesystem().resolve(path))))
+                        AbsPath.of(cell.getFilesystem().resolve(path)))))
         .map(QueryFileTarget::of)
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -373,7 +389,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
     try {
       List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
       for (BuildTarget buildTarget : newBuildTargets) {
-        discoverNewTargetsConcurrently(buildTarget, jobsCache)
+        discoverNewTargetsConcurrently(buildTarget, DependencyStack.top(buildTarget), jobsCache)
             .ifPresent(dep -> depsFuture.add(dep));
       }
       Futures.allAsList(depsFuture).get();
@@ -390,7 +406,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
           e, "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e));
     }
 
-    GraphTraversable<BuildTarget> traversable =
+    GraphTraversableWithPayload<BuildTarget, TargetNode<?>> traversable =
         target -> {
           TargetNode<?> node =
               Preconditions.checkNotNull(
@@ -406,18 +422,16 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
           //  - there are no new edges or nodes to be discovered by descending into the "old" nodes,
           // making this node safe to skip.
           if (graph.getNodes().contains(node)) {
-            return ImmutableSet.<BuildTarget>of().iterator();
+            return new Pair<>(node, ImmutableSet.<BuildTarget>of().iterator());
           }
-          return node.getParseDeps().iterator();
+          return new Pair<>(node, node.getParseDeps().iterator());
         };
 
-    AcyclicDepthFirstPostOrderTraversal<BuildTarget> targetNodeTraversal =
-        new AcyclicDepthFirstPostOrderTraversal<>(traversable);
+    AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, TargetNode<?>> targetNodeTraversal =
+        new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
     try {
-      for (BuildTarget buildTarget : targetNodeTraversal.traverse(newBuildTargets)) {
-        TargetNode<?> node =
-            Preconditions.checkNotNull(
-                targetsToNodes.get(buildTarget), "Couldn't find TargetNode for %s", buildTarget);
+      for (Pair<BuildTarget, TargetNode<?>> entry : targetNodeTraversal.traverse(newBuildTargets)) {
+        TargetNode<?> node = entry.getSecond();
         graph.addNode(node);
         for (BuildTarget dep : node.getParseDeps()) {
           graph.addEdge(
@@ -426,7 +440,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
                   targetsToNodes.get(dep), "Couldn't find TargetNode for %s", dep));
         }
       }
-    } catch (AcyclicDepthFirstPostOrderTraversal.CycleException e) {
+    } catch (CycleException e) {
       throw new QueryException(e, e.getMessage());
     }
 
@@ -434,7 +448,9 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   }
 
   private Optional<ListenableFuture<Unit>> discoverNewTargetsConcurrently(
-      BuildTarget buildTarget, ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache)
+      BuildTarget buildTarget,
+      DependencyStack dependencyStack,
+      ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache)
       throws BuildFileParseException {
     ListenableFuture<Unit> job = jobsCache.get(buildTarget);
     if (job != null) {
@@ -447,13 +463,14 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
 
     ListenableFuture<Unit> future =
         Futures.transformAsync(
-            parser.getTargetNodeJob(parserState, buildTarget),
+            parser.getTargetNodeJobAssertCompatible(parserState, buildTarget, dependencyStack),
             targetNode -> {
               targetsToNodes.put(buildTarget, targetNode);
+              checker.addTarget(buildTarget, dependencyStack);
               List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
               Set<BuildTarget> parseDeps = targetNode.getParseDeps();
               for (BuildTarget parseDep : parseDeps) {
-                discoverNewTargetsConcurrently(parseDep, jobsCache)
+                discoverNewTargetsConcurrently(parseDep, dependencyStack.child(parseDep), jobsCache)
                     .ifPresent(
                         depWork ->
                             depsFuture.add(
@@ -496,19 +513,23 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   @Override
   public ImmutableSet<QueryFileTarget> getBuildFiles(Set<QueryBuildTarget> targets) {
     ProjectFilesystem cellFilesystem = rootCell.getFilesystem();
-    Path rootPath = cellFilesystem.getRootPath();
-    Preconditions.checkState(rootPath.isAbsolute());
+    AbsPath rootPath = cellFilesystem.getRootPath();
 
     ImmutableSet.Builder<QueryFileTarget> builder =
         ImmutableSet.builderWithExpectedSize(targets.size());
     for (QueryBuildTarget target : targets) {
       BuildTarget buildTarget = target.getBuildTarget();
-      Cell cell = rootCell.getCell(buildTarget);
+      Cell cell = rootCell.getCell(buildTarget.getCell());
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
-      Optional<Path> path = buildFileTree.getBasePathOfAncestorTarget(buildTarget.getBasePath());
+      Optional<RelPath> path =
+          buildFileTree.getBasePathOfAncestorTarget(
+              buildTarget
+                  .getCellRelativeBasePath()
+                  .getPath()
+                  .toRelPath(cellFilesystem.getFileSystem()));
       Preconditions.checkState(path.isPresent());
 
-      Path buildFilePath =
+      RelPath buildFilePath =
           MorePaths.relativize(
               rootPath,
               cell.getFilesystem()
@@ -545,7 +566,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
   public ImmutableSet<? extends QueryTarget> getTargetsInAttribute(
       QueryBuildTarget target, String attribute) throws QueryException {
     return QueryTargetAccessor.getTargetsInAttribute(
-        typeCoercerFactory, getNode(target), attribute);
+        typeCoercerFactory, getNode(target), attribute, rootCell.getCellNameResolver());
   }
 
   @Override
@@ -553,7 +574,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryBuildTarget> 
       QueryBuildTarget target, String attribute, Predicate<Object> predicate)
       throws QueryException {
     return QueryTargetAccessor.filterAttributeContents(
-        typeCoercerFactory, getNode(target), attribute, predicate);
+        typeCoercerFactory, getNode(target), attribute, predicate, rootCell.getCellNameResolver());
   }
 
   @Override

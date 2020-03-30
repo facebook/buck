@@ -1,22 +1,22 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxPreprocessables;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
@@ -43,7 +43,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -106,18 +106,12 @@ public class HaskellPrebuiltLibraryDescription
         }
         HaskellPackage pkg = pkgBuilder.build();
 
-        return HaskellCompileInput.builder()
-            .addAllFlags(args.getExportedCompilerFlags())
-            .setPackage(pkg)
-            .build();
+        return ImmutableHaskellCompileInput.of(args.getExportedCompilerFlags(), pkg);
       }
 
       @Override
       public HaskellHaddockInput getHaddockInput(HaskellPlatform platform) {
-        return HaskellHaddockInput.builder()
-            .addAllInterfaces(ImmutableList.of())
-            .addAllHaddockOutputDirs(ImmutableList.of())
-            .build();
+        return ImmutableHaskellHaddockInput.of(ImmutableList.of(), ImmutableList.of());
       }
 
       public NativeLinkableInput getNativeLinkableInput(
@@ -221,10 +215,8 @@ public class HaskellPrebuiltLibraryDescription
     };
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractHaskellPrebuiltLibraryDescriptionArg
-      extends CommonDescriptionArg, HasDeclaredDeps {
+  @RuleArg
+  interface AbstractHaskellPrebuiltLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
     String getVersion();
 
     @Value.Default

@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -22,7 +23,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.args.Arg;
 import java.nio.file.Path;
 import java.util.function.Consumer;
@@ -47,12 +48,13 @@ abstract class AbstractOutputArg implements Arg {
    * @param path the {@link SourcePath} of the rule's output
    * @return the {@link Path} to be used for generating the {@link Arg}
    */
-  abstract Path sourcePathToArgPath(SourcePath path, SourcePathResolver resolver);
+  abstract Path sourcePathToArgPath(SourcePath path, SourcePathResolverAdapter resolver);
 
   @Override
-  public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+  public void appendToCommandLine(
+      Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
     // Ideally, we'd support some way to query the `HasSupplementalOutputs` interface via a
-    // `SourcePathResolver` so we wouldn't need to capture the `BuildRuleResolver`.
+    // `SourcePathResolverAdapter` so we wouldn't need to capture the `BuildRuleResolver`.
     BuildRule rule =
         resolver
             .getRuleOptional(target)

@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -21,13 +21,12 @@ import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.support.bgtasks.BackgroundTask;
-import com.facebook.buck.support.bgtasks.ImmutableBackgroundTask;
 import com.facebook.buck.support.bgtasks.TaskAction;
 import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.build.report.BuildReportFileUploader;
@@ -50,7 +49,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.annotation.concurrent.GuardedBy;
-import org.immutables.value.Value;
 
 public class RuleKeyDiagnosticsListener implements BuckEventListener {
   private static final Logger LOG = Logger.get(RuleKeyDiagnosticsListener.class);
@@ -58,6 +56,9 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   // Flush every 1000 keys or 10 MB whichever comes first (some keys can be as large as 1 MB)
   private static final int DEFAULT_MIN_KEYS_FOR_AUTO_FLUSH = 1000;
   private static final int DEFAULT_MIN_SIZE_FOR_AUTO_FLUSH = 10 * 1024 * 1024; // 10 MB
+
+  private static final String TRACE_KIND_RULE_DIAG_GRAPH = "rule_diag_graph";
+  private static final String TRACE_KIND_RULE_DIAG_KEYS = "rule_diag_keys";
 
   private final ProjectFilesystem projectFilesystem;
   private final InvocationInfo info;
@@ -234,18 +235,20 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
   @Override
   public void close() { // todo same issue w/passed function
     submitFlushDiagKeys();
-    outputExecutor.execute(this::writeDiagGraph);
+    if (!rulesInfo.isEmpty()) {
+      outputExecutor.execute(this::writeDiagGraph);
+    }
 
     Path logDir = info.getLogDirectoryPath();
     RuleKeyDiagnosticsListenerCloseArgs args =
-        RuleKeyDiagnosticsListenerCloseArgs.of(
+        ImmutableRuleKeyDiagnosticsListenerCloseArgs.of(
             outputExecutor,
             buildReportFileUploader,
             logDir.resolve(BuckConstant.RULE_KEY_DIAG_GRAPH_FILE_NAME),
             logDir.resolve(BuckConstant.RULE_KEY_DIAG_KEYS_FILE_NAME));
 
     BackgroundTask<RuleKeyDiagnosticsListenerCloseArgs> task =
-        ImmutableBackgroundTask.of(
+        BackgroundTask.of(
             "RuleKeyDiagnosticsListener_close", new RuleKeyDiagnosticsListenerCloseAction(), args);
     managerScope.schedule(task);
   }
@@ -259,34 +262,42 @@ public class RuleKeyDiagnosticsListener implements BuckEventListener {
     @Override
     public void run(RuleKeyDiagnosticsListenerCloseArgs args) {
       args.getOutputExecutor().shutdown();
-      args.getBuildReportFileUploader()
-          .ifPresent(
-              uploader -> {
-                uploader.uploadFile(args.getRuleDiagGraphFilePath(), "rule_diag_graph");
-                uploader.uploadFile(args.getRuleDiagKeyFilePath(), "rule_diag_keys");
-              });
       try {
         args.getOutputExecutor().awaitTermination(1, TimeUnit.HOURS);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
+
+      args.getBuildReportFileUploader()
+          .ifPresent(
+              uploader -> {
+                if (args.getRuleDiagGraphFilePath().toFile().exists()) {
+                  uploader.uploadFile(args.getRuleDiagGraphFilePath(), TRACE_KIND_RULE_DIAG_GRAPH);
+                } else {
+                  LOG.debug(
+                      "Not uploading %s. %s doesn't exist.",
+                      TRACE_KIND_RULE_DIAG_GRAPH, args.getRuleDiagGraphFilePath().toString());
+                }
+                if (args.getRuleDiagKeyFilePath().toFile().exists()) {
+                  uploader.uploadFile(args.getRuleDiagKeyFilePath(), TRACE_KIND_RULE_DIAG_KEYS);
+                } else {
+                  LOG.debug(
+                      "Not uploading %s. %s doesn't exist.",
+                      TRACE_KIND_RULE_DIAG_KEYS, args.getRuleDiagKeyFilePath().toString());
+                }
+              });
     }
   }
 
   /** Arguments to {@link RuleKeyDiagnosticsListenerCloseAction}. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  abstract static class AbstractRuleKeyDiagnosticsListenerCloseArgs {
-    @Value.Parameter
+  @BuckStyleValue
+  abstract static class RuleKeyDiagnosticsListenerCloseArgs {
     public abstract ExecutorService getOutputExecutor();
 
-    @Value.Parameter
     public abstract Optional<BuildReportFileUploader> getBuildReportFileUploader();
 
-    @Value.Parameter
     public abstract Path getRuleDiagGraphFilePath();
 
-    @Value.Parameter
     public abstract Path getRuleDiagKeyFilePath();
   }
 

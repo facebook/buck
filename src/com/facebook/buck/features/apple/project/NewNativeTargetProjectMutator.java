@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.project;
@@ -29,6 +29,7 @@ import com.facebook.buck.apple.RuleUtils;
 import com.facebook.buck.apple.XcodePostbuildScriptDescription;
 import com.facebook.buck.apple.XcodePrebuildScriptDescription;
 import com.facebook.buck.apple.XcodeScriptDescriptionArg;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.CopyFilePhaseDestinationSpec;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
@@ -57,6 +58,7 @@ import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxSource;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
+import com.facebook.buck.features.apple.common.CopyInXcode;
 import com.facebook.buck.features.js.JsBundleOutputs;
 import com.facebook.buck.features.js.JsBundleOutputsDescription;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -113,6 +115,7 @@ class NewNativeTargetProjectMutator {
   private boolean frameworkHeadersEnabled = false;
   private ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags =
       ImmutableMap.of();
+  private ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags = ImmutableMap.of();
   private ImmutableList<String> targetGroupPath = ImmutableList.of();
   private ImmutableSet<SourceWithFlags> sourcesWithFlags = ImmutableSet.of();
   private ImmutableSet<SourcePath> extraXcodeSources = ImmutableSet.of();
@@ -168,6 +171,12 @@ class NewNativeTargetProjectMutator {
   public NewNativeTargetProjectMutator setLangPreprocessorFlags(
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags) {
     this.langPreprocessorFlags = langPreprocessorFlags;
+    return this;
+  }
+
+  public NewNativeTargetProjectMutator setLangCompilerFlags(
+      ImmutableMap<CxxSource.Type, ImmutableList<String>> langCompilerFlags) {
+    this.langCompilerFlags = langCompilerFlags;
     return this;
   }
 
@@ -292,7 +301,8 @@ class NewNativeTargetProjectMutator {
   }
 
   public Result buildTargetAndAddToProject(PBXProject project, boolean addBuildPhases) {
-    PBXNativeTarget target = new PBXNativeTarget(targetName);
+    PBXNativeTarget target =
+        new PBXNativeTarget(targetName, AbstractPBXObjectFactory.DefaultFactory());
 
     Optional<PBXGroup> optTargetGroup;
     if (addBuildPhases) {
@@ -455,9 +465,21 @@ class NewNativeTargetProjectMutator {
       customLangPreprocessorFlags = langPreprocessorFlags.get(sourceType.get());
     }
 
+    ImmutableList<String> customLangCompilerFlags = ImmutableList.of();
+    if (sourceType.isPresent()) {
+      Optional<CxxSource.Type> sourceProcessedLanguage =
+          CxxSource.Type.fromLanguage(sourceType.get().getPreprocessedLanguage());
+
+      if (sourceProcessedLanguage.isPresent()
+          && langCompilerFlags.containsKey(sourceProcessedLanguage.get())) {
+        customLangCompilerFlags = langCompilerFlags.get(sourceProcessedLanguage.get());
+      }
+    }
+
     ImmutableList<String> customFlags =
         ImmutableList.copyOf(
-            Iterables.concat(customLangPreprocessorFlags, sourceWithFlags.getFlags()));
+            Iterables.concat(
+                customLangPreprocessorFlags, customLangCompilerFlags, sourceWithFlags.getFlags()));
     if (!customFlags.isEmpty()) {
       NSDictionary settings = new NSDictionary();
       settings.put("COMPILER_FLAGS", Joiner.on(' ').join(customFlags));
@@ -855,14 +877,14 @@ class NewNativeTargetProjectMutator {
         builder.add(
             CopyInXcode.of(
                 CopyInXcode.SourceType.FOLDER_CONTENTS,
-                cell.getFilesystem().relativize(jsOutputPath),
+                cell.getFilesystem().relativize(jsOutputPath).getPath(),
                 CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
                 Paths.get("")));
         Path resOutputPath = resolver.getSourcePathResolver().getAbsolutePath(resOutput);
         builder.add(
             CopyInXcode.of(
                 CopyInXcode.SourceType.FOLDER_CONTENTS,
-                cell.getFilesystem().relativize(resOutputPath),
+                cell.getFilesystem().relativize(resOutputPath).getPath(),
                 CopyInXcode.DestinationBase.UNLOCALIZED_RESOURCES,
                 Paths.get("")));
       }

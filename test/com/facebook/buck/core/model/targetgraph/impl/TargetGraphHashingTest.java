@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.targetgraph.impl;
@@ -24,12 +24,14 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -40,11 +42,9 @@ import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.ExecutableFinder;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
-import com.facebook.buck.manifestservice.ManifestService;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
@@ -62,7 +62,6 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.facebook.buck.util.ThrowingCloseableMemoizedSupplier;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.google.common.collect.ImmutableList;
@@ -111,21 +110,21 @@ public class TargetGraphHashingTest {
         TestParserFactory.create(executor.get(), cell, knownRuleTypesProvider, eventBus);
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     PerBuildState parserState =
-        PerBuildStateFactory.createFactory(
+        new PerBuildStateFactory(
                 typeCoercerFactory,
-                new DefaultConstructorArgMarshaller(typeCoercerFactory),
+                new DefaultConstructorArgMarshaller(),
                 knownRuleTypesProvider,
                 new ParserPythonInterpreterProvider(cell.getBuckConfig(), new ExecutableFinder()),
                 WatchmanFactory.NULL_WATCHMAN,
                 eventBus,
-                ThrowingCloseableMemoizedSupplier.of(() -> null, ManifestService::close),
-                new FakeFileHashCache(ImmutableMap.of()),
-                new ParsingUnconfiguredBuildTargetViewFactory())
+                new ParsingUnconfiguredBuildTargetViewFactory(),
+                UnconfiguredTargetConfiguration.INSTANCE)
             .create(
                 ParsingContext.builder(cell, MoreExecutors.newDirectExecutorService()).build(),
                 parser.getPermState());
     targetNodeRawAttributesProvider =
-        node -> parser.getTargetNodeRawAttributesJob(parserState, cell, node);
+        node ->
+            parser.getTargetNodeRawAttributesJob(parserState, cell, node, DependencyStack.root());
   }
 
   @Test
@@ -151,7 +150,7 @@ public class TargetGraphHashingTest {
   public void hashChangesWhenSrcContentChanges() throws Exception {
     TargetNode<?> node =
         createJavaLibraryTargetNodeWithSrcs(
-            BuildTargetFactory.newInstance(projectFilesystem, "//foo:lib"),
+            BuildTargetFactory.newInstance("//foo:lib"),
             ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
@@ -202,11 +201,11 @@ public class TargetGraphHashingTest {
   public void twoNodeIndependentRootsTargetGraphHasExpectedHashes() throws InterruptedException {
     TargetNode<?> nodeA =
         createJavaLibraryTargetNodeWithSrcs(
-            BuildTargetFactory.newInstance(projectFilesystem, "//foo:lib"),
+            BuildTargetFactory.newInstance("//foo:lib"),
             ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetNode<?> nodeB =
         createJavaLibraryTargetNodeWithSrcs(
-            BuildTargetFactory.newInstance(projectFilesystem, "//bar:lib"),
+            BuildTargetFactory.newInstance("//bar:lib"),
             ImmutableSet.of(Paths.get("bar/BarLib.java")));
     TargetGraph targetGraphA = TargetGraphFactory.newInstance(nodeA);
     TargetGraph targetGraphB = TargetGraphFactory.newInstance(nodeB);
@@ -278,8 +277,8 @@ public class TargetGraphHashingTest {
 
   @Test
   public void hashChangesForDependentNodeWhenDepsChange() throws InterruptedException {
-    BuildTarget nodeTarget = BuildTargetFactory.newInstance(projectFilesystem, "//foo:lib");
-    BuildTarget depTarget = BuildTargetFactory.newInstance(projectFilesystem, "//dep:lib");
+    BuildTarget nodeTarget = BuildTargetFactory.newInstance("//foo:lib");
+    BuildTarget depTarget = BuildTargetFactory.newInstance("//dep:lib");
 
     TargetGraph targetGraphA =
         createGraphWithANodeAndADep(nodeTarget, depTarget, Paths.get("dep/DepLib1.java"));
@@ -332,16 +331,13 @@ public class TargetGraphHashingTest {
   public void hashingSourceThrowsError() throws Exception {
     TargetNode<?> node =
         createJavaLibraryTargetNodeWithSrcs(
-            BuildTargetFactory.newInstance(projectFilesystem, "//foo:lib"),
+            BuildTargetFactory.newInstance("//foo:lib"),
             ImmutableSet.of(Paths.get("foo/FooLib.java")));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(node);
 
     FileHashLoader cache = new FakeFileHashCache(ImmutableMap.of());
 
-    thrown.expectMessage(
-        "Error reading path "
-            + MorePaths.pathWithPlatformSeparators("foo/FooLib.java")
-            + " for rule //foo:lib");
+    thrown.expectMessage("Error reading path foo/FooLib.java for rule //foo:lib");
 
     new TargetGraphHashing(
             eventBus,

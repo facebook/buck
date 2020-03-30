@@ -4,6 +4,8 @@ java_immutables_library(
     name = "xcode",
     srcs = [
         "GidGenerator.java",
+        "AbstractPBXObjectFactory.java",
+        "PBXObjectGIDFactory.java",
         "XcodeprojSerializer.java",
         "XCScheme.java",
     ] + glob([
@@ -16,6 +18,7 @@ java_immutables_library(
     deps = [
         "//src/com/facebook/buck/core/rulekey:rulekey",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/rules/modern:modern",
         "//src/com/facebook/buck/util:util",
         "//third-party/java/dd-plist:dd-plist",
     ],

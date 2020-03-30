@@ -5,12 +5,12 @@ python_library(
 )
 
 def define_impl(name):
-  python_binary(
-    name = name,
-    main = name + ".py",
-    deps = [ ":impl" ],
-    visibility = [ "PUBLIC" ],
-  )
+    python_binary(
+        name = name,
+        main = name + ".py",
+        deps = [":impl"],
+        visibility = ["PUBLIC"],
+    )
 
 define_impl("unimplemented")
 

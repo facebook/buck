@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -19,6 +19,7 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -26,9 +27,9 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.io.watchman.ImmutableWatchmanOverflowEvent;
-import com.facebook.buck.io.watchman.ImmutableWatchmanPathEvent;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
+import com.facebook.buck.io.watchman.WatchmanOverflowEvent;
+import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
@@ -50,9 +51,9 @@ public class RuleKeyCacheRecyclerTest {
   @Test
   public void pathWatchEventDoesNotInvalidateDifferentInput() {
     DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
-    RuleKeyInput input1 = new ImmutableRuleKeyInput(FILESYSTEM, FILESYSTEM.getPath("input1"));
+    RuleKeyInput input1 = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input1"));
     AddsToRuleKey appendable1 = new AddsToRuleKey() {};
-    RuleKeyInput input2 = new ImmutableRuleKeyInput(FILESYSTEM, FILESYSTEM.getPath("input2"));
+    RuleKeyInput input2 = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input2"));
     AddsToRuleKey appendable2 = new AddsToRuleKey() {};
     cache.get(
         appendable1,
@@ -65,7 +66,7 @@ public class RuleKeyCacheRecyclerTest {
     RuleKeyCacheRecycler<String> recycler =
         RuleKeyCacheRecycler.createAndRegister(EVENT_BUS, cache, ImmutableSet.of(FILESYSTEM));
     recycler.onFilesystemChange(
-        ImmutableWatchmanPathEvent.of(FILESYSTEM.getRootPath(), Kind.MODIFY, input2.getPath()));
+        WatchmanPathEvent.of(FILESYSTEM.getRootPath(), Kind.MODIFY, RelPath.of(input2.getPath())));
     assertTrue(cache.isCached(appendable1));
     assertFalse(cache.isCached(appendable2));
   }
@@ -73,7 +74,7 @@ public class RuleKeyCacheRecyclerTest {
   @Test
   public void pathWatchEventDoesInvalidateDirectoryInputContainingIt() {
     DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
-    RuleKeyInput input = new ImmutableRuleKeyInput(FILESYSTEM, FILESYSTEM.getPath("input"));
+    RuleKeyInput input = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input"));
     AddsToRuleKey appendable = new AddsToRuleKey() {};
     cache.get(
         appendable,
@@ -82,8 +83,8 @@ public class RuleKeyCacheRecyclerTest {
     RuleKeyCacheRecycler<String> recycler =
         RuleKeyCacheRecycler.createAndRegister(EVENT_BUS, cache, ImmutableSet.of(FILESYSTEM));
     recycler.onFilesystemChange(
-        ImmutableWatchmanPathEvent.of(
-            FILESYSTEM.getRootPath(), Kind.MODIFY, input.getPath().resolve("subpath")));
+        WatchmanPathEvent.of(
+            FILESYSTEM.getRootPath(), Kind.MODIFY, RelPath.of(input.getPath().resolve("subpath"))));
     assertFalse(cache.isCached(appendable));
   }
 
@@ -92,7 +93,7 @@ public class RuleKeyCacheRecyclerTest {
     DefaultRuleKeyCache<String> cache = new DefaultRuleKeyCache<>();
 
     // Create a rule key appendable with an input and cache it.
-    RuleKeyInput input1 = new ImmutableRuleKeyInput(FILESYSTEM, FILESYSTEM.getPath("input1"));
+    RuleKeyInput input1 = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input1"));
     AddsToRuleKey appendable1 = new AddsToRuleKey() {};
     cache.get(
         appendable1,
@@ -100,7 +101,7 @@ public class RuleKeyCacheRecyclerTest {
         new NoOpCacheStatsTracker());
 
     // Create another rule key appendable with an input and cache it.
-    RuleKeyInput input2 = new ImmutableRuleKeyInput(FILESYSTEM, FILESYSTEM.getPath("input2"));
+    RuleKeyInput input2 = ImmutableRuleKeyInput.of(FILESYSTEM, FILESYSTEM.getPath("input2"));
     AddsToRuleKey appendable2 = new AddsToRuleKey() {};
     cache.get(
         appendable2,
@@ -115,7 +116,7 @@ public class RuleKeyCacheRecyclerTest {
     assertTrue(cache.isCached(appendable2));
 
     // Send an overflow event and verify everything was invalidated.
-    recycler.onFilesystemChange(ImmutableWatchmanOverflowEvent.of(FILESYSTEM.getRootPath(), ""));
+    recycler.onFilesystemChange(WatchmanOverflowEvent.of(FILESYSTEM.getRootPath(), ""));
     assertFalse(cache.isCached(appendable1));
     assertFalse(cache.isCached(appendable2));
   }

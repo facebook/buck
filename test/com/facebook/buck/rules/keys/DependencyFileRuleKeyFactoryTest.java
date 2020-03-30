@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -33,7 +33,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourcePathFactoryForTests;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -56,7 +56,7 @@ public class DependencyFileRuleKeyFactoryTest {
   public void testKeysWhenInputPathContentsChanges() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = newActionGraphBuilder();
-    SourcePathResolver pathResolver = ruleResolver.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleResolver.getSourcePathResolver();
 
     SourcePath usedSourcePath = PathSourcePath.of(filesystem, Paths.get("usedInput"));
     SourcePath unusedSourcePath = PathSourcePath.of(filesystem, Paths.get("unusedInput"));
@@ -79,7 +79,7 @@ public class DependencyFileRuleKeyFactoryTest {
   @Test
   public void testKeysWhenInputTargetOutputChanges() throws Exception {
     ActionGraphBuilder graphBuilder = newActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
     BuildTarget usedTarget = BuildTargetFactory.newInstance("//:used");
     BuildTarget unusedTarget = BuildTargetFactory.newInstance("//:unused");
@@ -111,7 +111,7 @@ public class DependencyFileRuleKeyFactoryTest {
   public void testKeysWhenInputArchiveMemberChanges() throws Exception {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = newActionGraphBuilder();
-    SourcePathResolver pathResolver = ruleResolver.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleResolver.getSourcePathResolver();
 
     SourcePath archivePath = PathSourcePath.of(filesystem, Paths.get("archive"));
     SourcePath usedSourcePath = ArchiveMemberSourcePath.of(archivePath, Paths.get("used"));
@@ -541,7 +541,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
-    RuleKeyAndInputs res1 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res1 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleFinder)
             .build(rule1, depFileEntries);
 
@@ -549,7 +549,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule2.setCoveredByDepFilePredicate(coveredInputPaths);
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
-    RuleKeyAndInputs res2 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res2 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleFinder)
             .build(rule2, depFileEntries);
 
@@ -817,7 +817,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule1.setCoveredByDepFilePredicate(coveredInputPaths);
     rule1.setExistenceOfInterestPredicate(interestingInputPaths);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashesBefore, true, ImmutableMap.of());
-    RuleKeyAndInputs res1 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res1 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleFinder)
             .buildManifestKey(rule1);
 
@@ -825,7 +825,7 @@ public class DependencyFileRuleKeyFactoryTest {
     rule2.setCoveredByDepFilePredicate(coveredInputPaths);
     rule2.setExistenceOfInterestPredicate(interestingInputPaths);
     hashCache = new FakeFileHashCache(hashesAfter, true, ImmutableMap.of());
-    RuleKeyAndInputs res2 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res2 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleFinder)
             .buildManifestKey(rule2);
 
@@ -844,7 +844,7 @@ public class DependencyFileRuleKeyFactoryTest {
     RuleKeyFieldLoader fieldLoader =
         new RuleKeyFieldLoader(TestRuleKeyConfigurationFactory.create());
     BuildRuleResolver ruleResolver = newActionGraphBuilder();
-    SourcePathResolver pathResolver = ruleResolver.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = ruleResolver.getSourcePathResolver();
 
     SourcePath unusedSourcePath = PathSourcePath.of(filesystem, Paths.get("input0"));
     SourcePath sourcePath = PathSourcePath.of(filesystem, Paths.get("input"));
@@ -864,7 +864,7 @@ public class DependencyFileRuleKeyFactoryTest {
         };
     rule1.setCoveredByDepFilePredicate(coveredPredicate);
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
-    RuleKeyAndInputs res1 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res1 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleResolver)
             .build(rule1, ImmutableList.of(dependencyFileEntry));
 
@@ -875,7 +875,7 @@ public class DependencyFileRuleKeyFactoryTest {
         };
     rule2.setCoveredByDepFilePredicate(coveredPredicate);
     hashCache = new FakeFileHashCache(hashes, true, ImmutableMap.of());
-    RuleKeyAndInputs res2 =
+    DependencyFileRuleKeyFactory.RuleKeyAndInputs res2 =
         new DefaultDependencyFileRuleKeyFactory(fieldLoader, hashCache, ruleResolver)
             .build(rule2, ImmutableList.of(dependencyFileEntry));
 

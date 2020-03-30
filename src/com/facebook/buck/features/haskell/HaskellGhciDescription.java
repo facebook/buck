@@ -1,22 +1,24 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.haskell;
 
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
@@ -33,7 +35,8 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.CxxLinkableEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -48,8 +51,9 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -102,7 +106,7 @@ public class HaskellGhciDescription
     LOG.verbose("%s: omnibus roots: %s", baseTarget, omnibusRoots);
     LOG.verbose("%s: excluded roots: %s", baseTarget, excludedRoots);
 
-    HaskellGhciOmnibusSpec.Builder builder = HaskellGhciOmnibusSpec.builder();
+    ImmutableHaskellGhciOmnibusSpec.Builder builder = ImmutableHaskellGhciOmnibusSpec.builder();
 
     // Calculate excluded roots/deps, and add them to the link.
     ImmutableList<? extends NativeLinkable> transitiveExcludedLinkables =
@@ -259,7 +263,8 @@ public class HaskellGhciDescription
 
   // Return the C/C++ platform to build against.
   private HaskellPlatform getPlatform(BuildTarget target, AbstractHaskellGhciDescriptionArg arg) {
-    HaskellPlatformsProvider haskellPlatformsProvider = getHaskellPlatformsProvider();
+    HaskellPlatformsProvider haskellPlatformsProvider =
+        getHaskellPlatformsProvider(target.getTargetConfiguration());
     FlavorDomain<HaskellPlatform> platforms = haskellPlatformsProvider.getHaskellPlatforms();
 
     Optional<HaskellPlatform> flavorPlatform = platforms.getValue(target);
@@ -305,7 +310,7 @@ public class HaskellGhciDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractHaskellGhciDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
@@ -323,15 +328,17 @@ public class HaskellGhciDescription
                     .forEach(targetGraphOnlyDepsBuilder::add));
   }
 
-  private HaskellPlatformsProvider getHaskellPlatformsProvider() {
+  private HaskellPlatformsProvider getHaskellPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        HaskellPlatformsProvider.DEFAULT_NAME, HaskellPlatformsProvider.class);
+        HaskellPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        HaskellPlatformsProvider.class);
   }
 
   /** Composition of {@link NativeLinkableGroup}s in the omnibus link. */
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractHaskellGhciOmnibusSpec {
+  @BuckStyleValueWithBuilder
+  interface HaskellGhciOmnibusSpec {
 
     // All native nodes which are to be statically linked into the giant combined shared library.
     ImmutableSet<NativeLinkable> getBody();
@@ -346,9 +353,8 @@ public class HaskellGhciDescription
     ImmutableMap<BuildTarget, NativeLinkable> getExcludedTransitiveDeps();
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable(copy = true)
-  interface AbstractHaskellGhciDescriptionArg extends CommonDescriptionArg, HasDepsQuery {
+  @RuleArg
+  interface AbstractHaskellGhciDescriptionArg extends BuildRuleArg, HasDepsQuery {
     @Value.Default
     default SourceSortedSet getSrcs() {
       return SourceSortedSet.EMPTY;
@@ -387,6 +393,14 @@ public class HaskellGhciDescription
     @Value.Default
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformPreloadDeps() {
       return PatternMatchedCollection.of();
+    }
+
+    @Override
+    default HaskellGhciDescriptionArg withDepsQuery(Query query) {
+      if (getDepsQuery().equals(Optional.of(query))) {
+        return (HaskellGhciDescriptionArg) this;
+      }
+      return HaskellGhciDescriptionArg.builder().from(this).setDepsQuery(query).build();
     }
   }
 }

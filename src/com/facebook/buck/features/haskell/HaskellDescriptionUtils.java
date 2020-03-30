@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.haskell;
@@ -57,10 +57,11 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.util.MoreIterables;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -70,6 +71,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class HaskellDescriptionUtils {
@@ -104,7 +106,7 @@ public class HaskellDescriptionUtils {
     ExplicitCxxToolFlags.Builder preprocessorFlagsBuilder = CxxToolFlags.explicitBuilder();
 
     preprocessorFlagsBuilder.setPlatformFlags(
-        StringArg.from(CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C)));
+        CxxSourceTypes.getPlatformPreprocessFlags(cxxPlatform, CxxSource.Type.C));
     for (CxxPreprocessorInput preprocessorInput : cxxPreprocessorInputs) {
       builder
           .addAllIncludes(preprocessorInput.getIncludes())
@@ -331,9 +333,9 @@ public class HaskellDescriptionUtils {
                 Optional.empty(),
                 Optional.empty(),
                 ImmutableList.of(),
-                HaskellSources.builder()
-                    .putModuleMap(HaskellSourceModule.UNUSED, emptyModule.getSourcePathToOutput())
-                    .build()));
+                ImmutableHaskellSources.of(
+                    ImmutableMap.of(
+                        HaskellSourceModule.UNUSED, emptyModule.getSourcePathToOutput()))));
     BuildTarget emptyArchiveTarget = target.withAppendedFlavors(InternalFlavor.of("empty-archive"));
     Archive emptyArchive =
         graphBuilder.addToIndex(
@@ -343,8 +345,7 @@ public class HaskellDescriptionUtils {
                 graphBuilder,
                 platform.getCxxPlatform(),
                 "libempty.a",
-                emptyCompiledModule.getObjects(),
-                /* cacheable */ true));
+                emptyCompiledModule.getObjects()));
     argsBuilder.add(SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();
@@ -469,7 +470,7 @@ public class HaskellDescriptionUtils {
     haskellVisitor.start();
 
     // Build the omnibus composition spec.
-    HaskellGhciOmnibusSpec omnibusSpec =
+    HaskellGhciDescription.HaskellGhciOmnibusSpec omnibusSpec =
         HaskellGhciDescription.getOmnibusSpec(
             buildTarget,
             graphBuilder,
@@ -534,24 +535,28 @@ public class HaskellDescriptionUtils {
         NativeLinkables.getTransitiveNativeLinkables(graphBuilder, omnibusSpec.getDeps());
     NativeLinkables.SharedLibrariesBuilder sharedLibsBuilder =
         new NativeLinkables.SharedLibrariesBuilder();
-    transitiveDeps.stream()
-        // Skip statically linked libraries.
-        .filter(l -> l.getPreferredLinkage() != Linkage.STATIC)
-        .forEach(l -> sharedLibsBuilder.add(l, graphBuilder));
+    sharedLibsBuilder.addAll(
+        graphBuilder,
+        transitiveDeps.stream()
+            // Skip statically linked libraries.
+            .filter(l -> l.getPreferredLinkage() != Linkage.STATIC)
+            .collect(Collectors.toList()));
     ImmutableSortedMap<String, SourcePath> sharedLibs = sharedLibsBuilder.build();
 
     // Build up a set of all transitive preload libs, which are the ones that have been "excluded"
     // from the omnibus link.  These are the ones we need to LD_PRELOAD.
     NativeLinkables.SharedLibrariesBuilder preloadLibsBuilder =
         new NativeLinkables.SharedLibrariesBuilder();
-    omnibusSpec.getExcludedTransitiveDeps().values().stream()
-        // Don't include shared libs for static libraries -- except for preload roots, which we
-        // always link dynamically.
-        .filter(
-            l ->
-                l.getPreferredLinkage() != Linkage.STATIC
-                    || omnibusSpec.getExcludedRoots().contains(l.getBuildTarget()))
-        .forEach(l -> preloadLibsBuilder.add(l, graphBuilder));
+    preloadLibsBuilder.addAll(
+        graphBuilder,
+        omnibusSpec.getExcludedTransitiveDeps().values().stream()
+            // Don't include shared libs for static libraries -- except for preload roots, which we
+            // always link dynamically.
+            .filter(
+                l ->
+                    l.getPreferredLinkage() != Linkage.STATIC
+                        || omnibusSpec.getExcludedRoots().contains(l.getBuildTarget()))
+            .collect(Collectors.toList()));
     ImmutableSortedMap<String, SourcePath> preloadLibs = preloadLibsBuilder.build();
 
     HaskellSources srcs = HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", argSrcs);
@@ -573,17 +578,7 @@ public class HaskellDescriptionUtils {
         haskellPackages.build(),
         prebuiltHaskellPackages.build(),
         hsProfile,
-        platform.getGhciScriptTemplate().get(),
-        argExtraScriptTemplates,
-        platform.getGhciIservScriptTemplate().get(),
-        platform.getGhciBinutils().get(),
-        platform.getGhciGhc().get(),
-        platform.getGhciIServ().get(),
-        platform.getGhciIServProf().get(),
-        platform.getGhciLib().get(),
-        platform.getGhciCxx().get(),
-        platform.getGhciCc().get(),
-        platform.getGhciCpp().get(),
-        platform.getGhciPackager().get());
+        platform,
+        argExtraScriptTemplates);
   }
 }

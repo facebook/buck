@@ -1,23 +1,23 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
@@ -48,7 +48,7 @@ public class AndroidBuildConfigDescription
     implements DescriptionWithTargetGraph<AndroidBuildConfigDescriptionArg>,
         ImplicitDepsInferringDescription<AndroidBuildConfigDescriptionArg> {
 
-  private static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
+  public static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
 
   private final JavacFactory javacFactory;
 
@@ -86,10 +86,13 @@ public class AndroidBuildConfigDescription
         args.getValues(),
         args.getValuesFile(),
         /* useConstantExpressions */ false,
-        javacFactory.create(graphBuilder, null),
+        javacFactory.create(graphBuilder, null, buildTarget.getTargetConfiguration()),
         context
             .getToolchainProvider()
-            .getByName(JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.class)
+            .getByName(
+                JavacOptionsProvider.DEFAULT_NAME,
+                buildTarget.getTargetConfiguration(),
+                JavacOptionsProvider.class)
             .getJavacOptions(),
         graphBuilder);
   }
@@ -167,16 +170,16 @@ public class AndroidBuildConfigDescription
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AndroidBuildConfigDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
-    javacFactory.addParseTimeDeps(targetGraphOnlyDepsBuilder, null);
+    javacFactory.addParseTimeDeps(
+        targetGraphOnlyDepsBuilder, null, buildTarget.getTargetConfiguration());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  interface AbstractAndroidBuildConfigDescriptionArg extends CommonDescriptionArg {
+  @RuleArg
+  interface AbstractAndroidBuildConfigDescriptionArg extends BuildRuleArg {
     /** For R.java */
     String getPackage();
 

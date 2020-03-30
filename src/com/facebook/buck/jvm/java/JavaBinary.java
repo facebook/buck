@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -142,11 +143,10 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   context.getBuildCellRootPath(), getProjectFilesystem(), stagingRoot)));
 
       commands.add(
-          SymlinkFileStep.builder()
-              .setFilesystem(getProjectFilesystem())
-              .setExistingFile(context.getSourcePathResolver().getAbsolutePath(metaInfDirectory))
-              .setDesiredLink(stagingTarget)
-              .build());
+          SymlinkFileStep.of(
+              getProjectFilesystem(),
+              context.getSourcePathResolver().getAbsolutePath(metaInfDirectory),
+              stagingTarget));
 
       includePaths =
           ImmutableSortedSet.<Path>naturalOrder()
@@ -174,9 +174,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 .setDuplicatesLogLevel(duplicatesLogLevel)
                 .setRemoveEntryPredicate(
                     entry ->
-                        blacklistPatternsMatcher.hasPatterns()
-                            && blacklistPatternsMatcher.substringMatches(
-                                ((ZipEntry) entry).getName()))
+                        blacklistPatternsMatcher.substringMatches(((ZipEntry) entry).getName()))
                 .build());
     commands.add(jar);
 
@@ -220,7 +218,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
     Preconditions.checkState(
         mainClass != null,
         "Must specify a main class for %s in order to to run it.",
@@ -244,14 +242,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    Stream<BuildTarget> transitiveRuntimeDeps = Stream.of();
-    for (JavaLibrary lib : getTransitiveClasspathDeps()) {
-      // Skip ourself to avoid infinite recursion.
-      if (lib == this) continue;
-
-      transitiveRuntimeDeps =
-          Stream.concat(transitiveRuntimeDeps, lib.getRuntimeDeps(buildRuleResolver));
-    }
-    return transitiveRuntimeDeps;
+    return getTransitiveClasspathDeps().stream()
+        .flatMap(lib -> lib.getRuntimeDeps(buildRuleResolver));
   }
 }

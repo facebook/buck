@@ -1,23 +1,24 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.rust;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.BuckBuildLog;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -185,7 +186,11 @@ public class RustTestIntegrationTest {
 
     ProcessExecutor.Result result =
         workspace.runCommand(
-            workspace.resolve("buck-out/gen/env-test#binary,default,unittest/env_test").toString());
+            workspace
+                .getGenPath(
+                    BuildTargetFactory.newInstance("//:env-test#binary,default,unittest"), "%s")
+                .resolve("env_test")
+                .toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStderr().get(), Matchers.blankString());
   }
@@ -204,7 +209,10 @@ public class RustTestIntegrationTest {
     ProcessExecutor.Result result =
         workspace.runCommand(
             workspace
-                .resolve("buck-out/gen/gen_submod-test#binary,default,unittest/gen_submod_test")
+                .getGenPath(
+                    BuildTargetFactory.newInstance("//:gen_submod-test#binary,default,unittest"),
+                    "%s")
+                .resolve("gen_submod_test")
                 .toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStderr().get(), Matchers.blankString());
@@ -224,7 +232,10 @@ public class RustTestIntegrationTest {
     ProcessExecutor.Result result =
         workspace.runCommand(
             workspace
-                .resolve("buck-out/gen/subdir/subbin-test#binary,default,unittest/subbin_test")
+                .getGenPath(
+                    BuildTargetFactory.newInstance("//subdir:subbin-test#binary,default,unittest"),
+                    "%s")
+                .resolve("subbin_test")
                 .toString());
     assertThat(result.getExitCode(), Matchers.equalTo(0));
     assertThat(result.getStderr().get(), Matchers.blankString());

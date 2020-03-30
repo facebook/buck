@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java;
@@ -28,12 +28,13 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.Javac.Invocation;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
+import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.MockClassLoader;
@@ -61,6 +62,8 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import org.hamcrest.Matchers;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -86,15 +89,15 @@ public class Jsr199JavacIntegrationTest {
     assertEquals(
         String.format(
             "javac -source %s -target %s -g " + "-d %s " + "-classpath '' " + "@" + pathToSrcsList,
-            AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
-            AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
+            JavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
+            JavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
             pathToOutputDir),
         javac.getDescription(
             ImmutableList.of(
                 "-source",
-                AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
+                JavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
                 "-target",
-                AbstractJavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
+                JavacLanguageLevelOptions.TARGETED_JAVA_VERSION,
                 "-g",
                 "-d",
                 pathToOutputDir,
@@ -115,7 +118,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext =
-        JavacExecutionContext.of(
+        ImmutableJavacExecutionContext.of(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
@@ -170,7 +173,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false);
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext =
-        JavacExecutionContext.of(
+        ImmutableJavacExecutionContext.of(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
@@ -252,6 +255,10 @@ public class Jsr199JavacIntegrationTest {
 
   @Test
   public void shouldUseSpecifiedJavacJar() throws Exception {
+    // TODO(T47912516): Remove or test for expected error message after we've decided how to handle
+    //                  javac JARs in Java 11.
+    Assume.assumeThat(JavaVersion.getMajorVersion(), Matchers.lessThanOrEqualTo(8));
+
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     BuildRule rule = new FakeBuildRule("//:fake");
     graphBuilder.addToIndex(rule);
@@ -273,7 +280,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac javac = createJavac(/* withSyntaxError */ false, Optional.of(fakeJavacJar));
 
     JavacExecutionContext javacExecutionContext =
-        JavacExecutionContext.of(
+        ImmutableJavacExecutionContext.of(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),
@@ -355,7 +362,7 @@ public class Jsr199JavacIntegrationTest {
   private static class JdkNotFoundJavac extends Jsr199Javac {
     @Override
     protected JavaCompiler createCompiler(
-        JavacExecutionContext context, SourcePathResolver resolver) {
+        JavacExecutionContext context, SourcePathResolverAdapter resolver) {
       throw new RuntimeException("JDK is not found");
     }
   }
@@ -366,7 +373,7 @@ public class Jsr199JavacIntegrationTest {
     Jsr199Javac javac = new JdkNotFoundJavac();
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     JavacExecutionContext javacExecutionContext =
-        JavacExecutionContext.of(
+        ImmutableJavacExecutionContext.of(
             new JavacEventSinkToBuckEventBusBridge(executionContext.getBuckEventBus()),
             executionContext.getStdErr(),
             executionContext.getClassLoaderCache(),

@@ -1,0 +1,9 @@
+{"assetsDirPath":"@/buck-out/gen/js/bundle_with_extra_json__/res","bundlePath":"@/buck-out/gen/js/bundle_with_extra_json__/js/bundle_with_extra_json.js","command":"bundle","entryPoints":["pear"],"libraries":["@/buck-out/gen/js/fruit.jslib"],"release":false,"rootPath":"@","sourceMapPath":"@/buck-out/gen/js/bundle_with_extra_json__/map/bundle_with_extra_json.js.map","miscDirPath":"@/buck-out/gen/js/bundle_with_extra_json__/misc","extraData":{"a":[1,2,3],"b":true,"s":"hello @/js/empty!"},"flavors":[]}
+{"command":"library-dependencies","release":false,"rootPath":"@","outputPath":"@/buck-out/gen/js/fruit.jslib","dependencyLibraryFilePaths":[],"aggregatedSourceFilesFilePath":"@/buck-out/gen/js/fruit#_files_.jslib","flavors":[]}
+{"command":"library-files","release":false,"rootPath":"@","outputFilePath":"@/buck-out/gen/js/fruit#_files_.jslib","sourceFilePaths":["@/buck-out/gen/js/fruit#file-apple.js-<HASH>.jsfile","@/buck-out/gen/js/fruit#file-banana.js-<HASH>.jsfile","@/buck-out/gen/js/fruit#file-pear.js-<HASH>.jsfile"],"flavors":[]}
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-apple.js-<HASH>.jsfile","sourceJsFilePath":"@/js/apple.js","sourceJsFileName":"js/apple.js","flavors":[]}
+var apple;
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-banana.js-<HASH>.jsfile","sourceJsFilePath":"@/js/banana.js","sourceJsFileName":"js/banana.js","flavors":[]}
+var banana;
+{"command":"transform","outputFilePath":"@/buck-out/gen/js/fruit#file-pear.js-<HASH>.jsfile","sourceJsFilePath":"@/js/pear.js","sourceJsFileName":"js/pear.js","flavors":[]}
+var pear;

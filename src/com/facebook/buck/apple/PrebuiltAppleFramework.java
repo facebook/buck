@@ -1,28 +1,29 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.platform_type.ApplePlatformType;
-import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
+import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.HasOutputName;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -32,7 +33,6 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.cxx.CxxPreprocessorDep;
 import com.facebook.buck.cxx.CxxPreprocessorInput;
 import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
@@ -79,7 +79,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   private final Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags;
   private final ImmutableSet<FrameworkPath> frameworks;
   private final Optional<Pattern> supportedPlatformsRegex;
-  private final FlavorDomain<AppleCxxPlatform> applePlatformFlavorDomain;
+  private final FlavorDomain<UnresolvedAppleCxxPlatform> applePlatformFlavorDomain;
 
   private final LoadingCache<NativeLinkableCacheKey, NativeLinkableInput> nativeLinkableCache =
       CacheBuilder.newBuilder().build(CacheLoader.from(this::getNativeLinkableInputUncached));
@@ -88,26 +88,33 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
       new TransitiveCxxPreprocessorInputCache(this);
   private final PlatformLockedNativeLinkableGroup.Cache linkableCache =
       LegacyNativeLinkableGroup.getNativeLinkableCache(this);
+  private final ActionGraphBuilder graphBuilder;
 
   public PrebuiltAppleFramework(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      SourcePathResolver pathResolver,
+      ActionGraphBuilder graphBuilder,
       SourcePath frameworkPath,
       Linkage preferredLinkage,
       ImmutableSet<FrameworkPath> frameworks,
       Optional<Pattern> supportedPlatformsRegex,
       Function<? super CxxPlatform, ImmutableList<String>> exportedLinkerFlags,
-      FlavorDomain<AppleCxxPlatform> applePlatformFlavorDomain) {
+      FlavorDomain<UnresolvedAppleCxxPlatform> applePlatformFlavorDomain) {
     super(buildTarget, projectFilesystem, params);
+    this.graphBuilder = graphBuilder;
     this.frameworkPath = frameworkPath;
     this.exportedLinkerFlags = exportedLinkerFlags;
     this.preferredLinkage = preferredLinkage;
     this.frameworks = frameworks;
     this.supportedPlatformsRegex = supportedPlatformsRegex;
 
-    this.frameworkName = pathResolver.getAbsolutePath(frameworkPath).getFileName().toString();
+    this.frameworkName =
+        graphBuilder
+            .getSourcePathResolver()
+            .getAbsolutePath(frameworkPath)
+            .getFileName()
+            .toString();
     this.out =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
             .resolve(frameworkName);
@@ -141,9 +148,9 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
                 context.getBuildCellRootPath(), getProjectFilesystem(), out.getParent())));
     builder.add(
         RmStep.of(
-                BuildCellRelativePath.fromCellRelativePath(
-                    context.getBuildCellRootPath(), getProjectFilesystem(), out))
-            .withRecursive(true));
+            BuildCellRelativePath.fromCellRelativePath(
+                context.getBuildCellRootPath(), getProjectFilesystem(), out),
+            true));
     builder.add(
         CopyStep.forDirectory(
             getProjectFilesystem(),
@@ -161,7 +168,7 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
   }
 
   @Override
-  public String getOutputName() {
+  public String getOutputName(OutputLabel outputLabel) {
     return this.frameworkName;
   }
 
@@ -235,11 +242,14 @@ public class PrebuiltAppleFramework extends AbstractBuildRuleWithDeclaredAndExtr
 
     frameworkPaths.add(FrameworkPath.ofSourcePath(getSourcePathToOutput()));
     if (type == Linker.LinkableDepType.SHARED) {
-      Optional<AppleCxxPlatform> appleCxxPlatform =
+      Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
           applePlatformFlavorDomain.getValue(ImmutableSet.of(cxxPlatform.getFlavor()));
       boolean isMacTarget =
           appleCxxPlatform
-              .map(p -> p.getAppleSdk().getApplePlatform().getType() == ApplePlatformType.MAC)
+              .map(
+                  p ->
+                      p.resolve(graphBuilder).getAppleSdk().getApplePlatform().getType()
+                          == ApplePlatformType.MAC)
               .orElse(false);
       String loaderPath = isMacTarget ? "@loader_path/../Frameworks" : "@loader_path/Frameworks";
       String executablePath =

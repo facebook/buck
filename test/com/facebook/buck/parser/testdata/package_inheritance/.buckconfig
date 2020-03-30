@@ -1,0 +1,3 @@
+[parser]
+  enable_package_files: true
+  enable_inheriting_package_files = true

@@ -1,23 +1,25 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.command.config;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.config.Config;
+import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.MapDifference;
@@ -29,7 +31,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Helper methods for calculating and logging the config differences that cause state invalidation
@@ -76,17 +77,17 @@ public class ConfigDifference {
                   (option, value) ->
                       result.put(
                           section + "." + option,
-                          new ImmutableConfigChange(value.leftValue(), value.rightValue())));
+                          ImmutableConfigChange.of(value.leftValue(), value.rightValue())));
       BiConsumer<String, Map<String, String>> appendLeft =
           (section, diff) ->
               diff.forEach(
                   (option, value) ->
-                      result.put(section + "." + option, new ImmutableConfigChange(value, null)));
+                      result.put(section + "." + option, ImmutableConfigChange.of(value, null)));
       BiConsumer<String, Map<String, String>> appendRight =
           (section, diff) ->
               diff.forEach(
                   (option, value) ->
-                      result.put(section + "." + option, new ImmutableConfigChange(null, value)));
+                      result.put(section + "." + option, ImmutableConfigChange.of(null, value)));
 
       diffSections
           .entriesDiffering()
@@ -114,6 +115,10 @@ public class ConfigDifference {
 
     @Nullable
     String getNewValue();
+
+    static ConfigChange of(@Nullable String prevValue, @Nullable String newValue) {
+      return ImmutableConfigChange.of(prevValue, newValue);
+    }
   }
 
   /** Format a set of changes between configs for the console */
@@ -149,7 +154,7 @@ public class ConfigDifference {
     String prevVal = change.getValue().getPrevValue();
     String newVal = change.getValue().getNewValue();
     BiFunction<String, Integer, String> abbrev =
-        (value, width) -> truncate ? StringUtils.abbreviate(value, width) : value;
+        (value, width) -> truncate ? MoreStrings.abbreviate(value, width) : value;
     if (prevVal == null) {
       return String.format("New value %s='%s'", change.getKey(), abbrev.apply(newVal, 80));
     }

@@ -1,9 +1,9 @@
 genrule(
-  name = 'a',
-  out = 'a',
-  cmd = 'touch $OUT',
-  srcs = [
-    'inputs/a.txt',
-  ],
-  visibility = ['PUBLIC'],
+    name = "a",
+    out = "a",
+    cmd = "touch $OUT",
+    srcs = [
+        "inputs/a.txt",
+    ],
+    visibility = ["PUBLIC"],
 )

@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.event.listener;
 
 import static org.hamcrest.Matchers.equalTo;
@@ -132,7 +133,7 @@ public class CriticalPathEventListenerTest {
         new FakeBuildRule(
             BuildTargetFactory.newInstance("//:" + buildTargetName),
             ImmutableSortedSet.copyOf(buildRules));
-    listener.handleBuildRule(buildRule, execTime);
+    listener.handleBuildRule(buildRule, ImmutableExecutionTimeInfo.of(execTime, 0L));
     return buildRule;
   }
 
@@ -154,7 +155,9 @@ public class CriticalPathEventListenerTest {
     assertBuildTarget(criticalPathPair.getFirst(), nodeName);
 
     CriticalPathNode criticalPathNode = criticalPathPair.getSecond();
-    assertThat(criticalPathNode.getElapsedTimeMs(), equalTo(expectedElapsedTime));
+    assertThat(
+        criticalPathNode.getExecutionTimeInfo().getExecutionDurationMs(),
+        equalTo(expectedElapsedTime));
     assertThat(criticalPathNode.getTotalElapsedTimeMs(), equalTo(expectedTotalTime));
     if (prevNodeName == null) {
       assertThat(criticalPathNode.getPreviousNode(), nullValue());

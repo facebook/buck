@@ -1,23 +1,24 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.build.engine.manifest;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.io.ArchiveMemberPath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -26,7 +27,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourcePathFactoryForTests;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.FakeFileHashCache;
@@ -48,7 +49,7 @@ import org.junit.Test;
 
 public class ManifestTest {
 
-  private static final SourcePathResolver RESOLVER =
+  private static final SourcePathResolverAdapter RESOLVER =
       new TestActionGraphBuilder().getSourcePathResolver();
 
   @Test
@@ -127,12 +128,12 @@ public class ManifestTest {
     RuleKey key = new RuleKey("aa");
 
     Path tmp1 = Files.createTempDirectory("tmp1");
-    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(tmp1);
+    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp1);
     SourcePath input1 = PathSourcePath.of(filesystem1, Paths.get("input.h"));
     HashCode hashCode1 = HashCode.fromInt(1);
 
     Path tmp2 = Files.createTempDirectory("tmp2");
-    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(tmp2);
+    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp2);
     SourcePath input2 = PathSourcePath.of(filesystem2, Paths.get("input.h"));
     HashCode hashCode2 = HashCode.fromInt(1);
 
@@ -193,12 +194,12 @@ public class ManifestTest {
     RuleKey key = new RuleKey("aa");
 
     Path tmp1 = Files.createTempDirectory("tmp1");
-    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(tmp1);
+    ProjectFilesystem filesystem1 = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp1);
     SourcePath input1 = PathSourcePath.of(filesystem1, Paths.get("input.h"));
     HashCode hashCode1 = HashCode.fromInt(1);
 
     Path tmp2 = Files.createTempDirectory("tmp2");
-    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(tmp2);
+    ProjectFilesystem filesystem2 = new FakeProjectFilesystem(CanonicalCellName.rootCell(), tmp2);
     SourcePath input2 = PathSourcePath.of(filesystem2, Paths.get("input.h"));
     HashCode hashCode2 = HashCode.fromInt(1);
 
@@ -324,7 +325,6 @@ public class ManifestTest {
                     new RuleKey("bb"),
                     ImmutableMap.of("bar.h", HashCode.fromInt(0))))
             .getStats(),
-        Matchers.equalTo(
-            ManifestStats.builder().setNumDepFiles(2).setNumInputs(2).setNumHashes(1).build()));
+        Matchers.equalTo(ImmutableManifestStats.of(2, 1, 2)));
   }
 }

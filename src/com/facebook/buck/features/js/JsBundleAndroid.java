@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.js;
@@ -27,7 +27,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -59,17 +59,21 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    SourcePathResolver sourcePathResolver = context.getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
 
-    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToOutput()));
-    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToSourceMap()));
-    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToResources()));
-    buildableContext.recordArtifact(sourcePathResolver.getRelativePath(getSourcePathToMisc()));
+    buildableContext.recordArtifact(
+        sourcePathResolverAdapter.getRelativePath(getSourcePathToOutput()));
+    buildableContext.recordArtifact(
+        sourcePathResolverAdapter.getRelativePath(getSourcePathToSourceMap()));
+    buildableContext.recordArtifact(
+        sourcePathResolverAdapter.getRelativePath(getSourcePathToResources()));
+    buildableContext.recordArtifact(
+        sourcePathResolverAdapter.getRelativePath(getSourcePathToMisc()));
 
-    Path jsDir = sourcePathResolver.getRelativePath(getSourcePathToOutput());
-    Path resourcesDir = sourcePathResolver.getRelativePath(getSourcePathToResources());
-    Path sourceMapFile = sourcePathResolver.getRelativePath(getSourcePathToSourceMap());
-    Path miscDirPath = sourcePathResolver.getRelativePath(getSourcePathToMisc());
+    Path jsDir = sourcePathResolverAdapter.getRelativePath(getSourcePathToOutput());
+    Path resourcesDir = sourcePathResolverAdapter.getRelativePath(getSourcePathToResources());
+    Path sourceMapFile = sourcePathResolverAdapter.getRelativePath(getSourcePathToSourceMap());
+    Path miscDirPath = sourcePathResolverAdapter.getRelativePath(getSourcePathToMisc());
 
     return ImmutableList.<Step>builder()
         .addAll(
@@ -77,7 +81,7 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(),
                     getProjectFilesystem(),
-                    sourcePathResolver.getRelativePath(
+                    sourcePathResolverAdapter.getRelativePath(
                         JsUtil.relativeToOutputRoot(
                             getBuildTarget(), getProjectFilesystem(), "")))))
         .add(
@@ -101,22 +105,22 @@ public class JsBundleAndroid extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     miscDirPath.getParent())),
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                sourcePathResolver.getAbsolutePath(delegate.getSourcePathToOutput()),
+                sourcePathResolverAdapter.getAbsolutePath(delegate.getSourcePathToOutput()),
                 jsDir.getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS),
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                sourcePathResolver.getAbsolutePath(delegate.getSourcePathToResources()),
+                sourcePathResolverAdapter.getAbsolutePath(delegate.getSourcePathToResources()),
                 resourcesDir.getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS),
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                sourcePathResolver.getAbsolutePath(delegate.getSourcePathToSourceMap()),
+                sourcePathResolverAdapter.getAbsolutePath(delegate.getSourcePathToSourceMap()),
                 sourceMapFile.getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS),
             CopyStep.forDirectory(
                 getProjectFilesystem(),
-                sourcePathResolver.getAbsolutePath(delegate.getSourcePathToMisc()),
+                sourcePathResolverAdapter.getAbsolutePath(delegate.getSourcePathToMisc()),
                 miscDirPath.getParent(),
                 CopyStep.DirectoryMode.DIRECTORY_AND_CONTENTS))
         .build();

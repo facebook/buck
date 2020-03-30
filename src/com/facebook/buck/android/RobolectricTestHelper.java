@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
@@ -21,17 +22,16 @@ import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
@@ -105,7 +105,7 @@ class RobolectricTestHelper {
   }
 
   private String getDirectoriesContent(
-      SourcePathResolver pathResolver, Function<HasAndroidResourceDeps, SourcePath> filter) {
+      SourcePathResolverAdapter pathResolver, Function<HasAndroidResourceDeps, SourcePath> filter) {
     String content;
     if (optionalDummyRDotJava.isPresent()) {
       Iterable<String> resourceDirectories =
@@ -152,15 +152,14 @@ class RobolectricTestHelper {
   }
 
   /** Amend jvm args, adding manifest and dependency paths */
-  void amendVmArgs(ImmutableList.Builder<String> vmArgsBuilder, SourcePathResolver pathResolver) {
-    Preconditions.checkState(
-        optionalDummyRDotJava.isPresent(), "DummyRDotJava must have been created!");
-    vmArgsBuilder.add(
-        getRobolectricResourceDirectoriesArg(
-            pathResolver, optionalDummyRDotJava.get().getAndroidResourceDeps()));
-    vmArgsBuilder.add(
-        getRobolectricAssetsDirectories(
-            pathResolver, optionalDummyRDotJava.get().getAndroidResourceDeps()));
+  void amendVmArgs(
+      ImmutableList.Builder<String> vmArgsBuilder, SourcePathResolverAdapter pathResolver) {
+    if (optionalDummyRDotJava.isPresent()) {
+      ImmutableList<HasAndroidResourceDeps> resourceDeps =
+          optionalDummyRDotJava.get().getAndroidResourceDeps();
+      vmArgsBuilder.add(getRobolectricResourceDirectoriesArg(pathResolver, resourceDeps));
+      vmArgsBuilder.add(getRobolectricAssetsDirectories(pathResolver, resourceDeps));
+    }
 
     // Force robolectric to only use local dependency resolution.
     vmArgsBuilder.add("-Drobolectric.offline=true");
@@ -181,7 +180,7 @@ class RobolectricTestHelper {
 
   @VisibleForTesting
   String getRobolectricAssetsDirectories(
-      SourcePathResolver pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
+      SourcePathResolverAdapter pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
     String argValue;
     if (passDirectoriesInFile) {
       argValue = "@" + projectFilesystem.resolve(assetDirectoriesPath);
@@ -199,7 +198,7 @@ class RobolectricTestHelper {
 
   @VisibleForTesting
   String getRobolectricResourceDirectoriesArg(
-      SourcePathResolver pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
+      SourcePathResolverAdapter pathResolver, List<HasAndroidResourceDeps> resourceDeps) {
     String argValue;
     if (passDirectoriesInFile) {
       argValue = "@" + projectFilesystem.resolve(resourceDirectoriesPath);
@@ -215,7 +214,7 @@ class RobolectricTestHelper {
   }
 
   private Iterable<String> getDirs(
-      Stream<SourcePath> sourcePathStream, SourcePathResolver pathResolver) {
+      Stream<SourcePath> sourcePathStream, SourcePathResolverAdapter pathResolver) {
 
     return sourcePathStream
         .filter(Objects::nonNull)
@@ -229,7 +228,7 @@ class RobolectricTestHelper {
                           "Path %s is needed to run robolectric test %s, but was not found.",
                           input, buildTarget));
                 }
-                return !projectFilesystem.getDirectoryContents(input).isEmpty();
+                return !projectFilesystem.getDirectoryContents(input.getPath()).isEmpty();
               } catch (IOException e) {
                 LOG.warn(e, "Error filtering path for Robolectric res/assets.");
                 return true;

@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -26,13 +26,15 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -120,7 +122,7 @@ public class CxxTestDescriptionTest {
   public void environmentIsPropagated() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     addFramework(graphBuilder, filesystem);
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
@@ -158,7 +160,7 @@ public class CxxTestDescriptionTest {
   public void testArgsArePropagated() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     addFramework(graphBuilder, filesystem);
     BuildRule someRule =
         GenruleBuilder.newGenruleBuilder(BuildTargetFactory.newInstance("//:some_rule"))
@@ -251,9 +253,12 @@ public class CxxTestDescriptionTest {
             graphBuilder.getRule(
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -280,9 +285,12 @@ public class CxxTestDescriptionTest {
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
     assertThat(binary, Matchers.instanceOf(CxxLink.class));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -313,9 +321,12 @@ public class CxxTestDescriptionTest {
             graphBuilder.getRule(
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
-        hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath())));
+        hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath)));
     assertThat(binary.getBuildDeps(), hasItem(dep));
   }
 
@@ -345,10 +356,12 @@ public class CxxTestDescriptionTest {
             graphBuilder.getRule(
                 CxxDescriptionEnhancer.createCxxLinkTarget(
                     test.getBuildTarget(), Optional.empty()));
+    SourcePath outputSourcePath = dep.getSourcePathToOutput();
+    Path absoluteLinkerScriptPath =
+        graphBuilder.getSourcePathResolver().getAbsolutePath(outputSourcePath);
     assertThat(
         Arg.stringify(binary.getArgs(), graphBuilder.getSourcePathResolver()),
-        Matchers.not(
-            hasItem(String.format("--linker-script=%s", dep.getAbsoluteOutputFilePath()))));
+        Matchers.not(hasItem(String.format("--linker-script=%s", absoluteLinkerScriptPath))));
     assertThat(binary.getBuildDeps(), Matchers.not(hasItem(dep)));
   }
 
@@ -389,7 +402,7 @@ public class CxxTestDescriptionTest {
               .setFramework(framework)
               .setResources(ImmutableSortedSet.of(resource))
               .build();
-      assertThat(cxxTestWithResources.getInputs(), hasItem(resource));
+      assertThat(cxxTestWithResources.getInputs(), hasItem(ForwardRelativePath.ofPath(resource)));
     }
   }
 

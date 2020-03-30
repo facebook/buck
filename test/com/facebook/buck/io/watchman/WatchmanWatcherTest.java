@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.io.watchman;
@@ -25,6 +25,8 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -35,7 +37,7 @@ import com.facebook.buck.io.filesystem.GlobPatternMatcher;
 import com.facebook.buck.io.filesystem.RecursiveFileMatcher;
 import com.facebook.buck.io.watchman.WatchmanEvent.Kind;
 import com.facebook.buck.io.watchman.WatchmanEvent.Type;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -44,7 +46,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -59,15 +60,16 @@ import org.junit.Test;
 
 public class WatchmanWatcherTest {
 
-  private static final Path FAKE_ROOT = Paths.get("/fake/root").toAbsolutePath();
+  private static final AbsPath FAKE_ROOT = AbsPath.of(Paths.get("/fake/root").toAbsolutePath());
   private static final WatchmanQuery FAKE_QUERY =
-      new ImmutableWatchmanQuery("/fake/root", ImmutableMap.of());
+      ImmutableWatchmanQuery.of("/fake/root", ImmutableMap.of());
   private static final List<Object> FAKE_UUID_QUERY = FAKE_QUERY.toList("n:buckduuid");
   private static final List<Object> FAKE_CLOCK_QUERY = FAKE_QUERY.toList("c:0:0");
 
-  private static final Path FAKE_SECONDARY_ROOT = Paths.get("/fake/secondary").toAbsolutePath();
+  private static final AbsPath FAKE_SECONDARY_ROOT =
+      AbsPath.of(Paths.get("/fake/secondary").toAbsolutePath());
   private static final WatchmanQuery FAKE_SECONDARY_QUERY =
-      new ImmutableWatchmanQuery("/fake/SECONDARY", ImmutableMap.of());
+      ImmutableWatchmanQuery.of("/fake/SECONDARY", ImmutableMap.of());
 
   private EventBus eventBus;
   private EventBuffer eventBuffer;
@@ -202,7 +204,7 @@ public class WatchmanWatcherTest {
         new ImmutableList.Builder<>();
     // The threshold is 10000; go a little above that.
     for (int i = 0; i < 10010; i++) {
-      changedFiles.add(ImmutableMap.of("name", "foo/bar/baz" + Integer.toString(i)));
+      changedFiles.add(ImmutableMap.of("name", "foo/bar/baz" + i));
     }
     ImmutableMap<String, Object> watchmanOutput = ImmutableMap.of("files", changedFiles.build());
     WatchmanWatcher watcher = createWatcher(eventBus, watchmanOutput);
@@ -378,11 +380,11 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(
-                RecursiveFileMatcher.of(Paths.get("foo")),
-                RecursiveFileMatcher.of(Paths.get("bar/baz"))),
+                RecursiveFileMatcher.of(RelPath.get("foo")),
+                RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        new ImmutableWatchmanQuery(
+        ImmutableWatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
@@ -407,11 +409,11 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of("/path/to/repo", Optional.empty()),
             ImmutableSet.of(
-                RecursiveFileMatcher.of(Paths.get("foo")),
-                RecursiveFileMatcher.of(Paths.get("bar/baz"))),
+                RecursiveFileMatcher.of(RelPath.get("foo")),
+                RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of());
     assertEquals(
-        new ImmutableWatchmanQuery(
+        ImmutableWatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",
@@ -439,11 +441,11 @@ public class WatchmanWatcherTest {
         WatchmanWatcher.createQuery(
             ProjectWatch.of(watchRoot, Optional.empty()),
             ImmutableSet.of(
-                RecursiveFileMatcher.of(Paths.get("foo")),
-                RecursiveFileMatcher.of(Paths.get("bar/baz"))),
+                RecursiveFileMatcher.of(RelPath.get("foo")),
+                RecursiveFileMatcher.of(RelPath.get("bar/baz"))),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        new ImmutableWatchmanQuery(
+        ImmutableWatchmanQuery.of(
             watchRoot,
             ImmutableMap.of(
                 "expression",
@@ -470,7 +472,7 @@ public class WatchmanWatcherTest {
             ImmutableSet.of(GlobPatternMatcher.of("*.pbxproj")),
             ImmutableSet.of(Capability.DIRNAME));
     assertEquals(
-        new ImmutableWatchmanQuery(
+        ImmutableWatchmanQuery.of(
             "/path/to/repo",
             ImmutableMap.of(
                 "expression",

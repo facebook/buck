@@ -1,21 +1,22 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.features.project.intellij;
 
-import com.facebook.buck.core.description.arg.CommonDescriptionArg;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -52,7 +53,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implements IjModuleRule<T> {
+/** Base class for IntelliJ module rules */
+public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModuleRule<T> {
 
   protected final ProjectFilesystem projectFilesystem;
   protected final IjModuleFactoryResolver moduleFactoryResolver;
@@ -132,7 +134,11 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     ImmutableMultimap<Path, Path> foldersToInputsIndex =
         getSourceFoldersToInputsIndex(
             targetNode.getInputs().stream()
-                .map(path -> projectFilesystem.relativize(targetNode.getFilesystem().resolve(path)))
+                .map(
+                    path ->
+                        projectFilesystem
+                            .relativize(targetNode.getFilesystem().resolve(path))
+                            .getPath())
                 .collect(ImmutableList.toImmutableList()));
 
     if (!resourcePaths.isEmpty()) {
@@ -208,7 +214,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     return resources.stream()
         .filter(PathSourcePath.class::isInstance)
         .map(PathSourcePath.class::cast)
-        .map(path -> projectFilesystem.relativize(Paths.get(path.toString())))
+        .map(path -> projectFilesystem.relativize(Paths.get(path.toString())).getPath())
         .collect(ImmutableSet.toImmutableSet());
   }
 
@@ -217,7 +223,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     return resources.stream()
         .filter(PathSourcePath.class::isInstance)
         .map(PathSourcePath.class::cast)
-        .map(path -> projectFilesystem.relativize(Paths.get(path.toString())))
+        .map(path -> projectFilesystem.relativize(Paths.get(path.toString())).getPath())
         .filter(path -> path.startsWith(resourcesRoot))
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -275,8 +281,17 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
 
     Path annotationOutputPath = annotationOutput.get();
     context.addGeneratedSourceCodeFolder(
+        targetNode.getBuildTarget(),
         folderFactory.create(
             annotationOutputPath, false, ImmutableSortedSet.of(annotationOutputPath)));
+
+    moduleFactoryResolver
+        .getKaptAnnotationOutputPath(jvmLibraryTargetNode)
+        .ifPresent(
+            path ->
+                context.addGeneratedSourceCodeFolder(
+                    targetNode.getBuildTarget(),
+                    folderFactory.create(path, false, ImmutableSortedSet.of(path))));
   }
 
   private void addGeneratedOutputIfNeeded(
@@ -286,6 +301,7 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
 
     for (Path generatedSourcePath : generatedSourcePaths) {
       context.addGeneratedSourceCodeFolder(
+          targetNode.getBuildTarget(),
           folderFactory.create(
               generatedSourcePath, false, ImmutableSortedSet.of(generatedSourcePath)));
     }
@@ -308,8 +324,15 @@ public abstract class BaseIjModuleRule<T extends CommonDescriptionArg> implement
     return targetNode.getConstructorArg().getLabels().stream()
         .map(labelToGeneratedSourcesMap::get)
         .filter(Objects::nonNull)
-        .map(pattern -> pattern.replaceAll("%name%", buildTarget.getShortNameAndFlavorPostfix()))
-        .map(path -> BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, path))
+        .map(
+            pattern -> {
+              // Format must have exactly one `%s` component
+              String format =
+                  pattern
+                      .replaceFirst("%name%", "%s")
+                      .replace("%name%", buildTarget.getShortNameAndFlavorPostfix());
+              return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, format);
+            })
         .collect(ImmutableSet.toImmutableSet());
   }
 

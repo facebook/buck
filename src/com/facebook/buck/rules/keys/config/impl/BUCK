@@ -3,13 +3,10 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 java_immutables_library(
     name = "impl",
     srcs = glob(["*.java"]),
-    exported_deps = [
-        "//src/com/facebook/buck/rules/keys/config:config",
-    ],
     visibility = [
         "//src/com/facebook/buck/cli:cli",
         "//src/com/facebook/buck/core/cell/impl:impl",
-        "//src/com/facebook/buck/distributed:common",
+        "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//test/...",
     ],
     deps = [
@@ -17,5 +14,8 @@ java_immutables_library(
         "//src/com/facebook/buck/core/config:config",
         "//src/com/facebook/buck/core/model:model",
         "//src/com/facebook/buck/core/module/impl:impl",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/rules/keys/config:config",
     ],
 )

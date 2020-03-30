@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.jvm.java.abi;
@@ -36,10 +36,14 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InnerClassNode;
 
 class StubJarClassEntry extends StubJarEntry {
+  private static final String DEFAULT_METHOD_SUFFIX = "$default";
+  private static final int DEFAULT_METHOD_SUFFIX_LENGTH = DEFAULT_METHOD_SUFFIX.length();
+
   @Nullable private final Set<String> referencedClassNames;
   private final List<String> methodBodiesToRetain;
   private final Path path;
   private final ClassNode stub;
+  private final boolean retainEverything;
 
   @Nullable
   public static StubJarClassEntry of(
@@ -61,6 +65,13 @@ class StubJarClassEntry extends StubJarEntry {
       AnnotationNode kotlinMetadataAnnotation = findKotlinMetadataAnnotation(input, path);
       if (kotlinMetadataAnnotation != null) {
         isKotlinClass = true;
+        if (path.toString().contains("$sam$i")) {
+          // These classes are created when we have a Single Abstract Method (SAM) interface that is
+          // used within an inline function, and in these cases we need to retain the whole class.
+          input.visitClass(path, stub, false);
+          return new StubJarClassEntry(
+              path, stub, Collections.emptySet(), Collections.emptyList(), true);
+        }
         ClassNode dummyStub = new ClassNode(Opcodes.ASM7);
         input.visitClass(path, dummyStub, true);
         retainAllMethodBodies =
@@ -99,7 +110,7 @@ class StubJarClassEntry extends StubJarEntry {
         || retainAllMethodBodies
         || stub.name.endsWith("/package-info")) {
       return new StubJarClassEntry(
-          path, stub, referenceTracker.getReferencedClassNames(), methodBodiesToRetain);
+          path, stub, referenceTracker.getReferencedClassNames(), methodBodiesToRetain, false);
     }
 
     return null;
@@ -109,11 +120,13 @@ class StubJarClassEntry extends StubJarEntry {
       Path path,
       ClassNode stub,
       Set<String> referencedClassNames,
-      List<String> methodBodiesToRetain) {
+      List<String> methodBodiesToRetain,
+      boolean retainEverything) {
     this.path = path;
     this.stub = stub;
     this.referencedClassNames = referencedClassNames;
     this.methodBodiesToRetain = methodBodiesToRetain;
+    this.retainEverything = retainEverything;
   }
 
   @Override
@@ -129,8 +142,11 @@ class StubJarClassEntry extends StubJarEntry {
   private InputStream openInputStream() {
     ClassWriter writer = new ClassWriter(0);
     ClassVisitor visitor = writer;
-    visitor = new InnerClassSortingClassVisitor(stub.name, visitor);
-    visitor = new AbiFilteringClassVisitor(visitor, methodBodiesToRetain, referencedClassNames);
+    if (!retainEverything) {
+      visitor = new InnerClassSortingClassVisitor(stub.name, visitor);
+      visitor = new AbiFilteringClassVisitor(visitor, methodBodiesToRetain, referencedClassNames);
+    }
+
     stub.accept(visitor);
 
     return new ByteArrayInputStream(writer.toByteArray());
@@ -167,18 +183,20 @@ class StubJarClassEntry extends StubJarEntry {
       return true;
     }
 
-    if (path.toString().contains("$sam$i")) {
-      // These classes are created when we have a Single Abstract Method (SAM) interface that is
-      // used within an inline function.
-      return true;
-    }
-
     final List<String> inlineFunctions = inlineFunctionsMap.get(outerClass);
-    if (inlineFunctions == null) {
+    if (inlineFunctions == null || outerMethod == null) {
       return false;
     }
 
-    return inlineFunctions.contains(outerMethod);
+    return inlineFunctions.contains(sanitizeMethodName(outerMethod));
+  }
+
+  private static String sanitizeMethodName(String methodName) {
+    if (methodName.endsWith(DEFAULT_METHOD_SUFFIX)) {
+      return methodName.substring(0, methodName.length() - DEFAULT_METHOD_SUFFIX_LENGTH);
+    }
+
+    return methodName;
   }
 
   @Nullable

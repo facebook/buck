@@ -1,0 +1,71 @@
+platform(
+    name = "linux_platform",
+    constraint_values = [
+        "buck//config/constraints:linux",
+    ],
+)
+
+platform(
+    name = "osx_platform",
+    constraint_values = [
+        "buck//config/constraints:osx",
+    ],
+)
+
+config_setting(
+    name = "osx_config",
+    constraint_values = [
+        "buck//config/constraints:osx",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+config_setting(
+    name = "linux_config",
+    constraint_values = [
+        "buck//config/constraints:linux",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+genrule(
+    name = "a",
+    out = "a",
+    cmd = "echo a > $OUT",
+    compatible_with = [
+        ":linux_config",
+    ],
+)
+
+genrule(
+    name = "b",
+    out = "b",
+    cmd = "echo b > $OUT",
+    compatible_with = [
+        ":osx_config",
+    ],
+)
+
+java_library(
+    name = "lib_linux",
+    srcs = [
+        "A.java",
+    ],
+    compatible_with = [
+        ":linux_config",
+    ],
+)
+
+java_library(
+    name = "lib_osx",
+    srcs = [
+        "A.java",
+    ],
+    compatible_with = [
+        ":osx_config",
+    ],
+)

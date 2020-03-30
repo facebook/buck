@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -31,8 +31,8 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -42,7 +42,7 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
@@ -273,7 +273,7 @@ public class CxxLinkableEnhancerTest {
         ImmutableList.copyOf(
             CXX_PLATFORM
                 .getLd()
-                .resolve(graphBuilder, EmptyTargetConfiguration.INSTANCE)
+                .resolve(graphBuilder, UnconfiguredTargetConfiguration.INSTANCE)
                 .soname(soname));
 
     // Construct a CxxLink object which links as an executable.
@@ -437,11 +437,11 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void platformLdFlags() {
-    ImmutableMap<Linker.LinkableDepType, String> runtimes =
+    ImmutableMap<Linker.LinkableDepType, Arg> runtimes =
         ImmutableMap.of(
-            Linker.LinkableDepType.SHARED, "-ldummy-shared-libc",
-            Linker.LinkableDepType.STATIC, "-ldummy-static-libc",
-            Linker.LinkableDepType.STATIC_PIC, "-ldummy-static-pic-libc");
+            Linker.LinkableDepType.SHARED, StringArg.of("-ldummy-shared-libc"),
+            Linker.LinkableDepType.STATIC, StringArg.of("-ldummy-static-libc"),
+            Linker.LinkableDepType.STATIC_PIC, StringArg.of("-ldummy-static-pic-libc"));
     CxxPlatform cxxPlatform =
         CxxPlatform.builder()
             .from(CXX_PLATFORM)
@@ -449,7 +449,7 @@ public class CxxLinkableEnhancerTest {
             .build();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    for (Map.Entry<Linker.LinkableDepType, String> ent : runtimes.entrySet()) {
+    for (Map.Entry<Linker.LinkableDepType, Arg> ent : runtimes.entrySet()) {
       FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
       CxxLink lib =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
@@ -473,9 +473,10 @@ public class CxxLinkableEnhancerTest {
               NativeLinkableInput.builder().setArgs(DEFAULT_INPUTS).build(),
               Optional.empty(),
               TestCellPathResolver.get(filesystem));
+      SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
       assertThat(
-          Arg.stringify(lib.getArgs(), graphBuilder.getSourcePathResolver()),
-          hasItem(ent.getValue()));
+          Arg.stringify(lib.getArgs(), pathResolver),
+          hasItem(Arg.stringify(ent.getValue(), pathResolver)));
     }
   }
 
@@ -513,7 +514,7 @@ public class CxxLinkableEnhancerTest {
     NativeLinkableInput totalInput =
         NativeLinkables.getTransitiveNativeLinkableInput(
             graphBuilder,
-            EmptyTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
             Iterables.transform(
                 roots.values(), g -> g.getNativeLinkable(cxxPlatform, graphBuilder)),
             LinkableDepType.STATIC);
@@ -627,7 +628,7 @@ public class CxxLinkableEnhancerTest {
   @Test
   public void frameworksToLinkerFlagsTransformer() {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-    SourcePathResolver resolver = new TestActionGraphBuilder().getSourcePathResolver();
+    SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
 
     Arg linkerFlags =
         CxxLinkableEnhancer.frameworksToLinkerArg(

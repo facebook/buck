@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.parser;
@@ -19,13 +19,13 @@ package com.facebook.buck.parser;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.description.arg.DataTransferObject;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.parser.function.BuckPyFunction;
-import com.facebook.buck.rules.coercer.CoercedTypeCache;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -42,12 +42,11 @@ public class BuckPyFunctionTest {
 
   @Before
   public void setUpMarshaller() {
-    buckPyFunction = new BuckPyFunction(new DefaultTypeCoercerFactory(), CoercedTypeCache.INSTANCE);
+    buckPyFunction = new BuckPyFunction(new DefaultTypeCoercerFactory());
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractNoName {
+  @RuleArg
+  abstract static class AbstractNoName implements DataTransferObject {
     abstract String getRandom();
   }
 
@@ -60,9 +59,8 @@ public class BuckPyFunctionTest {
     assertTrue(definition.contains("name"));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractNoVis {
+  @RuleArg
+  abstract static class AbstractNoVis implements DataTransferObject {
     abstract String getRandom();
   }
 
@@ -74,11 +72,8 @@ public class BuckPyFunctionTest {
     assertTrue(definition.contains("visibility=None"));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractNamed {
-    abstract String getName();
-  }
+  @RuleArg
+  abstract static class AbstractNamed implements DataTransferObject {}
 
   @Test
   public void shouldOnlyIncludeTheNameFieldOnce() {
@@ -101,9 +96,8 @@ public class BuckPyFunctionTest {
         definition);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractLotsOfOptions {
+  @RuleArg
+  abstract static class AbstractLotsOfOptions implements DataTransferObject {
     abstract Optional<String> getThing();
 
     abstract Optional<List<BuildTarget>> getTargets();
@@ -133,9 +127,8 @@ public class BuckPyFunctionTest {
             "do_something=None, do_stuff=None, strings=None, targets=None, " + "thing=None"));
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractEither {
+  @RuleArg
+  abstract static class AbstractEither implements DataTransferObject {
     // Alphabetical ordering is deliberate.
     abstract Optional<String> getCat();
 
@@ -175,9 +168,8 @@ public class BuckPyFunctionTest {
         definition);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractVisible {
+  @RuleArg
+  abstract static class AbstractVisible implements DataTransferObject {
     abstract Set<BuildTargetMatcher> getVisibility();
   }
 
@@ -186,9 +178,8 @@ public class BuckPyFunctionTest {
     buckPyFunction.toPythonFunction(RuleType.of("nope", RuleType.Kind.BUILD), Visible.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
-  abstract static class AbstractDto {
+  @RuleArg
+  abstract static class AbstractDto implements DataTransferObject {
     abstract String getSomeField();
   }
 

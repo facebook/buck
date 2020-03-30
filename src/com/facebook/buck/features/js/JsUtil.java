@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.js;
@@ -20,22 +20,23 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.UserFlavor;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
-import com.facebook.buck.rules.macros.AbstractMacroExpanderWithoutPrecomputedWork;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.shell.WorkerShellStep;
 import com.facebook.buck.shell.WorkerTool;
@@ -55,21 +56,19 @@ import java.util.function.Consumer;
 
 public class JsUtil {
 
-  private static final ImmutableList<AbstractMacroExpanderWithoutPrecomputedWork<? extends Macro>>
-      MACRO_EXPANDERS =
-          ImmutableList.of(
-              /**
-               * Expands JSON with macros, escaping macro values for interpolation into quoted
-               * strings.
-               */
-              new LocationMacroExpander() {
-                @Override
-                protected Arg expand(
-                    SourcePathResolver resolver, LocationMacro macro, BuildRule rule)
-                    throws MacroException {
-                  return new JsArg(super.expand(resolver, macro, rule));
-                }
-              });
+  private static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
+      ImmutableList.of(
+          /**
+           * Expands JSON with macros, escaping macro values for interpolation into quoted strings.
+           */
+          new LocationMacroExpander() {
+            @Override
+            protected Arg expand(
+                SourcePathResolverAdapter resolver, LocationMacro macro, BuildRule rule)
+                throws MacroException {
+              return new JsArg(super.expand(resolver, macro, rule));
+            }
+          });
 
   private static class JsArg extends ProxyArg {
 
@@ -78,7 +77,8 @@ public class JsUtil {
     }
 
     @Override
-    public void appendToCommandLine(Consumer<String> consumer, SourcePathResolver pathResolver) {
+    public void appendToCommandLine(
+        Consumer<String> consumer, SourcePathResolverAdapter pathResolver) {
       super.appendToCommandLine(
           s -> consumer.accept(escapeJsonForStringEmbedding(s)), pathResolver);
     }
@@ -92,13 +92,13 @@ public class JsUtil {
       WorkerTool worker,
       ObjectBuilder jobArgs,
       BuildTarget buildTarget,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       ProjectFilesystem filesystem) {
     String jobArgsString =
         jobArgs
             .addArray(
                 "flavors",
-                buildTarget.getFlavors().stream()
+                buildTarget.getFlavors().getSet().stream()
                     .filter(JsFlavors::shouldBePassedToWorker)
                     .map(Flavor::getName)
                     .collect(JsonBuilder.toArrayOfStrings()))
@@ -114,9 +114,7 @@ public class JsUtil {
                 worker.getMaxWorkers(),
                 worker.isPersistent()
                     ? Optional.of(
-                        WorkerProcessIdentity.of(
-                            buildTarget.getCellPath().toString() + buildTarget,
-                            worker.getInstanceKey()))
+                        WorkerProcessIdentity.of(buildTarget.toString(), worker.getInstanceKey()))
                     : Optional.empty()));
     return new WorkerShellStep(
         buildTarget,
@@ -133,8 +131,7 @@ public class JsUtil {
   static SourcePath relativeToOutputRoot(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem, String subpath) {
     return ExplicitBuildTargetSourcePath.of(
-        buildTarget,
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").resolve(subpath));
+        buildTarget, BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve(subpath));
   }
 
   public static String getValueForFlavor(ImmutableMap<UserFlavor, String> map, Flavor flavor) {
@@ -152,8 +149,16 @@ public class JsUtil {
         .map(platform -> getValueForFlavor(PLATFORM_STRINGS, platform));
   }
 
+  static Optional<String> getPlatformString(FlavorSet flavors) {
+    return getPlatformString(flavors.getSet());
+  }
+
   public static String getSourcemapPath(JsBundleOutputs jsBundleOutputs) {
-    return String.format("map/%s.map", jsBundleOutputs.getBundleName());
+    return getSourcemapPath(jsBundleOutputs.getBundleName());
+  }
+
+  public static String getSourcemapPath(String bundleName) {
+    return String.format("map/%s.map", bundleName);
   }
 
   /**
@@ -166,7 +171,8 @@ public class JsUtil {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots) {
     StringWithMacrosConverter macrosConverter =
-        StringWithMacrosConverter.of(target, cellRoots, graphBuilder, MACRO_EXPANDERS);
+        StringWithMacrosConverter.of(
+            target, cellRoots.getCellNameResolver(), graphBuilder, MACRO_EXPANDERS);
     return args.getExtraJson().map(macrosConverter::convert);
   }
 

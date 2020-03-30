@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
@@ -19,17 +19,14 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.cxx.CxxGenruleDescription;
 import com.facebook.buck.cxx.Omnibus;
-import com.facebook.buck.cxx.OmnibusLibraries;
-import com.facebook.buck.cxx.OmnibusLibrary;
-import com.facebook.buck.cxx.OmnibusRoot;
 import com.facebook.buck.cxx.OmnibusRoots;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
@@ -40,6 +37,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.rules.args.Arg;
@@ -50,7 +48,10 @@ import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacroExpander;
+import com.facebook.buck.rules.macros.QueryTargetsMacroExpander;
+import com.facebook.buck.util.MoreMaps;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.versions.Version;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -58,24 +59,42 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 public class PythonUtil {
 
-  static final ImmutableList<MacroExpander<? extends Macro, ?>> MACRO_EXPANDERS =
-      ImmutableList.of(new LocationMacroExpander(), new AbsoluteOutputMacroExpander());
+  static final String SOURCE_EXT = "py";
+  static final String NATIVE_EXTENSION_EXT = "so";
+
+  static final String INIT_PY = "__init__.py";
+
+  static ImmutableList<MacroExpander<? extends Macro, ?>> macroExpanders(TargetGraph targetGraph) {
+    return ImmutableList.of(
+        LocationMacroExpander.INSTANCE,
+        AbsoluteOutputMacroExpander.INSTANCE,
+        new QueryTargetsMacroExpander(targetGraph),
+        new QueryTargetsAndOutputsMacroExpander(targetGraph));
+  }
 
   private PythonUtil() {}
+
+  public static boolean isModuleExt(String ext) {
+    return ext.equals(NATIVE_EXTENSION_EXT) || ext.equals(SOURCE_EXT);
+  }
 
   public static ImmutableList<BuildTarget> getDeps(
       PythonPlatform pythonPlatform,
@@ -92,7 +111,7 @@ public class PythonUtil {
         .toImmutableList();
   }
 
-  public static ImmutableMap<Path, SourcePath> getModules(
+  public static void forEachModule(
       BuildTarget target,
       ActionGraphBuilder graphBuilder,
       PythonPlatform pythonPlatform,
@@ -102,62 +121,144 @@ public class PythonUtil {
       SourceSortedSet items,
       PatternMatchedCollection<SourceSortedSet> platformItems,
       Optional<VersionMatchedCollection<SourceSortedSet>> versionItems,
-      Optional<ImmutableMap<BuildTarget, Version>> versions) {
-    return CxxGenruleDescription.fixupSourcePaths(
+      Optional<ImmutableMap<BuildTarget, Version>> versions,
+      BiConsumer<Path, SourcePath> consumer) {
+    forEachModuleParam(
+        target,
         graphBuilder,
         cxxPlatform,
-        ImmutableMap.<Path, SourcePath>builder()
-            .putAll(
-                PythonUtil.toModuleMap(
-                    target,
-                    graphBuilder.getSourcePathResolver(),
-                    parameter,
-                    baseModule,
-                    ImmutableList.of(items)))
-            .putAll(
-                PythonUtil.toModuleMap(
-                    target,
-                    graphBuilder.getSourcePathResolver(),
-                    "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
-                    baseModule,
-                    Iterables.concat(
-                        platformItems.getMatchingValues(pythonPlatform.getFlavor().toString()),
-                        platformItems.getMatchingValues(cxxPlatform.getFlavor().toString()))))
-            .putAll(
-                PythonUtil.toModuleMap(
-                    target,
-                    graphBuilder.getSourcePathResolver(),
-                    "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
-                    baseModule,
-                    versions.isPresent() && versionItems.isPresent()
-                        ? versionItems.get().getMatchingValues(versions.get())
-                        : ImmutableList.of()))
-            .build());
+        parameter,
+        baseModule,
+        ImmutableList.of(items),
+        consumer);
+    forEachModuleParam(
+        target,
+        graphBuilder,
+        cxxPlatform,
+        "platform" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
+        baseModule,
+        Iterables.concat(
+            platformItems.getMatchingValues(pythonPlatform.getFlavor().toString()),
+            platformItems.getMatchingValues(cxxPlatform.getFlavor().toString())),
+        consumer);
+    forEachModuleParam(
+        target,
+        graphBuilder,
+        cxxPlatform,
+        "versioned" + CaseFormat.LOWER_HYPHEN.to(CaseFormat.UPPER_CAMEL, parameter),
+        baseModule,
+        versions.isPresent() && versionItems.isPresent()
+            ? versionItems.get().getMatchingValues(versions.get())
+            : ImmutableList.of(),
+        consumer);
   }
 
-  static ImmutableMap<Path, SourcePath> toModuleMap(
+  public static void forEachSrc(
       BuildTarget target,
-      SourcePathResolver resolver,
+      ActionGraphBuilder graphBuilder,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> versions,
+      PythonLibraryDescription.CoreArg args,
+      BiConsumer<Path, SourcePath> consumer) {
+    forEachModule(
+        target,
+        graphBuilder,
+        pythonPlatform,
+        cxxPlatform,
+        "srcs",
+        PythonUtil.getBasePath(target, args.getBaseModule()),
+        args.getSrcs(),
+        args.getPlatformSrcs(),
+        args.getVersionedSrcs(),
+        versions,
+        consumer);
+  }
+
+  public static ImmutableSortedMap<Path, SourcePath> parseSources(
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> versions,
+      PythonLibraryDescription.CoreArg args) {
+    ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    forEachSrc(
+        target,
+        graphBuilder,
+        pythonPlatform,
+        cxxPlatform,
+        versions,
+        args,
+        (name, src) -> {
+          if (MorePaths.getFileExtension(name).equals(SOURCE_EXT)) {
+            builder.put(name, src);
+          }
+        });
+    return builder.build();
+  }
+
+  public static ImmutableSortedMap<Path, SourcePath> parseModules(
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> versions,
+      PythonLibraryDescription.CoreArg args) {
+    ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    forEachSrc(target, graphBuilder, pythonPlatform, cxxPlatform, versions, args, builder::put);
+    return builder.build();
+  }
+
+  public static ImmutableSortedMap<Path, SourcePath> parseResources(
+      BuildTarget target,
+      ActionGraphBuilder graphBuilder,
+      PythonPlatform pythonPlatform,
+      CxxPlatform cxxPlatform,
+      Optional<ImmutableMap<BuildTarget, Version>> versions,
+      PythonLibraryDescription.CoreArg args) {
+    ImmutableSortedMap.Builder<Path, SourcePath> builder = ImmutableSortedMap.naturalOrder();
+    forEachModule(
+        target,
+        graphBuilder,
+        pythonPlatform,
+        cxxPlatform,
+        "resources",
+        PythonUtil.getBasePath(target, args.getBaseModule()),
+        args.getResources(),
+        args.getPlatformResources(),
+        args.getVersionedResources(),
+        versions,
+        builder::put);
+    return builder.build();
+  }
+
+  static void forEachModuleParam(
+      BuildTarget target,
+      ActionGraphBuilder actionGraphBuilder,
+      CxxPlatform cxxPlatform,
       String parameter,
       Path baseModule,
-      Iterable<SourceSortedSet> inputs) {
-
-    ImmutableMap.Builder<Path, SourcePath> moduleNamesAndSourcePaths = ImmutableMap.builder();
+      Iterable<SourceSortedSet> inputs,
+      BiConsumer<Path, SourcePath> consumer) {
 
     for (SourceSortedSet input : inputs) {
       ImmutableMap<String, SourcePath> namesAndSourcePaths;
       if (input.getUnnamedSources().isPresent()) {
         namesAndSourcePaths =
-            resolver.getSourcePathNames(target, parameter, input.getUnnamedSources().get());
+            actionGraphBuilder
+                .getSourcePathResolver()
+                .getSourcePathNames(target, parameter, input.getUnnamedSources().get());
       } else {
         namesAndSourcePaths = input.getNamedSources().get();
       }
       for (ImmutableMap.Entry<String, SourcePath> entry : namesAndSourcePaths.entrySet()) {
-        moduleNamesAndSourcePaths.put(baseModule.resolve(entry.getKey()), entry.getValue());
+        consumer.accept(
+            baseModule.resolve(entry.getKey()),
+            CxxGenruleDescription.fixupSourcePath(
+                actionGraphBuilder, cxxPlatform, entry.getValue()));
       }
     }
-
-    return moduleNamesAndSourcePaths.build();
   }
 
   /** Convert a path to a module to it's module name as referenced in import statements. */
@@ -166,6 +267,13 @@ public class PythonUtil {
     if (ext == -1) {
       throw new HumanReadableException("%s: missing extension for module path: %s", target, name);
     }
+    return toModuleName(name);
+  }
+
+  /** Convert a path to a module to it's module name as referenced in import statements. */
+  static String toModuleName(String name) {
+    int ext = name.lastIndexOf('.');
+    Preconditions.checkState(ext != -1);
     name = name.substring(0, ext);
     return PathFormatter.pathWithUnixSeparators(name).replace('/', '.');
   }
@@ -176,40 +284,36 @@ public class PythonUtil {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
-      Iterable<BuildRule> deps,
-      PythonPackageComponents packageComponents,
+      PythonPackagable binary,
       PythonPlatform pythonPlatform,
       CxxBuckConfig cxxBuckConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       NativeLinkStrategy nativeLinkStrategy,
-      ImmutableSet<BuildTarget> preloadDeps) {
+      ImmutableSet<BuildTarget> preloadDeps,
+      boolean compile) {
 
-    PythonPackageComponents.Builder allComponents =
-        new PythonPackageComponents.Builder(buildTarget);
+    PythonPackageComponents.Builder allComponents = new PythonPackageComponents.Builder();
 
     Map<BuildTarget, CxxPythonExtension> extensions = new LinkedHashMap<>();
     Map<BuildTarget, NativeLinkable> nativeLinkableRoots = new LinkedHashMap<>();
 
     OmnibusRoots.Builder omnibusRoots = OmnibusRoots.builder(preloadDeps, graphBuilder);
 
-    // Add the top-level components.
-    allComponents.addComponent(packageComponents, buildTarget);
-
     // Walk all our transitive deps to build our complete package that we'll
     // turn into an executable.
-    new AbstractBreadthFirstTraversal<BuildRule>(
-        Iterables.concat(deps, graphBuilder.getAllRules(preloadDeps))) {
+    new AbstractBreadthFirstTraversal<Object>(
+        Iterables.concat(ImmutableList.of(binary), graphBuilder.getAllRules(preloadDeps))) {
       private final ImmutableList<BuildRule> empty = ImmutableList.of();
 
       @Override
-      public Iterable<BuildRule> visit(BuildRule rule) {
-        Iterable<BuildRule> deps = empty;
-        if (rule instanceof CxxPythonExtension) {
-          CxxPythonExtension extension = (CxxPythonExtension) rule;
+      public Iterable<?> visit(Object node) {
+        Iterable<?> deps = empty;
+
+        if (node instanceof CxxPythonExtension) {
+          CxxPythonExtension extension = (CxxPythonExtension) node;
           NativeLinkTarget target =
-              ((CxxPythonExtension) rule)
-                  .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder);
+              extension.getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false);
           extensions.put(target.getBuildTarget(), extension);
           omnibusRoots.addIncludedRoot(target);
           List<BuildRule> cxxpydeps = new ArrayList<>();
@@ -220,14 +324,28 @@ public class PythonUtil {
             }
           }
           deps = cxxpydeps;
-        } else if (rule instanceof PythonPackagable) {
-          PythonPackagable packagable = (PythonPackagable) rule;
-          PythonPackageComponents comps =
-              packagable.getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder);
-          allComponents.addComponent(comps, rule.getBuildTarget());
-          if (packagable.doesPythonPackageDisallowOmnibus() || comps.hasNativeCode(cxxPlatform)) {
-            for (BuildRule dep :
-                packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder)) {
+        } else if (node instanceof PythonPackagable) {
+          PythonPackagable packagable = (PythonPackagable) node;
+          packagable
+              .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+              .ifPresent(modules -> allComponents.putModules(packagable.getBuildTarget(), modules));
+          if (compile) {
+            packagable
+                .getPythonBytecode(pythonPlatform, cxxPlatform, graphBuilder)
+                .ifPresent(
+                    bytecode -> allComponents.putModules(packagable.getBuildTarget(), bytecode));
+          }
+          packagable
+              .getPythonResources(pythonPlatform, cxxPlatform, graphBuilder)
+              .ifPresent(
+                  resources -> allComponents.putResources(packagable.getBuildTarget(), resources));
+          allComponents.addZipSafe(packagable.isPythonZipSafe());
+          Iterable<BuildRule> packagableDeps =
+              packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
+          if (nativeLinkStrategy == NativeLinkStrategy.MERGED
+              && packagable.doesPythonPackageDisallowOmnibus(
+                  pythonPlatform, cxxPlatform, graphBuilder)) {
+            for (BuildRule dep : packagableDeps) {
               if (dep instanceof NativeLinkableGroup) {
                 NativeLinkable linkable =
                     ((NativeLinkableGroup) dep).getNativeLinkable(cxxPlatform, graphBuilder);
@@ -236,12 +354,12 @@ public class PythonUtil {
               }
             }
           }
-          deps = packagable.getPythonPackageDeps(pythonPlatform, cxxPlatform, graphBuilder);
-        } else if (rule instanceof NativeLinkableGroup) {
+          deps = packagableDeps;
+        } else if (node instanceof NativeLinkableGroup) {
           NativeLinkable linkable =
-              ((NativeLinkableGroup) rule).getNativeLinkable(cxxPlatform, graphBuilder);
+              ((NativeLinkableGroup) node).getNativeLinkable(cxxPlatform, graphBuilder);
           nativeLinkableRoots.put(linkable.getBuildTarget(), linkable);
-          omnibusRoots.addPotentialRoot(linkable);
+          omnibusRoots.addPotentialRoot(linkable, false);
         }
         return deps;
       }
@@ -251,7 +369,7 @@ public class PythonUtil {
     // excluded native linkable roots.
     if (nativeLinkStrategy == NativeLinkStrategy.MERGED) {
       OmnibusRoots roots = omnibusRoots.build();
-      OmnibusLibraries libraries =
+      Omnibus.OmnibusLibraries libraries =
           Omnibus.getSharedLibraries(
               buildTarget,
               projectFilesystem,
@@ -266,10 +384,13 @@ public class PythonUtil {
 
       // Add all the roots from the omnibus link.  If it's an extension, add it as a module.
       // Otherwise, add it as a native library.
-      for (Map.Entry<BuildTarget, OmnibusRoot> root : libraries.getRoots().entrySet()) {
+      for (Map.Entry<BuildTarget, Omnibus.OmnibusRoot> root : libraries.getRoots().entrySet()) {
         CxxPythonExtension extension = extensions.get(root.getKey());
         if (extension != null) {
-          allComponents.addModule(extension.getModule(), root.getValue().getPath(), root.getKey());
+          allComponents.putModules(
+              root.getKey(),
+              PythonMappedComponents.of(
+                  ImmutableSortedMap.of(extension.getModule(), root.getValue().getPath())));
         } else {
           NativeLinkTarget target =
               Preconditions.checkNotNull(
@@ -284,29 +405,46 @@ public class PythonUtil {
                   "%s: omnibus library for %s was built without soname",
                   buildTarget,
                   root.getKey());
-          allComponents.addNativeLibraries(
-              Paths.get(soname), root.getValue().getPath(), root.getKey());
+          allComponents.putNativeLibraries(
+              root.getKey(),
+              PythonMappedComponents.of(
+                  ImmutableSortedMap.of(Paths.get(soname), root.getValue().getPath())));
         }
       }
 
       // Add all remaining libraries as native libraries.
-      for (OmnibusLibrary library : libraries.getLibraries()) {
-        allComponents.addNativeLibraries(
-            Paths.get(library.getSoname()), library.getPath(), buildTarget);
+      if (!libraries.getLibraries().isEmpty()) {
+        libraries.getLibraries().stream()
+            .forEach(
+                lib ->
+                    allComponents.putNativeLibraries(
+                        buildTarget,
+                        PythonMappedComponents.of(
+                            ImmutableSortedMap.of(Paths.get(lib.getSoname()), lib.getPath()))));
       }
     } else {
 
       // For regular linking, add all extensions via the package components interface.
       Map<BuildTarget, NativeLinkable> extensionNativeDeps = new LinkedHashMap<>();
       for (Map.Entry<BuildTarget, CxxPythonExtension> entry : extensions.entrySet()) {
-        allComponents.addComponent(
-            entry.getValue().getPythonPackageComponents(pythonPlatform, cxxPlatform, graphBuilder),
-            entry.getValue().getBuildTarget());
+        entry
+            .getValue()
+            .getPythonModules(pythonPlatform, cxxPlatform, graphBuilder)
+            .ifPresent(
+                modules -> allComponents.putModules(entry.getValue().getBuildTarget(), modules));
+        entry
+            .getValue()
+            .getPythonResources(pythonPlatform, cxxPlatform, graphBuilder)
+            .ifPresent(
+                resources ->
+                    allComponents.putResources(entry.getValue().getBuildTarget(), resources));
+        allComponents.addZipSafe(entry.getValue().isPythonZipSafe());
+
         extensionNativeDeps.putAll(
             Maps.uniqueIndex(
                 entry
                     .getValue()
-                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder)
+                    .getNativeLinkTarget(pythonPlatform, cxxPlatform, graphBuilder, false)
                     .getNativeLinkTargetDeps(graphBuilder),
                 NativeLinkable::getBuildTarget));
       }
@@ -316,17 +454,25 @@ public class PythonUtil {
           NativeLinkables.getTransitiveNativeLinkables(
               graphBuilder,
               Iterables.concat(nativeLinkableRoots.values(), extensionNativeDeps.values()));
-      for (NativeLinkable nativeLinkable : nativeLinkables) {
-        NativeLinkableGroup.Linkage linkage = nativeLinkable.getPreferredLinkage();
-        if (nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
-            || linkage != NativeLinkableGroup.Linkage.STATIC) {
-          ImmutableMap<String, SourcePath> libs = nativeLinkable.getSharedLibraries(graphBuilder);
-          for (Map.Entry<String, SourcePath> ent : libs.entrySet()) {
-            allComponents.addNativeLibraries(
-                Paths.get(ent.getKey()), ent.getValue(), nativeLinkable.getBuildTarget());
-          }
-        }
-      }
+      graphBuilder
+          .getParallelizer()
+          .maybeParallelizeTransform(
+              nativeLinkables.stream()
+                  .filter(
+                      nativeLinkable -> {
+                        NativeLinkableGroup.Linkage linkage = nativeLinkable.getPreferredLinkage();
+                        return nativeLinkableRoots.containsKey(nativeLinkable.getBuildTarget())
+                            || linkage != NativeLinkableGroup.Linkage.STATIC;
+                      })
+                  .collect(Collectors.toList()),
+              linkable ->
+                  new AbstractMap.SimpleEntry<BuildTarget, PythonComponents>(
+                      linkable.getBuildTarget(),
+                      PythonMappedComponents.of(
+                          ImmutableSortedMap.copyOf(
+                              MoreMaps.transformKeys(
+                                  linkable.getSharedLibraries(graphBuilder), Paths::get)))))
+          .forEach(e -> allComponents.putNativeLibraries(e.getKey(), e.getValue()));
     }
 
     return allComponents.build();
@@ -335,7 +481,7 @@ public class PythonUtil {
   public static Path getBasePath(BuildTarget target, Optional<String> override) {
     return override.isPresent()
         ? Paths.get(override.get().replace('.', '/'))
-        : target.getBasePath();
+        : target.getCellRelativeBasePath().getPath().toPathDefaultFileSystem();
   }
 
   static ImmutableSet<String> getPreloadNames(

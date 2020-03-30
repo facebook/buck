@@ -1,27 +1,28 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx.toolchain.linker;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -43,14 +44,15 @@ public interface Linker extends Tool {
    */
   ImmutableList<FileScrubber> getScrubbers(ImmutableMap<Path, Path> cellRootMap);
 
-  // TODO(cjhopman): We should only require SourcePathResolver at the action execution phase, not
+  // TODO(cjhopman): We should only require SourcePathResolverAdapter at the action execution phase,
+  // not
   // during action graph creation. This is only ever used to get filenames, and that should be safe.
   // We should introduce an interface that is limited to just safe operations like that.
   /**
    * @return the platform-specific way to specify that the library represented by the given argument
    *     should be linked whole.
    */
-  Iterable<Arg> linkWhole(Arg input, SourcePathResolver resolver);
+  Iterable<Arg> linkWhole(Arg input, SourcePathResolverAdapter resolver);
 
   /**
    * @return the platform-specific way to specify that linker should use the given soname when
@@ -68,6 +70,11 @@ public interface Linker extends Tool {
    *     supported.
    */
   Iterable<Arg> fileList(Path fileListPath);
+
+  /** Abs-path version of {@link #fileList(Path)}. */
+  default Iterable<Arg> fileList(AbsPath fileListPath) {
+    return fileList(fileListPath.getPath());
+  }
 
   /**
    * @return the placeholder used by the dynamic loader for the directory containing the top-level

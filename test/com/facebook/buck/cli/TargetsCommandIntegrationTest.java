@@ -1,22 +1,23 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.testutil.MoreAsserts.assertJsonMatches;
+import static com.facebook.buck.testutil.MoreAsserts.assertJsonNotMatches;
 import static com.facebook.buck.util.string.MoreStrings.linesToText;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.allOf;
@@ -27,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeFalse;
@@ -36,8 +38,16 @@ import com.facebook.buck.android.AssumeAndroidPlatform;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.file.MorePaths;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.jvm.java.CompilerOutputPaths;
 import com.facebook.buck.log.thrift.rulekeys.FullRuleKey;
+import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -45,7 +55,9 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ThriftRuleKeyDeserializer;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.function.ThrowingFunction;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.string.MoreStrings;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Preconditions;
@@ -57,6 +69,7 @@ import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -82,9 +95,35 @@ public class TargetsCommandIntegrationTest {
   private static final String INCOMPATIBLE_OPTIONS_MSG2 =
       "option \"--show-rulekey (--show_rulekey)\" cannot be used with the option(s) [--show-target-hash]";
 
+  private static final String OUTPUT_PREFIX_PLACEHOLDER = "<OUTPUT_PREFIX>";
+
+  private static final String BUCKOUT_REGEX = "buck-out(.*[\\\\/])";
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Rule public ExpectedException thrown = ExpectedException.none();
+
+  private static Path getLegacyGenDir(String buildTarget, ProjectWorkspace workspace)
+      throws IOException {
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    BuildTarget target = BuildTargetFactory.newInstance(buildTarget);
+    // targets like genrule use the legacy path (without double underscore suffix)
+    return BuildTargetPaths.getGenPath(filesystem, target, "%s");
+  }
+
+  private static Path getNonLegacyGenDir(String buildTarget, ProjectWorkspace workspace) {
+    return BuildTargetPaths.getGenPath(
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath()),
+        BuildTargetFactory.newInstance(buildTarget),
+        "%s__");
+  }
+
+  private static void assertJsonMatchesWithOutputPlaceholder(String expectedJson, String actualJson)
+      throws IOException {
+    assertJsonMatches(
+        expectedJson.replaceAll(BUCKOUT_REGEX, OUTPUT_PREFIX_PLACEHOLDER),
+        actualJson.replaceAll(BUCKOUT_REGEX, OUTPUT_PREFIX_PLACEHOLDER));
+  }
 
   @Test
   public void testShowTargetsNamesWhenNoOptionsProvided() throws IOException {
@@ -112,10 +151,134 @@ public class TargetsCommandIntegrationTest {
     assertEquals(
         linesToText(
             "//:another-test "
-                + MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output"),
-            "//:test " + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output"),
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:another-test", workspace).resolve("test-output")),
+            "//:test "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:test", workspace).resolve("test-output")),
             ""),
         result.getStdout());
+  }
+
+  @Test
+  public void showOutputsWithoutMultipleOutputsShouldBehaveLikeShowOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-outputs", "//:test", "//:another-test");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:another-test "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:another-test", workspace).resolve("test-output")),
+            "//:test "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:test", workspace).resolve("test-output")),
+            ""),
+        result.getStdout());
+  }
+
+  @Test
+  public void showOutputsForMultipleNamedOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--show-outputs", "//:test_multiple_outputs[out2]");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:test_multiple_outputs[out2] "
+                + MorePaths.pathWithPlatformSeparators(
+                    getNonLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out2.txt")),
+            ""),
+        result.getStdout());
+
+    result =
+        workspace.runBuckCommand("targets", "--show-outputs", "//:test_multiple_outputs[out1]");
+    result.assertSuccess();
+    assertEquals(
+        linesToText(
+            "//:test_multiple_outputs[out1] "
+                + MorePaths.pathWithPlatformSeparators(
+                    getNonLegacyGenDir("//:test_multiple_outputs", workspace).resolve("out1.txt")),
+            ""),
+        result.getStdout());
+  }
+
+  @Test
+  public void showOutputsWithJsonForMultipleNamedOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs[out2]")
+            .assertSuccess();
+    assertOutputPaths("{\"out2\" : [\"<OUTPUT_PREFIX>out2.txt\"]}", result);
+
+    result =
+        workspace
+            .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs[out1]")
+            .assertSuccess();
+    assertOutputPaths("{\"out1\" : [\"<OUTPUT_PREFIX>out1.txt\"]}", result);
+  }
+
+  @Test
+  public void showOutputsForMultipleDefaultOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("targets", "--show-outputs", "//:test_multiple_outputs")
+            .assertSuccess();
+    assertThat(result.getStdout(), containsString("//:test_multiple_outputs"));
+    assertThat(result.getStdout(), not(containsString("buck-out")));
+  }
+
+  @Test
+  public void showOutputsWithJsonForEmptyDefaultOutputs() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("targets", "--show-outputs", "--json", "//:test_multiple_outputs")
+            .assertSuccess();
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
+
+    assertTrue(observed.isArray());
+    JsonNode targetNode = observed.get(0);
+
+    // Empty outputs should not print output paths
+    JsonNode cellPath = targetNode.get("buck.outputPath");
+    assertNull(cellPath);
+    cellPath = targetNode.get("buck.outputPaths");
+    assertNull(cellPath);
+  }
+
+  @Test
+  public void mustUseShowOutputsForNamedOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_paths", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("targets", "--show-output", "//:test_multiple_outputs[out1]")
+            .assertExitCode(ExitCode.BUILD_ERROR);
+    assertThat(
+        result.getStderr(),
+        containsString("genrule target //:test_multiple_outputs[out1] should use --show-outputs"));
   }
 
   @Test
@@ -128,8 +291,12 @@ public class TargetsCommandIntegrationTest {
     result.assertSuccess();
     assertEquals(
         linesToText(
-            "//:A " + MorePaths.pathWithPlatformSeparators("buck-out/gen/A/A.txt"),
-            "//:B " + MorePaths.pathWithPlatformSeparators("buck-out/gen/B/B.txt"),
+            "//:A "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:A", workspace).resolve("A.txt").toString()),
+            "//:B "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:B", workspace).resolve("B.txt").toString()),
             "//:C",
             "//:test-library"),
         result.getStdout().trim());
@@ -137,10 +304,10 @@ public class TargetsCommandIntegrationTest {
 
   @Test
   public void outputPathShownWithTargetPlatform() throws IOException {
-    AssumeAndroidPlatform.assumeSdkIsAvailable();
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "targets_command", tmp);
     workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
 
     ProcessResult result =
         workspace.runBuckCommand(
@@ -150,9 +317,17 @@ public class TargetsCommandIntegrationTest {
             "--show-output",
             "//android:D");
     result.assertSuccess();
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//android:D",
+            ConfigurationBuildTargetFactoryForTests.newConfiguration("//android:linux_platform"));
     assertEquals(
         linesToText(
-            "//android:D " + MorePaths.pathWithPlatformSeparators("buck-out/gen/android/D.apk")),
+            "//android:D "
+                + MorePaths.pathWithPlatformSeparators(
+                    BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s"))
+                + ".apk"),
         result.getStdout().trim());
   }
 
@@ -163,11 +338,13 @@ public class TargetsCommandIntegrationTest {
             this, "targets_command_annotation_processor", tmp);
     workspace.setUp();
 
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "//:");
     result.assertSuccess();
 
     verifyTestConfigurationRulesWithAnnotationProcessorOutput(
-        result, MorePaths::pathWithPlatformSeparators);
+        filesystem, result, MorePaths::pathWithPlatformSeparators);
   }
 
   @Test
@@ -177,33 +354,55 @@ public class TargetsCommandIntegrationTest {
             this, "targets_command_annotation_processor", tmp);
     workspace.setUp();
 
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+
     ProcessResult result = workspace.runBuckCommand("targets", "--show-full-output", "//:");
     result.assertSuccess();
 
     verifyTestConfigurationRulesWithAnnotationProcessorOutput(
-        result, s -> MorePaths.pathWithPlatformSeparators(tmp.getRoot().resolve(s)));
+        filesystem, result, s -> MorePaths.pathWithPlatformSeparators(tmp.getRoot().resolve(s)));
   }
 
   private static void verifyTestConfigurationRulesWithAnnotationProcessorOutput(
-      ProcessResult result, Function<String, String> resolvePath) {
+      ProjectFilesystem filesystem, ProcessResult result, Function<String, String> resolvePath) {
+
     assertEquals(
         linesToText(
             "//:annotation_processor",
             "//:annotation_processor_lib "
                 + resolvePath.apply(
-                    "buck-out/gen/lib__annotation_processor_lib__output/annotation_processor_lib.jar"),
+                    CompilerOutputPaths.getOutputJarPath(
+                            BuildTargetFactory.newInstance("//:annotation_processor_lib"),
+                            filesystem)
+                        .toString()),
             "//:test-library",
             "//:test-library-with-processing "
-                + resolvePath.apply("buck-out/annotation/__test-library-with-processing_gen__"),
+                + resolvePath.apply(
+                    CompilerOutputPaths.getAnnotationPath(
+                            filesystem,
+                            BuildTargetFactory.newInstance("//:test-library-with-processing"))
+                        .get()
+                        .toString()),
             "//:test-library-with-processing-with-srcs "
                 + resolvePath.apply(
-                    "buck-out/gen/lib__test-library-with-processing-with-srcs__output/test-library-with-processing-with-srcs.jar")
+                    CompilerOutputPaths.getOutputJarPath(
+                            BuildTargetFactory.newInstance(
+                                "//:test-library-with-processing-with-srcs"),
+                            filesystem)
+                        .toString())
                 + " "
                 + resolvePath.apply(
-                    "buck-out/annotation/__test-library-with-processing-with-srcs_gen__"),
+                    CompilerOutputPaths.getAnnotationPath(
+                            filesystem,
+                            BuildTargetFactory.newInstance(
+                                "//:test-library-with-processing-with-srcs"))
+                        .get()
+                        .toString()),
             "//:test-library-with-srcs "
                 + resolvePath.apply(
-                    "buck-out/gen/lib__test-library-with-srcs__output/test-library-with-srcs.jar")),
+                    CompilerOutputPaths.getOutputJarPath(
+                            BuildTargetFactory.newInstance("//:test-library-with-srcs"), filesystem)
+                        .toString())),
         result.getStdout().trim());
   }
 
@@ -256,7 +455,8 @@ public class TargetsCommandIntegrationTest {
         Matchers.matchesPattern(
             "//:test [a-f0-9]{40} "
                 + Pattern.quote(
-                    MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output"))));
+                    MorePaths.pathWithPlatformSeparators(
+                        getLegacyGenDir("//:test", workspace).resolve("test-output").toString()))));
   }
 
   @Test
@@ -267,17 +467,25 @@ public class TargetsCommandIntegrationTest {
 
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", "...");
     result.assertSuccess();
+    ProjectFilesystem filesystem = workspace.getProjectFileSystem();
+    BuildTarget javaLibTarget = BuildTargetFactory.newInstance("//:java_lib");
     assertEquals(
         linesToText(
             "//:another-test "
-                + MorePaths.pathWithPlatformSeparators("buck-out/gen/another-test/test-output"),
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:another-test", workspace)
+                        .resolve("test-output")
+                        .toString()),
             "//:java_lib "
                 + MorePaths.pathWithPlatformSeparators(
-                    "buck-out/gen/lib__java_lib__output/java_lib.jar")
+                    CompilerOutputPaths.getOutputJarPath(javaLibTarget, filesystem))
                 + " "
-                + MorePaths.pathWithPlatformSeparators("buck-out/annotation/__java_lib_gen__"),
+                + MorePaths.pathWithPlatformSeparators(
+                    CompilerOutputPaths.getAnnotationPath(filesystem, javaLibTarget).get()),
             "//:plugin",
-            "//:test " + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output"),
+            "//:test "
+                + MorePaths.pathWithPlatformSeparators(
+                    getLegacyGenDir("//:test", workspace).resolve("test-output").toString()),
             ""),
         result.getStdout());
   }
@@ -345,7 +553,8 @@ public class TargetsCommandIntegrationTest {
         "//:test "
             + MorePaths.pathWithPlatformSeparators(tmp.getRoot().toRealPath())
             + " "
-            + MorePaths.pathWithPlatformSeparators("buck-out/gen/test/test-output")
+            + MorePaths.pathWithPlatformSeparators(
+                getLegacyGenDir("//:test", workspace).resolve("test-output").toString())
             + System.lineSeparator(),
         result.getStdout());
   }
@@ -702,7 +911,8 @@ public class TargetsCommandIntegrationTest {
     // The contents of the project are not relevant for this test. We just want a non-empty project
     // to prevent against a regression where all of the build rules are printed.
     ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "project_slice", tmp);
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "referenced_file_with_non_existent_file", tmp);
     workspace.setUp();
 
     String pathToNonExistentFile = "modules/dep1/dep2/hello.txt";
@@ -753,7 +963,18 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("targets", "--json", "--show-output", "//:test");
 
-    assertJsonMatches(workspace.getFileContents("output_path_json.js"), result.getStdout());
+    assertJsonMatchesWithOutputPlaceholder(
+        workspace.getFileContents("output_path_json.js"), result.getStdout());
+  }
+
+  @Test
+  public void showOutputsWithJsonForSingleDefaultOutput() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "output_path", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand("targets", "--json", "--show-outputs", "//:test").assertSuccess();
+    assertOutputPaths("{\"DEFAULT\" : [\"<OUTPUT_PREFIX>test-output\"]}", result);
   }
 
   @Test
@@ -806,7 +1027,9 @@ public class TargetsCommandIntegrationTest {
     JsonNode cellPath = targetNode.get("buck.outputPath");
     assertNotNull(cellPath);
 
-    Path expectedPath = tmp.getRoot().resolve("buck-out/gen/test/test-output");
+    Path expectedPath =
+        tmp.getRoot()
+            .resolve(getLegacyGenDir("//:test", workspace).resolve("test-output").toString());
     String expectedRootPath = MorePaths.pathWithPlatformSeparators(expectedPath);
 
     assertEquals(expectedRootPath, cellPath.asText());
@@ -911,7 +1134,8 @@ public class TargetsCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("targets", "--json", "--show-output", "...");
     result.assertSuccess();
 
-    assertJsonMatches(workspace.getFileContents("output_path_json_all.js"), result.getStdout());
+    assertJsonMatchesWithOutputPlaceholder(
+        workspace.getFileContents("output_path_json_all.js"), result.getStdout());
   }
 
   @Test
@@ -930,7 +1154,7 @@ public class TargetsCommandIntegrationTest {
             "...");
     result.assertSuccess();
 
-    assertJsonMatches(
+    assertJsonMatchesWithOutputPlaceholder(
         workspace.getFileContents("output_path_json_all_snake_case.js"), result.getStdout());
 
     result =
@@ -938,7 +1162,8 @@ public class TargetsCommandIntegrationTest {
             "targets", "--json", "-c", "ui.json_attribute_format=legacy", "--show-output", "...");
     result.assertSuccess();
 
-    assertJsonMatches(workspace.getFileContents("output_path_json_all.js"), result.getStdout());
+    assertJsonMatchesWithOutputPlaceholder(
+        workspace.getFileContents("output_path_json_all.js"), result.getStdout());
   }
 
   @Test
@@ -958,7 +1183,7 @@ public class TargetsCommandIntegrationTest {
             "name");
     result.assertSuccess();
 
-    assertJsonMatches(
+    assertJsonMatchesWithOutputPlaceholder(
         workspace.getFileContents("output_path_json_all_filtered.js"), result.getStdout());
   }
 
@@ -1132,7 +1357,7 @@ public class TargetsCommandIntegrationTest {
 
     String expected =
         "//:exported.txt "
-            + workspace.getBuckPaths().getGenDir().resolve("exported.txt").resolve("exported.txt")
+            + getLegacyGenDir("//exported.txt:exported.txt", workspace)
             + System.lineSeparator();
     assertEquals(expected, result.getStdout());
   }
@@ -1248,6 +1473,45 @@ public class TargetsCommandIntegrationTest {
         Matchers.containsInAnyOrder("//:A", "//:test-library"));
   }
 
+  @Test
+  public void testHandlesRelativeTargets() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "just_build", tmp);
+    workspace.setUp();
+
+    ThrowingFunction<String, String, Exception> getOutput =
+        (String data) ->
+            MoreStrings.lines(data).stream()
+                .filter(line -> line.startsWith("//subdir1/subdir2:bar"))
+                .map(line -> line.trim().split("\\s+")[1])
+                .findFirst()
+                .get();
+
+    String absolutePath =
+        getOutput.apply(
+            workspace
+                .runBuckCommand("targets", "--show-output", "//subdir1/subdir2:bar")
+                .assertSuccess()
+                .getStdout());
+
+    workspace.setRelativeWorkingDirectory(Paths.get("subdir1"));
+    String subdirRelativePath =
+        getOutput.apply(
+            workspace
+                .runBuckCommand("targets", "--show-output", "subdir2:bar")
+                .assertSuccess()
+                .getStdout());
+    String subdirAbsolutePath =
+        getOutput.apply(
+            workspace
+                .runBuckCommand("targets", "--show-output", "//subdir1/subdir2:bar")
+                .assertSuccess()
+                .getStdout());
+
+    assertEquals(absolutePath, subdirAbsolutePath);
+    assertEquals(absolutePath, subdirRelativePath);
+  }
+
   private static ImmutableList<String> extractTargetsFromOutput(String output) {
     return Arrays.stream(output.split(System.lineSeparator()))
         .map(line -> line.split("\\s+")[0])
@@ -1259,5 +1523,102 @@ public class TargetsCommandIntegrationTest {
         .collect(
             ImmutableMap.toImmutableMap(
                 line -> line.split("\\s+")[0], line -> line.split("\\s+")[1]));
+  }
+
+  @Test
+  public void handleReusingCurrentConfigProperty() throws IOException {
+    String warningMessage =
+        String.format(
+            "`%s` parameter provided. Reusing previously defined config.",
+            GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG);
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenarioWithoutDefaultCell(
+            this, "output_path", tmp);
+    workspace.setUp();
+
+    // the first execution with specific configuration params for ui.json_attribute_format
+    ProcessResult result =
+        workspace.runBuckdCommand(
+            "targets",
+            "--json",
+            "-c",
+            "ui.json_attribute_format=snake_case",
+            "-c",
+            "client.id=123",
+            "-c",
+            "ui.warn_on_config_file_overrides=true",
+            "-c",
+            "foo.bar3=1",
+            "-c",
+            "foo.bar4=1",
+            "--show-output",
+            "...");
+    result.assertSuccess();
+    String expectedJson = workspace.getFileContents("output_path_json_all_snake_case.js");
+    assertJsonMatchesWithOutputPlaceholder(expectedJson, result.getStdout());
+    assertThat(
+        GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " not provided",
+        result.getStderr(),
+        not(containsString(warningMessage)));
+
+    // the second execution without specific configuration params for ui.json_attribute_format but
+    // with --reuse-current-config" param
+    result =
+        workspace.runBuckdCommand(
+            "targets", "--json", GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG, "--show-output", "...");
+    result.assertSuccess();
+    assertJsonMatchesWithOutputPlaceholder(expectedJson, result.getStdout());
+    String stderr = result.getStderr();
+    assertThat(
+        GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " provided",
+        stderr,
+        containsString(warningMessage));
+    assertThat(
+        stderr,
+        containsString(
+            "Running with reused config, some configuration changes would not be applied:"));
+    assertThat(
+        "show config key in the diff",
+        stderr,
+        containsString("  Removed value ui.json_attribute_format='snake_case'"));
+    assertThat(
+        "show whitelisted config settings in the diff",
+        stderr,
+        containsString("  Removed value ui.warn_on_config_file_overrides='true'"));
+    assertThat(
+        "show whitelisted config settings in the diff",
+        stderr,
+        containsString("  Removed value client.id='123'"));
+    assertThat(stderr, containsString("  ... and 2 more. See logs for all changes"));
+
+    // the third execution without specific configuration params for ui.json_attribute_format and
+    // without --reuse-current-config param
+    result = workspace.runBuckdCommand("targets", "--json", "--show-output", "...");
+    result.assertSuccess();
+    assertJsonNotMatches(expectedJson, result.getStdout());
+    assertThat(
+        GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG + " not provided",
+        result.getStderr(),
+        not(containsString(warningMessage)));
+  }
+
+  private static String replaceHashInPath(String toReplace) {
+    return toReplace.replaceAll(BUCKOUT_REGEX, OUTPUT_PREFIX_PLACEHOLDER);
+  }
+
+  private static String removeNewLinesAndSpaces(String s) {
+    return s.replaceAll(System.lineSeparator(), "").replaceAll(" ", "");
+  }
+
+  private static void assertOutputPaths(String expected, ProcessResult result) throws IOException {
+    JsonNode observed =
+        ObjectMappers.READER.readTree(ObjectMappers.createParser(result.getStdout()));
+    JsonNode targetNode = observed.get(0);
+    assertTrue(targetNode.isObject());
+    JsonNode outputPaths = targetNode.get("buck.outputPaths");
+    assertEquals(
+        removeNewLinesAndSpaces(expected),
+        removeNewLinesAndSpaces(replaceHashInPath(outputPaths.toString())));
   }
 }

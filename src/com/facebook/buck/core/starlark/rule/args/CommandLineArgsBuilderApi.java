@@ -1,21 +1,24 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.rule.args;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
+import com.facebook.buck.core.rules.actions.lib.args.CommandLineArgsApi;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
@@ -50,6 +53,8 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
               @ParamType(type = Integer.class),
               @ParamType(type = Artifact.class),
               @ParamType(type = Label.class),
+              @ParamType(type = OutputArtifact.class),
+              @ParamType(type = CommandLineArgsApi.class)
             }),
         @Param(
             name = "value",
@@ -61,10 +66,23 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
               @ParamType(type = Integer.class),
               @ParamType(type = Artifact.class),
               @ParamType(type = Label.class),
-            })
+              @ParamType(type = OutputArtifact.class),
+              @ParamType(type = CommandLineArgsApi.class)
+            }),
+        @Param(
+            name = "format",
+            doc =
+                "A format string to apply after stringifying each argument. This must contain one "
+                    + "or more %s. Each will be replaced with the string value of each argument "
+                    + "at execution time.",
+            type = String.class,
+            named = true,
+            positional = false,
+            defaultValue = "\"%s\"")
       },
       useLocation = true)
-  CommandLineArgsBuilderApi add(Object argNameOrValue, Object value, Location location)
+  CommandLineArgsBuilderApi add(
+      Object argNameOrValue, Object value, String formatString, Location location)
       throws EvalException;
 
   @SkylarkCallable(
@@ -74,10 +92,20 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
         @Param(
             name = "values",
             doc =
-                "Values to add to the existing Args object. Must be one of str, int, Label, or Artifact",
+                "Values to add to the existing Args object. Must be one of str, int, Label, "
+                    + "Artifact or RunInfo",
             type = SkylarkList.class),
+        @Param(
+            name = "format",
+            doc =
+                "A format string to apply after stringifying each argument. This must contain one "
+                    + "or more %s. Each will be replaced with the string value of each argument "
+                    + "at execution time.",
+            type = String.class,
+            named = true,
+            defaultValue = "\"%s\"")
       },
       useLocation = true)
-  CommandLineArgsBuilderApi addAll(SkylarkList<Object> values, Location location)
+  CommandLineArgsBuilderApi addAll(SkylarkList<?> values, String formatString, Location location)
       throws EvalException;
 }

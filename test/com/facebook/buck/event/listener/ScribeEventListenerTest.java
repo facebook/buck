@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event.listener;
@@ -58,8 +58,7 @@ public class ScribeEventListenerTest {
   private static final BuildId BUILD_ID = new BuildId("fake_build_id");
   private static final long NANO_TIME = TimeUnit.SECONDS.toNanos(300);
   private static final long CURRENT_TIME_MILLIS = 1409702151000L;
-  private static final FakeClock FAKE_CLOCK =
-      FakeClock.builder().currentTimeMillis(CURRENT_TIME_MILLIS).nanoTime(NANO_TIME).build();
+  private static final FakeClock FAKE_CLOCK = FakeClock.of(CURRENT_TIME_MILLIS, NANO_TIME);
 
   private BuckEventBus eventBus;
   private ScribeEventListener listener;
@@ -95,7 +94,7 @@ public class ScribeEventListenerTest {
     Started started = BuildEvent.started(Collections.singletonList("arg1"));
     eventBus.post(started);
     eventBus.post(BuildEvent.finished(started, ExitCode.SUCCESS));
-    eventBus.post(BuildEvent.distBuildStarted());
+    eventBus.post(BuildEvent.buildReport(""));
 
     assertEquals(2, logger.getLinesForCategory(CATEGORY).size());
   }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -32,7 +32,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.common.BuildRules;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -51,12 +51,12 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import org.immutables.value.Value;
 
 class AndroidBinaryResourcesGraphEnhancer {
   static final Flavor MANIFEST_MERGE_FLAVOR = InternalFlavor.of("manifest_merge");
   static final Flavor RESOURCES_FILTER_FLAVOR = InternalFlavor.of("resources_filter");
   static final Flavor AAPT_PACKAGE_FLAVOR = InternalFlavor.of("aapt_package");
+  static final String AAPT2_COMPILE_FLAVOR_PREFIX = "aapt2_compile_";
   static final Flavor AAPT2_LINK_FLAVOR = InternalFlavor.of("aapt2_link");
   static final Flavor PACKAGE_STRING_ASSETS_FLAVOR = InternalFlavor.of("package_string_assets");
   private static final Flavor MERGE_ASSETS_FLAVOR = InternalFlavor.of("merge_assets");
@@ -79,6 +79,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final ProjectFilesystem projectFilesystem;
   private final ActionGraphBuilder graphBuilder;
   private final AaptMode aaptMode;
+  private final ImmutableList<String> additionalAaptParams;
   private final Optional<SourcePath> rawManifest;
   private final Optional<SourcePath> manifestSkeleton;
   private final Optional<SourcePath> moduleManifestSkeleton;
@@ -95,8 +96,12 @@ class AndroidBinaryResourcesGraphEnhancer {
   private final boolean noAutoVersionResources;
   private final boolean noVersionTransitionsResources;
   private final boolean noAutoAddOverlayResources;
+  private final boolean noResourceRemoval;
   private final APKModuleGraph apkModuleGraph;
   private final boolean useProtoFormat;
+  private final boolean failOnLegacyAapt2Errors;
+  private final boolean useAapt2LocaleFiltering;
+  private final ImmutableSet<String> extraFilteredResources;
 
   public AndroidBinaryResourcesGraphEnhancer(
       BuildTarget buildTarget,
@@ -109,6 +114,7 @@ class AndroidBinaryResourcesGraphEnhancer {
       Optional<SourcePath> manifestSkeleton,
       Optional<SourcePath> moduleManifestSkeleton,
       AaptMode aaptMode,
+      ImmutableList<String> additionalAaptParams,
       FilterResourcesSteps.ResourceFilter resourceFilter,
       ResourcesFilter.ResourceCompressionMode resourceCompressionMode,
       ImmutableSet<String> locales,
@@ -124,8 +130,12 @@ class AndroidBinaryResourcesGraphEnhancer {
       boolean noAutoVersionResources,
       boolean noVersionTransitionsResources,
       boolean noAutoAddOverlayResources,
+      boolean noResourceRemoval,
       APKModuleGraph apkModuleGraph,
-      boolean useProtoFormat) {
+      boolean useProtoFormat,
+      boolean failOnLegacyAapt2Errors,
+      boolean useAapt2LocaleFiltering,
+      ImmutableSet<String> extraFilteredResources) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
@@ -136,6 +146,7 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.locales = locales;
     this.localizedStringFileName = localizedStringFileName;
     this.aaptMode = aaptMode;
+    this.additionalAaptParams = additionalAaptParams;
     this.rawManifest = rawManifest;
     this.manifestSkeleton = manifestSkeleton;
     this.moduleManifestSkeleton = moduleManifestSkeleton;
@@ -153,11 +164,14 @@ class AndroidBinaryResourcesGraphEnhancer {
     this.noAutoAddOverlayResources = noAutoAddOverlayResources;
     this.apkModuleGraph = apkModuleGraph;
     this.useProtoFormat = useProtoFormat;
+    this.failOnLegacyAapt2Errors = failOnLegacyAapt2Errors;
+    this.noResourceRemoval = noResourceRemoval;
+    this.useAapt2LocaleFiltering = useAapt2LocaleFiltering;
+    this.extraFilteredResources = extraFilteredResources;
   }
 
-  @Value.Immutable
-  @BuckStyleImmutable
-  interface AbstractAndroidBinaryResourcesGraphEnhancementResult {
+  @BuckStyleValueWithBuilder
+  interface AndroidBinaryResourcesGraphEnhancementResult {
 
     Optional<SourcePath> getRDotJavaDir();
 
@@ -179,11 +193,22 @@ class AndroidBinaryResourcesGraphEnhancer {
   AndroidBinaryResourcesGraphEnhancementResult enhance(
       AndroidPackageableCollection packageableCollection) {
 
+    boolean needsToFilterForLocales = !locales.isEmpty();
+    // If we're using aapt2 locale filtering, then we do filtering later when we invoke aapt2,
+    // so we can skip creating the resource filter tree.
+    if (useAapt2LocaleFiltering) {
+      if (aaptMode != AaptMode.AAPT2) {
+        throw new HumanReadableException(
+            "use_aapt2_locale_filtering=True is incompatible with aapt_mode=" + aaptMode);
+      }
+      needsToFilterForLocales = false;
+    }
+
     boolean needsResourceFiltering =
         resourceFilter.isEnabled()
             || postFilterResourcesCmd.isPresent()
             || resourceCompressionMode.isStoreStringsAsAssets()
-            || !locales.isEmpty();
+            || needsToFilterForLocales;
 
     int packageIdOffset = 0;
     ImmutableSet.Builder<SourcePath> pathToRDotTxtFiles = ImmutableSet.builder();
@@ -191,8 +216,8 @@ class AndroidBinaryResourcesGraphEnhancer {
     ImmutableMap.Builder<APKModule, FilteredResourcesProvider> filteredResourcesProviderBuilder =
         ImmutableMap.builder();
 
-    AndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder =
-        AndroidBinaryResourcesGraphEnhancementResult.builder();
+    ImmutableAndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder =
+        ImmutableAndroidBinaryResourcesGraphEnhancementResult.builder();
 
     List<SourcePath> apkResourceDependencyList = new ArrayList<>();
 
@@ -392,7 +417,7 @@ class AndroidBinaryResourcesGraphEnhancer {
   private void createMergeAndExoResources(
       AndroidPackageableCollection packageableCollection,
       Builder<SourcePath> pathToRDotTxtFiles,
-      AndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder,
+      ImmutableAndroidBinaryResourcesGraphEnhancementResult.Builder resultBuilder,
       AaptOutputInfo aaptOutputInfo,
       Optional<PackageStringAssets> packageStringAssets) {
     SourcePath pathToRDotTxt;
@@ -514,22 +539,15 @@ class AndroidBinaryResourcesGraphEnhancer {
     ImmutableList.Builder<Aapt2Compile> compileListBuilder = ImmutableList.builder();
     ToolProvider aapt2ToolProvider = androidPlatformTarget.getAapt2ToolProvider();
     if (filteredResourcesProvider.isPresent()) {
-
-      int index = 0;
-      for (SourcePath resDir : filteredResourcesProvider.get().getResDirectories()) {
-        BuildTarget aapt2BuildTarget =
-            buildTarget.withAppendedFlavors(InternalFlavor.of("aapt2_compile_" + index), flavor);
-        Aapt2Compile compileRule =
-            new Aapt2Compile(
-                aapt2BuildTarget,
-                projectFilesystem,
-                graphBuilder,
-                aapt2ToolProvider.resolve(graphBuilder, aapt2BuildTarget.getTargetConfiguration()),
-                resDir);
-        graphBuilder.addToIndex(compileRule);
-        compileListBuilder.add(compileRule);
-        index++;
-      }
+      compileListBuilder.addAll(
+          createAapt2CompileablesForResourceProvider(
+              projectFilesystem,
+              graphBuilder,
+              aapt2ToolProvider,
+              filteredResourcesProvider.get(),
+              buildTarget,
+              skipCrunchPngs,
+              failOnLegacyAapt2Errors));
     } else {
       for (BuildTarget resTarget : resourceDetails.getResourcesWithNonEmptyResDir()) {
         compileListBuilder.add(
@@ -558,8 +576,41 @@ class AndroidBinaryResourcesGraphEnhancer {
         noVersionTransitionsResources,
         noAutoAddOverlayResources,
         isProtoFormat,
+        noResourceRemoval,
         aapt2ToolProvider.resolve(graphBuilder, aaptLinkBuildTarget.getTargetConfiguration()),
-        androidPlatformTarget.getAndroidJar());
+        additionalAaptParams,
+        androidPlatformTarget.getAndroidJar(),
+        useAapt2LocaleFiltering,
+        locales,
+        extraFilteredResources);
+  }
+
+  public static ImmutableList<Aapt2Compile> createAapt2CompileablesForResourceProvider(
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder actionGraphBuilder,
+      ToolProvider toolProvider,
+      FilteredResourcesProvider provider,
+      BuildTarget buildTarget,
+      boolean skipCrunchPngs,
+      boolean failOnLegacyErrors) {
+    int index = 0;
+    ImmutableList.Builder<Aapt2Compile> builder = ImmutableList.builder();
+    for (SourcePath resDir : provider.getResDirectories()) {
+      BuildTarget target =
+          buildTarget.withAppendedFlavors(InternalFlavor.of(AAPT2_COMPILE_FLAVOR_PREFIX + index++));
+      Aapt2Compile rule =
+          new Aapt2Compile(
+              target,
+              projectFilesystem,
+              actionGraphBuilder,
+              toolProvider.resolve(actionGraphBuilder, target.getTargetConfiguration()),
+              resDir,
+              skipCrunchPngs,
+              failOnLegacyErrors);
+      actionGraphBuilder.addToIndex(rule);
+      builder.add(rule);
+    }
+    return builder.build();
   }
 
   private GenerateRDotJava createGenerateRDotJava(
@@ -624,7 +675,8 @@ class AndroidBinaryResourcesGraphEnhancer {
         getTargetsAsResourceDeps(resourceDetails.getResourcesWithNonEmptyResDir()),
         skipCrunchPngs,
         includesVectorDrawables,
-        manifestEntries);
+        manifestEntries,
+        additionalAaptParams);
   }
 
   private PackageStringAssets createPackageStringAssets(

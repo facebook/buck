@@ -10,6 +10,7 @@ buck_module(
         "//src/com/facebook/buck/core/rules:rules",
         "//src/com/facebook/buck/core/rules/impl:impl",
         "//src/com/facebook/buck/core/util/graph:graph",
+        "//src/com/facebook/buck/util/json:json",
     ],
     tests = [
         "//test/com/facebook/buck/features/apple/common:common",

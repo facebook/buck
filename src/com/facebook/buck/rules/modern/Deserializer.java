@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern;
@@ -19,9 +19,9 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.impl.ImmutableDefaultTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldSerializationTag;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
@@ -29,7 +29,7 @@ import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.impl.BuildTargetTypeInfo;
@@ -95,13 +95,13 @@ public class Deserializer {
 
   private final Function<Optional<String>, ProjectFilesystem> cellMap;
   private final ClassFinder classFinder;
-  private final Supplier<SourcePathResolver> pathResolver;
+  private final Supplier<SourcePathResolverAdapter> pathResolver;
   private final ToolchainProvider toolchainProvider;
 
   public Deserializer(
       Function<Optional<String>, ProjectFilesystem> cellMap,
       ClassFinder classFinder,
-      Supplier<SourcePathResolver> pathResolver,
+      Supplier<SourcePathResolverAdapter> pathResolver,
       ToolchainProvider toolchainProvider) {
     this.cellMap = cellMap;
     this.classFinder = classFinder;
@@ -127,7 +127,7 @@ public class Deserializer {
 
     @Override
     public <T> T createSpecial(Class<T> valueClass, Object... args) {
-      if (valueClass.equals(SourcePathResolver.class)) {
+      if (valueClass.equals(SourcePathResolverAdapter.class)) {
         Preconditions.checkState(args.length == 0);
         @SuppressWarnings("unchecked")
         T value = (T) pathResolver.get();
@@ -436,10 +436,10 @@ public class Deserializer {
       int type = stream.readInt();
       switch (type) {
         case Serializer.TARGET_CONFIGURATION_TYPE_EMPTY:
-          return EmptyTargetConfiguration.INSTANCE;
+          return UnconfiguredTargetConfiguration.INSTANCE;
         case Serializer.TARGET_CONFIGURATION_TYPE_DEFAULT:
           BuildTarget targetPlatform = BuildTargetTypeInfo.INSTANCE.createNotNull(this);
-          return ImmutableDefaultTargetConfiguration.of(targetPlatform);
+          return RuleBasedTargetConfiguration.of(targetPlatform);
         case Serializer.TARGET_CONFIGURATION_TYPE_CONFIGURATION:
           return ConfigurationForConfigurationTargets.INSTANCE;
         default:

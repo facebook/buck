@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.slb;
@@ -147,7 +147,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
 
     LOG.verbose("Starting pings. %s", toString());
 
-    List<ListenableFuture<PerServerPingData>> futures = new ArrayList<>();
+    List<ListenableFuture<LoadBalancerPingEvent.PerServerPingData>> futures = new ArrayList<>();
     for (URI serverUri : serverPool) {
       ServerPing serverPing = new ServerPing(serverUri);
       futures.add(serverPing.getFuture());
@@ -155,10 +155,10 @@ public class ClientSideSlb implements HttpLoadBalancer {
 
     // Wait for all executions to complete or fail.
     try {
-      List<PerServerPingData> allServerData = Futures.allAsList(futures).get();
-      LoadBalancerPingEventData.Builder eventData = LoadBalancerPingEventData.builder();
-      eventData.addAllPerServerData(allServerData);
-      eventBus.post(new LoadBalancerPingEvent(eventData.build()));
+      List<LoadBalancerPingEvent.PerServerPingData> allServerData =
+          Futures.allAsList(futures).get();
+      eventBus.post(
+          new LoadBalancerPingEvent(ImmutableLoadBalancerPingEventData.of(allServerData)));
       LOG.verbose("all pings complete %s", toString());
     } catch (InterruptedException ex) {
       LOG.info(ex, "ClientSideSlb was interrupted");
@@ -171,7 +171,8 @@ public class ClientSideSlb implements HttpLoadBalancer {
 
   public class ServerPing implements Callback {
 
-    private final SettableFuture<PerServerPingData> future = SettableFuture.create();
+    private final SettableFuture<LoadBalancerPingEvent.PerServerPingData> future =
+        SettableFuture.create();
     URI serverUri;
 
     ServerPing(URI serverUri) {
@@ -181,7 +182,7 @@ public class ClientSideSlb implements HttpLoadBalancer {
       pingClient.newCall(request).enqueue(this);
     }
 
-    public ListenableFuture<PerServerPingData> getFuture() {
+    public ListenableFuture<LoadBalancerPingEvent.PerServerPingData> getFuture() {
       return future;
     }
 
@@ -190,7 +191,8 @@ public class ClientSideSlb implements HttpLoadBalancer {
     */
     @Override
     public void onResponse(Call call, Response response) throws IOException {
-      PerServerPingData.Builder perServerData = PerServerPingData.builder().setServer(serverUri);
+      ImmutablePerServerPingData.Builder perServerData =
+          ImmutablePerServerPingData.builder().setServer(serverUri);
 
       long sentRequestMillis = response.sentRequestAtMillis();
       if (response.isSuccessful()) {
@@ -213,8 +215,10 @@ public class ClientSideSlb implements HttpLoadBalancer {
     */
     @Override
     public void onFailure(Call call, IOException e) {
+      healthManager.reportException(serverUri, e);
       healthManager.reportRequestError(serverUri);
-      PerServerPingData.Builder perServerData = PerServerPingData.builder().setServer(serverUri);
+      ImmutablePerServerPingData.Builder perServerData =
+          ImmutablePerServerPingData.builder().setServer(serverUri);
       perServerData.setException(e);
       future.set(perServerData.build());
     }

@@ -1,24 +1,24 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.maven;
 
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.MavenPublishable;
@@ -94,10 +94,10 @@ public class Publisher {
   }
 
   public ImmutableSet<DeployResult> publish(
-      SourcePathResolver pathResolver, ImmutableSet<MavenPublishable> publishables)
+      SourcePathResolverAdapter pathResolver, ImmutableSet<MavenPublishable> publishables)
       throws DeploymentException {
-    ImmutableListMultimap<UnflavoredBuildTargetView, UnflavoredBuildTargetView>
-        duplicateBuiltinBuileRules = checkForDuplicatePackagedDeps(publishables);
+    ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget> duplicateBuiltinBuileRules =
+        checkForDuplicatePackagedDeps(publishables);
     if (duplicateBuiltinBuileRules.size() > 0) {
       StringBuilder sb = new StringBuilder();
       sb.append("Duplicate transitive dependencies for publishable libraries found!  This means");
@@ -107,8 +107,7 @@ public class Publisher {
       sb.append("used together.  The can be resolved by adding a maven URL to each target listed");
       sb.append(StandardSystemProperty.LINE_SEPARATOR);
       sb.append("below:");
-      for (UnflavoredBuildTargetView unflavoredBuildTargetView :
-          duplicateBuiltinBuileRules.keySet()) {
+      for (UnflavoredBuildTarget unflavoredBuildTargetView : duplicateBuiltinBuileRules.keySet()) {
         sb.append(StandardSystemProperty.LINE_SEPARATOR);
         sb.append(unflavoredBuildTargetView.getFullyQualifiedName());
         sb.append(" (referenced by these build targets: ");
@@ -157,12 +156,11 @@ public class Publisher {
    * @return A multimap of dependency build targets and the publishable build targets that have them
    *     included in the final package that will be uploaded.
    */
-  private ImmutableListMultimap<UnflavoredBuildTargetView, UnflavoredBuildTargetView>
+  private ImmutableListMultimap<UnflavoredBuildTarget, UnflavoredBuildTarget>
       checkForDuplicatePackagedDeps(ImmutableSet<MavenPublishable> publishables) {
     // First build the multimap of the builtin dependencies and the publishable targets that use
     // them.
-    Multimap<UnflavoredBuildTargetView, UnflavoredBuildTargetView> builtinDeps =
-        HashMultimap.create();
+    Multimap<UnflavoredBuildTarget, UnflavoredBuildTarget> builtinDeps = HashMultimap.create();
     for (MavenPublishable publishable : publishables) {
       for (BuildRule buildRule : publishable.getPackagedDependencies()) {
         builtinDeps.put(
@@ -171,11 +169,10 @@ public class Publisher {
       }
     }
     // Now, check for any duplicate uses, and if found, return them.
-    ImmutableListMultimap.Builder<UnflavoredBuildTargetView, UnflavoredBuildTargetView> builder =
+    ImmutableListMultimap.Builder<UnflavoredBuildTarget, UnflavoredBuildTarget> builder =
         ImmutableListMultimap.builder();
-    for (UnflavoredBuildTargetView buildTarget : builtinDeps.keySet()) {
-      Collection<UnflavoredBuildTargetView> publishablesUsingBuildTarget =
-          builtinDeps.get(buildTarget);
+    for (UnflavoredBuildTarget buildTarget : builtinDeps.keySet()) {
+      Collection<UnflavoredBuildTarget> publishablesUsingBuildTarget = builtinDeps.get(buildTarget);
       if (publishablesUsingBuildTarget.size() > 1) {
         builder.putAll(buildTarget, publishablesUsingBuildTarget);
       }

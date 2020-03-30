@@ -141,7 +141,7 @@ cxx_library(
         "PUBLIC",
     ],
     deps = select({
-        "//:x86-64_config": [":x86-only-2"],
+        "//:x86_32-config": [":x86-only-2"],
         "DEFAULT": [],
     }),
 )
@@ -159,6 +159,20 @@ cxx_library(
     srcs = glob(["lib3.cpp"]),
     compiler_flags = ["-fexceptions"],
     link_style = "static",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+cxx_library(
+    name = "lib-shared",
+    srcs = [
+        "lib.cpp",
+    ],
+    headers = [
+        "lib.h",
+    ],
+    link_style = "shared",
     visibility = [
         "PUBLIC",
     ],

@@ -1,7 +1,7 @@
-if 'macosx' in read_config('cxx', 'default_platform'):
-  default_frameworks = ["$SDKROOT/System/Library/Frameworks/AppKit.framework"]
+if "macosx" in read_config("cxx", "default_platform"):
+    default_frameworks = ["$SDKROOT/System/Library/Frameworks/AppKit.framework"]
 else:
-  default_frameworks = ["$SDKROOT/System/Library/Frameworks/UIKit.framework"]
+    default_frameworks = ["$SDKROOT/System/Library/Frameworks/UIKit.framework"]
 
 apple_library(
     name = "dep",
@@ -29,12 +29,11 @@ apple_bundle(
     extension = "app",
     info_plist = "Bundle.plist",
     info_plist_substitutions = {
-        "PRODUCT_BUNDLE_IDENTIFIER": "com.uber.test1",
         "EXECUTABLE_NAME": "bundle",
+        "PRODUCT_BUNDLE_IDENTIFIER": "com.uber.test1",
     },
     product_name = "bundle",
 )
-
 
 apple_test(
     name = "swifttest",

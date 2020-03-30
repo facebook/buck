@@ -1,24 +1,23 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.remoteexecution.util;
 
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
-import com.facebook.buck.event.PerfEventId;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient.FileMaterializer;
@@ -57,7 +56,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
 
-/** Used for materialzing outputs from the CAS. */
+/** Used for materializing outputs from the CAS. */
 public class OutputsMaterializer {
 
   private static final Logger LOG = Logger.get(OutputsMaterializer.class);
@@ -102,7 +101,7 @@ public class OutputsMaterializer {
 
     private void setExecutable(boolean isExecutable, Path path) {
       if (isExecutable) {
-        Preconditions.checkState(path.toFile().setExecutable(true));
+        Preconditions.checkState(path.toFile().setExecutable(true, false));
       }
     }
   }
@@ -251,7 +250,7 @@ public class OutputsMaterializer {
       try (SimplePerfEvent.Scope ignored =
           SimplePerfEvent.scope(
               buckEventBus,
-              PerfEventId.of("outputs-materializer"),
+              SimplePerfEvent.PerfEventId.of("outputs-materializer"),
               "size",
               size,
               "items",

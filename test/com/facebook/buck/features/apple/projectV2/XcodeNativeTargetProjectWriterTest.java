@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.apple.projectV2;
@@ -26,11 +26,14 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXFileReference;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
+import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.impl.CellMappingsFactory;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -38,9 +41,11 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -52,29 +57,38 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class XcodeNativeTargetProjectWriterTest {
+  private ProjectFilesystem projectFilesystem;
   private BuildTarget buildTarget;
   private AppleConfig appleConfig;
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
-  private SourcePathResolver sourcePathResolver;
+  private SourcePathResolverAdapter sourcePathResolverAdapter;
   private BuildRuleResolver buildRuleResolver;
+  private NewCellPathResolver newCellPathResolver;
+  private AbstractPBXObjectFactory objectFactory;
 
   @Before
   public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    generatedProject = new PBXProject("TestProject");
+    projectFilesystem = new FakeProjectFilesystem();
+    generatedProject = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
     buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     appleConfig = AppleProjectHelper.createDefaultAppleConfig(new FakeProjectFilesystem());
     buildRuleResolver = new TestActionGraphBuilder();
-    sourcePathResolver = buildRuleResolver.getSourcePathResolver();
+    sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =
-        new PathRelativizer(Paths.get("_output"), sourcePathResolver::getRelativePath);
+        new PathRelativizer(Paths.get("_output"), sourcePathResolverAdapter::getRelativePath);
+    newCellPathResolver =
+        CellMappingsFactory.create(
+            projectFilesystem.getRootPath(),
+            Configs.createDefaultConfig(projectFilesystem.getRootPath().getPath()));
+    objectFactory = AbstractPBXObjectFactory.DefaultFactory();
   }
 
   @Test
   public void shouldCreateTarget() throws NoSuchBuildTargetException {
     XCodeNativeTargetAttributes nativeTargetAttributes =
-        XCodeNativeTargetAttributes.builder()
+        ImmutableXCodeNativeTargetAttributes.builder()
             .setTarget(Optional.of(buildTarget))
             .setAppleConfig(appleConfig)
             .setProduct(
@@ -87,7 +101,11 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, true);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            true,
+            newCellPathResolver,
+            objectFactory);
     projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
     assertTargetExistsAndReturnTarget(generatedProject, "bar");
@@ -108,7 +126,11 @@ public class XcodeNativeTargetProjectWriterTest {
             .build();
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, false);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            false,
+            newCellPathResolver,
+            objectFactory);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(nativeTargetAttributes, generatedProject);
 
@@ -141,7 +163,11 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, false);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            false,
+            newCellPathResolver,
+            objectFactory);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -170,7 +196,11 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, false);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            false,
+            newCellPathResolver,
+            objectFactory);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -188,7 +218,11 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, false);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            false,
+            newCellPathResolver,
+            objectFactory);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -203,7 +237,7 @@ public class XcodeNativeTargetProjectWriterTest {
   @Test
   public void testTargetHasBuildScriptPhase() {
     XCodeNativeTargetAttributes targetAttributes =
-        XCodeNativeTargetAttributes.builder()
+        ImmutableXCodeNativeTargetAttributes.builder()
             .setTarget(Optional.of(buildTarget))
             .setAppleConfig(appleConfig)
             .setProduct(
@@ -216,7 +250,11 @@ public class XcodeNativeTargetProjectWriterTest {
 
     XcodeNativeTargetProjectWriter projectWriter =
         new XcodeNativeTargetProjectWriter(
-            pathRelativizer, sourcePathResolver::getRelativePath, false);
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            false,
+            newCellPathResolver,
+            objectFactory);
     XcodeNativeTargetProjectWriter.Result result =
         projectWriter.writeTargetToProject(targetAttributes, generatedProject);
 
@@ -229,8 +267,8 @@ public class XcodeNativeTargetProjectWriterTest {
         is(equalTo("cd $SOURCE_ROOT/.. && ./build_script.sh")));
   }
 
-  private XCodeNativeTargetAttributes.Builder builderWithCommonDefaults() {
-    return XCodeNativeTargetAttributes.builder()
+  private ImmutableXCodeNativeTargetAttributes.Builder builderWithCommonDefaults() {
+    return ImmutableXCodeNativeTargetAttributes.builder()
         .setTarget(Optional.of(buildTarget))
         .setAppleConfig(appleConfig)
         .setProduct(

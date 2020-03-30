@@ -1,29 +1,26 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.knowntypes;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.model.AbstractRuleType;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.starlark.rule.SkylarkDescription;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
@@ -96,11 +93,11 @@ public class KnownUserDefinedRuleTypesTest {
   public void returnsCorrectRuleType() throws LabelSyntaxException, EvalException {
     KnownUserDefinedRuleTypes knownRules = new KnownUserDefinedRuleTypes();
     SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
-    RuleType expected = RuleType.of(rule.getName(), AbstractRuleType.Kind.BUILD);
+    RuleType expected = RuleType.of(rule.getName(), RuleType.Kind.BUILD);
 
     knownRules.addRule(rule);
 
-    RuleType ruleType = knownRules.getRuleType(rule.getName());
+    RuleType ruleType = knownRules.getDescriptorByName(rule.getName()).getRuleType();
 
     assertEquals(expected, ruleType);
   }
@@ -109,20 +106,7 @@ public class KnownUserDefinedRuleTypesTest {
   public void errorsWhenTryingToGetRuleTypeForNonStoredType() {
     KnownUserDefinedRuleTypes knownRules = new KnownUserDefinedRuleTypes();
 
-    expectedThrown.expect(NullPointerException.class);
-    knownRules.getRuleType("//foo:bar.bzl:");
-  }
-
-  @Test
-  public void returnsCorrectDescription() throws LabelSyntaxException, EvalException {
-    KnownUserDefinedRuleTypes knownRules = new KnownUserDefinedRuleTypes();
-    SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
-    knownRules.addRule(rule);
-
-    RuleType ruleType = knownRules.getRuleType(rule.getName());
-
-    BaseDescription<?> ret = knownRules.getDescription(ruleType);
-    assertTrue(ret instanceof SkylarkDescription);
-    assertSame(ret, knownRules.getDescription(ruleType));
+    expectedThrown.expect(IllegalStateException.class);
+    knownRules.getDescriptorByName("//foo:bar.bzl:");
   }
 }

@@ -1,23 +1,24 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.modern.tools;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.rulekey.CustomFieldSerializationTag;
@@ -27,7 +28,7 @@ import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ClassInfo;
 import com.facebook.buck.rules.modern.CustomBehaviorUtils;
@@ -41,7 +42,7 @@ import com.facebook.buck.rules.modern.impl.AbstractValueVisitor;
 import com.facebook.buck.rules.modern.impl.DefaultClassInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfoFactory;
 import com.facebook.buck.rules.modern.impl.ValueTypeInfos.ExcludedValueTypeInfo;
-import com.facebook.buck.rules.modern.tools.CachedErrors.Builder;
+import com.facebook.buck.rules.modern.tools.ImmutableCachedErrors.Builder;
 import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
@@ -73,8 +74,8 @@ import java.util.stream.Stream;
  * required toolchains and referenced paths outside of the known cells.
  */
 public class IsolationChecker {
-  private final SourcePathResolver pathResolver;
-  private final ImmutableMap<Path, Optional<String>> cellMap;
+  private final SourcePathResolverAdapter pathResolver;
+  private final ImmutableMap<AbsPath, Optional<String>> cellMap;
   private final FailureReporter reporter;
   private final Path rootCellPath;
 
@@ -95,7 +96,7 @@ public class IsolationChecker {
     this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
     this.cellMap =
         cellResolver.getKnownRoots().stream()
-            .collect(ImmutableMap.toImmutableMap(root -> root, cellResolver::getCanonicalCellName));
+            .collect(ImmutableMap.toImmutableMap(p -> p, cellResolver::getCanonicalCellName));
     this.reporter = reporter;
   }
 
@@ -139,9 +140,9 @@ public class IsolationChecker {
 
   private boolean isInRepo(Path path) {
     Path cellPath = rootCellPath;
-    for (Entry<Path, Optional<String>> candidate : cellMap.entrySet()) {
-      if (path.startsWith(candidate.getKey())) {
-        cellPath = candidate.getKey();
+    for (Entry<AbsPath, Optional<String>> candidate : cellMap.entrySet()) {
+      if (path.startsWith(candidate.getKey().getPath())) {
+        cellPath = candidate.getKey().getPath();
       }
     }
     return path.startsWith(cellPath);
@@ -274,7 +275,7 @@ public class IsolationChecker {
       VisitorDelegate delegate) {
     CachedErrors results = resultsCache.get(instance);
     if (results == null) {
-      Builder builder = CachedErrors.builder();
+      Builder builder = ImmutableCachedErrors.builder();
       Visitor visitor =
           new Visitor(
               "",
@@ -343,30 +344,26 @@ public class IsolationChecker {
     }
 
     void handlePath(Path path, Consumer<Path> consumer) {
-      inputsCache
-          .computeIfAbsent(
-              path,
-              ignored -> {
-                ImmutableList.Builder<Path> builder = ImmutableList.builder();
-                if (isInRepo(path)) {
-                  try {
-                    if (Files.isSymbolicLink(path)) {
-                      handlePath(
-                          path.getParent().resolve(Files.readSymbolicLink(path)), builder::add);
-                    } else if (Files.isDirectory(path)) {
-                      try (Stream<Path> list = Files.list(path)) {
-                        list.forEach(child -> handlePath(child, consumer));
-                      }
-                    }
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
-                  }
-                } else {
-                  builder.add(path);
-                }
-                return builder.build();
-              })
-          .forEach(consumer::accept);
+      if (!inputsCache.containsKey(path)) {
+        ImmutableList.Builder<Path> builder = ImmutableList.builder();
+        if (isInRepo(path)) {
+          try {
+            if (Files.isSymbolicLink(path)) {
+              handlePath(path.getParent().resolve(Files.readSymbolicLink(path)), builder::add);
+            } else if (Files.isDirectory(path)) {
+              try (Stream<Path> list = Files.list(path)) {
+                list.forEach(child -> handlePath(child, consumer));
+              }
+            }
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        } else {
+          builder.add(path);
+        }
+        inputsCache.put(path, builder.build());
+      }
+      inputsCache.get(path).forEach(consumer::accept);
     }
   }
 

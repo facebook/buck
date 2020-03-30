@@ -1,22 +1,24 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules.resolver.impl;
 
 import com.facebook.buck.core.cell.CellProvider;
+import com.facebook.buck.core.cell.Cells;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -86,6 +88,7 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
   private final ActionGraphBuilderMetadataCache metadataCache;
   private final ConcurrentHashMap<BuildTarget, Task<BuildRule>> buildRuleIndex;
   private final Parallelizer parallelizer;
+  private final Cells cells;
 
   public MultiThreadedActionGraphBuilder(
       ListeningExecutorService executor,
@@ -96,15 +99,16 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
     this.targetGraph = targetGraph;
     this.configurationRuleRegistry = configurationRuleRegistry;
     this.buildRuleGenerator = buildRuleGenerator;
+    this.cells = cellProvider.getRootCell();
 
     this.executor = executor;
 
     int initialCapacity = (int) (targetGraph.getNodes().size() * 5 * 1.1);
     this.buildRuleIndex = new ConcurrentHashMap<>(initialCapacity);
     this.metadataCache =
-        new ActionGraphBuilderMetadataCache(this, this.targetGraph, initialCapacity);
+        new ActionGraphBuilderMetadataCache(this, this.targetGraph, initialCapacity, cells);
     this.toolchainProviderResolver =
-        target -> cellProvider.getBuildTargetCell(target).getToolchainProvider();
+        target -> cellProvider.getCellByCanonicalCellName(target.getCell()).getToolchainProvider();
     this.parallelizer =
         new Parallelizer() {
           @Override
@@ -242,7 +246,8 @@ public class MultiThreadedActionGraphBuilder extends AbstractActionGraphBuilder 
                                     targetGraph,
                                     configurationRuleRegistry,
                                     this,
-                                    targetGraph.get(target)))
+                                    targetGraph.get(target).cast(BuildRuleArg.class),
+                                    cells.getCell(target.getCell()).getCellPathResolver()))
                         .apply(target)));
   }
 

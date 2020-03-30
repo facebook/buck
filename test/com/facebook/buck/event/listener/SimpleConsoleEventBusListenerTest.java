@@ -1,18 +1,19 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.event.listener;
 
 import static com.facebook.buck.event.TestEventConfigurator.configureTestEventAtTime;
@@ -33,14 +34,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.BuildRuleKeys;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
-import com.facebook.buck.distributed.DistBuildCreatedEvent;
-import com.facebook.buck.distributed.DistBuildStatusEvent;
-import com.facebook.buck.distributed.ImmutableDistBuildStatus;
-import com.facebook.buck.distributed.thrift.BuildJob;
-import com.facebook.buck.distributed.thrift.BuildSlaveInfo;
-import com.facebook.buck.distributed.thrift.BuildSlaveRunId;
-import com.facebook.buck.distributed.thrift.BuildStatus;
-import com.facebook.buck.distributed.thrift.StampedeId;
 import com.facebook.buck.event.ActionGraphEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -65,6 +58,7 @@ import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Locale;
@@ -79,9 +73,6 @@ import org.junit.runners.Parameterized.Parameters;
 
 @RunWith(Parameterized.class)
 public class SimpleConsoleEventBusListenerTest {
-  private static final StampedeId STAMPEDE_ID_ONE = new StampedeId().setId("stampedeIdOne");
-  private static final String STAMPEDE_ID_ONE_MESSAGE =
-      "StampedeId=[stampedeIdOne]" + System.lineSeparator();
   private static final String TARGET_ONE = "//target:one";
   private static final String TARGET_TWO = "//target:two";
   private static final String SEVERE_MESSAGE = "This is a sample severe message.";
@@ -333,7 +324,8 @@ public class SimpleConsoleEventBusListenerTest {
     assertOutput(expectedOutput, console);
 
     CommandEvent.Started commandStarted =
-        CommandEvent.started("build", ImmutableList.of(), OptionalLong.of(100), 1234);
+        CommandEvent.started(
+            "build", ImmutableList.of(), Paths.get(""), OptionalLong.of(100), 1234);
     eventBus.post(CommandEvent.finished(commandStarted, ExitCode.SUCCESS));
     if (buildDetailsCommands.contains("build") && buildDetailsTemplate.isPresent()) {
       expectedOutput +=
@@ -435,97 +427,6 @@ public class SimpleConsoleEventBusListenerTest {
   }
 
   @Test
-  public void testPrintStampedeBuildSlaveStatusLines() {
-    setupSimpleConsole(true);
-    String expectedOutput = "";
-    assertOutput(expectedOutput, console);
-
-    BuildSlaveRunId buildSlaveRunId1 = new BuildSlaveRunId();
-    buildSlaveRunId1.setId("runid1");
-    BuildSlaveInfo slaveInfo1 = new BuildSlaveInfo();
-    slaveInfo1.setBuildSlaveRunId(buildSlaveRunId1);
-    slaveInfo1.setHostname("hostname1");
-    slaveInfo1.setStatus(BuildStatus.BUILDING);
-
-    BuildJob job = new BuildJob();
-    job.setBuildSlaves(ImmutableList.of(slaveInfo1));
-    job.setStatus(BuildStatus.BUILDING);
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job,
-                new ImmutableDistBuildStatus(
-                    Optional.of(BuildStatus.QUEUED.toString()), ImmutableList.of())),
-            0,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    expectedOutput += "STAMPEDE JOB STATUS CHANGED TO [BUILDING]" + System.lineSeparator();
-    expectedOutput +=
-        "STAMPEDE WORKER [hostname1][runid1] JOINED BUILD WITH STATUS [BUILDING]"
-            + System.lineSeparator();
-    assertOutput(expectedOutput, console);
-
-    BuildSlaveRunId buildSlaveRunId2 = new BuildSlaveRunId();
-    buildSlaveRunId2.setId("runid2");
-    BuildSlaveInfo slaveInfo2 = new BuildSlaveInfo();
-    slaveInfo2.setBuildSlaveRunId(buildSlaveRunId2);
-    slaveInfo2.setHostname("hostname2");
-    slaveInfo2.setStatus(BuildStatus.BUILDING);
-
-    job.setBuildSlaves(ImmutableList.of(slaveInfo1, slaveInfo2));
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job,
-                new ImmutableDistBuildStatus(
-                    Optional.of(BuildStatus.BUILDING.toString()), ImmutableList.of())),
-            1,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    expectedOutput +=
-        "STAMPEDE WORKER [hostname2][runid2] JOINED BUILD WITH STATUS [BUILDING]"
-            + System.lineSeparator();
-    assertOutput(expectedOutput, console);
-
-    slaveInfo2.setStatus(BuildStatus.FINISHED_SUCCESSFULLY);
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job,
-                new ImmutableDistBuildStatus(
-                    Optional.of(BuildStatus.BUILDING.toString()), ImmutableList.of())),
-            2,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    expectedOutput +=
-        "STAMPEDE WORKER [hostname2][runid2] CHANGED STATUS TO [FINISHED_SUCCESSFULLY]"
-            + System.lineSeparator();
-    assertOutput(expectedOutput, console);
-
-    job.setStatus(BuildStatus.FINISHED_SUCCESSFULLY);
-
-    eventBus.postWithoutConfiguring(
-        configureTestEventAtTime(
-            new DistBuildStatusEvent(
-                job,
-                new ImmutableDistBuildStatus(
-                    Optional.of(BuildStatus.FINISHED_SUCCESSFULLY.toString()), ImmutableList.of())),
-            3,
-            TimeUnit.MILLISECONDS,
-            /* threadId */ 0L));
-
-    expectedOutput +=
-        "STAMPEDE JOB STATUS CHANGED TO [FINISHED_SUCCESSFULLY]" + System.lineSeparator();
-    assertOutput(expectedOutput, console);
-  }
-
-  @Test
   public void testSimpleHideSucceededBuild() {
     setupSimpleConsole(true);
     String expectedOutput = "";
@@ -599,18 +500,6 @@ public class SimpleConsoleEventBusListenerTest {
             "BUILDING: FINISHED IN 1.2s",
             "BUILD SUCCEEDED",
             "");
-    assertOutput(expectedOutput, console);
-  }
-
-  @Test
-  public void testPrintsStampedeIdForDistributedBuild() {
-    setupSimpleConsole(true);
-    String expectedOutput = "";
-    assertOutput(expectedOutput, console);
-
-    eventBus.post(new DistBuildCreatedEvent(STAMPEDE_ID_ONE));
-
-    expectedOutput += STAMPEDE_ID_ONE_MESSAGE;
     assertOutput(expectedOutput, console);
   }
 

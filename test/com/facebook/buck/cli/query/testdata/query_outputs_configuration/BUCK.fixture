@@ -1,0 +1,16 @@
+java_library(
+    name = "j",
+    default_target_platform = ":p",
+)
+
+platform(
+    name = "p",
+    constraint_values = [
+    ],
+)
+
+platform(
+    name = "q",
+    constraint_values = [
+    ],
+)

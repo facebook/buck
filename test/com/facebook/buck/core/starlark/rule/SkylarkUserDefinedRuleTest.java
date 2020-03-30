@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.rule;
 
 import static com.facebook.buck.skylark.function.SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES;
@@ -20,14 +21,16 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableIntAttribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.ImmutableStringAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.IntAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
@@ -46,6 +49,7 @@ import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkType;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
+import java.util.Set;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
 import org.junit.Rule;
@@ -53,9 +57,14 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class SkylarkUserDefinedRuleTest {
+
+  private static final Set<String> HIDDEN_IMPLICIT_ATTRIBUTES = ImmutableSet.of();
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   Location location = Location.BUILTIN;
+
+  private static final ImmutableMap<String, Attribute<?>> TEST_IMPLICIT_ATTRIBUTES =
+      ImmutableMap.of("name", IMPLICIT_ATTRIBUTES.get("name"));
 
   public static class SimpleFunction extends BaseFunction {
 
@@ -121,11 +130,18 @@ public class SkylarkUserDefinedRuleTest {
   public void getsCorrectName() throws LabelSyntaxException, EvalException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()),
-            "_arg2", new ImmutableStringAttribute("some string", "", true, ImmutableList.of()));
+            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
+            "_arg2", StringAttribute.of("some string", "", true, ImmutableList.of()));
 
     SkylarkUserDefinedRule rule =
-        SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+        SkylarkUserDefinedRule.of(
+            location,
+            SimpleFunction.of(1),
+            TEST_IMPLICIT_ATTRIBUTES,
+            HIDDEN_IMPLICIT_ATTRIBUTES,
+            params,
+            false,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     assertEquals("@foo//bar:extension.bzl:baz_rule", rule.getName());
@@ -139,14 +155,21 @@ public class SkylarkUserDefinedRuleTest {
       throws EvalException, LabelSyntaxException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()),
-            "_arg2", new ImmutableStringAttribute("some string", "", true, ImmutableList.of()));
+            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
+            "_arg2", StringAttribute.of("some string", "", true, ImmutableList.of()));
 
     ImmutableList<String> expectedOrder = ImmutableList.of("name", "arg1");
     ImmutableList<String> expectedRawArgs = ImmutableList.of("name", "arg1", "_arg2");
 
     SkylarkUserDefinedRule rule =
-        SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+        SkylarkUserDefinedRule.of(
+            location,
+            SimpleFunction.of(1),
+            TEST_IMPLICIT_ATTRIBUTES,
+            HIDDEN_IMPLICIT_ATTRIBUTES,
+            params,
+            false,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     assertEquals(expectedOrder, rule.getSignature().getSignature().getNames());
@@ -154,19 +177,30 @@ public class SkylarkUserDefinedRuleTest {
   }
 
   @Test
-  public void movesNameToFirstArgAndPutsMandatoryArgsAheadOfOptionalOnes()
+  public void movesNameToFirstArgAndPutsMandatoryArgsAheadOfOptionalOnesAndSorts()
       throws EvalException, LabelSyntaxException {
     ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of(
-            "arg1", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()),
-            "arg2", new ImmutableStringAttribute("some string", "", true, ImmutableList.of()),
-            "arg3", new ImmutableIntAttribute(5, "", false, ImmutableList.of()),
-            "arg4", new ImmutableIntAttribute(5, "", true, ImmutableList.of()));
+        ImmutableMap.<String, AttributeHolder>builder()
+            .put("arg1", StringAttribute.of("some string", "", false, ImmutableList.of()))
+            .put("arg9", StringAttribute.of("some string", "", true, ImmutableList.of()))
+            .put("arg2", StringAttribute.of("some string", "", true, ImmutableList.of()))
+            .put("arg3", IntAttribute.of(5, "", false, ImmutableList.of()))
+            .put("arg8", IntAttribute.of(5, "", false, ImmutableList.of()))
+            .put("arg4", IntAttribute.of(5, "", true, ImmutableList.of()))
+            .build();
 
-    ImmutableList<String> expectedOrder = ImmutableList.of("name", "arg2", "arg4", "arg1", "arg3");
+    ImmutableList<String> expectedOrder =
+        ImmutableList.of("name", "arg2", "arg4", "arg9", "arg1", "arg3", "arg8");
 
     SkylarkUserDefinedRule rule =
-        SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+        SkylarkUserDefinedRule.of(
+            location,
+            SimpleFunction.of(1),
+            TEST_IMPLICIT_ATTRIBUTES,
+            HIDDEN_IMPLICIT_ATTRIBUTES,
+            params,
+            false,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     assertEquals(expectedOrder, rule.getSignature().getSignature().getNames());
@@ -180,7 +214,14 @@ public class SkylarkUserDefinedRuleTest {
     expectedException.expectMessage(
         "Implementation function 'a_func' must accept a single 'ctx' argument. Accepts 0 arguments");
 
-    SkylarkUserDefinedRule.of(location, SimpleFunction.of(0), IMPLICIT_ATTRIBUTES, params);
+    SkylarkUserDefinedRule.of(
+        location,
+        SimpleFunction.of(0),
+        TEST_IMPLICIT_ATTRIBUTES,
+        HIDDEN_IMPLICIT_ATTRIBUTES,
+        params,
+        false,
+        false);
   }
 
   @Test
@@ -191,20 +232,33 @@ public class SkylarkUserDefinedRuleTest {
     expectedException.expectMessage(
         "Implementation function 'a_func' must accept a single 'ctx' argument. Accepts 2 arguments");
 
-    SkylarkUserDefinedRule.of(location, SimpleFunction.of(2), IMPLICIT_ATTRIBUTES, params);
+    SkylarkUserDefinedRule.of(
+        location,
+        SimpleFunction.of(2),
+        TEST_IMPLICIT_ATTRIBUTES,
+        HIDDEN_IMPLICIT_ATTRIBUTES,
+        params,
+        false,
+        false);
   }
 
   @Test
   public void raisesErrorIfArgumentDuplicatesBuiltInName() throws EvalException {
     ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of(
-            "name", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()));
+        ImmutableMap.of("name", StringAttribute.of("some string", "", false, ImmutableList.of()));
 
     expectedException.expect(EvalException.class);
     expectedException.expectMessage(
         "Provided attr 'name' shadows implicit attribute. Please remove it.");
 
-    SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+    SkylarkUserDefinedRule.of(
+        location,
+        SimpleFunction.of(1),
+        TEST_IMPLICIT_ATTRIBUTES,
+        HIDDEN_IMPLICIT_ATTRIBUTES,
+        params,
+        false,
+        false);
   }
 
   @Test
@@ -219,7 +273,14 @@ public class SkylarkUserDefinedRuleTest {
             "name", "some_rule_name");
 
     SkylarkUserDefinedRule rule =
-        SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+        SkylarkUserDefinedRule.of(
+            location,
+            SimpleFunction.of(1),
+            TEST_IMPLICIT_ATTRIBUTES,
+            HIDDEN_IMPLICIT_ATTRIBUTES,
+            params,
+            false,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
@@ -244,10 +305,10 @@ public class SkylarkUserDefinedRuleTest {
       throws LabelSyntaxException, InterruptedException, EvalException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()),
-            "arg2", new ImmutableStringAttribute("some string", "", true, ImmutableList.of()),
-            "arg3", new ImmutableIntAttribute(5, "", false, ImmutableList.of()),
-            "arg4", new ImmutableIntAttribute(5, "", true, ImmutableList.of()));
+            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
+            "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
+            "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
+            "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
     ImmutableMap<String, Object> expected =
         ImmutableMap.<String, Object>builder()
             .put("buck.base_path", "some_package/subdir")
@@ -260,7 +321,14 @@ public class SkylarkUserDefinedRuleTest {
             .build();
 
     SkylarkUserDefinedRule rule =
-        SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+        SkylarkUserDefinedRule.of(
+            location,
+            SimpleFunction.of(1),
+            TEST_IMPLICIT_ATTRIBUTES,
+            HIDDEN_IMPLICIT_ATTRIBUTES,
+            params,
+            false,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
@@ -288,13 +356,20 @@ public class SkylarkUserDefinedRuleTest {
       throws LabelSyntaxException, InterruptedException, EvalException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()),
-            "arg2", new ImmutableStringAttribute("some string", "", true, ImmutableList.of()),
-            "arg3", new ImmutableIntAttribute(5, "", false, ImmutableList.of()),
-            "arg4", new ImmutableIntAttribute(5, "", true, ImmutableList.of()));
+            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
+            "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
+            "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
+            "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
 
     SkylarkUserDefinedRule rule =
-        SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+        SkylarkUserDefinedRule.of(
+            location,
+            SimpleFunction.of(1),
+            TEST_IMPLICIT_ATTRIBUTES,
+            HIDDEN_IMPLICIT_ATTRIBUTES,
+            params,
+            false,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
@@ -316,23 +391,35 @@ public class SkylarkUserDefinedRuleTest {
   public void raisesErrorIfInvalidCharsInArgumentNameAreProvided() throws EvalException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "invalid-name",
-            new ImmutableStringAttribute("some string", "", false, ImmutableList.of()));
+            "invalid-name", StringAttribute.of("some string", "", false, ImmutableList.of()));
 
     expectedException.expect(EvalException.class);
     expectedException.expectMessage("Attribute name 'invalid-name' is not a valid identifier");
-    SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+    SkylarkUserDefinedRule.of(
+        location,
+        SimpleFunction.of(1),
+        TEST_IMPLICIT_ATTRIBUTES,
+        HIDDEN_IMPLICIT_ATTRIBUTES,
+        params,
+        false,
+        false);
   }
 
   @Test
   public void raisesErrorIfEmptyArgumentNameIsProvided() throws EvalException {
     ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of(
-            "", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()));
+        ImmutableMap.of("", StringAttribute.of("some string", "", false, ImmutableList.of()));
 
     expectedException.expect(EvalException.class);
     expectedException.expectMessage("Attribute name '' is not a valid identifier");
-    SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+    SkylarkUserDefinedRule.of(
+        location,
+        SimpleFunction.of(1),
+        TEST_IMPLICIT_ATTRIBUTES,
+        HIDDEN_IMPLICIT_ATTRIBUTES,
+        params,
+        false,
+        false);
   }
 
   @Test
@@ -340,10 +427,10 @@ public class SkylarkUserDefinedRuleTest {
       throws EvalException, IOException, InterruptedException, LabelSyntaxException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()),
-            "arg2", new ImmutableStringAttribute("some string", "", true, ImmutableList.of()),
-            "arg3", new ImmutableIntAttribute(5, "", false, ImmutableList.of()),
-            "arg4", new ImmutableIntAttribute(5, "", true, ImmutableList.of()));
+            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
+            "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
+            "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
+            "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
     ImmutableMap<String, Object> expected =
         ImmutableMap.<String, Object>builder()
             .put("buck.base_path", "some_package/subdir")
@@ -356,7 +443,14 @@ public class SkylarkUserDefinedRuleTest {
             .build();
 
     SkylarkUserDefinedRule rule =
-        SkylarkUserDefinedRule.of(location, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+        SkylarkUserDefinedRule.of(
+            location,
+            SimpleFunction.of(1),
+            TEST_IMPLICIT_ATTRIBUTES,
+            HIDDEN_IMPLICIT_ATTRIBUTES,
+            params,
+            false,
+            false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
     try (Mutability mutability = Mutability.create("argtest")) {
@@ -393,21 +487,29 @@ public class SkylarkUserDefinedRuleTest {
   public void returnsParamInfos() throws EvalException {
 
     ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of(
-            "arg1", new ImmutableStringAttribute("some string", "", false, ImmutableList.of()));
+        ImmutableMap.of("arg1", StringAttribute.of("some string", "", false, ImmutableList.of()));
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
-            Location.BUILTIN, SimpleFunction.of(1), IMPLICIT_ATTRIBUTES, params);
+            Location.BUILTIN,
+            SimpleFunction.of(1),
+            TEST_IMPLICIT_ATTRIBUTES,
+            HIDDEN_IMPLICIT_ATTRIBUTES,
+            params,
+            false,
+            false);
 
-    ImmutableMap<String, ParamInfo> paramInfos = rule.getAllParamInfo();
+    ImmutableMap<String, ParamInfo<?>> paramInfos = rule.getAllParamInfo();
 
+    assertEquals(ImmutableSet.of("name", "arg1"), paramInfos.keySet());
+
+    SkylarkParamInfo name = (SkylarkParamInfo) paramInfos.get("name");
+    SkylarkParamInfo arg1 = (SkylarkParamInfo) paramInfos.get("arg1");
+
+    assertEquals("name", name.getName());
     assertEquals(
-        ImmutableMap.of(
-            "name",
-            new SkylarkParamInfo(
-                "name", new ImmutableStringAttribute("", "", true, ImmutableList.of())),
-            "arg1",
-            new SkylarkParamInfo("arg1", params.get("arg1").getAttribute())),
-        paramInfos);
+        StringAttribute.of("", "The name of the target", true, ImmutableList.of()), name.getAttr());
+
+    assertEquals("arg1", arg1.getName());
+    assertEquals(params.get("arg1").getAttribute(), arg1.getAttr());
   }
 }

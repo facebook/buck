@@ -1,0 +1,6 @@
+{
+    "//example:three":{
+        "name":"three",
+        "visibility":["//example/..."]
+    }
+}

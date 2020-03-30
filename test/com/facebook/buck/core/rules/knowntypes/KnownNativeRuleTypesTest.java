@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.rules.knowntypes;
@@ -21,11 +21,12 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.Toolchain;
 import com.facebook.buck.core.toolchain.impl.DefaultToolchainProvider;
@@ -33,6 +34,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
@@ -54,13 +56,13 @@ public class KnownNativeRuleTypesTest {
 
   @Test(expected = IllegalStateException.class)
   public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() {
-    ImmutableList<DescriptionWithTargetGraph<?>> buildDescriptions =
+    ImmutableList<Description<?>> buildDescriptions =
         ImmutableList.of(
             new KnownRuleTestDescription("Foo"),
             new KnownRuleTestDescription("Bar"),
             new KnownRuleTestDescription("Raz"));
 
-    KnownNativeRuleTypes.of(buildDescriptions, ImmutableList.of());
+    KnownNativeRuleTypes.of(buildDescriptions, ImmutableList.of(), ImmutableList.of());
   }
 
   @Test
@@ -78,8 +80,7 @@ public class KnownNativeRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     KnownNativeRuleTypes knownRuleTypes1 =
         TestKnownRuleTypesFactory.create(
@@ -98,8 +99,7 @@ public class KnownNativeRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     KnownNativeRuleTypes knownRuleTypes2 =
         TestKnownRuleTypesFactory.create(
@@ -121,10 +121,10 @@ public class KnownNativeRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE) {
+            TestRuleKeyConfigurationFactory.create()) {
           @Override
-          public Toolchain getByName(String toolchainName) {
+          public Toolchain getByName(
+              String toolchainName, TargetConfiguration toolchainTargetConfiguration) {
             throw new IllegalStateException(
                 "Toolchain creation is not allowed during construction of KnownBuildRuleTypesTest");
           }
@@ -150,8 +150,7 @@ public class KnownNativeRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     // This would throw if "default" weren't available as a platform.
     TestKnownRuleTypesFactory.create(
@@ -175,17 +174,19 @@ public class KnownNativeRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
     CxxPlatformsProvider cxxPlatformsProvider =
-        toolchainProvider.getByName(CxxPlatformsProvider.DEFAULT_NAME, CxxPlatformsProvider.class);
+        toolchainProvider.getByName(
+            CxxPlatformsProvider.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            CxxPlatformsProvider.class);
     assertThat(
         cxxPlatformsProvider
             .getUnresolvedCxxPlatforms()
             .getValue(flavor)
-            .resolve(new TestActionGraphBuilder(), EmptyTargetConfiguration.INSTANCE)
+            .resolve(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE)
             .getCflags(),
-        Matchers.contains(flag));
+        Matchers.contains(StringArg.of(flag)));
     TestKnownRuleTypesFactory.create(
         buckConfig, toolchainProvider, KnownRuleTypesTestUtil.createExecutor(temporaryFolder));
   }
@@ -208,8 +209,7 @@ public class KnownNativeRuleTypesTest {
             filesystem,
             KnownRuleTypesTestUtil.createExecutor(temporaryFolder),
             executableFinder,
-            TestRuleKeyConfigurationFactory.create(),
-            () -> EmptyTargetConfiguration.INSTANCE);
+            TestRuleKeyConfigurationFactory.create());
 
     // It should be legal to override multiple host platforms even though
     // only one will be practically used in a build.

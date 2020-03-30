@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -605,8 +605,8 @@ public class ExopackageInstallerIntegrationTest {
 
     Optional<ExopackageInfo.ResourcesInfo> resourcesInfo = Optional.empty();
     if (!currentBuildState.resourcesContents.isEmpty()) {
-      ExopackageInfo.ResourcesInfo.Builder resourcesInfoBuilder =
-          ExopackageInfo.ResourcesInfo.builder();
+      ImmutableList.Builder<ExopackagePathAndHash> resourcesPaths = ImmutableList.builder();
+
       int n = 0;
       Iterator<String> resourcesContents = currentBuildState.resourcesContents.iterator();
       StringBuilder expectedMetadata = new StringBuilder();
@@ -619,7 +619,7 @@ public class ExopackageInstallerIntegrationTest {
         writeFile(resourcePath, content);
         Sha1HashCode resourceHash = filesystem.computeSha1(resourcePath);
         writeFile(hashPath, resourceHash.getHash());
-        resourcesInfoBuilder.addResourcesPaths(
+        resourcesPaths.add(
             ExopackagePathAndHash.of(
                 FakeSourcePath.of(filesystem, resourcePath),
                 FakeSourcePath.of(filesystem, hashPath)));
@@ -627,7 +627,7 @@ public class ExopackageInstallerIntegrationTest {
         prefix = "\n";
         builder.addExoFile("resources/" + resourceHash + ".apk", content);
       }
-      resourcesInfo = Optional.of(resourcesInfoBuilder.build());
+      resourcesInfo = Optional.of(ExopackageInfo.ResourcesInfo.of(resourcesPaths.build()));
       builder.addExoFile("resources/metadata.txt", expectedMetadata.toString());
     }
 
@@ -662,18 +662,17 @@ public class ExopackageInstallerIntegrationTest {
       moduleInfo = Optional.of(moduleInfoBuilder.build());
     }
 
-    ApkInfo apkInfo =
-        ApkInfo.builder()
-            .setApkPath(apkSourcePath)
-            .setManifestPath(manifestSourcePath)
-            .setExopackageInfo(
+    HasInstallableApk.ApkInfo apkInfo =
+        ImmutableApkInfo.of(
+            manifestSourcePath,
+            apkSourcePath,
+            Optional.of(
                 ExopackageInfo.builder()
                     .setDexInfo(dexInfo)
                     .setNativeLibsInfo(nativeLibsInfo)
                     .setResourcesInfo(resourcesInfo)
                     .setModuleInfo(moduleInfo)
-                    .build())
-            .build();
+                    .build()));
     device.setAllowedInstallCounts(
         expectedApksInstalled,
         expectedDexesInstalled,

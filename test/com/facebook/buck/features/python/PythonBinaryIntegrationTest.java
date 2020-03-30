@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
@@ -30,7 +30,8 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -40,6 +41,7 @@ import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
+import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
@@ -50,6 +52,7 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.environment.Platform;
@@ -67,7 +70,9 @@ import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
+import org.hamcrest.comparator.ComparatorMatcherBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -109,12 +114,14 @@ public class PythonBinaryIntegrationTest {
 
   @Before
   public void setUp() throws IOException {
-    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
-
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "python_binary", tmp);
     workspace.setUp();
     String pexFlags = pexDirectory ? "--directory" : "";
-    workspace.writeContentsToPath(
+    String buckconfigContents =
+        Platform.detect().equals(Platform.WINDOWS)
+            ? workspace.getFileContents("buckconfig.windows")
+            : "";
+    buckconfigContents +=
         "[python]\n"
             + "  package_style = "
             + packageStyle.toString().toLowerCase()
@@ -123,8 +130,8 @@ public class PythonBinaryIntegrationTest {
             + nativeLinkStrategy.toString().toLowerCase()
             + "\n"
             + "  pex_flags = "
-            + pexFlags,
-        ".buckconfig");
+            + pexFlags;
+    workspace.writeContentsToPath(buckconfigContents, ".buckconfig");
     PythonBuckConfig config = getPythonBuckConfig();
     assertThat(config.getPackageStyle(), equalTo(packageStyle));
     assertThat(config.getNativeLinkStrategy(), equalTo(nativeLinkStrategy));
@@ -138,7 +145,6 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void executionThroughSymlink() throws IOException, InterruptedException {
-    assumeThat(Platform.detect(), Matchers.oneOf(Platform.MACOS, Platform.LINUX));
     workspace.runBuckBuild("//:bin").assertSuccess();
     String output =
         workspace
@@ -187,10 +193,10 @@ public class PythonBinaryIntegrationTest {
   }
 
   @Test
-  public void testOutput() {
+  public void testOutput() throws Exception {
     workspace.runBuckBuild("//:bin").assertSuccess();
 
-    File output = workspace.getPath("buck-out/gen/bin.pex").toFile();
+    File output = workspace.getGenPath(BuildTargetFactory.newInstance("//:bin"), "%s.pex").toFile();
     if (pexDirectory) {
       assertTrue(output.isDirectory());
     } else {
@@ -199,6 +205,7 @@ public class PythonBinaryIntegrationTest {
   }
 
   public void assumeThatNativeLibsAreSupported() {
+    assumeTrue(!Platform.detect().equals(Platform.WINDOWS));
     assumeThat(packageStyle, not(is(PackageStyle.INPLACE_LITE)));
     assumeThat(
         "TODO(8667197): Native libs currently don't work on El Capitan",
@@ -241,7 +248,7 @@ public class PythonBinaryIntegrationTest {
     String nativeLibsEnvVarName =
         CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()))
             .getLd()
-            .resolve(resolver, EmptyTargetConfiguration.INSTANCE)
+            .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .searchPathEnvVar();
     String originalNativeLibsEnvVar = "something";
     workspace.writeContentsToPath(
@@ -317,7 +324,7 @@ public class PythonBinaryIntegrationTest {
 
   @Test
   public void multiplePythonHomes() {
-    assumeThat(Platform.detect(), not(is(Platform.WINDOWS)));
+    assumeThatNativeLibsAreSupported();
     ProcessResult result =
         workspace.runBuckBuild(
             "-c",
@@ -352,7 +359,8 @@ public class PythonBinaryIntegrationTest {
     workspace.runBuckCommand("run", "//:main_module_with_prebuilt_dep_bin").assertSuccess();
     Path binPath =
         workspace.resolve(
-            workspace.getBuckPaths().getGenDir().resolve("main_module_with_prebuilt_dep_bin.pex"));
+            workspace.getGenPath(
+                BuildTargetFactory.newInstance("//:main_module_with_prebuilt_dep_bin"), "%s.pex"));
 
     ImmutableSet<Path> expectedPaths =
         ImmutableSet.of(
@@ -401,18 +409,11 @@ public class PythonBinaryIntegrationTest {
     res.assertSuccess();
 
     Path linkTreeDir =
-        workspace.resolve(
-            workspace
-                .getBuckPaths()
-                .getGenDir()
-                .resolve("main_module_with_prebuilt_dep_bin#link-tree"));
+        workspace.getGenPath(
+            workspace.newBuildTarget("//:main_module_with_prebuilt_dep_bin#link-tree"), "%s");
     Path originalWhlDir =
-        workspace.resolve(
-            workspace
-                .getBuckPaths()
-                .getGenDir()
-                .resolve("external_sources")
-                .resolve("__whl_dep__extracted"));
+        workspace.getGenPath(
+            BuildTargetFactory.newInstance("//external_sources:whl_dep"), "__%s__extracted");
 
     ImmutableSet<Path> expectedPaths =
         ImmutableSet.of(
@@ -447,7 +448,7 @@ public class PythonBinaryIntegrationTest {
             .getStderr(),
         Matchers.matchesPattern(
             Pattern.compile(
-                ".*Tried to link.*external_sources/__init__.py.*",
+                ".*found duplicate entries for module \\S+ when creating python package.*",
                 Pattern.MULTILINE | Pattern.DOTALL)));
   }
 
@@ -456,11 +457,7 @@ public class PythonBinaryIntegrationTest {
     assumeThat(packageStyle, is(PackageStyle.INPLACE));
 
     // Iteration order on whls not guaranteed, but we want to make sure it's the whls conflicting
-    String expected =
-        ".*Tried to link .*__whl_dep__extracted\\S+__init__.py, but "
-            + ".*__whl_dep_copy__extracted\\S+__init__.py.*|"
-            + ".*Tried to link .*__whl_dep_copy__extracted\\S+__init__.py, but "
-            + ".*__whl_dep__extracted\\S+__init__.py.*";
+    String expected = ".*found duplicate entries for module \\S+ when creating python package.*";
 
     assertThat(
         workspace
@@ -478,6 +475,7 @@ public class PythonBinaryIntegrationTest {
    */
   @Test
   public void omnibusExcludedNativeLinkableRoot() {
+    assumeThatNativeLibsAreSupported();
     assumeThat(nativeLinkStrategy, is(NativeLinkStrategy.MERGED));
     workspace
         .runBuckCommand("targets", "--show-output", "//omnibus_excluded_root:bin")
@@ -507,6 +505,17 @@ public class PythonBinaryIntegrationTest {
     return new PythonBuckConfig(buckConfig);
   }
 
+  private ImmutableList<String> getDirectlyExecutedPexCommand(String pexPathString)
+      throws IOException {
+    return Platform.detect().equals(Platform.WINDOWS)
+        ? ImmutableList.of(
+            new PythonInterpreterFromConfig(getPythonBuckConfig(), new ExecutableFinder())
+                .getPythonInterpreterPath()
+                .toString(),
+            pexPathString)
+        : ImmutableList.of(pexPathString);
+  }
+
   @Test
   public void stripsPathEarlyInInplaceBinaries() throws IOException, InterruptedException {
     assumeThat(packageStyle, is(PackageStyle.INPLACE));
@@ -514,11 +523,13 @@ public class PythonBinaryIntegrationTest {
 
     DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
+    ImmutableList<String> command = getDirectlyExecutedPexCommand(pexPath.toString());
+
     Result ret =
         executor.launchAndExecute(
             ProcessExecutorParams.builder()
                 .setDirectory(workspace.resolve("pathtest"))
-                .setCommand(ImmutableList.of(pexPath.toString()))
+                .setCommand(command)
                 .build());
     Assert.assertEquals(0, ret.getExitCode());
   }
@@ -526,15 +537,18 @@ public class PythonBinaryIntegrationTest {
   @Test
   public void preloadDeps() throws IOException, InterruptedException {
     assumeThat(packageStyle, is(PackageStyle.INPLACE));
+    assumeThatNativeLibsAreSupported();
     Path pexPath = workspace.buildAndReturnOutput("//preload_deps:bin");
 
     DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
+
+    ImmutableList<String> command = getDirectlyExecutedPexCommand(pexPath.toString());
 
     Result ret =
         executor.launchAndExecute(
             ProcessExecutorParams.builder()
                 .setDirectory(workspace.resolve("pathtest"))
-                .setCommand(ImmutableList.of(pexPath.toString()))
+                .setCommand(command)
                 .build());
     Assert.assertEquals(0, ret.getExitCode());
   }
@@ -542,6 +556,7 @@ public class PythonBinaryIntegrationTest {
   @Test
   public void preloadDepsOrder() throws IOException, InterruptedException {
     assumeThat(packageStyle, is(PackageStyle.INPLACE));
+    assumeThatNativeLibsAreSupported();
     DefaultProcessExecutor executor = new DefaultProcessExecutor(new TestConsole());
 
     for (Pair<String, String> test :
@@ -549,11 +564,14 @@ public class PythonBinaryIntegrationTest {
             new Pair<>("//preload_deps:bin_a_first", "a\n"),
             new Pair<>("//preload_deps:bin_b_first", "b\n"))) {
       Path pexPath = workspace.buildAndReturnOutput(test.getFirst());
+
+      ImmutableList<String> command = getDirectlyExecutedPexCommand(pexPath.toString());
+
       Result ret =
           executor.launchAndExecute(
               ProcessExecutorParams.builder()
                   .setDirectory(workspace.resolve("pathtest"))
-                  .setCommand(ImmutableList.of(pexPath.toString()))
+                  .setCommand(command)
                   .build());
       Assert.assertEquals(
           ret.getStdout().orElse("") + ret.getStderr().orElse(""), 0, ret.getExitCode());
@@ -591,5 +609,30 @@ public class PythonBinaryIntegrationTest {
             .map(path -> tmp.getRoot().relativize(path))
             .collect(ImmutableList.toImmutableList());
     Assert.assertEquals(3, pycFiles.size());
+  }
+
+  @Test
+  public void compileSources() throws IOException, InterruptedException {
+    assumeThat(packageStyle, is(PackageStyle.STANDALONE));
+    Path py3 = PythonTestUtils.assumeInterpreter("python3");
+    PythonTestUtils.assumeVersion(
+        py3,
+        Matchers.any(String.class),
+        ComparatorMatcherBuilder.comparedBy(new VersionStringComparator())
+            .greaterThanOrEqualTo("3.7"));
+    Path binPath =
+        workspace.buildAndReturnOutput("-c", "python.interpreter=" + py3, "//:bin_compile");
+    ImmutableSet<Path> paths =
+        pexDirectory
+            ? Files.walk(binPath)
+                .filter(p -> !p.equals(binPath))
+                .map(binPath::relativize)
+                .collect(ImmutableSet.toImmutableSet())
+            : Unzip.getZipMembers(binPath);
+    assertThat(
+        paths.stream().map(PathFormatter::pathWithUnixSeparators).collect(Collectors.toList()),
+        Matchers.hasItems(
+            Matchers.matchesRegex("foo/bar/(__pycache__/)?mod(.cpython-3[0-9])?.pyc"),
+            Matchers.matchesRegex("(__pycache__/)?main(.cpython-3[0-9])?.pyc")));
   }
 }

@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.file.downloader.impl;
@@ -19,6 +19,7 @@ package com.facebook.buck.file.downloader.impl;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
@@ -56,7 +57,9 @@ public class StackedDownloader implements Downloader {
   }
 
   public static Downloader createFromConfig(
-      BuckConfig config, ToolchainProvider toolchainProvider) {
+      BuckConfig config,
+      ToolchainProvider toolchainProvider,
+      TargetConfiguration toolchainTargetConfiguration) {
     ImmutableList.Builder<Downloader> downloaders = ImmutableList.builder();
 
     DownloadConfig downloadConfig = new DownloadConfig(config);
@@ -108,9 +111,13 @@ public class StackedDownloader implements Downloader {
       }
     }
 
-    if (toolchainProvider.isToolchainPresent(AndroidSdkLocation.DEFAULT_NAME)) {
+    if (toolchainProvider.isToolchainPresent(
+        AndroidSdkLocation.DEFAULT_NAME, toolchainTargetConfiguration)) {
       AndroidSdkLocation androidSdkLocation =
-          toolchainProvider.getByName(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+          toolchainProvider.getByName(
+              AndroidSdkLocation.DEFAULT_NAME,
+              toolchainTargetConfiguration,
+              AndroidSdkLocation.class);
       Path androidSdkRootPath = androidSdkLocation.getSdkRootPath();
       Path androidMavenRepo = androidSdkRootPath.resolve("extras/android/m2repository");
       try {

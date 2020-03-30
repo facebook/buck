@@ -1,25 +1,27 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
+import com.facebook.buck.core.artifact.OutputArtifact;
 import com.facebook.buck.core.build.action.BuildEngineAction;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 
 /**
  * An {@link Action} that forms the Action graph.
@@ -28,22 +30,25 @@ import com.google.common.collect.ImmutableSet;
  */
 public interface Action extends BuildEngineAction {
 
-  /** @return the identifier to the creator of this action */
+  /** @return the build target of the rule analysis that created of this action */
   BuildTarget getOwner();
 
   /** @return the set of inputs required to complete this action */
-  ImmutableSet<Artifact> getInputs();
+  ImmutableSortedSet<Artifact> getInputs();
 
   /** @return the set of outputs this action generates */
-  ImmutableSet<Artifact> getOutputs();
+  ImmutableSortedSet<OutputArtifact> getOutputs();
 
   @Override
-  ImmutableSet<SourcePath> getSourcePathOutputs();
+  ImmutableSortedSet<SourcePath> getSourcePathOutputs();
 
   /**
    * @return a name for this action to be printed to console when executing and for logging purposes
    */
   String getShortName();
+
+  /** @return the short name of this action as an ID */
+  String getID();
 
   /**
    * Executes this action as part of the build
@@ -70,16 +75,6 @@ public interface Action extends BuildEngineAction {
    */
   @Override
   boolean isCacheable();
-
-  /**
-   * @return true if this rule, and all rules which that depend on it, should be built locally i.e.
-   *     on the machine that initiated a build instead of one of the remote workers taking part in
-   *     the distributed build.
-   */
-  @Override
-  default boolean shouldBuildLocally() {
-    return false;
-  }
 
   /**
    * @return true if this rule should only be allowed to be executed via Remote Execution if it

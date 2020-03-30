@@ -1,44 +1,47 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.versioncontrol;
 
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
-import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
-import com.facebook.buck.util.unarchive.ArchiveFormat;
-import com.facebook.buck.util.unarchive.ExistingFileMode;
 import com.google.common.base.Charsets;
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
+import com.google.common.io.Files;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -52,7 +55,6 @@ public class HgCmdLineInterfaceIntegrationTest {
 
   @Rule public ExpectedException exception = ExpectedException.none();
 
-  private static final String HG_REPOS_ZIP = "hg_repos.zip";
   private static final String REPOS_DIR = "hg_repos";
   private static final String REPO_TWO_DIR = "hg_repo_two";
   private static final String REPO_THREE_DIR = "hg_repo_three";
@@ -97,10 +99,19 @@ public class HgCmdLineInterfaceIntegrationTest {
 
   @BeforeClass
   public static void setUpClass() throws IOException, InterruptedException {
-    reposPath = explodeReposZip();
 
-    repoTwoCmdLine = makeCmdLine(reposPath.resolve(REPO_TWO_DIR));
-    repoThreeCmdLine = makeCmdLine(reposPath.resolve(REPO_THREE_DIR));
+    reposPath = tempFolder.getRoot().toPath().resolve(REPOS_DIR);
+    Path repoTwoPath = reposPath.resolve(REPO_TWO_DIR);
+    Path repoThreePath = reposPath.resolve(REPO_THREE_DIR);
+    Optional<Path> hgCommand =
+        new ExecutableFinder()
+            .getOptionalExecutable(Paths.get("hg"), EnvVariablesProvider.getSystemEnv());
+
+    assumeTrue("Must have hg present to run", hgCommand.isPresent());
+    setupTestRepos(hgCommand.get(), repoTwoPath, repoThreePath);
+
+    repoTwoCmdLine = makeCmdLine(repoTwoPath);
+    repoThreeCmdLine = makeCmdLine(repoThreePath);
   }
 
   @Before
@@ -141,8 +152,7 @@ public class HgCmdLineInterfaceIntegrationTest {
   @Test
   public void testDiffBetweenTheSameRevision()
       throws VersionControlCommandFailedException, InterruptedException {
-    exception.expect(VersionControlCommandFailedException.class);
-    repoThreeCmdLine.diffBetweenRevisions("adf7a0", "adf7a0").get();
+    assertFalse(repoThreeCmdLine.diffBetweenRevisions("adf7a0", "adf7a0").isPresent());
   }
 
   @Test
@@ -162,36 +172,61 @@ public class HgCmdLineInterfaceIntegrationTest {
             "new file mode 100644",
             "");
     try (InputStream diffFileStream =
-        repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3").get()) {
+        repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3").get().get()) {
       InputStreamReader diffFileReader = new InputStreamReader(diffFileStream, Charsets.UTF_8);
       String actualDiff = CharStreams.toString(diffFileReader);
-      assertEquals(String.join("\n", expectedValue), actualDiff);
+      // The output message from FB hg is a bit more than that from open source hg, use contains
+      // here.
+      assertThat(String.join("\n", expectedValue), Matchers.containsString(actualDiff));
     }
   }
 
-  private static Path explodeReposZip() throws InterruptedException, IOException {
-    return explodeReposZip(tempFolder.getRoot().toPath());
+  private static void run(Path directory, String... args) throws IOException, InterruptedException {
+    Process proc = new ProcessBuilder().command(args).directory(directory.toFile()).start();
+    proc.waitFor();
+    assertEquals(
+        String.format(
+            "Could not run %s, got result %s", Joiner.on(" ").join(args), proc.exitValue()),
+        0,
+        proc.exitValue());
   }
 
-  private static Path explodeReposZip(Path destination) throws InterruptedException, IOException {
+  private static void setupTestRepos(Path hgPath, Path repoTwoPath, Path repoThreePath)
+      throws InterruptedException, IOException {
     Path testDataDir = TestDataHelper.getTestDataDirectory(HgCmdLineInterfaceIntegrationTest.class);
-    Path hgRepoZipPath = testDataDir.resolve(HG_REPOS_ZIP);
 
-    Path hgRepoZipCopyPath = destination.resolve(HG_REPOS_ZIP);
+    // All of these are generated by
+    // test/com/facebook/buck/util/versioncontrol/testdata/create_from_zip.sh
+    Path repoTwoBundle = testDataDir.resolve(REPO_TWO_DIR + ".tar.bz2");
+    Path repoTwoBookmarks = testDataDir.resolve(REPO_TWO_DIR + ".bookmarks");
+    Path repoThreeBundle = testDataDir.resolve(REPO_THREE_DIR + ".tar.bz2");
+    Path repoThreeBookmarks = testDataDir.resolve(REPO_TWO_DIR + ".bookmarks");
+    String hg = hgPath.toString();
 
-    Files.copy(hgRepoZipPath, hgRepoZipCopyPath, REPLACE_EXISTING);
+    assertTrue(repoTwoPath.toFile().mkdirs());
+    assertTrue(repoThreePath.toFile().mkdirs());
 
-    Path reposPath = destination.resolve(REPOS_DIR);
+    run(repoTwoPath, hg, "init");
+    run(repoTwoPath, hg, "unbundle", repoTwoBundle.toString());
+    addTestBookmarks(hg, repoTwoBookmarks, repoTwoPath);
+    run(repoTwoPath, hg, "update", "branch_from_master2");
 
-    ArchiveFormat.ZIP
-        .getUnarchiver()
-        .extractArchive(
-            new DefaultProjectFilesystemFactory(),
-            hgRepoZipCopyPath,
-            reposPath,
-            ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+    run(repoThreePath, hg, "init");
+    run(repoThreePath, hg, "unbundle", repoThreeBundle.toString());
+    addTestBookmarks(hg, repoThreeBookmarks, repoThreePath);
+    run(repoThreePath, hg, "update", "branch_from_master3");
+    Files.write(new byte[] {}, repoThreePath.resolve("local_change").toFile());
+    Files.write(new byte[] {}, repoThreePath.resolve("tracked_change").toFile());
+    run(repoThreePath, hg, "add", "tracked_change");
+  }
 
-    return reposPath;
+  private static void addTestBookmarks(String hg, Path bookmarksFile, Path hgRepoPath)
+      throws IOException, InterruptedException {
+    List<String> lines = Files.readLines(bookmarksFile.toFile(), Charsets.UTF_8);
+    for (String line : lines) {
+      String[] parts = line.split(" ");
+      run(hgRepoPath, hg, "bookmark", "-r", parts[1], parts[0]);
+    }
   }
 
   private static VersionControlCmdLineInterface makeCmdLine(Path repoRootDir) {

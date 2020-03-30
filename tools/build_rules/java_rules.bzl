@@ -14,18 +14,21 @@
 
 """Module containing java macros."""
 
-load("@bazel_skylib//lib:collections.bzl", "collections")
+load("@buck_bazel_skylib//lib:collections.bzl", "collections")
 load("//tools/build_rules:module_rules_for_tests.bzl", "convert_module_deps_to_test")
 
+def _append_and_get_uniq_deps(kwargs, key, new_deps):
+    return list(collections.uniq(list(kwargs.get(key, [])) + new_deps))
+
 def _add_immutables(deps_arg, **kwargs):
-    kwargs[deps_arg] = collections.uniq(kwargs.get(deps_arg, []) + [
+    kwargs[deps_arg] = _append_and_get_uniq_deps(kwargs, deps_arg, [
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//third-party/java/errorprone:error-prone-annotations",
         "//third-party/java/immutables:immutables",
         "//third-party/java/guava:guava",
         "//third-party/java/jsr:jsr305",
     ])
-    kwargs["plugins"] = collections.uniq(kwargs.get("plugins", []) + [
+    kwargs["plugins"] = _append_and_get_uniq_deps(kwargs, "plugins", [
         "//third-party/java/immutables:processor",
     ])
     return kwargs
@@ -133,7 +136,6 @@ def standard_java_test(
         labels = None,
         with_test_data = False,
         **kwargs):
-
     test_srcs = native.glob(["*Test.java"])
 
     if len(test_srcs) > 0:
@@ -148,22 +150,34 @@ def standard_java_test(
             **kwargs
         )
 
+def standard_java_benchmark(
+        name,
+        deps):
+    native.java_library(
+        name = name,
+        srcs = native.glob(["*Benchmark.java"]),
+        plugins = ["//third-party/java/jmh:jmh-generator-annprocess-plugin"],
+        deps = deps + [
+            "//third-party/java/jmh:jmh",
+        ],
+    )
+
 def _add_pf4j_plugin_framework(**kwargs):
-    kwargs["provided_deps"] = collections.uniq(kwargs.get("provided_deps", []) + [
+    kwargs["provided_deps"] = _append_and_get_uniq_deps(kwargs, "provided_deps", [
         "//third-party/java/pf4j:pf4j",
     ])
-    kwargs["plugins"] = collections.uniq(kwargs.get("plugins", []) + [
+    kwargs["plugins"] = _append_and_get_uniq_deps(kwargs, "plugins", [
         "//third-party/java/pf4j:processor",
     ])
-    kwargs["annotation_processor_params"] = collections.uniq(kwargs.get("annotation_processor_params", []) + [
+    kwargs["annotation_processor_params"] = _append_and_get_uniq_deps(kwargs, "annotation_processor_params", [
         "pf4j.storageClassName=org.pf4j.processor.ServiceProviderExtensionStorage",
     ])
     return kwargs
 
 def _add_buck_modules_annotation_processor(**kwargs):
-    kwargs["plugins"] = list(collections.uniq(kwargs.get("plugins", []) + [
+    kwargs["plugins"] = _append_and_get_uniq_deps(kwargs, "plugins", [
         "//src/com/facebook/buck/core/module/annotationprocessor:annotationprocessor",
-    ]))
+    ])
     return kwargs
 
 def java_library_with_plugins(name, **kwargs):

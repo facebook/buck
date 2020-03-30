@@ -1,47 +1,46 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import java.nio.file.Path;
+import com.google.common.reflect.TypeToken;
 import java.util.Arrays;
 import java.util.Locale;
 
-public class EnumTypeCoercer<E extends Enum<E>> extends LeafTypeCoercer<E> {
+/** Coerce a string to java enum. */
+public class EnumTypeCoercer<E extends Enum<E>> extends LeafUnconfiguredOnlyCoercer<E> {
   private final Class<E> enumClass;
 
-  @SuppressWarnings("unchecked")
-  public EnumTypeCoercer(Class<?> e) {
-    this.enumClass = (Class<E>) e;
+  public EnumTypeCoercer(Class<E> e) {
+    this.enumClass = e;
   }
 
   @Override
-  public Class<E> getOutputClass() {
-    return enumClass;
+  public TypeToken<E> getUnconfiguredType() {
+    return TypeToken.of(enumClass);
   }
 
   @Override
-  public E coerce(
-      CellPathResolver cellRoots,
+  public E coerceToUnconfigured(
+      CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
-      Path pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
+      ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
     if (object instanceof String) {
@@ -59,7 +58,7 @@ public class EnumTypeCoercer<E extends Enum<E>> extends LeafTypeCoercer<E> {
     }
     throw CoerceFailedException.simple(
         object,
-        getOutputClass(),
+        getOutputType(),
         "Allowed values: " + Arrays.toString(enumClass.getEnumConstants()));
   }
 }

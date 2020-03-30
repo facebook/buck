@@ -1,28 +1,30 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.coercer;
 
-import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.model.BaseName;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.TargetNodeTranslator;
 import com.facebook.buck.versions.TargetTranslatable;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -35,13 +37,21 @@ public class PatternMatchedCollection<T>
     this.values = values;
   }
 
-  public ImmutableList<T> getMatchingValues(String string) {
-    ImmutableList.Builder<T> matchingValues = ImmutableList.builder();
-    for (Pair<Pattern, T> pair : values) {
+  /** Apply {@code consumer} to all values whose {@link Pattern} matches {@code string}. */
+  public void forEachMatchingValue(String string, Consumer<T> consumer) {
+    int size = values.size();
+    for (int idx = 0; idx < size; idx++) {
+      Pair<Pattern, T> pair = values.get(idx);
       if (pair.getFirst().matcher(string).find()) {
-        matchingValues.add(pair.getSecond());
+        consumer.accept(pair.getSecond());
       }
     }
+  }
+
+  /** @return all values whose {@link Pattern} matches {@code string}. */
+  public ImmutableList<T> getMatchingValues(String string) {
+    ImmutableList.Builder<T> matchingValues = ImmutableList.builder();
+    forEachMatchingValue(string, matchingValues::add);
     return matchingValues.build();
   }
 
@@ -49,17 +59,23 @@ public class PatternMatchedCollection<T>
     return values;
   }
 
+  /** Apply {@code consumer} to all values. */
+  public void forEachValue(Consumer<T> consumer) {
+    int size = values.size();
+    for (int idx = 0; idx < size; idx++) {
+      consumer.accept(values.get(idx).getSecond());
+    }
+  }
+
   public ImmutableList<T> getValues() {
     ImmutableList.Builder<T> vals = ImmutableList.builder();
-    for (Pair<Pattern, T> value : values) {
-      vals.add(value.getSecond());
-    }
+    forEachValue(vals::add);
     return vals.build();
   }
 
   @Override
   public Optional<PatternMatchedCollection<T>> translateTargets(
-      CellPathResolver cellPathResolver, String targetBaseName, TargetNodeTranslator translator) {
+      CellNameResolver cellPathResolver, BaseName targetBaseName, TargetNodeTranslator translator) {
     Optional<ImmutableList<Pair<Pattern, T>>> translatedValues =
         translator.translate(cellPathResolver, targetBaseName, values);
     return translatedValues.map(PatternMatchedCollection::new);

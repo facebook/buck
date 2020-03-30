@@ -1,18 +1,19 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.providers.collect.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -20,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.rules.analysis.impl.FakeBuiltInProvider;
 import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.Provider;
@@ -27,6 +29,8 @@ import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.starlark.compatible.MutableObjectException;
+import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
@@ -34,6 +38,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -141,5 +146,17 @@ public class ProviderInfoCollectionImplTest {
         fakeInfo1, providerInfoCollection.getIndex(builtinProvider1, Location.BUILTIN, ctx));
     assertEquals(
         Runtime.NONE, providerInfoCollection.getIndex(builtinProvider2, Location.BUILTIN, ctx));
+  }
+
+  @Test
+  public void throwsExceptionIfAddingMutableValue() {
+    try (TestMutableEnv env = new TestMutableEnv()) {
+      ProviderInfoCollectionImpl.Builder collection = ProviderInfoCollectionImpl.builder();
+      SkylarkDict<String, Set<Artifact>> mutableDict = SkylarkDict.of(env.getEnv());
+
+      assertFalse(mutableDict.isImmutable());
+      expectedException.expect(MutableObjectException.class);
+      collection.put(new ImmutableDefaultInfo(mutableDict, ImmutableList.of()));
+    }
   }
 }

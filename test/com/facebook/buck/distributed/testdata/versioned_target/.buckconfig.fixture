@@ -1,5 +1,0 @@
-[build]
-  versions = true
-[version_universes]
-  v1 = //:versioned=1
-  v2 = //:versioned=2

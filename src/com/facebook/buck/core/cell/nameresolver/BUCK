@@ -1,0 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "nameresolver",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/cell/exception:exception",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model:model",
+    ],
+)

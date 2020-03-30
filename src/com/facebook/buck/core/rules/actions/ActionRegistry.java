@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.rules.actions;
 
 import com.facebook.buck.core.artifact.Artifact;
@@ -47,6 +48,19 @@ public interface ActionRegistry {
   }
 
   /**
+   * Simple helper behaves like {@link #declareArtifact(Path, Location)}, but validates that the
+   * string is a valid path
+   *
+   * @param output the output path relative to the package path for hte current rule that the {@link
+   *     Action}s are being created for
+   * @param location if provided, the location within the extension file where this artifact was
+   *     declared
+   * @return a {@link Artifact} for hte given path
+   * @throws ArtifactDeclarationException if the provided output path is invalid
+   */
+  Artifact declareArtifact(String output, Location location) throws ArtifactDeclarationException;
+
+  /**
    * @param output the output {@link Path} relative to the package path for the current rule that
    *     the {@link Action}s are being created for
    * @param location if provided, the location within the extension file where this artifact was
@@ -65,8 +79,9 @@ public interface ActionRegistry {
    * com.google.devtools.build.lib.packages.Provider}s to be consumed.
    *
    * @param action the {@link Action} to create an {@link ActionWrapperData} for and registers it
+   * @return the assigned unique ID for this {@link Action}
    */
-  void registerActionAnalysisDataForAction(Action action) throws ActionCreationException;
+  String registerActionAnalysisDataForAction(Action action) throws ActionCreationException;
 
   /**
    * @return the {@link BuildTarget} responsible for all the {@link Action}s registered to this

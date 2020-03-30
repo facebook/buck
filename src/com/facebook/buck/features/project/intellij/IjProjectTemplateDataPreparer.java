@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -54,10 +54,8 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -200,13 +198,13 @@ public class IjProjectTemplateDataPreparer {
 
     IjFolderToIjSourceFolderTransform transformToFolder =
         new IjFolderToIjSourceFolderTransform(module);
-    Map<String, List<IjSourceFolder>> sources = Maps.newTreeMap();
-    sources.put(contentRootPath.toString(), Collections.emptyList());
+    Map<String, ImmutableList<IjSourceFolder>> sources = Maps.newTreeMap();
+    sources.put(contentRootPath.toString(), ImmutableList.of());
     simplifiedFolders
         .asMap()
         .forEach(
             (contentRoot, contentRootFolders) -> {
-              List<IjSourceFolder> sourceFolders =
+              ImmutableList<IjSourceFolder> sourceFolders =
                   contentRootFolders.stream()
                       .map(transformToFolder)
                       .sorted()
@@ -214,10 +212,9 @@ public class IjProjectTemplateDataPreparer {
               sources.put(contentRoot.toString(), sourceFolders);
             });
     ImmutableList.Builder<ContentRoot> contentRootsBuilder = ImmutableList.builder();
-    for (Map.Entry<String, List<IjSourceFolder>> entry : sources.entrySet()) {
+    for (Map.Entry<String, ImmutableList<IjSourceFolder>> entry : sources.entrySet()) {
       String url = getUrl(projectPaths.getModuleQualifiedPath(Paths.get(entry.getKey()), module));
-      contentRootsBuilder.add(
-          ContentRoot.builder().setUrl(url).setFolders(entry.getValue()).build());
+      contentRootsBuilder.add(ContentRoot.of(url, entry.getValue()));
     }
     return contentRootsBuilder.build();
   }
@@ -298,7 +295,7 @@ public class IjProjectTemplateDataPreparer {
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
 
-  public ImmutableSet<DependencyEntry> getDependencies(IjModule module) {
+  public ImmutableSet<IjDependencyListBuilder.DependencyEntry> getDependencies(IjModule module) {
     ImmutableMap<IjProjectElement, DependencyType> deps = moduleGraph.getDepsFor(module);
     IjDependencyListBuilder dependencyListBuilder = new IjDependencyListBuilder();
 
@@ -339,11 +336,7 @@ public class IjProjectTemplateDataPreparer {
                   (module.getModuleBasePath().toString().isEmpty() || !needToPutModuleToGroup)
                       ? null
                       : moduleGroupName;
-              return ModuleIndexEntry.builder()
-                  .setFileUrl(fileUrl)
-                  .setFilePath(moduleOutputFileRelativePath)
-                  .setGroup(group)
-                  .build();
+              return ModuleIndexEntry.of(fileUrl, moduleOutputFileRelativePath, group);
             })
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
   }
@@ -488,7 +481,7 @@ public class IjProjectTemplateDataPreparer {
       Set<String> relativeResourcePaths = new HashSet<>(resourcePaths.size());
       for (Path resourcePath : resourcePaths) {
         relativeResourcePaths.add(
-            IjProjectPaths.toRelativeString(resourcePath, module.getModuleBasePath()));
+            IjProjectPaths.toRelativeString(resourcePath, projectPaths.getModuleDir(module)));
       }
 
       androidProperties.put(
@@ -542,16 +535,15 @@ public class IjProjectTemplateDataPreparer {
         ijResourceFolderType = resourceFolder.getResourceFolderType();
       }
 
-      return IjSourceFolder.builder()
-          .setType(folder.getIjName())
-          .setUrl(getUrl(projectPaths.getModuleQualifiedPath(folder.getPath(), module)))
-          .setPath(projectPaths.getModuleRelativePath(folder.getPath(), module))
-          .setIsTestSource(folder instanceof TestFolder)
-          .setIsResourceFolder(folder.isResourceFolder())
-          .setIjResourceFolderType(ijResourceFolderType)
-          .setRelativeOutputPath(relativeOutputPath)
-          .setPackagePrefix(packagePrefix)
-          .build();
+      return IjSourceFolder.of(
+          folder.getIjName(),
+          getUrl(projectPaths.getModuleQualifiedPath(folder.getPath(), module)),
+          projectPaths.getModuleRelativePath(folder.getPath(), module),
+          folder instanceof TestFolder,
+          folder.isResourceFolder(),
+          ijResourceFolderType,
+          relativeOutputPath,
+          packagePrefix);
     }
 
     @Nullable

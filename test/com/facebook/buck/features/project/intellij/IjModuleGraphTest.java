@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.project.intellij;
@@ -28,6 +28,7 @@ import com.facebook.buck.android.AndroidLibraryDescription;
 import com.facebook.buck.android.AndroidLibraryGraphEnhancer;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -38,7 +39,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.features.project.intellij.aggregation.AggregationMode;
 import com.facebook.buck.features.project.intellij.aggregation.DefaultAggregationModuleFactory;
 import com.facebook.buck.features.project.intellij.model.DependencyType;
@@ -627,21 +628,22 @@ public class IjModuleGraphTest {
 
   @Test
   public void testMultiCellModule() {
-    ProjectFilesystem depFileSystem = new FakeProjectFilesystem(Paths.get("dep").toAbsolutePath());
+    ProjectFilesystem depFileSystem =
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("dep")), Paths.get("dep").toAbsolutePath());
     ProjectFilesystem mainFileSystem =
-        new FakeProjectFilesystem(Paths.get("main").toAbsolutePath());
+        new FakeProjectFilesystem(
+            CanonicalCellName.unsafeOf(Optional.of("main")), Paths.get("main").toAbsolutePath());
 
     TargetNode<?> depTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(depFileSystem, "dep//java/com/example:dep"),
-                depFileSystem)
+                BuildTargetFactory.newInstance("dep//java/com/example:dep"), depFileSystem)
             .addSrc(Paths.get("java/com/example/Dep.java"))
             .build();
 
     TargetNode<?> mainTargetNode =
         JavaLibraryBuilder.createBuilder(
-                BuildTargetFactory.newInstance(mainFileSystem, "main//java/com/example:main"),
-                mainFileSystem)
+                BuildTargetFactory.newInstance("main//java/com/example:main"), mainFileSystem)
             .addSrc(Paths.get("java/com/example/Main.java"))
             .addDep(depTargetNode.getBuildTarget())
             .build();
@@ -678,12 +680,13 @@ public class IjModuleGraphTest {
       Function<? super TargetNode<?>, Optional<Path>> rDotJavaClassPathResolver,
       AggregationMode aggregationMode,
       boolean isMultiCellModulesSupported) {
-    SourcePathResolver sourcePathResolver = new TestActionGraphBuilder().getSourcePathResolver();
+    SourcePathResolverAdapter sourcePathResolverAdapter =
+        new TestActionGraphBuilder().getSourcePathResolver();
     IjLibraryFactoryResolver sourceOnlyResolver =
         new IjLibraryFactoryResolver() {
           @Override
           public Path getPath(SourcePath path) {
-            return sourcePathResolver.getAbsolutePath(path);
+            return sourcePathResolverAdapter.getAbsolutePath(path);
           }
 
           @Override
@@ -700,7 +703,8 @@ public class IjModuleGraphTest {
             .build();
     JavaPackageFinder packageFinder =
         (buckConfig == null)
-            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(Collections.emptyList())
+            ? DefaultJavaPackageFinder.createDefaultJavaPackageFinder(
+                filesystem, Collections.emptyList())
             : buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     SupportedTargetTypeRegistry typeRegistry =
         new SupportedTargetTypeRegistry(
@@ -744,6 +748,23 @@ public class IjModuleGraphTest {
               @Override
               public Optional<Path> getAnnotationOutputPath(
                   TargetNode<? extends JvmLibraryArg> targetNode) {
+                JvmLibraryArg constructorArg = targetNode.getConstructorArg();
+                if (constructorArg.getPlugins().isEmpty()
+                    && constructorArg.getAnnotationProcessors().isEmpty()) {
+                  return Optional.empty();
+                }
+                return Optional.of(
+                    targetNode
+                        .getFilesystem()
+                        .getBuckPaths()
+                        .getBuckOut()
+                        .resolve("annotation")
+                        .resolve(targetNode.getBuildTarget().getShortName()));
+              }
+
+              @Override
+              public Optional<Path> getKaptAnnotationOutputPath(
+                  TargetNode<? extends JvmLibraryArg> targetNode) {
                 return Optional.empty();
               }
 
@@ -755,7 +776,8 @@ public class IjModuleGraphTest {
             },
             projectConfig,
             packageFinder);
-    IjModuleFactory moduleFactory = new DefaultIjModuleFactory(filesystem, typeRegistry);
+    IjModuleFactory moduleFactory =
+        new DefaultIjModuleFactory(filesystem, projectConfig, typeRegistry);
     IjLibraryFactory libraryFactory = new DefaultIjLibraryFactory(sourceOnlyResolver);
     return IjModuleGraphFactory.from(
         filesystem,

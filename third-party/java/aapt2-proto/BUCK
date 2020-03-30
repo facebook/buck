@@ -6,9 +6,9 @@ prebuilt_jar(
 java_library(
     name = "aapt2-proto",
     srcs = [],
+    visibility = ["PUBLIC"],
     exported_deps = [
         ":prebuilt",
         "//third-party/java/protobuf:protobuf",
     ],
-    visibility = ["PUBLIC"],
 )

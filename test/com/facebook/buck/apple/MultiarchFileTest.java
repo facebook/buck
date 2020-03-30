@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.apple;
@@ -35,6 +35,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -51,8 +52,8 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -123,14 +124,15 @@ public class MultiarchFileTest {
         ((Flavored) descriptionFactory.get())
             .hasFlavors(
                 ImmutableSet.of(
-                    InternalFlavor.of("iphoneos-i386"), InternalFlavor.of("iphoneos-x86_64"))));
+                    InternalFlavor.of("iphoneos-armv7"), InternalFlavor.of("iphoneos-arm64")),
+                UnconfiguredTargetConfiguration.INSTANCE));
   }
 
   @SuppressWarnings({"unchecked"})
   @Test
   public void descriptionWithMultiplePlatformArgsShouldGenerateMultiarchFile() {
     BuildTarget target =
-        BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64");
+        BuildTargetFactory.newInstance("//foo:thing#iphoneos-armv7,iphoneos-arm64");
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(target).build()));
@@ -167,7 +169,7 @@ public class MultiarchFileTest {
     try {
       nodeBuilderFactory
           .getNodeBuilder(
-              BuildTargetFactory.newInstance("//foo:xctest#iphoneos-i386,macosx-x86_64"))
+              BuildTargetFactory.newInstance("//foo:xctest#iphoneos-armv7,macosx-x86_64"))
           .build(graphBuilder);
     } catch (HumanReadableException e) {
       exception = e;
@@ -194,7 +196,7 @@ public class MultiarchFileTest {
         nodeBuilderFactory
             .getNodeBuilder(
                 BuildTargetFactory.newInstance(
-                    "//foo:xctest#" + "iphoneos-i386,iphoneos-x86_64," + flavor))
+                    "//foo:xctest#" + "iphoneos-armv7,iphoneos-arm64," + flavor))
             .build(graphBuilder);
       } catch (HumanReadableException e) {
         exception = e;
@@ -210,7 +212,7 @@ public class MultiarchFileTest {
   @Test
   public void propagatesSingleArchRulesAndTheirDsymDepsAsDsymDeps() {
     BuildTarget target =
-        BuildTargetFactory.newInstance("//foo:thing#iphoneos-i386,iphoneos-x86_64");
+        BuildTargetFactory.newInstance("//foo:thing#iphoneos-armv7,iphoneos-arm64");
     ActionGraphBuilder graphBuilder =
         new TestActionGraphBuilder(
             TargetGraphFactory.newInstance(new AppleLibraryBuilder(target).build()));
@@ -222,7 +224,7 @@ public class MultiarchFileTest {
     assertThat(
         "dsym deps should contain single arch rules themselves",
         dsymDeps,
-        hasItems(multiarchRule.getBuildDeps().toArray(new BuildRule[0])));
+        hasItems(RichStream.from(multiarchRule.getBuildDeps()).toArray(BuildRule[]::new)));
     assertThat(
         "dsym deps should contain dsym deps of single arch rules",
         dsymDeps,

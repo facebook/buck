@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.python;
@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -30,7 +31,7 @@ import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDe
 import com.facebook.buck.core.rules.tool.BinaryBuildRule;
 import com.facebook.buck.core.sourcepath.ForwardingBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
@@ -46,8 +47,8 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.util.Memoizer;
-import com.facebook.buck.util.RichStream;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -163,7 +164,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem().getRootPath(),
                 getBuildTarget().getFullyQualifiedName(),
                 binary
-                    .getExecutableCommand()
+                    .getExecutableCommand(OutputLabel.defaultLabel())
                     .getCommandPrefix(buildContext.getSourcePathResolver()),
                 getMergedEnv(buildContext.getSourcePathResolver()),
                 options.getTestSelectorList(),
@@ -172,9 +173,10 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .build();
   }
 
-  private ImmutableMap<String, String> getMergedEnv(SourcePathResolver pathResolver) {
+  private ImmutableMap<String, String> getMergedEnv(SourcePathResolverAdapter pathResolver) {
     return new ImmutableMap.Builder<String, String>()
-        .putAll(binary.getExecutableCommand().getEnvironment(pathResolver))
+        .putAll(
+            binary.getExecutableCommand(OutputLabel.defaultLabel()).getEnvironment(pathResolver))
         .putAll(Arg.stringify(getEnv(), pathResolver))
         .build();
   }
@@ -206,7 +208,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Callable<TestResults> interpretTestResults(
       ExecutionContext executionContext,
-      SourcePathResolver pathResolver,
+      SourcePathResolverAdapter pathResolver,
       boolean isUsingTestSelectors) {
     return () -> {
       Optional<String> resultsFileContents =
@@ -240,7 +242,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .map(BuildRule::getBuildTarget)
         .concat(binary.getRuntimeDeps(buildRuleResolver))
         .concat(
-            BuildableSupport.getDeps(binary.getExecutableCommand(), buildRuleResolver)
+            BuildableSupport.getDeps(
+                    binary.getExecutableCommand(OutputLabel.defaultLabel()), buildRuleResolver)
                 .map(BuildRule::getBuildTarget));
   }
 
@@ -259,8 +262,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   }
 
   @Override
-  public Tool getExecutableCommand() {
-    return binary.getExecutableCommand();
+  public Tool getExecutableCommand(OutputLabel outputLabel) {
+    return binary.getExecutableCommand(OutputLabel.defaultLabel());
   }
 
   @Override
@@ -269,12 +272,14 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions testRunningOptions,
       BuildContext buildContext) {
     return ExternalTestRunnerTestSpec.builder()
-        .setCwd(getProjectFilesystem().getRootPath())
+        .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())
         .setType("pyunit")
         .setNeededCoverage(neededCoverage)
         .addAllCommand(
-            binary.getExecutableCommand().getCommandPrefix(buildContext.getSourcePathResolver()))
+            binary
+                .getExecutableCommand(OutputLabel.defaultLabel())
+                .getCommandPrefix(buildContext.getSourcePathResolver()))
         .putAllEnv(getMergedEnv(buildContext.getSourcePathResolver()))
         .addAllLabels(getLabels())
         .addAllContacts(getContacts())

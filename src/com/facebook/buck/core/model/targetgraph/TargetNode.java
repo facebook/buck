@@ -1,37 +1,39 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model.targetgraph;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.HasBuildTarget;
 import com.facebook.buck.core.model.RuleType;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.visibility.ObeysVisibility;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.versions.Version;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
 
@@ -42,7 +44,11 @@ import java.util.Set;
  * targets and paths referenced from those inputs.
  */
 public interface TargetNode<T extends ConstructorArg>
-    extends Comparable<TargetNode<?>>, ObeysVisibility, HasBuildTarget, ComputeResult {
+    extends Comparable<TargetNode<?>>,
+        ObeysVisibility,
+        HasBuildTarget,
+        ComputeResult,
+        DependencyStack.ProvidesElement {
 
   @Override
   BuildTarget getBuildTarget();
@@ -55,7 +61,8 @@ public interface TargetNode<T extends ConstructorArg>
 
   ProjectFilesystem getFilesystem();
 
-  ImmutableSet<Path> getInputs();
+  /** Cell root-relative paths. */
+  ImmutableSet<ForwardRelativePath> getInputs();
 
   ImmutableSet<BuildTarget> getDeclaredDeps();
 
@@ -79,9 +86,6 @@ public interface TargetNode<T extends ConstructorArg>
    * select} statements.
    */
   ImmutableSortedSet<BuildTarget> getConfigurationDeps();
-
-  // TODO(cjhopman): This should be a CellNameResolver.
-  CellPathResolver getCellNames();
 
   ImmutableSet<VisibilityPattern> getVisibilityPatterns();
 
@@ -110,8 +114,6 @@ public interface TargetNode<T extends ConstructorArg>
 
   RuleType getRuleType();
 
-  TargetNode<T> copy();
-
   /**
    * This method copies this target node with applying logic in {@link
    * com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription} that may give
@@ -120,6 +122,10 @@ public interface TargetNode<T extends ConstructorArg>
    * <p>Note that this method strips away selected versions, and may be buggy because of it.
    */
   TargetNode<T> copyWithFlavors(ImmutableSet<Flavor> flavors);
+
+  default TargetNode<T> copyWithFlavors(FlavorSet flavors) {
+    return copyWithFlavors(flavors.getSet());
+  }
 
   /**
    * This method copies this target node without applying logic in {@link
@@ -139,4 +145,15 @@ public interface TargetNode<T extends ConstructorArg>
 
   TargetNode<T> withSelectedVersions(
       Optional<? extends ImmutableMap<BuildTarget, Version>> selectedVersions);
+
+  @Override
+  default DependencyStack.Element getElement() {
+    return getBuildTarget();
+  }
+
+  @SuppressWarnings("unchecked")
+  default <U extends ConstructorArg> TargetNode<U> cast(Class<U> newArgClass) {
+    Preconditions.checkState(newArgClass.isInstance(this.getConstructorArg()));
+    return (TargetNode<U>) this;
+  }
 }

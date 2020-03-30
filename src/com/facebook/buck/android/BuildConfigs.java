@@ -1,22 +1,22 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
 
-import com.facebook.buck.core.model.UnflavoredBuildTargetView;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.google.common.collect.ImmutableList;
 
@@ -55,8 +55,8 @@ public class BuildConfigs {
   /**
    * Returns a list of fields (with values) that every {@code BuildConfig.java} should declare. The
    * default value of each constant may be overridden by the {@code userFields} passed to {@link
-   * #generateBuildConfigDotJava(UnflavoredBuildTargetView, String, boolean, BuildConfigFields)}
-   * when generating a {@code BuildConfig.java}.
+   * #generateBuildConfigDotJava(UnflavoredBuildTarget, String, boolean, BuildConfigFields)} when
+   * generating a {@code BuildConfig.java}.
    */
   public static BuildConfigFields getDefaultBuildConfigFields() {
     return DEFAULT_BUILD_CONFIG_CONSTANTS;
@@ -67,7 +67,7 @@ public class BuildConfigs {
    * fields specified by {@link #getDefaultBuildConfigFields()}.
    */
   public static String generateBuildConfigDotJava(
-      UnflavoredBuildTargetView source, String javaPackage) {
+      UnflavoredBuildTarget source, String javaPackage) {
     return generateBuildConfigDotJava(
         source, javaPackage, /* useConstantExpressions */ false, BuildConfigFields.of());
   }
@@ -97,7 +97,7 @@ public class BuildConfigs {
    *     BuildConfig} class.
    */
   public static String generateBuildConfigDotJava(
-      UnflavoredBuildTargetView source,
+      UnflavoredBuildTarget source,
       String javaPackage,
       boolean useConstantExpressions,
       BuildConfigFields userFields) {

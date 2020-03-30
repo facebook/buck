@@ -1,22 +1,23 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.util.concurrent;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -40,6 +41,27 @@ public class MoreFutures {
 
   /** Utility class: do not instantiate. */
   private MoreFutures() {}
+
+  /**
+   * Combine the {@param first} and {@param second} listenable futures, returning a listenable
+   * future that wraps the result of these futures as a {@link Pair}.
+   */
+  public static <U, V> ListenableFuture<Pair<U, V>> combinedFutures(
+      ListenableFuture<U> first,
+      ListenableFuture<V> second,
+      ListeningExecutorService executorService) {
+
+    Callable<Pair<U, V>> pairComputation =
+        new Callable<Pair<U, V>>() {
+          @Override
+          public Pair<U, V> call() throws Exception {
+            return new Pair<U, V>(first.get(), second.get());
+          }
+        };
+    ListenableFuture<Pair<U, V>> pairFuture =
+        Futures.whenAllSucceed(first, second).call(pairComputation, executorService);
+    return pairFuture;
+  }
 
   /**
    * Invoke multiple callables on the provided executor and wait for all to return successfully. An

@@ -1,0 +1,24 @@
+load("//tools/build_rules:java_rules.bzl", "standard_java_test")
+
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+        exclude = [
+            "*Test.java",
+        ],
+    ),
+    visibility = ["//test/..."],
+    exported_deps = [
+        "//src/com/facebook/buck/core/model/platform:platform",
+    ],
+)
+
+standard_java_test(
+    name = "platform",
+    deps = [
+        "//src/com/facebook/buck/core/model/platform:platform",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

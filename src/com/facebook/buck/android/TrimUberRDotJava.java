@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.android;
@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -55,13 +56,17 @@ import javax.annotation.Nonnull;
 
 /** Rule for trimming unnecessary ids from R.java files. */
 class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+  /** Interface for build rules that keep track of referenced Android resources */
+  interface UsesResources extends BuildRule {
+    ImmutableList<String> getReferencedResources();
+  }
   /**
    * If the app has resources, aapt will have generated an R.java in this directory. If there are no
    * resources, this should be empty and we'll create a placeholder R.java below.
    */
   private final Optional<SourcePath> pathToRDotJavaDir;
 
-  private final Collection<DexProducedFromJavaLibrary> allPreDexRules;
+  private final Collection<? extends UsesResources> allPreDexRules;
   private final Optional<String> keepResourcePattern;
 
   private static final Pattern R_DOT_JAVA_LINE_PATTERN =
@@ -75,7 +80,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       Optional<SourcePath> pathToRDotJavaDir,
-      Collection<DexProducedFromJavaLibrary> allPreDexRules,
+      Collection<? extends UsesResources> allPreDexRules,
       Optional<String> keepResourcePattern) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.pathToRDotJavaDir = pathToRDotJavaDir;
@@ -122,7 +127,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     @Override
     public StepExecutionResult execute(ExecutionContext context) throws IOException {
       ImmutableSet.Builder<String> allReferencedResourcesBuilder = ImmutableSet.builder();
-      for (DexProducedFromJavaLibrary preDexRule : allPreDexRules) {
+      for (UsesResources preDexRule : allPreDexRules) {
         allReferencedResourcesBuilder.addAll(preDexRule.getReferencedResources());
       }
       ImmutableSet<String> allReferencedResources = allReferencedResourcesBuilder.build();

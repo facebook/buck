@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cxx;
@@ -20,7 +20,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
-import com.facebook.buck.core.model.EmptyTargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -93,7 +93,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     assertThat(
         lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
-                Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE),
+                Linker.LinkableDepType.STATIC,
+                graphBuilder,
+                UnconfiguredTargetConfiguration.INSTANCE),
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(
@@ -117,7 +119,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     assertThat(
         lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
-                Linker.LinkableDepType.STATIC_PIC, graphBuilder, EmptyTargetConfiguration.INSTANCE),
+                Linker.LinkableDepType.STATIC_PIC,
+                graphBuilder,
+                UnconfiguredTargetConfiguration.INSTANCE),
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(
@@ -144,7 +148,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     assertThat(
         lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
-                Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE),
+                Linker.LinkableDepType.SHARED,
+                graphBuilder,
+                UnconfiguredTargetConfiguration.INSTANCE),
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(
@@ -230,7 +236,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     assertThat(
         lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
-                Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE),
+                Linker.LinkableDepType.SHARED,
+                graphBuilder,
+                UnconfiguredTargetConfiguration.INSTANCE),
         Matchers.equalTo(
             NativeLinkableInput.builder()
                 .addArgs(SourcePathArg.of(lib1), SourcePathArg.of(lib2))
@@ -299,7 +307,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         library
             .getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
-                Linker.LinkableDepType.STATIC, graphBuilder, EmptyTargetConfiguration.INSTANCE);
+                Linker.LinkableDepType.STATIC,
+                graphBuilder,
+                UnconfiguredTargetConfiguration.INSTANCE);
     SourcePath lib = cxxGenrule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder);
     assertThat(input.getArgs(), Matchers.contains(SourcePathArg.of(lib)));
   }
@@ -331,7 +341,9 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
     assertThat(
         lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .getNativeLinkableInput(
-                Linker.LinkableDepType.SHARED, graphBuilder, EmptyTargetConfiguration.INSTANCE),
+                Linker.LinkableDepType.SHARED,
+                graphBuilder,
+                UnconfiguredTargetConfiguration.INSTANCE),
         Matchers.equalTo(NativeLinkableInput.of()));
 
     assertThat(

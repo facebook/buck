@@ -1,17 +1,17 @@
 /*
- * Copyright 2018-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.go;
@@ -21,7 +21,7 @@ import com.facebook.buck.cli.CommandRunnerParams;
 import com.facebook.buck.cli.ProjectGeneratorParameters;
 import com.facebook.buck.cli.ProjectTestsMode;
 import com.facebook.buck.command.config.BuildBuckConfig;
-import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
@@ -45,9 +45,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.SpeculativeParsing;
-import com.facebook.buck.parser.TargetNodeSpec;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.MoreExceptions;
@@ -80,8 +80,8 @@ public class GoProjectCommandHelper {
   private final Parser parser;
   private final GoBuckConfig goBuckConfig;
   private final BuckConfig buckConfig;
-  private final Cell cell;
-  private final TargetConfiguration targetConfiguration;
+  private final Cells cells;
+  private final Optional<TargetConfiguration> targetConfiguration;
   private final Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser;
   private final ParsingContext parsingContext;
 
@@ -93,19 +93,19 @@ public class GoProjectCommandHelper {
       boolean enableParserProfiling,
       Function<Iterable<String>, ImmutableList<TargetNodeSpec>> argsParser,
       ProjectGeneratorParameters projectGeneratorParameters,
-      TargetConfiguration targetConfiguration) {
+      Optional<TargetConfiguration> targetConfiguration) {
     this.params = params;
     this.buckEventBus = params.getBuckEventBus();
     this.console = projectGeneratorParameters.getConsole();
     this.parser = projectGeneratorParameters.getParser();
     this.goBuckConfig = new GoBuckConfig(params.getBuckConfig());
     this.buckConfig = params.getBuckConfig();
-    this.cell = params.getCell();
+    this.cells = params.getCells();
     this.argsParser = argsParser;
     this.projectGeneratorParameters = projectGeneratorParameters;
     this.targetConfiguration = targetConfiguration;
     this.parsingContext =
-        ParsingContext.builder(cell, executor)
+        ParsingContext.builder(cells.getRootCell(), executor)
             .setProfilingEnabled(enableParserProfiling)
             .setSpeculativeParsing(SpeculativeParsing.ENABLED)
             .setApplyDefaultFlavorsMode(
@@ -203,7 +203,7 @@ public class GoProjectCommandHelper {
       Map<BuildTargetSourcePath, Path> generatedPackages)
       throws IOException {
     Path vendorPath;
-    ProjectFilesystem projectFilesystem = cell.getFilesystem();
+    ProjectFilesystem projectFilesystem = cells.getRootCell().getFilesystem();
 
     Optional<Path> projectPath = goBuckConfig.getProjectPath();
     if (projectPath.isPresent()) {
@@ -368,7 +368,8 @@ public class GoProjectCommandHelper {
                   params.getUnconfiguredBuildTargetFactory(),
                   targetGraphCreationResult,
                   targetConfiguration,
-                  buckEventBus);
+                  buckEventBus,
+                  cells);
     }
     return targetGraphCreationResult;
   }

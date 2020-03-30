@@ -1,17 +1,17 @@
 /*
- * Copyright 2017-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.support.state;
@@ -26,13 +26,14 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
-import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.JsonTargetConfigurationSerializer;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -45,6 +46,7 @@ import com.facebook.buck.io.watchman.FakeWatchmanClient;
 import com.facebook.buck.io.watchman.FakeWatchmanFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager.LifecycleStatus;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
@@ -94,12 +96,14 @@ public class BuckGlobalStateLifecycleManagerTest {
     watchmanClient = new FakeWatchmanClient(0, ImmutableMap.of());
     watchman =
         FakeWatchmanFactory.createWatchman(
-            watchmanClient, filesystem.getRootPath(), filesystem.getPath(""), "watch");
+            watchmanClient, filesystem.getRootPath().getPath(), filesystem.getPath(""), "watch");
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
     targetConfigurationSerializer =
         new JsonTargetConfigurationSerializer(
-            buildTarget -> unconfiguredBuildTargetFactory.create(cellPathResolver, buildTarget));
+            buildTarget ->
+                unconfiguredBuildTargetFactory.create(
+                    buildTarget, cellPathResolver.getCellNameResolver()));
   }
 
   @Test
@@ -338,7 +342,7 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
 
     Object buckGlobalState3 =
         buckGlobalStateLifecycleManager
@@ -424,8 +428,10 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider().getByName(AndroidSdkLocation.DEFAULT_NAME);
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
+        .getByName(AndroidSdkLocation.DEFAULT_NAME, UnconfiguredTargetConfiguration.INSTANCE);
 
     Object buckGlobalState3 =
         buckGlobalStateLifecycleManager
@@ -456,7 +462,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         "Android SDK should be the same other location", buckGlobalState3, buckGlobalState4);
   }
 
-  private Cell createCellWithAndroidSdk(Path androidSdkPath) {
+  private Cells createCellWithAndroidSdk(Path androidSdkPath) {
     return new TestCellBuilder()
         .setBuckConfig(buckConfig)
         .setFilesystem(filesystem)
@@ -472,9 +478,13 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
@@ -512,9 +522,13 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithWorkingAndroidSdk =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
@@ -552,9 +566,13 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk1 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
@@ -568,8 +586,12 @@ public class BuckGlobalStateLifecycleManagerTest {
             .getFirst();
 
     cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    cell.getRootCell()
+        .getToolchainProvider()
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk2 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
@@ -593,9 +615,13 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     BuckGlobalState buckGlobalStateWithBrokenAndroidSdk1 =
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
@@ -631,9 +657,13 @@ public class BuckGlobalStateLifecycleManagerTest {
     Path androidSdkPath = tmp.newFolder("android-sdk").toAbsolutePath();
     Files.deleteIfExists(androidSdkPath);
 
-    Cell cell = createCellWithAndroidSdk(androidSdkPath);
-    cell.getToolchainProvider()
-        .getByNameIfPresent(AndroidSdkLocation.DEFAULT_NAME, AndroidSdkLocation.class);
+    Cells cell = createCellWithAndroidSdk(androidSdkPath);
+    cell.getRootCell()
+        .getToolchainProvider()
+        .getByNameIfPresent(
+            AndroidSdkLocation.DEFAULT_NAME,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            AndroidSdkLocation.class);
     Object buckGlobalStateWithBrokenAndroidSdk1 =
         buckGlobalStateLifecycleManager.getBuckGlobalState(
             cell,
@@ -660,7 +690,7 @@ public class BuckGlobalStateLifecycleManagerTest {
 
   @Test
   public void testBuckGlobalStateUptime() {
-    Cell cell = new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build();
+    Cells cell = new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build();
     SettableFakeClock clock = new SettableFakeClock(1000, 0);
     BuckGlobalState buckGlobalState =
         buckGlobalStateLifecycleManager
@@ -677,5 +707,56 @@ public class BuckGlobalStateLifecycleManagerTest {
     assertEquals(buckGlobalState.getUptime(), 0);
     clock.setCurrentTimeMillis(2000);
     assertEquals(buckGlobalState.getUptime(), 1000);
+  }
+
+  @Test
+  public void whenBuckWhitelistedConfigChangesDaemonNotRestarted() {
+    buckGlobalStateLifecycleManager.resetBuckGlobalState();
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResultFirstRun =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
+            new TestCellBuilder()
+                .setBuckConfig(
+                    FakeBuckConfig.builder()
+                        .setSections(
+                            ImmutableMap.of(
+                                "ui",
+                                ImmutableMap.of(CliConfig.TRUNCATE_FAILING_COMMAND_CONFIG, "true")))
+                        .build())
+                .setFilesystem(filesystem)
+                .build(),
+            knownRuleTypesProvider,
+            watchman,
+            Console.createNullConsole(),
+            clock,
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer);
+
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResultSecondRun =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
+            new TestCellBuilder()
+                .setBuckConfig(
+                    FakeBuckConfig.builder()
+                        .setSections(
+                            ImmutableMap.of(
+                                "ui",
+                                ImmutableMap.of(
+                                    CliConfig.TRUNCATE_FAILING_COMMAND_CONFIG, "false")))
+                        .build())
+                .setFilesystem(filesystem)
+                .build(),
+            knownRuleTypesProvider,
+            watchman,
+            Console.createNullConsole(),
+            clock,
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer);
+
+    assertEquals(
+        "Daemon should not be replaced when whitelisted config changes.",
+        buckStateResultFirstRun.getFirst(),
+        buckStateResultSecondRun.getFirst());
+
+    assertEquals(LifecycleStatus.NEW, buckStateResultFirstRun.getSecond());
+    assertEquals(LifecycleStatus.REUSED, buckStateResultSecondRun.getSecond());
   }
 }

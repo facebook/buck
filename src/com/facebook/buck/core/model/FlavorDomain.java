@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.core.model;
@@ -60,6 +60,10 @@ public class FlavorDomain<T> {
     return !Sets.intersection(translation.keySet(), flavors).isEmpty();
   }
 
+  public boolean containsAnyOf(FlavorSet flavors) {
+    return containsAnyOf(flavors.getSet());
+  }
+
   /**
    * Provides a convenience function to map the values of the domain (retaining the current name).
    */
@@ -100,6 +104,10 @@ public class FlavorDomain<T> {
     return Optional.ofNullable(Iterables.getFirst(match, null));
   }
 
+  public Optional<Flavor> getFlavor(FlavorSet flavorSet) {
+    return getFlavor(flavorSet.getSet());
+  }
+
   public Optional<Flavor> getFlavor(BuildTarget buildTarget) {
     try {
       return getFlavor(buildTarget.getFlavors());
@@ -113,6 +121,10 @@ public class FlavorDomain<T> {
     Optional<Flavor> flavor = getFlavor(flavors);
     return flavor.map(
         theFlavor -> new AbstractMap.SimpleImmutableEntry<>(theFlavor, translation.get(theFlavor)));
+  }
+
+  public Optional<Map.Entry<Flavor, T>> getFlavorAndValue(FlavorSet flavors) {
+    return getFlavorAndValue(flavors.getSet());
   }
 
   public Optional<Map.Entry<Flavor, T>> getFlavorAndValue(BuildTarget buildTarget) {
@@ -129,12 +141,16 @@ public class FlavorDomain<T> {
     return flavor.map(translation::get);
   }
 
+  public Optional<T> getValue(FlavorSet flavors) {
+    return getValue(flavors.getSet());
+  }
+
   /**
    * @return a list of values for flavors that are present in this domain. Non-existing flavors are
    *     ignored.
    */
-  private ImmutableList<T> getValues(Set<Flavor> flavors) {
-    return flavors.stream()
+  private ImmutableList<T> getValues(FlavorSet flavors) {
+    return flavors.getSet().stream()
         .filter(translation::containsKey)
         .map(translation::get)
         .collect(ImmutableList.toImmutableList());

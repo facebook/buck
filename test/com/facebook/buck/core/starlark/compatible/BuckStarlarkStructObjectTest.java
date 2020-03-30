@@ -1,18 +1,19 @@
 /*
- * Copyright 2019-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
+
 package com.facebook.buck.core.starlark.compatible;
 
 import static org.junit.Assert.assertEquals;
@@ -41,7 +42,7 @@ public class BuckStarlarkStructObjectTest {
   @Test
   public void findsGettersForStructLikeClasses() throws NoSuchMethodException, EvalException {
 
-    TestStructLikeClass structLikeClass = new ImmutableTestStructLikeClass("foo");
+    TestStructLikeClass structLikeClass = ImmutableTestStructLikeClass.of("foo");
 
     assertEquals(structLikeClass.getFoo(), structLikeClass.getValue("get_foo"));
   }
@@ -49,7 +50,7 @@ public class BuckStarlarkStructObjectTest {
   @Test
   public void throwsEvalExceptionWhenNoMatchingField() throws NoSuchMethodException, EvalException {
 
-    TestStructLikeClass structLikeClass = new ImmutableTestStructLikeClass("foo");
+    TestStructLikeClass structLikeClass = ImmutableTestStructLikeClass.of("foo");
 
     expectedException.expect(EvalException.class);
     structLikeClass.getValue("get_bar");

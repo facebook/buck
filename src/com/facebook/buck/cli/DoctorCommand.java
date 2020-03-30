@@ -1,17 +1,17 @@
 /*
- * Copyright 2016-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.cli;
@@ -19,7 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.doctor.BuildLogHelper;
 import com.facebook.buck.doctor.DefaultDefectReporter;
 import com.facebook.buck.doctor.DefaultExtraInfoCollector;
-import com.facebook.buck.doctor.DefectSubmitResult;
+import com.facebook.buck.doctor.DefectReporter;
 import com.facebook.buck.doctor.DoctorInteractiveReport;
 import com.facebook.buck.doctor.DoctorReportHelper;
 import com.facebook.buck.doctor.UserInput;
@@ -28,7 +28,6 @@ import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointRequest;
 import com.facebook.buck.doctor.config.DoctorEndpointResponse;
-import com.facebook.buck.doctor.config.ImmutableDoctorConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.log.LogConfigSetup;
@@ -45,7 +44,7 @@ public class DoctorCommand extends AbstractCommand {
 
   @Override
   public ExitCode runWithoutHelp(CommandRunnerParams params) throws Exception {
-    ProjectFilesystem filesystem = params.getCell().getFilesystem();
+    ProjectFilesystem filesystem = params.getCells().getRootCell().getFilesystem();
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
 
     UserInput userInput =
@@ -54,10 +53,10 @@ public class DoctorCommand extends AbstractCommand {
             new BufferedReader(new InputStreamReader(params.getStdIn())));
     DoctorReportHelper helper =
         new DoctorReportHelper(
-            params.getCell().getFilesystem(),
+            params.getCells().getRootCell().getFilesystem(),
             userInput,
             params.getConsole(),
-            params.getBuckConfig().getView(ImmutableDoctorConfig.class));
+            params.getBuckConfig().getView(DoctorConfig.class));
 
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));
@@ -67,7 +66,7 @@ public class DoctorCommand extends AbstractCommand {
     }
     Optional<String> issueDescription = helper.promptForIssue();
 
-    Optional<DefectSubmitResult> reportResult =
+    Optional<DefectReporter.DefectSubmitResult> reportResult =
         generateReport(params, userInput, entry.get(), issueDescription);
     if (!reportResult.isPresent()) {
       params.getConsole().printErrorText("Failed to generate report to send.");
@@ -83,18 +82,18 @@ public class DoctorCommand extends AbstractCommand {
     return ExitCode.SUCCESS;
   }
 
-  private Optional<DefectSubmitResult> generateReport(
+  private Optional<DefectReporter.DefectSubmitResult> generateReport(
       CommandRunnerParams params,
       UserInput userInput,
       BuildLogEntry entry,
       Optional<String> issueDescription)
       throws IOException, InterruptedException {
-    DoctorConfig doctorConfig = new ImmutableDoctorConfig(params.getBuckConfig());
+    DoctorConfig doctorConfig = DoctorConfig.of(params.getBuckConfig());
 
     Optional<WatchmanDiagReportCollector> watchmanDiagReportCollector =
         WatchmanDiagReportCollector.newInstanceIfWatchmanUsed(
             params.getWatchman(),
-            params.getCell().getFilesystem(),
+            params.getCells().getRootCell().getFilesystem(),
             new DefaultProcessExecutor(params.getConsole()),
             new ExecutableFinder(),
             params.getEnvironment());
@@ -102,11 +101,11 @@ public class DoctorCommand extends AbstractCommand {
     DoctorInteractiveReport report =
         new DoctorInteractiveReport(
             new DefaultDefectReporter(
-                params.getCell().getFilesystem(),
+                params.getCells().getRootCell().getFilesystem(),
                 doctorConfig,
                 params.getBuckEventBus(),
                 params.getClock()),
-            params.getCell().getFilesystem(),
+            params.getCells().getRootCell().getFilesystem(),
             params.getConsole(),
             userInput,
             issueDescription,
@@ -115,7 +114,7 @@ public class DoctorCommand extends AbstractCommand {
             doctorConfig,
             new DefaultExtraInfoCollector(
                 doctorConfig,
-                params.getCell().getFilesystem(),
+                params.getCells().getRootCell().getFilesystem(),
                 new DefaultProcessExecutor(params.getConsole())),
             ImmutableSet.of(entry),
             watchmanDiagReportCollector);

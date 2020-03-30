@@ -1,17 +1,17 @@
 /*
- * Copyright 2013-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.event;
@@ -19,6 +19,7 @@ package com.facebook.buck.event;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.event.external.events.InstallFinishedEventExternalInterface;
 import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 
 public abstract class InstallEvent extends AbstractBuckEvent
@@ -49,8 +50,17 @@ public abstract class InstallEvent extends AbstractBuckEvent
   }
 
   public static Finished finished(
+      Started started,
+      boolean success,
+      Optional<Long> pid,
+      Optional<String> packageName,
+      ImmutableMap<String, String> installDeviceInfo) {
+    return new Finished(started, success, pid, packageName, installDeviceInfo);
+  }
+
+  public static Finished finished(
       Started started, boolean success, Optional<Long> pid, Optional<String> packageName) {
-    return new Finished(started, success, pid, packageName);
+    return finished(started, success, pid, packageName, ImmutableMap.of());
   }
 
   public static class Started extends InstallEvent {
@@ -67,18 +77,26 @@ public abstract class InstallEvent extends AbstractBuckEvent
   public static class Finished extends InstallEvent
       implements InstallFinishedEventExternalInterface {
 
+    public static final String DEVICE_INFO_LOCALES = "locales";
+
     private static long invalidPid = -1;
 
     private final boolean success;
     private final long pid;
     private final String packageName;
+    private final ImmutableMap<String, String> installDeviceInfo;
 
     protected Finished(
-        Started started, boolean success, Optional<Long> pid, Optional<String> packageName) {
+        Started started,
+        boolean success,
+        Optional<Long> pid,
+        Optional<String> packageName,
+        ImmutableMap<String, String> installDeviceInfo) {
       super(started.getEventKey(), started.getBuildTarget());
       this.success = success;
       this.pid = pid.orElse(invalidPid);
       this.packageName = packageName.orElse("");
+      this.installDeviceInfo = installDeviceInfo;
     }
 
     @Override
@@ -88,6 +106,10 @@ public abstract class InstallEvent extends AbstractBuckEvent
 
     public long getPid() {
       return pid;
+    }
+
+    public ImmutableMap<String, String> getInstallDeviceInfo() {
+      return installDeviceInfo;
     }
 
     @Override

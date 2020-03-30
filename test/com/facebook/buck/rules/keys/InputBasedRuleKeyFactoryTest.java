@@ -1,17 +1,17 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.rules.keys;
@@ -19,7 +19,7 @@ package com.facebook.buck.rules.keys;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.artifact.BuildTargetSourcePathToArtifactConverter;
-import com.facebook.buck.core.artifact.ImmutableSourceArtifactImpl;
+import com.facebook.buck.core.artifact.SourceArtifactImpl;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -39,7 +39,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.NonHashableSourcePathContainer;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.file.RemoteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -55,7 +55,6 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -134,10 +133,10 @@ public class InputBasedRuleKeyFactoryTest {
     SomeAction action =
         new SomeAction(
             new ActionRegistryForTests(BuildTargetFactory.newInstance("//:foo")),
-            ImmutableSet.of(
+            ImmutableSortedSet.of(
                 BuildTargetSourcePathToArtifactConverter.convert(
                     filesystem, dep.getSourcePathToOutput())),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             1,
             "a");
 
@@ -186,8 +185,8 @@ public class InputBasedRuleKeyFactoryTest {
     SomeAction action =
         new SomeAction(
             new ActionRegistryForTests(BuildTargetFactory.newInstance("//:rule")),
-            ImmutableSet.of(ImmutableSourceArtifactImpl.of(PathSourcePath.of(filesystem, output))),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(SourceArtifactImpl.of(PathSourcePath.of(filesystem, output))),
+            ImmutableSortedSet.of(),
             1,
             "a");
 
@@ -209,7 +208,7 @@ public class InputBasedRuleKeyFactoryTest {
   @Test
   public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildRule dep =
@@ -247,7 +246,7 @@ public class InputBasedRuleKeyFactoryTest {
   @Test
   public void actionRuleKeyChangesIfInputContentsFromBuildTargetSourcePathChanges() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildRule dep =
@@ -258,10 +257,10 @@ public class InputBasedRuleKeyFactoryTest {
     SomeAction action =
         new SomeAction(
             new ActionRegistryForTests(BuildTargetFactory.newInstance("//:action")),
-            ImmutableSet.of(
+            ImmutableSortedSet.of(
                 BuildTargetSourcePathToArtifactConverter.convert(
                     filesystem, dep.getSourcePathToOutput())),
-            ImmutableSet.of(),
+            ImmutableSortedSet.of(),
             1,
             "");
 
@@ -319,7 +318,7 @@ public class InputBasedRuleKeyFactoryTest {
   @Test
   public void ruleKeyChangesIfInputContentsFromBuildTargetSourcePathInRuleKeyAppendableChanges() {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathResolver pathResolver = graphBuilder.getSourcePathResolver();
+    SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     BuildRule dep =

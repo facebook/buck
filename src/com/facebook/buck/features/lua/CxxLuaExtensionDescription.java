@@ -1,27 +1,29 @@
 /*
- * Copyright 2015-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.Flavored;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -31,7 +33,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
-import com.facebook.buck.core.util.immutables.BuckStyleImmutable;
+import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxConstructorArg;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxFlags;
@@ -56,13 +58,16 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
-import com.facebook.buck.cxx.toolchain.nativelink.PlatformMappedCache;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
-import com.facebook.buck.util.RichStream;
+import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionPropagator;
+import com.google.common.base.Throwables;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -70,13 +75,15 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimaps;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
-import org.immutables.value.Value;
 
 public class CxxLuaExtensionDescription
     implements DescriptionWithTargetGraph<CxxLuaExtensionDescriptionArg>,
@@ -115,7 +122,8 @@ public class CxxLuaExtensionDescription
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       LuaPlatform luaPlatform,
-      CxxLuaExtensionDescriptionArg args) {
+      CxxLuaExtensionDescriptionArg args,
+      boolean includePrivateLinkerFlags) {
 
     CxxPlatform cxxPlatform = luaPlatform.getCxxPlatform();
     StringWithMacrosConverter macrosConverter =
@@ -127,7 +135,7 @@ public class CxxLuaExtensionDescription
         CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args);
     ImmutableMap<Path, SourcePath> headers =
         CxxDescriptionEnhancer.parseHeaders(
-            buildTarget, graphBuilder, Optional.of(cxxPlatform), args);
+            buildTarget, graphBuilder, projectFilesystem, Optional.of(cxxPlatform), args);
 
     // Setup the header symlink tree and combine all the preprocessor input from this rule
     // and all dependencies.
@@ -198,11 +206,14 @@ public class CxxLuaExtensionDescription
             .requirePreprocessAndCompileRules(srcs);
 
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
-    CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
-            args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
-        .stream()
-        .map(macrosConverter::convert)
-        .forEach(argsBuilder::add);
+
+    if (includePrivateLinkerFlags) {
+      CxxFlags.getFlagsWithMacrosWithPlatformMacroExpansion(
+              args.getLinkerFlags(), args.getPlatformLinkerFlags(), cxxPlatform)
+          .stream()
+          .map(macrosConverter::convert)
+          .forEach(argsBuilder::add);
+    }
 
     // Add object files into the args.
     argsBuilder.addAll(SourcePathArg.from(picObjects.values()));
@@ -253,7 +264,8 @@ public class CxxLuaExtensionDescription
                     graphBuilder,
                     cellRoots,
                     luaPlatform,
-                    args))
+                    args,
+                    true))
             .build(),
         Optional.empty(),
         cellRoots);
@@ -271,7 +283,8 @@ public class CxxLuaExtensionDescription
       BuildRuleParams params,
       CxxLuaExtensionDescriptionArg args) {
     ActionGraphBuilder graphBuilder = context.getActionGraphBuilder();
-    FlavorDomain<LuaPlatform> luaPlatforms = getLuaPlatformsProvider().getLuaPlatforms();
+    FlavorDomain<LuaPlatform> luaPlatforms =
+        getLuaPlatformsProvider(buildTarget.getTargetConfiguration()).getLuaPlatforms();
     ProjectFilesystem projectFilesystem = context.getProjectFilesystem();
     CellPathResolver cellRoots = context.getCellPathResolver();
     args.checkDuplicateSources(graphBuilder.getSourcePathResolver());
@@ -288,8 +301,7 @@ public class CxxLuaExtensionDescription
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
     return new CxxLuaExtension(buildTarget, projectFilesystem, params) {
-      private final PlatformMappedCache<NativeLinkTarget> targetsCache =
-          new PlatformMappedCache<>();
+      private final NativeLinkTargetCache targetsCache = new NativeLinkTargetCache();
 
       @Override
       public String getModule(CxxPlatform cxxPlatform) {
@@ -306,9 +318,11 @@ public class CxxLuaExtensionDescription
       }
 
       @Override
-      public NativeLinkTarget getTargetForPlatform(CxxPlatform cxxPlatform) {
+      public NativeLinkTarget getTargetForPlatform(
+          CxxPlatform cxxPlatform, boolean includePrivateLinkerFlags) {
         return targetsCache.get(
             cxxPlatform,
+            includePrivateLinkerFlags,
             () -> {
               ImmutableList<NativeLinkable> nativeLinkables =
                   RichStream.from(args.getCxxDeps().get(graphBuilder, cxxPlatform))
@@ -322,7 +336,8 @@ public class CxxLuaExtensionDescription
                       graphBuilder,
                       cellRoots,
                       luaPlatforms.getValue(cxxPlatform.getFlavor()),
-                      args);
+                      args,
+                      includePrivateLinkerFlags);
               NativeLinkableInput linkableInput =
                   NativeLinkableInput.builder()
                       .addAllArgs(extensionArgs)
@@ -336,18 +351,41 @@ public class CxxLuaExtensionDescription
                   Optional.empty());
             });
       }
+
+      class NativeLinkTargetCache {
+        // Use the Flavor as a key because hashing the CxxPlatform is expensive.
+        private final Cache<Pair<Flavor, Boolean>, NativeLinkTarget> cache =
+            CacheBuilder.newBuilder().build();
+
+        /** Returns either a cached or computed linkable. */
+        public NativeLinkTarget get(
+            CxxPlatform cxxPlatform,
+            boolean includePrivateLinkerFlags,
+            Supplier<NativeLinkTarget> supplier) {
+          try {
+            return cache.get(
+                new Pair<>(cxxPlatform.getFlavor(), includePrivateLinkerFlags), supplier::get);
+          } catch (ExecutionException e) {
+            Throwables.throwIfUnchecked(e.getCause());
+            throw new UncheckedExecutionException(e.getCause());
+          }
+        }
+      }
     };
   }
 
   @Override
   public void findDepsForTargetFromConstructorArgs(
       BuildTarget buildTarget,
-      CellPathResolver cellRoots,
+      CellNameResolver cellRoots,
       AbstractCxxLuaExtensionDescriptionArg constructorArg,
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
 
-    for (LuaPlatform luaPlatform : getLuaPlatformsProvider().getLuaPlatforms().getValues()) {
+    for (LuaPlatform luaPlatform :
+        getLuaPlatformsProvider(buildTarget.getTargetConfiguration())
+            .getLuaPlatforms()
+            .getValues()) {
 
       // Add deps from lua C/C++ library.
       Optionals.addIfPresent(luaPlatform.getLuaCxxLibraryTarget(), extraDepsBuilder);
@@ -360,17 +398,21 @@ public class CxxLuaExtensionDescription
   }
 
   @Override
-  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains() {
-    return Optional.of(ImmutableSet.of(getLuaPlatformsProvider().getLuaPlatforms()));
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(
+        ImmutableSet.of(getLuaPlatformsProvider(toolchainTargetConfiguration).getLuaPlatforms()));
   }
 
-  private LuaPlatformsProvider getLuaPlatformsProvider() {
+  private LuaPlatformsProvider getLuaPlatformsProvider(
+      TargetConfiguration toolchainTargetConfiguration) {
     return toolchainProvider.getByName(
-        LuaPlatformsProvider.DEFAULT_NAME, LuaPlatformsProvider.class);
+        LuaPlatformsProvider.DEFAULT_NAME,
+        toolchainTargetConfiguration,
+        LuaPlatformsProvider.class);
   }
 
-  @BuckStyleImmutable
-  @Value.Immutable
+  @RuleArg
   interface AbstractCxxLuaExtensionDescriptionArg extends CxxConstructorArg {
     Optional<String> getBaseModule();
   }

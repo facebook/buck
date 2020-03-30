@@ -1,17 +1,17 @@
 #!/usr/bin/env python
-# Copyright 2018-present Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
-# Licensed under the Apache License, Version 2.0 (the "License"); you may
-# not use this file except in compliance with the License. You may obtain
-# a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 #
 #     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations
-# under the License.
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 
 from __future__ import print_function
@@ -31,12 +31,21 @@ def append_sys_path(buck_root):
     sys.path.insert(0, os.path.join(buck_root, "third-party/py/setuptools"))
 
 
+def find_buck_root():
+    f = os.path.abspath(__file__)
+    while not os.path.exists(os.path.join(f, "third-party/py/pex/BUCK")):
+        p = os.path.dirname(f)
+        if p == f:  # FS root
+            raise Exception("buck root not found for {}".format(__file__))
+        f = p
+    return f
+
+
 # This script can be executed either from a pex file or in a standalone mode.
 # A pex file should contain all the necessary dependencies, but in standalone mode
 # these dependencies need to be configured before importing them.
 if not zipfile.is_zipfile(sys.argv[0]):
-    append_sys_path(os.sep.join(__file__.split(os.sep)[:-4]))
-    append_sys_path(os.sep.join(__file__.split(os.sep)[:-7]))
+    append_sys_path(find_buck_root())
 
 import pkg_resources  # noqa isort:skip
 
@@ -154,7 +163,7 @@ def main():
     copy_package(pex_builder, "_markerlib", prefix=pex_builder.BOOTSTRAP_DIR)
 
     # Add the sources listed in the manifest.
-    for dst, src in manifest["modules"].iteritems():
+    for dst, src in manifest["modules"].items():
         # NOTE(agallagher): calls the `add_source` and `add_resource` below
         # hard-link the given source into the PEX temp dir.  Since OS X and
         # Linux behave different when hard-linking a source that is a
@@ -166,12 +175,12 @@ def main():
             raise Exception("Failed to add {}: {}".format(src, e))
 
     # Add resources listed in the manifest.
-    for dst, src in manifest["resources"].iteritems():
+    for dst, src in manifest["resources"].items():
         # NOTE(agallagher): see rationale above.
         pex_builder.add_resource(dereference_symlinks(src), dst)
 
     # Add resources listed in the manifest.
-    for dst, src in manifest["nativeLibraries"].iteritems():
+    for dst, src in manifest["nativeLibraries"].items():
         # NOTE(agallagher): see rationale above.
         pex_builder.add_resource(dereference_symlinks(src), dst)
 

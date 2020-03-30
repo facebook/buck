@@ -1,17 +1,17 @@
 /*
- * Copyright 2012-present Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.facebook.buck.artifact_cache;
@@ -65,7 +65,7 @@ public class NoopArtifactCache implements ArtifactCache {
   @Override
   public ListenableFuture<CacheDeleteResult> deleteAsync(List<RuleKey> ruleKeys) {
     ImmutableList<String> cacheNames = ImmutableList.of(NoopArtifactCache.class.getSimpleName());
-    return Futures.immediateFuture(CacheDeleteResult.builder().setCacheNames(cacheNames).build());
+    return Futures.immediateFuture(CacheDeleteResult.of(cacheNames));
   }
 
   @Override
@@ -87,20 +87,12 @@ public class NoopArtifactCache implements ArtifactCache {
     }
 
     @Override
-    public ArtifactCache newInstance(
-        boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
+    public ArtifactCache remoteOnlyInstance() {
       return new NoopArtifactCache();
     }
 
     @Override
-    public ArtifactCache remoteOnlyInstance(
-        boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
-      return new NoopArtifactCache();
-    }
-
-    @Override
-    public ArtifactCache localOnlyInstance(
-        boolean distributedBuildModeEnabled, boolean isDownloadHeavyBuild) {
+    public ArtifactCache localOnlyInstance() {
       return new NoopArtifactCache();
     }
 

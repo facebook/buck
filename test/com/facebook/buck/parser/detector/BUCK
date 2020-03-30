@@ -1,0 +1,13 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "detector",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
+        "//src/com/facebook/buck/parser/detector:detector",
+        "//test/com/facebook/buck/core/cell:testutil",
+        "//test/com/facebook/buck/core/cell/nameresolver:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)
