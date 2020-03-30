@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -51,6 +52,7 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.parser.api.ForwardingProjectBuildFileParserDecorator;
+import com.facebook.buck.parser.api.PackageFileManifest;
 import com.facebook.buck.parser.api.ProjectBuildFileParser;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.detector.TargetConfigurationDetectorFactory;
@@ -379,6 +381,35 @@ public class ParsePipelineTest {
   }
 
   @Test
+  public void emptyPackageFileCachedForNonExistentPackageFile() throws Exception {
+    Fixture fixture = createMultiThreadedFixture("pipeline_test");
+    Cell cell = fixture.getCells();
+
+    BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
+
+    fixture.getTargetNodeParsePipeline().getNode(cell, aTarget, DependencyStack.root());
+
+    AbsPath nonExistantPackageFile = AbsPath.of(cell.getFilesystem().resolve("a/PACKAGE"));
+    assertFalse(cell.getFilesystem().isFile(nonExistantPackageFile));
+
+    // The package file parser checks for a path and if it doesn't exist, uses the default.
+    assertTrue(fixture.packageFileExistsInCache(nonExistantPackageFile));
+
+    PackageFileManifest packageFileManifest =
+        fixture.getPackageFileParsePipeline().getFileJob(cell, nonExistantPackageFile).get();
+    assertSame(PackageFileParsePipeline.NONEXISTENT_PACKAGE, packageFileManifest);
+
+    PackageFileManifest cachedPackageFileManifest =
+        fixture
+            .daemonicParserState
+            .getPackageFileCache()
+            .lookupComputedNode(cell, nonExistantPackageFile, eventBus)
+            .get();
+
+    assertSame(PackageFileParsePipeline.NONEXISTENT_PACKAGE, cachedPackageFileManifest);
+  }
+
+  @Test
   public void invalidatedPackageFileInvalidatesNodeButNotManifest() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
@@ -504,6 +535,7 @@ public class ParsePipelineTest {
     private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
     private final Cells cells;
+    private final PackageFileParsePipeline packageFileParsePipeline;
     private final DaemonicParserState daemonicParserState;
     private final ListeningExecutorService executorService;
     private final Set<CloseRecordingProjectBuildFileParserDecorator> projectBuildFileParsers;
@@ -584,7 +616,7 @@ public class ParsePipelineTest {
       PackageFileParserPool packageFileParserPool =
           new PackageFileParserPool(NUM_THREADS, packageFileParserFactory);
 
-      PackageFileParsePipeline packageFileParsePipeline =
+      packageFileParsePipeline =
           new PackageFileParsePipeline(
               new PipelineNodeCache<>(daemonicParserState.getPackageFileCache(), n -> false),
               packageFileParserPool,
@@ -649,6 +681,10 @@ public class ParsePipelineTest {
 
     public BuildFileRawNodeParsePipeline getBuildFileRawNodeParsePipeline() {
       return buildFileRawNodeParsePipeline;
+    }
+
+    public PackageFileParsePipeline getPackageFileParsePipeline() {
+      return packageFileParsePipeline;
     }
 
     public Cell getCells() {

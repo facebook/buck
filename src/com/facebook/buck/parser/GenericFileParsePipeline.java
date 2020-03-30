@@ -31,13 +31,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /** A pipeline that provides cached parsed results for a given file. */
 public class GenericFileParsePipeline<T extends FileManifest> implements FileParsePipeline<T> {
-
-  private final BuckEventBus eventBus;
-  private final PipelineNodeCache<AbsPath, T> cache;
+  protected final BuckEventBus eventBus;
+  protected final PipelineNodeCache<AbsPath, T> cache;
   private final ListeningExecutorService executorService;
   private final FileParserPool<T> fileParserPool;
   private final Watchman watchman;
-  private final AtomicBoolean shuttingDown;
+  protected final AtomicBoolean shuttingDown;
 
   public GenericFileParsePipeline(
       PipelineNodeCache<AbsPath, T> cache,
@@ -54,28 +53,29 @@ public class GenericFileParsePipeline<T extends FileManifest> implements FilePar
   }
 
   @Override
-  public ListenableFuture<T> getFileJob(Cell cell, AbsPath buildFile) throws BuildTargetException {
-
+  public ListenableFuture<T> getFileJob(Cell cell, AbsPath manifestFile)
+      throws BuildTargetException {
     if (shuttingDown.get()) {
       return Futures.immediateCancelledFuture();
     }
 
     return cache.getJobWithCacheLookup(
         cell,
-        buildFile,
+        manifestFile,
         () -> {
           if (shuttingDown.get()) {
             return Futures.immediateCancelledFuture();
           }
 
-          RelPath pathToCheck = cell.getRoot().relativize(buildFile.getParent());
+          RelPath pathToCheck = cell.getRoot().relativize(manifestFile.getParent());
           if (cell.getFilesystem().isIgnored(pathToCheck)) {
             throw new HumanReadableException(
                 "Content of '%s' cannot be built because it is defined in an ignored directory.",
                 pathToCheck);
           }
 
-          return fileParserPool.getManifest(eventBus, cell, watchman, buildFile, executorService);
+          return fileParserPool.getManifest(
+              eventBus, cell, watchman, manifestFile, executorService);
         },
         eventBus);
   }
