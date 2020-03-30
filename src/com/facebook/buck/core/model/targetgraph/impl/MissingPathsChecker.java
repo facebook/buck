@@ -21,7 +21,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -31,7 +30,6 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Set;
-import java.util.function.Function;
 
 /** Checks that paths exist and throw an exception if at least one path doesn't exist. */
 class MissingPathsChecker implements PathsChecker {
@@ -53,31 +51,32 @@ class MissingPathsChecker implements PathsChecker {
       ImmutableSet<ForwardRelativePath> paths,
       ImmutableSet<ForwardRelativePath> filePaths,
       ImmutableSet<ForwardRelativePath> dirPaths) {
-    checkPathsWithExtraCheck(projectFilesystem, buildTarget, paths, pathsCache, args -> null);
+    checkPathsWithExtraCheck(
+        projectFilesystem, buildTarget, paths, pathsCache, (path, attrs) -> {});
     checkPathsWithExtraCheck(
         projectFilesystem,
         buildTarget,
         filePaths,
         filePathsCache,
-        args -> {
-          if (!args.getSecond().isRegularFile()) {
-            throw new HumanReadableException(
-                "In %s expected regular file: %s", buildTarget, args.getFirst());
+        (path, attrs) -> {
+          if (!attrs.isRegularFile()) {
+            throw new HumanReadableException("In %s expected regular file: %s", buildTarget, path);
           }
-          return null;
         });
     checkPathsWithExtraCheck(
         projectFilesystem,
         buildTarget,
         dirPaths,
         dirPathsCache,
-        args -> {
-          if (!args.getSecond().isDirectory()) {
-            throw new HumanReadableException(
-                "In %s expected directory: %s", buildTarget, args.getFirst());
+        (path, attrs) -> {
+          if (!attrs.isDirectory()) {
+            throw new HumanReadableException("In %s expected directory: %s", buildTarget, path);
           }
-          return null;
         });
+  }
+
+  private interface ExtraCheck {
+    void check(ForwardRelativePath path, BasicFileAttributes attrs);
   }
 
   private static void checkPathsWithExtraCheck(
@@ -85,7 +84,7 @@ class MissingPathsChecker implements PathsChecker {
       BuildTarget buildTarget,
       ImmutableSet<ForwardRelativePath> paths,
       LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache,
-      Function<Pair<ForwardRelativePath, BasicFileAttributes>, Void> extraCheck) {
+      ExtraCheck extraCheck) {
     Set<ForwardRelativePath> checkedPaths =
         pathsCache.getUnchecked(projectFilesystem.getRootPath());
     for (ForwardRelativePath path : paths) {
@@ -96,7 +95,7 @@ class MissingPathsChecker implements PathsChecker {
         BasicFileAttributes attrs =
             projectFilesystem.readAttributes(
                 path.toPath(projectFilesystem.getFileSystem()), BasicFileAttributes.class);
-        extraCheck.apply(new Pair<>(path, attrs));
+        extraCheck.check(path, attrs);
       } catch (NoSuchFileException e) {
         throw new HumanReadableException(
             e, "%s references non-existing file or directory '%s'", buildTarget, path);
