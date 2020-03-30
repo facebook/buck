@@ -53,6 +53,8 @@ message BuckInfo {
   string project_prefix = 4;
   // Buck version
   string version = 5;
+  // Type of the build rule being executed.
+  string rule_type = 6;
 }
 
 // Data about the client that wants to start the session - may be ignored if

@@ -458,6 +458,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
             () ->
                 requirementsProvider.resolveRequirements(
                     buildRule.getBuildTarget(), auxiliaryBuildTag));
+    String ruleType = buildRule.getType();
     ListenableFuture<ExecutionResult> executionResult =
         executionLimiter.schedule(
             service,
@@ -470,7 +471,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
               ExecutionHandle executionHandle =
                   executionClients
                       .getRemoteExecutionService()
-                      .execute(actionDigest, ruleName, metadataProvider);
+                      .execute(actionDigest, ruleName, ruleType, metadataProvider);
 
               guardContext.onCancellation(reason -> executionHandle.cancel());
               Futures.addCallback(

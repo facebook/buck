@@ -70,7 +70,7 @@ public class OutOfProcessIsolatedExecutionClients implements RemoteExecutionClie
             workDir.getPath().resolve("__cache__"), protocol, eventBus);
     this.protocol = protocol;
     this.executionService =
-        (actionDigest, ruleName, metadataProvider) -> {
+        (actionDigest, ruleName, ruleType, metadataProvider) -> {
           Action action = storage.materializeAction(actionDigest);
 
           Path buildDir = workDir.getPath().resolve(action.getInputRootDigest().getHash());

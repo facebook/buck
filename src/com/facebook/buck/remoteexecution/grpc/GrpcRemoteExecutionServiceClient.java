@@ -161,14 +161,14 @@ public class GrpcRemoteExecutionServiceClient implements RemoteExecutionServiceC
 
   @Override
   public ExecutionHandle execute(
-      Digest actionDigest, String ruleName, MetadataProvider metadataProvider)
+      Digest actionDigest, String ruleName, String ruleType, MetadataProvider metadataProvider)
       throws IOException, InterruptedException {
 
     StubAndResponseMetadata<ExecutionStub> stubAndMetadata =
         GrpcHeaderHandler.wrapStubToSendAndReceiveMetadata(
             executionStub,
             metadataProvider.getForAction(
-                RemoteExecutionActionEvent.actionDigestToString(actionDigest), ruleName));
+                RemoteExecutionActionEvent.actionDigestToString(actionDigest), ruleName, ruleType));
 
     ExecutionState state = new ExecutionState(stubAndMetadata.getMetadata());
 

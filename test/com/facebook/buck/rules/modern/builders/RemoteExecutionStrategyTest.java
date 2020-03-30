@@ -456,7 +456,7 @@ public class RemoteExecutionStrategyTest {
 
     @Override
     public RemoteExecutionServiceClient getRemoteExecutionService() {
-      return (actionDigest, ruleName, metadataProvider) ->
+      return (actionDigest, ruleName, ruleType, metadataProvider) ->
           SimpleRemoteExecutionClients.this.execute();
     }
 

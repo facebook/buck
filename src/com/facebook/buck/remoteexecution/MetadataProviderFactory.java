@@ -54,12 +54,13 @@ public class MetadataProviderFactory {
 
       @Override
       public RemoteExecutionMetadata.Builder getBuilderForAction(
-          String actionDigest, String ruleName) {
+          String actionDigest, String ruleName, String ruleType) {
         return RemoteExecutionMetadata.newBuilder();
       }
 
       @Override
-      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
+      public RemoteExecutionMetadata getForAction(
+          String actionDigest, String ruleName, String ruleType) {
         return get();
       }
     };
@@ -125,19 +126,21 @@ public class MetadataProviderFactory {
 
       @Override
       public RemoteExecutionMetadata.Builder getBuilderForAction(
-          String actionDigest, String ruleName) {
+          String actionDigest, String ruleName, String ruleType) {
         // NOTE: Do NOT try to optimize this by storing the builder and applying updates to it
         // directly. This would require locking for the duration of update and copying into a fresh
         // RemoteExecutionMetadata.Builder object.
         RemoteExecutionMetadata.Builder builder = metadata.toBuilder();
-        BuckInfo buckInfo = builder.getBuckInfo().toBuilder().setRuleName(ruleName).build();
+        BuckInfo buckInfo =
+            builder.getBuckInfo().toBuilder().setRuleName(ruleName).setRuleType(ruleType).build();
         builder.setBuckInfo(buckInfo);
         return builder;
       }
 
       @Override
-      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
-        return getBuilderForAction(actionDigest, ruleName).build();
+      public RemoteExecutionMetadata getForAction(
+          String actionDigest, String ruleName, String ruleType) {
+        return getBuilderForAction(actionDigest, ruleName, ruleType).build();
       }
     };
   }
@@ -169,18 +172,21 @@ public class MetadataProviderFactory {
 
       @Override
       public RemoteExecutionMetadata.Builder getBuilderForAction(
-          String actionDigest, String ruleName) {
+          String actionDigest, String ruleName, String ruleType) {
         TraceInfo traceInfo =
             TraceInfo.newBuilder()
                 .setTraceId(traceInfoProvider.getTraceId())
                 .setEdgeId(traceInfoProvider.getEdgeId(actionDigest))
                 .build();
-        return metadataProvider.getBuilderForAction(actionDigest, ruleName).setTraceInfo(traceInfo);
+        return metadataProvider
+            .getBuilderForAction(actionDigest, ruleName, ruleType)
+            .setTraceInfo(traceInfo);
       }
 
       @Override
-      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
-        return getBuilderForAction(actionDigest, ruleName).build();
+      public RemoteExecutionMetadata getForAction(
+          String actionDigest, String ruleName, String ruleType) {
+        return getBuilderForAction(actionDigest, ruleName, ruleType).build();
       }
     };
   }
@@ -200,15 +206,16 @@ public class MetadataProviderFactory {
 
       @Override
       public RemoteExecutionMetadata.Builder getBuilderForAction(
-          String actionDigest, String ruleName) {
+          String actionDigest, String ruleName, String ruleType) {
         return metadataProvider
-            .getBuilderForAction(actionDigest, ruleName)
+            .getBuilderForAction(actionDigest, ruleName, ruleType)
             .setWorkerRequirements(requirementsSupplier.get());
       }
 
       @Override
-      public RemoteExecutionMetadata getForAction(String actionDigest, String ruleName) {
-        return getBuilderForAction(actionDigest, ruleName).build();
+      public RemoteExecutionMetadata getForAction(
+          String actionDigest, String ruleName, String ruleType) {
+        return getBuilderForAction(actionDigest, ruleName, ruleType).build();
       }
     };
   }

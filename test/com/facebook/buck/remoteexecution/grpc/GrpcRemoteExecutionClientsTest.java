@@ -114,6 +114,7 @@ public class GrpcRemoteExecutionClientsTest {
             .execute(
                 clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)),
                 "",
+                "",
                 MetadataProviderFactory.emptyMetadataProvider())
             .getResult()
             .get();
@@ -141,6 +142,7 @@ public class GrpcRemoteExecutionClientsTest {
             .getRemoteExecutionService()
             .execute(
                 clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)),
+                "",
                 "",
                 MetadataProviderFactory.emptyMetadataProvider());
 

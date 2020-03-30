@@ -65,6 +65,7 @@ public interface RemoteExecutionServiceClient {
    *
    * <p>Returns an ActionResult with exit code, outputs, stdout/stderr, etc.
    */
-  ExecutionHandle execute(Digest actionDigest, String ruleName, MetadataProvider metadataProvider)
+  ExecutionHandle execute(
+      Digest actionDigest, String ruleName, String ruleType, MetadataProvider metadataProvider)
       throws IOException, InterruptedException;
 }

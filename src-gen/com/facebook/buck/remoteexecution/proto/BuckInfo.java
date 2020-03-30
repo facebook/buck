@@ -27,6 +27,7 @@ private static final long serialVersionUID = 0L;
     auxiliaryBuildTag_ = "";
     projectPrefix_ = "";
     version_ = "";
+    ruleType_ = "";
   }
 
   @java.lang.Override
@@ -81,6 +82,12 @@ private static final long serialVersionUID = 0L;
             java.lang.String s = input.readStringRequireUtf8();
 
             version_ = s;
+            break;
+          }
+          case 50: {
+            java.lang.String s = input.readStringRequireUtf8();
+
+            ruleType_ = s;
             break;
           }
           default: {
@@ -331,6 +338,48 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int RULE_TYPE_FIELD_NUMBER = 6;
+  private volatile java.lang.Object ruleType_;
+  /**
+   * <pre>
+   * Type of the build rule being executed.
+   * </pre>
+   *
+   * <code>string rule_type = 6;</code>
+   */
+  public java.lang.String getRuleType() {
+    java.lang.Object ref = ruleType_;
+    if (ref instanceof java.lang.String) {
+      return (java.lang.String) ref;
+    } else {
+      com.google.protobuf.ByteString bs = 
+          (com.google.protobuf.ByteString) ref;
+      java.lang.String s = bs.toStringUtf8();
+      ruleType_ = s;
+      return s;
+    }
+  }
+  /**
+   * <pre>
+   * Type of the build rule being executed.
+   * </pre>
+   *
+   * <code>string rule_type = 6;</code>
+   */
+  public com.google.protobuf.ByteString
+      getRuleTypeBytes() {
+    java.lang.Object ref = ruleType_;
+    if (ref instanceof java.lang.String) {
+      com.google.protobuf.ByteString b = 
+          com.google.protobuf.ByteString.copyFromUtf8(
+              (java.lang.String) ref);
+      ruleType_ = b;
+      return b;
+    } else {
+      return (com.google.protobuf.ByteString) ref;
+    }
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -360,6 +409,9 @@ private static final long serialVersionUID = 0L;
     if (!getVersionBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 5, version_);
     }
+    if (!getRuleTypeBytes().isEmpty()) {
+      com.google.protobuf.GeneratedMessageV3.writeString(output, 6, ruleType_);
+    }
     unknownFields.writeTo(output);
   }
 
@@ -383,6 +435,9 @@ private static final long serialVersionUID = 0L;
     }
     if (!getVersionBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, version_);
+    }
+    if (!getRuleTypeBytes().isEmpty()) {
+      size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, ruleType_);
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -409,6 +464,8 @@ private static final long serialVersionUID = 0L;
         .equals(other.getProjectPrefix())) return false;
     if (!getVersion()
         .equals(other.getVersion())) return false;
+    if (!getRuleType()
+        .equals(other.getRuleType())) return false;
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -430,6 +487,8 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getProjectPrefix().hashCode();
     hash = (37 * hash) + VERSION_FIELD_NUMBER;
     hash = (53 * hash) + getVersion().hashCode();
+    hash = (37 * hash) + RULE_TYPE_FIELD_NUMBER;
+    hash = (53 * hash) + getRuleType().hashCode();
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -577,6 +636,8 @@ private static final long serialVersionUID = 0L;
 
       version_ = "";
 
+      ruleType_ = "";
+
       return this;
     }
 
@@ -608,6 +669,7 @@ private static final long serialVersionUID = 0L;
       result.auxiliaryBuildTag_ = auxiliaryBuildTag_;
       result.projectPrefix_ = projectPrefix_;
       result.version_ = version_;
+      result.ruleType_ = ruleType_;
       onBuilt();
       return result;
     }
@@ -674,6 +736,10 @@ private static final long serialVersionUID = 0L;
       }
       if (!other.getVersion().isEmpty()) {
         version_ = other.version_;
+        onChanged();
+      }
+      if (!other.getRuleType().isEmpty()) {
+        ruleType_ = other.ruleType_;
         onChanged();
       }
       this.mergeUnknownFields(other.unknownFields);
@@ -1164,6 +1230,95 @@ private static final long serialVersionUID = 0L;
       onChanged();
       return this;
     }
+
+    private java.lang.Object ruleType_ = "";
+    /**
+     * <pre>
+     * Type of the build rule being executed.
+     * </pre>
+     *
+     * <code>string rule_type = 6;</code>
+     */
+    public java.lang.String getRuleType() {
+      java.lang.Object ref = ruleType_;
+      if (!(ref instanceof java.lang.String)) {
+        com.google.protobuf.ByteString bs =
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        ruleType_ = s;
+        return s;
+      } else {
+        return (java.lang.String) ref;
+      }
+    }
+    /**
+     * <pre>
+     * Type of the build rule being executed.
+     * </pre>
+     *
+     * <code>string rule_type = 6;</code>
+     */
+    public com.google.protobuf.ByteString
+        getRuleTypeBytes() {
+      java.lang.Object ref = ruleType_;
+      if (ref instanceof String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        ruleType_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+    /**
+     * <pre>
+     * Type of the build rule being executed.
+     * </pre>
+     *
+     * <code>string rule_type = 6;</code>
+     */
+    public Builder setRuleType(
+        java.lang.String value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  
+      ruleType_ = value;
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Type of the build rule being executed.
+     * </pre>
+     *
+     * <code>string rule_type = 6;</code>
+     */
+    public Builder clearRuleType() {
+      
+      ruleType_ = getDefaultInstance().getRuleType();
+      onChanged();
+      return this;
+    }
+    /**
+     * <pre>
+     * Type of the build rule being executed.
+     * </pre>
+     *
+     * <code>string rule_type = 6;</code>
+     */
+    public Builder setRuleTypeBytes(
+        com.google.protobuf.ByteString value) {
+      if (value == null) {
+    throw new NullPointerException();
+  }
+  checkByteStringIsUtf8(value);
+      
+      ruleType_ = value;
+      onChanged();
+      return this;
+    }
     @java.lang.Override
     public final Builder setUnknownFields(
         final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1216,4 +1371,3 @@ private static final long serialVersionUID = 0L;
   }
 
 }
-

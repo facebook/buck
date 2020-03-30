@@ -104,4 +104,22 @@ public interface BuckInfoOrBuilder extends
    */
   com.google.protobuf.ByteString
       getVersionBytes();
+
+  /**
+   * <pre>
+   * Type of the build rule being executed.
+   * </pre>
+   *
+   * <code>string rule_type = 6;</code>
+   */
+  java.lang.String getRuleType();
+  /**
+   * <pre>
+   * Type of the build rule being executed.
+   * </pre>
+   *
+   * <code>string rule_type = 6;</code>
+   */
+  com.google.protobuf.ByteString
+      getRuleTypeBytes();
 }
