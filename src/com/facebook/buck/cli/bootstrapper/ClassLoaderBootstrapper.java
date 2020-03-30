@@ -17,7 +17,6 @@
 package com.facebook.buck.cli.bootstrapper;
 
 import java.io.File;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -39,20 +38,19 @@ import java.util.Arrays;
  * instead of their own.
  */
 public final class ClassLoaderBootstrapper {
+
   private static final ClassLoader classLoader = createClassLoader();
 
   private ClassLoaderBootstrapper() {}
 
-  public static void main(String[] args) throws Exception {
+  /** Main method */
+  public static void main(String[] args) {
     // Some things (notably Jetty) use the context class loader to load stuff
     Thread.currentThread().setContextClassLoader(classLoader);
 
     String mainClassName = args[0];
     String[] remainingArgs = Arrays.copyOfRange(args, 1, args.length);
-
-    Class<?> mainClass = classLoader.loadClass(mainClassName);
-    Method mainMethod = mainClass.getMethod("main", String[].class);
-    mainMethod.invoke(null, (Object) remainingArgs);
+    ClassLoaderBootstrapperUtils.invokeMainMethod(classLoader, mainClassName, remainingArgs);
   }
 
   public static Class<?> loadClass(String name) {

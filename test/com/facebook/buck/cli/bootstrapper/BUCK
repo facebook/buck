@@ -1,3 +1,5 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
 python_test(
     name = "bootstrapper",
     srcs = glob(["*.py"]),
@@ -8,4 +10,22 @@ python_test(
         "//src/com/facebook/buck/cli/bootstrapper:bootstrapper",
         "//test/com/facebook/buck/testutil/integration:integration-py",
     ],
+)
+
+java_test(
+    name = "bootstrapper-util",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        ":bootstrapper-util-lib",
+        "//src/com/facebook/buck/cli/bootstrapper:bootstrapper_lib",
+        "//third-party/java/junit:junit",
+    ],
+)
+
+java_library(
+    name = "bootstrapper-util-lib",
+    srcs = glob(
+        ["*.java"],
+        exclude = ["*Test.java"],
+    ),
 )
