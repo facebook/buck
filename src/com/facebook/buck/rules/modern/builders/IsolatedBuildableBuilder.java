@@ -266,14 +266,11 @@ public abstract class IsolatedBuildableBuilder {
               fs.writeContentsToPath(
                   fs.getRootPath().toString(), configuredPaths.getProjectRootDir());
 
-              if (!configuredPaths
-                      .getConfiguredBuckOut()
-                      .getPath()
-                      .equals(configuredPaths.getBuckOut())
+              if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut())
                   && buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()
                   && Platform.detect() != Platform.WINDOWS) {
                 BuckPaths unconfiguredPaths =
-                    configuredPaths.withConfiguredBuckOut(RelPath.of(configuredPaths.getBuckOut()));
+                    configuredPaths.withConfiguredBuckOut(configuredPaths.getBuckOut());
                 ImmutableMap<RelPath, RelPath> paths =
                     ImmutableMap.of(
                         unconfiguredPaths.getGenDir(), configuredPaths.getGenDir(),

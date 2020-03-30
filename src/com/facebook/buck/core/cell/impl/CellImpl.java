@@ -62,7 +62,7 @@ abstract class CellImpl implements Cell {
     ImmutableSet.Builder<PathMatcher> ignores =
         ImmutableSet.builderWithExpectedSize(filesystem.getBlacklistedPaths().size() + 1);
     ignores.addAll(filesystem.getBlacklistedPaths());
-    ignores.add(RecursiveFileMatcher.of(RelPath.of(filesystem.getBuckPaths().getBuckOut())));
+    ignores.add(RecursiveFileMatcher.of(filesystem.getBuckPaths().getBuckOut()));
     for (AbsPath subCellRoots : getKnownRootsOfAllCells()) {
       if (!subCellRoots.equals(getRoot())) {
         ignores.add(

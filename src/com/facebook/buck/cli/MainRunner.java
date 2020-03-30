@@ -794,9 +794,7 @@ public final class MainRunner {
         Optional<String> currentBuckCoreKey =
             filesystem.readFileIfItExists(filesystem.getBuckPaths().getCurrentVersionFile());
         BuckPaths unconfiguredPaths =
-            filesystem
-                .getBuckPaths()
-                .withConfiguredBuckOut(RelPath.of(filesystem.getBuckPaths().getBuckOut()));
+            filesystem.getBuckPaths().withConfiguredBuckOut(filesystem.getBuckPaths().getBuckOut());
 
         previousBuckCoreKey = currentBuckCoreKey.orElse("<NOT_FOUND>");
 
@@ -1262,7 +1260,8 @@ public final class MainRunner {
                         ? Optional.of(
                             filesystem
                                 .resolve(filesystem.getBuckPaths().getBuckOut())
-                                .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON))
+                                .resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON)
+                                .getPath())
                         : Optional.empty(),
                     buildEventBus);
             consoleListener.setProgressEstimator(progressEstimator);

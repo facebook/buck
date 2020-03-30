@@ -161,11 +161,12 @@ public class Build implements Closeable {
       BuckConfig buckConfig = cell.getBuckConfig();
       ProjectFilesystem filesystem = cell.getFilesystem();
       BuckPaths configuredPaths = filesystem.getBuckPaths();
-      if (!configuredPaths.getConfiguredBuckOut().getPath().equals(configuredPaths.getBuckOut())
+      if (!configuredPaths.getConfiguredBuckOut().equals(configuredPaths.getBuckOut())
           && buckConfig.getView(BuildBuckConfig.class).getBuckOutCompatLink()
           && Platform.detect() != Platform.WINDOWS) {
         BuckPaths unconfiguredPaths =
-            configuredPaths.withConfiguredBuckOut(RelPath.of(configuredPaths.getBuckOut()));
+            configuredPaths.withConfiguredBuckOut(
+                RelPath.of(configuredPaths.getBuckOut().getPath()));
         ImmutableMap<RelPath, RelPath> paths =
             ImmutableMap.of(
                 unconfiguredPaths.getGenDir(),

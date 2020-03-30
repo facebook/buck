@@ -619,7 +619,7 @@ public class DefaultProjectFilesystemTest {
         ImmutableSortedSet.copyOf(Ordering.natural(), ignorePaths),
         equalTo(
             ImmutableSortedSet.of(
-                filesystem.getBuckPaths().getBuckOut(),
+                filesystem.getBuckPaths().getBuckOut().getPath(),
                 filesystem.getBuckPaths().getTrashDir(),
                 Paths.get(".idea"),
                 Paths.get(

@@ -233,7 +233,7 @@ public class WatchedFileHashCacheTest {
   @Test
   public void thatWillGetIsCorrect() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    Path buckOut = filesystem.getBuckPaths().getBuckOut();
+    RelPath buckOut = filesystem.getBuckPaths().getBuckOut();
     filesystem.mkdirs(buckOut);
     Path buckOutFile = buckOut.resolve("file.txt");
     Path otherFile = Paths.get("file.txt");

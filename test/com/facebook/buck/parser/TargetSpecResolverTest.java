@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.graph.transformation.executor.DepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.executor.impl.DefaultDepsAwareExecutor;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
@@ -225,7 +226,7 @@ public class TargetSpecResolverTest {
 
   @Test
   public void resolveTargetSpecsIgnoresBuckout() throws Exception {
-    Path buckout = filesystem.getBuckPaths().getBuckOut();
+    RelPath buckout = filesystem.getBuckPaths().getBuckOut();
     Path buckFile = cellRoot.resolve(buckout.resolve("BUCK"));
     Files.createDirectories(buckFile.getParent());
     Files.write(buckFile, "genrule(name='foo', out='foo', cmd='foo')".getBytes(UTF_8));
@@ -237,7 +238,7 @@ public class TargetSpecResolverTest {
                     BuildFileSpec.fromRecursivePath(
                         CellRelativePath.of(
                             cell.getRootCell().getCanonicalName(),
-                            ForwardRelativePath.ofPath(buckout))))));
+                            ForwardRelativePath.ofRelPath(buckout))))));
     assertThat(targets, equalTo(ImmutableList.of(ImmutableSet.of())));
   }
 

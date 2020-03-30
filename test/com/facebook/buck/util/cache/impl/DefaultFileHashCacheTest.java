@@ -22,6 +22,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemDelegate;
@@ -322,7 +323,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void thatBuckoutCacheWillGetIsCorrect() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    Path buckOut = filesystem.getBuckPaths().getBuckOut();
+    RelPath buckOut = filesystem.getBuckPaths().getBuckOut();
     filesystem.mkdirs(buckOut);
     Path buckOutFile = buckOut.resolve("file.txt");
     Path otherFile = Paths.get("file.txt");
@@ -338,7 +339,7 @@ public class DefaultFileHashCacheTest {
   @Test
   public void thatNonBuckoutCacheWillGetIsCorrect() throws IOException {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    Path buckOut = filesystem.getBuckPaths().getBuckOut();
+    RelPath buckOut = filesystem.getBuckPaths().getBuckOut();
     filesystem.mkdirs(buckOut);
     Path buckOutFile = buckOut.resolve("file.txt");
     Path otherFile = Paths.get("file.txt");

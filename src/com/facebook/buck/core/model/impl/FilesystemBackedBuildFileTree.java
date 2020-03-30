@@ -115,9 +115,9 @@ public class FilesystemBackedBuildFileTree implements BuildFileTree {
    *     folder, which means it cannot contain build files
    */
   private boolean isBuckSpecialPath(Path path) {
-    Path buckOut = projectFilesystem.getBuckPaths().getBuckOut();
+    RelPath buckOut = projectFilesystem.getBuckPaths().getBuckOut();
     Path buckCache = projectFilesystem.getBuckPaths().getCacheDir();
 
-    return path.startsWith(buckOut) || path.startsWith(buckCache);
+    return path.startsWith(buckOut.getPath()) || path.startsWith(buckCache);
   }
 }

@@ -35,7 +35,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -59,12 +58,12 @@ public class PathUtilsTest {
             fileSystem,
             fileSystem.getBuckPaths().getConfiguredBuckOut().resolve("foo"));
     graphBuilder.addToIndex(rule);
-    Path expected = fileSystem.resolve(fileSystem.getBuckPaths().getBuckOut()).resolve("foo");
+    AbsPath expected = fileSystem.resolve(fileSystem.getBuckPaths().getBuckOut()).resolve("foo");
 
     assertThat(
         PathUtils.getUserFacingOutputPath(pathResolver, rule, true, OutputLabel.defaultLabel())
             .get(),
-        Matchers.equalTo(expected));
+        Matchers.equalTo(expected.getPath()));
   }
 
   @Test

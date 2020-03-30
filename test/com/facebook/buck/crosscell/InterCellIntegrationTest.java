@@ -215,7 +215,7 @@ public class InterCellIntegrationTest {
     Pair<ProjectWorkspace, ProjectWorkspace> cells =
         prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
     ProjectWorkspace primary = cells.getFirst();
-    Path secondaryBuckOut =
+    AbsPath secondaryBuckOut =
         primary
             .getProjectFileSystem()
             .resolve(
@@ -228,7 +228,8 @@ public class InterCellIntegrationTest {
 
     primary.runBuckBuild("//:cxxbinary");
     ImmutableMap<String, HashCode> firstPrimaryObjectFiles = findObjectFiles(primary);
-    ImmutableMap<String, HashCode> firstObjectFiles = findObjectFilesInBuckOut(secondaryBuckOut);
+    ImmutableMap<String, HashCode> firstObjectFiles =
+        findObjectFilesInBuckOut(secondaryBuckOut.getPath());
 
     // Now recreate an identical checkout
     cells = prepare("inter-cell/export-file/primary", "inter-cell/export-file/secondary");
@@ -246,7 +247,8 @@ public class InterCellIntegrationTest {
 
     primary.runBuckBuild("//:cxxbinary");
     ImmutableMap<String, HashCode> secondPrimaryObjectFiles = findObjectFiles(primary);
-    ImmutableMap<String, HashCode> secondObjectFiles = findObjectFilesInBuckOut(secondaryBuckOut);
+    ImmutableMap<String, HashCode> secondObjectFiles =
+        findObjectFilesInBuckOut(secondaryBuckOut.getPath());
 
     assertEquals(firstPrimaryObjectFiles, secondPrimaryObjectFiles);
     assertEquals(firstObjectFiles, secondObjectFiles);

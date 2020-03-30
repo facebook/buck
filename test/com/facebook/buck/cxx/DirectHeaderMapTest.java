@@ -120,7 +120,7 @@ public class DirectHeaderMapTest {
     BuildContext buildContext = FakeBuildContext.withSourcePathResolver(pathResolver);
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
-    AbsPath includeRoot = AbsPath.of(projectFilesystem.resolve(buildRule.getIncludeRoot()));
+    AbsPath includeRoot = projectFilesystem.resolve(buildRule.getIncludeRoot());
     ImmutableList<Step> expectedBuildSteps =
         ImmutableList.of(
             RmStep.of(

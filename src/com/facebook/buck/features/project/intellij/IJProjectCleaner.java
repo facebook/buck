@@ -113,7 +113,7 @@ public class IJProjectCleaner {
     Set<File> buckDirectories = new HashSet<>();
     buckDirectories.add(
         convertPathToFile(
-            projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut())));
+            projectFilesystem.resolve(projectFilesystem.getBuckPaths().getBuckOut()).getPath()));
 
     ArtifactCacheBuckConfig cacheBuckConfig = new ArtifactCacheBuckConfig(buckConfig);
     for (DirCacheEntry entry : cacheBuckConfig.getCacheEntries().getDirCacheEntries()) {

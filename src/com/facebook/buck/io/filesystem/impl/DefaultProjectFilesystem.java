@@ -204,7 +204,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
                 })
             // TODO(#10068334) So we claim to ignore this path to preserve existing behaviour, but
             // we really don't end up ignoring it in reality (see extractIgnorePaths).
-            .append(ImmutableSet.of(buckPaths.getBuckOut()))
+            .append(ImmutableSet.of(buckPaths.getBuckOut().getPath()))
             .transform((Path basePath) -> RecursiveFileMatcher.of(RelPath.of(basePath)))
             .transform(matcher -> (PathMatcher) matcher)
             .append(

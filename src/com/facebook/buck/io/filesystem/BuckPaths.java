@@ -21,7 +21,6 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.config.Config;
-import com.google.common.base.Preconditions;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -35,8 +34,9 @@ public abstract class BuckPaths {
 
   public static BuckPaths createDefaultBuckPaths(
       CanonicalCellName cellName, Path rootPath, boolean buckOutIncludeTargetConfigHash) {
-    Path buckOut = rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString());
-    return BuckPaths.of(cellName, buckOut, RelPath.of(buckOut), buckOutIncludeTargetConfigHash);
+    RelPath buckOut =
+        RelPath.of(rootPath.getFileSystem().getPath(BuckConstant.getBuckOutputPath().toString()));
+    return BuckPaths.of(cellName, buckOut, buckOut, buckOutIncludeTargetConfigHash);
   }
 
   /** Is hashed buck-out enabled? Must be queried using root cell buckconfig. */
@@ -50,12 +50,7 @@ public abstract class BuckPaths {
   public abstract CanonicalCellName getCellName();
 
   /** The relative path to the directory where Buck will generate its files. */
-  public abstract Path getBuckOut();
-
-  @Value.Check
-  protected void checkBuckOut() {
-    Preconditions.checkArgument(!getBuckOut().isAbsolute());
-  }
+  public abstract RelPath getBuckOut();
 
   /**
    * The relative path to the directory where Buck will generate its files. This is used when
@@ -156,13 +151,12 @@ public abstract class BuckPaths {
   }
 
   public RelPath getSymlinkPathForDir(Path unconfiguredDirInBuckOut) {
-    return getConfiguredBuckOut()
-        .resolve(RelPath.of(getBuckOut().relativize(unconfiguredDirInBuckOut)));
+    return getConfiguredBuckOut().resolve(getBuckOut().relativize(unconfiguredDirInBuckOut));
   }
 
   public static BuckPaths of(
       CanonicalCellName cellName,
-      Path buckOut,
+      RelPath buckOut,
       RelPath configuredBuckOut,
       boolean shouldIncludeTargetConfigHash) {
     return ImmutableBuckPaths.ofImpl(
@@ -177,7 +171,8 @@ public abstract class BuckPaths {
     return of(getCellName(), getBuckOut(), configuredBuckOut, shouldIncludeTargetConfigHash());
   }
 
-  public BuckPaths withBuckOut(Path buckOut) {
+  /** Replace {@link #getBuckOut()} field. */
+  public BuckPaths withBuckOut(RelPath buckOut) {
     if (getBuckOut().equals(buckOut)) {
       return this;
     }

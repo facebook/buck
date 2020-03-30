@@ -165,7 +165,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
   }
 
   private static Path getConfiguredBuckOut(
-      Optional<String> configuredBuckOut, Path buckOutPath, Path rootPath) {
+      Optional<String> configuredBuckOut, RelPath buckOutPath, Path rootPath) {
     // You currently cannot truly configure the BuckOut directory today.
     // The use of ConfiguredBuckOut and project.buck_out here is IMHO
     // confusingly "partial" support for this feature.
@@ -186,7 +186,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
       return rootPath.getFileSystem().getPath(value);
     }
 
-    return buckOutPath;
+    return buckOutPath.getPath();
   }
 
   private static BuckPaths getConfiguredBuckPaths(
@@ -202,11 +202,12 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     if (embeddedCellBuckOutInfo.isPresent()) {
       Path buckOut = embeddedCellBuckOutInfo.get().getCellBuckOut();
       buckOut = rootPath.relativize(buckOut);
-      buckPaths = buckPaths.withConfiguredBuckOut(RelPath.of(buckOut)).withBuckOut(buckOut);
+      buckPaths =
+          buckPaths.withConfiguredBuckOut(RelPath.of(buckOut)).withBuckOut(RelPath.of(buckOut));
     } else {
-      Path buckOut = buckPaths.getBuckOut();
+      Path buckOut = buckPaths.getBuckOut().getPath();
       if (configuredProjectBuckOut.isPresent()) {
-        buckOut = getConfiguredBuckOut(configuredProjectBuckOut, buckOut, rootPath);
+        buckOut = getConfiguredBuckOut(configuredProjectBuckOut, RelPath.of(buckOut), rootPath);
         buckPaths = buckPaths.withConfiguredBuckOut(RelPath.of(buckOut));
       }
     }
@@ -226,7 +227,7 @@ public class DefaultProjectFilesystemFactory implements ProjectFilesystemFactory
     Path mainCellBuckOut =
         embeddedCellBuckOutInfo
             .getMainCellRoot()
-            .resolve(embeddedCellBuckOutInfo.getMainCellBuckPaths().getBuckOut());
+            .resolve(embeddedCellBuckOutInfo.getMainCellBuckPaths().getBuckOut().getPath());
 
     return Optional.of(root.relativize(mainCellBuckOut));
   }

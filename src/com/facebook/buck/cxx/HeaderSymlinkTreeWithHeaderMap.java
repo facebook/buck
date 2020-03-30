@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -69,7 +70,7 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     LOG.debug("Generating post-build steps to write header map to %s", headerMapPath);
-    Path buckOut =
+    AbsPath buckOut =
         getProjectFilesystem().resolve(getProjectFilesystem().getBuckPaths().getBuckOut());
 
     ImmutableMap.Builder<Path, Path> headerMapEntries = ImmutableMap.builder();
@@ -79,7 +80,7 @@ public final class HeaderSymlinkTreeWithHeaderMap extends HeaderSymlinkTree {
       // tree. Because "reasons", we don't want to cache that value, so we need to relativize the
       // path to the output directory of this current rule. We then rely on magic and the stars
       // aligning in order to get this to work. May we find peace in another life.
-      headerMapEntries.put(key, buckOut.relativize(getRoot().resolve(key)));
+      headerMapEntries.put(key, buckOut.relativize(getRoot().resolve(key)).getPath());
     }
     ImmutableList.Builder<Step> builder =
         ImmutableList.<Step>builder()

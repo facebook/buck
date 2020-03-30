@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -201,8 +202,8 @@ public class CellTest {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(cellRoot.toAbsolutePath());
 
-    Path buckOutRelative = filesystem.getBuckPaths().getBuckOut();
-    Path buckOut = cellRoot.resolve(buckOutRelative);
+    RelPath buckOutRelative = filesystem.getBuckPaths().getBuckOut();
+    Path buckOut = cellRoot.resolve(buckOutRelative.getPath());
 
     Files.createDirectories(buckOut);
 

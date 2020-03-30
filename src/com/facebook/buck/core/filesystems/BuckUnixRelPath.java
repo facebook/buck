@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.filesystems;
 
+import java.nio.file.Path;
+
 /**
  * {@link com.facebook.buck.core.filesystems.BuckUnixPath} with {@link
  * com.facebook.buck.core.filesystems.RelPath} marker.
@@ -43,5 +45,10 @@ class BuckUnixRelPath extends BuckUnixPath implements RelPath {
   @Override
   public BuckUnixRelPath subpath(int beginIndex, int endIndex) {
     return (BuckUnixRelPath) super.subpath(beginIndex, endIndex);
+  }
+
+  @Override
+  public BuckUnixRelPath relativize(Path obj) {
+    return (BuckUnixRelPath) super.relativize(obj);
   }
 }
