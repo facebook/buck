@@ -35,14 +35,14 @@ import java.nio.file.Path;
  */
 public final class DefaultProjectFilesystemDelegate implements ProjectFilesystemDelegate {
 
-  private final Path root;
+  private final AbsPath root;
 
   public DefaultProjectFilesystemDelegate(Path root) {
-    this.root = root;
+    this(AbsPath.of(root));
   }
 
   public DefaultProjectFilesystemDelegate(AbsPath root) {
-    this(root.getPath());
+    this.root = root;
   }
 
   @Override
@@ -84,9 +84,9 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
     // {@link java.nio.file.Paths#get(String, String...)}, but there's no guarantee that the
     // underlying {@link FileSystem} is the default one.
     if (pathRelativeToProjectRoot.getFileSystem().equals(root.getFileSystem())) {
-      return root.resolve(pathRelativeToProjectRoot);
+      return root.resolve(pathRelativeToProjectRoot).getPath();
     }
-    return root.resolve(pathRelativeToProjectRoot.toString());
+    return root.resolve(pathRelativeToProjectRoot.toString()).getPath();
   }
 
   @Override
