@@ -17,7 +17,7 @@
 package com.facebook.buck.parser.detector;
 
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -26,7 +26,7 @@ import java.util.Optional;
 public class TargetConfigurationDetector {
   /** A matcher part of the rule */
   interface Matcher {
-    boolean matches(UnconfiguredTargetNode node);
+    boolean matches(UnflavoredBuildTarget node);
   }
 
   private final ImmutableList<Pair<Matcher, TargetConfiguration>> matchers;
@@ -37,9 +37,9 @@ public class TargetConfigurationDetector {
 
   /** Find first matching configuration, or return empty if no rules match the target. */
   public Optional<TargetConfiguration> detectTargetConfiguration(
-      UnconfiguredTargetNode unconfiguredBuildTarget) {
+      UnflavoredBuildTarget unflavoredBuildTarget) {
     for (Pair<Matcher, TargetConfiguration> pair : matchers) {
-      if (pair.getFirst().matches(unconfiguredBuildTarget)) {
+      if (pair.getFirst().matches(unflavoredBuildTarget)) {
         return Optional.of(pair.getSecond());
       }
     }
@@ -58,8 +58,8 @@ public class TargetConfigurationDetector {
     }
 
     @Override
-    public boolean matches(UnconfiguredTargetNode node) {
-      return simplePackageSpec.matches(node.getBuildTarget());
+    public boolean matches(UnflavoredBuildTarget node) {
+      return simplePackageSpec.matches(node);
     }
 
     @Override

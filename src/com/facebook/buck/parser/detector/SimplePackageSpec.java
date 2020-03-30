@@ -20,7 +20,7 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.CellRelativePath;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -37,7 +37,7 @@ class SimplePackageSpec {
     this.prefix = prefix;
   }
 
-  boolean matches(UnconfiguredBuildTarget target) {
+  boolean matches(UnflavoredBuildTarget target) {
     return target.getCellRelativeBasePath().startsWith(prefix);
   }
 

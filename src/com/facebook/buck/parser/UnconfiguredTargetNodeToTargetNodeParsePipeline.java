@@ -329,7 +329,8 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     // Use detector when neither global configuration is specified
     // not `default_target_platform` argument is passed
     Optional<TargetConfiguration> detectedTargetConfiguration =
-        targetConfigurationDetector.detectTargetConfiguration(unconfiguredTargetNode);
+        targetConfigurationDetector.detectTargetConfiguration(
+            unconfiguredTargetNode.getBuildTarget().getUnflavoredBuildTarget());
     if (detectedTargetConfiguration.isPresent()) {
       return detectedTargetConfiguration.get();
     }

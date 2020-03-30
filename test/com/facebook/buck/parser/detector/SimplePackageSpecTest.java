@@ -26,13 +26,13 @@ public class SimplePackageSpecTest {
   private static void assertMatches(String spec, String target) {
     Assert.assertTrue(
         SimplePackageSpec.parse(spec, TestCellNameResolver.forRoot("foo", "bar"))
-            .matches(UnconfiguredBuildTargetParser.parse(target)));
+            .matches(UnconfiguredBuildTargetParser.parse(target).getUnflavoredBuildTarget()));
   }
 
   private static void assertDoesNotMatch(String spec, String target) {
     Assert.assertFalse(
         SimplePackageSpec.parse(spec, TestCellNameResolver.forRoot("foo", "bar"))
-            .matches(UnconfiguredBuildTargetParser.parse(target)));
+            .matches(UnconfiguredBuildTargetParser.parse(target).getUnflavoredBuildTarget()));
   }
 
   @Test
