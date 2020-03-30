@@ -334,16 +334,19 @@ class DaemonicCellState {
    * </ul>
    *
    * @param path Absolute path to the file for which to invalidate all cached content.
+   * @param invalidateManifests Whether to invalidate cached manifests at {@code path}.
    * @return Count of all invalidated raw nodes for the path
    */
-  int invalidatePath(AbsPath path) {
+  int invalidatePath(AbsPath path, boolean invalidateManifests) {
     try (AutoCloseableLock writeLock = cachesLock.writeLock()) {
       // If `path` is a build file with a valid entry in `allBuildFileManifests`, we also want to
       // invalidate the build targets in the manifest.
       int invalidatedRawNodes = invalidateNodesInPath(path, true);
 
-      allBuildFileManifests.invalidate(path);
-      allPackageFileManifests.invalidate(path);
+      if (invalidateManifests) {
+        allBuildFileManifests.invalidate(path);
+        allPackageFileManifests.invalidate(path);
+      }
 
       // We may have been given a file that other build files depend on. Invalidate accordingly.
       Set<AbsPath> dependents = buildFileDependents.get(path);
@@ -360,7 +363,7 @@ class DaemonicCellState {
           invalidatedRawNodes += invalidateNodesInPath(dependent, false);
         } else {
           // Recursively invalidate all cached content based on `dependent`.
-          invalidatedRawNodes += invalidatePath(dependent);
+          invalidatedRawNodes += invalidatePath(dependent, true);
         }
       }
       if (!isPackageFile) {
@@ -377,7 +380,7 @@ class DaemonicCellState {
         if (dependent.equals(path)) {
           continue;
         }
-        invalidatedRawNodes += invalidatePath(dependent);
+        invalidatedRawNodes += invalidatePath(dependent, true);
       }
       packageFileDependents.removeAll(path);
 
@@ -400,7 +403,7 @@ class DaemonicCellState {
           Optional.ofNullable(cell.getBuckConfig().getEnvironment().get(ent.getKey()));
       if (!value.equals(ent.getValue())) {
         LOG.verbose("invalidating for env change: %s (%s != %s)", buildFile, value, ent.getValue());
-        invalidatePath(buildFile);
+        invalidatePath(buildFile, true);
         this.cell.set(cell);
         return Optional.of(
             Maps.difference(

@@ -630,7 +630,7 @@ public class DaemonicParserState {
 
     // Paths passed in may not be absolute.
     path = state.getCellRoot().resolve(path.getPath());
-    int invalidatedNodes = state.invalidatePath(path);
+    int invalidatedNodes = state.invalidatePath(path, true);
     rulesInvalidatedByWatchEventsCounter.inc(invalidatedNodes);
   }
 

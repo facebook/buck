@@ -182,7 +182,7 @@ public class DaemonicCellStateTest {
                     TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("name", "target"))))),
         ImmutableSet.of(),
         ImmutableMap.of());
-    assertEquals("Still only one invalidated node", 1, childState.invalidatePath(targetPath));
+    assertEquals("Still only one invalidated node", 1, childState.invalidatePath(targetPath, true));
     assertEquals(
         "Cell-named target should still be invalidated",
         Optional.empty(),
@@ -241,12 +241,12 @@ public class DaemonicCellStateTest {
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
 
-    state.invalidatePath(AbsPath.of(filesystem.resolve("path/to/random.bzl")));
+    state.invalidatePath(AbsPath.of(filesystem.resolve("path/to/random.bzl")), true);
 
     lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
 
-    state.invalidatePath(packageFile);
+    state.invalidatePath(packageFile, true);
 
     lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertFalse(lookupManifest.isPresent());
@@ -268,7 +268,7 @@ public class DaemonicCellStateTest {
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
 
-    state.invalidatePath(dependentFile);
+    state.invalidatePath(dependentFile, true);
 
     lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertFalse(lookupManifest.isPresent());
