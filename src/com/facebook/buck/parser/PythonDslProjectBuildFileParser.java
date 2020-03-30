@@ -445,7 +445,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
             buildFile.getPath(), ParseBuckFileEvent.ParserKind.PYTHON_DSL, this.getClass());
     buckEventBus.post(parseBuckFileStarted);
 
-    ImmutableList<Map<String, Object>> values = ImmutableList.of();
+    ImmutableList<TwoArraysImmutableHashMap<String, Object>> values = ImmutableList.of();
     Optional<String> profile = Optional.empty();
     try (AssertScopeExclusiveAccess.Scope scope = assertSingleThreadedParsing.scope()) {
       AbsPath cellPath = options.getProjectRoot();
@@ -514,7 +514,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @SuppressWarnings("unchecked")
-  private BuildFileManifest toBuildFileManifest(ImmutableList<Map<String, Object>> values) {
+  private BuildFileManifest toBuildFileManifest(
+      ImmutableList<TwoArraysImmutableHashMap<String, Object>> values) {
     return BuildFileManifest.of(
         indexTargetsByName(values.subList(0, values.size() - 3).asList()),
         ImmutableSortedSet.copyOf(
@@ -534,7 +535,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   private static TwoArraysImmutableHashMap<String, RawTargetNode> indexTargetsByName(
-      ImmutableList<Map<String, Object>> targets) {
+      ImmutableList<TwoArraysImmutableHashMap<String, Object>> targets) {
     TwoArraysImmutableHashMap.Builder<String, RawTargetNode> builder =
         TwoArraysImmutableHashMap.builderWithExpectedSize(targets.size());
     targets.forEach(
@@ -543,8 +544,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   }
 
   @SuppressWarnings("unchecked")
-  private static RawTargetNode convertSelectableAttributes(Map<String, Object> values) {
-    TwoArraysImmutableHashMap.Builder<String, Object> attrs = TwoArraysImmutableHashMap.builder();
+  private static RawTargetNode convertSelectableAttributes(
+      TwoArraysImmutableHashMap<String, Object> values) {
+    TwoArraysImmutableHashMap.Builder<String, Object> attrs =
+        TwoArraysImmutableHashMap.builderWithExpectedSize(values.size());
 
     ForwardRelativePath basePath = null;
     String type = null;
@@ -669,7 +672,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private static void handleDiagnostics(
       Path buildFile,
       Path buckPyDir,
-      List<Map<String, Object>> diagnosticsList,
+      List<TwoArraysImmutableHashMap<String, Object>> diagnosticsList,
       BuckEventBus buckEventBus)
       throws IOException, BuildFileParseException {
     for (Map<String, Object> diagnostic : diagnosticsList) {

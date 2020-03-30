@@ -29,7 +29,6 @@ import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
@@ -53,8 +52,8 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
     if (jp.getCurrentToken() != JsonToken.START_OBJECT) {
       throw new JsonParseException(jp, "Missing expected START_OBJECT");
     }
-    ImmutableList<Map<String, Object>> values = ImmutableList.of();
-    ImmutableList<Map<String, Object>> diagnostics = ImmutableList.of();
+    ImmutableList<TwoArraysImmutableHashMap<String, Object>> values = ImmutableList.of();
+    ImmutableList<TwoArraysImmutableHashMap<String, Object>> diagnostics = ImmutableList.of();
     Optional<String> profile = Optional.empty();
     String fieldName;
     while ((fieldName = jp.nextFieldName()) != null) {
@@ -78,13 +77,14 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
     return BuildFilePythonResult.of(values, diagnostics, profile);
   }
 
-  private static ImmutableList<Map<String, Object>> deserializeObjectList(JsonParser jp)
-      throws IOException {
+  private static ImmutableList<TwoArraysImmutableHashMap<String, Object>> deserializeObjectList(
+      JsonParser jp) throws IOException {
     JsonToken token = jp.nextToken();
     if (token != JsonToken.START_ARRAY) {
       throw new JsonParseException(jp, "Missing expected START_ARRAY, got: " + token);
     }
-    ImmutableList.Builder<Map<String, Object>> result = ImmutableList.builder();
+    ImmutableList.Builder<TwoArraysImmutableHashMap<String, Object>> result =
+        ImmutableList.builder();
     while ((token = jp.nextToken()) == JsonToken.START_OBJECT) {
       result.add(deserializeObject(jp));
     }
@@ -94,7 +94,8 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
     return result.build();
   }
 
-  private static Map<String, Object> deserializeObject(JsonParser jp) throws IOException {
+  private static TwoArraysImmutableHashMap<String, Object> deserializeObject(JsonParser jp)
+      throws IOException {
     TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
     String fieldName;
     while ((fieldName = jp.nextFieldName()) != null) {

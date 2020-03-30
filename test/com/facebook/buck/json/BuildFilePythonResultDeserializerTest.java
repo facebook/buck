@@ -19,6 +19,7 @@ package com.facebook.buck.json;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -53,7 +54,9 @@ public final class BuildFilePythonResultDeserializerTest {
         result,
         is(
             BuildFilePythonResult.of(
-                ImmutableList.of(expectedValues), ImmutableList.of(), Optional.empty())));
+                ImmutableList.of(TwoArraysImmutableHashMap.copyOf(expectedValues)),
+                ImmutableList.of(),
+                Optional.empty())));
   }
 
   @Test
@@ -73,7 +76,7 @@ public final class BuildFilePythonResultDeserializerTest {
             BuildFilePythonResult.of(
                 ImmutableList.of(),
                 ImmutableList.of(
-                    ImmutableMap.of(
+                    TwoArraysImmutableHashMap.of(
                         "message",
                         "Oops",
                         "level",

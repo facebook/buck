@@ -17,9 +17,9 @@
 package com.facebook.buck.json;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -31,15 +31,15 @@ import java.util.Optional;
 @BuckStyleValue
 @JsonDeserialize(as = BuildFilePythonResult.class, using = BuildFilePythonResultDeserializer.class)
 public interface BuildFilePythonResult {
-  ImmutableList<Map<String, Object>> getValues();
+  ImmutableList<TwoArraysImmutableHashMap<String, Object>> getValues();
 
-  ImmutableList<Map<String, Object>> getDiagnostics();
+  ImmutableList<TwoArraysImmutableHashMap<String, Object>> getDiagnostics();
 
   Optional<String> getProfile();
 
   static BuildFilePythonResult of(
-      ImmutableList<Map<String, Object>> values,
-      ImmutableList<Map<String, Object>> diagnostics,
+      ImmutableList<TwoArraysImmutableHashMap<String, Object>> values,
+      ImmutableList<TwoArraysImmutableHashMap<String, Object>> diagnostics,
       Optional<String> profile) {
     return ImmutableBuildFilePythonResult.ofImpl(values, diagnostics, profile);
   }
