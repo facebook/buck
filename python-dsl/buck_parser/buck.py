@@ -303,7 +303,7 @@ class LazyBuildEnvPartial(object):
                     # Optimistically hope that name is the first arg. It generally is...
                     name = args[0]
                 raise IncorrectArgumentsException(
-                    self.func.func_name, name, missing_args, extra_args
+                    self.func.__name__, name, missing_args, extra_args
                 )
             raise
 
