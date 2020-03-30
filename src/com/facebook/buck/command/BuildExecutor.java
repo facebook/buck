@@ -36,6 +36,8 @@ import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.google.common.base.Preconditions;
@@ -44,6 +46,7 @@ import java.util.Optional;
 
 /** Used to build a given set of targets. */
 public class BuildExecutor {
+
   private final ActionGraphAndBuilder actionGraphAndBuilder;
   private final WeightedListeningExecutorService executorService;
   private final CachingBuildEngineDelegate cachingBuildEngineDelegate;
@@ -84,8 +87,12 @@ public class BuildExecutor {
     this.targetConfigurationSerializer = targetConfigurationSerializer;
 
     // Init resources.
+    Console console = args.getConsole();
+    ConsoleParams consoleParams =
+        ConsoleParams.of(console.getAnsi().isAnsiTerminal(), console.getVerbosity());
     this.cachingBuildEngine =
-        createCachingBuildEngine(remoteExecutionAutoEnabled, forceDisableRemoteExecution);
+        createCachingBuildEngine(
+            remoteExecutionAutoEnabled, forceDisableRemoteExecution, consoleParams);
     this.build =
         new Build(
             actionGraphAndBuilder.getActionGraphBuilder(),
@@ -101,7 +108,6 @@ public class BuildExecutor {
   /**
    * Builds the given targets synchronously. Failures are printed to the EventBus.
    *
-   * @param targetsToBuild
    * @return exit code.
    */
   public ExitCode buildTargets(
@@ -139,7 +145,9 @@ public class BuildExecutor {
   }
 
   private CachingBuildEngine createCachingBuildEngine(
-      boolean remoteExecutionAutoEnabled, boolean forceDisableRemoteExecution) {
+      boolean remoteExecutionAutoEnabled,
+      boolean forceDisableRemoteExecution,
+      ConsoleParams consoleParams) {
     CachingBuildEngineBuckConfig engineConfig =
         args.getBuckConfig().getView(CachingBuildEngineBuckConfig.class);
 
@@ -155,7 +163,8 @@ public class BuildExecutor {
             args.getBuckEventBus(),
             metadataProvider,
             remoteExecutionAutoEnabled,
-            forceDisableRemoteExecution),
+            forceDisableRemoteExecution,
+            consoleParams),
         executorService,
         buildEngineMode.orElse(engineConfig.getBuildEngineMode()),
         engineConfig.getBuildDepFiles(),

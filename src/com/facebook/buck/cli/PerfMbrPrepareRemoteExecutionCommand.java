@@ -34,6 +34,8 @@ import com.facebook.buck.rules.modern.builders.ModernBuildRuleRemoteExecutionHel
 import com.facebook.buck.rules.modern.builders.RemoteExecutionActionInfo;
 import com.facebook.buck.rules.modern.builders.RemoteExecutionHelper;
 import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.concurrent.JobLimiter;
 import com.facebook.buck.util.types.Pair;
@@ -66,6 +68,7 @@ import org.kohsuke.args4j.Option;
  */
 public class PerfMbrPrepareRemoteExecutionCommand
     extends AbstractPerfCommand<PerfMbrPrepareRemoteExecutionCommand.PreparedState> {
+
   @Argument private List<String> arguments = new ArrayList<>();
 
   @Nullable
@@ -122,6 +125,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
 
     RemoteExecutionConfig config = params.getBuckConfig().getView(RemoteExecutionConfig.class);
 
+    Console console = params.getConsole();
     RemoteExecutionHelper helper =
         new ModernBuildRuleRemoteExecutionHelper(
             params.getBuckEventBus(),
@@ -153,7 +157,8 @@ public class PerfMbrPrepareRemoteExecutionCommand
               @Override
               public void set(Path path, HashCode hashCode) {}
             },
-            config.getStrategyConfig().getIgnorePaths());
+            config.getStrategyConfig().getIgnorePaths(),
+            ConsoleParams.of(console.getAnsi().isAnsiTerminal(), console.getVerbosity()));
     int maxPendingUploads = config.getStrategyConfig().getMaxConcurrentPendingUploads();
     JobLimiter uploadsLimiter = new JobLimiter(maxPendingUploads);
 
@@ -233,6 +238,7 @@ public class PerfMbrPrepareRemoteExecutionCommand
 
   /** Preapared state with the action graph created. */
   static class PreparedState {
+
     private final ImmutableList<BuildRule> rulesInGraph;
     private final BuildRuleResolver graphBuilder;
     private boolean heapDumped = false;

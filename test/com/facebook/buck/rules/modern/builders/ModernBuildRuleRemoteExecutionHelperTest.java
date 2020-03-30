@@ -46,6 +46,8 @@ import com.facebook.buck.rules.modern.ValueCreator;
 import com.facebook.buck.rules.modern.ValueVisitor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.util.ConsoleParams;
+import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.base.Verify;
@@ -59,6 +61,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class ModernBuildRuleRemoteExecutionHelperTest {
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   private ModernBuildRuleRemoteExecutionHelper mbrHelper;
   private ProjectFilesystem filesystem;
@@ -108,10 +111,12 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
               @Override
               public void set(Path path, HashCode hashCode) {}
             },
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION));
   }
 
   public static class SimpleBuildable implements Buildable {
+
     @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext buildContext,
@@ -123,15 +128,18 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
   }
 
   public static class GoodBuildable extends SimpleBuildable {
+
     @AddToRuleKey ImmutableList<SourcePath> paths = ImmutableList.of();
   }
 
   public static class ExcludedFieldBuildable extends SimpleBuildable {
+
     // Non-@AddToRuleKey fields should fail.
     final int value = 0;
   }
 
   public static class CustomFieldSerialization extends SimpleBuildable {
+
     @CustomFieldBehavior(BadFieldSerialization.class)
     final int value;
 
@@ -156,6 +164,7 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
 
   @CustomClassBehavior(GoodSerialization.class)
   public static class CustomClassSerialization extends SimpleBuildable {
+
     final int value;
 
     public CustomClassSerialization(int value) {
@@ -165,6 +174,7 @@ public class ModernBuildRuleRemoteExecutionHelperTest {
 
   static class GoodSerialization
       implements com.facebook.buck.rules.modern.CustomClassSerialization<CustomClassSerialization> {
+
     @Override
     public <E extends Exception> void serialize(
         CustomClassSerialization instance, ValueVisitor<E> serializer) {

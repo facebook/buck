@@ -50,6 +50,7 @@ import com.facebook.buck.rules.modern.Serializer.Delegate;
 import com.facebook.buck.rules.modern.impl.InputsMapBuilder;
 import com.facebook.buck.rules.modern.impl.InputsMapBuilder.Data;
 import com.facebook.buck.util.BuckConstant;
+import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.Memoizer;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Scope;
@@ -101,6 +102,7 @@ import javax.annotation.Nullable;
  * OutOfProcessIsolatedBuilder} (via trampoline.sh).
  */
 public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelper {
+
   private static final Logger LOG = Logger.get(ModernBuildRuleRemoteExecutionHelper.class);
   private static final Path TRAMPOLINE =
       Paths.get(
@@ -117,7 +119,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   private static final String FILE_HASH_VERIFICATION = "hash.verify";
 
   private final InputsMapBuilder inputsMapBuilder;
-  private ImmutableSet<PathMatcher> ignorePaths;
+  private final ImmutableSet<PathMatcher> ignorePaths;
 
   /** Gets the shared path prefix of all the cells. */
   private static Path getCellPathPrefix(
@@ -142,6 +144,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
    * files, configuration, etc).
    */
   private static class RequiredFile {
+
     private final Path path;
     private final FileNode fileNode;
     private final UploadDataSupplier dataSupplier;
@@ -154,6 +157,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   }
 
   private static class ClassPath {
+
     private final ImmutableList<RequiredFile> requiredFiles;
     private final ImmutableList<Path> classpath;
 
@@ -183,14 +187,16 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   private final CellPathResolver cellResolver;
   private final FileHashLoader fileHasher;
   private final Serializer serializer;
-  private final Map<Class<?>, Map<String, Boolean>> loggedMessagesByClass;
+  private final Map<Class<?>, Map<String, Boolean>> loggedMessagesByClass =
+      new ConcurrentHashMap<>();
   private final Path cellPathPrefix;
   private final Path projectRoot;
-  private final Map<HashCode, Node> nodeMap;
+  private final Map<HashCode, Node> nodeMap = new ConcurrentHashMap<>();
   private final HashFunction hasher;
 
   private final Protocol protocol;
   private final Memoizer<Digest> emptyDirectoryDigestMemoizer = new Memoizer<>();
+  private final ConsoleParams consoleParams;
 
   public ModernBuildRuleRemoteExecutionHelper(
       BuckEventBus eventBus,
@@ -198,7 +204,9 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       SourcePathRuleFinder ruleFinder,
       Cell rootCell,
       FileHashLoader fileHasher,
-      ImmutableSet<PathMatcher> ignorePaths) {
+      ImmutableSet<PathMatcher> ignorePaths,
+      ConsoleParams consoleParams) {
+    this.consoleParams = consoleParams;
     this.ignorePaths = ignorePaths;
     ImmutableSet<CanonicalCellName> cellNames = getCellNames(rootCell);
     this.cellResolver = rootCell.getCellPathResolver();
@@ -210,11 +218,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     this.pathResolver = ruleFinder.getSourcePathResolver();
     this.projectRoot = cellPathPrefix.relativize(rootCell.getRoot().getPath());
 
-    this.nodeMap = new ConcurrentHashMap<>();
     this.hasher = protocol.getHashFunction();
     this.fileHasher = fileHasher;
-
-    this.loggedMessagesByClass = new ConcurrentHashMap<>();
 
     Delegate delegate =
         (instance, data, children) -> {
@@ -270,7 +275,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     if (pluginResources == null || pluginRoot == null) {
       pluginFiles = () -> new ClassPath(ImmutableList.of(), ImmutableList.of());
     } else {
-      pluginFiles = prepareClassPath(() -> findPlugins());
+      pluginFiles = prepareClassPath(ModernBuildRuleRemoteExecutionHelper::findPlugins);
     }
 
     this.inputsMapBuilder = new InputsMapBuilder();
@@ -281,13 +286,12 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
               ImmutableList.Builder<RequiredFile> filesBuilder = ImmutableList.builder();
               for (CanonicalCellName cellName : cellNames) {
                 Path configPath = getPrefixRelativeCellPath(cellName).resolve(".buckconfig");
-                byte[] bytes =
-                    serializeConfig(
-                        rootCell
-                            .getCellProvider()
-                            .getCellByPath(
-                                cellResolver.getNewCellPathResolver().getCellPath(cellName))
-                            .getBuckConfig());
+                BuckConfig buckConfig =
+                    rootCell
+                        .getCellProvider()
+                        .getCellByPath(cellResolver.getNewCellPathResolver().getCellPath(cellName))
+                        .getBuckConfig();
+                byte[] bytes = serializeConfig(buckConfig);
                 Digest digest = protocol.computeDigest(bytes);
                 filesBuilder.add(
                     new RequiredFile(
@@ -396,7 +400,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
     ImmutableList.Builder<UploadDataSupplier> requiredDataBuilder = ImmutableList.builder();
 
-    try (Scope ignored2 = LeafEvents.scope(eventBus, "constructing_inputs_tree")) {
+    try (Scope ignored = LeafEvents.scope(eventBus, "constructing_inputs_tree")) {
       getSharedFilesData(requiredDataPredicate).forEach(requiredDataBuilder::add);
 
       allNodes.add(
@@ -418,8 +422,9 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       outputs.add(cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(METADATA_PATH)));
     }
 
-    try (Scope ignored2 = LeafEvents.scope(eventBus, "constructing_action_info")) {
-      ImmutableList<String> command = getBuilderCommand(projectRoot, hash.toString());
+    try (Scope ignored = LeafEvents.scope(eventBus, "constructing_action_info")) {
+      ImmutableList<String> command =
+          getBuilderCommand(projectRoot, hash.toString(), consoleParams);
       ImmutableSortedMap<String, String> commandEnvironment =
           getBuilderEnvironmentOverrides(
               isolatedBootstrapClasspath, isolatedClasspath, cellPathPrefix);
@@ -656,30 +661,36 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
     // TODO(shivanker): Pass all user environment overrides to remote workers.
     String relativePluginRoot = relativizePathString(cellPrefixRoot, pluginRoot);
-    String relativeBaseBuckOut = baseBuckOutDir;
     String relativePluginResources = relativizePathString(cellPrefixRoot, pluginResources);
     return ImmutableSortedMap.<String, String>naturalOrder()
         .put("CLASSPATH", classpathArg(bootstrapClasspath))
         .put("BUCK_CLASSPATH", classpathArg(classpath))
         .put("BUCK_JAVA_VERSION", String.valueOf(JavaVersion.getMajorVersion()))
         .put("BUCK_PLUGIN_ROOT", relativePluginRoot)
-        .put("BASE_BUCK_OUT_DIR", relativeBaseBuckOut)
+        .put("BASE_BUCK_OUT_DIR", baseBuckOutDir)
         .put("BUCK_PLUGIN_RESOURCES", relativePluginResources)
         // TODO(cjhopman): This shouldn't be done here, it's not a Buck thing.
         .put("BUCK_DISTCC", "0")
         .build();
   }
 
-  private static ImmutableList<String> getBuilderCommand(Path projectRoot, String hash) {
+  private static ImmutableList<String> getBuilderCommand(
+      Path projectRoot, String hash, ConsoleParams consoleParams) {
     String rootString = projectRoot.toString();
     if (rootString.isEmpty()) {
       rootString = "./";
     }
     return ImmutableList.of(
-        "./" + TRAMPOLINE_PATH.toString(), rootString, hash, METADATA_PATH.toString());
+        "./" + TRAMPOLINE_PATH.toString(),
+        rootString,
+        hash,
+        METADATA_PATH.toString(),
+        Boolean.toString(consoleParams.isAnsiEscapeSequencesEnabled()),
+        consoleParams.getVerbosity().toString());
   }
 
   private static class Node implements Comparable<Node> {
+
     private final AddsToRuleKey instance;
     private final String hash;
     private final ImmutableSortedSet<Node> children;
@@ -701,7 +712,11 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
     private WeakReference<byte[]> dataRef;
 
-    Node(AddsToRuleKey instance, byte[] data, HashCode hash, ImmutableSortedSet<Node> children) {
+    Node(
+        AddsToRuleKey instance,
+        @Nullable byte[] data,
+        HashCode hash,
+        ImmutableSortedSet<Node> children) {
       this.instance = instance;
       this.data = data;
       this.dataRef = new WeakReference<>(data);
@@ -742,6 +757,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       throws IOException {
     Map<Path, FileNode> fileNodes = new HashMap<>();
     class DataAdder {
+
       void addData(Path root, Node node) throws IOException {
         String fileName = "__value__";
         Path valuePath = root.resolve(node.hash).resolve(fileName);

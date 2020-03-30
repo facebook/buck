@@ -69,6 +69,8 @@ import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.test.external.ExternalTestRunEvent;
 import com.facebook.buck.test.external.ExternalTestSpecCalculationEvent;
 import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ForwardingProcessListener;
 import com.facebook.buck.util.ListeningProcessExecutor;
@@ -608,6 +610,7 @@ public class TestCommand extends BuildCommand {
                     params.getBuildEnvironmentDescription().getUser(), getArguments());
         LocalCachingBuildEngineDelegate localCachingBuildEngineDelegate =
             new LocalCachingBuildEngineDelegate(params.getFileHashCache());
+        Console console = params.getConsole();
         try (CachingBuildEngine cachingBuildEngine =
                 new CachingBuildEngine(
                     localCachingBuildEngineDelegate,
@@ -621,7 +624,9 @@ public class TestCommand extends BuildCommand {
                         params.getBuckEventBus(),
                         params.getMetadataProvider(),
                         remoteExecutionAutoEnabled,
-                        isRemoteExecutionForceDisabled()),
+                        isRemoteExecutionForceDisabled(),
+                        ConsoleParams.of(
+                            console.getAnsi().isAnsiTerminal(), console.getVerbosity())),
                     pool.getWeightedListeningExecutorService(),
                     getBuildEngineMode().orElse(cachingBuildEngineBuckConfig.getBuildEngineMode()),
                     cachingBuildEngineBuckConfig.getBuildDepFiles(),
@@ -671,7 +676,7 @@ public class TestCommand extends BuildCommand {
               build.executeAndPrintFailuresToEventBus(
                   targets,
                   params.getBuckEventBus(),
-                  params.getConsole(),
+                  console,
                   getPathToBuildReport(params.getBuckConfig()));
           params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
           if (exitCode != ExitCode.SUCCESS) {

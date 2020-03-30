@@ -77,6 +77,7 @@ import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.cache.FileHashCache;
 import com.facebook.buck.util.cache.FileHashCacheMode;
@@ -102,6 +103,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class GenruleTest {
+
   @Rule public ExpectedException expectedThrownException = ExpectedException.none();
 
   private ProjectFilesystem filesystem;
@@ -998,7 +1000,8 @@ public class GenruleTest {
               @Override
               public void set(Path path, HashCode hashCode) {}
             },
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            ConsoleParams.of(false, Verbosity.STANDARD_INFORMATION));
 
     assertFalse(mbrHelper.supportsRemoteExecution(genrule));
   }

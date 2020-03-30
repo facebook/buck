@@ -24,52 +24,58 @@ public enum Verbosity {
   // setting.
 
   /** Do not print anything to the console. */
-  SILENT,
+  SILENT(0),
 
   /** Prints out the bare minimum required information, such as errors from build steps. */
-  STANDARD_INFORMATION,
+  STANDARD_INFORMATION(1),
 
   /** Print extra output from generated binaries and tests being run, but nothing else. */
-  BINARY_OUTPUTS,
+  BINARY_OUTPUTS(2),
 
   /** Print the command being executed, but do not print its output. */
-  COMMANDS,
+  COMMANDS(3),
 
   /** Commands plus the output from some select commands of interest. */
-  COMMANDS_AND_SPECIAL_OUTPUT,
+  COMMANDS_AND_SPECIAL_OUTPUT(4),
 
   /** Print the command being executed followed by its output. */
-  COMMANDS_AND_OUTPUT,
+  COMMANDS_AND_OUTPUT(5),
 
   /**
    * If the command being executed has its own {@code --verbose} option or equivalent, it should be
    * used.
    */
-  ALL,
+  ALL(100),
   ;
 
+  private final int level;
+
+  Verbosity(int level) {
+    this.level = level;
+  }
+
   public boolean isSilent() {
-    return this.ordinal() <= SILENT.ordinal();
+    return level <= SILENT.level;
   }
 
   public boolean shouldPrintStandardInformation() {
-    return this.ordinal() >= STANDARD_INFORMATION.ordinal();
+    return level >= STANDARD_INFORMATION.level;
   }
 
   public boolean shouldPrintBinaryRunInformation() {
-    return this.ordinal() >= BINARY_OUTPUTS.ordinal();
+    return level >= BINARY_OUTPUTS.level;
   }
 
   public boolean shouldPrintCommand() {
-    return this.ordinal() >= COMMANDS.ordinal();
+    return level >= COMMANDS.level;
   }
 
   public boolean shouldPrintSelectCommandOutput() {
-    return this.ordinal() >= COMMANDS_AND_SPECIAL_OUTPUT.ordinal();
+    return level >= COMMANDS_AND_SPECIAL_OUTPUT.level;
   }
 
   public boolean shouldPrintOutput() {
-    return this.ordinal() >= COMMANDS_AND_OUTPUT.ordinal();
+    return level >= COMMANDS_AND_OUTPUT.level;
   }
 
   /**

@@ -34,12 +34,13 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
+import javax.annotation.Nonnull;
 
 /** This implements out of process rule execution. */
 public class OutOfProcessIsolatedBuilder {
 
   private static final Logger LOG = Logger.get(OutOfProcessIsolatedBuilder.class);
-  private static final int NUM_ARGS = 4;
+  private static final int NUM_ARGS = 6;
 
   /**
    * Entry point for out of process rule execution. This should be run within the build root
@@ -50,12 +51,11 @@ public class OutOfProcessIsolatedBuilder {
    */
   public static void main(String[] args) {
     LogManager.getLogManager().getLogger("").setLevel(Level.SEVERE);
-
     LOG.info("Started buck at time [%s].", Instant.now());
-    Console console =
-        new Console(Verbosity.STANDARD_INFORMATION, System.out, System.err, Ansi.forceTty());
-    Thread.setDefaultUncaughtExceptionHandler((thread, error) -> handleException(console, error));
+    checkArguments(args);
 
+    Console console = createConsole(args);
+    Thread.setDefaultUncaughtExceptionHandler((thread, error) -> handleException(console, error));
     try {
       build(args, console);
     } catch (Exception e) {
@@ -63,6 +63,26 @@ public class OutOfProcessIsolatedBuilder {
     }
 
     System.exit(0);
+  }
+
+  private static void checkArguments(String[] args) {
+    Preconditions.checkState(
+        args.length == NUM_ARGS,
+        "Expected %s arguments, got %s: <%s>",
+        NUM_ARGS,
+        args.length,
+        Joiner.on(",").join(args));
+  }
+
+  @Nonnull
+  private static Console createConsole(String[] args) {
+    boolean isAnsiEscapeSequencesEnabled = Boolean.parseBoolean(args[4]);
+    Verbosity verbosity = Verbosity.valueOf(args[5]);
+    return new Console(
+        verbosity,
+        System.out,
+        System.err,
+        isAnsiEscapeSequencesEnabled ? Ansi.forceTty() : Ansi.withoutTty());
   }
 
   private static void handleException(Console console, Throwable throwable) {
@@ -74,14 +94,6 @@ public class OutOfProcessIsolatedBuilder {
   }
 
   private static void build(String[] args, Console console) throws Exception {
-
-    Preconditions.checkState(
-        args.length == NUM_ARGS,
-        "Expected %s arguments, got %s: <%s>",
-        NUM_ARGS,
-        args.length,
-        Joiner.on(",").join(args));
-
     Path buildDir = Paths.get(args[0]);
     Path projectRoot = Paths.get(args[1]);
     HashCode hash = HashCode.fromString(args[2]);
@@ -96,7 +108,7 @@ public class OutOfProcessIsolatedBuilder {
 
       @Override
       protected BuckEventBus createEventBus(Console console) {
-        DefaultBuckEventBus buckEventBus =
+        BuckEventBus buckEventBus =
             new DefaultBuckEventBus(new DefaultClock(), new BuildId("whatever"));
         buckEventBus.register(new ConsoleBuckEventListener(console));
         return buckEventBus;

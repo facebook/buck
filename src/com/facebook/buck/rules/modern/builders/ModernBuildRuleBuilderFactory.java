@@ -34,6 +34,7 @@ import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
 import com.facebook.buck.rules.modern.config.HybridLocalBuildStrategyConfig;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleBuildStrategy;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleStrategyConfig;
+import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.hashing.FileHashLoader;
 import com.google.common.util.concurrent.Futures;
 import java.io.IOException;
@@ -44,6 +45,7 @@ import java.util.Optional;
  * modern_build_rule.strategy config option.
  */
 public class ModernBuildRuleBuilderFactory {
+
   private static final int WORKER_REQUIREMENTS_PROVIDER_DEFAULT_MAX_CACHE_SIZE = 1000;
 
   /** Creates a BuildRuleStrategy for ModernBuildRules based on the buck configuration. */
@@ -57,7 +59,8 @@ public class ModernBuildRuleBuilderFactory {
       BuckEventBus eventBus,
       MetadataProvider metadataProvider,
       boolean remoteExecutionAutoEnabled,
-      boolean forceDisableRemoteExecution) {
+      boolean forceDisableRemoteExecution,
+      ConsoleParams consoleParams) {
     ModernBuildRuleBuildStrategy strategy;
     try {
       RemoteExecutionClientsFactory remoteExecutionFactory =
@@ -89,7 +92,8 @@ public class ModernBuildRuleBuilderFactory {
                   metadataProvider,
                   remoteExecutionAutoEnabled,
                   forceDisableRemoteExecution,
-                  workerRequirementsProvider));
+                  workerRequirementsProvider,
+                  consoleParams));
         case REMOTE:
           return Optional.of(
               RemoteExecutionStrategy.createRemoteExecutionStrategy(
@@ -100,7 +104,8 @@ public class ModernBuildRuleBuilderFactory {
                   rootCell,
                   hashLoader,
                   metadataProvider,
-                  workerRequirementsProvider));
+                  workerRequirementsProvider,
+                  consoleParams));
       }
     } catch (IOException e) {
       throw new BuckUncheckedExecutionException(e, "When creating MBR build strategy.");
@@ -119,7 +124,8 @@ public class ModernBuildRuleBuilderFactory {
       MetadataProvider metadataProvider,
       boolean remoteExecutionAutoEnabled,
       boolean forceDisableRemoteExecution,
-      WorkerRequirementsProvider workerRequirementsProvider) {
+      WorkerRequirementsProvider workerRequirementsProvider,
+      ConsoleParams consoleParams) {
     BuildRuleStrategy delegate =
         getBuildStrategy(
                 hybridLocalConfig.getDelegateConfig(),
@@ -131,7 +137,8 @@ public class ModernBuildRuleBuilderFactory {
                 eventBus,
                 metadataProvider,
                 remoteExecutionAutoEnabled,
-                forceDisableRemoteExecution)
+                forceDisableRemoteExecution,
+                consoleParams)
             .orElseThrow(
                 () -> new HumanReadableException("Delegate config configured incorrectly."));
     return new HybridLocalStrategy(

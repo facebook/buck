@@ -51,6 +51,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.StepFailedException;
+import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.concurrent.JobLimiter;
 import com.facebook.buck.util.concurrent.MostExecutors;
@@ -76,6 +77,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -87,6 +89,7 @@ import javax.annotation.Nullable;
  * for a high-level description of the approach to remote execution.
  */
 public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
+
   private static final Logger LOG = Logger.get(RemoteExecutionStrategy.class);
 
   private final BuckEventBus eventBus;
@@ -132,11 +135,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
     this.eventBus.post(remoteExecutionSessionStartedEvent);
   }
 
-  /**
-   * Creates a BuildRuleStrategy for a particular config
-   *
-   * @return
-   */
+  /** Creates a BuildRuleStrategy for a particular config */
   static LocalFallbackStrategy createRemoteExecutionStrategy(
       BuckEventBus eventBus,
       RemoteExecutionConfig remoteExecutionConfig,
@@ -145,7 +144,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       Cell rootCell,
       FileHashLoader fileHasher,
       MetadataProvider metadataProvider,
-      WorkerRequirementsProvider workerRequirementsProvider) {
+      WorkerRequirementsProvider workerRequirementsProvider,
+      ConsoleParams consoleParams) {
     RemoteExecutionStrategyConfig strategyConfig = remoteExecutionConfig.getStrategyConfig();
     return new LocalFallbackStrategy(
         new RemoteExecutionStrategy(
@@ -159,7 +159,8 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                 ruleFinder,
                 rootCell,
                 fileHasher,
-                strategyConfig.getIgnorePaths()),
+                strategyConfig.getIgnorePaths(),
+                consoleParams),
             workerRequirementsProvider,
             MoreExecutors.listeningDecorator(
                 MostExecutors.newMultiThreadExecutor("remote-exec", strategyConfig.getThreads())),
@@ -184,6 +185,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
 
   /** StrategyBuildResult for Remote Execution Strategy which includes RuleContext */
   public interface RemoteExecutionStrategyBuildResult extends StrategyBuildResult {
+
     RemoteRuleContext getRuleContext();
   }
 
@@ -275,7 +277,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           }
 
           @Override
-          public void onFailure(Throwable t) {
+          public void onFailure(@Nonnull Throwable t) {
             OptionalInt exitCode =
                 t instanceof StepFailedException
                     ? ((StepFailedException) t).getExitCode()
@@ -483,7 +485,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                     }
 
                     @Override
-                    public void onFailure(Throwable t) {}
+                    public void onFailure(@Nonnull Throwable t) {}
                   },
                   MoreExecutors.directExecutor());
               executionHandle
@@ -602,7 +604,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
       return Futures.transform(
           executionClients.getContentAddressedStorage().fetch(metadataDigest),
           bytes -> {
-            long duration = Long.valueOf(StandardCharsets.UTF_8.decode(bytes).toString());
+            long duration = Long.parseLong(StandardCharsets.UTF_8.decode(bytes).toString());
             RemoteBuildRuleExecutionEvent.postEvent(eventBus, buildRule, duration);
             return null;
           },
