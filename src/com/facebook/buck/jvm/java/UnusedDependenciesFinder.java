@@ -42,6 +42,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -367,7 +368,12 @@ public abstract class UnusedDependenciesFinder implements Step {
 
       ImmutableList<DependencyAndExportedDeps> exportedDeps =
           rule instanceof ExportDependencies
-              ? getDependencies(buildRuleResolver, ((ExportDependencies) rule).getExportedDeps())
+              ? getDependencies(
+                  buildRuleResolver,
+                  ImmutableSortedSet.<BuildRule>naturalOrder()
+                      .addAll(((ExportDependencies) rule).getExportedDeps())
+                      .addAll(((ExportDependencies) rule).getExportedProvidedDeps())
+                      .build())
               : ImmutableList.of();
       builder.add(new DependencyAndExportedDeps(targetAndSourcePaths, exportedDeps));
     }

@@ -183,9 +183,42 @@ java_library(
 )
 
 java_library(
+    name = "dep_with_exported_dep_that_is_used",
+    srcs = ["BarMeh.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dep_with_exported_dep",
+    ],
+)
+
+java_library(
+    name = "dep_with_exported_provided_dep_that_is_used",
+    srcs = ["BarMeh.java"],
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        ":dep_with_exported_provided_dep",
+    ],
+)
+
+java_library(
     name = "dep_with_exported_dep",
     srcs = [],
     exported_deps = [
+        ":meh",
+    ],
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+java_library(
+    name = "dep_with_exported_provided_dep",
+    srcs = [],
+    exported_provided_deps = [
         ":meh",
     ],
     visibility = [

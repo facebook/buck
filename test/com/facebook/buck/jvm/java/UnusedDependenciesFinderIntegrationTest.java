@@ -380,6 +380,30 @@ public class UnusedDependenciesFinderIntegrationTest {
   }
 
   @Test
+  public void testSucceedBuildForDepThatHasExportedDepThatIsNeeded() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=fail",
+            ":dep_with_exported_dep_that_is_used");
+
+    processResult.assertSuccess();
+  }
+
+  @Test
+  public void testSucceedBuildForDepThatHasExportedProvidedDepThatIsNeeded() {
+    ProcessResult processResult =
+        workspace.runBuckCommand(
+            "build",
+            "-c",
+            "java.unused_dependencies_action=fail",
+            ":dep_with_exported_provided_dep_that_is_used");
+
+    processResult.assertSuccess();
+  }
+
+  @Test
   public void testShowCommandOnly() {
     ProcessResult processResult =
         workspace.runBuckCommand(
