@@ -3,6 +3,19 @@ version: 2.1
 orbs:
   win: circleci/windows@2.2.0
 
+install_ocaml: &install_ocaml
+  name: Install Ocaml
+  command: |
+    if [ "${PLATFORM}" == "linux" ]; then
+      sudo apt install ocaml
+    elif [ "${PLATFORM}" == "macos" ]; then
+      brew install opam
+      opam init -y
+      opam switch create 4.07.1
+      eval `opam env`
+    fi
+    ocaml -version
+
 install_openjdk8: &install_openjdk8
   name: Install OpenJDK8
   command: |
@@ -178,6 +191,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_ocaml
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_groovy
@@ -243,6 +258,8 @@ jobs:
       - run:
           <<: *install_android_sdk
       - run:
+          <<: *install_ocaml
+      - run:
           <<: *install_ghc
       - run:
           <<: *install_golang
@@ -274,6 +291,8 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - run:
+          <<: *install_ocaml
       - run:
           <<: *install_android_sdk
       - run:
@@ -487,6 +506,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_ocaml
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_groovy
@@ -551,6 +572,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_ocaml
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_ghc
@@ -596,6 +619,8 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - run:
+          <<: *install_ocaml
       - run:
           <<: *install_android_sdk
       - run:

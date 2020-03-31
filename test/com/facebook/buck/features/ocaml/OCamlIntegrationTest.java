@@ -229,7 +229,7 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", binTarget.toString()).assertSuccess();
 
     Path ocamlNativePluginDir =
-        workspace.getDestPath().resolve("buck-out").resolve("gen").resolve("ocaml_native_plugin");
+        workspace.getDestPath().resolve("buck-out").resolve("gen").resolve("ce9b6f2e").resolve("ocaml_native_plugin");
 
     Path pluginCmxsFile = ocamlNativePluginDir.resolve("plugin#default").resolve("libplugin.cmxs");
 
@@ -517,8 +517,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertFailure();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertTrue(buildLog.getAllTargets().containsAll(targets));
-    buildLog.assertTargetCanceled(target);
-    buildLog.assertTargetCanceled(binary);
+    buildLog.assertTargetFailed(target.toString());
+    buildLog.assertTargetFailed(binary.toString());
 
     workspace.resetBuildLogFile();
     workspace.replaceFileContents(".buckconfig", "warnings_flags=+a", "");
@@ -552,8 +552,8 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", target.toString()).assertFailure();
     BuckBuildLog buildLog = workspace.getBuildLog();
     assertThat(buildLog.getAllTargets(), Matchers.hasItems(targets.toArray(new BuildTarget[0])));
-    buildLog.assertTargetCanceled(target);
-    buildLog.assertTargetCanceled(binary);
+    buildLog.assertTargetFailed(target.toString());
+    buildLog.assertTargetFailed(binary.toString());
 
     workspace.resetBuildLogFile();
 
