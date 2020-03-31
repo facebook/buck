@@ -54,6 +54,7 @@ import com.facebook.buck.cxx.CxxBinaryFlavored;
 import com.facebook.buck.cxx.CxxBinaryImplicitFlavors;
 import com.facebook.buck.cxx.CxxBinaryMetadataFactory;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
+import com.facebook.buck.cxx.CxxLinkGroupMapDatabase;
 import com.facebook.buck.cxx.FrameworkDependencies;
 import com.facebook.buck.cxx.HasAppleDebugSymbolDeps;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -102,6 +103,7 @@ public class AppleBinaryDescription
   private static final Set<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(
           APP_FLAVOR,
+          CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE,
           CxxCompilationDatabase.COMPILATION_DATABASE,
           CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
           AppleDebugFormat.DWARF_AND_DSYM.getFlavor(),

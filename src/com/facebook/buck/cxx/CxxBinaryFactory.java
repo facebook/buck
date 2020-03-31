@@ -37,9 +37,16 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.util.stream.RichStream;
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Collection;
 import java.util.Optional;
 
 public class CxxBinaryFactory {
@@ -90,6 +97,25 @@ public class CxxBinaryFactory {
           graphBuilder,
           cxxPlatform,
           args);
+    }
+
+    if (flavors.contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)) {
+      CxxDeps cxxDeps = CxxDeps.builder().addDeps(args.getCxxDeps()).addDeps(extraCxxDeps).build();
+      ImmutableList<NativeLinkable> allNativeLinkables =
+          RichStream.from(cxxDeps.get(graphBuilder, cxxPlatform))
+              .filter(NativeLinkableGroup.class)
+              .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+              .toImmutableList();
+      Collection<BuildTarget> targets =
+          Collections2.transform(
+              CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
+                  graphBuilder,
+                  args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+                  LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph),
+                  allNativeLinkables,
+                  ImmutableSet.of()),
+              linkable -> linkable.getBuildTarget());
+      return new CxxLinkGroupMapDatabase(target, projectFilesystem, graphBuilder, targets);
     }
 
     if (flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)) {

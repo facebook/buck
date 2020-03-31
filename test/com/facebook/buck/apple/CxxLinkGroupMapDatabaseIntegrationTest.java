@@ -87,4 +87,24 @@ public class CxxLinkGroupMapDatabaseIntegrationTest {
             "//Apps/TestApp:Dylib2#link-group-map-database,iphonesimulator-x86_64",
             "[\"//Apps/Libs:A\",\"//Apps/Libs:C\"]"));
   }
+
+  @Test
+  public void testCreateLinkGroupMapDatabaseForAppleBinaryInAppWithOneUngroupedLinkable()
+      throws IOException {
+    runCreateLinkGroupMapDatabaseTestForScenario(
+        "apple_binary_with_link_groups_single_dylib",
+        ImmutableMap.of(
+            "//Apps/TestApp:CatchAllApp#link-group-map-database,iphonesimulator-x86_64",
+            "[\"//Apps/Libs:Root\",\"//Apps/Libs:A\",\"//Apps/TestApp:CatchAllDylib\"]"));
+  }
+
+  @Test
+  public void testCreateLinkGroupMapDatabaseForAppleBinaryInAppWithNoUngroupedLinkables()
+      throws IOException {
+    runCreateLinkGroupMapDatabaseTestForScenario(
+        "apple_binary_with_link_groups_multiples_dylibs",
+        ImmutableMap.of(
+            "//Apps/TestApp:TestApp#link-group-map-database,iphonesimulator-x86_64",
+            "[\"//Apps/TestApp:Dylib2\",\"//Apps/TestApp:Dylib1\"]"));
+  }
 }
