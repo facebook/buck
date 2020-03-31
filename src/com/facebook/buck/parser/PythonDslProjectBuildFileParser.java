@@ -109,8 +109,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
 
   @Nullable private BuckPythonProgram buckPythonProgram;
-  private Supplier<Path> rawConfigJson;
-  private Supplier<Path> ignorePathsJson;
+  private final Supplier<Path> rawConfigJson;
+  private final Supplier<Path> ignorePathsJson;
 
   @Nullable private ProcessExecutor.LaunchedProcess buckPyProcess;
   @Nullable private ParserInputStream buckPyProcessInput;
@@ -131,7 +131,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @Nullable private FutureTask<Unit> stderrConsumerTerminationFuture;
   @Nullable private Thread stderrConsumerThread;
 
-  private AtomicReference<AbsPath> currentBuildFile = new AtomicReference<>();
+  private final AtomicReference<AbsPath> currentBuildFile = new AtomicReference<>();
 
   public PythonDslProjectBuildFileParser(
       ProjectBuildFileParserOptions options,
@@ -205,7 +205,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
    * parse phase.
    */
   @VisibleForTesting
-  public void initIfNeeded() throws IOException {
+  void initIfNeeded() throws IOException {
     ensureNotClosed();
     if (!isInitialized) {
       init();
@@ -271,20 +271,18 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       InputStreamConsumer stderrConsumer =
           new InputStreamConsumer(
               stderr,
-              (InputStreamConsumer.Handler)
-                  line -> {
-                    AbsPath path = currentBuildFile.get();
-                    if (!Objects.equals(path, lastPath.get())) {
-                      numberOfLines.set(0);
-                      lastPath.set(path);
-                    }
-                    int count = numberOfLines.getAndIncrement();
-                    if (count == 0) {
-                      buckEventBus.post(
-                          ConsoleEvent.warning("WARNING: Output when parsing %s:", path));
-                    }
-                    buckEventBus.post(ConsoleEvent.warning("| %s", line));
-                  });
+              line -> {
+                AbsPath path = currentBuildFile.get();
+                if (!Objects.equals(path, lastPath.get())) {
+                  numberOfLines.set(0);
+                  lastPath.set(path);
+                }
+                int count = numberOfLines.getAndIncrement();
+                if (count == 0) {
+                  buckEventBus.post(ConsoleEvent.warning("WARNING: Output when parsing %s:", path));
+                }
+                buckEventBus.post(ConsoleEvent.warning("| %s", line));
+              });
       stderrConsumerTerminationFuture = new FutureTask<>(stderrConsumer);
       stderrConsumerThread =
           Threads.namedThread(
@@ -432,7 +430,6 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @VisibleForTesting
   protected BuildFileManifest getAllRulesInternal(AbsPath buildFile)
       throws IOException, BuildFileParseException {
-    ensureNotClosed();
     initIfNeeded();
 
     // Check isInitialized implications (to avoid Eradicate warnings).
@@ -479,9 +476,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       LOG.verbose("Got rules: %s", values);
       LOG.verbose("Parsed %d rules from %s", values.size(), buildFile);
       profile = resultObject.getProfile();
-      if (profile.isPresent()) {
-        LOG.debug("Profile result:\n%s", profile.get());
-      }
+      profile.ifPresent(s -> LOG.debug("Profile result:\n%s", s));
       if (values.isEmpty()) {
         // in case Python process cannot send values due to serialization issues, it will send an
         // empty list
@@ -554,18 +549,25 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     ImmutableList<String> visibility = ImmutableList.of();
     ImmutableList<String> withinView = ImmutableList.of();
     for (Map.Entry<String, Object> entry : values.entrySet()) {
-      if (entry.getKey().equals(InternalTargetAttributeNames.BASE_PATH)) {
-        basePath = ForwardRelativePath.of((String) entry.getValue());
-      } else if (entry.getKey().equals(InternalTargetAttributeNames.BUCK_TYPE)) {
-        type = (String) entry.getValue();
-      } else if (entry.getKey().equals(VisibilityAttributes.VISIBILITY)) {
-        visibility = (ImmutableList<String>) entry.getValue();
-      } else if (entry.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
-        withinView = (ImmutableList<String>) entry.getValue();
-      } else {
-        attrs.put(
-            entry.getKey(),
-            PythonDslProjectBuildFileParser.convertToSelectableAttributeIfNeeded(entry.getValue()));
+      switch (entry.getKey()) {
+        case InternalTargetAttributeNames.BASE_PATH:
+          basePath = ForwardRelativePath.of((String) entry.getValue());
+          break;
+        case InternalTargetAttributeNames.BUCK_TYPE:
+          type = (String) entry.getValue();
+          break;
+        case VisibilityAttributes.VISIBILITY:
+          visibility = (ImmutableList<String>) entry.getValue();
+          break;
+        case VisibilityAttributes.WITHIN_VIEW:
+          withinView = (ImmutableList<String>) entry.getValue();
+          break;
+        default:
+          attrs.put(
+              entry.getKey(),
+              PythonDslProjectBuildFileParser.convertToSelectableAttributeIfNeeded(
+                  entry.getValue()));
+          break;
       }
     }
 
@@ -666,7 +668,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       LOG.verbose(
           "Parsing output of buck.py for %s...", request.getOrDefault("buildFile", "[unknown]"));
     }
-    return buckPyProcessJsonParser.readValueAs(BuildFilePythonResult.class);
+    return Objects.requireNonNull(buckPyProcessJsonParser).readValueAs(BuildFilePythonResult.class);
   }
 
   private static void handleDiagnostics(
@@ -870,6 +872,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
 
   @Override
   public void reportProfile() throws IOException {
+    initIfNeeded();
     BuildFilePythonResult resultObject =
         performJsonRequest(ImmutableMap.of("command", "report_profile"));
     Optional<String> profile = resultObject.getProfile();
@@ -931,7 +934,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
     if (buckPyProcessJsonParser != null) {
       try {
         buckPyProcessJsonParser.close();
-      } catch (IOException e) {
+      } catch (IOException ignored) {
       } finally {
         buckPyProcessJsonParser = null;
       }
