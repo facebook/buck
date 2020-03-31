@@ -381,7 +381,7 @@ public class ParsePipelineTest {
   }
 
   @Test
-  public void emptyPackageFileCachedForNonExistentPackageFile() throws Exception {
+  public void emptyPackageManifestCachedForNonExistentPackageFile() throws Exception {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
 
@@ -389,23 +389,17 @@ public class ParsePipelineTest {
 
     fixture.getTargetNodeParsePipeline().getNode(cell, aTarget, DependencyStack.root());
 
-    AbsPath nonExistantPackageFile = AbsPath.of(cell.getFilesystem().resolve("a/PACKAGE"));
-    assertFalse(cell.getFilesystem().isFile(nonExistantPackageFile));
+    AbsPath nonExistentPackageFile = AbsPath.of(cell.getFilesystem().resolve("a/PACKAGE"));
+    assertFalse(cell.getFilesystem().isFile(nonExistentPackageFile));
 
-    // The package file parser checks for a path and if it doesn't exist, uses the default.
-    assertTrue(fixture.packageFileExistsInCache(nonExistantPackageFile));
-
-    PackageFileManifest packageFileManifest =
-        fixture.getPackageFileParsePipeline().getFileJob(cell, nonExistantPackageFile).get();
-    assertSame(PackageFileParsePipeline.NONEXISTENT_PACKAGE, packageFileManifest);
+    assertTrue(fixture.packageFileExistsInCache(nonExistentPackageFile));
 
     PackageFileManifest cachedPackageFileManifest =
         fixture
             .daemonicParserState
             .getPackageFileCache()
-            .lookupComputedNode(cell, nonExistantPackageFile, eventBus)
+            .lookupComputedNode(cell, nonExistentPackageFile, eventBus)
             .get();
-
     assertSame(PackageFileParsePipeline.NONEXISTENT_PACKAGE, cachedPackageFileManifest);
   }
 
@@ -491,6 +485,35 @@ public class ParsePipelineTest {
     }
   }
 
+  @Test
+  public void invalidationOfNonExistentPackageFileInvalidatesChildNodes() throws Exception {
+    Fixture fixture = createMultiThreadedFixture("pipeline_test");
+    Cell cell = fixture.getCells();
+
+    BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
+
+    fixture.getTargetNodeParsePipeline().getNode(cell, aTarget, DependencyStack.root());
+
+    // Verify that a cached package file manifest exists for a non-existent file
+    AbsPath nonExistentPackageFile = AbsPath.of(cell.getFilesystem().resolve("a/PACKAGE"));
+    AbsPath parentNonExistentPackafeFile = AbsPath.of(cell.getFilesystem().resolve("PACKAGE"));
+    assertFalse(cell.getFilesystem().isFile(nonExistentPackageFile));
+    assertFalse(cell.getFilesystem().isFile(parentNonExistentPackafeFile));
+
+    assertTrue(fixture.packageFileExistsInCache(nonExistentPackageFile));
+    assertTrue(fixture.packageFileExistsInCache(parentNonExistentPackafeFile));
+
+    assertTrue(fixture.targetExistsInCache(aTarget));
+
+    // Invalidation of a non-existent parent package file invalidates appropriate nodes
+    fixture.invalidatePath(parentNonExistentPackafeFile);
+
+    assertFalse(fixture.targetExistsInCache(aTarget));
+    // The package file at a/PACKAGE should not be invalidated
+    assertTrue(fixture.packageFileExistsInCache(nonExistentPackageFile));
+    assertFalse(fixture.packageFileExistsInCache(parentNonExistentPackafeFile));
+  }
+
   private static class TypedParsePipelineCache<K, V> implements PipelineNodeCache.Cache<K, V> {
     private final Map<K, V> nodeMap = new HashMap<>();
 
@@ -535,7 +558,6 @@ public class ParsePipelineTest {
     private final BuildFileRawNodeParsePipeline buildFileRawNodeParsePipeline;
     private final ProjectBuildFileParserPool projectBuildFileParserPool;
     private final Cells cells;
-    private final PackageFileParsePipeline packageFileParsePipeline;
     private final DaemonicParserState daemonicParserState;
     private final ListeningExecutorService executorService;
     private final Set<CloseRecordingProjectBuildFileParserDecorator> projectBuildFileParsers;
@@ -616,7 +638,7 @@ public class ParsePipelineTest {
       PackageFileParserPool packageFileParserPool =
           new PackageFileParserPool(NUM_THREADS, packageFileParserFactory);
 
-      packageFileParsePipeline =
+      PackageFileParsePipeline packageFileParsePipeline =
           new PackageFileParsePipeline(
               new PipelineNodeCache<>(daemonicParserState.getPackageFileCache(), n -> false),
               packageFileParserPool,
@@ -681,10 +703,6 @@ public class ParsePipelineTest {
 
     public BuildFileRawNodeParsePipeline getBuildFileRawNodeParsePipeline() {
       return buildFileRawNodeParsePipeline;
-    }
-
-    public PackageFileParsePipeline getPackageFileParsePipeline() {
-      return packageFileParsePipeline;
     }
 
     public Cell getCells() {

@@ -217,13 +217,11 @@ public class DaemonicParserState {
       addAllIncludes(dependentsOfEveryNode, manifest.getIncludes(), cell);
 
       if (cell.getBuckConfig().getView(ParserConfig.class).getEnablePackageFiles()) {
-        // Add the PACKAGE file in the build file's directory and parent directory as dependents,
-        // regardless of whether they currently exist. If a PACKAGE file is added, we need to
+        // Add the PACKAGE file in the build file's directory, regardless of whether they currently
+        // exist. If a PACKAGE file is added, or a parent PACKAGE file is modified/added we need to
         // invalidate all relevant nodes.
         AbsPath packageFile = PackagePipeline.getPackageFileFromBuildFile(cell, buildFile);
-        ImmutableSet<AbsPath> parentPackageFiles =
-            PackagePipeline.getAllParentPackageFiles(cell, packageFile);
-        dependentsOfEveryNode.add(packageFile).addAll(parentPackageFiles);
+        dependentsOfEveryNode.add(packageFile);
       }
 
       return getOrCreateCellState(cell)
@@ -268,6 +266,10 @@ public class DaemonicParserState {
       ImmutableSet.Builder<AbsPath> packageDependents = ImmutableSet.builder();
 
       addAllIncludes(packageDependents, manifest.getIncludes(), cell);
+
+      // Package files may depend on their parent PACKAGE file.
+      Optional<AbsPath> parentPackageFile = PackagePipeline.getParentPackageFile(cell, packageFile);
+      parentPackageFile.ifPresent(path -> packageDependents.add(path));
 
       return getOrCreateCellState(cell)
           .putPackageFileManifestIfNotPresent(

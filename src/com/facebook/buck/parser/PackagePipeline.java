@@ -31,7 +31,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -95,7 +94,7 @@ class PackagePipeline implements AutoCloseable {
   }
 
   static boolean isPackageFile(Path path) {
-    return path.getFileName().toString().equals(PACKAGE_FILE_NAME) && Files.isRegularFile(path);
+    return path.getFileName().toString().equals(PACKAGE_FILE_NAME);
   }
 
   /**
@@ -180,15 +179,10 @@ class PackagePipeline implements AutoCloseable {
       return Futures.immediateFuture(Optional.empty());
     }
 
-    if (cell.getFilesystem().isFile(parentBuildFile.get())) {
-      // We have a build file and should cache this package node
-      return Futures.transformAsync(
-          getPackageJobInternal(cell, parentBuildFile.get()),
-          cachedPackageNode -> Futures.immediateFuture(Optional.of(cachedPackageNode)),
-          executorService);
-    } else {
-      return getParentPackageJob(cell, parentBuildFile.get());
-    }
+    return Futures.transformAsync(
+        getPackageJobInternal(cell, parentBuildFile.get()),
+        cachedPackageNode -> Futures.immediateFuture(Optional.of(cachedPackageNode)),
+        executorService);
   }
 
   private ListenableFuture<Package> computePackage(

@@ -350,13 +350,13 @@ class DaemonicCellState {
 
       // We may have been given a file that other build files depend on. Invalidate accordingly.
       Set<AbsPath> dependents = buildFileDependents.get(path);
-      boolean isPackageFile = PackagePipeline.isPackageFile(path.getPath());
+      boolean pathIsPackageFile = PackagePipeline.isPackageFile(path.getPath());
       LOG.verbose("Invalidating dependents for path %s: %s", path, dependents);
       for (AbsPath dependent : dependents) {
         if (dependent.equals(path)) {
           continue;
         }
-        if (isPackageFile) {
+        if (pathIsPackageFile) {
           // Typically, the dependents of PACKAGE files are build files. If there is a valid entry
           // for `dependent` in `allBuildFileManifests`, invalidate the cached nodes, but not the
           // build targets contained within in.
@@ -366,7 +366,7 @@ class DaemonicCellState {
           invalidatedRawNodes += invalidatePath(dependent, true);
         }
       }
-      if (!isPackageFile) {
+      if (!pathIsPackageFile) {
         // Package files do not invalidate the build file (as the build file does not need to be
         // re-parsed). This means the dependents of the package remain intact.
         buildFileDependents.removeAll(path);
@@ -380,9 +380,19 @@ class DaemonicCellState {
         if (dependent.equals(path)) {
           continue;
         }
-        invalidatedRawNodes += invalidatePath(dependent, true);
+        if (pathIsPackageFile) {
+          // Package files depend on parent package files (if a valid parent exists), but the
+          // invalidation of a parent does not invalidate the manifest of a child package file.
+          invalidatedRawNodes += invalidatePath(dependent, false);
+        } else {
+          invalidatedRawNodes += invalidatePath(dependent, true);
+        }
       }
-      packageFileDependents.removeAll(path);
+      // Dependents of package files are build files and other package files, neither of which
+      // we want to invalidate.
+      if (!pathIsPackageFile) {
+        packageFileDependents.removeAll(path);
+      }
 
       return invalidatedRawNodes;
     }
