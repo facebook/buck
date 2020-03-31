@@ -37,14 +37,25 @@ MODULES_DIR = "buck-modules"
 MODULES_RESOURCES_DIR = "buck-modules-resources"
 
 
+def _get_package_info():
+    return json.loads(pkg_resources.resource_string(__name__, "buck_package_info"))
+
+
 class BuckPackage(BuckTool):
     def __init__(self, buck_project, buck_reporter):
         super(BuckPackage, self).__init__(buck_project, buck_reporter)
         self._resource_subdir = None
         self._lock_file = None
 
+    @classmethod
+    def get_buck_version(cls):
+        fake_version = os.environ.get("BUCK_FAKE_VERSION")
+        if fake_version:
+            return fake_version
+        return _get_package_info()["version"]
+
     def _get_package_info(self):
-        return json.loads(pkg_resources.resource_string(__name__, "buck_package_info"))
+        return _get_package_info()
 
     def _get_buck_git_commit(self):
         return self._get_buck_version_uid()

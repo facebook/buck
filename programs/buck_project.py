@@ -258,8 +258,6 @@ class BuckProject:
     def from_current_dir():
         with Tracing("BuckProject.from_current_dir"):
             current_dir = os.getcwd()
-            if "--version" in sys.argv or "-V" in sys.argv:
-                return BuckProject(current_dir)
             at_root_dir = False
             while not at_root_dir:
                 if os.path.exists(os.path.join(current_dir, ".buckconfig")):

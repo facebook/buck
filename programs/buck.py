@@ -225,6 +225,18 @@ def main(argv, reporter):
                     )
 
                     return buck_repo.launch_buck(build_id, os.getcwd(), java_path, argv)
+    except NoBuckConfigFoundException:
+        from programs.buck_tool import CommandLineArgs
+
+        parsed_args = CommandLineArgs(sys.argv)
+        # If we're in a PEX, not in a buck project dir, and the version was requested,
+        # print out the version
+        if parsed_args.is_version() and zipfile.is_zipfile(argv[0]):
+            from programs.buck_package import BuckPackage
+
+            print(BuckPackage.get_buck_version())
+            return ExitCodeCallable(ExitCode.SUCCESS)
+        raise
     finally:
         if tracing_dir:
             Tracing.write_to_dir(tracing_dir, build_id)
