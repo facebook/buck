@@ -16,6 +16,7 @@
 
 package com.facebook.buck.edenfs;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystemDelegate;
 import com.facebook.buck.util.config.Config;
@@ -23,7 +24,6 @@ import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.eden.thrift.EdenError;
 import com.facebook.thrift.TException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -98,15 +98,14 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
 
   @Override
   public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
-    Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
+    AbsPath fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
     return computeSha1(fileToHash, /* retryWithRealPathIfEdenError */ true);
   }
 
-  private Sha1HashCode computeSha1(Path path, boolean retryWithRealPathIfEdenError)
+  private Sha1HashCode computeSha1(AbsPath path, boolean retryWithRealPathIfEdenError)
       throws IOException {
-    Preconditions.checkArgument(path.isAbsolute());
     if (disableSha1FastPath) {
-      return delegate.computeSha1(path);
+      return delegate.computeSha1(path.getPath());
     }
 
     Optional<Sha1HashCode> ret =
@@ -114,14 +113,14 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
             ? computeSha1ViaXAttr(path)
             : computeSha1ViaThrift(path, retryWithRealPathIfEdenError);
 
-    return ret.isPresent() ? ret.get() : delegate.computeSha1(path);
+    return ret.isPresent() ? ret.get() : delegate.computeSha1(path.getPath());
   }
 
-  private Optional<Sha1HashCode> computeSha1ViaXAttr(Path path) throws IOException {
+  private Optional<Sha1HashCode> computeSha1ViaXAttr(AbsPath path) throws IOException {
     try {
       if (path.getFileSystem().supportedFileAttributeViews().contains("user")) {
         UserDefinedFileAttributeView view =
-            Files.getFileAttributeView(path, UserDefinedFileAttributeView.class);
+            Files.getFileAttributeView(path.getPath(), UserDefinedFileAttributeView.class);
         if (view != null) {
           // Eden returns the SHA1 as a UTF-8 encoded hexadecimal string
           ByteBuffer buf = ByteBuffer.allocate(SHA1_HEX_LENGTH);
@@ -143,8 +142,8 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   }
 
   private Optional<Sha1HashCode> computeSha1ViaThrift(
-      Path path, boolean retryWithRealPathIfEdenError) throws IOException {
-    Optional<Path> entry = mount.getPathRelativeToProjectRoot(path);
+      AbsPath path, boolean retryWithRealPathIfEdenError) throws IOException {
+    Optional<Path> entry = mount.getPathRelativeToProjectRoot(path.getPath());
     if (entry.isPresent()) {
       try {
         return Optional.of(mount.getSha1(entry.get()));
@@ -155,7 +154,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
           // It's possible that an EdenError was thrown because entry.get() was a path to a
           // symlink, which is not supported by Eden's getSha1() API. Try again if the real path
           // is different from the original path.
-          Path realPath = path.toRealPath();
+          AbsPath realPath = path.toRealPath();
           if (!realPath.equals(path)) {
             return Optional.of(computeSha1(realPath, /* retryWithRealPathIfEdenError */ false));
           }
@@ -166,7 +165,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
   }
 
   @Override
-  public Path getPathForRelativePath(Path pathRelativeToProjectRootOrJustAbsolute) {
+  public AbsPath getPathForRelativePath(Path pathRelativeToProjectRootOrJustAbsolute) {
     return delegate.getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
   }
 }

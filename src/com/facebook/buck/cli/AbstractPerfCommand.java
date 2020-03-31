@@ -331,8 +331,8 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
           }
 
           @Override
-          public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
-            return realFilesystem.getPathForRelativePath(pathRelativeToProjectRoot);
+          public AbsPath getPathForRelativePath(Path pathRelativeToProjectRoot) {
+            return AbsPath.of(realFilesystem.getPathForRelativePath(pathRelativeToProjectRoot));
           }
 
           @Override

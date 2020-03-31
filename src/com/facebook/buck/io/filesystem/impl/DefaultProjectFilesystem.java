@@ -326,7 +326,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   @Override
   public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
-    return delegate.getPathForRelativePath(pathRelativeToProjectRoot);
+    return delegate.getPathForRelativePath(pathRelativeToProjectRoot).getPath();
   }
 
   @Override

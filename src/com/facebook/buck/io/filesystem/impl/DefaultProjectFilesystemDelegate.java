@@ -51,7 +51,7 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
 
   @Override
   public Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException {
-    Path fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
+    AbsPath fileToHash = getPathForRelativePath(pathRelativeToProjectRootOrJustAbsolute);
     try {
       // Normally, we would just use `Files.hash(fileToHash.toFile(), Hashing.sha1())`, but if
       // fileToHash is backed by Jimfs, its toFile() method throws an UnsupportedOperationException.
@@ -62,7 +62,7 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
             public InputStream openStream() throws IOException {
               // No need to wrap with BufferedInputStream because ByteSource uses
               // ByteStreams.copy(), which already buffers.
-              return Files.newInputStream(fileToHash);
+              return Files.newInputStream(fileToHash.getPath());
             }
           };
       HashCode hashCode = source.hash(Hashing.sha1());
@@ -78,13 +78,13 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
   }
 
   @Override
-  public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
+  public AbsPath getPathForRelativePath(Path pathRelativeToProjectRoot) {
     // We often create {@link Path} instances using
     // {@link java.nio.file.Paths#get(String, String...)}, but there's no guarantee that the
     // underlying {@link FileSystem} is the default one.
     if (pathRelativeToProjectRoot.getFileSystem().equals(root.getFileSystem())) {
-      return root.resolve(pathRelativeToProjectRoot).getPath();
+      return root.resolve(pathRelativeToProjectRoot);
     }
-    return root.resolve(pathRelativeToProjectRoot.toString()).getPath();
+    return root.resolve(pathRelativeToProjectRoot.toString());
   }
 }
