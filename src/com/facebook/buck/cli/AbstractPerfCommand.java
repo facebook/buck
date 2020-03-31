@@ -55,7 +55,6 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -334,21 +333,6 @@ public abstract class AbstractPerfCommand<CommandContext> extends AbstractComman
           @Override
           public Path getPathForRelativePath(Path pathRelativeToProjectRoot) {
             return realFilesystem.getPathForRelativePath(pathRelativeToProjectRoot);
-          }
-
-          @Override
-          public boolean isExecutable(Path child) {
-            return false;
-          }
-
-          @Override
-          public boolean isSymlink(Path path) {
-            return false;
-          }
-
-          @Override
-          public boolean exists(Path pathRelativeToProjectRoot, LinkOption... options) {
-            return true;
           }
 
           @Override

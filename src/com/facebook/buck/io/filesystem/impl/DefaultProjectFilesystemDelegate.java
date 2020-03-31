@@ -26,7 +26,6 @@ import com.google.common.io.ByteSource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 /**
@@ -87,21 +86,5 @@ public final class DefaultProjectFilesystemDelegate implements ProjectFilesystem
       return root.resolve(pathRelativeToProjectRoot).getPath();
     }
     return root.resolve(pathRelativeToProjectRoot.toString()).getPath();
-  }
-
-  @Override
-  public boolean isExecutable(Path child) {
-    child = getPathForRelativePath(child);
-    return Files.isExecutable(child);
-  }
-
-  @Override
-  public boolean isSymlink(Path path) {
-    return Files.isSymbolicLink(getPathForRelativePath(path));
-  }
-
-  @Override
-  public boolean exists(Path pathRelativeToProjectRoot, LinkOption... options) {
-    return Files.exists(getPathForRelativePath(pathRelativeToProjectRoot), options);
   }
 }

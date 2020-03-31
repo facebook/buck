@@ -380,7 +380,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
 
   @Override
   public boolean exists(Path pathRelativeToProjectRoot, LinkOption... options) {
-    return delegate.exists(pathRelativeToProjectRoot, options);
+    return Files.exists(resolve(pathRelativeToProjectRoot), options);
   }
 
   @Override
@@ -612,7 +612,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   /** Allows {@link Files#isExecutable} to be faked in tests. */
   @Override
   public boolean isExecutable(Path child) {
-    return delegate.isExecutable(child);
+    return Files.isExecutable(resolve(child));
   }
 
   @Override
@@ -1004,7 +1004,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   /** Returns true if the file under {@code path} exists and is a symbolic link, false otherwise. */
   @Override
   public boolean isSymLink(Path path) {
-    return delegate.isSymlink(path);
+    return Files.isSymbolicLink(resolve(path));
   }
 
   /** Returns the target of the specified symbolic link. */

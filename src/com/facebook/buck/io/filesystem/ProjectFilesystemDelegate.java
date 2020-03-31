@@ -19,7 +19,6 @@ package com.facebook.buck.io.filesystem;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 /**
@@ -32,12 +31,6 @@ public interface ProjectFilesystemDelegate {
   Sha1HashCode computeSha1(Path pathRelativeToProjectRootOrJustAbsolute) throws IOException;
 
   Path getPathForRelativePath(Path pathRelativeToProjectRoot);
-
-  boolean isExecutable(Path child);
-
-  boolean isSymlink(Path path);
-
-  boolean exists(Path pathRelativeToProjectRoot, LinkOption... options);
 
   /**
    * @return details about the delegate suitable for writing to a logger. It is recommended that the
