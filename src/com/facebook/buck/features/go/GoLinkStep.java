@@ -68,6 +68,8 @@ public class GoLinkStep extends ShellStep {
   private final LinkMode linkMode;
   private final Path output;
 
+  private static final String GoRootFinal = "/usr/local/go";
+
   public GoLinkStep(
       Path workingDirectory,
       ImmutableMap<String, String> environment,
@@ -103,6 +105,7 @@ public class GoLinkStep extends ShellStep {
             .addAll(linkerFlags)
             .add("-o", output.toString())
             .add("-buildmode", buildMode.getBuildMode())
+            .add("-buildid=") // Setting to a static buildid helps make the binary reproducible.
             .add("-linkmode", linkMode.getLinkMode());
 
     for (Path libraryPath : libraryPaths) {
@@ -130,6 +133,10 @@ public class GoLinkStep extends ShellStep {
         .put("GOOS", platform.getGoOs().getEnvVarValue())
         .put("GOARCH", platform.getGoArch().getEnvVarValue())
         .put("GOARM", platform.getGoArch().getEnvVarValueForArm())
+        // Setting go root final rewrites the root to a standard path
+        // instead of having user name embedded in the binaries
+        // which helps with reproducible builds.
+        .put("GOROOT_FINAL", GoRootFinal)
         .build();
   }
 

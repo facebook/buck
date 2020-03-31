@@ -90,6 +90,7 @@ public class GoCompileStep extends ShellStep {
               .add("-trimpath", workingDirectory.toString())
               .add("-nolocalimports")
               .addAll(flags)
+              .add("-buildid=")
               .add("-o", output.toString());
 
       if (asmSymabisPath.isPresent() && !Iterables.isEmpty(asmSrcs)) {
