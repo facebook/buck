@@ -74,7 +74,7 @@ public class GraphEnhancementQueryEnvironmentTest {
             ImmutableSet.of(),
             UnconfiguredTargetConfiguration.INSTANCE);
     try {
-      envWithoutDeps.getTargetsMatchingPattern("::");
+      envWithoutDeps.getTargetEvaluator().evaluateTarget("::");
       fail("Expected a QueryException to be thrown!");
     } catch (Exception e) {
       assertThat("Exception should contain a cause!", e.getCause(), Matchers.notNullValue());
@@ -96,15 +96,15 @@ public class GraphEnhancementQueryEnvironmentTest {
             UnconfiguredTargetConfiguration.INSTANCE);
 
     // No deps in == no deps out
-    assertTrue(envWithoutDeps.getTargetsMatchingPattern("$declared_deps").isEmpty());
+    assertTrue(envWithoutDeps.getTargetEvaluator().evaluateTarget("$declared_deps").isEmpty());
     // Check that returned path is resolved
     assertThat(
-        envWithoutDeps.getTargetsMatchingPattern("//another/target:target"),
+        envWithoutDeps.getTargetEvaluator().evaluateTarget("//another/target:target"),
         Matchers.contains(
             QueryBuildTarget.of(BuildTargetFactory.newInstance("//another/target:target"))));
     // Check that the returned path is relative to the contextual path
     assertThat(
-        envWithoutDeps.getTargetsMatchingPattern(":relative_name"),
+        envWithoutDeps.getTargetEvaluator().evaluateTarget(":relative_name"),
         Matchers.contains(
             QueryBuildTarget.of(BuildTargetFactory.newInstance("//foo/bar:relative_name"))));
   }
@@ -128,7 +128,7 @@ public class GraphEnhancementQueryEnvironmentTest {
 
     // Check that the macro resolves
     assertThat(
-        env.getTargetsMatchingPattern("$declared_deps"),
+        env.getTargetEvaluator().evaluateTarget("$declared_deps"),
         Matchers.hasItems(QueryBuildTarget.of(dep1), QueryBuildTarget.of(dep2)));
   }
 

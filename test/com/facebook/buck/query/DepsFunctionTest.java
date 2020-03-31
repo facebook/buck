@@ -102,12 +102,19 @@ public class DepsFunctionTest {
       throws Exception {
     QueryEnvironment env = createNiceMock(QueryEnvironment.class);
 
-    Capture<String> stringCapture = Capture.newInstance();
-    expect(env.getTargetsMatchingPattern(EasyMock.capture(stringCapture)))
-        .andStubAnswer(
-            () ->
-                ImmutableSet.of(
-                    QueryBuildTarget.of(BuildTargetFactory.newInstance(stringCapture.getValue()))));
+    expect(env.getTargetEvaluator())
+        .andReturn(
+            new QueryEnvironment.TargetEvaluator() {
+              @Override
+              public Set evaluateTarget(String target) throws QueryException {
+                return ImmutableSet.of(QueryBuildTarget.of(BuildTargetFactory.newInstance(target)));
+              }
+
+              @Override
+              public Type getType() {
+                return Type.IMMEDIATE;
+              }
+            });
 
     Capture<Iterable<QueryBuildTarget>> targetsCapture = Capture.newInstance();
     expect(env.getFwdDeps(EasyMock.capture(targetsCapture)))

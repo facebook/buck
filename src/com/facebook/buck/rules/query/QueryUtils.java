@@ -195,7 +195,7 @@ public final class QueryUtils {
             ImmutableSet.of(),
             query.getTargetConfiguration());
     QueryExpression<QueryTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
-    return parsedExp.getTargets(env).stream()
+    return parsedExp.getTargets(env.getTargetEvaluator()).stream()
         .map(
             queryTarget -> {
               Preconditions.checkState(queryTarget instanceof QueryBuildTarget);

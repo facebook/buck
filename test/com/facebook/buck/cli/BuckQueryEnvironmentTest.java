@@ -183,14 +183,14 @@ public class BuckQueryEnvironmentTest {
     Set<QueryTarget> targets;
     ImmutableSet<QueryTarget> expectedTargets;
 
-    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example:six");
+    targets = buckQueryEnvironment.getTargetEvaluator().evaluateTarget("//example:six");
     expectedTargets =
         new ImmutableSortedSet.Builder<>(QueryTarget::compare)
             .add(createQueryBuildTarget("//example", "six"))
             .build();
     assertThat(targets, is(equalTo(expectedTargets)));
 
-    targets = buckQueryEnvironment.getTargetsMatchingPattern("//example/app:seven");
+    targets = buckQueryEnvironment.getTargetEvaluator().evaluateTarget("//example/app:seven");
     expectedTargets =
         new ImmutableSortedSet.Builder<>(QueryTarget::compare)
             .add(createQueryBuildTarget("//example/app", "seven"))
@@ -217,7 +217,8 @@ public class BuckQueryEnvironmentTest {
                 createQueryBuildTarget("//example", "six-tests"))
             .build();
     assertThat(
-        buckQueryEnvironment.getTargetsMatchingPattern("//example:"), is(equalTo(expectedTargets)));
+        buckQueryEnvironment.getTargetEvaluator().evaluateTarget("//example:"),
+        is(equalTo(expectedTargets)));
   }
 
   @Test

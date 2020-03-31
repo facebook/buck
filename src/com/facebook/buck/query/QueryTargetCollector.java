@@ -22,11 +22,11 @@ import java.util.Set;
 
 class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV_NODE_TYPE> {
   private final ImmutableSet.Builder<ENV_NODE_TYPE> targets;
-  private final QueryEnvironment<ENV_NODE_TYPE> env;
+  private final QueryEnvironment.TargetEvaluator<ENV_NODE_TYPE> targetEvaluator;
 
-  QueryTargetCollector(QueryEnvironment<ENV_NODE_TYPE> env) {
+  QueryTargetCollector(QueryEnvironment.TargetEvaluator<ENV_NODE_TYPE> targetEvaluator) {
     this.targets = ImmutableSet.builder();
-    this.env = env;
+    this.targetEvaluator = targetEvaluator;
   }
 
   @Override
@@ -34,7 +34,7 @@ class QueryTargetCollector<ENV_NODE_TYPE> implements QueryExpression.Visitor<ENV
     if (exp instanceof TargetLiteral) {
       try {
         targets.addAll(
-            env.getTargetsMatchingPattern(((TargetLiteral<ENV_NODE_TYPE>) exp).getPattern()));
+            targetEvaluator.evaluateTarget(((TargetLiteral<ENV_NODE_TYPE>) exp).getPattern()));
       } catch (QueryException e) {
         throw new HumanReadableException(e, "Error computing targets from literal [%s]", exp);
       }

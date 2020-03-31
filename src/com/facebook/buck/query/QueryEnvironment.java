@@ -211,14 +211,6 @@ public interface QueryEnvironment<NODE_TYPE> {
   /** Returns an evaluator for target patterns. */
   TargetEvaluator<NODE_TYPE> getTargetEvaluator();
 
-  /**
-   * Returns the set of target nodes in the graph for the specified target pattern, in 'buck build'
-   * syntax.
-   */
-  default Set<NODE_TYPE> getTargetsMatchingPattern(String pattern) throws QueryException {
-    return getTargetEvaluator().evaluateTarget(pattern);
-  }
-
   /** Returns the direct forward dependencies of the specified targets. */
   Set<NODE_TYPE> getFwdDeps(Iterable<NODE_TYPE> targets) throws QueryException;
 

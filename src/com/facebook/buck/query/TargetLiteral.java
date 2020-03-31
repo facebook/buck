@@ -39,7 +39,7 @@ public final class TargetLiteral<NODE_TYPE> extends QueryExpression<NODE_TYPE> {
   @Override
   public Set<NODE_TYPE> eval(QueryEvaluator<NODE_TYPE> evaluator, QueryEnvironment<NODE_TYPE> env)
       throws QueryException {
-    return env.getTargetsMatchingPattern(getPattern());
+    return env.getTargetEvaluator().evaluateTarget(getPattern());
   }
 
   @Override
