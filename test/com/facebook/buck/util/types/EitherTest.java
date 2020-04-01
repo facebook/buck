@@ -103,4 +103,28 @@ public class EitherTest {
   public void getRightOfLeftThrows() {
     Either.ofLeft(new Object()).getRight();
   }
+
+  @Test
+  public void mapLeft() {
+    Either<Integer, Object> left = Either.ofLeft(1);
+    assertSame(
+        left,
+        left.mapRight(
+            i -> {
+              throw new AssertionError();
+            }));
+    assertEquals(Either.ofLeft("1"), Either.ofLeft(1).mapLeft(Object::toString));
+  }
+
+  @Test
+  public void mapRight() {
+    Either<Object, Integer> right = Either.ofRight(1);
+    assertSame(
+        right,
+        right.mapLeft(
+            i -> {
+              throw new AssertionError();
+            }));
+    assertEquals(Either.ofRight("1"), Either.ofRight(1).mapRight(Object::toString));
+  }
 }

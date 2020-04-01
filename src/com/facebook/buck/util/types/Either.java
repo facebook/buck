@@ -54,6 +54,12 @@ public abstract class Either<LEFT, RIGHT> {
   public abstract <X> X transform(
       Function<LEFT, X> lhsTransformer, Function<RIGHT, X> rhsTransformer);
 
+  /** Transform left part of either. */
+  public abstract <L1> Either<L1, RIGHT> mapLeft(Function<LEFT, L1> f);
+
+  /** Transform left part of either. */
+  public abstract <R1> Either<LEFT, R1> mapRight(Function<RIGHT, R1> f);
+
   public static <LEFT, RIGHT> Either<LEFT, RIGHT> ofLeft(LEFT value) {
     return new Left<>(value);
   }
@@ -108,6 +114,17 @@ public abstract class Either<LEFT, RIGHT> {
     @Override
     public <X> X transform(Function<LEFT, X> lhsTransformer, Function<RIGHT, X> rhsTransformer) {
       return lhsTransformer.apply(value);
+    }
+
+    @Override
+    public <L1> Either<L1, RIGHT> mapLeft(Function<LEFT, L1> f) {
+      return Either.ofLeft(f.apply(value));
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <R1> Either<LEFT, R1> mapRight(Function<RIGHT, R1> f) {
+      return (Either<LEFT, R1>) this;
     }
 
     @Override
@@ -171,6 +188,17 @@ public abstract class Either<LEFT, RIGHT> {
     @Override
     public <X> X transform(Function<LEFT, X> lhsTransformer, Function<RIGHT, X> rhsTransformer) {
       return rhsTransformer.apply(value);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <L1> Either<L1, RIGHT> mapLeft(Function<LEFT, L1> f) {
+      return (Either<L1, RIGHT>) this;
+    }
+
+    @Override
+    public <R1> Either<LEFT, R1> mapRight(Function<RIGHT, R1> f) {
+      return Either.ofRight(f.apply(value));
     }
 
     @Override
