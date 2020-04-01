@@ -54,11 +54,11 @@ public class BuckArgsMethods {
         .collect(ImmutableList.toImmutableList());
   }
 
-  private static Iterable<String> getArgsFromPythonFile(AbsPath argsPath, String suffix)
-      throws IOException {
+  private static Iterable<String> getArgsFromPythonFile(
+      String pythonInterpreter, AbsPath argsPath, String suffix) throws IOException {
     Process proc =
         Runtime.getRuntime()
-            .exec(new String[] {"python", argsPath.toString(), "--flavors", suffix});
+            .exec(new String[] {pythonInterpreter, argsPath.toString(), "--flavors", suffix});
     try (InputStream input = proc.getInputStream();
         OutputStream output = proc.getOutputStream();
         BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8))) {
@@ -66,8 +66,8 @@ public class BuckArgsMethods {
     }
   }
 
-  private static Iterable<String> getArgsFromPath(AbsPath argsPath, Optional<String> flavors)
-      throws IOException {
+  private static Iterable<String> getArgsFromPath(
+      String pythonInterpreter, AbsPath argsPath, Optional<String> flavors) throws IOException {
     if (!argsPath.toString().endsWith(".py")) {
       if (flavors.isPresent()) {
         throw new HumanReadableException(
@@ -76,7 +76,7 @@ public class BuckArgsMethods {
       }
       return getArgsFromTextFile(argsPath);
     }
-    return getArgsFromPythonFile(argsPath, flavors.orElse(""));
+    return getArgsFromPythonFile(pythonInterpreter, argsPath, flavors.orElse(""));
   }
 
   /**
@@ -88,15 +88,18 @@ public class BuckArgsMethods {
    * command line arguments from AT-file syntax files passed via {@code --flagfile} command line
    * option.
    *
+   * @param pythonInterpreter the python interpreter to use to execute python @ files
    * @param args original args array
    * @param cellMapping a map from cell names to their roots
    * @return args array with AT-files expanded.
    */
   public static ImmutableList<String> expandAtFiles(
-      Iterable<String> args, ImmutableMap<CellName, AbsPath> cellMapping) {
+      String pythonInterpreter,
+      Iterable<String> args,
+      ImmutableMap<CellName, AbsPath> cellMapping) {
     // LinkedHashSet is used to preserve insertion order, so that a path can be printed
     Set<String> expansionPath = new LinkedHashSet<>();
-    return expandFlagFilesRecursively(args, cellMapping, expansionPath);
+    return expandFlagFilesRecursively(pythonInterpreter, args, cellMapping, expansionPath);
   }
 
   /**
@@ -105,6 +108,7 @@ public class BuckArgsMethods {
    * <p>Loops are not allowed and result in runtime exception.
    */
   private static ImmutableList<String> expandFlagFilesRecursively(
+      String pythonInterpreter,
       Iterable<String> args,
       ImmutableMap<CellName, AbsPath> cellMapping,
       Set<String> expansionPath) {
@@ -123,9 +127,11 @@ public class BuckArgsMethods {
           throw new HumanReadableException(arg + " should be followed by a path.");
         }
         String nextFlagFile = argsIterator.next();
-        argumentsBuilder.addAll(expandFlagFile(nextFlagFile, cellMapping, expansionPath));
+        argumentsBuilder.addAll(
+            expandFlagFile(pythonInterpreter, nextFlagFile, cellMapping, expansionPath));
       } else if (arg.startsWith("@")) {
-        argumentsBuilder.addAll(expandFlagFile(arg.substring(1), cellMapping, expansionPath));
+        argumentsBuilder.addAll(
+            expandFlagFile(pythonInterpreter, arg.substring(1), cellMapping, expansionPath));
       } else {
         argumentsBuilder.add(arg);
       }
@@ -135,7 +141,10 @@ public class BuckArgsMethods {
 
   /** Recursively expands flag files into a list of command line flags. */
   private static ImmutableList<String> expandFlagFile(
-      String nextFlagFile, ImmutableMap<CellName, AbsPath> cellMapping, Set<String> expansionPath) {
+      String pythonInterpreter,
+      String nextFlagFile,
+      ImmutableMap<CellName, AbsPath> cellMapping,
+      Set<String> expansionPath) {
     if (expansionPath.contains(nextFlagFile)) {
       // expansion path is a linked hash set, so it preserves order
       throw new HumanReadableException(
@@ -148,14 +157,17 @@ public class BuckArgsMethods {
     expansionPath.add(nextFlagFile);
     ImmutableList<String> expandedArgs =
         expandFlagFilesRecursively(
-            expandFile(nextFlagFile, cellMapping), cellMapping, expansionPath);
+            pythonInterpreter,
+            expandFile(pythonInterpreter, nextFlagFile, cellMapping),
+            cellMapping,
+            expansionPath);
     expansionPath.remove(nextFlagFile);
     return expandedArgs;
   }
 
   /** Extracts command line options from a file identified by {@code arg} with AT-file syntax. */
   private static Iterable<String> expandFile(
-      String arg, ImmutableMap<CellName, AbsPath> cellMapping) {
+      String pythonInterpreter, String arg, ImmutableMap<CellName, AbsPath> cellMapping) {
     BuckCellArg argfile = BuckCellArg.of(arg);
     String[] parts = argfile.getArg().split("#", 2);
     String unresolvedArgsPath = parts[0];
@@ -186,7 +198,7 @@ public class BuckArgsMethods {
     }
     Optional<String> flavors = parts.length == 2 ? Optional.of(parts[1]) : Optional.empty();
     try {
-      return getArgsFromPath(argsPath, flavors);
+      return getArgsFromPath(pythonInterpreter, argsPath, flavors);
     } catch (IOException e) {
       throw new HumanReadableException(e, "Could not read options from " + arg);
     }
@@ -211,5 +223,11 @@ public class BuckArgsMethods {
       }
     }
     return result.build();
+  }
+
+  /** Get the location of the python binary that the python wrapper was invoked with */
+  public static String getPythonInterpreter(ImmutableMap<String, String> clientEnvironment) {
+    return Objects.requireNonNull(
+        clientEnvironment.get("BUCK_WRAPPER_PYTHON_BIN"), "BUCK_WRAPPER_PYTHON_BIN was not set!");
   }
 }

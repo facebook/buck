@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +30,10 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.hamcrest.Matchers;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -38,16 +42,34 @@ public class BuckArgsMethodsTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public ExpectedException thrown = ExpectedException.none();
+  private String pythonInterpreter;
+
+  @Before
+  public void setUp() {
+
+    Path interpreterPath =
+        new ExecutableFinder()
+            .getExecutable(
+                Paths.get("python3"),
+                com.facebook.buck.util.environment.EnvVariablesProvider.getSystemEnv());
+    ImmutableMap<String, String> clientEnvironment =
+        ImmutableMap.of("BUCK_WRAPPER_PYTHON_BIN", interpreterPath.toAbsolutePath().toString());
+    pythonInterpreter = BuckArgsMethods.getPythonInterpreter(clientEnvironment);
+  }
 
   @Test
   public void testArgFileExpansion() throws IOException {
+
     assertThat(
         BuckArgsMethods.expandAtFiles(
-            ImmutableList.of("arg1"), ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
+            pythonInterpreter,
+            ImmutableList.of("arg1"),
+            ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "arg@a"),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg@a"));
@@ -57,19 +79,23 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "@" + arg),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg2", "arg3"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "@" + arg, "arg4"),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg2", "arg3", "arg4"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
-            ImmutableList.of("@" + arg), ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
+            pythonInterpreter,
+            ImmutableList.of("@" + arg),
+            ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg2", "arg3"));
 
     AbsPath arg4 = tmp.newFile("argsfile4");
@@ -77,6 +103,7 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "@" + arg, "@" + arg4),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg2", "arg3", "arg4"));
@@ -85,6 +112,7 @@ public class BuckArgsMethodsTest {
     Files.write(argWithSpace.getPath(), ImmutableList.of("arg "));
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("@" + argWithSpace),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg "));
@@ -93,12 +121,14 @@ public class BuckArgsMethodsTest {
     Files.write(pyArg.getPath(), ImmutableList.of("print('arg2'); print('arg3');"));
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "@" + pyArg + "#flavor"),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg2", "arg3"));
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "@" + pyArg),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg2", "arg3"));
@@ -109,6 +139,7 @@ public class BuckArgsMethodsTest {
         ImmutableList.of("import sys; print(sys.argv[1]); print(sys.argv[2])"));
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "@" + pyArgWithFlavors + "#fl1,fl2"),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "--flavors", "fl1,fl2"));
@@ -121,6 +152,7 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "--flagfile", arg.toString()),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg2", "arg3"));
@@ -132,6 +164,7 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "--", "--flagfile", arg.toString()),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "--", "--flagfile", arg.toString()));
@@ -144,6 +177,7 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "--flagfile", arg.toString(), "--", "--flagfile", "foo"),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg2", "arg3", "--", "--flagfile", "foo"));
@@ -158,6 +192,7 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg0", "--flagfile", arg.toString()),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg0", "arg1", "arg2"));
@@ -172,6 +207,7 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg0", "--flagfile", arg.toString()),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg0", "arg1", "arg2"));
@@ -187,6 +223,7 @@ public class BuckArgsMethodsTest {
     thrown.expectMessage("Expansion loop detected:");
     thrown.expectMessage("argsfile -> flagfile -> argsfile");
     BuckArgsMethods.expandAtFiles(
+        pythonInterpreter,
         ImmutableList.of("arg0", "--flagfile", arg.toString()),
         ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot()));
   }
@@ -201,6 +238,7 @@ public class BuckArgsMethodsTest {
     thrown.expectMessage("Expansion loop detected:");
     thrown.expectMessage("argsfile -> flagfile -> argsfile");
     BuckArgsMethods.expandAtFiles(
+        pythonInterpreter,
         ImmutableList.of("arg0", "--flagfile", arg.toString()),
         ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot()));
   }
@@ -215,6 +253,7 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", "--flagfile", argsfile.toString(), "@argsfile2"),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg2", "arg3", "arg4", "arg5"));
@@ -226,6 +265,7 @@ public class BuckArgsMethodsTest {
     thrown.expectMessage("--flagfile should be followed by a path.");
 
     BuckArgsMethods.expandAtFiles(
+        pythonInterpreter,
         ImmutableList.of("arg1", "--flagfile"),
         ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot()));
   }
@@ -238,6 +278,7 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("--flagfile", "subcell//argsfile"),
             ImmutableMap.of(
                 CellName.ROOT_CELL_NAME,
@@ -257,6 +298,7 @@ public class BuckArgsMethodsTest {
     Files.write(argsfile.getPath(), ImmutableList.of("arg1", "arg2"));
 
     BuckArgsMethods.expandAtFiles(
+        pythonInterpreter,
         ImmutableList.of("--flagfile", "cell//argsfile"),
         ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot()));
   }
@@ -306,10 +348,12 @@ public class BuckArgsMethodsTest {
         ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot());
     assertEquals(
         ImmutableList.of("--foo", "bar ", "--baz"),
-        BuckArgsMethods.expandAtFiles(ImmutableList.of("@" + staticArgs.toString()), cellMapping));
+        BuckArgsMethods.expandAtFiles(
+            pythonInterpreter, ImmutableList.of("@" + staticArgs.toString()), cellMapping));
     assertEquals(
         ImmutableList.of("--py-foo", "py-bar ", "--py-baz"),
-        BuckArgsMethods.expandAtFiles(ImmutableList.of("@" + pythonArgs.toString()), cellMapping));
+        BuckArgsMethods.expandAtFiles(
+            pythonInterpreter, ImmutableList.of("@" + pythonArgs.toString()), cellMapping));
   }
 
   @Test
@@ -320,6 +364,7 @@ public class BuckArgsMethodsTest {
 
     assertThat(
         BuckArgsMethods.expandAtFiles(
+            pythonInterpreter,
             ImmutableList.of("arg1", atArg, "--", atArg),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg2", "arg3", "--", atArg));

@@ -588,6 +588,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
       envBuilder.put(
           "BUCK_CLIENT_PWD",
           repoRoot.toAbsolutePath().resolve(relativeWorkingDir).normalize().toString());
+      String python3Interpreter =
+          new ExecutableFinder()
+              .getExecutable(Paths.get("python3"), EnvVariablesProvider.getSystemEnv())
+              .toAbsolutePath()
+              .toString();
+      envBuilder.put("BUCK_WRAPPER_PYTHON_BIN", python3Interpreter);
 
       ImmutableMap<String, String> sanizitedEnv = ImmutableMap.copyOf(envBuilder);
       BackgroundTaskManager manager = AsyncBackgroundTaskManager.of();

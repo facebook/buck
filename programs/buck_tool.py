@@ -785,6 +785,8 @@ class BuckTool(object):
                 env = self._environ_for_buck()
                 env["BUCK_BUILD_ID"] = build_id
                 env["BUCK_CLIENT_PWD"] = client_cwd
+                if "BUCK_WRAPPER_PYTHON_BIN" not in env:
+                    env["BUCK_WRAPPER_PYTHON_BIN"] = sys.executable
 
                 self._reporter.is_buckd = use_buckd
                 run_fn = (

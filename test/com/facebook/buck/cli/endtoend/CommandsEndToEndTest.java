@@ -16,18 +16,29 @@
 
 package com.facebook.buck.cli.endtoend;
 
+import static org.junit.Assert.assertEquals;
+
+import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.endtoend.EndToEndEnvironment;
 import com.facebook.buck.testutil.endtoend.EndToEndRunner;
 import com.facebook.buck.testutil.endtoend.EndToEndTestDescriptor;
 import com.facebook.buck.testutil.endtoend.EndToEndWorkspace;
 import com.facebook.buck.testutil.endtoend.Environment;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import org.junit.Assume;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(EndToEndRunner.class)
 public class CommandsEndToEndTest {
+
+  @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   @Environment
   public static EndToEndEnvironment getBaseEnvironment() {
@@ -67,5 +78,34 @@ public class CommandsEndToEndTest {
               false, ImmutableMap.copyOf(test.getVariableMap()), test.getTemplateSet(), command)
           .assertSuccess();
     }
+  }
+
+  @Test
+  public void shouldUseTheInterpreterSpecifiedInTheEnvironment(
+      EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Throwable {
+    Assume.assumeFalse(Platform.detect() == Platform.WINDOWS);
+
+    for (String s : test.getTemplateSet()) {
+      workspace.addPremadeTemplate(s);
+    }
+    workspace.setup();
+
+    Path scriptPath = workspace.getPath(Paths.get("test.py"));
+    Files.write(scriptPath, ImmutableList.of("echo --config", "echo foo.bar=baz"));
+
+    String stdout =
+        workspace
+            .runBuckCommand(
+                ImmutableMap.of("BUCK_WRAPPER_PYTHON_BIN", "/bin/bash"),
+                "audit",
+                "config",
+                "--tab",
+                "@" + scriptPath.toAbsolutePath().toString(),
+                "foo.bar")
+            .assertSuccess()
+            .getStdout()
+            .trim();
+
+    assertEquals("foo.bar\tbaz", stdout);
   }
 }
