@@ -42,7 +42,7 @@ public interface UnresolvedInferPlatform {
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
       BuildTarget buildTarget,
       UnresolvedInferPlatform platform) {
-    if (buildTarget.getFlavors().contains(InferJava.INFER_NULLSAFE)) {
+    if (InferJava.findSupportedFlavor(buildTarget.getFlavors()).isPresent()) {
       targetGraphOnlyDepsBuilder.addAll(
           platform.getParseTimeDeps(buildTarget.getTargetConfiguration()));
     }

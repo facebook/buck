@@ -141,9 +141,10 @@ public class AndroidLibraryDescription
 
     FlavorSet flavors = buildTarget.getFlavors();
 
-    if (flavors.contains(InferJava.INFER_NULLSAFE)) {
+    Optional<Flavor> inferFlavor = InferJava.findSupportedFlavor(flavors);
+    if (inferFlavor.isPresent()) {
       return InferJava.create(
-          InferJava.INFER_NULLSAFE,
+          inferFlavor.get(),
           buildTarget,
           projectFilesystem,
           context.getActionGraphBuilder(),
@@ -190,7 +191,8 @@ public class AndroidLibraryDescription
         || flavors.equals(ImmutableSet.of(JavaAbis.SOURCE_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(JavaAbis.SOURCE_ONLY_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR))
-        || flavors.equals(ImmutableSet.of(InferJava.INFER_NULLSAFE));
+        || flavors.equals(ImmutableSet.of(InferJava.INFER_NULLSAFE))
+        || flavors.equals(ImmutableSet.of(InferJava.INFER_JAVA_CAPTURE));
   }
 
   @Override

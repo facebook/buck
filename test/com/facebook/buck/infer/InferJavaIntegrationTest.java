@@ -17,6 +17,7 @@
 package com.facebook.buck.infer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -25,6 +26,7 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -40,7 +42,18 @@ public class InferJavaIntegrationTest {
   }
 
   @Test
-  public void inferJavaLibrarySmokeTest() throws IOException {
+  public void captureJavaLibrarySmokeTest() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
+    workspace.setUp();
+
+    Path output = workspace.buildAndReturnOutput("//:java-smoke-test#infer-java-capture");
+    assertTrue(Files.isRegularFile(output.resolve("results.db")));
+    assertTrue(Files.isDirectory(output.resolve("specs")));
+  }
+
+  @Test
+  public void nullsafeJavaLibrarySmokeTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
     workspace.setUp();
@@ -51,7 +64,7 @@ public class InferJavaIntegrationTest {
   }
 
   @Test
-  public void inferJavaEmptySourcesTest() throws IOException {
+  public void nullsafeEmptySourcesTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
     workspace.setUp();
@@ -60,7 +73,7 @@ public class InferJavaIntegrationTest {
   }
 
   @Test
-  public void inferJavaProvidedDepTest() throws IOException {
+  public void nullsafeProvidedDepTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
     workspace.setUp();
@@ -71,7 +84,7 @@ public class InferJavaIntegrationTest {
   }
 
   @Test
-  public void inferJavaExportedProvidedDepTest() throws IOException {
+  public void inferExportedProvidedDepTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
     workspace.setUp();
@@ -82,11 +95,13 @@ public class InferJavaIntegrationTest {
   }
 
   @Test
-  public void inferJavaFromDistTest() throws IOException {
+  public void inferFromDistTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "dist", tmp);
     workspace.setUp();
 
+    // Although here we use #nullsafe flavor this testcase is not nullsafe specific as it tests
+    // how InferJava handles infer.dist config option (note "dist" workspace scenario above).
     Path output = workspace.buildAndReturnOutput("//:l1#nullsafe");
     String content = workspace.getFileContents(output);
     assertEquals("fake infer results\n", content);
@@ -95,7 +110,7 @@ public class InferJavaIntegrationTest {
   @Test
   @Ignore(
       "TODO: `buck test` fails with unknown android-platform-target toolchain (but works in Idea)")
-  public void inferAndroidLibrarySmokeTest() throws IOException {
+  public void nullsafeAndroidLibrarySmokeTest() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "several_libraries", tmp);
     workspace.setUp();

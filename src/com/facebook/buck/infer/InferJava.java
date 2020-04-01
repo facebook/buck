@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -69,6 +70,18 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
    */
   public static final Flavor INFER_NULLSAFE = InternalFlavor.of("nullsafe");
 
+  /**
+   * {@code #infer-java-capture} flavor for a Java rule that performs the capture phase (a
+   * preliminary to analysis).
+   *
+   * <p>The result of the capture phase (infer-out) is exposed as the output of the rule.
+   */
+  public static final Flavor INFER_JAVA_CAPTURE = InternalFlavor.of("infer-java-capture");
+
+  // All flavors provided by the build rule.
+  private static final ImmutableList<Flavor> providedFlavors =
+      ImmutableList.of(INFER_JAVA_CAPTURE, INFER_NULLSAFE);
+
   // This is the default name of the JSON report which is suitable for consumption
   // by tools and automation.
   private static final String INFER_JSON_REPORT_FILE = "report.json";
@@ -81,6 +94,21 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
   /** Supported commands to infer binary. */
   enum Command {
     RUN,
+    CAPTURE,
+  }
+
+  /**
+   * @return first flavor that matches one of the supported InferJava flavors, empty optional
+   *     otherwise.
+   */
+  public static Optional<Flavor> findSupportedFlavor(FlavorSet flavors) {
+    for (Flavor aFlavor : providedFlavors) {
+      if (flavors.contains(aFlavor)) {
+        return Optional.of(aFlavor);
+      }
+    }
+
+    return Optional.empty();
   }
 
   private InferJava(
@@ -132,6 +160,11 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
       }
 
       limitToOutputFile = Optional.of(INFER_JSON_REPORT_FILE);
+    } else if (flavor.equals(INFER_JAVA_CAPTURE)) {
+      command = Command.CAPTURE;
+      // For now we hardcode this, as there's no need for other capture args
+      args = ImmutableList.of("--genrule-mode");
+      limitToOutputFile = Optional.empty(); // copy the whole infer-out
     } else {
       throw new UnsupportedOperationException("Unsupported flavor: " + flavor.getName());
     }
@@ -214,8 +247,9 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
     @AddToRuleKey @Nullable private final SourcePath generatedClasses;
 
     // A non-empty limitToOutputFile allows to pick a particular file from infer-out as output of
-    // the
-    // build rule. When not set the whole infer-out is going to be exposed is build rule output.
+    // the build rule. When not set the whole infer-out is going to be exposed as build rule output.
+    // Ideally, we should be able to expose a subset of infer-out as output (because we don't really
+    // want tmp/ or something like that in the output).
     @AddToRuleKey private final Optional<String> limitToOutputFile;
     @AddToRuleKey private final OutputPath output;
 
@@ -305,8 +339,12 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
             CopyStep.forFile(
                 filesystem, outputTarget, outputPathResolver.resolvePath(this.output)));
       } else {
-        throw new UnsupportedOperationException(
-            "Unsupported output: limitToOutputFile should be specified");
+        steps.add(
+            CopyStep.forDirectory(
+                filesystem,
+                inferOutPath.getPath(),
+                outputPathResolver.resolvePath(this.output),
+                CopyStep.DirectoryMode.CONTENTS_ONLY));
       }
 
       return steps.build();

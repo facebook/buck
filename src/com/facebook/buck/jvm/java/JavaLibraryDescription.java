@@ -67,6 +67,7 @@ public class JavaLibraryDescription
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(
           InferJava.INFER_NULLSAFE,
+          InferJava.INFER_JAVA_CAPTURE,
           Javadoc.DOC_JAR,
           JavaLibrary.SRC_JAR,
           JavaLibrary.MAVEN_JAR,
@@ -134,9 +135,10 @@ public class JavaLibraryDescription
             graphBuilder,
             args);
 
-    if (flavors.contains(InferJava.INFER_NULLSAFE)) {
+    Optional<Flavor> inferFlavor = InferJava.findSupportedFlavor(flavors);
+    if (inferFlavor.isPresent()) {
       return InferJava.create(
-          InferJava.INFER_NULLSAFE,
+          inferFlavor.get(),
           buildTarget,
           projectFilesystem,
           graphBuilder,
