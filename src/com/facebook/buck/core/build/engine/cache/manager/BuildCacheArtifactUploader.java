@@ -176,6 +176,10 @@ public class BuildCacheArtifactUploader {
       }
     }
 
+    // TODO: Have OnDiskBuildInfo handle creating the artifact itself so we don't have a TOCTOU
+    // race.
+    onDiskBuildInfo.validateArtifact();
+
     // Do the actual upload.
     return uploader.performUploadToArtifactCache(
         ImmutableSet.copyOf(ruleKeys),
