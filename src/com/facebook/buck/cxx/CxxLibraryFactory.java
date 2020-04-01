@@ -167,7 +167,7 @@ public class CxxLibraryFactory {
           Collections2.transform(
               CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
                   graphBuilder,
-                  linkableDepType.orElse(Linker.LinkableDepType.SHARED),
+                  linkableDepType.orElse(Linker.LinkableDepType.STATIC),
                   makeLinkableListFilter(args, targetGraph),
                   allNativeLinkables,
                   blacklist),
