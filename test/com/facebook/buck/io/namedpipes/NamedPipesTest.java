@@ -114,24 +114,24 @@ public class NamedPipesTest {
         NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
         try (NamedPipe namedPipe = namedPipeFactory.connect(Paths.get(namedPipePath));
             InputStream inputStream = namedPipe.getInputStream()) {
-
           LOG.info("Read named pipe: " + namedPipe);
-
-          String line;
-          int read;
-          StringBuilder sb = new StringBuilder();
-          while ((read = inputStream.read()) != -1) {
-            sb.append((char) read);
-            if (isEndOfTheObject(sb)) {
-              line = sb.toString();
-              sb.setLength(0);
-              handleReadLine(line, receivedMessages);
-            }
-          }
-
+          processMessages(inputStream);
           LOG.info("Finishing reader thread!");
         } catch (IOException e) {
           LOG.error(e, "Can't read from a named pipe: " + namedPipePath);
+        }
+      }
+
+      private void processMessages(InputStream inputStream) throws IOException {
+        int read;
+        StringBuilder buffer = new StringBuilder();
+        while ((read = inputStream.read()) != -1) {
+          buffer.append((char) read);
+          if (isEndOfTheObject(buffer)) {
+            String message = buffer.toString();
+            buffer.setLength(0);
+            receivedMessages.add(serialize(message));
+          }
         }
       }
 
@@ -148,13 +148,11 @@ public class NamedPipesTest {
         return true;
       }
 
-      private void handleReadLine(String line, List<ReceivedNamedPipeJsonMessage> receivedMessages)
-          throws IOException {
+      private ReceivedNamedPipeJsonMessage serialize(String message) throws IOException {
         NamedPipeJsonMessage jsonMessage =
-            ObjectMappers.readValue(line, NamedPipeJsonMessage.class);
+            ObjectMappers.readValue(message, NamedPipeJsonMessage.class);
         LOG.info("json message received : " + jsonMessage);
-        receivedMessages.add(
-            ImmutableReceivedNamedPipeJsonMessage.ofImpl(Instant.now(), jsonMessage));
+        return ImmutableReceivedNamedPipeJsonMessage.ofImpl(Instant.now(), jsonMessage);
       }
     };
   }
@@ -165,5 +163,6 @@ public class NamedPipesTest {
         ImmutableNamedPipeJsonMessage.ofImpl(Instant.now().toString(), message);
     ObjectMappers.WRITER.writeValue((DataOutput) outputStream, namedPipeJsonMessage);
     outputStream.writeUTF(DELIMITER);
+    outputStream.flush();
   }
 }
