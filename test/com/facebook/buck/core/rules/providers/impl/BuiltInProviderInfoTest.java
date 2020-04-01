@@ -27,24 +27,20 @@ import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
+import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.syntax.Argument;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.DictionaryLiteral;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.Identifier;
-import com.google.devtools.build.lib.syntax.IntegerLiteral;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
-import com.google.devtools.build.lib.syntax.StringLiteral;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
@@ -229,12 +225,7 @@ public class BuiltInProviderInfoTest {
                       ImmutableMap.of(SomeInfo.PROVIDER.getName(), SomeInfo.PROVIDER)))
               .build();
 
-      FuncallExpression ast =
-          new FuncallExpression(
-              new Identifier("SomeInfo"),
-              ImmutableList.of(
-                  new Argument.Keyword(new Identifier("str"), new StringLiteral("d")),
-                  new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
+      FuncallExpression ast = TestStarlarkParser.parseFuncall("SomeInfo(str='d', my_info=4)");
 
       o = ast.eval(env);
     }
@@ -268,7 +259,7 @@ public class BuiltInProviderInfoTest {
     assertEquals(SkylarkDict.of(null, "b", 2), someInfo2.map());
 
     InfoWithMap someInfo3 = InfoWithMap.PROVIDER.createInfo(SkylarkDict.of(null));
-    assertEquals(SkylarkDict.of(null), someInfo3.map());
+    assertEquals(SkylarkDict.<String, Integer>of(null), someInfo3.map());
   }
 
   @Test
@@ -301,10 +292,7 @@ public class BuiltInProviderInfoTest {
               .build();
 
       FuncallExpression ast =
-          new FuncallExpression(
-              new Identifier(ImmutableSomeInfo.PROVIDER.getName()),
-              ImmutableList.of(
-                  new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(2))));
+          TestStarlarkParser.parseFuncall(ImmutableSomeInfo.PROVIDER.getName() + "(my_info=2)");
 
       assertEquals(new ImmutableSomeInfo("default value", 2), ast.eval(env));
     }
@@ -325,9 +313,8 @@ public class BuiltInProviderInfoTest {
               .build();
 
       FuncallExpression ast =
-          new FuncallExpression(
-              new Identifier(ImmutableInfoWithNoDefaultValOnAnnotation.PROVIDER.getName()),
-              ImmutableList.of(new Argument.Keyword(new Identifier("val"), new IntegerLiteral(2))));
+          TestStarlarkParser.parseFuncall(
+              ImmutableInfoWithNoDefaultValOnAnnotation.PROVIDER.getName() + "(val=2)");
 
       assertEquals(new ImmutableInfoWithNoDefaultValOnAnnotation(2), ast.eval(env));
     }
@@ -348,16 +335,8 @@ public class BuiltInProviderInfoTest {
               .build();
 
       FuncallExpression ast =
-          new FuncallExpression(
-              new Identifier("SomeInfoWithInstantiate"),
-              ImmutableList.of(
-                  new Argument.Keyword(
-                      new Identifier("str_list"),
-                      new DictionaryLiteral(
-                          ImmutableList.of(
-                              new DictionaryLiteral.DictionaryEntryLiteral(
-                                  new StringLiteral("d"), new StringLiteral("d_value"))))),
-                  new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
+          TestStarlarkParser.parseFuncall(
+              "SomeInfoWithInstantiate(str_list={'d': 'd_value'}, my_info=4)");
 
       o = ast.eval(env);
     }
@@ -383,11 +362,7 @@ public class BuiltInProviderInfoTest {
                           SomeInfoWithInstantiate.PROVIDER)))
               .build();
 
-      FuncallExpression ast =
-          new FuncallExpression(
-              new Identifier("SomeInfoWithInstantiate"),
-              ImmutableList.of(
-                  new Argument.Keyword(new Identifier("my_info"), new IntegerLiteral(4))));
+      FuncallExpression ast = TestStarlarkParser.parseFuncall("SomeInfoWithInstantiate(my_info=4)");
 
       o = ast.eval(env);
     }
@@ -413,11 +388,7 @@ public class BuiltInProviderInfoTest {
               .build();
 
       FuncallExpression ast =
-          new FuncallExpression(
-              new Identifier("SomeInfoWithInstantiate"),
-              ImmutableList.of(
-                  new Argument.Keyword(
-                      new Identifier("my_info"), new StringLiteral("not a number"))));
+          TestStarlarkParser.parseFuncall("SomeInfoWithInstantiate(my_info='not a number')");
 
       thrown.expect(EvalException.class);
       thrown.expectMessage("expected value of type 'int'");

@@ -1,0 +1,12 @@
+java_library(
+    name = "testutil",
+    srcs = glob(
+        ["*.java"],
+    ),
+    visibility = [
+        "//test/...",
+    ],
+    deps = [
+        "//third-party/java/bazel:bazel",
+    ],
+)

@@ -25,6 +25,7 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.attr.impl.IntAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
+import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
@@ -45,7 +46,6 @@ import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
-import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkType;
@@ -123,7 +123,7 @@ public class SkylarkUserDefinedRuleTest {
    * ast to construct
    */
   private FuncallExpression getJunkAst() {
-    FuncallExpression ast = new FuncallExpression(Identifier.of("junk"), ImmutableList.of());
+    FuncallExpression ast = TestStarlarkParser.parseFuncall("junk()");
     ast.setLocation(Location.BUILTIN);
     return ast;
   }

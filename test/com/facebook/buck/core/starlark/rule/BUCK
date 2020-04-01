@@ -29,6 +29,7 @@ standard_java_test(
         "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
         "//test/com/facebook/buck/core/rules/providers/collect/impl:testutil",
         "//test/com/facebook/buck/core/select:testutil",
+        "//test/com/facebook/buck/core/starlark/testutil:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/skylark/function:testutil",
         "//test/com/facebook/buck/step/impl:testutil",

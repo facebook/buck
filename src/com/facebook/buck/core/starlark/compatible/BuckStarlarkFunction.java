@@ -31,6 +31,7 @@ import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodDescriptor;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.WrongMethodTypeException;
@@ -48,8 +49,7 @@ import javax.annotation.Nullable;
  *
  * <p>This class currently doesn't handle optionals and other java/skylark object coercing.
  */
-public abstract class BuckStarlarkFunction
-    implements com.google.devtools.build.lib.syntax.StarlarkFunction {
+public abstract class BuckStarlarkFunction implements StarlarkCallable {
 
   private final MethodDescriptor methodDescriptor;
   private static MethodHandles.Lookup lookup = MethodHandles.lookup();

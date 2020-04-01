@@ -18,17 +18,15 @@ package com.facebook.buck.core.starlark.compatible;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.Argument;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.Identifier;
-import com.google.devtools.build.lib.syntax.IntegerLiteral;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParamDescriptor;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -117,10 +115,7 @@ public class BuckStarlarkFunctionTest {
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
-      FuncallExpression ast =
-          new FuncallExpression(
-              new Identifier("toStr"),
-              ImmutableList.of(new Argument.Keyword(new Identifier("num"), new IntegerLiteral(1))));
+      FuncallExpression ast = TestStarlarkParser.parseFuncall("toStr(num=1)");
 
       assertEquals("1", ast.eval(env));
     }
@@ -145,10 +140,7 @@ public class BuckStarlarkFunctionTest {
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
-      FuncallExpression ast =
-          new FuncallExpression(
-              new Identifier("toStr"),
-              ImmutableList.of(new Argument.Keyword(new Identifier("num"), new IntegerLiteral(1))));
+      FuncallExpression ast = TestStarlarkParser.parseFuncall("toStr(num=1)");
 
       assertEquals("1", ast.eval(env));
     }
@@ -176,22 +168,11 @@ public class BuckStarlarkFunctionTest {
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
-      FuncallExpression ast =
-          new FuncallExpression(
-              new Identifier("myFoo"),
-              ImmutableList.of(
-                  new Argument.Positional(new IntegerLiteral(100)),
-                  new Argument.Keyword(new Identifier("numNoDefault"), new IntegerLiteral(10))));
+      FuncallExpression ast = TestStarlarkParser.parseFuncall("myFoo(100, numNoDefault=10)");
 
       assertEquals("111", ast.eval(env));
 
-      ast =
-          new FuncallExpression(
-              new Identifier("myFoo"),
-              ImmutableList.of(
-                  new Argument.Positional(new IntegerLiteral(100)),
-                  new Argument.Keyword(new Identifier("numNoDefault"), new IntegerLiteral(10)),
-                  new Argument.Keyword(new Identifier("numWithDefault"), new IntegerLiteral(5))));
+      ast = TestStarlarkParser.parseFuncall("myFoo(100, numNoDefault=10, numWithDefault=5)");
 
       assertEquals("115", ast.eval(env));
     }

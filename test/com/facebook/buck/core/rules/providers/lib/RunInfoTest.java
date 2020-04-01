@@ -40,6 +40,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
+import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,7 +51,6 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
@@ -154,7 +154,7 @@ public class RunInfoTest {
                       ImmutableMap.of(RunInfo.PROVIDER.getName(), RunInfo.PROVIDER)))
               .build();
 
-      FuncallExpression ast = new FuncallExpression(new Identifier("RunInfo"), ImmutableList.of());
+      FuncallExpression ast = TestStarlarkParser.parseFuncall("RunInfo()");
       ast.setLocation(Location.BUILTIN);
 
       Object raw = ast.eval(env);

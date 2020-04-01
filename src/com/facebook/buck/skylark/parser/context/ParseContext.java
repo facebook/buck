@@ -39,10 +39,6 @@ import javax.annotation.Nullable;
  * like parsed rules or a package definition.
  */
 public class ParseContext {
-  // internal variable exposed to rules that is used to track parse events. This allows us to
-  // remove parse state from rules and as such makes rules reusable across parse invocations
-  private static final String PARSE_CONTEXT = "$parse_context";
-
   private @Nullable PackageMetadata pkg;
 
   private final Map<String, RecordedRule> rawRules;
@@ -139,7 +135,7 @@ public class ParseContext {
   /** Get the {@link ParseContext} by looking up in the environment. */
   public static ParseContext getParseContext(Environment env, FuncallExpression ast)
       throws EvalException {
-    @Nullable ParseContext value = (ParseContext) env.dynamicLookup(PARSE_CONTEXT);
+    @Nullable ParseContext value = env.getThreadLocal(ParseContext.class);
     if (value == null) {
       // if PARSE_CONTEXT is missing, we're not called from a build file. This happens if someone
       // uses native.some_func() in the wrong place.
@@ -153,6 +149,6 @@ public class ParseContext {
   }
 
   public void setup(Environment env) {
-    env.setupDynamic(PARSE_CONTEXT, this);
+    env.setThreadLocal(ParseContext.class, this);
   }
 }

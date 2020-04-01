@@ -15,6 +15,7 @@ java_test(
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
         "//test/com/facebook/buck/core/starlark/compatible:testutil",
+        "//test/com/facebook/buck/core/starlark/testutil:testutil",
         "//third-party/java/guava:guava",
         "//third-party/java/junit:junit",
     ],
