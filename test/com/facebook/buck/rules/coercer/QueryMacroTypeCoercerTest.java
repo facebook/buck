@@ -21,7 +21,6 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -39,11 +38,7 @@ public class QueryMacroTypeCoercerTest {
     ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     QueryMacroTypeCoercer<QueryMacro> coercer =
-        new QueryMacroTypeCoercer<>(
-            new QueryCoercer(
-                new DefaultTypeCoercerFactory(), new ParsingUnconfiguredBuildTargetViewFactory()),
-            QueryMacro.class,
-            QueryOutputsMacro::of);
+        new QueryMacroTypeCoercer<>(new QueryCoercer(), QueryMacro.class, QueryOutputsMacro::of);
     QueryMacro queryMacro =
         coercer.coerce(
             createCellRoots(filesystem).getCellNameResolver(),

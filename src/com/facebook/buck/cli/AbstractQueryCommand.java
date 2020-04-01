@@ -207,7 +207,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     Set<String> targetLiterals = new LinkedHashSet<>();
     for (String input : inputsFormattedAsBuildTargets) {
       String query = queryFormat.replace("%s", input);
-      QueryExpression<QueryTarget> expr = QueryExpression.parse(query, env);
+      QueryExpression<QueryTarget> expr = QueryExpression.parse(query, env.getQueryParserEnv());
       expr.collectTargetPatterns(targetLiterals);
     }
     env.preloadTargetPatterns(targetLiterals);

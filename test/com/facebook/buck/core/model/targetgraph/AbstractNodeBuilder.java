@@ -135,13 +135,31 @@ public abstract class AbstractNodeBuilder<
     QueryCache cache = new QueryCache();
     builtArg =
         QueryUtils.withDepsQuery(
-            builtArg, target, cache, graphBuilder, cellRoots.getCellNameResolver(), targetGraph);
+            builtArg,
+            target,
+            cache,
+            graphBuilder,
+            cellRoots.getCellNameResolver(),
+            targetGraph,
+            TYPE_COERCER_FACTORY);
     builtArg =
         QueryUtils.withProvidedDepsQuery(
-            builtArg, target, cache, graphBuilder, cellRoots.getCellNameResolver(), targetGraph);
+            builtArg,
+            target,
+            cache,
+            graphBuilder,
+            cellRoots.getCellNameResolver(),
+            targetGraph,
+            TYPE_COERCER_FACTORY);
     builtArg =
         QueryUtils.withModuleBlacklistQuery(
-            builtArg, target, cache, graphBuilder, cellRoots.getCellNameResolver(), targetGraph);
+            builtArg,
+            target,
+            cache,
+            graphBuilder,
+            cellRoots.getCellNameResolver(),
+            targetGraph,
+            TYPE_COERCER_FACTORY);
 
     @SuppressWarnings("unchecked")
     TBuildRule rule =

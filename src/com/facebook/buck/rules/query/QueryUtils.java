@@ -27,10 +27,11 @@ import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildT
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryParserEnv;
 import com.facebook.buck.query.QueryTarget;
-import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.Threads;
 import com.google.common.base.Preconditions;
@@ -49,7 +50,6 @@ import java.util.stream.Stream;
  */
 public final class QueryUtils {
 
-  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
   private static final UnconfiguredBuildTargetViewFactory UNCONFIGURED_BUILD_TARGET_FACTORY =
       new ParsingUnconfiguredBuildTargetViewFactory();
 
@@ -64,14 +64,22 @@ public final class QueryUtils {
       QueryCache cache,
       ActionGraphBuilder graphBuilder,
       CellNameResolver cellRoots,
-      TargetGraph graph) {
+      TargetGraph graph,
+      TypeCoercerFactory typeCoercerFactory) {
     if (arg instanceof HasDepsQuery) {
       HasDepsQuery castedArg = (HasDepsQuery) arg;
       if (castedArg.getDepsQuery().isPresent()) {
         Query query = castedArg.getDepsQuery().get();
         ImmutableSortedSet<BuildTarget> resolvedQuery =
             resolveDepQuery(
-                target, query, cache, graphBuilder, cellRoots, graph, castedArg.getDeps());
+                target,
+                query,
+                cache,
+                graphBuilder,
+                cellRoots,
+                graph,
+                castedArg.getDeps(),
+                typeCoercerFactory);
         return (T) castedArg.withDepsQuery(query.withResolvedQuery(resolvedQuery));
       }
     }
@@ -86,14 +94,22 @@ public final class QueryUtils {
       QueryCache cache,
       ActionGraphBuilder graphBuilder,
       CellNameResolver cellRoots,
-      TargetGraph graph) {
+      TargetGraph graph,
+      TypeCoercerFactory typeCoercerFactory) {
     if (arg instanceof HasProvidedDepsQuery) {
       HasProvidedDepsQuery castedArg = (HasProvidedDepsQuery) arg;
       if (castedArg.getProvidedDepsQuery().isPresent()) {
         Query query = castedArg.getProvidedDepsQuery().get();
         ImmutableSortedSet<BuildTarget> resolvedQuery =
             resolveDepQuery(
-                target, query, cache, graphBuilder, cellRoots, graph, castedArg.getProvidedDeps());
+                target,
+                query,
+                cache,
+                graphBuilder,
+                cellRoots,
+                graph,
+                castedArg.getProvidedDeps(),
+                typeCoercerFactory);
         arg = (T) castedArg.withProvidedDepsQuery(query.withResolvedQuery(resolvedQuery));
       }
     }
@@ -120,7 +136,8 @@ public final class QueryUtils {
       QueryCache cache,
       ActionGraphBuilder graphBuilder,
       CellNameResolver cellRoots,
-      TargetGraph graph) {
+      TargetGraph graph,
+      TypeCoercerFactory typeCoercerFactory) {
     if (arg instanceof HasApplicationModuleBlacklist) {
       HasApplicationModuleBlacklist castedArg = (HasApplicationModuleBlacklist) arg;
       if (castedArg.getApplicationModuleBlacklist().isPresent()) {
@@ -138,7 +155,8 @@ public final class QueryUtils {
                                 graphBuilder,
                                 cellRoots,
                                 graph,
-                                ImmutableSet.of())))
+                                ImmutableSet.of(),
+                                typeCoercerFactory)))
                 .collect(ImmutableList.toImmutableList());
 
         arg = (T) castedArg.withApplicationModuleBlacklist(resolvedQueries);
@@ -155,19 +173,21 @@ public final class QueryUtils {
       ActionGraphBuilder graphBuilder,
       CellNameResolver cellRoots,
       TargetGraph targetGraph,
-      ImmutableSet<BuildTarget> declaredDeps) {
+      ImmutableSet<BuildTarget> declaredDeps,
+      TypeCoercerFactory typeCoercerFactory) {
     GraphEnhancementQueryEnvironment env =
         new GraphEnhancementQueryEnvironment(
             Optional.of(graphBuilder),
             Optional.of(targetGraph),
-            TYPE_COERCER_FACTORY,
+            typeCoercerFactory,
             cellRoots,
             UNCONFIGURED_BUILD_TARGET_FACTORY,
             target.getBaseName(),
             declaredDeps,
             target.getTargetConfiguration());
     try {
-      QueryExpression<QueryTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
+      QueryExpression<QueryTarget> parsedExp =
+          QueryExpression.parse(query.getQuery(), env.getQueryParserEnv());
       Set<QueryTarget> queryTargets = cache.getQueryEvaluator(targetGraph).eval(parsedExp, env);
       return queryTargets.stream()
           .filter(queryTarget -> queryTarget instanceof QueryBuildTarget)
@@ -184,18 +204,19 @@ public final class QueryUtils {
   public static Stream<BuildTarget> extractBuildTargets(
       CellNameResolver cellNameResolver, BaseName targetBaseName, Query query)
       throws QueryException {
-    GraphEnhancementQueryEnvironment env =
-        new GraphEnhancementQueryEnvironment(
-            Optional.empty(),
-            Optional.empty(),
-            TYPE_COERCER_FACTORY,
+
+    QueryEnvironment.TargetEvaluator<QueryTarget> targetEvaluator =
+        new GraphEnhancementQueryEnvironment.TargetEvaluator(
             cellNameResolver,
             UNCONFIGURED_BUILD_TARGET_FACTORY,
             targetBaseName,
             ImmutableSet.of(),
             query.getTargetConfiguration());
+
+    QueryParserEnv<QueryTarget> env =
+        QueryParserEnv.of(GraphEnhancementQueryEnvironment.QUERY_FUNCTIONS, targetEvaluator);
     QueryExpression<QueryTarget> parsedExp = QueryExpression.parse(query.getQuery(), env);
-    return parsedExp.getTargets(env.getTargetEvaluator()).stream()
+    return parsedExp.getTargets(targetEvaluator).stream()
         .map(
             queryTarget -> {
               Preconditions.checkState(queryTarget instanceof QueryBuildTarget);

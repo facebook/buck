@@ -20,57 +20,23 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
-import com.facebook.buck.query.QueryExpression;
-import com.facebook.buck.query.QueryTarget;
-import com.facebook.buck.rules.query.GraphEnhancementQueryEnvironment;
 import com.facebook.buck.rules.query.Query;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
+import com.facebook.buck.rules.query.QueryUtils;
 import com.google.common.reflect.TypeToken;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /** Coercer for {@link Query}s. */
 public class QueryCoercer implements TypeCoercer<Object, Query> {
 
-  private final TypeCoercerFactory typeCoercerFactory;
-  private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
-
-  public QueryCoercer(
-      TypeCoercerFactory typeCoercerFactory,
-      UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory) {
-    this.typeCoercerFactory = typeCoercerFactory;
-    this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
-  }
-
   private Stream<BuildTarget> extractBuildTargets(CellNameResolver cellNameResolver, Query query) {
-    GraphEnhancementQueryEnvironment env =
-        new GraphEnhancementQueryEnvironment(
-            Optional.empty(),
-            Optional.empty(),
-            typeCoercerFactory,
-            cellNameResolver,
-            unconfiguredBuildTargetFactory,
-            query.getBaseName(),
-            ImmutableSet.of(),
-            query.getTargetConfiguration());
-    QueryExpression<QueryTarget> parsedExp;
     try {
-      parsedExp = QueryExpression.parse(query.getQuery(), env);
+      return QueryUtils.extractBuildTargets(cellNameResolver, query.getBaseName(), query);
     } catch (QueryException e) {
       throw new RuntimeException("Error parsing query: " + query.getQuery(), e);
     }
-    return parsedExp.getTargets(env.getTargetEvaluator()).stream()
-        .map(
-            queryTarget -> {
-              Preconditions.checkState(queryTarget instanceof QueryBuildTarget);
-              return ((QueryBuildTarget) queryTarget).getBuildTarget();
-            });
   }
 
   @Override

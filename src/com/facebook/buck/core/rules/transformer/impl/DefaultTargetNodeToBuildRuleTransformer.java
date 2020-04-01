@@ -31,6 +31,8 @@ import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.transformer.TargetNodeToBuildRuleTransformer;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.google.common.base.Preconditions;
@@ -39,6 +41,8 @@ import java.util.Set;
 
 /** Takes in an {@link TargetNode} from the target graph and builds a {@link BuildRule}. */
 public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuildRuleTransformer {
+  private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
+
   private final QueryCache cache;
 
   public DefaultTargetNodeToBuildRuleTransformer() {
@@ -76,7 +80,8 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               cache,
               graphBuilder,
               cellPathResolver.getCellNameResolver(),
-              targetGraph);
+              targetGraph,
+              TYPE_COERCER_FACTORY);
       arg =
           QueryUtils.withProvidedDepsQuery(
               arg,
@@ -84,7 +89,8 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               cache,
               graphBuilder,
               cellPathResolver.getCellNameResolver(),
-              targetGraph);
+              targetGraph,
+              TYPE_COERCER_FACTORY);
       arg =
           QueryUtils.withModuleBlacklistQuery(
               arg,
@@ -92,7 +98,8 @@ public class DefaultTargetNodeToBuildRuleTransformer implements TargetNodeToBuil
               cache,
               graphBuilder,
               cellPathResolver.getCellNameResolver(),
-              targetGraph);
+              targetGraph,
+              TYPE_COERCER_FACTORY);
 
       // The params used for the Buildable only contain the declared parameters. However, the deps
       // of the rule include not only those, but also any that were picked up through the deps

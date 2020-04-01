@@ -59,7 +59,7 @@ public abstract class QueryExpression<NODE_TYPE> {
 
   /** Scan and parse the specified query expression. */
   public static <NODE_TYPE> QueryExpression<NODE_TYPE> parse(
-      String query, QueryEnvironment<NODE_TYPE> env) throws QueryException {
+      String query, QueryParserEnv<NODE_TYPE> env) throws QueryException {
     return QueryParser.parse(query, env);
   }
 

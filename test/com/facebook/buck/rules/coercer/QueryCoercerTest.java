@@ -22,7 +22,6 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
-import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.query.Query;
@@ -36,9 +35,7 @@ public class QueryCoercerTest {
   @Test
   public void traverseBuildTargets() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    QueryCoercer coercer =
-        new QueryCoercer(
-            new DefaultTypeCoercerFactory(), new ParsingUnconfiguredBuildTargetViewFactory());
+    QueryCoercer coercer = new QueryCoercer();
     Query query = Query.of("deps(//:a)", UnconfiguredTargetConfiguration.INSTANCE, BaseName.ROOT);
     List<Object> traversed = new ArrayList<>();
     coercer.traverse(createCellRoots(filesystem).getCellNameResolver(), query, traversed::add);

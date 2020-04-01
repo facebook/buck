@@ -265,7 +265,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   public Set<QueryTarget> evaluateQuery(String query) throws QueryException, InterruptedException {
-    return evaluateQuery(QueryExpression.parse(query, this));
+    return evaluateQuery(QueryExpression.parse(query, this.getQueryParserEnv()));
   }
 
   TargetNode<?> getNode(QueryBuildTarget target) throws QueryException {

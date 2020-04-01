@@ -273,14 +273,18 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryT
     return QUERY_FUNCTIONS;
   }
 
-  private static class TargetEvaluator implements QueryEnvironment.TargetEvaluator<QueryTarget> {
+  /**
+   * Implementation of {@link com.facebook.buck.query.QueryEnvironment.TargetEvaluator} for
+   * configured target graph.
+   */
+  public static class TargetEvaluator implements QueryEnvironment.TargetEvaluator<QueryTarget> {
     private final CellNameResolver cellNames;
     private final BaseName targetBaseName;
     private final ImmutableSet<BuildTarget> declaredDeps;
     private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
     private final TargetConfiguration targetConfiguration;
 
-    private TargetEvaluator(
+    public TargetEvaluator(
         CellNameResolver cellNames,
         UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
         BaseName targetBaseName,

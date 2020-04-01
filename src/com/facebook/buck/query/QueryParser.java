@@ -75,7 +75,7 @@ final class QueryParser<NODE_TYPE> {
   private final QueryEnvironment.TargetEvaluator<NODE_TYPE> targetEvaluator;
 
   /** Scan and parse the specified query expression. */
-  static <NODE_TYPE> QueryExpression<NODE_TYPE> parse(String query, QueryEnvironment<NODE_TYPE> env)
+  static <NODE_TYPE> QueryExpression<NODE_TYPE> parse(String query, QueryParserEnv<NODE_TYPE> env)
       throws QueryException {
     QueryParser<NODE_TYPE> parser =
         new QueryParser<NODE_TYPE>(Lexer.scan(query.toCharArray()), env);
@@ -87,7 +87,7 @@ final class QueryParser<NODE_TYPE> {
     return expr;
   }
 
-  private QueryParser(List<Lexer.Token> tokens, QueryEnvironment<NODE_TYPE> env) {
+  private QueryParser(List<Lexer.Token> tokens, QueryParserEnv<NODE_TYPE> env) {
     this.functions = new HashMap<>();
     for (QueryFunction<NODE_TYPE> queryFunction : env.getFunctions()) {
       this.functions.put(queryFunction.getName(), queryFunction);

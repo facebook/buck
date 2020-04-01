@@ -33,7 +33,11 @@ import org.junit.rules.ExpectedException;
 
 public class QueryParserTest {
 
-  private QueryEnvironment queryEnvironment;
+  private static final ImmutableList<QueryEnvironment.QueryFunction<QueryBuildTarget>>
+      QUERY_FUNCTIONS =
+          ImmutableList.of(new DepsFunction<>(), new RdepsFunction<>(), new TestsOfFunction<>());
+
+  private QueryParserEnv<QueryBuildTarget> queryEnvironment;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -41,8 +45,8 @@ public class QueryParserTest {
 
   @Before
   public void makeEnvironment() {
-    QueryEnvironment.TargetEvaluator targetEvaluator = new TestTargetEvaluator();
-    queryEnvironment = new TestQueryEnvironment(targetEvaluator);
+    QueryEnvironment.TargetEvaluator<QueryBuildTarget> targetEvaluator = new TestTargetEvaluator();
+    queryEnvironment = QueryParserEnv.of(QUERY_FUNCTIONS, targetEvaluator);
   }
 
   @Test
@@ -127,25 +131,6 @@ public class QueryParserTest {
     @Override
     public Type getType() {
       return TargetEvaluator.Type.LAZY;
-    }
-  }
-
-  private static class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryTarget> {
-
-    private final TargetEvaluator targetEvaluator;
-
-    private TestQueryEnvironment(TargetEvaluator targetEvaluator) {
-      this.targetEvaluator = targetEvaluator;
-    }
-
-    @Override
-    public TargetEvaluator getTargetEvaluator() {
-      return targetEvaluator;
-    }
-
-    @Override
-    public Iterable<QueryFunction<QueryTarget>> getFunctions() {
-      return ImmutableList.of(new DepsFunction<>(), new RdepsFunction<>(), new TestsOfFunction<>());
     }
   }
 }

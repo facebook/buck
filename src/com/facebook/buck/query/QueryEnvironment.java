@@ -211,6 +211,11 @@ public interface QueryEnvironment<NODE_TYPE> {
   /** Returns an evaluator for target patterns. */
   TargetEvaluator<NODE_TYPE> getTargetEvaluator();
 
+  /** Query parser environment. */
+  default QueryParserEnv<NODE_TYPE> getQueryParserEnv() {
+    return QueryParserEnv.of(getFunctions(), getTargetEvaluator());
+  }
+
   /** Returns the direct forward dependencies of the specified targets. */
   Set<NODE_TYPE> getFwdDeps(Iterable<NODE_TYPE> targets) throws QueryException;
 

@@ -1,8 +1,6 @@
-# Note that we deliberately avoid the use of java_immutables_library()
-# in this package because we discourage the use of Guava collections
-# in com.facebook.buck.query because it interacts badly with the Kotlin
-# code in com.facebook.buck.multitenant.
-java_library(
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
     name = "query",
     srcs = glob(["*.java"]),
     tests = [

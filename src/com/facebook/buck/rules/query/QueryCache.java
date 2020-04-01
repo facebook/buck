@@ -21,6 +21,7 @@ import com.facebook.buck.query.CachingQueryEvaluator;
 import com.facebook.buck.query.QueryEvaluator;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryParserEnv;
 import com.facebook.buck.query.QueryTarget;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.CacheBuilder;
@@ -46,7 +47,7 @@ public class QueryCache {
   }
 
   @VisibleForTesting
-  boolean isPresent(TargetGraph targetGraph, GraphEnhancementQueryEnvironment env, Query query)
+  boolean isPresent(TargetGraph targetGraph, QueryParserEnv<QueryTarget> env, Query query)
       throws QueryException {
     CachingQueryEvaluator<QueryTarget> evaluator = evaluators.getIfPresent(targetGraph);
     return Objects.nonNull(evaluator)

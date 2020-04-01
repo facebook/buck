@@ -39,6 +39,8 @@ import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
+import com.facebook.buck.query.QueryParserEnv;
+import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.google.common.collect.ImmutableSet;
@@ -132,29 +134,33 @@ public class QueryCacheTest {
             ImmutableSet.of(),
             UnconfiguredTargetConfiguration.INSTANCE);
 
+    QueryParserEnv<QueryTarget> queryParserEnv = env.getQueryParserEnv();
+
     QueryCache cache = new QueryCache();
 
-    assertFalse(cache.isPresent(targetGraph, env, q1));
-    assertFalse(cache.isPresent(targetGraph, env, q2));
-    assertFalse(cache.isPresent(targetGraph, env, q3));
-    assertFalse(cache.isPresent(targetGraph, env, q4));
-    assertFalse(cache.isPresent(targetGraph, env, q5));
-    assertFalse(cache.isPresent(targetGraph, env, q6));
+    assertFalse(cache.isPresent(targetGraph, queryParserEnv, q1));
+    assertFalse(cache.isPresent(targetGraph, queryParserEnv, q2));
+    assertFalse(cache.isPresent(targetGraph, queryParserEnv, q3));
+    assertFalse(cache.isPresent(targetGraph, queryParserEnv, q4));
+    assertFalse(cache.isPresent(targetGraph, queryParserEnv, q5));
+    assertFalse(cache.isPresent(targetGraph, queryParserEnv, q6));
 
     assertThat(
-        cache.getQueryEvaluator(targetGraph).eval(QueryExpression.parse(q1.getQuery(), env), env),
+        cache
+            .getQueryEvaluator(targetGraph)
+            .eval(QueryExpression.parse(q1.getQuery(), queryParserEnv), env),
         Matchers.containsInAnyOrder(
             QueryBuildTarget.of(targetA),
             QueryBuildTarget.of(targetB),
             QueryBuildTarget.of(targetC),
             QueryBuildTarget.of(targetD)));
 
-    assertTrue(cache.isPresent(targetGraph, env, q1));
-    assertTrue(cache.isPresent(targetGraph, env, q2));
-    assertFalse(cache.isPresent(targetGraph, env, q3));
-    assertFalse(cache.isPresent(targetGraph, env, q4));
-    assertFalse(cache.isPresent(targetGraph, env, q5));
-    assertTrue(cache.isPresent(targetGraph, env, q6));
+    assertTrue(cache.isPresent(targetGraph, queryParserEnv, q1));
+    assertTrue(cache.isPresent(targetGraph, queryParserEnv, q2));
+    assertFalse(cache.isPresent(targetGraph, queryParserEnv, q3));
+    assertFalse(cache.isPresent(targetGraph, queryParserEnv, q4));
+    assertFalse(cache.isPresent(targetGraph, queryParserEnv, q5));
+    assertTrue(cache.isPresent(targetGraph, queryParserEnv, q6));
   }
 
   @Test
@@ -212,27 +218,30 @@ public class QueryCacheTest {
             bar.getDeclaredDeps(),
             UnconfiguredTargetConfiguration.INSTANCE);
 
+    QueryParserEnv<QueryTarget> fooParserEnv = fooEnv.getQueryParserEnv();
+    QueryParserEnv<QueryTarget> barParserEnv = barEnv.getQueryParserEnv();
+
     QueryCache cache = new QueryCache();
 
-    assertFalse(cache.isPresent(targetGraph, fooEnv, declared));
-    assertFalse(cache.isPresent(targetGraph, barEnv, declared));
+    assertFalse(cache.isPresent(targetGraph, fooParserEnv, declared));
+    assertFalse(cache.isPresent(targetGraph, barParserEnv, declared));
 
     assertThat(
         cache
             .getQueryEvaluator(targetGraph)
-            .eval(QueryExpression.parse(declared.getQuery(), fooEnv), fooEnv),
+            .eval(QueryExpression.parse(declared.getQuery(), fooParserEnv), fooEnv),
         Matchers.contains(QueryBuildTarget.of(targetA)));
 
-    assertTrue(cache.isPresent(targetGraph, fooEnv, declared));
-    assertFalse(cache.isPresent(targetGraph, barEnv, declared));
+    assertTrue(cache.isPresent(targetGraph, fooParserEnv, declared));
+    assertFalse(cache.isPresent(targetGraph, barParserEnv, declared));
 
     assertThat(
         cache
             .getQueryEvaluator(targetGraph)
-            .eval(QueryExpression.parse(declared.getQuery(), barEnv), barEnv),
+            .eval(QueryExpression.parse(declared.getQuery(), barParserEnv), barEnv),
         Matchers.contains(QueryBuildTarget.of(targetB)));
 
-    assertTrue(cache.isPresent(targetGraph, fooEnv, declared));
-    assertTrue(cache.isPresent(targetGraph, barEnv, declared));
+    assertTrue(cache.isPresent(targetGraph, fooParserEnv, declared));
+    assertTrue(cache.isPresent(targetGraph, barParserEnv, declared));
   }
 }

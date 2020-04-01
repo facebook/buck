@@ -67,7 +67,8 @@ public class AttrFilterFunctionTest {
   }
 
   private void assertQuery(String query, Set<QueryBuildTarget> expected) throws QueryException {
-    QueryExpression<QueryTarget> queryExpr = QueryParser.parse(query, queryEnvironment);
+    QueryExpression<QueryTarget> queryExpr =
+        QueryParser.parse(query, queryEnvironment.getQueryParserEnv());
 
     Set<QueryTarget> result = queryExpr.eval(new NoopQueryEvaluator<>(), queryEnvironment);
     assertEquals(expected, result);

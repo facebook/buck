@@ -67,7 +67,8 @@ public abstract class QueryMacroExpander<T extends QueryMacro>
             ImmutableSet.of(),
             target.getTargetConfiguration());
     try {
-      QueryExpression<QueryTarget> parsedExp = QueryExpression.parse(queryExpression, env);
+      QueryExpression<QueryTarget> parsedExp =
+          QueryExpression.parse(queryExpression, env.getQueryParserEnv());
       Set<QueryTarget> queryTargets = new NoopQueryEvaluator<QueryTarget>().eval(parsedExp, env);
       return queryTargets.stream();
     } catch (QueryException e) {
