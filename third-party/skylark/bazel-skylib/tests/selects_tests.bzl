@@ -24,7 +24,7 @@ def _with_or_test(ctx):
     # dictionary from a select().
 
     # Test select()-compatible input syntax.
-    input_dict = {"//conditions:default": ":d1", ":foo": ":d1"}
+    input_dict = {":foo": ":d1", "//conditions:default": ":d1"}
     asserts.equals(env, input_dict, selects.with_or_dict(input_dict))
 
     # Test OR syntax.
@@ -37,17 +37,17 @@ def _with_or_test(ctx):
 
     # Test mixed syntax.
     mixed_dict = {
-        "//conditions:default": ":d3",
-        (":bar", ":baz"): ":d2",
         ":foo": ":d1",
+        (":bar", ":baz"): ":d2",
+        "//conditions:default": ":d3",
     }
     asserts.equals(
         env,
         {
-            "//conditions:default": ":d3",
             ":bar": ":d2",
             ":baz": ":d2",
             ":foo": ":d1",
+            "//conditions:default": ":d3",
         },
         selects.with_or_dict(mixed_dict),
     )

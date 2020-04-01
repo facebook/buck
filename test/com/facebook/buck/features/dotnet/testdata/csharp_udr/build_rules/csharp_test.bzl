@@ -40,25 +40,6 @@ def _csharp_test_impl(ctx):
 csharp_test = rule(
     implementation = _csharp_test_impl,
     attrs = {
-        "srcs": attr.source_list(
-            doc = "List of sources that should be compiled in the resulting .exe",
-            allow_empty = False,
-        ),
-        "out": attr.string(doc = (
-            "The name of the output file. If not provided, `name` will be used " +
-            "and suffixed with .exe",
-        )),
-        "optimize": attr.bool(doc = "Whether to pass the -optimize flag to csc"),
-        "runner": attr.source(
-            doc = (
-                "A script that executes tests on the .dlls that are provided to it. " +
-                "Generally a wrapper around something like vstest.console.exe"
-            ),
-        ),
-        "system_assemblies": attr.string_list(doc = (
-            "A list of system assemblies that are required and should be linked. " +
-            "e.g. \"mscorlib.dll\""
-        )),
         "deps": attr.dep_list(
             doc = (
                 "A list of C# dependencies. These will be copied to the destination " +
@@ -66,6 +47,25 @@ csharp_test = rule(
             ),
             providers = [DotnetLibraryProviderInfo],
         ),
+        "optimize": attr.bool(doc = "Whether to pass the -optimize flag to csc"),
+        "out": attr.string(doc = (
+            "The name of the output file. If not provided, `name` will be used " +
+            "and suffixed with .exe",
+        )),
+        "runner": attr.source(
+            doc = (
+                "A script that executes tests on the .dlls that are provided to it. " +
+                "Generally a wrapper around something like vstest.console.exe"
+            ),
+        ),
+        "srcs": attr.source_list(
+            doc = "List of sources that should be compiled in the resulting .exe",
+            allow_empty = False,
+        ),
+        "system_assemblies": attr.string_list(doc = (
+            "A list of system assemblies that are required and should be linked. " +
+            "e.g. \"mscorlib.dll\""
+        )),
         "_toolchain": attr.dep(
             default = "//toolchains:dotnet",
             providers = [DotnetLegacyToolchainInfo],

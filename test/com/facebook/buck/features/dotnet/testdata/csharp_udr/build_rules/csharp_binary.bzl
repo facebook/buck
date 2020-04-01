@@ -29,25 +29,6 @@ def _csharp_binary_impl(ctx):
 csharp_binary = rule(
     implementation = _csharp_binary_impl,
     attrs = {
-        "srcs": attr.source_list(
-            doc = "List of sources that should be compiled in the resulting .exe",
-            allow_empty = False,
-        ),
-        "out": attr.string(doc = (
-            "The name of the output file. If not provided, `name` will be used " +
-            "and suffixed with .exe",
-        )),
-        "main": attr.string(doc = (
-            "The main entry point to the program. This should be the fully " +
-            "qualified class name that contains Main. If not provided, C# will " +
-            "attempt to divine this automatically. " +
-            "See https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-options/main-compiler-option"
-        )),
-        "optimize": attr.bool(doc = "Whether to pass the -optimize flag to csc"),
-        "system_assemblies": attr.string_list(doc = (
-            "A list of system assemblies that are required and should be linked. " +
-            "e.g. \"mscorlib.dll\""
-        )),
         "deps": attr.dep_list(
             doc = (
                 "A list of C# dependencies. These will be copied to the destination " +
@@ -55,6 +36,25 @@ csharp_binary = rule(
             ),
             providers = [DotnetLibraryProviderInfo],
         ),
+        "main": attr.string(doc = (
+            "The main entry point to the program. This should be the fully " +
+            "qualified class name that contains Main. If not provided, C# will " +
+            "attempt to divine this automatically. " +
+            "See https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/compiler-options/main-compiler-option"
+        )),
+        "optimize": attr.bool(doc = "Whether to pass the -optimize flag to csc"),
+        "out": attr.string(doc = (
+            "The name of the output file. If not provided, `name` will be used " +
+            "and suffixed with .exe",
+        )),
+        "srcs": attr.source_list(
+            doc = "List of sources that should be compiled in the resulting .exe",
+            allow_empty = False,
+        ),
+        "system_assemblies": attr.string_list(doc = (
+            "A list of system assemblies that are required and should be linked. " +
+            "e.g. \"mscorlib.dll\""
+        )),
         "_toolchain": attr.dep(
             default = "//toolchains:dotnet",
             providers = [DotnetLegacyToolchainInfo],

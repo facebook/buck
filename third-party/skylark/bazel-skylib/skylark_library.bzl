@@ -46,14 +46,14 @@ def _skylark_library_impl(ctx):
 skylark_library = rule(
     implementation = _skylark_library_impl,
     attrs = {
-        "srcs": attr.label_list(
-            allow_files = [".bzl"],
-        ),
         "deps": attr.label_list(
             allow_files = [".bzl"],
             providers = [
                 [SkylarkLibraryInfo],
             ],
+        ),
+        "srcs": attr.label_list(
+            allow_files = [".bzl"],
         ),
     },
 )

@@ -83,9 +83,9 @@ def _impl(ctx):
 
 my_rule = rule(
     attrs = {
-        "srcs": attr.source_list(),
         "exit_code": attr.int(),
         "script": attr.string(),
+        "srcs": attr.source_list(),
         "use_env": attr.bool(),
     },
     implementation = _impl,
