@@ -145,16 +145,16 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
                 blob.substring(matchResult.getStartIndex() + 1, matchResult.getEndIndex())));
 
       } else {
-
-        MacroContainer.Builder macroContainer = MacroContainer.builder();
-
         String macroString = blob.substring(matchResult.getStartIndex(), matchResult.getEndIndex());
 
         // Extract the macro name and hande the `@` prefix.
         String name = matchResult.getMacroType();
+        boolean outputToFile;
         if (name.startsWith("@")) {
-          macroContainer.setOutputToFile(true);
+          outputToFile = true;
           name = name.substring(1);
+        } else {
+          outputToFile = false;
         }
 
         // Look up the macro coercer that owns this macro name.
@@ -186,9 +186,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
               e);
         }
 
-        macroContainer.setMacro(macro);
-
-        parts.add(Either.ofRight(macroContainer.build()));
+        parts.add(Either.ofRight(MacroContainer.of(macro, outputToFile)));
       }
 
       lastEnd = matchResult.getEndIndex();
