@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -81,6 +82,11 @@ public class GoCompileStep extends ShellStep {
     for (Path path : srcs) {
       pathStrings.add(path.toString());
     }
+
+    // sort the .go source files, because go tool compile requires this in order to produce stable
+    // hashes
+    Collections.sort(pathStrings);
+
     if (pathStrings.size() > 0) {
       ImmutableList.Builder<String> commandBuilder =
           ImmutableList.<String>builder()
