@@ -36,6 +36,7 @@ import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.facebook.buck.util.unarchive.ExistingFileMode;
+import com.facebook.buck.util.unarchive.Unarchiver;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableSet;
@@ -252,15 +253,11 @@ public class BuildCacheArtifactFetcher {
           ruleKey,
           BuildInfo.MetadataKey.ORIGIN_BUILD_ID);
 
-      ImmutableSet<Path> extractedFiles =
-          ArchiveFormat.TAR_ZSTD
-              .getUnarchiver()
-              .extractArchive(
-                  zipPath.toAbsolutePath(),
-                  filesystem,
-                  ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
+      Unarchiver unarchiver = ArchiveFormat.TAR_ZSTD.getUnarchiver();
+      unarchiver.extractArchive(
+          zipPath.toAbsolutePath(), filesystem, ExistingFileMode.OVERWRITE_AND_CLEAN_DIRECTORIES);
 
-      onDiskBuildInfo.validateArtifact(extractedFiles);
+      onDiskBuildInfo.validateArtifact();
       fullSize =
           Long.parseLong(onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_SIZE).getLeft());
 

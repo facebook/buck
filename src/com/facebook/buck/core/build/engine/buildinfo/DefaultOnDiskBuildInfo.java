@@ -325,7 +325,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
   }
 
   @Override
-  public void validateArtifact(Set<Path> extractedFiles) throws IOException {
+  public void validateArtifact() throws IOException {
     // TODO(bertrand): It would be good to validate OUTPUT_HASH and RECORDED_PATH_HASHES, but we
     // don't compute them if the artifact size exceeds the input rule key threshold.
     Optional<String> artifactMetadataFile =

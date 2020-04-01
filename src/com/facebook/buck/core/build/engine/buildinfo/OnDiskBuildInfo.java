@@ -26,7 +26,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
-import java.util.Set;
 
 /** Provides access to the on-disk rule metadata (both "artifact" and "build"). */
 public interface OnDiskBuildInfo {
@@ -77,7 +76,7 @@ public interface OnDiskBuildInfo {
       Predicate<Long> shouldWriteOutputHashes)
       throws IOException;
 
-  void validateArtifact(Set<Path> extractedFiles) throws IOException;
+  void validateArtifact() throws IOException;
 
   ImmutableSortedSet<Path> getOutputPaths();
 }

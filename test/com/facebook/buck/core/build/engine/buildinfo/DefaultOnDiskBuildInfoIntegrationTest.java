@@ -31,7 +31,6 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
@@ -164,9 +163,7 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
 
   @Test
   public void testSuccessfulValidation() throws IOException {
-    onDiskBuildInfo.validateArtifact(
-        /** unused */
-        ImmutableSet.of());
+    onDiskBuildInfo.validateArtifact();
   }
 
   @Test
@@ -178,8 +175,6 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
     projectFilesystem.deleteFileAtPathIfExists(otherPathWithinDir);
 
     exceptionRule.expect(IllegalStateException.class);
-    onDiskBuildInfo.validateArtifact(
-        /** unused */
-        ImmutableSet.of());
+    onDiskBuildInfo.validateArtifact();
   }
 }
