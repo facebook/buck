@@ -23,15 +23,17 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacro;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.rules.query.UnconfiguredQuery;
 import com.google.common.collect.ImmutableList;
 
 /** A type coercer for the {@link QueryTargetsAndOutputsMacro} macro. */
 class QueryTargetsAndOutputsMacroTypeCoercer
     implements MacroTypeCoercer<QueryTargetsAndOutputsMacro> {
 
-  private final TypeCoercer<Object, Query> queryCoercer;
+  private final TypeCoercer<UnconfiguredQuery, Query> queryCoercer;
 
-  public QueryTargetsAndOutputsMacroTypeCoercer(TypeCoercer<Object, Query> queryCoercer) {
+  public QueryTargetsAndOutputsMacroTypeCoercer(
+      TypeCoercer<UnconfiguredQuery, Query> queryCoercer) {
     this.queryCoercer = queryCoercer;
   }
 
@@ -73,7 +75,7 @@ class QueryTargetsAndOutputsMacroTypeCoercer
     }
     return QueryTargetsAndOutputsMacro.of(
         separator,
-        queryCoercer.coerce(
+        queryCoercer.coerceBoth(
             cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,

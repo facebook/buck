@@ -25,11 +25,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
+import com.facebook.buck.rules.query.UnconfiguredQuery;
 import com.google.common.reflect.TypeToken;
 import java.util.stream.Stream;
 
 /** Coercer for {@link Query}s. */
-public class QueryCoercer implements TypeCoercer<Object, Query> {
+public class QueryCoercer implements TypeCoercer<UnconfiguredQuery, Query> {
 
   private Stream<BuildTarget> extractBuildTargets(CellNameResolver cellNameResolver, Query query) {
     try {
@@ -55,13 +56,16 @@ public class QueryCoercer implements TypeCoercer<Object, Query> {
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public UnconfiguredQuery coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    return object;
+    if (object instanceof String) {
+      return UnconfiguredQuery.of((String) object, BaseName.ofPath(pathRelativeToProjectRoot));
+    }
+    throw CoerceFailedException.simple(object, getOutputType());
   }
 
   @Override
@@ -70,8 +74,8 @@ public class QueryCoercer implements TypeCoercer<Object, Query> {
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<UnconfiguredQuery> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredQuery.class);
   }
 
   @Override
@@ -81,12 +85,8 @@ public class QueryCoercer implements TypeCoercer<Object, Query> {
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      UnconfiguredQuery object)
       throws CoerceFailedException {
-    if (object instanceof String) {
-      return Query.of(
-          (String) object, targetConfiguration, BaseName.ofPath(pathRelativeToProjectRoot));
-    }
-    throw CoerceFailedException.simple(object, getOutputType());
+    return object.configure(targetConfiguration);
   }
 }

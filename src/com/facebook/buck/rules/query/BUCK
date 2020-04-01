@@ -2,6 +2,7 @@ load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
 TYPES_SRCS = [
     "Query.java",
+    "UnconfiguredQuery.java",
 ]
 
 java_immutables_library(

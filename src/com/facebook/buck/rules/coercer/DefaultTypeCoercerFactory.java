@@ -61,6 +61,7 @@ import com.facebook.buck.rules.macros.QueryTargetsMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.WorkerMacro;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.rules.query.UnconfiguredQuery;
 import com.facebook.buck.util.Types;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
@@ -125,7 +126,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<UnconfiguredNeededCoverageSpec, NeededCoverageSpec> neededCoverageSpecTypeCoercer =
         new NeededCoverageSpecTypeCoercer(
             intTypeCoercer, buildTargetTypeCoercer, stringTypeCoercer);
-    TypeCoercer<Object, Query> queryTypeCoercer = new QueryCoercer();
+    TypeCoercer<UnconfiguredQuery, Query> queryTypeCoercer = new QueryCoercer();
     TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>
         buildTargetsTypeCoercer = new ListTypeCoercer<>(buildTargetTypeCoercer);
     TypeCoercer<CxxLinkGroupMappingTarget.Traversal, CxxLinkGroupMappingTarget.Traversal>

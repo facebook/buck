@@ -23,18 +23,21 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.QueryMacro;
 import com.facebook.buck.rules.query.Query;
+import com.facebook.buck.rules.query.UnconfiguredQuery;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Function;
 
 /** A type coercer for macros accepting a single {@link Query} arg. */
 class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M> {
 
-  private final TypeCoercer<Object, Query> queryCoercer;
+  private final TypeCoercer<UnconfiguredQuery, Query> queryCoercer;
   private final Class<M> mClass;
   private final Function<Query, M> factory;
 
   public QueryMacroTypeCoercer(
-      TypeCoercer<Object, Query> queryCoercer, Class<M> mClass, Function<Query, M> factory) {
+      TypeCoercer<UnconfiguredQuery, Query> queryCoercer,
+      Class<M> mClass,
+      Function<Query, M> factory) {
     this.queryCoercer = queryCoercer;
     this.mClass = mClass;
     this.factory = factory;
@@ -69,7 +72,7 @@ class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M>
           String.format("expected exactly one argument (found %d)", args.size()));
     }
     return factory.apply(
-        queryCoercer.coerce(
+        queryCoercer.coerceBoth(
             cellNameResolver,
             filesystem,
             pathRelativeToProjectRoot,
