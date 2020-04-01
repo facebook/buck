@@ -46,7 +46,7 @@ public abstract class PackageFileManifest implements ComputeResult, FileManifest
   public abstract ImmutableSortedSet<String> getIncludes();
 
   @Override
-  public abstract ImmutableMap<String, Object> getConfigs();
+  public abstract ImmutableMap<String, Object> getReadConfigurationOptionsForTest();
 
   @Override
   public abstract Optional<ImmutableMap<String, Optional<String>>> getEnv();

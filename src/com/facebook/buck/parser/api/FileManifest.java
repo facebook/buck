@@ -32,7 +32,7 @@ public interface FileManifest {
    * @return a map from configuration section to configuration key to the value returned during
    *     parsing.
    */
-  ImmutableMap<String, Object> getConfigs();
+  ImmutableMap<String, Object> getReadConfigurationOptionsForTest();
 
   /** @return an optional map from environment variable to a value read during parsing (if any). */
   Optional<ImmutableMap<String, Optional<String>>> getEnv();

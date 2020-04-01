@@ -396,7 +396,7 @@ public class SkylarkProjectBuildFileParserTest {
     Path buildFile = projectFilesystem.resolve("BUCK");
     Files.write(buildFile, ImmutableList.of("val = read_config('app', 'name', 'guava')"));
     BuildFileManifest buildFileManifest = parser.getManifest(AbsPath.of(buildFile));
-    Map<String, Object> configs = buildFileManifest.getConfigs();
+    Map<String, Object> configs = buildFileManifest.getReadConfigurationOptionsForTest();
     assertEquals(ImmutableMap.of("app", ImmutableMap.of("name", Optional.empty())), configs);
   }
 
@@ -407,7 +407,7 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile,
         ImmutableList.of("val = read_config('dummy_section', 'dummy_key', 'dummy_value')"));
     BuildFileManifest buildFileManifest = parser.getManifest(AbsPath.of(buildFile));
-    Map<String, Object> configs = buildFileManifest.getConfigs();
+    Map<String, Object> configs = buildFileManifest.getReadConfigurationOptionsForTest();
     assertEquals(
         ImmutableMap.of("dummy_section", ImmutableMap.of("dummy_key", Optional.of("dummy_value"))),
         configs);
@@ -1127,7 +1127,7 @@ public class SkylarkProjectBuildFileParserTest {
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()),
         Matchers.containsInAnyOrder("BUCK", "build_rules.bzl"));
-    Map<String, Object> configs = buildFileManifest.getConfigs();
+    Map<String, Object> configs = buildFileManifest.getReadConfigurationOptionsForTest();
     assertThat(configs, equalTo(ImmutableMap.of()));
     Optional<ImmutableMap<String, Optional<String>>> env = buildFileManifest.getEnv();
     assertFalse(env.isPresent());
