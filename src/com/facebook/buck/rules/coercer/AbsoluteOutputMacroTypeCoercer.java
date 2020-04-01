@@ -29,7 +29,8 @@ import com.google.common.collect.ImmutableList;
  *
  * @see com.facebook.buck.rules.macros.OutputMacroExpander
  */
-public class AbsoluteOutputMacroTypeCoercer implements MacroTypeCoercer<AbsoluteOutputMacro> {
+public class AbsoluteOutputMacroTypeCoercer
+    implements MacroTypeCoercer<AbsoluteOutputMacro, AbsoluteOutputMacro> {
 
   @Override
   public boolean hasElementClass(Class<?>[] types) {

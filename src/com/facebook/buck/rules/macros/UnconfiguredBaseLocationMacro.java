@@ -16,23 +16,5 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.util.immutables.BuckStyleValue;
-
-/**
- * Macro used to denote the absolute path of an output of a rule. Used when constructing command
- * lines for the rule, e.g. in {@code flags} fields of supporting rules.
- */
-@BuckStyleValue
-public abstract class AbsoluteOutputMacro implements Macro, UnconfiguredMacro {
-
-  public static AbsoluteOutputMacro of(String outputName) {
-    return ImmutableAbsoluteOutputMacro.ofImpl(outputName);
-  }
-
-  @Override
-  public Class<? extends Macro> getMacroClass() {
-    return AbsoluteOutputMacro.class;
-  }
-
-  public abstract String getOutputName();
-}
+/** Macro that resolves to the output location of a build rule. */
+public abstract class UnconfiguredBaseLocationMacro extends UnconfiguredBuildTargetMacro {}

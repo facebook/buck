@@ -33,6 +33,7 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.rules.macros.UnconfiguredMacro;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import java.util.Arrays;
@@ -417,7 +418,7 @@ public class StringWithMacrosTypeCoercerTest {
     assertEquals(result, coercer.concat(Arrays.asList(string1, string2, string3)));
   }
 
-  static class TestMacro implements Macro {
+  static class TestMacro implements Macro, UnconfiguredMacro {
 
     private final ImmutableList<String> args;
 
@@ -450,7 +451,7 @@ public class StringWithMacrosTypeCoercerTest {
     }
   }
 
-  static class Test2Macro implements Macro {
+  static class Test2Macro implements Macro, UnconfiguredMacro {
     private final ImmutableList<String> args;
 
     Test2Macro(ImmutableList<String> args) {
@@ -482,7 +483,7 @@ public class StringWithMacrosTypeCoercerTest {
     }
   }
 
-  static class TestMacroTypeCoercer implements MacroTypeCoercer<TestMacro> {
+  static class TestMacroTypeCoercer implements MacroTypeCoercer<UnconfiguredMacro, TestMacro> {
 
     @Override
     public boolean hasElementClass(Class<?>[] types) {
@@ -509,7 +510,7 @@ public class StringWithMacrosTypeCoercerTest {
     }
   }
 
-  static class Test2MacroTypeCoercer implements MacroTypeCoercer<Test2Macro> {
+  static class Test2MacroTypeCoercer implements MacroTypeCoercer<Test2Macro, Test2Macro> {
 
     @Override
     public boolean hasElementClass(Class<?>[] types) {
@@ -536,7 +537,7 @@ public class StringWithMacrosTypeCoercerTest {
     }
   }
 
-  private static class TestFailMacroTypeCoercer implements MacroTypeCoercer<TestMacro> {
+  private static class TestFailMacroTypeCoercer implements MacroTypeCoercer<TestMacro, TestMacro> {
 
     @Override
     public boolean hasElementClass(Class<?>[] types) {

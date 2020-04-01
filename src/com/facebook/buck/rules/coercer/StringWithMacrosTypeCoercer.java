@@ -25,6 +25,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.UnconfiguredMacro;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -43,11 +44,16 @@ import javax.annotation.Nullable;
 public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWithMacros> {
 
   private final ImmutableMap<String, Class<? extends Macro>> macros;
-  private final ImmutableMap<Class<? extends Macro>, MacroTypeCoercer<? extends Macro>> coercers;
+  private final ImmutableMap<
+          Class<? extends Macro>, MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro>>
+      coercers;
 
   private StringWithMacrosTypeCoercer(
       ImmutableMap<String, Class<? extends Macro>> macros,
-      ImmutableMap<Class<? extends Macro>, MacroTypeCoercer<? extends Macro>> coercers) {
+      ImmutableMap<
+              Class<? extends Macro>,
+              MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro>>
+          coercers) {
     Preconditions.checkArgument(
         Sets.difference(coercers.keySet(), new HashSet<>(macros.values())).isEmpty());
     this.macros = macros;
@@ -66,7 +72,8 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
 
   @Override
   public boolean hasElementClass(Class<?>... types) {
-    for (MacroTypeCoercer<? extends Macro> coercer : coercers.values()) {
+    for (MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro> coercer :
+        coercers.values()) {
       if (coercer.hasElementClass(types)) {
         return true;
       }
@@ -74,8 +81,11 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
     return false;
   }
 
-  private <M extends Macro> void traverse(
-      CellNameResolver cellRoots, MacroTypeCoercer<M> coercer, Macro macro, Traversal traversal) {
+  private <U extends UnconfiguredMacro, M extends Macro> void traverse(
+      CellNameResolver cellRoots,
+      MacroTypeCoercer<U, M> coercer,
+      Macro macro,
+      Traversal traversal) {
     coercer.traverse(cellRoots, coercer.getOutputClass().cast(macro), traversal);
   }
 
@@ -83,7 +93,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
   public void traverse(
       CellNameResolver cellRoots, StringWithMacros stringWithMacros, Traversal traversal) {
     for (MacroContainer macroContainer : stringWithMacros.getMacros()) {
-      MacroTypeCoercer<? extends Macro> coercer =
+      MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro> coercer =
           Objects.requireNonNull(coercers.get(macroContainer.getMacro().getMacroClass()));
       traverse(cellRoots, coercer, macroContainer.getMacro(), traversal);
     }
@@ -165,7 +175,8 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
                   "Macro '%s' not found when expanding '%s'",
                   matchResult.getMacroType(), macroString));
         }
-        MacroTypeCoercer<? extends Macro> coercer = Objects.requireNonNull(coercers.get(clazz));
+        MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro> coercer =
+            Objects.requireNonNull(coercers.get(clazz));
         ImmutableList<String> args = matchResult.getMacroInput();
 
         // Delegate to the macro coercers to parse the macro..
@@ -264,11 +275,11 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
     private Builder() {}
 
     private ImmutableMap.Builder<String, Class<? extends Macro>> macros = ImmutableMap.builder();
-    private ImmutableList.Builder<MacroTypeCoercer<? extends Macro>> macroCoercers =
-        ImmutableList.builder();
+    private ImmutableList.Builder<MacroTypeCoercer<? extends UnconfiguredMacro, ? extends Macro>>
+        macroCoercers = ImmutableList.builder();
 
-    public <M extends Macro> Builder put(
-        String macro, Class<M> macroClass, MacroTypeCoercer<M> coercer) {
+    public <U extends UnconfiguredMacro, M extends Macro> Builder put(
+        String macro, Class<M> macroClass, MacroTypeCoercer<U, M> coercer) {
       macros.put(macro, macroClass);
       macroCoercers.add(coercer);
       return this;

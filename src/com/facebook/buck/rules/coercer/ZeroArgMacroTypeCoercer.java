@@ -22,10 +22,12 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.UnconfiguredMacro;
 import com.google.common.collect.ImmutableList;
 
 /** A coercer for {@link Macro}s which take zero arguments. */
-public class ZeroArgMacroTypeCoercer<M extends Macro> implements MacroTypeCoercer<M> {
+public class ZeroArgMacroTypeCoercer<U extends UnconfiguredMacro, M extends Macro>
+    implements MacroTypeCoercer<U, M> {
 
   private final Class<M> mClass;
   private final M val;

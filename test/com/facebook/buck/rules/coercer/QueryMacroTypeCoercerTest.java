@@ -26,6 +26,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.QueryMacro;
 import com.facebook.buck.rules.macros.QueryOutputsMacro;
+import com.facebook.buck.rules.macros.UnconfiguredQueryMacro;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableList;
 import org.hamcrest.Matchers;
@@ -37,7 +38,7 @@ public class QueryMacroTypeCoercerTest {
   public void coerceQueryMacroFromStringArg() throws CoerceFailedException {
     ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    QueryMacroTypeCoercer<QueryMacro> coercer =
+    QueryMacroTypeCoercer<UnconfiguredQueryMacro, QueryMacro> coercer =
         new QueryMacroTypeCoercer<>(new QueryCoercer(), QueryMacro.class, QueryOutputsMacro::of);
     QueryMacro queryMacro =
         coercer.coerce(

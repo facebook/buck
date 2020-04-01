@@ -24,6 +24,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.UnconfiguredMacro;
 import com.google.common.collect.ImmutableList;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -35,7 +36,7 @@ public class ZeroArgMacroTypeCoercerTest {
     ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ZeroArgMacro macro = new ZeroArgMacro();
-    ZeroArgMacroTypeCoercer<ZeroArgMacro> coercer =
+    ZeroArgMacroTypeCoercer<ZeroArgMacro, ZeroArgMacro> coercer =
         new ZeroArgMacroTypeCoercer<>(ZeroArgMacro.class, macro);
     ZeroArgMacro result =
         coercer.coerce(
@@ -52,7 +53,7 @@ public class ZeroArgMacroTypeCoercerTest {
   public void testIncorrectArgs() throws CoerceFailedException {
     ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    ZeroArgMacroTypeCoercer<ZeroArgMacro> coercer =
+    ZeroArgMacroTypeCoercer<ZeroArgMacro, ZeroArgMacro> coercer =
         new ZeroArgMacroTypeCoercer<>(ZeroArgMacro.class, new ZeroArgMacro());
     coercer.coerce(
         createCellRoots(filesystem).getCellNameResolver(),
@@ -63,7 +64,7 @@ public class ZeroArgMacroTypeCoercerTest {
         ImmutableList.of("arg"));
   }
 
-  private static class ZeroArgMacro implements Macro {
+  private static class ZeroArgMacro implements Macro, UnconfiguredMacro {
 
     @Override
     public Class<? extends Macro> getMacroClass() {

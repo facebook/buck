@@ -22,13 +22,15 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.QueryTargetsAndOutputsMacro;
+import com.facebook.buck.rules.macros.UnconfiguredQueryTargetsAndOutputsMacro;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.UnconfiguredQuery;
 import com.google.common.collect.ImmutableList;
 
 /** A type coercer for the {@link QueryTargetsAndOutputsMacro} macro. */
 class QueryTargetsAndOutputsMacroTypeCoercer
-    implements MacroTypeCoercer<QueryTargetsAndOutputsMacro> {
+    implements MacroTypeCoercer<
+        UnconfiguredQueryTargetsAndOutputsMacro, QueryTargetsAndOutputsMacro> {
 
   private final TypeCoercer<UnconfiguredQuery, Query> queryCoercer;
 

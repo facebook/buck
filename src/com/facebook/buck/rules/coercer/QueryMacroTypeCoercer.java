@@ -22,13 +22,15 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.QueryMacro;
+import com.facebook.buck.rules.macros.UnconfiguredQueryMacro;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.UnconfiguredQuery;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Function;
 
 /** A type coercer for macros accepting a single {@link Query} arg. */
-class QueryMacroTypeCoercer<M extends QueryMacro> implements MacroTypeCoercer<M> {
+class QueryMacroTypeCoercer<U extends UnconfiguredQueryMacro, M extends QueryMacro>
+    implements MacroTypeCoercer<U, M> {
 
   private final TypeCoercer<UnconfiguredQuery, Query> queryCoercer;
   private final Class<M> mClass;

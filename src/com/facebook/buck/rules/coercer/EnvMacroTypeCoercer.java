@@ -26,7 +26,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 /** Coercer for <code>env</code> macros. */
-public class EnvMacroTypeCoercer implements MacroTypeCoercer<EnvMacro> {
+public class EnvMacroTypeCoercer implements MacroTypeCoercer<EnvMacro, EnvMacro> {
 
   @Override
   public boolean hasElementClass(Class<?>[] types) {

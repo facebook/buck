@@ -17,22 +17,21 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.query.UnconfiguredQuery;
 
 /**
- * Macro used to denote the absolute path of an output of a rule. Used when constructing command
- * lines for the rule, e.g. in {@code flags} fields of supporting rules.
+ * Class providing the type for macros used in `$(query_targets_and_outputs ...)` macro strings. The
+ * implementation is provided by the {@link QueryMacro} base class.
  */
 @BuckStyleValue
-public abstract class AbsoluteOutputMacro implements Macro, UnconfiguredMacro {
+public abstract class UnconfiguredQueryTargetsAndOutputsMacro extends UnconfiguredQueryMacro {
 
-  public static AbsoluteOutputMacro of(String outputName) {
-    return ImmutableAbsoluteOutputMacro.ofImpl(outputName);
+  public static UnconfiguredQueryTargetsAndOutputsMacro of(
+      String separator, UnconfiguredQuery coerce) {
+    return ImmutableUnconfiguredQueryTargetsAndOutputsMacro.ofImpl(separator, coerce);
   }
 
-  @Override
-  public Class<? extends Macro> getMacroClass() {
-    return AbsoluteOutputMacro.class;
-  }
+  abstract String getSeparator();
 
-  public abstract String getOutputName();
+  public abstract UnconfiguredQuery getQuery();
 }

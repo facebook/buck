@@ -24,12 +24,14 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.BuildTargetMacro;
+import com.facebook.buck.rules.macros.UnconfiguredBuildTargetMacro;
 import com.google.common.collect.ImmutableList;
 import java.util.function.Function;
 
 /** Coercer for macros which take a single {@link BuildTarget} arg. */
-public final class BuildTargetMacroTypeCoercer<M extends BuildTargetMacro>
-    implements MacroTypeCoercer<M> {
+public final class BuildTargetMacroTypeCoercer<
+        U extends UnconfiguredBuildTargetMacro, M extends BuildTargetMacro>
+    implements MacroTypeCoercer<U, M> {
 
   /** Should target be resolved for host platform or target */
   public enum TargetOrHost {

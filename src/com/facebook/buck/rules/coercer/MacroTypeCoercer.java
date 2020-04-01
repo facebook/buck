@@ -22,10 +22,11 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.UnconfiguredMacro;
 import com.google.common.collect.ImmutableList;
 
 /** Base class for coercing a macro name and arguments into a typed {@link Macro}. */
-interface MacroTypeCoercer<T extends Macro> {
+interface MacroTypeCoercer<U extends UnconfiguredMacro, T extends Macro> {
 
   boolean hasElementClass(Class<?>[] types);
 

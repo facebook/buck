@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
+import com.facebook.buck.rules.macros.UnconfiguredCxxGenruleFilterAndTargetsMacro;
 import com.google.common.collect.ImmutableList;
 import java.util.ArrayDeque;
 import java.util.Optional;
@@ -32,7 +33,7 @@ import java.util.regex.Pattern;
 
 /** Coercer for <code>cxx_genrule</code> flag-based macros. */
 public class CxxGenruleFilterAndTargetsMacroTypeCoercer<M extends CxxGenruleFilterAndTargetsMacro>
-    implements MacroTypeCoercer<M> {
+    implements MacroTypeCoercer<UnconfiguredCxxGenruleFilterAndTargetsMacro, M> {
 
   private final Optional<TypeCoercer<Pattern, Pattern>> patternTypeCoercer;
   private final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ImmutableList<BuildTarget>>

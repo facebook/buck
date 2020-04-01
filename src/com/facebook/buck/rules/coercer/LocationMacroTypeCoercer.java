@@ -23,10 +23,12 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.LocationMacro;
+import com.facebook.buck.rules.macros.UnconfiguredLocationMacro;
 import com.google.common.collect.ImmutableList;
 
 /** Coerces `$(location ...)` macros into {@link LocationMacro}. */
-class LocationMacroTypeCoercer extends AbstractLocationMacroTypeCoercer<LocationMacro> {
+class LocationMacroTypeCoercer
+    extends AbstractLocationMacroTypeCoercer<UnconfiguredLocationMacro, LocationMacro> {
 
   public LocationMacroTypeCoercer(
       TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>

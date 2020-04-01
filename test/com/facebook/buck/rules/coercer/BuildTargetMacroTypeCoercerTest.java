@@ -29,6 +29,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.BuildTargetMacro;
 import com.facebook.buck.rules.macros.Macro;
+import com.facebook.buck.rules.macros.UnconfiguredBuildTargetMacro;
 import com.google.common.collect.ImmutableList;
 import org.junit.Assert;
 import org.junit.Test;
@@ -58,6 +59,19 @@ public class BuildTargetMacroTypeCoercerTest {
     }
   }
 
+  private static class UnconfiguredMyBuildTargetMacro extends UnconfiguredBuildTargetMacro {
+    private final UnconfiguredBuildTargetWithOutputs buildTarget;
+
+    private UnconfiguredMyBuildTargetMacro(UnconfiguredBuildTargetWithOutputs buildTarget) {
+      this.buildTarget = buildTarget;
+    }
+
+    @Override
+    public UnconfiguredBuildTargetWithOutputs getTargetWithOutputs() {
+      return buildTarget;
+    }
+  }
+
   private TargetConfiguration hostConfiguration =
       RuleBasedTargetConfiguration.of(ConfigurationBuildTargetFactoryForTests.newInstance("//:h"));
   private TargetConfiguration targetConfiguration =
@@ -72,7 +86,7 @@ public class BuildTargetMacroTypeCoercerTest {
 
   @Test
   public void useHost() throws Exception {
-    BuildTargetMacroTypeCoercer<MyBuildTargetMacro> coercer =
+    BuildTargetMacroTypeCoercer<UnconfiguredMyBuildTargetMacro, MyBuildTargetMacro> coercer =
         new BuildTargetMacroTypeCoercer<>(
             buildTargetWithOutputsTypeCoercer,
             MyBuildTargetMacro.class,
@@ -100,7 +114,7 @@ public class BuildTargetMacroTypeCoercerTest {
 
   @Test
   public void useTarget() throws Exception {
-    BuildTargetMacroTypeCoercer<MyBuildTargetMacro> coercer =
+    BuildTargetMacroTypeCoercer<UnconfiguredMyBuildTargetMacro, MyBuildTargetMacro> coercer =
         new BuildTargetMacroTypeCoercer<>(
             buildTargetWithOutputsTypeCoercer,
             MyBuildTargetMacro.class,
@@ -120,7 +134,7 @@ public class BuildTargetMacroTypeCoercerTest {
 
   @Test
   public void coercesOutputLabel() throws Exception {
-    BuildTargetMacroTypeCoercer<MyBuildTargetMacro> coercer =
+    BuildTargetMacroTypeCoercer<UnconfiguredMyBuildTargetMacro, MyBuildTargetMacro> coercer =
         new BuildTargetMacroTypeCoercer<>(
             buildTargetWithOutputsTypeCoercer,
             MyBuildTargetMacro.class,

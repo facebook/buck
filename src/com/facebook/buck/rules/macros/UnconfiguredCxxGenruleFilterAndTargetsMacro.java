@@ -16,23 +16,31 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableList;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
-/**
- * Macro used to denote the absolute path of an output of a rule. Used when constructing command
- * lines for the rule, e.g. in {@code flags} fields of supporting rules.
- */
+/** Base class for <code>cxx_genrule</code> flags-based macros. */
 @BuckStyleValue
-public abstract class AbsoluteOutputMacro implements Macro, UnconfiguredMacro {
+public abstract class UnconfiguredCxxGenruleFilterAndTargetsMacro implements UnconfiguredMacro {
 
-  public static AbsoluteOutputMacro of(String outputName) {
-    return ImmutableAbsoluteOutputMacro.ofImpl(outputName);
+  /** Which macro is this. */
+  public enum Which {
+    CPPFLAGS,
+    CXXPPFLAGS,
+    LDFLAGS_SHARED,
+    LDFLAGS_SHARED_FILTER,
+    LDFLAGS_STATIC,
+    LDFLAGS_STATIC_FILTER,
+    LDFLAGS_STATIC_PIC,
+    LDFLAGS_STATIC_PIC_FILTER,
   }
 
-  @Override
-  public Class<? extends Macro> getMacroClass() {
-    return AbsoluteOutputMacro.class;
-  }
+  public abstract Which getWhich();
 
-  public abstract String getOutputName();
+  public abstract Optional<Pattern> getFilter();
+
+  public abstract ImmutableList<UnconfiguredBuildTarget> getTargets();
 }

@@ -23,7 +23,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
  * the rule, e.g. in {@code flags} fields of supporting rules.
  */
 @BuckStyleValue
-public abstract class OutputMacro implements Macro {
+public abstract class OutputMacro implements Macro, UnconfiguredMacro {
 
   public static OutputMacro of(String outputName) {
     return ImmutableOutputMacro.ofImpl(outputName);

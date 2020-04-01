@@ -20,7 +20,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** <code>$(env)</code> macro type. */
 @BuckStyleValue
-public interface EnvMacro extends Macro {
+public interface EnvMacro extends Macro, UnconfiguredMacro {
 
   @Override
   default Class<? extends Macro> getMacroClass() {

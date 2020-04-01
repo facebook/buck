@@ -16,23 +16,22 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.Flavor;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.google.common.collect.ImmutableSet;
 
-/**
- * Macro used to denote the absolute path of an output of a rule. Used when constructing command
- * lines for the rule, e.g. in {@code flags} fields of supporting rules.
- */
+/** Macro that resolves to the output location of a build rule. */
 @BuckStyleValue
-public abstract class AbsoluteOutputMacro implements Macro, UnconfiguredMacro {
-
-  public static AbsoluteOutputMacro of(String outputName) {
-    return ImmutableAbsoluteOutputMacro.ofImpl(outputName);
-  }
+public abstract class UnconfiguredLocationPlatformMacro extends UnconfiguredBaseLocationMacro {
 
   @Override
-  public Class<? extends Macro> getMacroClass() {
-    return AbsoluteOutputMacro.class;
+  public abstract UnconfiguredBuildTargetWithOutputs getTargetWithOutputs();
+
+  public static UnconfiguredLocationPlatformMacro of(
+      UnconfiguredBuildTargetWithOutputs target, Iterable<? extends Flavor> flavors) {
+    return ImmutableUnconfiguredLocationPlatformMacro.ofImpl(target, flavors);
   }
 
-  public abstract String getOutputName();
+  abstract ImmutableSet<Flavor> getFlavors();
 }
