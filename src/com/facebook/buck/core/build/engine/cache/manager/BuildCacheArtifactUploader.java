@@ -28,16 +28,57 @@ import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.function.Supplier;
 
 public class BuildCacheArtifactUploader {
+
+  /**
+   * Defines the interface that {@link BuildCacheArtifactUploader} uses to perform the actual upload
+   * to the cache.
+   */
+  public interface NetworkUploader {
+    ListenableFuture<Unit> performUploadToArtifactCache(
+        ImmutableSet<RuleKey> ruleKeys,
+        ArtifactCache artifactCache,
+        BuckEventBus eventBus,
+        ImmutableMap<String, String> buildMetadata,
+        SortedSet<Path> pathsToIncludeInArchive,
+        BuildRule buildRule,
+        long buildTimeMs);
+  }
+
+  private static final NetworkUploader DEFAULT_UPLOADER =
+      new NetworkUploader() {
+        @Override
+        public ListenableFuture<Unit> performUploadToArtifactCache(
+            ImmutableSet<RuleKey> ruleKeys,
+            ArtifactCache artifactCache,
+            BuckEventBus eventBus,
+            ImmutableMap<String, String> buildMetadata,
+            SortedSet<Path> pathsToIncludeInArchive,
+            BuildRule buildRule,
+            long buildTimeMs) {
+          return ArtifactUploader.performUploadToArtifactCache(
+              ImmutableSet.copyOf(ruleKeys),
+              artifactCache,
+              eventBus,
+              buildMetadata,
+              pathsToIncludeInArchive,
+              buildRule,
+              buildTimeMs);
+        }
+      };
+
   private final RuleKey defaultKey;
   private final Supplier<Optional<RuleKey>> inputBasedKey;
   private final OnDiskBuildInfo onDiskBuildInfo;
@@ -46,6 +87,7 @@ public class BuildCacheArtifactUploader {
   private final BuckEventBus eventBus;
   private final ArtifactCache artifactCache;
   private final Optional<Long> artifactCacheSizeLimit;
+  private final NetworkUploader uploader;
 
   public BuildCacheArtifactUploader(
       RuleKey defaultKey,
@@ -56,6 +98,28 @@ public class BuildCacheArtifactUploader {
       BuckEventBus eventBus,
       ArtifactCache artifactCache,
       Optional<Long> artifactCacheSizeLimit) {
+    this(
+        defaultKey,
+        inputBasedKey,
+        onDiskBuildInfo,
+        rule,
+        manifestRuleKeyManager,
+        eventBus,
+        artifactCache,
+        artifactCacheSizeLimit,
+        DEFAULT_UPLOADER);
+  }
+
+  public BuildCacheArtifactUploader(
+      RuleKey defaultKey,
+      Supplier<Optional<RuleKey>> inputBasedKey,
+      OnDiskBuildInfo onDiskBuildInfo,
+      BuildRule rule,
+      ManifestRuleKeyManager manifestRuleKeyManager,
+      BuckEventBus eventBus,
+      ArtifactCache artifactCache,
+      Optional<Long> artifactCacheSizeLimit,
+      NetworkUploader uploader) {
     this.defaultKey = defaultKey;
     this.inputBasedKey = inputBasedKey;
     this.onDiskBuildInfo = onDiskBuildInfo;
@@ -64,6 +128,7 @@ public class BuildCacheArtifactUploader {
     this.eventBus = eventBus;
     this.artifactCache = artifactCache;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
+    this.uploader = uploader;
   }
 
   /**
@@ -112,7 +177,7 @@ public class BuildCacheArtifactUploader {
     }
 
     // Do the actual upload.
-    return ArtifactUploader.performUploadToArtifactCache(
+    return uploader.performUploadToArtifactCache(
         ImmutableSet.copyOf(ruleKeys),
         artifactCache,
         eventBus,
