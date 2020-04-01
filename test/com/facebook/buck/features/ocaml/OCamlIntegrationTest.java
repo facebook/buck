@@ -31,6 +31,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.toolchain.ToolchainCreationContext;
@@ -229,7 +230,12 @@ public class OCamlIntegrationTest {
     workspace.runBuckCommand("build", binTarget.toString()).assertSuccess();
 
     Path ocamlNativePluginDir =
-        workspace.getDestPath().resolve("buck-out").resolve("gen").resolve("ce9b6f2e").resolve("ocaml_native_plugin");
+        workspace.getPath(
+            BuildTargetPaths.getGenPath(
+                workspace.getProjectFileSystem(),
+                pluginTarget,
+              "%s"
+            )).getParent();
 
     Path pluginCmxsFile = ocamlNativePluginDir.resolve("plugin#default").resolve("libplugin.cmxs");
 
