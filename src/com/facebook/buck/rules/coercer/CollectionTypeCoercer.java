@@ -76,7 +76,7 @@ public abstract class CollectionTypeCoercer<
   }
 
   /** Helper method to add coerced elements to the builder. */
-  protected void fillConfigured(
+  protected boolean fillConfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
@@ -85,6 +85,7 @@ public abstract class CollectionTypeCoercer<
       ImmutableCollection.Builder<T> builder,
       D object)
       throws CoerceFailedException {
+    boolean identity = true;
     for (U element : object) {
       // if any element failed, the entire collection fails
       T coercedElement =
@@ -95,7 +96,9 @@ public abstract class CollectionTypeCoercer<
               targetConfiguration,
               hostConfiguration,
               element);
+      identity &= coercedElement == element;
       builder.add(coercedElement);
     }
+    return identity;
   }
 }

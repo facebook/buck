@@ -77,14 +77,21 @@ public class ListTypeCoercer<U, T>
     }
 
     ImmutableList.Builder<T> builder = ImmutableList.builder();
-    fillConfigured(
-        cellRoots,
-        filesystem,
-        pathRelativeToProjectRoot,
-        targetConfiguration,
-        hostConfiguration,
-        builder,
-        object);
+    boolean identity =
+        fillConfigured(
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            builder,
+            object);
+
+    if (identity) {
+      // save allocation
+      return (ImmutableList<T>) object;
+    }
+
     return builder.build();
   }
 
