@@ -32,7 +32,7 @@ public class BuckExecutableSettingsProviderTest {
     EasyMock.replay(buckExecutableDetector);
 
     BuckExecutableSettingsProvider settingsProvider =
-        new BuckExecutableSettingsProvider(buckExecutableDetector);
+        new BuckExecutableSettingsProvider().withExecutableDetector(buckExecutableDetector);
 
     settingsProvider.setAdbExecutableOverride(Optional.empty());
     Assert.assertEquals(
@@ -57,7 +57,7 @@ public class BuckExecutableSettingsProviderTest {
     EasyMock.replay(buckExecutableDetector);
 
     BuckExecutableSettingsProvider settingsProvider =
-        new BuckExecutableSettingsProvider(buckExecutableDetector);
+        new BuckExecutableSettingsProvider().withExecutableDetector(buckExecutableDetector);
 
     settingsProvider.setBuckExecutableOverride(Optional.empty());
     Assert.assertEquals(

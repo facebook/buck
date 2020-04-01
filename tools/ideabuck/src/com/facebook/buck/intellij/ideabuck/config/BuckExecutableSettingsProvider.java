@@ -43,12 +43,13 @@ public class BuckExecutableSettingsProvider
   }
 
   public BuckExecutableSettingsProvider() {
-    this(BuckExecutableDetector.newInstance());
+    this.executableDetector = BuckExecutableDetector.newInstance();
   }
 
   @VisibleForTesting
-  BuckExecutableSettingsProvider(BuckExecutableDetector executableDetector) {
+  BuckExecutableSettingsProvider withExecutableDetector(BuckExecutableDetector executableDetector) {
     this.executableDetector = executableDetector;
+    return this;
   }
 
   @Override
