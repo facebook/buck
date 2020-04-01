@@ -38,7 +38,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.infer.InferConfig;
-import com.facebook.buck.infer.InferNullsafe;
+import com.facebook.buck.infer.InferJava;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
 import com.facebook.buck.infer.toolchain.InferToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -66,7 +66,7 @@ public class JavaLibraryDescription
 
   private static final ImmutableSet<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(
-          InferNullsafe.INFER_NULLSAFE,
+          InferJava.INFER_NULLSAFE,
           Javadoc.DOC_JAR,
           JavaLibrary.SRC_JAR,
           JavaLibrary.MAVEN_JAR,
@@ -134,8 +134,9 @@ public class JavaLibraryDescription
             graphBuilder,
             args);
 
-    if (flavors.contains(InferNullsafe.INFER_NULLSAFE)) {
-      return InferNullsafe.create(
+    if (flavors.contains(InferJava.INFER_NULLSAFE)) {
+      return InferJava.create(
+          InferJava.INFER_NULLSAFE,
           buildTarget,
           projectFilesystem,
           graphBuilder,

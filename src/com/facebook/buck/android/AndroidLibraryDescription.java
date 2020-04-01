@@ -34,7 +34,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.infer.InferConfig;
-import com.facebook.buck.infer.InferNullsafe;
+import com.facebook.buck.infer.InferJava;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
 import com.facebook.buck.infer.toolchain.InferToolchain;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -141,8 +141,9 @@ public class AndroidLibraryDescription
 
     FlavorSet flavors = buildTarget.getFlavors();
 
-    if (flavors.contains(InferNullsafe.INFER_NULLSAFE)) {
-      return InferNullsafe.create(
+    if (flavors.contains(InferJava.INFER_NULLSAFE)) {
+      return InferJava.create(
+          InferJava.INFER_NULLSAFE,
           buildTarget,
           projectFilesystem,
           context.getActionGraphBuilder(),
@@ -189,7 +190,7 @@ public class AndroidLibraryDescription
         || flavors.equals(ImmutableSet.of(JavaAbis.SOURCE_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(JavaAbis.SOURCE_ONLY_ABI_FLAVOR))
         || flavors.equals(ImmutableSet.of(JavaAbis.VERIFIED_SOURCE_ABI_FLAVOR))
-        || flavors.equals(ImmutableSet.of(InferNullsafe.INFER_NULLSAFE));
+        || flavors.equals(ImmutableSet.of(InferJava.INFER_NULLSAFE));
   }
 
   @Override

@@ -1,6 +1,13 @@
 #!/bin/bash
 
-ARG_FILE=${1:1}
+# Fetch 2nd positional argument, after the @-sign.
+# This should be path to arg file.
+ARG_FILE=${2:1}
+if [ ! -f "$ARG_FILE" ]; then
+    >&2 echo "Expected arg file, found non-existent: $ARG_FILE"
+    exit 42
+fi
+
 RESULTS_DIR=$(cat $ARG_FILE | grep -C1 -e --results-dir | tail -n1)
 
 mkdir -p $RESULTS_DIR

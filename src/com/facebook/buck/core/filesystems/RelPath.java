@@ -22,7 +22,7 @@ import java.nio.file.Paths;
 /** Relative path. */
 public interface RelPath extends PathWrapper {
   /**
-   * Cosnstruct using {@link java.nio.file.Path} object.
+   * Construct using {@link java.nio.file.Path} object.
    *
    * <p>Note this operation is just a cast if the path is {@link BuckUnixPath}.
    *
