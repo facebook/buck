@@ -72,4 +72,8 @@ public interface PathWrapper {
   default boolean startsWith(Path other) {
     return getPath().startsWith(other);
   }
+
+  default boolean startsWith(String other) {
+    return getPath().startsWith(other);
+  }
 }

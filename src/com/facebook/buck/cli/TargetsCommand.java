@@ -879,11 +879,10 @@ public class TargetsCommand extends AbstractCommand {
     ImmutableSet<TargetNode<?>> directOwners;
     if (referencedFiles.isPresent()) {
       BuildFileTree buildFileTree =
-          new InMemoryBuildFileTree(
+          InMemoryBuildFileTree.fromTargets(
               graph.getNodes().stream()
                   .map(TargetNode::getBuildTarget)
-                  .collect(ImmutableSet.toImmutableSet()),
-              projectFilesystem);
+                  .collect(ImmutableSet.toImmutableSet()));
       directOwners =
           graph.getNodes().stream()
               .filter(

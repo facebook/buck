@@ -19,6 +19,7 @@ package com.facebook.buck.core.path;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -255,5 +256,29 @@ public class ForwardRelativePathTest {
     assertEquals("", ForwardRelativePath.of("").toPathPrefix());
     assertEquals("foo/", ForwardRelativePath.of("foo").toPathPrefix());
     assertEquals("foo/bar/", ForwardRelativePath.of("foo/bar").toPathPrefix());
+  }
+
+  @Test
+  public void getNameCount() {
+    // Paths.get("").getNameCount() returns 1, while
+    // BuckUnixPath of "" .getNameCount() returns 0
+    assertEquals(0, ForwardRelativePath.of("").getNameCount());
+    assertEquals(1, ForwardRelativePath.of("foo").getNameCount());
+    assertEquals(1, Paths.get("foo").getNameCount());
+    assertEquals(2, ForwardRelativePath.of("foo/bar").getNameCount());
+    assertEquals(2, Paths.get("foo/bar").getNameCount());
+  }
+
+  @Test
+  public void getParent() {
+    assertNull(ForwardRelativePath.of("").getParent());
+    assertNull(Paths.get("").getParent());
+    assertNull(ForwardRelativePath.of("foo").getParent());
+    assertNull(Paths.get("foo").getParent());
+    assertEquals(ForwardRelativePath.of("foo"), ForwardRelativePath.of("foo/bar").getParent());
+    assertEquals(Paths.get("foo"), Paths.get("foo/bar").getParent());
+    assertEquals(
+        ForwardRelativePath.of("foo/bar"), ForwardRelativePath.of("foo/bar/baz").getParent());
+    assertEquals(Paths.get("foo/bar"), Paths.get("foo/bar/baz").getParent());
   }
 }

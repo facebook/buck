@@ -18,7 +18,6 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -26,7 +25,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -74,9 +72,7 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
         continue;
       }
 
-      Optional<RelPath> ancestor =
-          buildFileTree.getBasePathOfAncestorTarget(
-              path.toRelPath(targetCell.getFilesystem().getFileSystem()));
+      Optional<ForwardRelativePath> ancestor = buildFileTree.getBasePathOfAncestorTarget(path);
       // It should not be possible for us to ever get an Optional.empty() for this because that
       // would require one of two conditions:
       // 1) The source path references parent directories, which we check for above.
@@ -90,9 +86,9 @@ public class ThrowingPackageBoundaryChecker implements PackageBoundaryChecker {
                 target, path));
       }
 
-      if (!ancestor.get().equals(basePath.toRelPath(targetCell.getFilesystem().getFileSystem()))) {
+      if (!ancestor.get().equals(basePath)) {
         String buildFileName = targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName();
-        Path buckFile = ancestor.get().resolve(buildFileName);
+        ForwardRelativePath buckFile = ancestor.get().resolve(buildFileName);
         // TODO(cjhopman): If we want to manually split error message lines ourselves, we should
         // have a utility to do it correctly after formatting instead of doing it manually.
         String formatString =

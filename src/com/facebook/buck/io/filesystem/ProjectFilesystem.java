@@ -161,6 +161,11 @@ public interface ProjectFilesystem {
   /** Checks whether there is a normal file at the specified path. */
   boolean isFile(Path pathRelativeToProjectRoot, LinkOption... options);
 
+  /** Checks whether there is a normal file at the specified path. */
+  default boolean isFile(ForwardRelativePath pathRelativeToProjectRoot, LinkOption... options) {
+    return isFile(pathRelativeToProjectRoot.toRelPath(getFileSystem()), options);
+  }
+
   default boolean isFile(PathWrapper pathRelativeToProjectRoot, LinkOption... options) {
     return isFile(pathRelativeToProjectRoot.getPath(), options);
   }
@@ -469,6 +474,17 @@ public interface ProjectFilesystem {
    */
   @Deprecated
   boolean isIgnored(RelPath path);
+
+  /**
+   * Use {@link ProjectFilesystemView#isIgnored(Path)} instead
+   *
+   * @param path the path to check.
+   * @return whether ignoredPaths contains path or any of its ancestors.
+   */
+  @Deprecated
+  default boolean isIgnored(ForwardRelativePath path) {
+    return isIgnored(path.toRelPath(getFileSystem()));
+  }
 
   /**
    * Returns a relative path whose parent directory is guaranteed to exist. The path will be under

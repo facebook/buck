@@ -31,6 +31,7 @@ import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
+import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
@@ -542,19 +543,15 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
       BuildTarget buildTarget = target.getBuildTarget();
       Cell cell = rootCell.getCell(buildTarget.getCell());
       BuildFileTree buildFileTree = Objects.requireNonNull(buildFileTrees.get(cell));
-      Optional<RelPath> path =
+      Optional<ForwardRelativePath> path =
           buildFileTree.getBasePathOfAncestorTarget(
-              buildTarget
-                  .getCellRelativeBasePath()
-                  .getPath()
-                  .toRelPath(cellFilesystem.getFileSystem()));
+              buildTarget.getCellRelativeBasePath().getPath());
       Preconditions.checkState(path.isPresent());
 
       RelPath buildFilePath =
           MorePaths.relativize(
               rootPath,
-              cell.getFilesystem()
-                  .resolve(path.get())
+              AbsPath.of(cell.getFilesystem().resolve(path.get()))
                   .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
       Preconditions.checkState(cellFilesystem.exists(buildFilePath));
       SourcePath sourcePath = PathSourcePath.of(cell.getFilesystem(), buildFilePath);

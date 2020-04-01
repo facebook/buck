@@ -28,6 +28,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * A normalized relative path object which:
@@ -71,6 +72,19 @@ public class ForwardRelativePath implements Comparable<ForwardRelativePath> {
     }
 
     return new ForwardRelativePath(splitAndIntern(path, offset));
+  }
+
+  public int getNameCount() {
+    return segments.length;
+  }
+
+  /** Similar to {@link Path#getParent()}. */
+  @Nullable
+  public ForwardRelativePath getParent() {
+    if (segments.length < 2) {
+      return null;
+    }
+    return new ForwardRelativePath(Arrays.copyOf(this.segments, segments.length - 1));
   }
 
   private static class Substring {

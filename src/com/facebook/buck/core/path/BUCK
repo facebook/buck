@@ -12,5 +12,6 @@ java_library(
         "//src/com/facebook/buck/core/filesystems:filesystems",
         "//src/com/facebook/buck/util/environment:platform",
         "//third-party/java/guava:guava",
+        "//third-party/java/jsr:jsr305",
     ],
 )

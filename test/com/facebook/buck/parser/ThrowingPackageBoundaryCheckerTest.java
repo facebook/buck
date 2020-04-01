@@ -20,12 +20,10 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.InMemoryBuildFileTree;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -102,7 +100,8 @@ public class ThrowingPackageBoundaryCheckerTest {
                   public BuildFileTree load(Cell cell) {
                     return new InMemoryBuildFileTree(Collections.emptyList()) {
                       @Override
-                      public Optional<RelPath> getBasePathOfAncestorTarget(RelPath filePath) {
+                      public Optional<ForwardRelativePath> getBasePathOfAncestorTarget(
+                          ForwardRelativePath filePath) {
                         return Optional.empty();
                       }
                     };
@@ -131,8 +130,9 @@ public class ThrowingPackageBoundaryCheckerTest {
                   public BuildFileTree load(Cell cell) {
                     return new InMemoryBuildFileTree(Collections.emptyList()) {
                       @Override
-                      public Optional<RelPath> getBasePathOfAncestorTarget(RelPath filePath) {
-                        return Optional.of(RelPath.get("d"));
+                      public Optional<ForwardRelativePath> getBasePathOfAncestorTarget(
+                          ForwardRelativePath filePath) {
+                        return Optional.of(ForwardRelativePath.of("d"));
                       }
                     };
                   }
@@ -141,25 +141,19 @@ public class ThrowingPackageBoundaryCheckerTest {
         new ThrowingPackageBoundaryChecker(buildFileTrees);
 
     thrown.expect(HumanReadableException.class);
-    String testPath = "a/b/Test.java";
-    String dPath = MorePaths.pathWithPlatformSeparators("d/BUCK");
     thrown.expectMessage(
-        "The target '//a/b:c' tried to reference '"
-            + testPath
-            + "'.\nThis is not allowed because '"
-            + testPath
-            + "' can only be referenced from '"
-            + dPath
-            + "' \nwhich is its closest parent 'BUCK' file.\n\n"
-            + "You should find or create a rule in '"
-            + dPath
-            + "' that references\n'"
-            + testPath
-            + "' and use that in '//a/b:c'\ninstead of directly referencing '"
-            + testPath
-            + "'.\nMore info at:\nhttps://buck.build/concept/build_rule.html\n"
-            + "\nThis issue might also be caused by a bug in buckd's caching.\n"
-            + "Please check whether using `buck kill` resolves it.");
+        Matchers.matchesRegex(
+            "The target '//a/b:c' tried to reference 'a[/\\\\]b[/\\\\]Test.java'.\n"
+                + "This is not allowed because 'a[/\\\\]b[/\\\\]Test.java' "
+                + "can only be referenced from 'd[/\\\\]BUCK' \n"
+                + "which is its closest parent 'BUCK' file.\n\n"
+                + "You should find or create a rule in 'd[/\\\\]BUCK' that references\n'"
+                + "a[/\\\\]b[/\\\\]Test.java' and use that in '//a/b:c'\n"
+                + "instead of directly referencing 'a[/\\\\]b[/\\\\]Test.java'.\n"
+                + "More info at:\n"
+                + "https://buck.build/concept/build_rule.html\n\n"
+                + "This issue might also be caused by a bug in buckd's caching.\n"
+                + "Please check whether using `buck kill` resolves it."));
 
     boundaryChecker.enforceBuckPackageBoundaries(
         new TestCellBuilder().build().getRootCell(),
@@ -175,7 +169,8 @@ public class ThrowingPackageBoundaryCheckerTest {
                 new CacheLoader<Cell, BuildFileTree>() {
                   @Override
                   public BuildFileTree load(Cell cell) {
-                    return new InMemoryBuildFileTree(Collections.singleton(RelPath.get("a/b")));
+                    return new InMemoryBuildFileTree(
+                        Collections.singleton(ForwardRelativePath.of("a/b")));
                   }
                 });
     ThrowingPackageBoundaryChecker boundaryChecker =
