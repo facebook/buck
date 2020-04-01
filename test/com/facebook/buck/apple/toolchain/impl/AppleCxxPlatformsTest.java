@@ -262,9 +262,6 @@ public class AppleCxxPlatformsTest {
     assertThat(
         Arg.stringify(cxxPlatform.getCflags(), resolver),
         hasConsecutiveItems("-mios-version-min=7.0"));
-    assertThat(
-        Arg.stringify(cxxPlatform.getLdflags(), resolver),
-        hasConsecutiveItems("-Wl,-sdk_version", "-Wl,8.0"));
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform
@@ -373,9 +370,6 @@ public class AppleCxxPlatformsTest {
     assertThat(
         Arg.stringify(cxxPlatform.getCflags(), resolver),
         hasConsecutiveItems("-mwatchos-version-min=2.0"));
-    assertThat(
-        Arg.stringify(cxxPlatform.getLdflags(), resolver),
-        hasConsecutiveItems("-Wl,-sdk_version", "-Wl,2.0"));
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform
@@ -486,9 +480,6 @@ public class AppleCxxPlatformsTest {
     assertThat(
         Arg.stringify(cxxPlatform.getCflags(), resolver),
         hasConsecutiveItems("-mtvos-version-min=9.1"));
-    assertThat(
-        Arg.stringify(cxxPlatform.getLdflags(), resolver),
-        hasConsecutiveItems("-Wl,-sdk_version", "-Wl,9.1"));
     assertEquals(
         "/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
         cxxPlatform
