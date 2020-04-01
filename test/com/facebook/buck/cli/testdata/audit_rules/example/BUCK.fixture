@@ -26,6 +26,13 @@ genrule(
     environment_expansion_separator = ",",
 )
 
+genrule(
+    name = "vis-public",
+    out = "vis-public.txt",
+    cmd = "echo v > $OUT",
+    visibility = ["PUBLIC"],
+)
+
 keystore(
     name = "debug_keystore",
     properties = "debug.keystore.properties",

@@ -24,3 +24,12 @@ genrule(
   out = "foo.txt",
 )
 
+genrule(
+  name = "vis-public",
+  cmd = "echo v > $OUT",
+  out = "vis-public.txt",
+  visibility = [
+    "PUBLIC",
+  ],
+)
+

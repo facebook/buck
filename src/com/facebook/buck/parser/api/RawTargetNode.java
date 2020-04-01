@@ -18,6 +18,7 @@ package com.facebook.buck.parser.api;
 
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -36,6 +37,19 @@ public abstract class RawTargetNode {
   public abstract ImmutableList<String> getWithinView();
 
   public abstract TwoArraysImmutableHashMap<String, Object> getAttrs();
+
+  /** Get attributes including special attributes not present in {@link #getAttrs()}. */
+  public TwoArraysImmutableHashMap<String, Object> getAttrsIncludingSpecial() {
+    TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
+    builder.putAll(getAttrs());
+    if (!getVisibility().isEmpty()) {
+      builder.put(VisibilityAttributes.VISIBILITY, getVisibility());
+    }
+    if (!getWithinView().isEmpty()) {
+      builder.put(VisibilityAttributes.WITHIN_VIEW, getWithinView());
+    }
+    return builder.build();
+  }
 
   @Nullable
   public Object get(String name) {

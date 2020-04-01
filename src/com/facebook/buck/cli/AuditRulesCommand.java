@@ -177,7 +177,10 @@ public class AuditRulesCommand extends AbstractCommand {
 
     // Add the properties specific to the rule.
     SortedSet<String> customProperties = new TreeSet<>();
-    for (String key : rawRule.getAttrs().keySet()) {
+
+    TwoArraysImmutableHashMap<String, Object> attrs = rawRule.getAttrsIncludingSpecial();
+
+    for (String key : attrs.keySet()) {
       // Ignore keys that start with "buck.".
       if (!LAST_PROPERTIES.contains(key)) {
         customProperties.add(key);
@@ -186,11 +189,11 @@ public class AuditRulesCommand extends AbstractCommand {
     properties.addAll(customProperties);
 
     // Add common properties that should be displayed last.
-    properties.addAll(Sets.intersection(LAST_PROPERTIES, rawRule.getAttrs().keySet()));
+    properties.addAll(Sets.intersection(LAST_PROPERTIES, attrs.keySet()));
 
     // Write out the properties and their corresponding values.
     for (String property : properties) {
-      Object rawValue = rawRule.get(property);
+      Object rawValue = attrs.get(property);
       if (!shouldInclude(rawValue)) {
         continue;
       }

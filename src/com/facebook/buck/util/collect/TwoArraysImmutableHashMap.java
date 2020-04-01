@@ -356,6 +356,13 @@ public class TwoArraysImmutableHashMap<K, V> extends AbstractImmutableMap<K, V> 
       return this;
     }
 
+    /** Put all entries into a new map. */
+    public void putAll(Map<K, V> attrs) {
+      for (Entry<K, V> entry : attrs.entrySet()) {
+        put(entry.getKey(), entry.getValue());
+      }
+    }
+
     private K getKey(int i) {
       return (K) entries[i * 2];
     }
