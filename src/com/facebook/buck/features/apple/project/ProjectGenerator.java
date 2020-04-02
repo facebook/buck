@@ -1933,11 +1933,11 @@ public class ProjectGenerator {
                       Iterables.concat(
                           targetNode.getConstructorArg().getLinkerFlags(),
                           collectRecursiveExportedLinkerFlags(targetNode))))
-              .addAll(swiftDebugLinkerFlagsBuilder.build())
               .build();
 
+      ImmutableList<String> swiftDebugLinkerFlags = swiftDebugLinkerFlagsBuilder.build();
       updateOtherLinkerFlagsForOptions(
-          targetNode, bundleLoaderNode, appendConfigsBuilder, otherLdFlags);
+          targetNode, bundleLoaderNode, appendConfigsBuilder, otherLdFlags, swiftDebugLinkerFlags);
 
       ImmutableMultimap<String, ImmutableList<String>> platformFlags =
           convertPlatformFlags(
@@ -2120,7 +2120,8 @@ public class ProjectGenerator {
       TargetNode<? extends CommonArg> targetNode,
       Optional<TargetNode<AppleBundleDescriptionArg>> bundleLoaderNode,
       Builder<String, String> appendConfigsBuilder,
-      Iterable<String> otherLdFlags) {
+      Iterable<String> otherLdFlags,
+      Iterable<String> swiftLinkerFlags) {
 
     // Local: Local to the current project and built by Xcode.
     // Focused: Included in the workspace and built by Xcode but not in current project.
@@ -2231,13 +2232,14 @@ public class ProjectGenerator {
               Streams.stream(systemFwkOrLibFlags).collect(Collectors.joining(" ")));
     }
 
-    Stream<String> otherLdFlagsStream = Streams.stream(otherLdFlags).map(Escaper.BASH_ESCAPER);
+    Stream<String> allOtherLdFlagsStream =
+        Streams.stream(Iterables.concat(otherLdFlags, swiftLinkerFlags)).map(Escaper.BASH_ESCAPER);
 
     if (options.shouldForceLoadLinkWholeLibraries() && options.shouldAddLinkedLibrariesAsFlags()) {
       appendConfigsBuilder.put(
           "OTHER_LDFLAGS",
           Streams.concat(
-                  otherLdFlagsStream,
+                  allOtherLdFlagsStream,
                   Stream.of(
                       "$BUCK_LINKER_FLAGS_SYSTEM",
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
@@ -2255,7 +2257,7 @@ public class ProjectGenerator {
       appendConfigsBuilder.put(
           "OTHER_LDFLAGS",
           Streams.concat(
-                  otherLdFlagsStream,
+                  allOtherLdFlagsStream,
                   Stream.of(
                       "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_LOCAL",
                       "$BUCK_LINKER_FLAGS_LIBRARY_FORCE_LOAD_FOCUSED",
@@ -2265,7 +2267,7 @@ public class ProjectGenerator {
       appendConfigsBuilder.put(
           "OTHER_LDFLAGS",
           Streams.concat(
-                  otherLdFlagsStream,
+                  allOtherLdFlagsStream,
                   Stream.of(
                       "$BUCK_LINKER_FLAGS_SYSTEM",
                       "$BUCK_LINKER_FLAGS_FRAMEWORK_LOCAL",
@@ -2277,7 +2279,7 @@ public class ProjectGenerator {
               .collect(Collectors.joining(" ")));
     } else {
       appendConfigsBuilder.put(
-          "OTHER_LDFLAGS", otherLdFlagsStream.collect(Collectors.joining(" ")));
+          "OTHER_LDFLAGS", allOtherLdFlagsStream.collect(Collectors.joining(" ")));
     }
   }
 

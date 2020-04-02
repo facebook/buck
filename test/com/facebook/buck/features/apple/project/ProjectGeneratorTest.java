@@ -6108,18 +6108,19 @@ public class ProjectGeneratorTest {
         containsString(
             "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libA.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
 
-    // Platform-specific config options are _additive_, so we need to ensure that the Swift debug
-    // flags appear just _once_ in the generic OTHER_LDFLAGS. Since they're expressed using
-    // ${CURRENT_ARCH), we do not need specific options per architecture.
+    // Platform-specific config options are _additive_ of they include `$(inherited)`, so we need
+    // to ensure that the Swift debug flags appear just _once_ in the generic OTHER_LDFLAGS.
+    // Since they're expressed using ${CURRENT_ARCH), we do not need specific options
+    // per architecture.
 
     assertThat(
         bundleBuildSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"),
-        containsString("$(inherited)"));
+        containsString("$(inherited)")); // Checks that the flags end up being addictive
     assertThat(
         bundleBuildSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"),
-        // NB: The test is _now_ broken, this establishes _current_ behavior which will be fixed.
-        containsString(
-            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libA.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+        not(
+            containsString(
+                "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libA.swiftmodule/${CURRENT_ARCH}.swiftmodule'")));
   }
 
   @Test
