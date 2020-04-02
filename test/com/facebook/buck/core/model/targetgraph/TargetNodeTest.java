@@ -30,6 +30,7 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
@@ -58,6 +59,11 @@ import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.UnconfiguredMacroContainer;
+import com.facebook.buck.rules.macros.UnconfiguredQueryOutputsMacro;
+import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
+import com.facebook.buck.rules.query.UnconfiguredQuery;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -161,7 +167,17 @@ public class TargetNodeTest {
   public void invalidArgumentsThrowAnException() {
     ImmutableMap<String, Object> rawNode =
         ImmutableMap.of(
-            "name", TARGET_THREE.getShortName(), "cmd", Optional.of("$(query_outputs '123')"));
+            "name",
+            TARGET_THREE.getShortName(),
+            "cmd",
+            Optional.of(
+                UnconfiguredStringWithMacros.ofUnconfigured(
+                    ImmutableList.of(
+                        Either.ofRight(
+                            UnconfiguredMacroContainer.of(
+                                UnconfiguredQueryOutputsMacro.of(
+                                    UnconfiguredQuery.of("123", BaseName.ROOT)),
+                                false))))));
 
     try {
       createTargetNode(

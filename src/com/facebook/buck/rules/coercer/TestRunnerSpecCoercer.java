@@ -22,6 +22,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import java.util.Map;
@@ -32,13 +33,15 @@ import java.util.Map;
  */
 public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec> {
 
-  private final TypeCoercer<Object, StringWithMacros> macrosTypeCoercer;
+  private final TypeCoercer<UnconfiguredStringWithMacros, StringWithMacros> macrosTypeCoercer;
   private final TypeCoercer<
-          ImmutableMap<Object, Object>, ImmutableMap<StringWithMacros, TestRunnerSpec>>
+          ImmutableMap<UnconfiguredStringWithMacros, Object>,
+          ImmutableMap<StringWithMacros, TestRunnerSpec>>
       mapTypeCoercer;
   private final ListTypeCoercer<Object, TestRunnerSpec> listTypeCoercer;
 
-  public TestRunnerSpecCoercer(TypeCoercer<Object, StringWithMacros> macrosTypeCoercer) {
+  public TestRunnerSpecCoercer(
+      TypeCoercer<UnconfiguredStringWithMacros, StringWithMacros> macrosTypeCoercer) {
     this.macrosTypeCoercer = macrosTypeCoercer;
     this.mapTypeCoercer = new MapTypeCoercer<>(macrosTypeCoercer, this);
     this.listTypeCoercer = new ListTypeCoercer<>(this);
@@ -69,6 +72,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
+    // TODO(nga): make it 2p
     return object;
   }
 
@@ -108,7 +112,7 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
       return TestRunnerSpec.ofBoolean((Boolean) object);
     } else {
       return TestRunnerSpec.ofStringWithMacros(
-          macrosTypeCoercer.coerce(
+          macrosTypeCoercer.coerceBoth(
               cellRoots,
               filesystem,
               pathRelativeToProjectRoot,

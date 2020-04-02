@@ -68,6 +68,7 @@ import com.facebook.buck.rules.macros.UnconfiguredMavenCoordinatesMacro;
 import com.facebook.buck.rules.macros.UnconfiguredQueryOutputsMacro;
 import com.facebook.buck.rules.macros.UnconfiguredQueryPathsMacro;
 import com.facebook.buck.rules.macros.UnconfiguredQueryTargetsMacro;
+import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
 import com.facebook.buck.rules.macros.UnconfiguredWorkerMacro;
 import com.facebook.buck.rules.macros.WorkerMacro;
 import com.facebook.buck.rules.query.Query;
@@ -148,7 +149,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         linkGroupMappingTargetsCoercer = new ListTypeCoercer<>(linkGroupMappingTargetCoercer);
     TypeCoercer<Object, CxxLinkGroupMapping> linkGroupMappingCoercer =
         new CxxLinkGroupMappingCoercer(stringTypeCoercer, linkGroupMappingTargetsCoercer);
-    TypeCoercer<Object, StringWithMacros> stringWithMacrosCoercer =
+    TypeCoercer<UnconfiguredStringWithMacros, StringWithMacros> stringWithMacrosCoercer =
         StringWithMacrosTypeCoercer.builder()
             .put(
                 "classpath",

@@ -31,8 +31,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputsFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -58,8 +57,13 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.UnconfiguredSourceSet;
 import com.facebook.buck.rules.macros.ClasspathMacro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
+import com.facebook.buck.rules.macros.UnconfiguredExecutableMacro;
+import com.facebook.buck.rules.macros.UnconfiguredLocationMacro;
+import com.facebook.buck.rules.macros.UnconfiguredMacroContainer;
+import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -99,17 +103,29 @@ public class GenruleDescriptionTest {
             UnconfiguredSourceSet.ofUnnamedSources(
                 ImmutableSet.of(
                     new UnconfiguredSourcePath.BuildTarget(
-                        UnconfiguredBuildTargetWithOutputs.of(
-                            UnconfiguredBuildTargetFactoryForTests.newInstance("//foo:baz"),
-                            OutputLabel.defaultLabel())),
+                        UnconfiguredBuildTargetWithOutputsFactoryForTests.newInstance("//foo:baz")),
                     new UnconfiguredSourcePath.BuildTarget(
-                        UnconfiguredBuildTargetWithOutputs.of(
-                            UnconfiguredBuildTargetFactoryForTests.newInstance("//biz:baz"),
-                            OutputLabel.defaultLabel())))),
+                        UnconfiguredBuildTargetWithOutputsFactoryForTests.newInstance(
+                            "//biz:baz")))),
             "out",
             Optional.of("AndroidManifest.xml"),
             "cmd",
-            Optional.of("$(exe //bin:executable) $(location :arg)"));
+            Optional.of(
+                UnconfiguredStringWithMacros.ofUnconfigured(
+                    ImmutableList.of(
+                        Either.ofRight(
+                            UnconfiguredMacroContainer.of(
+                                UnconfiguredExecutableMacro.of(
+                                    UnconfiguredBuildTargetWithOutputsFactoryForTests.newInstance(
+                                        "//bin:executable")),
+                                false)),
+                        Either.ofLeft(" "),
+                        Either.ofRight(
+                            UnconfiguredMacroContainer.of(
+                                UnconfiguredLocationMacro.of(
+                                    UnconfiguredBuildTargetWithOutputsFactoryForTests.newInstance(
+                                        "//foo:arg")),
+                                false))))));
     ProjectFilesystem projectFilesystem = new AllExistingProjectFilesystem();
     ConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();

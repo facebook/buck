@@ -18,6 +18,7 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.string.StringMatcher;
 import com.facebook.buck.util.types.Either;
@@ -150,13 +151,13 @@ public abstract class StringWithMacros
   }
 
   /** String with macros without actual macros. */
-  private static class Constant extends StringWithMacros {
+  static class Constant extends StringWithMacros implements UnconfiguredStringWithMacros {
 
-    private static final StringWithMacros EMPTY = new Constant("");
+    static final Constant EMPTY = new Constant("");
 
     private final String constant;
 
-    private Constant(String constant) {
+    Constant(String constant) {
       this.constant = constant;
     }
 
@@ -167,6 +168,21 @@ public abstract class StringWithMacros
       } else {
         return ImmutableList.of(Either.ofLeft(constant));
       }
+    }
+
+    @Override
+    public ImmutableList<Either<String, UnconfiguredMacroContainer>> getUnconfiguredParts() {
+      if (constant.isEmpty()) {
+        return ImmutableList.of();
+      } else {
+        return ImmutableList.of(Either.ofLeft(constant));
+      }
+    }
+
+    @Override
+    public StringWithMacros configure(
+        TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+      return this;
     }
 
     // Following functions would work fine with parent class implementations,

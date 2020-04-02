@@ -26,6 +26,8 @@ import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroContainer;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.UnconfiguredMacro;
+import com.facebook.buck.rules.macros.UnconfiguredMacroContainer;
+import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
 import com.facebook.buck.util.types.Either;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -41,7 +43,8 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 /** Coerce to {@link com.facebook.buck.rules.macros.StringWithMacros}. */
-public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWithMacros> {
+public class StringWithMacrosTypeCoercer
+    implements TypeCoercer<UnconfiguredStringWithMacros, StringWithMacros> {
 
   private final ImmutableMap<String, Class<? extends Macro>> macros;
   private final ImmutableMap<
@@ -66,8 +69,8 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<UnconfiguredStringWithMacros> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredStringWithMacros.class);
   }
 
   @Override
@@ -100,41 +103,43 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public UnconfiguredStringWithMacros coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    return object;
+    if (!(object instanceof String)) {
+      throw CoerceFailedException.simple(object, getOutputType());
+    }
+    return parse(cellRoots, filesystem, pathRelativeToProjectRoot, (String) object);
   }
 
   // Most strings with macros do not contain any macros.
   // This method is optimistic fast-path optimization of string with macro parsing.
   @Nullable
-  private StringWithMacros tryParseFast(String blob) {
+  private UnconfiguredStringWithMacros tryParseFast(String blob) {
     if (blob.indexOf('$') >= 0) {
       return null;
     }
 
-    return StringWithMacros.ofConstantString(blob);
+    return UnconfiguredStringWithMacros.ofConstantStringUnconfigured(blob);
   }
 
-  private StringWithMacros parse(
+  private UnconfiguredStringWithMacros parse(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       String blob)
       throws CoerceFailedException {
 
-    StringWithMacros fast = tryParseFast(blob);
+    UnconfiguredStringWithMacros fast = tryParseFast(blob);
     if (fast != null) {
       return fast;
     }
 
-    ImmutableList.Builder<Either<String, MacroContainer>> parts = ImmutableList.builder();
+    ImmutableList.Builder<Either<String, UnconfiguredMacroContainer>> parts =
+        ImmutableList.builder();
 
     // Iterate over all macros found in the string, expanding each found macro.
     int lastEnd = 0;
@@ -180,16 +185,11 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
         ImmutableList<String> args = matchResult.getMacroInput();
 
         // Delegate to the macro coercers to parse the macro..
-        Macro macro;
+        UnconfiguredMacro macro;
         try {
           macro =
-              coercer.coerceBoth(
-                  cellNameResolver,
-                  filesystem,
-                  pathRelativeToProjectRoot,
-                  targetConfiguration,
-                  hostConfiguration,
-                  args);
+              coercer.coerceToUnconfigured(
+                  cellNameResolver, filesystem, pathRelativeToProjectRoot, args);
         } catch (CoerceFailedException e) {
           throw new CoerceFailedException(
               String.format(
@@ -197,7 +197,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
               e);
         }
 
-        parts.add(Either.ofRight(MacroContainer.of(macro, outputToFile)));
+        parts.add(Either.ofRight(UnconfiguredMacroContainer.of(macro, outputToFile)));
       }
 
       lastEnd = matchResult.getEndIndex();
@@ -208,7 +208,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
       parts.add(Either.ofLeft(blob.substring(lastEnd)));
     }
 
-    return StringWithMacros.of(parts.build());
+    return UnconfiguredStringWithMacros.ofUnconfigured(parts.build());
   }
 
   @Override
@@ -218,18 +218,9 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      UnconfiguredStringWithMacros object)
       throws CoerceFailedException {
-    if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(object, getOutputType());
-    }
-    return parse(
-        cellRoots,
-        filesystem,
-        pathRelativeToProjectRoot,
-        targetConfiguration,
-        hostConfiguration,
-        (String) object);
+    return object.configure(targetConfiguration, hostConfiguration);
   }
 
   @Override
