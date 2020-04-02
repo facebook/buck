@@ -1518,6 +1518,12 @@ public class ProjectGenerator {
             && !swiftDepTargets.isEmpty()
             && swiftBuckConfig.getProjectAddASTPaths()) {
           for (TargetNode<?> swiftNode : swiftDepTargets) {
+            if (!isLibraryFocused(swiftNode)) {
+              // Unfocused targets will not be built by Xcode, so we cannot refer to their
+              // .swiftmodule files by referencing $BUILT_PRODUCTS_DIR.
+              continue;
+            }
+
             String swiftModulePath =
                 String.format(
                     "${BUILT_PRODUCTS_DIR}/%s.swiftmodule/${CURRENT_ARCH}.swiftmodule",

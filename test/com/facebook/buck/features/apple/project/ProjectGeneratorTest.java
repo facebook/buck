@@ -86,6 +86,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -6107,6 +6108,33 @@ public class ProjectGeneratorTest {
         bundleBuildSettings.get("OTHER_LDFLAGS"),
         containsString(
             "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libA.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+    assertThat(
+        bundleBuildSettings.get("OTHER_LDFLAGS"),
+        containsString(
+            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libB.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+  }
+
+  @Test
+  public void testSwiftAddASTPathsLinkerFlagsWithFocusedModules() throws IOException {
+    BuildTarget libTargetB = BuildTargetFactory.newInstance("//foo", "libB");
+    BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "bin");
+    BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
+
+    // "libA" is missing from the list.
+    ImmutableSet<UnflavoredBuildTarget> focusedTargets =
+        ImmutableSet.of(
+            libTargetB.getUnflavoredBuildTarget(),
+            binaryTarget.getUnflavoredBuildTarget(),
+            bundleTarget.getUnflavoredBuildTarget());
+    defaultFocusedModules = Optional.of(FocusedModuleTargetMatcher.focusedOn(focusedTargets));
+
+    ImmutableMap<String, String> bundleBuildSettings = getBuildSettingsForSwiftASTProjectScenario();
+
+    assertThat(
+        bundleBuildSettings.get("OTHER_LDFLAGS"),
+        not(
+            containsString(
+                "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libA.swiftmodule/${CURRENT_ARCH}.swiftmodule'")));
     assertThat(
         bundleBuildSettings.get("OTHER_LDFLAGS"),
         containsString(
