@@ -5,6 +5,7 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-stub-1.24.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-protobuf-lite-1.24.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-protobuf-1.24.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-netty-1.24.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-netty-shaded-1.24.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-core-1.24.0.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/perfmark-api-0.20.1.jar!/" />
@@ -21,7 +22,9 @@
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-core-1.24.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/perfmark-api-0.20.1-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-context-1.24.0-sources.jar!/" />
+      <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-netty-1.24.0-sources.jar!/" />
       <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-netty-shaded-1.24.0-sources.jar!/" />
+        <root url="jar://$PROJECT_DIR$/third-party/java/grpc/grpc-testing-1.24.0-sources.jar!/" />
     </SOURCES>
   </library>
 </component>
