@@ -42,7 +42,7 @@ public class NamedPipesTest {
 
   private static Logger LOG = Logger.get(NamedPipesTest.class);
 
-  private static final String DELIMITER = "EndOfObject";
+  private static final String DELIMITER = "^^^";
 
   @BeforeClass
   public static void beforeClass() throws Exception {
@@ -55,7 +55,7 @@ public class NamedPipesTest {
    * Test creates a named pipe. Then writes to it 3 messages with 1 second delay. Reader executes as
    * a separate thread.
    *
-   * <p>In the end test verifies that message that were sent was received in about 500ms.
+   * <p>In the end test verifies that message that were sent was received in about 1s.
    */
   @Test
   public void testNamedPipes() {
@@ -107,9 +107,9 @@ public class NamedPipesTest {
       assertFalse(
           "Receive timestamp: "
               + receivedInstant
-              + " must be not more than 500ms different from the send timestamp: "
+              + " must be not more than 1s different from the send timestamp: "
               + sentInstant,
-          receivedInstant.minus(Duration.ofMillis(500)).isAfter(sentInstant));
+          receivedInstant.minus(Duration.ofSeconds(1)).isAfter(sentInstant));
     }
   }
 
