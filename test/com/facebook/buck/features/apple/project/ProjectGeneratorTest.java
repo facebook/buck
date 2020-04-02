@@ -6099,6 +6099,20 @@ public class ProjectGeneratorTest {
 
   @Test
   public void testSwiftAddASTPathsLinkerFlags() throws IOException {
+    ImmutableMap<String, String> bundleBuildSettings = getBuildSettingsForSwiftASTProjectScenario();
+
+    assertThat(
+        bundleBuildSettings.get("OTHER_LDFLAGS"),
+        containsString(
+            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libA.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+    assertThat(
+        bundleBuildSettings.get("OTHER_LDFLAGS"),
+        containsString(
+            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libB.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+  }
+
+  private ImmutableMap<String, String> getBuildSettingsForSwiftASTProjectScenario()
+      throws IOException {
     ImmutableMap<String, ImmutableMap<String, String>> sections =
         ImmutableMap.of(
             "swift",
@@ -6152,17 +6166,7 @@ public class ProjectGeneratorTest {
     PBXProject project = projectGenerator.getGeneratedProject();
 
     PBXTarget bundlePBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
-    ImmutableMap<String, String> bundleBuildSettings =
-        getBuildSettings(bundleTarget, bundlePBXTarget, "Debug");
-
-    assertThat(
-        bundleBuildSettings.get("OTHER_LDFLAGS"),
-        containsString(
-            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libA.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
-    assertThat(
-        bundleBuildSettings.get("OTHER_LDFLAGS"),
-        containsString(
-            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libB.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+    return getBuildSettings(bundleTarget, bundlePBXTarget, "Debug");
   }
 
   @Test
