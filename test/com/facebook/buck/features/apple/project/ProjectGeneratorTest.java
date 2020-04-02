@@ -189,6 +189,7 @@ public class ProjectGeneratorTest {
   private CxxBuckConfig cxxBuckConfig;
   private AppleConfig appleConfig;
   private SwiftBuckConfig swiftBuckConfig;
+  private Optional<FocusedModuleTargetMatcher> defaultFocusedModules;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   private AbsPath rootPath;
@@ -228,6 +229,7 @@ public class ProjectGeneratorTest {
     cxxBuckConfig = new CxxBuckConfig(config);
     appleConfig = config.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(config);
+    defaultFocusedModules = Optional.empty();
   }
 
   @Test
@@ -6669,7 +6671,7 @@ public class ProjectGeneratorTest {
         false,
         workspaceTarget,
         ImmutableSet.of(),
-        FocusedModuleTargetMatcher.noFocus(),
+        defaultFocusedModules.orElse(FocusedModuleTargetMatcher.noFocus()),
         DEFAULT_PLATFORM,
         appleCxxFlavors,
         actionGraphBuilderForNode,
