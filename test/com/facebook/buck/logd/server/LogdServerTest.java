@@ -140,7 +140,6 @@ public class LogdServerTest {
     LogMessage logMessage2 =
         LogMessage.newBuilder().setLogId(logId).setLogMessage("Hello, again!").build();
 
-    @SuppressWarnings("unchecked")
     StreamObserver<Status> responseObserver = mock(StreamObserver.class);
     LogdServiceGrpc.LogdServiceStub stub = LogdServiceGrpc.newStub(inProcessChannel);
     Capture<Status> statusCaptor = Capture.newInstance();

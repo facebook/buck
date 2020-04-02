@@ -85,7 +85,6 @@ public class TestActionExecutionRunner {
     StepExecutionResult getResult();
   }
 
-  @SuppressWarnings("unchecked")
   public <T extends AbstractAction> ExecutionDetails<T> runAction(T action)
       throws ActionCreationException, IOException {
 

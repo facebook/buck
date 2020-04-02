@@ -49,7 +49,6 @@ public class AbstractBatchingLoggerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testBatchingLogger() {
     String shortData = "data";
     String longData = "datdatdatdatdatdatdataaaaaaadata";

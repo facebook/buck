@@ -317,7 +317,6 @@ public class XcodeNativeTargetProjectWriterTest {
     assertThat("Copy files build phase exists", maybeBuildPhase, notNullValue());
 
     if (maybeBuildPhase.isPresent()) {
-      @SuppressWarnings("unchecked")
       PBXCopyFilesBuildPhase buildPhase = (PBXCopyFilesBuildPhase) maybeBuildPhase.get();
       assertThat(
           "Copy files build phase contains expected file",

@@ -153,7 +153,6 @@ public class AppleToolchainDiscoveryTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked") // for hasItems
   public void shouldEmitLogMessageWhenFailingToReadToolchainInfo() throws Exception {
     Path root = Paths.get("test/com/facebook/buck/apple/testdata/toolchain-discovery");
     Path tempRoot = temp.getRoot().toPath();

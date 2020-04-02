@@ -116,7 +116,6 @@ public class AndroidNativeLibsPackageableGraphEnhancerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testCxxLibrary() {
 
     UnresolvedNdkCxxPlatform ndkCxxPlatform =

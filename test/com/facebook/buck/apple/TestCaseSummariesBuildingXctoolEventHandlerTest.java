@@ -61,7 +61,6 @@ public class TestCaseSummariesBuildingXctoolEventHandlerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void mixedPassAndFailReturnsMixedResultSummary() throws Exception {
     Path jsonPath =
         TestDataHelper.getTestDataDirectory(this).resolve("xctool-output/mixed-pass-and-fail.json");

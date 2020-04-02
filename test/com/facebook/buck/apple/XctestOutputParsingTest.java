@@ -47,7 +47,6 @@ import org.junit.Test;
 public class XctestOutputParsingTest {
 
   @Test
-  @SuppressWarnings("unchecked")
   public void mixedPassAndFailReturnsMixedResultSummary() throws Exception {
     Path outputPath =
         TestDataHelper.getTestDataDirectory(this).resolve("xctest-output/mixed-pass-and-fail.txt");

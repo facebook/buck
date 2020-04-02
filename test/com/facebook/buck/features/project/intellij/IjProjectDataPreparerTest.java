@@ -231,7 +231,6 @@ public class IjProjectDataPreparerTest {
   }
 
   @Test
-  @SuppressWarnings("unchecked")
   public void testDependencies() {
     TargetNode<?> hamcrestTargetNode =
         PrebuiltJarBuilder.createBuilder(

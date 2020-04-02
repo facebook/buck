@@ -65,10 +65,8 @@ import org.junit.Test;
 public class DefaultClassInfoTest {
   private InputRuleResolver inputRuleResolver = createStrictMock(InputRuleResolver.class);
 
-  @SuppressWarnings("unchecked")
   private Consumer<BuildRule> buildRuleConsumer = createStrictMock(Consumer.class);
 
-  @SuppressWarnings("unchecked")
   private Consumer<OutputPath> outputConsumer = createStrictMock(Consumer.class);
 
   private ProjectFilesystem filesystem =

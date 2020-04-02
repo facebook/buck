@@ -128,7 +128,6 @@ public class MultiarchFileTest {
                 UnconfiguredTargetConfiguration.INSTANCE));
   }
 
-  @SuppressWarnings({"unchecked"})
   @Test
   public void descriptionWithMultiplePlatformArgsShouldGenerateMultiarchFile() {
     BuildTarget target =

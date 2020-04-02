@@ -49,9 +49,7 @@ public class ForwardingRuleKeyHasherTest {
     String string = "hash";
     HashCode hash = createMock(HashCode.class);
 
-    @SuppressWarnings("unchecked")
     RuleKeyHasher<String> stringHasher = createStrictMock(RuleKeyHasher.class);
-    @SuppressWarnings("unchecked")
     RuleKeyHasher<HashCode> guavaHasher = createStrictMock(RuleKeyHasher.class);
 
     expect(guavaHasher.hash()).andReturn(hash);
@@ -333,9 +331,7 @@ public class ForwardingRuleKeyHasherTest {
     String string = "hash";
     HashCode hash = createMock(HashCode.class);
 
-    @SuppressWarnings("unchecked")
     RuleKeyHasher<String> stringHasher = createStrictMock(RuleKeyHasher.class);
-    @SuppressWarnings("unchecked")
     RuleKeyHasher<HashCode> guavaHasher = createStrictMock(RuleKeyHasher.class);
 
     expect(guavaHasher.hash()).andReturn(hash);

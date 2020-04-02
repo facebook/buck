@@ -127,7 +127,6 @@ public final class ProjectGeneratorTestUtils {
   public static <T extends PBXBuildPhase> T getSingleBuildPhaseOfType(
       PBXTarget target, Class<T> cls) {
     Iterable<T> buildPhases = getExpectedBuildPhasesByType(target, cls, 1);
-    @SuppressWarnings("unchecked")
     T element = (T) Iterables.getOnlyElement(buildPhases);
     return element;
   }
