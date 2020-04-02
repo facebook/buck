@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 public class NamedPipesTest {
@@ -42,6 +43,13 @@ public class NamedPipesTest {
   private static Logger LOG = Logger.get(NamedPipesTest.class);
 
   private static final String DELIMITER = "EndOfObject";
+
+  @BeforeClass
+  public static void beforeClass() throws Exception {
+    // invoke initialize of ObjectMappers.WRITER and ObjectMappers.READER that happens in
+    // static-block
+    Class.forName(ObjectMappers.class.getCanonicalName());
+  }
 
   /**
    * Test creates a named pipe. Then writes to it 3 messages with 1 second delay. Reader executes as
