@@ -6101,6 +6101,28 @@ public class ProjectGeneratorTest {
   }
 
   @Test
+  public void testSwiftAddASTPathsLinkerFlagsNonDuplicated() throws IOException {
+    ImmutableMap<String, String> bundleBuildSettings = getBuildSettingsForSwiftASTProjectScenario();
+    assertThat(
+        bundleBuildSettings.get("OTHER_LDFLAGS"),
+        containsString(
+            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libA.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+
+    // Platform-specific config options are _additive_, so we need to ensure that the Swift debug
+    // flags appear just _once_ in the generic OTHER_LDFLAGS. Since they're expressed using
+    // ${CURRENT_ARCH), we do not need specific options per architecture.
+
+    assertThat(
+        bundleBuildSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"),
+        containsString("$(inherited)"));
+    assertThat(
+        bundleBuildSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"),
+        // NB: The test is _now_ broken, this establishes _current_ behavior which will be fixed.
+        containsString(
+            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libA.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+  }
+
+  @Test
   public void testSwiftAddASTPathsLinkerFlags() throws IOException {
     ImmutableMap<String, String> bundleBuildSettings = getBuildSettingsForSwiftASTProjectScenario();
 
@@ -6158,6 +6180,13 @@ public class ProjectGeneratorTest {
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "bin");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
+    PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags =
+        PatternMatchedCollection.<ImmutableList<StringWithMacros>>builder()
+            .add(
+                Pattern.compile("iphonesimulator.*"),
+                ImmutableList.of(StringWithMacros.ofConstantString("-ObjC")))
+            .build();
+
     TargetNode<?> libNodeA =
         AppleLibraryBuilder.createBuilder(libTargetA)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
@@ -6179,6 +6208,7 @@ public class ProjectGeneratorTest {
                     SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
             .setDeps(ImmutableSortedSet.of(libTargetA, libTargetB))
+            .setPlatformLinkerFlags(platformLinkerFlags)
             .build();
 
     TargetNode<?> bundleNode =
@@ -6188,8 +6218,11 @@ public class ProjectGeneratorTest {
             .setInfoPlist(FakeSourcePath.of("Info.plist"))
             .build();
 
+    ImmutableSet<Flavor> appleFlavors =
+        ImmutableSet.of(InternalFlavor.of("iphonesimulator-x86_64"));
     ProjectGenerator projectGenerator =
-        createProjectGenerator(ImmutableSet.of(libNodeA, libNodeB, binaryNode, bundleNode));
+        createProjectGenerator(
+            ImmutableSet.of(libNodeA, libNodeB, binaryNode, bundleNode), appleFlavors);
 
     projectGenerator.createXcodeProjects();
 

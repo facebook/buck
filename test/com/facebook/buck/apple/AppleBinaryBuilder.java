@@ -79,6 +79,12 @@ public class AppleBinaryBuilder
     return this;
   }
 
+  public AppleBinaryBuilder setPlatformLinkerFlags(
+      PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
+    getArgForPopulating().setPlatformLinkerFlags(platformLinkerFlags);
+    return this;
+  }
+
   public AppleBinaryBuilder setPreprocessorFlags(ImmutableList<String> preprocessorFlags) {
     getArgForPopulating()
         .setPreprocessorFlags(
