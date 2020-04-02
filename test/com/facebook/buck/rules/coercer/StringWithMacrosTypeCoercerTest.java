@@ -449,6 +449,12 @@ public class StringWithMacrosTypeCoercerTest {
     public int hashCode() {
       return args.hashCode();
     }
+
+    @Override
+    public Macro configure(
+        TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+      return this;
+    }
   }
 
   static class Test2Macro implements Macro, UnconfiguredMacro {
@@ -481,9 +487,15 @@ public class StringWithMacrosTypeCoercerTest {
     public int hashCode() {
       return args.hashCode();
     }
+
+    @Override
+    public Macro configure(
+        TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+      return this;
+    }
   }
 
-  static class TestMacroTypeCoercer implements MacroTypeCoercer<UnconfiguredMacro, TestMacro> {
+  static class TestMacroTypeCoercer implements MacroTypeCoercer<TestMacro, TestMacro> {
 
     @Override
     public boolean hasElementClass(Class<?>[] types) {
@@ -499,13 +511,12 @@ public class StringWithMacrosTypeCoercerTest {
     public void traverse(CellNameResolver cellRoots, TestMacro macro, Traversal traversal) {}
 
     @Override
-    public TestMacro coerce(
+    public TestMacro coerceToUnconfigured(
         CellNameResolver cellNameResolver,
         ProjectFilesystem filesystem,
         ForwardRelativePath pathRelativeToProjectRoot,
-        TargetConfiguration targetConfiguration,
-        TargetConfiguration hostConfiguration,
-        ImmutableList<String> args) {
+        ImmutableList<String> args)
+        throws CoerceFailedException {
       return new TestMacro(args);
     }
   }
@@ -526,13 +537,12 @@ public class StringWithMacrosTypeCoercerTest {
     public void traverse(CellNameResolver cellRoots, Test2Macro macro, Traversal traversal) {}
 
     @Override
-    public Test2Macro coerce(
+    public Test2Macro coerceToUnconfigured(
         CellNameResolver cellNameResolver,
         ProjectFilesystem filesystem,
         ForwardRelativePath pathRelativeToProjectRoot,
-        TargetConfiguration targetConfiguration,
-        TargetConfiguration hostConfiguration,
-        ImmutableList<String> args) {
+        ImmutableList<String> args)
+        throws CoerceFailedException {
       return new Test2Macro(args);
     }
   }
@@ -553,12 +563,10 @@ public class StringWithMacrosTypeCoercerTest {
     public void traverse(CellNameResolver cellRoots, TestMacro macro, Traversal traversal) {}
 
     @Override
-    public TestMacro coerce(
+    public TestMacro coerceToUnconfigured(
         CellNameResolver cellNameResolver,
         ProjectFilesystem filesystem,
         ForwardRelativePath pathRelativeToProjectRoot,
-        TargetConfiguration targetConfiguration,
-        TargetConfiguration hostConfiguration,
         ImmutableList<String> args)
         throws CoerceFailedException {
       throw new CoerceFailedException("failed");

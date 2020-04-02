@@ -18,28 +18,22 @@ package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.query.UnconfiguredQuery;
 
 /**
- * Macro used to denote the path of an output of a rule. Used when constructing command lines for
- * the rule, e.g. in {@code flags} fields of supporting rules.
+ * Class providing the type for macros used in `$(query_paths ...)` macro strings. The
+ * implementation is provided by the {@link QueryMacro} base class.
  */
 @BuckStyleValue
-public abstract class OutputMacro implements Macro, UnconfiguredMacro {
-
-  public static OutputMacro of(String outputName) {
-    return ImmutableOutputMacro.ofImpl(outputName);
-  }
+public abstract class UnconfiguredQueryPathsMacro extends UnconfiguredQueryMacro {
 
   @Override
-  public Class<? extends Macro> getMacroClass() {
-    return OutputMacro.class;
-  }
-
-  public abstract String getOutputName();
-
-  @Override
-  public Macro configure(
+  public QueryPathsMacro configure(
       TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
-    return this;
+    return QueryPathsMacro.of(getQuery().configure(targetConfiguration));
+  }
+
+  public static UnconfiguredQueryPathsMacro of(UnconfiguredQuery query) {
+    return ImmutableUnconfiguredQueryPathsMacro.ofImpl(query);
   }
 }

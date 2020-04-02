@@ -16,13 +16,15 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-/** Base class for <code>cxx_genrule</code> flags-based macros. */
+/** Unconfigured graph version of {@link CxxGenruleFilterAndTargetsMacro}. */
 @BuckStyleValue
 public abstract class UnconfiguredCxxGenruleFilterAndTargetsMacro implements UnconfiguredMacro {
 
@@ -43,4 +45,39 @@ public abstract class UnconfiguredCxxGenruleFilterAndTargetsMacro implements Unc
   public abstract Optional<Pattern> getFilter();
 
   public abstract ImmutableList<UnconfiguredBuildTarget> getTargets();
+
+  public static UnconfiguredCxxGenruleFilterAndTargetsMacro of(
+      Which which, Optional<Pattern> filter, ImmutableList<UnconfiguredBuildTarget> targets) {
+    return ImmutableUnconfiguredCxxGenruleFilterAndTargetsMacro.ofImpl(which, filter, targets);
+  }
+
+  /** Apply the configuration. */
+  @Override
+  public CxxGenruleFilterAndTargetsMacro configure(
+      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+    ImmutableList<BuildTarget> configuredTargets =
+        getTargets().stream()
+            .map(t -> t.configure(targetConfiguration))
+            .collect(ImmutableList.toImmutableList());
+    switch (getWhich()) {
+      case CPPFLAGS:
+        return CppFlagsMacro.of(getFilter(), configuredTargets);
+      case CXXPPFLAGS:
+        return CxxppFlagsMacro.of(getFilter(), configuredTargets);
+      case LDFLAGS_SHARED:
+        return LdflagsSharedMacro.of(getFilter(), configuredTargets);
+      case LDFLAGS_SHARED_FILTER:
+        return LdflagsSharedFilterMacro.of(getFilter(), configuredTargets);
+      case LDFLAGS_STATIC:
+        return LdflagsStaticMacro.of(getFilter(), configuredTargets);
+      case LDFLAGS_STATIC_FILTER:
+        return LdflagsSharedFilterMacro.of(getFilter(), configuredTargets);
+      case LDFLAGS_STATIC_PIC:
+        return LdflagsStaticPicMacro.of(getFilter(), configuredTargets);
+      case LDFLAGS_STATIC_PIC_FILTER:
+        return LdflagsStaticPicFilterMacro.of(getFilter(), configuredTargets);
+      default:
+        throw new AssertionError();
+    }
+  }
 }

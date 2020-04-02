@@ -16,11 +16,12 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** <code>$(ld)</code> macro type. */
 @BuckStyleValue
-public abstract class LdMacro implements Macro {
+public abstract class LdMacro implements Macro, UnconfiguredMacro {
 
   @Override
   public Class<? extends Macro> getMacroClass() {
@@ -29,5 +30,11 @@ public abstract class LdMacro implements Macro {
 
   public static LdMacro of() {
     return ImmutableLdMacro.of();
+  }
+
+  @Override
+  public Macro configure(
+      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+    return this;
   }
 }

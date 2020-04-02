@@ -16,11 +16,12 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** <code>$(cxxflags)</code> macro type. */
 @BuckStyleValue
-public interface CxxFlagsMacro extends Macro {
+public interface CxxFlagsMacro extends Macro, UnconfiguredMacro {
 
   @Override
   default Class<? extends Macro> getMacroClass() {
@@ -29,5 +30,11 @@ public interface CxxFlagsMacro extends Macro {
 
   static CxxFlagsMacro of() {
     return ImmutableCxxFlagsMacro.of();
+  }
+
+  @Override
+  default Macro configure(
+      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+    return this;
   }
 }

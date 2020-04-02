@@ -16,9 +16,6 @@
 
 package com.facebook.buck.rules.macros;
 
-import com.facebook.buck.core.model.TargetConfiguration;
-
-/** Unconfigured version of {@link Macro} */
-public interface UnconfiguredMacro {
-  Macro configure(TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration);
-}
+/** Marker for macros which expand to executable. */
+public abstract class AbstractUnconfiguredExecutableTargetOrHostMacro
+    extends UnconfiguredBuildTargetMacro {}

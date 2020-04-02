@@ -56,7 +56,7 @@ public class LocationMacroTypeCoercerTest {
   @Test
   public void validTarget() throws CoerceFailedException {
     assertThat(
-        coercer.coerce(
+        coercer.coerceBoth(
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
@@ -69,7 +69,7 @@ public class LocationMacroTypeCoercerTest {
                     BuildTargetFactory.newInstance("//:test"), OutputLabel.defaultLabel()))));
 
     assertThat(
-        coercer.coerce(
+        coercer.coerceBoth(
             CELL_PATH_RESOLVER,
             FILESYSTEM,
             BASE_PATH,
@@ -84,7 +84,7 @@ public class LocationMacroTypeCoercerTest {
 
   @Test(expected = CoerceFailedException.class)
   public void invalidTarget() throws CoerceFailedException {
-    coercer.coerce(
+    coercer.coerceBoth(
         CELL_PATH_RESOLVER,
         FILESYSTEM,
         BASE_PATH,
@@ -95,7 +95,7 @@ public class LocationMacroTypeCoercerTest {
 
   @Test(expected = CoerceFailedException.class)
   public void tooManyArgs() throws CoerceFailedException {
-    coercer.coerce(
+    coercer.coerceBoth(
         CELL_PATH_RESOLVER,
         FILESYSTEM,
         BASE_PATH,
@@ -106,7 +106,7 @@ public class LocationMacroTypeCoercerTest {
 
   @Test(expected = CoerceFailedException.class)
   public void tooFewArgs() throws CoerceFailedException {
-    coercer.coerce(
+    coercer.coerceBoth(
         CELL_PATH_RESOLVER,
         FILESYSTEM,
         BASE_PATH,

@@ -19,7 +19,6 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -33,27 +32,18 @@ public final class BuildTargetMacroTypeCoercer<
         U extends UnconfiguredBuildTargetMacro, M extends BuildTargetMacro>
     implements MacroTypeCoercer<U, M> {
 
-  /** Should target be resolved for host platform or target */
-  public enum TargetOrHost {
-    TARGET,
-    HOST,
-  }
-
   private final TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
       buildTargetWithOutputsTypeCoercer;
   private final Class<M> mClass;
-  private final TargetOrHost targetOrHost;
-  private final Function<BuildTargetWithOutputs, M> factory;
+  private final Function<UnconfiguredBuildTargetWithOutputs, U> factory;
 
   public BuildTargetMacroTypeCoercer(
       TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
           buildTargetWithOutputsTypeCoercer,
       Class<M> mClass,
-      TargetOrHost targetOrHost,
-      Function<BuildTargetWithOutputs, M> factory) {
+      Function<UnconfiguredBuildTargetWithOutputs, U> factory) {
     this.buildTargetWithOutputsTypeCoercer = buildTargetWithOutputsTypeCoercer;
     this.mClass = mClass;
-    this.targetOrHost = targetOrHost;
     this.factory = factory;
   }
 
@@ -77,26 +67,19 @@ public final class BuildTargetMacroTypeCoercer<
   }
 
   @Override
-  public M coerce(
+  public U coerceToUnconfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (args.size() != 1) {
       throw new CoerceFailedException(
           String.format("expected exactly one argument (found %d)", args.size()));
     }
-    BuildTargetWithOutputs target =
-        buildTargetWithOutputsTypeCoercer.coerceBoth(
-            cellNameResolver,
-            filesystem,
-            pathRelativeToProjectRoot,
-            targetOrHost == TargetOrHost.TARGET ? targetConfiguration : hostConfiguration,
-            hostConfiguration,
-            args.get(0));
+    UnconfiguredBuildTargetWithOutputs target =
+        buildTargetWithOutputsTypeCoercer.coerceToUnconfigured(
+            cellNameResolver, filesystem, pathRelativeToProjectRoot, args.get(0));
     return factory.apply(target);
   }
 }

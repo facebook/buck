@@ -27,6 +27,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.CppFlagsMacro;
 import com.facebook.buck.rules.macros.LdflagsStaticMacro;
+import com.facebook.buck.rules.macros.UnconfiguredCxxGenruleFilterAndTargetsMacro;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -47,9 +48,11 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
                     new UnconfiguredBuildTargetTypeCoercer(
                         new ParsingUnconfiguredBuildTargetViewFactory()))),
             CppFlagsMacro.class,
-            CppFlagsMacro::of);
+            (p, t) ->
+                UnconfiguredCxxGenruleFilterAndTargetsMacro.of(
+                    UnconfiguredCxxGenruleFilterAndTargetsMacro.Which.CPPFLAGS, p, t));
     CppFlagsMacro result =
-        coercer.coerce(
+        coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
@@ -75,9 +78,11 @@ public class CxxGenruleFilterAndTargetsMacroTypeCoercerTest {
                     new UnconfiguredBuildTargetTypeCoercer(
                         new ParsingUnconfiguredBuildTargetViewFactory()))),
             LdflagsStaticMacro.class,
-            LdflagsStaticMacro::of);
+            (p, t) ->
+                UnconfiguredCxxGenruleFilterAndTargetsMacro.of(
+                    UnconfiguredCxxGenruleFilterAndTargetsMacro.Which.LDFLAGS_STATIC, p, t));
     LdflagsStaticMacro result =
-        coercer.coerce(
+        coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,

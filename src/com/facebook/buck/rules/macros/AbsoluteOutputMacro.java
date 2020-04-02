@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
@@ -35,4 +36,10 @@ public abstract class AbsoluteOutputMacro implements Macro, UnconfiguredMacro {
   }
 
   public abstract String getOutputName();
+
+  @Override
+  public Macro configure(
+      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+    return this;
+  }
 }

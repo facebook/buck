@@ -16,11 +16,12 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /** <code>$(platform-name)</code> macro type. */
 @BuckStyleValue
-public interface PlatformNameMacro extends Macro {
+public interface PlatformNameMacro extends Macro, UnconfiguredMacro {
 
   @Override
   default Class<? extends Macro> getMacroClass() {
@@ -29,5 +30,11 @@ public interface PlatformNameMacro extends Macro {
 
   static PlatformNameMacro of() {
     return ImmutablePlatformNameMacro.of();
+  }
+
+  @Override
+  default Macro configure(
+      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+    return this;
   }
 }

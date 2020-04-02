@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
@@ -25,5 +26,11 @@ public abstract class UnconfiguredLocationMacro extends UnconfiguredBaseLocation
 
   public static UnconfiguredLocationMacro of(UnconfiguredBuildTargetWithOutputs target) {
     return ImmutableUnconfiguredLocationMacro.ofImpl(target);
+  }
+
+  @Override
+  public LocationMacro configure(
+      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+    return LocationMacro.of(getTargetWithOutputs().configure(targetConfiguration));
   }
 }

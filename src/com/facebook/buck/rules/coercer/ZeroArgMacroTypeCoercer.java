@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
@@ -30,11 +29,11 @@ public class ZeroArgMacroTypeCoercer<U extends UnconfiguredMacro, M extends Macr
     implements MacroTypeCoercer<U, M> {
 
   private final Class<M> mClass;
-  private final M val;
+  private final U unconfigured;
 
-  public ZeroArgMacroTypeCoercer(Class<M> mClass, M val) {
+  public ZeroArgMacroTypeCoercer(Class<M> mClass, U unconfigured) {
     this.mClass = mClass;
-    this.val = val;
+    this.unconfigured = unconfigured;
   }
 
   @Override
@@ -51,18 +50,16 @@ public class ZeroArgMacroTypeCoercer<U extends UnconfiguredMacro, M extends Macr
   }
 
   @Override
-  public M coerce(
+  public U coerceToUnconfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (!args.isEmpty()) {
       throw new CoerceFailedException(
           String.format("expected zero arguments (found %d)", args.size()));
     }
-    return val;
+    return unconfigured;
   }
 }

@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -49,20 +48,13 @@ abstract class AbstractLocationMacroTypeCoercer<
     buildTargetWithOutputsTypeCoercer.traverse(cellRoots, macro.getTargetWithOutputs(), traversal);
   }
 
-  protected BuildTargetWithOutputs coerceTarget(
+  protected UnconfiguredBuildTargetWithOutputs coerceTarget(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       String arg)
       throws CoerceFailedException {
-    return buildTargetWithOutputsTypeCoercer.coerceBoth(
-        cellNameResolver,
-        filesystem,
-        pathRelativeToProjectRoot,
-        targetConfiguration,
-        hostConfiguration,
-        arg);
+    return buildTargetWithOutputsTypeCoercer.coerceToUnconfigured(
+        cellNameResolver, filesystem, pathRelativeToProjectRoot, arg);
   }
 }

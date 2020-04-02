@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.query.UnconfiguredQuery;
 
@@ -33,5 +34,13 @@ public abstract class UnconfiguredQueryTargetsAndOutputsMacro extends Unconfigur
 
   abstract String getSeparator();
 
+  @Override
   public abstract UnconfiguredQuery getQuery();
+
+  @Override
+  public QueryTargetsAndOutputsMacro configure(
+      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+    return QueryTargetsAndOutputsMacro.of(
+        getSeparator(), getQuery().configure(targetConfiguration));
+  }
 }

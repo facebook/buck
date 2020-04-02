@@ -183,7 +183,7 @@ public class StringWithMacrosTypeCoercer implements TypeCoercer<Object, StringWi
         Macro macro;
         try {
           macro =
-              coercer.coerce(
+              coercer.coerceBoth(
                   cellNameResolver,
                   filesystem,
                   pathRelativeToProjectRoot,

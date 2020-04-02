@@ -18,7 +18,6 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -42,26 +41,18 @@ class LocationMacroTypeCoercer
   }
 
   @Override
-  public LocationMacro coerce(
+  public UnconfiguredLocationMacro coerceToUnconfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (args.size() != 1 || args.get(0).isEmpty()) {
       throw new CoerceFailedException(
           String.format("expected exactly one argument (found %d)", args.size()));
     }
-    BuildTargetWithOutputs targetWithOutputs =
-        coerceTarget(
-            cellNameResolver,
-            filesystem,
-            pathRelativeToProjectRoot,
-            targetConfiguration,
-            hostConfiguration,
-            args.get(0));
-    return LocationMacro.of(targetWithOutputs);
+    UnconfiguredBuildTargetWithOutputs targetWithOutputs =
+        coerceTarget(cellNameResolver, filesystem, pathRelativeToProjectRoot, args.get(0));
+    return UnconfiguredLocationMacro.of(targetWithOutputs);
   }
 }

@@ -34,12 +34,24 @@ interface MacroTypeCoercer<U extends UnconfiguredMacro, T extends Macro> {
 
   void traverse(CellNameResolver cellRoots, T macro, Traversal traversal);
 
-  T coerce(
+  U coerceToUnconfigured(
+      CellNameResolver cellNameResolver,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      ImmutableList<String> args)
+      throws CoerceFailedException;
+
+  @SuppressWarnings("unchecked")
+  default T coerceBoth(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
-      throws CoerceFailedException;
+      throws CoerceFailedException {
+    U unconfigured =
+        coerceToUnconfigured(cellNameResolver, filesystem, pathRelativeToProjectRoot, args);
+    return (T) unconfigured.configure(targetConfiguration, hostConfiguration);
+  }
 }

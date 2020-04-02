@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
@@ -34,12 +33,12 @@ class QueryMacroTypeCoercer<U extends UnconfiguredQueryMacro, M extends QueryMac
 
   private final TypeCoercer<UnconfiguredQuery, Query> queryCoercer;
   private final Class<M> mClass;
-  private final Function<Query, M> factory;
+  private final Function<UnconfiguredQuery, U> factory;
 
   public QueryMacroTypeCoercer(
       TypeCoercer<UnconfiguredQuery, Query> queryCoercer,
       Class<M> mClass,
-      Function<Query, M> factory) {
+      Function<UnconfiguredQuery, U> factory) {
     this.queryCoercer = queryCoercer;
     this.mClass = mClass;
     this.factory = factory;
@@ -61,12 +60,10 @@ class QueryMacroTypeCoercer<U extends UnconfiguredQueryMacro, M extends QueryMac
   }
 
   @Override
-  public M coerce(
+  public U coerceToUnconfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     if (args.size() != 1) {
@@ -74,12 +71,7 @@ class QueryMacroTypeCoercer<U extends UnconfiguredQueryMacro, M extends QueryMac
           String.format("expected exactly one argument (found %d)", args.size()));
     }
     return factory.apply(
-        queryCoercer.coerceBoth(
-            cellNameResolver,
-            filesystem,
-            pathRelativeToProjectRoot,
-            targetConfiguration,
-            hostConfiguration,
-            args.get(0)));
+        queryCoercer.coerceToUnconfigured(
+            cellNameResolver, filesystem, pathRelativeToProjectRoot, args.get(0)));
   }
 }

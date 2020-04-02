@@ -19,6 +19,7 @@ package com.facebook.buck.rules.coercer;
 import static com.facebook.buck.core.cell.TestCellBuilder.createCellRoots;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -39,7 +40,7 @@ public class ZeroArgMacroTypeCoercerTest {
     ZeroArgMacroTypeCoercer<ZeroArgMacro, ZeroArgMacro> coercer =
         new ZeroArgMacroTypeCoercer<>(ZeroArgMacro.class, macro);
     ZeroArgMacro result =
-        coercer.coerce(
+        coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
@@ -55,7 +56,7 @@ public class ZeroArgMacroTypeCoercerTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     ZeroArgMacroTypeCoercer<ZeroArgMacro, ZeroArgMacro> coercer =
         new ZeroArgMacroTypeCoercer<>(ZeroArgMacro.class, new ZeroArgMacro());
-    coercer.coerce(
+    coercer.coerceBoth(
         createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         basePath,
@@ -69,6 +70,12 @@ public class ZeroArgMacroTypeCoercerTest {
     @Override
     public Class<? extends Macro> getMacroClass() {
       return ZeroArgMacro.class;
+    }
+
+    @Override
+    public Macro configure(
+        TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
+      return this;
     }
   }
 }

@@ -17,29 +17,21 @@
 package com.facebook.buck.rules.macros;
 
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputs;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
-/**
- * Macro used to denote the path of an output of a rule. Used when constructing command lines for
- * the rule, e.g. in {@code flags} fields of supporting rules.
- */
+/** Unconfigured graph version of {@link com.facebook.buck.rules.macros.ExecutableMacro}. */
 @BuckStyleValue
-public abstract class OutputMacro implements Macro, UnconfiguredMacro {
-
-  public static OutputMacro of(String outputName) {
-    return ImmutableOutputMacro.ofImpl(outputName);
-  }
+public abstract class UnconfiguredExecutableMacro
+    extends AbstractUnconfiguredExecutableTargetOrHostMacro {
 
   @Override
-  public Class<? extends Macro> getMacroClass() {
-    return OutputMacro.class;
-  }
-
-  public abstract String getOutputName();
-
-  @Override
-  public Macro configure(
+  public ExecutableMacro configure(
       TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration) {
-    return this;
+    return ExecutableMacro.of(getTargetWithOutputs().configure(targetConfiguration));
+  }
+
+  public static UnconfiguredExecutableMacro of(UnconfiguredBuildTargetWithOutputs buildTarget) {
+    return ImmutableUnconfiguredExecutableMacro.ofImpl(buildTarget);
   }
 }

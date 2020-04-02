@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
@@ -49,13 +48,12 @@ public class EnvMacroTypeCoercer implements MacroTypeCoercer<EnvMacro, EnvMacro>
   }
 
   @Override
-  public EnvMacro coerce(
+  public EnvMacro coerceToUnconfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      ImmutableList<String> args) {
+      ImmutableList<String> args)
+      throws CoerceFailedException {
     Preconditions.checkState(
         args.size() == 1, String.format("expected a single argument: %s", args));
     return EnvMacro.of(args.get(0));

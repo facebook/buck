@@ -17,7 +17,6 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.TypeCoercer.Traversal;
@@ -56,12 +55,10 @@ class QueryTargetsAndOutputsMacroTypeCoercer
   }
 
   @Override
-  public QueryTargetsAndOutputsMacro coerce(
+  public UnconfiguredQueryTargetsAndOutputsMacro coerceToUnconfigured(
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
       ImmutableList<String> args)
       throws CoerceFailedException {
     String separator = " ";
@@ -75,14 +72,9 @@ class QueryTargetsAndOutputsMacroTypeCoercer
       throw new CoerceFailedException(
           "One quoted query expression is expected, or a separator and a query");
     }
-    return QueryTargetsAndOutputsMacro.of(
+    return UnconfiguredQueryTargetsAndOutputsMacro.of(
         separator,
-        queryCoercer.coerceBoth(
-            cellNameResolver,
-            filesystem,
-            pathRelativeToProjectRoot,
-            targetConfiguration,
-            hostConfiguration,
-            query));
+        queryCoercer.coerceToUnconfigured(
+            cellNameResolver, filesystem, pathRelativeToProjectRoot, query));
   }
 }

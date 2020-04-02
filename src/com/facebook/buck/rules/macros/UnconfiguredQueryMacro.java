@@ -16,5 +16,15 @@
 
 package com.facebook.buck.rules.macros;
 
+import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.rules.query.UnconfiguredQuery;
+
 /** Unconfigured graph version of {@link com.facebook.buck.rules.macros.QueryMacro}. */
-public abstract class UnconfiguredQueryMacro implements UnconfiguredMacro {}
+public abstract class UnconfiguredQueryMacro implements UnconfiguredMacro {
+
+  public abstract UnconfiguredQuery getQuery();
+
+  @Override
+  public abstract QueryMacro configure(
+      TargetConfiguration targetConfiguration, TargetConfiguration hostConfiguration);
+}
