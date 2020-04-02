@@ -6109,12 +6109,19 @@ public class ProjectGeneratorTest {
     BuckConfig buckConfig = FakeBuckConfig.builder().setSections(sections).build();
     swiftBuckConfig = new SwiftBuckConfig(buckConfig);
 
-    BuildTarget libTarget = BuildTargetFactory.newInstance("//foo", "lib");
+    BuildTarget libTargetA = BuildTargetFactory.newInstance("//foo", "libA");
+    BuildTarget libTargetB = BuildTargetFactory.newInstance("//foo", "libB");
     BuildTarget binaryTarget = BuildTargetFactory.newInstance("//foo", "bin");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "bundle");
 
-    TargetNode<?> libNode =
-        AppleLibraryBuilder.createBuilder(libTarget)
+    TargetNode<?> libNodeA =
+        AppleLibraryBuilder.createBuilder(libTargetA)
+            .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
+            .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
+            .setSwiftVersion(Optional.of("3.0"))
+            .build();
+    TargetNode<?> libNodeB =
+        AppleLibraryBuilder.createBuilder(libTargetB)
             .setConfigs(ImmutableSortedMap.of("Debug", ImmutableMap.of()))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("Foo.swift"))))
             .setSwiftVersion(Optional.of("3.0"))
@@ -6127,7 +6134,7 @@ public class ProjectGeneratorTest {
                 ImmutableSortedSet.of(
                     SourceWithFlags.of(FakeSourcePath.of("foo.h"), ImmutableList.of("public")),
                     SourceWithFlags.of(FakeSourcePath.of("bar.h"))))
-            .setDeps(ImmutableSortedSet.of(libTarget))
+            .setDeps(ImmutableSortedSet.of(libTargetA, libTargetB))
             .build();
 
     TargetNode<?> bundleNode =
@@ -6138,7 +6145,7 @@ public class ProjectGeneratorTest {
             .build();
 
     ProjectGenerator projectGenerator =
-        createProjectGenerator(ImmutableSet.of(libNode, binaryNode, bundleNode));
+        createProjectGenerator(ImmutableSet.of(libNodeA, libNodeB, binaryNode, bundleNode));
 
     projectGenerator.createXcodeProjects();
 
@@ -6151,7 +6158,11 @@ public class ProjectGeneratorTest {
     assertThat(
         bundleBuildSettings.get("OTHER_LDFLAGS"),
         containsString(
-            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/lib.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libA.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
+    assertThat(
+        bundleBuildSettings.get("OTHER_LDFLAGS"),
+        containsString(
+            "-Xlinker -add_ast_path -Xlinker '${BUILT_PRODUCTS_DIR}/libB.swiftmodule/${CURRENT_ARCH}.swiftmodule'"));
   }
 
   @Test
