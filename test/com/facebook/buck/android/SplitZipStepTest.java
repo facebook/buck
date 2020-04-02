@@ -91,7 +91,7 @@ public class SplitZipStepTest {
     // time they are written due to timestamps written into the file.
     assertEquals("secondary-1.dex.jar", data[0]);
     assertTrue(
-        String.format("Unexpected class: %s", data[2]), fileToClassName.values().contains(data[2]));
+        String.format("Unexpected class: %s", data[2]), fileToClassName.containsValue(data[2]));
   }
 
   @Test
@@ -130,7 +130,7 @@ public class SplitZipStepTest {
     // time they are written due to timestamps written into the file.
     assertEquals("module-1.dex.jar", data[0]);
     assertTrue(
-        String.format("Unexpected class: %s", data[2]), fileToClassName.values().contains(data[2]));
+        String.format("Unexpected class: %s", data[2]), fileToClassName.containsValue(data[2]));
   }
 
   @Test

@@ -19,10 +19,10 @@ package com.facebook.buck.android.exopackage;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -62,7 +62,7 @@ public class DexExoHelper {
     // hashes in the file names (because we use that to skip re-uploads), so just hack
     // the metadata file to have hash-like names.
     return com.google.common.io.Files.toString(
-            pathResolver.getAbsolutePath(dexInfo.getMetadata()).toFile(), Charsets.UTF_8)
+            pathResolver.getAbsolutePath(dexInfo.getMetadata()).toFile(), StandardCharsets.UTF_8)
         .replaceAll(
             "secondary-([\\d_]+)\\.dex\\.jar (\\p{XDigit}{40}) ", "secondary-$2.dex.jar $2 ");
   }

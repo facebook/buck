@@ -44,11 +44,11 @@ import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -206,7 +206,8 @@ public class ProvisioningProfileCopyStepTest {
     Optional<String> resultContents = projectFilesystem.readFileIfItExists(dryRunResultFile);
     assertTrue(resultContents.isPresent());
     NSDictionary resultPlist =
-        (NSDictionary) PropertyListParser.parse(resultContents.get().getBytes(Charsets.UTF_8));
+        (NSDictionary)
+            PropertyListParser.parse(resultContents.get().getBytes(StandardCharsets.UTF_8));
 
     assertEquals(new NSString("com.example.TestApp"), resultPlist.get("bundle-id"));
   }

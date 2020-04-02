@@ -26,12 +26,12 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.MoreStringsForTests;
 import com.facebook.buck.util.string.MoreStrings;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.io.Resources;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -68,7 +68,7 @@ public class AuditModulesCommandTest {
         Resources.toString(
             Resources.getResource(
                 AuditModulesCommandTest.class, "testdata/audit_modules/stdout-json.in"),
-            Charsets.UTF_8);
+            StandardCharsets.UTF_8);
 
     assertThat(output, is(equalToIgnoringPlatformNewlines(expected)));
   }
@@ -86,7 +86,7 @@ public class AuditModulesCommandTest {
         Resources.toString(
             Resources.getResource(
                 AuditModulesCommandTest.class, "testdata/audit_modules/stdout-raw.in"),
-            Charsets.UTF_8);
+            StandardCharsets.UTF_8);
 
     assertEquals(output, MoreStrings.lines(expected));
   }

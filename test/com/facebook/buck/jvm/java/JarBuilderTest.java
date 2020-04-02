@@ -25,7 +25,6 @@ import com.facebook.buck.util.zip.JarBuilder;
 import com.facebook.buck.util.zip.JarEntryContainer;
 import com.facebook.buck.util.zip.JarEntrySupplier;
 import com.facebook.buck.util.zip.ZipConstants;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import java.io.ByteArrayInputStream;
@@ -219,7 +218,7 @@ public class JarBuilderTest {
             CharStreams.toString(
                 new InputStreamReader(
                     jarFile.getInputStream(jarFile.getEntry("META-INF/services/com.example.Foo1")),
-                    Charsets.UTF_8)));
+                    StandardCharsets.UTF_8)));
 
         // Test duplication
         assertEquals(
@@ -227,7 +226,7 @@ public class JarBuilderTest {
             CharStreams.toString(
                 new InputStreamReader(
                     jarFile.getInputStream(jarFile.getEntry("META-INF/services/com.example.Foo2")),
-                    Charsets.UTF_8)));
+                    StandardCharsets.UTF_8)));
 
         // Test non service files
         assertEquals(

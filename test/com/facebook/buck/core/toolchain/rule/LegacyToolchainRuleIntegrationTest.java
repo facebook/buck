@@ -31,10 +31,10 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -67,8 +67,8 @@ public class LegacyToolchainRuleIntegrationTest {
     httpdHandler =
         new HttpdForTests.CapturingHttpHandler(
             ImmutableMap.<String, byte[]>builder()
-                .put("/csc.sh", cscDotSh.getBytes(Charsets.UTF_8))
-                .put("/csc.bat", cscDotBat.getBytes(Charsets.UTF_8))
+                .put("/csc.sh", cscDotSh.getBytes(StandardCharsets.UTF_8))
+                .put("/csc.bat", cscDotBat.getBytes(StandardCharsets.UTF_8))
                 .build());
     httpd = new HttpdForTests();
     httpd.addHandler(httpdHandler);

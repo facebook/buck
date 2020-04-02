@@ -24,11 +24,11 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements;
 import com.facebook.buck.remoteexecution.proto.WorkerRequirements.WorkerSize;
-import com.google.common.base.Charsets;
 import com.google.common.io.FileWriteMode;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Objects;
@@ -116,7 +116,7 @@ public class FileBasedWorkerRequirementsProviderTest {
   public void testInvalidJSONShouldReturnDefault() throws IOException {
     File file = Paths.get(tmp.getPath(), FILENAME).toFile();
     Assert.assertTrue(file.createNewFile());
-    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND).write("invalid json");
+    Files.asCharSink(file, StandardCharsets.UTF_8, FileWriteMode.APPEND).write("invalid json");
 
     WorkerRequirementsProvider provider =
         new FileBasedWorkerRequirementsProvider(projectFilesystem, FILENAME, true, 1000);
@@ -131,7 +131,7 @@ public class FileBasedWorkerRequirementsProviderTest {
   public void testRuleNotFoundShouldReturnDefault() throws IOException {
     File file = Paths.get(tmp.getPath(), FILENAME).toFile();
     Assert.assertTrue(file.createNewFile());
-    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
+    Files.asCharSink(file, StandardCharsets.UTF_8, FileWriteMode.APPEND)
         .write(String.format("{%s: %s}", OTHER_RULE_ACTION_TAGS, SIZE_SMALL));
 
     WorkerRequirementsProvider provider =
@@ -147,7 +147,7 @@ public class FileBasedWorkerRequirementsProviderTest {
   public void testRuleHasCustomRequirements() throws IOException {
     File file = Paths.get(tmp.getPath(), FILENAME).toFile();
     Assert.assertTrue(file.createNewFile());
-    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
+    Files.asCharSink(file, StandardCharsets.UTF_8, FileWriteMode.APPEND)
         .write(
             String.format(
                 "{%s: %s, %s: %s}", OTHER_RULE_ACTION_TAGS, SIZE_SMALL, ACTION_TAGS, SIZE_LARGE));
@@ -164,7 +164,7 @@ public class FileBasedWorkerRequirementsProviderTest {
   public void testRuleHasCustomRequirementsButOnlyWithoutAuxiliaryTag() throws IOException {
     File file = Paths.get(tmp.getPath(), FILENAME).toFile();
     Assert.assertTrue(file.createNewFile());
-    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
+    Files.asCharSink(file, StandardCharsets.UTF_8, FileWriteMode.APPEND)
         .write(
             String.format(
                 "{%s: %s, %s: %s}",
@@ -182,7 +182,7 @@ public class FileBasedWorkerRequirementsProviderTest {
   public void testRuleHasInvalidTypeShouldProvideDefault() throws IOException {
     File file = Paths.get(tmp.getPath(), FILENAME).toFile();
     Assert.assertTrue(file.createNewFile());
-    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
+    Files.asCharSink(file, StandardCharsets.UTF_8, FileWriteMode.APPEND)
         .write(
             String.format(
                 "{%s: %s, %s: %s}", OTHER_RULE_ACTION_TAGS, SIZE_SMALL, ACTION_TAGS, SIZE_UNKNOWN));
@@ -201,7 +201,7 @@ public class FileBasedWorkerRequirementsProviderTest {
   public void testRuleHasCustomRequirementsInOldFormat() throws IOException {
     File file = Paths.get(tmp.getPath(), FILENAME).toFile();
     Assert.assertTrue(file.createNewFile());
-    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
+    Files.asCharSink(file, StandardCharsets.UTF_8, FileWriteMode.APPEND)
         .write(
             String.format(
                 "{\"%s\": %s, \"%s\": %s}", OTHER_SHORT_NAME, SIZE_SMALL, SHORT_NAME, SIZE_LARGE));
@@ -218,7 +218,7 @@ public class FileBasedWorkerRequirementsProviderTest {
   public void testRuleHasInvalidTypeShouldProvideDefaultInOldFormat() throws IOException {
     File file = Paths.get(tmp.getPath(), FILENAME).toFile();
     Assert.assertTrue(file.createNewFile());
-    Files.asCharSink(file, Charsets.UTF_8, FileWriteMode.APPEND)
+    Files.asCharSink(file, StandardCharsets.UTF_8, FileWriteMode.APPEND)
         .write(
             String.format(
                 "{\"%s\": %s, \"%s\": %s}",

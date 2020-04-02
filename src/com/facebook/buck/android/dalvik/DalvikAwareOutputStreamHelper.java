@@ -18,13 +18,13 @@ package com.facebook.buck.android.dalvik;
 
 import com.facebook.buck.jvm.java.classes.FileLike;
 import com.facebook.buck.util.zip.DeterministicZipBuilder;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -54,7 +54,7 @@ public class DalvikAwareOutputStreamHelper implements ZipOutputStreamHelper {
     this.zipBuilder = new DeterministicZipBuilder(outputFile);
     this.linearAllocLimit = linearAllocLimit;
     Path reportFile = reportDir.resolve(outputFile.getFileName() + ".txt");
-    this.reportFileWriter = Files.newBufferedWriter(reportFile, Charsets.UTF_8);
+    this.reportFileWriter = Files.newBufferedWriter(reportFile, StandardCharsets.UTF_8);
     this.dalvikStatsCache = dalvikStatsCache;
   }
 

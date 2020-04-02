@@ -34,11 +34,11 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /** Compile the given module sources into their respective bytecode. */
 public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
@@ -144,7 +144,7 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
   private static String getCompiler() {
     try {
       return Resources.toString(
-          Resources.getResource(PythonCompileRule.class, "compile.py"), Charsets.UTF_8);
+          Resources.getResource(PythonCompileRule.class, "compile.py"), StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

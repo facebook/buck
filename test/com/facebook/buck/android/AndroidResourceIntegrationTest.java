@@ -26,13 +26,13 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.hamcrest.Matchers;
@@ -77,7 +77,7 @@ public class AndroidResourceIntegrationTest {
                     .getStdout())
             .get(1);
     assertThat(
-        Files.readAllLines(workspace.getPath(output).resolve("R.txt"), Charsets.UTF_8),
+        Files.readAllLines(workspace.getPath(output).resolve("R.txt"), StandardCharsets.UTF_8),
         Matchers.contains("int string another_name 0x7f010002", "int string some_name 0x7f010001"));
 
     // Add a new item in the input and verify that the resource rule gets re-run.
@@ -97,7 +97,7 @@ public class AndroidResourceIntegrationTest {
     workspace.runBuckBuild(buildTarget);
 
     String resourceIndexJson =
-        Charsets.US_ASCII
+        StandardCharsets.US_ASCII
             .decode(
                 ByteBuffer.wrap(
                     Files.readAllBytes(

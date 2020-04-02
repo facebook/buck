@@ -30,7 +30,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.xml.XmlDomParser;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -38,6 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.BufferedReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -175,7 +175,7 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
     Map<String, String> messages = new HashMap<>();
     Map<String, List<String>> stdout = new HashMap<>();
     Map<String, Long> times = new HashMap<>();
-    try (BufferedReader reader = Files.newBufferedReader(output, Charsets.US_ASCII)) {
+    try (BufferedReader reader = Files.newBufferedReader(output, StandardCharsets.US_ASCII)) {
       Stack<String> testSuite = new Stack<>();
       Optional<String> currentTest = Optional.empty();
       String line;

@@ -24,7 +24,6 @@ import com.facebook.buck.logd.proto.CreateLogResponse;
 import com.facebook.buck.logd.proto.LogMessage;
 import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.logd.proto.LogdServiceGrpc;
-import com.google.common.base.Charsets;
 import com.google.rpc.Status;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
@@ -33,6 +32,7 @@ import io.grpc.testing.GrpcCleanupRule;
 import io.grpc.util.MutableHandlerRegistry;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
@@ -107,7 +107,7 @@ public class LogdStreamFactoryTest {
     String message = "hello world";
     try (OutputStream logdStream =
         logStreamFactory.createLogStream(getTestFilePath(), LogType.BUCK_LOG)) {
-      logdStream.write(message.getBytes(Charsets.UTF_8));
+      logdStream.write(message.getBytes(StandardCharsets.UTF_8));
     } catch (IOException e) {
       throw new AssertionError("Failed to stream message via logd", e);
     }

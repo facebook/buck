@@ -30,11 +30,11 @@ import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -74,7 +74,7 @@ public class ShellStepTest {
               @Subscribe
               public void logEvent(ConsoleEvent event) throws IOException {
                 if (event.getLevel().equals(Level.WARNING)) {
-                  console.getStdErr().write(event.getMessage().getBytes(Charsets.UTF_8));
+                  console.getStdErr().write(event.getMessage().getBytes(StandardCharsets.UTF_8));
                 }
               }
             });

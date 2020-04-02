@@ -45,11 +45,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -93,7 +93,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     workspace.runBuckBuild(target.getFullyQualifiedName()).assertSuccess();
     Path lib = workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple.a"));
-    String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
+    String contents =
+        Files.asByteSource(lib.toFile()).asCharSource(StandardCharsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
 
     // ...
@@ -104,7 +105,7 @@ public class CxxPreprocessAndCompileIntegrationTest {
         longPwdWorkspace.getPath(
             BuildTargetPaths.getGenPath(longPwdFilesystem, target, "%s/libsimple.a"));
     String longPwdContents =
-        Files.asByteSource(longPwdLib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
+        Files.asByteSource(longPwdLib.toFile()).asCharSource(StandardCharsets.ISO_8859_1).read();
     assertEquals(contents, longPwdContents);
   }
 
@@ -117,7 +118,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
     Path lib =
         workspace.getPath(
             BuildTargetPaths.getGenPath(filesystem, target, "%s/libsimple_assembly.a"));
-    String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
+    String contents =
+        Files.asByteSource(lib.toFile()).asCharSource(StandardCharsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
   }
 
@@ -147,7 +149,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
         workspace.getPath(
             BuildTargetPaths.getGenPath(
                 workspace.getProjectFileSystem(), target, "%s/libsimple.a"));
-    String contents = Files.asByteSource(lib.toFile()).asCharSource(Charsets.ISO_8859_1).read();
+    String contents =
+        Files.asByteSource(lib.toFile()).asCharSource(StandardCharsets.ISO_8859_1).read();
     assertFalse(lib.toString(), contents.contains(tmp.getRoot().toString()));
     assertFalse(lib.toString(), contents.contains(symlinkedRoot.toString()));
 

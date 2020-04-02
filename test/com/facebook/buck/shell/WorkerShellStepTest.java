@@ -41,12 +41,12 @@ import com.facebook.buck.worker.WorkerProcessIdentity;
 import com.facebook.buck.worker.WorkerProcessParams;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.facebook.buck.worker.WorkerProcessPoolFactory;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -141,7 +141,7 @@ public class WorkerShellStepTest {
     WorkerProcessPool workerProcessPool =
         new WorkerProcessPool(
             poolCapacity,
-            Hashing.sha1().hashString(fakeWorkerStartupCommand, Charsets.UTF_8),
+            Hashing.sha1().hashString(fakeWorkerStartupCommand, StandardCharsets.UTF_8),
             () -> new FakeWorkerProcess(jobArgs));
 
     ConcurrentHashMap<String, WorkerProcessPool> workerProcessMap = new ConcurrentHashMap<>();
@@ -150,7 +150,7 @@ public class WorkerShellStepTest {
     WorkerProcessPool persistentWorkerProcessPool =
         new WorkerProcessPool(
             poolCapacity,
-            Hashing.sha1().hashString(fakePersistentWorkerStartupCommand, Charsets.UTF_8),
+            Hashing.sha1().hashString(fakePersistentWorkerStartupCommand, StandardCharsets.UTF_8),
             () -> new FakeWorkerProcess(jobArgs));
     ConcurrentHashMap<String, WorkerProcessPool> persistentWorkerProcessMap =
         new ConcurrentHashMap<>();
@@ -283,7 +283,8 @@ public class WorkerShellStepTest {
                 "myJobArgs",
                 1,
                 persistentWorkerKey,
-                Hashing.sha1().hashString(fakePersistentWorkerStartupCommand, Charsets.UTF_8)),
+                Hashing.sha1()
+                    .hashString(fakePersistentWorkerStartupCommand, StandardCharsets.UTF_8)),
             null,
             null);
 

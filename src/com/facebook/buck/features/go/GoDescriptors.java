@@ -54,7 +54,6 @@ import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -65,6 +64,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -512,7 +512,7 @@ abstract class GoDescriptors {
   private static String extractTestMainGenerator() {
     try {
       return Resources.toString(
-          Resources.getResource(GoDescriptors.class, TEST_MAIN_GEN_PATH), Charsets.UTF_8);
+          Resources.getResource(GoDescriptors.class, TEST_MAIN_GEN_PATH), StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

@@ -146,7 +146,7 @@ public class JsBundleWorkerJobArgsTest {
       // Double quote not allowed as Windows path character.
       // The Java nio Windows normalizer gives errors for the \t
       // and all other escape characters, but \'.
-      fileNameWithEscapes = "//needs\'\':escaping";
+      fileNameWithEscapes = "//needs'':escaping";
     } else {
       fileNameWithEscapes = "//needs\t\":escaping";
     }

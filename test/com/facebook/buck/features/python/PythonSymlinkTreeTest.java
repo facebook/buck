@@ -55,13 +55,13 @@ import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.hashing.FileHashLoader;
-import com.google.common.base.Charsets;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -96,12 +96,12 @@ public class PythonSymlinkTreeTest {
     // Get the first file we're symlinking
     Path link1 = Paths.get("file");
     AbsPath file1 = tmpDir.newFile();
-    Files.write(file1.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file1.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
 
     // Get the second file we're symlinking
     Path link2 = Paths.get("directory", "then", "file");
     AbsPath file2 = tmpDir.newFile();
-    Files.write(file2.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file2.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
 
     // Setup the map representing the link tree.
     links =
@@ -164,7 +164,7 @@ public class PythonSymlinkTreeTest {
     // BuildRule rule1 = symlinkTreeBuildable;
 
     AbsPath file1 = tmpDir.newFile();
-    Files.write(file1.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file1.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
 
     BuildTarget exportFileTarget1 = BuildTargetFactory.newInstance("//test:dir1");
     BuildTarget exportFileTarget2 = BuildTargetFactory.newInstance("//test:dir2");

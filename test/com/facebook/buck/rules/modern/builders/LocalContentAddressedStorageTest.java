@@ -29,7 +29,6 @@ import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache;
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
@@ -37,6 +36,7 @@ import com.google.common.util.concurrent.Futures;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -63,7 +63,7 @@ public class LocalContentAddressedStorageTest {
 
   @Test
   public void canAddData() throws IOException {
-    byte[] data = "hello world!".getBytes(Charsets.UTF_8);
+    byte[] data = "hello world!".getBytes(StandardCharsets.UTF_8);
     Digest digest = protocol.newDigest("myhashcode", data.length);
     Futures.getUnchecked(
         storage.addMissing(
@@ -81,12 +81,13 @@ public class LocalContentAddressedStorageTest {
   }
 
   private void assertDataEquals(byte[] expected, byte[] actual) {
-    assertEquals(new String(expected, Charsets.UTF_8), new String(actual, Charsets.UTF_8));
+    assertEquals(
+        new String(expected, StandardCharsets.UTF_8), new String(actual, StandardCharsets.UTF_8));
   }
 
   @Test
   public void presentDataIsNotAdded() throws IOException {
-    byte[] data = "hello world!".getBytes(Charsets.UTF_8);
+    byte[] data = "hello world!".getBytes(StandardCharsets.UTF_8);
     Digest digest = protocol.newDigest("myhashcode", data.length);
     Futures.getUnchecked(
         storage.addMissing(
@@ -107,10 +108,10 @@ public class LocalContentAddressedStorageTest {
   public void addingAndMaterializingFullInputsWorks() throws IOException {
     Map<Path, FileNode> files = new HashMap<>();
     Path somePath = Paths.get("dir/some.path");
-    byte[] someData = "hello world!".getBytes(Charsets.UTF_8);
+    byte[] someData = "hello world!".getBytes(StandardCharsets.UTF_8);
     files.put(somePath, newFileNode(someData, somePath, false));
     Path otherPath = Paths.get("dir/other.path");
-    byte[] otherData = "goodbye world!".getBytes(Charsets.UTF_8);
+    byte[] otherData = "goodbye world!".getBytes(StandardCharsets.UTF_8);
     files.put(otherPath, newFileNode(otherData, otherPath, false));
 
     MerkleTreeNodeCache nodeCache = new MerkleTreeNodeCache(protocol);

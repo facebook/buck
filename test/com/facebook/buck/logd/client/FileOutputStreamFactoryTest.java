@@ -19,9 +19,9 @@ package com.facebook.buck.logd.client;
 import static org.junit.Assert.*;
 
 import com.facebook.buck.logd.proto.LogType;
-import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -37,7 +37,7 @@ public class FileOutputStreamFactoryTest {
     LogStreamFactory logStreamFactory = new FileOutputStreamFactory();
     try (OutputStream fileOutputStream =
         logStreamFactory.createLogStream(getTestFilePath(), LogType.BUCK_LOG)) {
-      fileOutputStream.write(message.getBytes(Charsets.UTF_8));
+      fileOutputStream.write(message.getBytes(StandardCharsets.UTF_8));
     }
 
     assertEquals(message, readFile(getTestFilePath()));

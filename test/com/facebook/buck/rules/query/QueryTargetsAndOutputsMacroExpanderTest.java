@@ -186,14 +186,13 @@ public class QueryTargetsAndOutputsMacroExpanderTest {
 
   private String coerceAndStringify(String input, BuildRule rule) throws CoerceFailedException {
     StringWithMacros stringWithMacros =
-        (StringWithMacros)
-            coercer.coerceBoth(
-                cellNameResolver,
-                filesystem,
-                rule.getBuildTarget().getCellRelativeBasePath().getPath(),
-                UnconfiguredTargetConfiguration.INSTANCE,
-                UnconfiguredTargetConfiguration.INSTANCE,
-                input);
+        coercer.coerceBoth(
+            cellNameResolver,
+            filesystem,
+            rule.getBuildTarget().getCellRelativeBasePath().getPath(),
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            input);
     Arg arg = converter.convert(stringWithMacros);
     return Arg.stringify(arg, graphBuilder.getSourcePathResolver());
   }

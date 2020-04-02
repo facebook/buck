@@ -30,11 +30,11 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -50,7 +50,7 @@ public class SymlinkFileStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
 
     File source = tmpDir.newFile();
-    Files.write("foobar", source, Charsets.UTF_8);
+    Files.write("foobar", source, StandardCharsets.UTF_8);
 
     File target = tmpDir.newFile();
     target.delete();
@@ -65,11 +65,11 @@ public class SymlinkFileStepTest {
     step.execute(context);
 
     assertTrue(target.exists());
-    assertEquals("foobar", Files.readFirstLine(target, Charsets.UTF_8));
+    assertEquals("foobar", Files.readFirstLine(target, StandardCharsets.UTF_8));
 
     // Modify the original file and see if the linked file changes as well.
-    Files.write("new", source, Charsets.UTF_8);
-    assertEquals("new", Files.readFirstLine(target, Charsets.UTF_8));
+    Files.write("new", source, StandardCharsets.UTF_8);
+    assertEquals("new", Files.readFirstLine(target, StandardCharsets.UTF_8));
   }
 
   @Test

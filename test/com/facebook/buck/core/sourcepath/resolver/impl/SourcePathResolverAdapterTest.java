@@ -44,7 +44,7 @@ public class SourcePathResolverAdapterTest {
   @Rule public final ExpectedException exception = ExpectedException.none();
 
   @Mock private SourcePathResolver mockResolver;
-  @Mock private SourcePath mockSourcePath;;
+  @Mock private SourcePath mockSourcePath;
   private ProjectFilesystem projectFilesystem;
   private SourcePathResolverAdapter testAdapter;
 

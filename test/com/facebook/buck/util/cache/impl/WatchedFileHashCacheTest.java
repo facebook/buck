@@ -33,11 +33,11 @@ import com.facebook.buck.io.watchman.WatchmanPathEvent;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.HashCodeAndFileType;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -150,11 +150,11 @@ public class WatchedFileHashCacheTest {
     WatchedFileHashCache cache = new WatchedFileHashCache(filesystem, fileHashCacheMode);
     tmp.newFolder("foo", "bar");
     AbsPath inputFile = tmp.newFile("foo/bar/baz");
-    Files.write(inputFile.getPath(), "Hello world".getBytes(Charsets.UTF_8));
+    Files.write(inputFile.getPath(), "Hello world".getBytes(StandardCharsets.UTF_8));
 
     Path dir = Paths.get("foo/bar");
     HashCode dirHash = cache.get(dir);
-    Files.write(inputFile.getPath(), "Goodbye world".getBytes(Charsets.UTF_8));
+    Files.write(inputFile.getPath(), "Goodbye world".getBytes(StandardCharsets.UTF_8));
     cache.onFileSystemChange(
         WatchmanPathEvent.of(
             filesystem.getRootPath(), Kind.MODIFY, RelPath.of(dir.resolve("baz"))));

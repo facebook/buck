@@ -19,12 +19,12 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyFactory;
@@ -167,7 +167,7 @@ public class ClientCertificateHandler {
    */
   public static InputStream filterPEMInputStream(InputStream inStream, String label)
       throws IOException {
-    String fileContent = new String(ByteStreams.toByteArray(inStream), Charsets.UTF_8);
+    String fileContent = new String(ByteStreams.toByteArray(inStream), StandardCharsets.UTF_8);
     /* See https://www.rfc-editor.org/rfc/rfc7468.html#section-3 */
     Matcher matcher =
         Pattern.compile(
@@ -179,7 +179,7 @@ public class ClientCertificateHandler {
       pemSections.add(fileContent.substring(matcher.start(), matcher.end()));
     }
     return new ByteArrayInputStream(
-        String.join(System.lineSeparator(), pemSections).getBytes(Charsets.UTF_8));
+        String.join(System.lineSeparator(), pemSections).getBytes(StandardCharsets.UTF_8));
   }
 
   /**
@@ -197,7 +197,7 @@ public class ClientCertificateHandler {
     }
     Path keyPath = keyPathOptional.get();
     try {
-      String privateKeyRaw = new String(Files.readAllBytes(keyPath), Charsets.UTF_8);
+      String privateKeyRaw = new String(Files.readAllBytes(keyPath), StandardCharsets.UTF_8);
       Matcher matcher = privateKeyExtractor.matcher(privateKeyRaw);
       if (!matcher.find()) {
         throw new HumanReadableException(

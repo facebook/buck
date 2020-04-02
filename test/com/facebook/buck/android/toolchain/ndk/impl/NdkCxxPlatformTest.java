@@ -77,7 +77,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -87,6 +86,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.io.Files;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -501,7 +501,7 @@ public class NdkCxxPlatformTest {
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
     Path expectedFlags = TestDataHelper.getTestDataDirectory(this).resolve("ndkcxxplatforms.flags");
-    String expected = Files.toString(expectedFlags.toFile(), Charsets.UTF_8);
+    String expected = Files.toString(expectedFlags.toFile(), StandardCharsets.UTF_8);
 
     // This string is constructed to try to get intellij/phabricator to not detect moves across the
     // boundaries of different flag types. We could split this into multiple files, but the tradeoff

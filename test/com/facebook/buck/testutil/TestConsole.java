@@ -20,7 +20,7 @@ import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Verbosity;
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Implementation of {@link Console} to use in unit tests. Avoids the side-effect of writing to
@@ -43,11 +43,11 @@ public class TestConsole extends Console {
 
   public String getTextWrittenToStdOut() {
     CapturingPrintStream stream = (CapturingPrintStream) getStdOut().getRawStream();
-    return stream.getContentsAsString(Charsets.UTF_8);
+    return stream.getContentsAsString(StandardCharsets.UTF_8);
   }
 
   public String getTextWrittenToStdErr() {
     CapturingPrintStream stream = (CapturingPrintStream) getStdErr().getRawStream();
-    return stream.getContentsAsString(Charsets.UTF_8);
+    return stream.getContentsAsString(StandardCharsets.UTF_8);
   }
 }

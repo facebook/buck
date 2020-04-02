@@ -44,7 +44,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.unarchive.Unzip;
 import com.facebook.buck.util.zip.Zip;
 import com.facebook.buck.util.zip.ZipConstants;
-import com.google.common.base.Charsets;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -716,7 +715,7 @@ public class DefaultProjectFilesystemTest {
     expected.expect(IOException.class);
 
     tmp.newFolder("dir1");
-    Files.write(tmp.newFile("dir1/file1").getPath(), "new file 1".getBytes(Charsets.UTF_8));
+    Files.write(tmp.newFile("dir1/file1").getPath(), "new file 1".getBytes(UTF_8));
 
     tmp.newFolder("dir2");
     tmp.newFile("dir2/file1");
@@ -729,7 +728,7 @@ public class DefaultProjectFilesystemTest {
     expected.expect(IOException.class);
 
     tmp.newFolder("dir1");
-    Files.write(tmp.newFile("dir1/file1").getPath(), "new file 1".getBytes(Charsets.UTF_8));
+    Files.write(tmp.newFile("dir1/file1").getPath(), "new file 1".getBytes(UTF_8));
 
     tmp.newFolder("dir2");
     tmp.newFolder("dir2/file1");
@@ -742,22 +741,20 @@ public class DefaultProjectFilesystemTest {
   @Test
   public void moveChildrenMergesOneDirectoryIntoAnother() throws IOException {
     AbsPath srcDir = tmp.newFolder("dir1");
-    Files.write(tmp.newFile("dir1/file1").getPath(), "new file 1".getBytes(Charsets.UTF_8));
+    Files.write(tmp.newFile("dir1/file1").getPath(), "new file 1".getBytes(UTF_8));
 
     tmp.newFolder("dir1/subdir1");
-    Files.write(tmp.newFile("dir1/subdir1/file2").getPath(), "new file 2".getBytes(Charsets.UTF_8));
+    Files.write(tmp.newFile("dir1/subdir1/file2").getPath(), "new file 2".getBytes(UTF_8));
 
     tmp.newFolder("dir1/subdir1/subdir2");
-    Files.write(
-        tmp.newFile("dir1/subdir1/subdir2/file3").getPath(), "new file 3".getBytes(Charsets.UTF_8));
+    Files.write(tmp.newFile("dir1/subdir1/subdir2/file3").getPath(), "new file 3".getBytes(UTF_8));
 
     tmp.newFolder("dir1/subdir1/subdir2/subdir3");
 
     tmp.newFolder("dir2");
     AbsPath destRoot = tmp.newFolder("dir2/dir3");
-    Files.write(tmp.newFile("dir2/dir3/file1").getPath(), "old file 1".getBytes(Charsets.UTF_8));
-    Files.write(
-        tmp.newFile("dir2/dir3/file1_1").getPath(), "old file 1_1".getBytes(Charsets.UTF_8));
+    Files.write(tmp.newFile("dir2/dir3/file1").getPath(), "old file 1".getBytes(UTF_8));
+    Files.write(tmp.newFile("dir2/dir3/file1_1").getPath(), "old file 1_1".getBytes(UTF_8));
 
     tmp.newFolder("dir2/dir3/dir4");
     tmp.newFolder("dir2/dir3/subdir1");

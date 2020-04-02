@@ -34,11 +34,11 @@ import com.facebook.buck.io.file.FileScrubber;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -223,7 +223,8 @@ public class DarwinLinker extends DelegatingTool
       Set<String> symbols = new LinkedHashSet<>();
       try {
         for (SourcePath path : symbolFiles) {
-          symbols.addAll(Files.readAllLines(pathResolver.getAbsolutePath(path), Charsets.UTF_8));
+          symbols.addAll(
+              Files.readAllLines(pathResolver.getAbsolutePath(path), StandardCharsets.UTF_8));
         }
       } catch (IOException e) {
         throw new RuntimeException(e);

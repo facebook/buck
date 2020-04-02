@@ -18,8 +18,8 @@ package com.facebook.buck.util;
 
 import static org.junit.Assert.*;
 
-import com.google.common.base.Charsets;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Test;
@@ -50,8 +50,8 @@ public class NamedTemporaryDirectoryTest {
     try (NamedTemporaryDirectory temp = new NamedTemporaryDirectory("prefix")) {
       root = temp.getPath();
       path = root.resolve("some.file");
-      Files.write(path, "data".getBytes(Charsets.UTF_8));
-      Files.write(root.resolve("other.file"), "data2".getBytes(Charsets.UTF_8));
+      Files.write(path, "data".getBytes(StandardCharsets.UTF_8));
+      Files.write(root.resolve("other.file"), "data2".getBytes(StandardCharsets.UTF_8));
     }
     assertFalse(Files.exists(path));
     assertFalse(Files.exists(root));
@@ -67,9 +67,9 @@ public class NamedTemporaryDirectoryTest {
       subdir = root.resolve("subdir");
       Files.createDirectories(subdir);
       path = subdir.resolve("some.file");
-      Files.write(path, "data".getBytes(Charsets.UTF_8));
-      Files.write(subdir.resolve("other"), "data".getBytes(Charsets.UTF_8));
-      Files.write(root.resolve("other"), "data".getBytes(Charsets.UTF_8));
+      Files.write(path, "data".getBytes(StandardCharsets.UTF_8));
+      Files.write(subdir.resolve("other"), "data".getBytes(StandardCharsets.UTF_8));
+      Files.write(root.resolve("other"), "data".getBytes(StandardCharsets.UTF_8));
     }
     assertFalse(Files.exists(path));
     assertFalse(Files.exists(subdir));

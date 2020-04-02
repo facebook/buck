@@ -31,7 +31,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.FakeClock;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
@@ -53,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileAlreadyExistsException;
@@ -589,7 +589,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
 
   @Override
   public void writeContentsToPath(String contents, Path path, FileAttribute<?>... attrs) {
-    writeBytesToPath(contents.getBytes(Charsets.UTF_8), path, attrs);
+    writeBytesToPath(contents.getBytes(StandardCharsets.UTF_8), path, attrs);
   }
 
   @Override
@@ -655,7 +655,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     if (!exists(path)) {
       return Optional.empty();
     }
-    return Optional.of(new String(getFileBytes(path), Charsets.UTF_8));
+    return Optional.of(new String(getFileBytes(path), StandardCharsets.UTF_8));
   }
 
   /** Does not support symlinks. */

@@ -24,11 +24,11 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -140,7 +140,7 @@ public class StringPoolTest {
 
       resourceTable.dumpStrings(new PrintStream(baos));
 
-      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+      String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
       Path stringsOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".strings"));
       String expected = new String(Files.readAllBytes(stringsOutput));

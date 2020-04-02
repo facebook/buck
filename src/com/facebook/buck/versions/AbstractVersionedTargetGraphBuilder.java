@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -34,6 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -71,8 +71,8 @@ public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTa
     Preconditions.checkArgument(!versions.isEmpty());
     Hasher hasher = Hashing.md5().newHasher();
     for (Map.Entry<BuildTarget, Version> ent : versions.entrySet()) {
-      hasher.putString(ent.getKey().toString(), Charsets.UTF_8);
-      hasher.putString(ent.getValue().getName(), Charsets.UTF_8);
+      hasher.putString(ent.getKey().toString(), StandardCharsets.UTF_8);
+      hasher.putString(ent.getValue().getName(), StandardCharsets.UTF_8);
     }
     return InternalFlavor.of("v" + hasher.hash().toString().substring(0, 7));
   }

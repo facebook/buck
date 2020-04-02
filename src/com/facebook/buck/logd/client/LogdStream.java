@@ -17,10 +17,10 @@
 package com.facebook.buck.logd.client;
 
 import com.facebook.buck.logd.proto.LogMessage;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import io.grpc.stub.StreamObserver;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** LogdStream streams log messages to LogD */
@@ -74,7 +74,7 @@ public class LogdStream extends OutputStream {
 
   private synchronized void flushBuffer() {
     if (count > 0) {
-      String logMessage = new String(buf, 0, count, Charsets.UTF_8);
+      String logMessage = new String(buf, 0, count, StandardCharsets.UTF_8);
       write(logMessage);
       count = 0;
     }

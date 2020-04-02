@@ -81,7 +81,6 @@ import com.facebook.buck.shell.ExportFileDescription.Mode;
 import com.facebook.buck.shell.ExportFileDirectoryAction;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -98,6 +97,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.Files;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -592,7 +592,8 @@ public class CxxDescriptionEnhancer {
               .encode(
                   Hashing.sha1()
                       .hashString(
-                          target.getUnflavoredBuildTarget().getFullyQualifiedName(), Charsets.UTF_8)
+                          target.getUnflavoredBuildTarget().getFullyQualifiedName(),
+                          StandardCharsets.UTF_8)
                       .asBytes())
               .substring(0, 10);
       postfix = "-" + hashedPath;

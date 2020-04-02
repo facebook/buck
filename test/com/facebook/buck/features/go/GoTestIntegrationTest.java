@@ -36,9 +36,9 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Before;
@@ -91,7 +91,7 @@ public class GoTestIntegrationTest {
     String cmd = spec.get("cmd").textValue();
 
     Path script = Files.createTempFile("bash", "script");
-    Files.write(script, cmd.getBytes(Charsets.UTF_8));
+    Files.write(script, cmd.getBytes(StandardCharsets.UTF_8));
     MostFiles.makeExecutable(script);
 
     DefaultProcessExecutor processExecutor =

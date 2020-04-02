@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -31,6 +30,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
@@ -81,16 +81,16 @@ public class ClasspathTraversalTest {
   @Test
   public void testDirectoryAndFile() throws IOException {
     File notADirectory = tempDir.newFile("not_a_directory.txt");
-    Files.write("not_a_directory.txt", notADirectory, Charsets.UTF_8);
+    Files.write("not_a_directory.txt", notADirectory, StandardCharsets.UTF_8);
     File yesADir = tempDir.newFolder("is_a_directory");
-    Files.write("foo.txt", new File(yesADir, "foo.txt"), Charsets.UTF_8);
-    Files.write("bar.txt", new File(yesADir, "bar.txt"), Charsets.UTF_8);
+    Files.write("foo.txt", new File(yesADir, "foo.txt"), StandardCharsets.UTF_8);
+    Files.write("bar.txt", new File(yesADir, "bar.txt"), StandardCharsets.UTF_8);
     File aSubDir = new File(yesADir, "fizzbuzz");
     assertTrue("Failed to create dir: " + aSubDir, aSubDir.mkdir());
     Files.write(
         MorePaths.pathWithPlatformSeparators("fizzbuzz/whatever.txt"),
         new File(aSubDir, "whatever.txt"),
-        Charsets.UTF_8);
+        StandardCharsets.UTF_8);
     verifyFileLike(4, notADirectory, yesADir);
   }
 
@@ -103,7 +103,7 @@ public class ClasspathTraversalTest {
       for (String filename : files) {
         ZipEntry entry = new ZipEntry(filename);
         zipOut.putNextEntry(entry);
-        zipOut.write(filename.getBytes(Charsets.UTF_8));
+        zipOut.write(filename.getBytes(StandardCharsets.UTF_8));
       }
     }
     verifyFileLike(3, file);

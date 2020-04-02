@@ -24,7 +24,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -32,6 +31,7 @@ import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
@@ -263,7 +263,7 @@ public class AndroidNdkResolver extends BaseAndroidToolchainResolver {
         throw new HumanReadableException("Failed to read NDK version from " + newNdk + ".");
       }
     } else if (oldNdkPathFound) {
-      try (BufferedReader reader = Files.newBufferedReader(oldNdk, Charsets.UTF_8)) {
+      try (BufferedReader reader = Files.newBufferedReader(oldNdk, StandardCharsets.UTF_8)) {
         // Android NDK r10e for Linux is mislabeled as r10e-rc4 instead of r10e. This is a work
         // around since we should consider them equivalent.
         return Optional.ofNullable(reader.readLine().split("\\s+")[0].replace("r10e-rc4", "r10e"));

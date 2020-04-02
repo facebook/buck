@@ -49,13 +49,13 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.versioncontrol.NoOpCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.ByteStreams;
 import java.io.DataOutput;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Instant;
@@ -436,7 +436,7 @@ public class DoctorCommandIntegrationTest {
         assertTrue(requestMethod.get().equalsIgnoreCase(expectedMethod));
         assertThat(
             "Request should contain the uuid.",
-            new String(requestBody.get(), Charsets.UTF_8),
+            new String(requestBody.get(), StandardCharsets.UTF_8),
             Matchers.containsString(expectedBody));
 
         try (DataOutputStream out = new DataOutputStream(httpResponse.getOutputStream())) {

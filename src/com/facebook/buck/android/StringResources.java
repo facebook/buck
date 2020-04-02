@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -26,6 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
@@ -78,7 +78,7 @@ public class StringResources {
           .put("other", 5)
           .build();
 
-  private static Charset charset = Charsets.UTF_8;
+  private static Charset charset = StandardCharsets.UTF_8;
 
   public StringResources(
       SortedMap<Integer, EnumMap<Gender, String>> strings,

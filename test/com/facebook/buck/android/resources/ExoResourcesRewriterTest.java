@@ -27,12 +27,12 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.IntBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
@@ -85,7 +85,7 @@ public class ExoResourcesRewriterTest {
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     primaryResourceTable.dump(new PrintStream(baos));
-    String content = new String(baos.toByteArray(), Charsets.UTF_8);
+    String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
     Path expectedPath = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources.primary"));
     String expected = filesystem.readFileIfItExists(expectedPath).get();
 
@@ -96,7 +96,7 @@ public class ExoResourcesRewriterTest {
 
     baos = new ByteArrayOutputStream();
     exoResourceTable.dump(new PrintStream(baos));
-    content = new String(baos.toByteArray(), Charsets.UTF_8);
+    content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
     expectedPath = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources.exo"));
     expected = filesystem.readFileIfItExists(expectedPath).get();
 

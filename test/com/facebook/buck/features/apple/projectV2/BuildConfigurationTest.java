@@ -239,12 +239,12 @@ public class BuildConfigurationTest {
     }
 
     assertEquals(3 + additionalConfigs.size(), buildConfigs.size());
-    assertTrue(buildConfigs.keySet().contains(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME));
-    assertTrue(buildConfigs.keySet().contains(BuildConfiguration.PROFILE_BUILD_CONFIGURATION_NAME));
-    assertTrue(buildConfigs.keySet().contains(BuildConfiguration.RELEASE_BUILD_CONFIGURATION_NAME));
+    assertTrue(buildConfigs.containsKey(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME));
+    assertTrue(buildConfigs.containsKey(BuildConfiguration.PROFILE_BUILD_CONFIGURATION_NAME));
+    assertTrue(buildConfigs.containsKey(BuildConfiguration.RELEASE_BUILD_CONFIGURATION_NAME));
 
     for (Map.Entry<String, ImmutableMap<String, String>> entry : additionalConfigs.entrySet()) {
-      assertTrue(buildConfigs.keySet().contains(entry.getKey()));
+      assertTrue(buildConfigs.containsKey(entry.getKey()));
       assertEquals(entry.getValue(), buildConfigs.get(entry.getKey()));
     }
   }
@@ -253,7 +253,7 @@ public class BuildConfigurationTest {
       ImmutableSortedMap<String, ImmutableMap<String, String>> buildConfigs,
       String configName,
       ImmutableMap<String, String> buildSettings) {
-    assertTrue(buildConfigs.keySet().contains(configName));
+    assertTrue(buildConfigs.containsKey(configName));
     assertEquals(buildConfigs.get(configName), buildSettings);
   }
 }

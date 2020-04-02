@@ -36,12 +36,12 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
 import com.facebook.buck.zip.ZipScrubberStep;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -233,7 +233,7 @@ class TrimUberRDotJava extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           continue;
         }
       }
-      output.write(line.getBytes(Charsets.UTF_8));
+      output.write(line.getBytes(StandardCharsets.UTF_8));
       output.write('\n');
     }
   }

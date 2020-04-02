@@ -94,7 +94,6 @@ import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.versions.Version;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Predicates;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -106,6 +105,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Comparator;
@@ -632,7 +632,7 @@ public class AppleTestDescription
               .relativize(projectFilesystem.getRootPath())
               .toString();
       Hasher hasher = Hashing.sha1().newHasher();
-      hasher.putBytes(relativeRootPathString.getBytes(Charsets.UTF_8));
+      hasher.putBytes(relativeRootPathString.getBytes(StandardCharsets.UTF_8));
       String sha1Hash = hasher.hash().toString();
 
       BuildTarget unzipXctoolTarget =

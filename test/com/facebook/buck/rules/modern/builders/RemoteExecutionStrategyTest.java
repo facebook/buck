@@ -55,7 +55,6 @@ import com.facebook.buck.rules.modern.ModernBuildRule;
 import com.facebook.buck.rules.modern.NoOpModernBuildRule;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.types.Unit;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
@@ -67,6 +66,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -88,7 +88,7 @@ public class RemoteExecutionStrategyTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
   private final GrpcProtocol protocol = new GrpcProtocol();
 
-  private final byte[] missingData = "data".getBytes(Charsets.UTF_8);
+  private final byte[] missingData = "data".getBytes(StandardCharsets.UTF_8);
   private final Digest missingDigest = protocol.computeDigest(missingData);
 
   private RemoteExecutionClients clients;
@@ -380,7 +380,7 @@ public class RemoteExecutionStrategyTest {
     public Path getCellPathPrefix() {
       return tmp.getRoot().getPath();
     }
-  };
+  }
 
   private class SimpleRemoteExecutionClients implements RemoteExecutionClients {
     public ExecutionHandle execute() {

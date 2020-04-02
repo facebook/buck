@@ -23,9 +23,9 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
 class TestUtils {
@@ -46,7 +46,7 @@ class TestUtils {
       fileSeparator = "\\\\";
     }
     String buildReportContents =
-        new String(Files.readAllBytes(buildReportPath.getPath()), Charsets.UTF_8);
+        new String(Files.readAllBytes(buildReportPath.getPath()), StandardCharsets.UTF_8);
     String buildReportContentsToReplaceWithOutputPrefix = buildReportContents;
     String buildReportContentsToReplaceWithRandomNumber = buildReportContents;
 

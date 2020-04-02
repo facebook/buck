@@ -24,13 +24,13 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -90,7 +90,7 @@ public class ResourceTableTest {
       ResourceTable resourceTable = ResourceTable.get(buf);
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       resourceTable.dump(new PrintStream(baos));
-      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+      String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
       Path resourcesOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources"));
 
@@ -119,7 +119,7 @@ public class ResourceTableTest {
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       resourceTable.dump(new PrintStream(baos));
-      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+      String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
       Path resourcesOutput =
           filesystem.resolve(filesystem.getPath(APK_NAME + ".resources.reversed"));
@@ -150,7 +150,7 @@ public class ResourceTableTest {
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       resourceTable.dump(new PrintStream(baos));
-      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+      String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
       Path resourcesOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources"));
 
@@ -185,11 +185,11 @@ public class ResourceTableTest {
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       resourceTable.dump(new PrintStream(baos));
-      String expected = new String(baos.toByteArray(), Charsets.UTF_8);
+      String expected = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
       baos = new ByteArrayOutputStream();
       copy.dump(new PrintStream(baos));
-      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+      String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
       MoreAsserts.assertLargeStringsEqual(expected, content);
     }
@@ -212,7 +212,7 @@ public class ResourceTableTest {
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       resourceTable.dump(new PrintStream(baos));
-      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+      String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
       MoreAsserts.assertLargeStringsEqual(expected, content);
     }
@@ -235,7 +235,7 @@ public class ResourceTableTest {
 
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       resourceTable.getStrings().dump(new PrintStream(baos));
-      String content = new String(baos.toByteArray(), Charsets.UTF_8);
+      String content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
       assertEquals(
           "String pool of 4 unique UTF-8 non-sorted strings, "
@@ -248,7 +248,7 @@ public class ResourceTableTest {
 
       baos = new ByteArrayOutputStream();
       resourceTable.getPackage().getKeys().dump(new PrintStream(baos));
-      content = new String(baos.toByteArray(), Charsets.UTF_8);
+      content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
       assertEquals(
           "String pool of 5 unique UTF-8 non-sorted strings, "
@@ -262,7 +262,7 @@ public class ResourceTableTest {
 
       baos = new ByteArrayOutputStream();
       resourceTable.getPackage().getTypes().dump(new PrintStream(baos));
-      content = new String(baos.toByteArray(), Charsets.UTF_8);
+      content = new String(baos.toByteArray(), StandardCharsets.UTF_8);
 
       assertEquals(
           "String pool of 6 unique UTF-8 non-sorted strings, "

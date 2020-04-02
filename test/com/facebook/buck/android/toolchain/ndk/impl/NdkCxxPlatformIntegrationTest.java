@@ -54,10 +54,10 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -209,7 +209,7 @@ public class NdkCxxPlatformIntegrationTest {
         workspace.getPath(
             BuildTargetPaths.getGenPath(
                 filesystem, target, "%s/lib" + target.getShortName() + ".a"));
-    String contents = MorePaths.asByteSource(lib).asCharSource(Charsets.ISO_8859_1).read();
+    String contents = MorePaths.asByteSource(lib).asCharSource(StandardCharsets.ISO_8859_1).read();
 
     // Verify that the working directory is sanitized.
     assertLibraryArchiveContentDoesNotContain(
@@ -235,7 +235,8 @@ public class NdkCxxPlatformIntegrationTest {
         longPwdWorkspace.getPath(
             BuildTargetPaths.getGenPath(
                 longPwdFilesystem, target, "%s/lib" + target.getShortName() + ".a"));
-    String movedContents = MorePaths.asByteSource(lib).asCharSource(Charsets.ISO_8859_1).read();
+    String movedContents =
+        MorePaths.asByteSource(lib).asCharSource(StandardCharsets.ISO_8859_1).read();
     assertEquals(contents, movedContents);
   }
 

@@ -493,7 +493,7 @@ public class PythonDslProjectBuildFileParserTest {
         new TestProjectBuildFileParserFactory(cell.getRootCell().getRoot(), knownNativeRuleTypes);
 
     ImmutableMap<String, Object> returnedTarget =
-        ImmutableMap.<String, Object>of(
+        ImmutableMap.of(
             "name", "bar", "buck.type", "//foo:udr.bzl:my_rule", "val", 5, "buck.base_path", "foo");
 
     ImmutableList<String> extensionContents =

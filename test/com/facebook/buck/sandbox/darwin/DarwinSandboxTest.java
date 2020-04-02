@@ -19,11 +19,11 @@ package com.facebook.buck.sandbox.darwin;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.sandbox.SandboxProperties;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.Test;
 
@@ -47,7 +47,7 @@ public class DarwinSandboxTest {
 
     List<String> expected =
         Resources.readLines(
-            Resources.getResource(getClass(), "sandbox_profile.in"), Charsets.UTF_8);
+            Resources.getResource(getClass(), "sandbox_profile.in"), StandardCharsets.UTF_8);
 
     List<String> actual =
         Lists.newArrayList(DarwinSandbox.generateSandboxProfileContent(sandboxProperties));

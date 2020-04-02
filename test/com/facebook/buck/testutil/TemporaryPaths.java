@@ -113,7 +113,7 @@ public class TemporaryPaths extends ExternalResource {
 
     if (Files.exists(toCreate.getPath())) {
       throw new IOException(
-          "a file with the name \'" + fileName + "\' already exists in the test folder");
+          "a file with the name '" + fileName + "' already exists in the test folder");
     }
 
     return AbsPath.of(Files.createFile(toCreate.getPath()));

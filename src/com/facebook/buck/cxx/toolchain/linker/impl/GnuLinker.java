@@ -42,12 +42,12 @@ import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -221,7 +221,8 @@ public class GnuLinker extends DelegatingTool implements Linker, HasIncrementalT
                   try {
                     symbols.addAll(
                         Files.readAllLines(
-                            context.getSourcePathResolver().getAbsolutePath(path), Charsets.UTF_8));
+                            context.getSourcePathResolver().getAbsolutePath(path),
+                            StandardCharsets.UTF_8));
                   } catch (IOException e) {
                     throw new RuntimeException(e);
                   }

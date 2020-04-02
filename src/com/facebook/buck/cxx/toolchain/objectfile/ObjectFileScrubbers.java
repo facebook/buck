@@ -18,7 +18,6 @@ package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.io.file.FileContentsScrubber;
 import com.facebook.buck.util.ObjectFileCommonModificationDate;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -30,14 +29,15 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 public class ObjectFileScrubbers {
 
   private static final int GLOBAL_HEADER_SIZE = 8;
   private static final ImmutableSet<String> SPECIAL_ENTRIES = ImmutableSet.of("/", "//");
-  public static final byte[] GLOBAL_HEADER = "!<arch>\n".getBytes(Charsets.US_ASCII);
-  public static final byte[] GLOBAL_THIN_HEADER = "!<thin>\n".getBytes(Charsets.US_ASCII);
+  public static final byte[] GLOBAL_HEADER = "!<arch>\n".getBytes(StandardCharsets.US_ASCII);
+  public static final byte[] GLOBAL_THIN_HEADER = "!<thin>\n".getBytes(StandardCharsets.US_ASCII);
   public static final byte[] END_OF_FILE_HEADER_MARKER = {0x60, 0x0A};
 
   public enum PaddingStyle {
@@ -94,7 +94,7 @@ public class ObjectFileScrubbers {
             checkArchive(read == entrySize, "Not all bytes have been read");
 
             buffer.position(0); // position points just past the last byte read, so need to reset
-            String fileName = new String(getBytes(buffer, 16), Charsets.US_ASCII).trim();
+            String fileName = new String(getBytes(buffer, 16), StandardCharsets.US_ASCII).trim();
 
             // Inject 0's for the non-deterministic meta-data entries.
             /* File modification timestamp */ putIntAsDecimalString(
@@ -141,7 +141,7 @@ public class ObjectFileScrubbers {
 
   public static long getDecimalStringAsLong(ByteBuffer buffer, int len) {
     byte[] bytes = getBytes(buffer, len);
-    String str = new String(bytes, Charsets.US_ASCII).trim();
+    String str = new String(bytes, StandardCharsets.US_ASCII).trim();
     return str.isEmpty() ? 0 : Long.parseLong(str.trim());
   }
 
@@ -191,13 +191,13 @@ public class ObjectFileScrubbers {
   private static void putSpaceLeftPaddedString(ByteBuffer buffer, int len, String value) {
     Preconditions.checkState(value.length() <= len);
     value = Strings.padStart(value, len, ' ');
-    buffer.put(value.getBytes(Charsets.US_ASCII));
+    buffer.put(value.getBytes(StandardCharsets.US_ASCII));
   }
 
   private static void putSpaceRightPaddedString(ByteBuffer buffer, int len, String value) {
     Preconditions.checkState(value.length() <= len);
     value = Strings.padEnd(value, len, ' ');
-    buffer.put(value.getBytes(Charsets.US_ASCII));
+    buffer.put(value.getBytes(StandardCharsets.US_ASCII));
   }
 
   public static void putBytes(ByteBuffer buffer, byte[] bytes) {

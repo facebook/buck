@@ -56,13 +56,13 @@ import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.hashing.FileHashLoader;
-import com.google.common.base.Charsets;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -96,12 +96,12 @@ public class SymlinkTreeTest {
     // Get the first file we're symlinking
     Path link1 = Paths.get("file");
     AbsPath file1 = tmpDir.newFile();
-    Files.write(file1.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file1.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
 
     // Get the second file we're symlinking
     Path link2 = Paths.get("directory", "then", "file");
     AbsPath file2 = tmpDir.newFile();
-    Files.write(file2.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file2.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
 
     // Setup the map representing the link tree.
     links =
@@ -158,7 +158,7 @@ public class SymlinkTreeTest {
     // Also create a new BuildRule based around a SymlinkTree buildable with a different
     // link map.
     AbsPath aFile = tmpDir.newFile();
-    Files.write(aFile.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(aFile.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
     SymlinkTree modifiedSymlinkTreeBuildRule =
         new SymlinkTree(
             "link_tree",
@@ -197,7 +197,7 @@ public class SymlinkTreeTest {
 
     // Change the contents of the target of the link.
     Path existingFile = pathResolver.getAbsolutePath(links.values().asList().get(0));
-    Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
+    Files.write(existingFile, "something new".getBytes(StandardCharsets.UTF_8));
 
     // Re-calculate the rule key
     RuleKey key2 = ruleKeyFactory.build(symlinkTreeBuildRule);
@@ -229,7 +229,7 @@ public class SymlinkTreeTest {
 
     Path existingFile =
         graphBuilder.getSourcePathResolver().getAbsolutePath(links.values().asList().get(0));
-    Files.write(existingFile, "something new".getBytes(Charsets.UTF_8));
+    Files.write(existingFile, "something new".getBytes(StandardCharsets.UTF_8));
     hashCache.invalidateAll();
 
     RuleKey ruleKey2 = new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(genrule);

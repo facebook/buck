@@ -46,7 +46,6 @@ import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.timing.Clock;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -58,6 +57,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.ClosedByInterruptException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -370,7 +370,7 @@ public class Build implements Closeable {
       // TODO(cjhopman): The build report should use an ErrorLogger to extract good error
       // messages.
       try {
-        Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), Charsets.UTF_8);
+        Files.write(jsonBuildReport, pathToBuildReport.get().toFile(), StandardCharsets.UTF_8);
       } catch (IOException e) {
         eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));
         exitCode = 1;
@@ -431,7 +431,7 @@ public class Build implements Closeable {
     try {
       String jsonBuildReport = buildReport.generateJsonBuildReport();
       eventBus.post(BuildEvent.buildReport(jsonBuildReport));
-      Files.asCharSink(pathToBuildReport.toFile(), Charsets.UTF_8).write(jsonBuildReport);
+      Files.asCharSink(pathToBuildReport.toFile(), StandardCharsets.UTF_8).write(jsonBuildReport);
     } catch (IOException writeException) {
       LOG.warn(writeException, "Failed to write the build report to %s", pathToBuildReport);
       eventBus.post(ThrowableConsoleEvent.create(e, "Failed writing report"));

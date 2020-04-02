@@ -50,7 +50,6 @@ import com.facebook.buck.step.fs.SymlinkMapsPaths;
 import com.facebook.buck.step.fs.SymlinkTreeMergeStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreIterables;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -408,7 +407,8 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
             @Override
             public StepExecutionResult execute(ExecutionContext context) throws IOException {
               String template;
-              template = new String(Files.readAllBytes(ghciIservScriptTemplate), Charsets.UTF_8);
+              template =
+                  new String(Files.readAllBytes(ghciIservScriptTemplate), StandardCharsets.UTF_8);
               ST st = new ST(template);
               ImmutableSet.Builder<String> preloadLibrariesB = ImmutableSet.builder();
               for (String libPath : preloadLibs.keySet()) {

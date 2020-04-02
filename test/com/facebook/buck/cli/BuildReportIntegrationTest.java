@@ -34,8 +34,8 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -97,7 +97,8 @@ public class BuildReportIntegrationTest {
 
     assertTrue(Files.exists(buildReport.getPath()));
     String buildReportContents =
-        new String(Files.readAllBytes(buildReport.getPath()), Charsets.UTF_8).replace("\r\n", "\n");
+        new String(Files.readAllBytes(buildReport.getPath()), StandardCharsets.UTF_8)
+            .replace("\r\n", "\n");
     assertThat(buildReportContents, Matchers.containsString("stderr: failure.c"));
     assertThat(buildReportContents, Matchers.containsString("failure.c:2:3"));
   }

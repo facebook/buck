@@ -154,7 +154,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
     public Class<FakeTargetNodeArg> getConstructorArgType() {
       return FakeTargetNodeArg.class;
     }
-  };
+  }
 
   @Test
   public void transformDelegatesWhenNewDescription() throws ActionCreationException {

@@ -24,11 +24,11 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.MoreStringsForTests;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -79,7 +79,7 @@ public class ZipInspector {
   public void assertFileContents(String pathRelativeToRoot, String expected) throws IOException {
     assertFileExists(pathRelativeToRoot);
     assertThat(
-        new String(getFileContents(pathRelativeToRoot), Charsets.UTF_8),
+        new String(getFileContents(pathRelativeToRoot), StandardCharsets.UTF_8),
         MoreStringsForTests.equalToIgnoringPlatformNewlines(expected));
   }
 
@@ -89,7 +89,7 @@ public class ZipInspector {
 
   public void assertFileContains(String pathRelativeToRoot, String expected) throws IOException {
     assertThat(
-        new String(getFileContents(pathRelativeToRoot), Charsets.UTF_8),
+        new String(getFileContents(pathRelativeToRoot), StandardCharsets.UTF_8),
         MoreStringsForTests.containsIgnoringPlatformNewlines(expected));
   }
 

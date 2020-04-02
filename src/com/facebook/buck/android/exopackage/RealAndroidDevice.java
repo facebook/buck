@@ -37,7 +37,6 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -57,6 +56,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1352,8 +1352,10 @@ public class RealAndroidDevice implements AndroidDevice {
           SimplePerfEvent.scope(eventBus, "install_" + filesType)) {
         // Slurp the file into RAM to make sure we know how many bytes we are getting.
         byte[] bytes = Files.readAllBytes(source);
-        byte[] restOfHeader = (bytes.length + " " + destination + "\n").getBytes(Charsets.UTF_8);
-        byte[] headerPrefix = String.format("%04X ", restOfHeader.length).getBytes(Charsets.UTF_8);
+        byte[] restOfHeader =
+            (bytes.length + " " + destination + "\n").getBytes(StandardCharsets.UTF_8);
+        byte[] headerPrefix =
+            String.format("%04X ", restOfHeader.length).getBytes(StandardCharsets.UTF_8);
         stream.write(headerPrefix);
         stream.write(restOfHeader);
         stream.write(bytes);
@@ -1367,7 +1369,7 @@ public class RealAndroidDevice implements AndroidDevice {
         "%s: Transferred %s files (%,d bytes) in %,dms (%,.2f kB/s)",
         filesType, installPaths.size(), totalByteCount, elapsedMillis, kbps);
 
-    stream.write("000D 0 --complete\n".getBytes(Charsets.UTF_8));
+    stream.write("000D 0 --complete\n".getBytes(StandardCharsets.UTF_8));
     stream.flush();
   }
 }

@@ -23,10 +23,10 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.jimfs.Jimfs;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -52,10 +52,10 @@ public class PythonResolvedPackageComponentsTest {
     FileSystem fileSystem = Jimfs.newFileSystem();
     Path foo1 = fileSystem.getPath("/target1/foo");
     Files.createDirectories(foo1.getParent());
-    Files.write(foo1, "something".getBytes(Charsets.UTF_8));
+    Files.write(foo1, "something".getBytes(StandardCharsets.UTF_8));
     Path foo2 = fileSystem.getPath("/target2/foo");
     Files.createDirectories(foo2.getParent());
-    Files.write(foo2, "something else".getBytes(Charsets.UTF_8));
+    Files.write(foo2, "something else".getBytes(StandardCharsets.UTF_8));
     PythonResolvedPackageComponents components =
         ImmutablePythonResolvedPackageComponents.builder()
             .putModules(

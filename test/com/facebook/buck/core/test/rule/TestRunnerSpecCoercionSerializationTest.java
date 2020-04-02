@@ -35,11 +35,11 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import org.junit.Test;
 
 public class TestRunnerSpecCoercionSerializationTest {
@@ -115,6 +115,6 @@ public class TestRunnerSpecCoercionSerializationTest {
     generator.close();
     assertEquals(
         ObjectMappers.WRITER.withDefaultPrettyPrinter().writeValueAsString(expectedSpec),
-        outputStream.toString(Charsets.UTF_8.name()));
+        outputStream.toString(StandardCharsets.UTF_8.name()));
   }
 }

@@ -60,7 +60,7 @@ public class RunEndToEndTest {
             test.getTemplateSet(),
             "run",
             "-c",
-            "user.exit_code=" + Integer.toString(ExitCode.TEST_NOTHING.getCode()),
+            "user.exit_code=" + ExitCode.TEST_NOTHING.getCode(),
             "//run/simple_bin:main");
     result.assertExitCode(ExitCode.TEST_NOTHING);
   }

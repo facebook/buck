@@ -57,7 +57,6 @@ import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.env.BuckClasspath;
 import com.facebook.buck.util.function.ThrowingSupplier;
 import com.facebook.buck.util.hashing.FileHashLoader;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
@@ -75,6 +74,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.ref.WeakReference;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -644,7 +644,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
               value.forEach(
                   (key1, value1) -> builder.append(String.format("  %s=%s\n", key1, value1)));
             });
-    return builder.toString().getBytes(Charsets.UTF_8);
+    return builder.toString().getBytes(StandardCharsets.UTF_8);
   }
 
   private String relativizePathString(Path prefixRoot, String s) {

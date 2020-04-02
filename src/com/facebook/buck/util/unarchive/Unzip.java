@@ -20,7 +20,6 @@ import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.PatternsMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.ByteStreams;
@@ -28,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -56,7 +56,7 @@ public class Unzip extends Unarchiver {
       if (entry.isUnixSymlink()) {
         filesystem.createSymLink(
             target,
-            filesystem.getPath(new String(ByteStreams.toByteArray(is), Charsets.UTF_8)),
+            filesystem.getPath(new String(ByteStreams.toByteArray(is), StandardCharsets.UTF_8)),
             /* force */ true);
       } else {
         try (OutputStream out = filesystem.newFileOutputStream(target)) {

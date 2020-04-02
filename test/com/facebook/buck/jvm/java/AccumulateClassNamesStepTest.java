@@ -23,7 +23,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.TestExecutionContext;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.hash.HashCode;
@@ -32,6 +31,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -75,7 +75,7 @@ public class AccumulateClassNamesStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.execute(context);
 
-    String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), Charsets.UTF_8);
+    String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), StandardCharsets.UTF_8);
     String separator = AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR;
     assertEquals(
         "Verify that the contents are sorted alphabetically and ignore non-.class files.",
@@ -112,7 +112,7 @@ public class AccumulateClassNamesStepTest {
     ExecutionContext context = TestExecutionContext.newInstance();
     accumulateClassNamesStep.execute(context);
 
-    String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), Charsets.UTF_8);
+    String contents = Files.toString(new File(tmp.getRoot(), "output.txt"), StandardCharsets.UTF_8);
     String separator = AccumulateClassNamesStep.CLASS_NAME_HASH_CODE_SEPARATOR;
     assertEquals(
         "Verify that the contents are sorted alphabetically and ignore non-.class files.",

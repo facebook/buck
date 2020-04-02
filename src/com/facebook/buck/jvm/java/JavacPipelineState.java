@@ -25,13 +25,13 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -152,11 +152,11 @@ public class JavacPipelineState implements RulePipelineState {
   }
 
   public String getStdoutContents() {
-    return Objects.requireNonNull(stdout).getContentsAsString(Charsets.UTF_8);
+    return Objects.requireNonNull(stdout).getContentsAsString(StandardCharsets.UTF_8);
   }
 
   public String getStderrContents() {
-    return Objects.requireNonNull(stderr).getContentsAsString(Charsets.UTF_8);
+    return Objects.requireNonNull(stderr).getContentsAsString(StandardCharsets.UTF_8);
   }
 
   @Override

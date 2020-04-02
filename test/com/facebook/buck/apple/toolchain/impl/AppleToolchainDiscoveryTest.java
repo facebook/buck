@@ -32,10 +32,10 @@ import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.FakeProcess;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -162,7 +162,7 @@ public class AppleToolchainDiscoveryTest {
     Files.write(
         tempRoot.resolve("Toolchains/bar.xctoolchain/Info.plist"),
         ImmutableList.of("Not a valid plist"),
-        Charsets.UTF_8);
+        StandardCharsets.UTF_8);
 
     assertThat(
         AppleToolchainDiscovery.discoverAppleToolchains(Optional.of(tempRoot), ImmutableList.of()),

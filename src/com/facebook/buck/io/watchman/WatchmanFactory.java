@@ -30,13 +30,13 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -476,7 +476,7 @@ public class WatchmanFactory {
       return Optional.empty();
     }
     if (exitCode != 0) {
-      LOG.error("Watchman's stderr: %s", new String(stderr.toByteArray(), Charsets.UTF_8));
+      LOG.error("Watchman's stderr: %s", new String(stderr.toByteArray(), StandardCharsets.UTF_8));
       LOG.error("Error %d executing %s", exitCode, Joiner.on(" ").join(args));
       return Optional.empty();
     }

@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 

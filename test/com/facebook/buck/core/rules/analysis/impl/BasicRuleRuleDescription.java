@@ -36,7 +36,6 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -53,6 +52,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -126,7 +126,7 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
               try (OutputStream outputStream =
                   ctx.getArtifactFilesystem().getOutputStream(output)) {
                 outputStream.write(
-                    ObjectMappers.WRITER.writeValueAsString(data).getBytes(Charsets.UTF_8));
+                    ObjectMappers.WRITER.writeValueAsString(data).getBytes(StandardCharsets.UTF_8));
               } catch (IOException e) {
                 return ActionExecutionResult.failure(
                     Optional.empty(), Optional.empty(), ImmutableList.of(), Optional.of(e));

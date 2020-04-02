@@ -33,9 +33,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.timing.SettableFakeClock;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileTime;
@@ -215,7 +215,7 @@ public class WorkspaceGeneratorTest {
         projectFilesystem.readFileIfItExists(
             workspacePath.resolve("xcshareddata/WorkspaceSettings.xcsettings"));
     assertThat(settings.isPresent(), equalTo(true));
-    NSObject object = PropertyListParser.parse(settings.get().getBytes(Charsets.UTF_8));
+    NSObject object = PropertyListParser.parse(settings.get().getBytes(StandardCharsets.UTF_8));
     assertThat(object, instanceOf(NSDictionary.class));
     NSObject autocreate =
         ((NSDictionary) object).get("IDEWorkspaceSharedSettings_AutocreateContextsIfNeeded");
@@ -239,7 +239,7 @@ public class WorkspaceGeneratorTest {
         projectFilesystem.readFileIfItExists(
             workspacePath.resolve("xcshareddata/WorkspaceSettings.xcsettings"));
     assertThat(settings.isPresent(), equalTo(true));
-    NSObject object = PropertyListParser.parse(settings.get().getBytes(Charsets.UTF_8));
+    NSObject object = PropertyListParser.parse(settings.get().getBytes(StandardCharsets.UTF_8));
     assertThat(object, instanceOf(NSDictionary.class));
     NSObject buildSystemType = ((NSDictionary) object).get("BuildSystemType");
     assertThat(buildSystemType, instanceOf(NSString.class));

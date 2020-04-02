@@ -52,7 +52,6 @@ import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.ThriftException;
 import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -67,6 +66,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -312,9 +312,9 @@ public class ThriftArtifactCacheTest {
 
     String payload1 = "payload1";
     String payload3 = "bigger payload3";
-    byte[] payloadBytes1 = payload1.getBytes(Charsets.UTF_8);
+    byte[] payloadBytes1 = payload1.getBytes(StandardCharsets.UTF_8);
     payload1Ref.set(payloadBytes1);
-    byte[] payloadBytes3 = payload3.getBytes(Charsets.UTF_8);
+    byte[] payloadBytes3 = payload3.getBytes(StandardCharsets.UTF_8);
     payload3Ref.set(payloadBytes3);
 
     ArtifactMetadata metadata1 = new ArtifactMetadata();

@@ -54,11 +54,11 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -327,7 +327,7 @@ public class AppleBundleIntegrationTest {
   private NSDictionary verifyAndParsePlist(Path path) throws Exception {
     assertTrue(Files.exists(path));
     String resultContents = filesystem.readFileIfItExists(path).get();
-    return (NSDictionary) PropertyListParser.parse(resultContents.getBytes(Charsets.UTF_8));
+    return (NSDictionary) PropertyListParser.parse(resultContents.getBytes(StandardCharsets.UTF_8));
   }
 
   @Test

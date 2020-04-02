@@ -359,7 +359,7 @@ public class AdbHelperTest {
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
 
-    List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
+    List<IDevice> deviceList = Lists.newArrayList(device);
 
     AdbHelper adbHelper = createAdbHelper(deviceList);
     adbHelper.adbCall("install apk", (d) -> d.installApkOnDevice(apk, false, true, false), true);
@@ -387,7 +387,7 @@ public class AdbHelperTest {
     device.setSerialNumber("serial#1");
     device.setName("testDevice");
 
-    List<IDevice> deviceList = Lists.newArrayList((IDevice) device);
+    List<IDevice> deviceList = Lists.newArrayList(device);
 
     AdbHelper adbHelper = createAdbHelper(deviceList);
     adbHelper.adbCall("install apk", (d) -> d.installApkOnDevice(apk, false, false, false), false);

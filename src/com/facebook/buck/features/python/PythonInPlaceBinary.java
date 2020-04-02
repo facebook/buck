@@ -40,13 +40,13 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.stream.RichStream;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Resources;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
@@ -129,7 +129,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
   private static String getNamedResource(String resourceName) {
     try {
       return Resources.toString(
-          Resources.getResource(PythonInPlaceBinary.class, resourceName), Charsets.UTF_8);
+          Resources.getResource(PythonInPlaceBinary.class, resourceName), StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

@@ -158,7 +158,6 @@ import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -189,6 +188,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
@@ -2918,7 +2918,7 @@ public class ProjectGenerator {
       String xcconfigContents = stringBuilder.toString();
 
       if (MoreProjectFilesystems.fileContentsDiffer(
-          new ByteArrayInputStream(xcconfigContents.getBytes(Charsets.UTF_8)),
+          new ByteArrayInputStream(xcconfigContents.getBytes(StandardCharsets.UTF_8)),
           xcconfigPath,
           projectFilesystem)) {
         if (options.shouldGenerateReadOnlyFiles()) {
@@ -3214,24 +3214,24 @@ public class ProjectGenerator {
       boolean shouldCreateHeadersSymlinks,
       boolean shouldCreateHeaderMap) {
     Hasher hasher = Hashing.sha1().newHasher();
-    hasher.putBytes(ruleKeyConfiguration.getCoreKey().getBytes(Charsets.UTF_8));
+    hasher.putBytes(ruleKeyConfiguration.getCoreKey().getBytes(StandardCharsets.UTF_8));
     String symlinkState = shouldCreateHeadersSymlinks ? "symlinks-enabled" : "symlinks-disabled";
-    byte[] symlinkStateValue = symlinkState.getBytes(Charsets.UTF_8);
+    byte[] symlinkStateValue = symlinkState.getBytes(StandardCharsets.UTF_8);
     hasher.putInt(symlinkStateValue.length);
     hasher.putBytes(symlinkStateValue);
     String hmapState = shouldCreateHeaderMap ? "hmap-enabled" : "hmap-disabled";
-    byte[] hmapStateValue = hmapState.getBytes(Charsets.UTF_8);
+    byte[] hmapStateValue = hmapState.getBytes(StandardCharsets.UTF_8);
     hasher.putInt(hmapStateValue.length);
     hasher.putBytes(hmapStateValue);
     if (moduleName.isPresent()) {
-      byte[] moduleNameValue = moduleName.get().getBytes(Charsets.UTF_8);
+      byte[] moduleNameValue = moduleName.get().getBytes(StandardCharsets.UTF_8);
       hasher.putInt(moduleNameValue.length);
       hasher.putBytes(moduleNameValue);
     }
     hasher.putInt(0);
     for (Map.Entry<Path, Path> entry : contents.entrySet()) {
-      byte[] key = entry.getKey().toString().getBytes(Charsets.UTF_8);
-      byte[] value = entry.getValue().toString().getBytes(Charsets.UTF_8);
+      byte[] key = entry.getKey().toString().getBytes(StandardCharsets.UTF_8);
+      byte[] value = entry.getValue().toString().getBytes(StandardCharsets.UTF_8);
       hasher.putInt(key.length);
       hasher.putBytes(key);
       hasher.putInt(value.length);
@@ -3490,7 +3490,7 @@ public class ProjectGenerator {
     String contentsToWrite = rootObject.toXMLPropertyList();
     // Before we write any files, check if the file contents have changed.
     if (MoreProjectFilesystems.fileContentsDiffer(
-        new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
+        new ByteArrayInputStream(contentsToWrite.getBytes(StandardCharsets.UTF_8)),
         serializedProject,
         projectFilesystem)) {
       LOG.debug("Regenerating project at %s", serializedProject);
@@ -4843,7 +4843,7 @@ public class ProjectGenerator {
                             .getBuildTarget()
                             .getUnflavoredBuildTarget()
                             .getFullyQualifiedName(),
-                        Charsets.UTF_8)
+                        StandardCharsets.UTF_8)
                     .asBytes())
             .substring(0, 10);
     return Paths.get(hashedPath + suffix);

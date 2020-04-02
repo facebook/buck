@@ -31,12 +31,12 @@ import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.MoreMaps;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -263,7 +263,7 @@ public class BuildConfiguration {
 
     projectFilesystem.mkdirs(Objects.requireNonNull(xcconfigPath).getParent());
     if (MoreProjectFilesystems.fileContentsDiffer(
-        new ByteArrayInputStream(xcconfigContents.getBytes(Charsets.UTF_8)),
+        new ByteArrayInputStream(xcconfigContents.getBytes(StandardCharsets.UTF_8)),
         xcconfigPath,
         projectFilesystem)) {
       if (readOnly) {

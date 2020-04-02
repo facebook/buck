@@ -33,10 +33,10 @@ import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.MerkleTreeNode
 import com.facebook.buck.remoteexecution.util.MerkleTreeNodeCache.NodeData;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -107,12 +107,12 @@ public class MerkleTreeNodeCacheTest {
 
     // Use suppliers so that we get a different instances of everything all the time (to ensure that
     // the node cache behavior doesn't depend on reference equality).
-    Digest hash1 = protocol.computeDigest("hash1".getBytes(Charsets.UTF_8));
-    Digest hash2 = protocol.computeDigest("hash2".getBytes(Charsets.UTF_8));
-    Digest hash3 = protocol.computeDigest("hash3".getBytes(Charsets.UTF_8));
-    Digest hash4 = protocol.computeDigest("hash4".getBytes(Charsets.UTF_8));
-    Digest hash5 = protocol.computeDigest("hash5".getBytes(Charsets.UTF_8));
-    Digest hash6 = protocol.computeDigest("hash6".getBytes(Charsets.UTF_8));
+    Digest hash1 = protocol.computeDigest("hash1".getBytes(StandardCharsets.UTF_8));
+    Digest hash2 = protocol.computeDigest("hash2".getBytes(StandardCharsets.UTF_8));
+    Digest hash3 = protocol.computeDigest("hash3".getBytes(StandardCharsets.UTF_8));
+    Digest hash4 = protocol.computeDigest("hash4".getBytes(StandardCharsets.UTF_8));
+    Digest hash5 = protocol.computeDigest("hash5".getBytes(StandardCharsets.UTF_8));
+    Digest hash6 = protocol.computeDigest("hash6".getBytes(StandardCharsets.UTF_8));
     Digest emptyDirectoryDigest =
         protocol.computeDigest(
             protocol.newDirectory(ImmutableList.of(), ImmutableList.of(), ImmutableList.of()));
@@ -244,12 +244,12 @@ public class MerkleTreeNodeCacheTest {
 
     // Use supplier so that we get a different Digest instance all the time (to ensure that the node
     // cache behavior doesn't depend on reference equality).
-    Supplier<Digest> hash1 = () -> protocol.computeDigest("hash1".getBytes(Charsets.UTF_8));
-    Supplier<Digest> hash2 = () -> protocol.computeDigest("hash2".getBytes(Charsets.UTF_8));
-    Supplier<Digest> hash3 = () -> protocol.computeDigest("hash3".getBytes(Charsets.UTF_8));
-    Supplier<Digest> hash4 = () -> protocol.computeDigest("hash4".getBytes(Charsets.UTF_8));
-    Supplier<Digest> hash5 = () -> protocol.computeDigest("hash5".getBytes(Charsets.UTF_8));
-    Supplier<Digest> hash6 = () -> protocol.computeDigest("hash6".getBytes(Charsets.UTF_8));
+    Supplier<Digest> hash1 = () -> protocol.computeDigest("hash1".getBytes(StandardCharsets.UTF_8));
+    Supplier<Digest> hash2 = () -> protocol.computeDigest("hash2".getBytes(StandardCharsets.UTF_8));
+    Supplier<Digest> hash3 = () -> protocol.computeDigest("hash3".getBytes(StandardCharsets.UTF_8));
+    Supplier<Digest> hash4 = () -> protocol.computeDigest("hash4".getBytes(StandardCharsets.UTF_8));
+    Supplier<Digest> hash5 = () -> protocol.computeDigest("hash5".getBytes(StandardCharsets.UTF_8));
+    Supplier<Digest> hash6 = () -> protocol.computeDigest("hash6".getBytes(StandardCharsets.UTF_8));
 
     ImmutableMap<Path, FileNode> firstFiles =
         ImmutableMap.<Path, FileNode>builder()

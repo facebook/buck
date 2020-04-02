@@ -23,13 +23,13 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Suppliers;
 import com.google.common.io.ByteSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.function.Supplier;
@@ -65,7 +65,8 @@ public class WriteFileStep implements Step {
           @Override
           public InputStream openStream() {
             // echo by default writes a trailing new line and so should we.
-            return new ByteArrayInputStream((content.get() + "\n").getBytes(Charsets.UTF_8));
+            return new ByteArrayInputStream(
+                (content.get() + "\n").getBytes(StandardCharsets.UTF_8));
           }
         },
         outputPath,

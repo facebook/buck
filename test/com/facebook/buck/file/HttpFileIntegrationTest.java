@@ -31,11 +31,11 @@ import com.facebook.buck.testutil.integration.HttpdForTests;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.regex.Pattern;
@@ -62,11 +62,11 @@ public class HttpFileIntegrationTest {
     httpdHandler =
         new HttpdForTests.CapturingHttpHandler(
             ImmutableMap.<String, byte[]>builder()
-                .put("/foo/bar/echo.sh", echoDotSh.getBytes(Charsets.UTF_8))
-                .put("/foo/bar/echo.bat", echoDotBat.getBytes(Charsets.UTF_8))
+                .put("/foo/bar/echo.sh", echoDotSh.getBytes(StandardCharsets.UTF_8))
+                .put("/foo/bar/echo.bat", echoDotBat.getBytes(StandardCharsets.UTF_8))
                 .put(
                     "/package/artifact_name/version/artifact_name-version-classifier.zip",
-                    echoDotSh.getBytes(Charsets.UTF_8))
+                    echoDotSh.getBytes(StandardCharsets.UTF_8))
                 .build());
     httpd = new HttpdForTests();
     httpd.addHandler(httpdHandler);

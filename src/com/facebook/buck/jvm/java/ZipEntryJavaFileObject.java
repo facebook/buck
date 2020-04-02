@@ -16,7 +16,6 @@
 
 package com.facebook.buck.jvm.java;
 
-import com.google.common.base.Charsets;
 import com.google.common.io.CharStreams;
 import java.io.Closeable;
 import java.io.IOException;
@@ -24,6 +23,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import javax.annotation.Nullable;
@@ -70,7 +70,7 @@ class ZipEntryJavaFileObject extends SimpleJavaFileObject implements Closeable {
     }
 
     try (InputStream inputStream = zipFile.getInputStream(zipEntry);
-        InputStreamReader isr = new InputStreamReader(inputStream, Charsets.UTF_8)) {
+        InputStreamReader isr = new InputStreamReader(inputStream, StandardCharsets.UTF_8)) {
       contents = CharStreams.toString(isr);
     } catch (IOException e) {
       throw new RuntimeException(e);

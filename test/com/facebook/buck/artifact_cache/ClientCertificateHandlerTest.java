@@ -19,8 +19,8 @@ package com.facebook.buck.artifact_cache;
 import com.facebook.buck.artifact_cache.config.ArtifactCacheBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Charsets;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.PrivateKey;
@@ -197,8 +197,8 @@ public class ClientCertificateHandlerTest {
   public void setUp() throws IOException {
     clientCertPath = temporaryPaths.newFile("client.crt").getPath();
     clientKeyPath = temporaryPaths.newFile("client.key").getPath();
-    Files.write(clientCertPath, SAMPLE_CLIENT_CERT.getBytes(Charsets.UTF_8));
-    Files.write(clientKeyPath, SAMPLE_CLIENT_KEY.getBytes(Charsets.UTF_8));
+    Files.write(clientCertPath, SAMPLE_CLIENT_CERT.getBytes(StandardCharsets.UTF_8));
+    Files.write(clientKeyPath, SAMPLE_CLIENT_KEY.getBytes(StandardCharsets.UTF_8));
     config_required =
         ArtifactCacheBuckConfigTest.createFromText(
             "[cache]",
@@ -253,7 +253,7 @@ public class ClientCertificateHandlerTest {
     expected.expect(HumanReadableException.class);
     expected.expectMessage("No parsable X509 certificates found in");
 
-    Files.write(clientCertPath, "INVALID CERT".getBytes(Charsets.UTF_8));
+    Files.write(clientCertPath, "INVALID CERT".getBytes(StandardCharsets.UTF_8));
 
     ClientCertificateHandler.fromConfiguration(config_optional);
   }
@@ -305,7 +305,7 @@ public class ClientCertificateHandlerTest {
     expected.expect(HumanReadableException.class);
     expected.expectMessage("Expected BEGIN PRIVATE KEY/END PRIVATE KEY ");
 
-    Files.write(clientKeyPath, "TESTING".getBytes(Charsets.UTF_8));
+    Files.write(clientKeyPath, "TESTING".getBytes(StandardCharsets.UTF_8));
 
     ClientCertificateHandler.fromConfiguration(config_optional);
   }
@@ -318,7 +318,7 @@ public class ClientCertificateHandlerTest {
     Files.write(
         clientKeyPath,
         "-----BEGIN PRIVATE KEY-----\nNOT BASE64\n-----END PRIVATE KEY-----\n"
-            .getBytes(Charsets.UTF_8));
+            .getBytes(StandardCharsets.UTF_8));
 
     ClientCertificateHandler.fromConfiguration(config_optional);
   }
@@ -333,7 +333,7 @@ public class ClientCertificateHandlerTest {
         ("-----BEGIN PRIVATE KEY-----\n"
                 + "MIIJKQIBAAKCAgEAtqFSEuAK1CbaBiKfybnYMSQp1tXmgi+WdrxRT5B9MnPxe9oo\n"
                 + "-----END PRIVATE KEY-----\n")
-            .getBytes(Charsets.UTF_8));
+            .getBytes(StandardCharsets.UTF_8));
 
     ClientCertificateHandler.fromConfiguration(config_optional);
   }
@@ -341,7 +341,8 @@ public class ClientCertificateHandlerTest {
   @Test
   public void handlesCombinedKeyAndCert() throws IOException {
     Files.write(
-        clientKeyPath, (SAMPLE_CLIENT_CERT + "\n" + SAMPLE_CLIENT_KEY).getBytes(Charsets.UTF_8));
+        clientKeyPath,
+        (SAMPLE_CLIENT_CERT + "\n" + SAMPLE_CLIENT_KEY).getBytes(StandardCharsets.UTF_8));
 
     String[] keyLines = SAMPLE_CLIENT_KEY.split("\n");
     byte[] expectedPrivateKey =
@@ -373,7 +374,7 @@ public class ClientCertificateHandlerTest {
                 + SAMPLE_CA_INTERMEDIATE_CERT
                 + "\n"
                 + SAMPLE_CLIENT_INTERMEDIATE_KEY)
-            .getBytes(Charsets.UTF_8));
+            .getBytes(StandardCharsets.UTF_8));
     Files.write(
         identityPathReverse,
         (SAMPLE_CLIENT_INTERMEDIATE_KEY
@@ -381,7 +382,7 @@ public class ClientCertificateHandlerTest {
                 + SAMPLE_CLIENT_INTERMEDIATE_CERT
                 + "\n"
                 + SAMPLE_CA_INTERMEDIATE_CERT)
-            .getBytes(Charsets.UTF_8));
+            .getBytes(StandardCharsets.UTF_8));
 
     String[] keyLines = SAMPLE_CLIENT_INTERMEDIATE_KEY.split("\n");
     byte[] expectedPrivateKey =

@@ -38,7 +38,6 @@ import com.facebook.buck.jvm.java.version.JavaVersion;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.MockClassLoader;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -333,7 +332,7 @@ public class Jsr199JavacIntegrationTest {
         Joiner.on('\n')
             .join(
                 "package com.example;", "", "public class Example {" + (withSyntaxError ? "" : "}"))
-            .getBytes(Charsets.UTF_8));
+            .getBytes(StandardCharsets.UTF_8));
 
     Path pathToOutputDirectory = Paths.get("out");
     tmp.newFolder(pathToOutputDirectory.toString());

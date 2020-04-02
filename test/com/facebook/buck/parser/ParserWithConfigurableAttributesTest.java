@@ -17,7 +17,7 @@
 package com.facebook.buck.parser;
 
 import static com.facebook.buck.parser.config.ParserConfig.DEFAULT_BUILD_FILE_NAME;
-import static com.google.common.base.Charsets.UTF_8;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
@@ -126,7 +126,6 @@ import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -2704,8 +2703,7 @@ public class ParserWithConfigurableAttributesTest {
                     .getPath()
                     .toPath(filesystem.getFileSystem())
                     .resolve("BUCK"),
-                HashCode.fromBytes(
-                    buildTarget.getBaseName().toString().getBytes(StandardCharsets.UTF_8))));
+                HashCode.fromBytes(buildTarget.getBaseName().toString().getBytes(UTF_8))));
 
     try (PerBuildState state =
         new PerBuildStateFactory(

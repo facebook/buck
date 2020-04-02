@@ -51,7 +51,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Predicates;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -61,6 +60,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.Resources;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
@@ -140,7 +140,7 @@ abstract class NativeExecutableStarter implements Starter {
     try {
       return Resources.toString(
           Resources.getResource(NativeExecutableStarter.class, NATIVE_STARTER_CXX_SOURCE),
-          Charsets.UTF_8);
+          StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

@@ -17,11 +17,11 @@
 package com.facebook.buck.httpserver;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.google.common.base.Charsets;
 import com.google.common.io.ByteStreams;
 import com.google.common.net.MediaType;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
@@ -77,6 +77,6 @@ class StaticResourcesHandler extends AbstractHandler {
   private String getContentsForResource(String path) throws IOException {
     InputStream input = getClass().getResourceAsStream(String.format("resources%s", path));
     byte[] bytes = ByteStreams.toByteArray(input);
-    return new String(bytes, Charsets.UTF_8);
+    return new String(bytes, StandardCharsets.UTF_8);
   }
 }

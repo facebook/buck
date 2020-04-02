@@ -39,7 +39,6 @@ import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.ChunkAccumulator;
 import com.facebook.buck.util.xml.XmlDomParser;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -52,6 +51,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -189,7 +189,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
     // ignore these as we parse the output lines.
     Optional<String> currentTest = Optional.empty();
     Map<String, ChunkAccumulator> stdout = new HashMap<>();
-    CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
+    CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
     decoder.onMalformedInput(CodingErrorAction.IGNORE);
 
     try (InputStream input = getProjectFilesystem().newFileInputStream(output);
@@ -200,7 +200,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         if ((matcher = START.matcher(line.trim())).matches()) {
           String test = matcher.group(1);
           currentTest = Optional.of(test);
-          stdout.put(test, new ChunkAccumulator(Charsets.UTF_8, maxTestOutputSize));
+          stdout.put(test, new ChunkAccumulator(StandardCharsets.UTF_8, maxTestOutputSize));
         } else if (END.matcher(line.trim()).matches()) {
           currentTest = Optional.empty();
         } else if (currentTest.isPresent()) {
@@ -257,7 +257,7 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
       throws IOException {
 
     ImmutableList.Builder<TestResultSummary> listBuilder = ImmutableList.builder();
-    List<String> lines = Files.readLines(testListPath.toFile(), Charsets.UTF_8);
+    List<String> lines = Files.readLines(testListPath.toFile(), StandardCharsets.UTF_8);
     Optional<String> prefix = Optional.empty();
     for (String line : lines) {
       if (line.startsWith(TEST_MARKER)) {

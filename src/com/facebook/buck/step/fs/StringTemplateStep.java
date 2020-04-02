@@ -20,10 +20,10 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -57,7 +57,7 @@ public class StringTemplateStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     String template;
-    template = new String(Files.readAllBytes(templatePath), Charsets.UTF_8);
+    template = new String(Files.readAllBytes(templatePath), StandardCharsets.UTF_8);
 
     ST st = new ST(template);
 

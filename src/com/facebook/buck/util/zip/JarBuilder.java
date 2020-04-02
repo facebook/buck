@@ -18,7 +18,6 @@ package com.facebook.buck.util.zip;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.util.stream.RichStream;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
@@ -26,6 +25,7 @@ import com.google.common.io.CharStreams;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -270,7 +270,7 @@ public class JarBuilder {
         Set<String> existingServices =
             services.computeIfAbsent(entryName, (m) -> new LinkedHashSet<>());
         existingServices.add(
-            CharStreams.toString(new InputStreamReader(entryInputStream, Charsets.UTF_8)));
+            CharStreams.toString(new InputStreamReader(entryInputStream, StandardCharsets.UTF_8)));
       }
       return;
     }

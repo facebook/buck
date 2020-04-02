@@ -27,12 +27,12 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -144,7 +144,7 @@ public class DownloadStepTest {
         new ConditionallyExplodingDownloader(
             uri -> {
               if (uri.getHost().equalsIgnoreCase("mirror2.example.com")) {
-                return Optional.of("test".getBytes(Charsets.UTF_8));
+                return Optional.of("test".getBytes(StandardCharsets.UTF_8));
               } else {
                 return Optional.empty();
               }
@@ -182,7 +182,7 @@ public class DownloadStepTest {
         new ConditionallyExplodingDownloader(
             uri -> {
               if (uri.getHost().equalsIgnoreCase("mirror2.example.com")) {
-                return Optional.of("test".getBytes(Charsets.UTF_8));
+                return Optional.of("test".getBytes(StandardCharsets.UTF_8));
               } else {
                 return Optional.empty();
               }
@@ -220,7 +220,7 @@ public class DownloadStepTest {
   public void failsIfDownloadSucceedsAndSha1Fails() throws IOException {
     ConditionallyExplodingDownloader downloader =
         new ConditionallyExplodingDownloader(
-            uri -> Optional.of("test_bad_hash".getBytes(Charsets.UTF_8)));
+            uri -> Optional.of("test_bad_hash".getBytes(StandardCharsets.UTF_8)));
 
     DownloadStep step =
         new DownloadStep(
@@ -247,7 +247,7 @@ public class DownloadStepTest {
   public void failsIfDownloadSucceedsAndSha256Fails() throws IOException {
     ConditionallyExplodingDownloader downloader =
         new ConditionallyExplodingDownloader(
-            uri -> Optional.of("test_bad_hash".getBytes(Charsets.UTF_8)));
+            uri -> Optional.of("test_bad_hash".getBytes(StandardCharsets.UTF_8)));
 
     DownloadStep step =
         new DownloadStep(

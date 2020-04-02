@@ -25,7 +25,6 @@ import com.facebook.buck.features.apple.common.SchemeActionType;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -34,6 +33,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -340,7 +340,7 @@ class SchemeGenerator {
       serializeScheme(scheme, outputStream);
       String contentsToWrite = outputStream.toString();
       if (MoreProjectFilesystems.fileContentsDiffer(
-          new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
+          new ByteArrayInputStream(contentsToWrite.getBytes(StandardCharsets.UTF_8)),
           schemePath,
           projectFilesystem)) {
         projectFilesystem.writeContentsToPath(outputStream.toString(), schemePath);

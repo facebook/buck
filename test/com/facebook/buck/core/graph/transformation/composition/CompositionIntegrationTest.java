@@ -89,14 +89,10 @@ public class CompositionIntegrationTest {
         Composition.composeRight(
             LongMultNode.class,
             noOpComputation2,
-            (KeyComposer<LongNode, LongNode, LongMultNode>)
-                (key, result) -> ImmutableSet.of(LongMultNode.of(result.get())));
+            (key, result) -> ImmutableSet.of(LongMultNode.of(result.get())));
     ComposedComputation<MyLongNode, LongMultNode> composed1 =
         Composition.composeRight(
-            LongMultNode.class,
-            noOpComputation1,
-            (KeyComposer<MyLongNode, MyLongNode, LongNode>)
-                (key, result) -> ImmutableSet.of(LongNode.of(1)));
+            LongMultNode.class, noOpComputation1, (key, result) -> ImmutableSet.of(LongNode.of(1)));
 
     GraphTransformationEngine engine =
         new DefaultGraphTransformationEngine(

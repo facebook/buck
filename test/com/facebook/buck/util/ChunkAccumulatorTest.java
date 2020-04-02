@@ -18,7 +18,7 @@ package com.facebook.buck.util;
 
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -26,7 +26,7 @@ public class ChunkAccumulatorTest {
 
   @Test
   public void simple() {
-    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 100);
+    ChunkAccumulator accumulator = new ChunkAccumulator(StandardCharsets.UTF_8, 100);
     accumulator.append("hello");
     accumulator.append("world");
     assertThat(accumulator.getChunks(), Matchers.contains("hello", "world"));
@@ -34,7 +34,7 @@ public class ChunkAccumulatorTest {
 
   @Test
   public void overflow() {
-    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 8);
+    ChunkAccumulator accumulator = new ChunkAccumulator(StandardCharsets.UTF_8, 8);
     accumulator.append("hello");
     accumulator.append("world");
     assertThat(accumulator.getChunks(), Matchers.contains("world"));
@@ -42,7 +42,7 @@ public class ChunkAccumulatorTest {
 
   @Test
   public void bigOverflow() {
-    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 10);
+    ChunkAccumulator accumulator = new ChunkAccumulator(StandardCharsets.UTF_8, 10);
     accumulator.append("hello");
     accumulator.append("world");
     accumulator.append("big chunk");
@@ -51,7 +51,7 @@ public class ChunkAccumulatorTest {
 
   @Test
   public void chunkTooBigForAccumulator() {
-    ChunkAccumulator accumulator = new ChunkAccumulator(Charsets.UTF_8, 10);
+    ChunkAccumulator accumulator = new ChunkAccumulator(StandardCharsets.UTF_8, 10);
     accumulator.append("super big chunk");
     assertThat(accumulator.getChunks(), Matchers.empty());
   }

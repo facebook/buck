@@ -20,10 +20,10 @@ import static org.hamcrest.Matchers.empty;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
@@ -48,7 +48,7 @@ public class PathListingTest {
     Files.setLastModifiedTime(oldest, FileTime.fromMillis(1000));
 
     middle = tmpDir.getRoot().toPath().resolve("middle");
-    Files.write(middle, Strings.repeat("X", middleFileSize).getBytes(Charsets.UTF_8));
+    Files.write(middle, Strings.repeat("X", middleFileSize).getBytes(StandardCharsets.UTF_8));
     Files.setLastModifiedTime(middle, FileTime.fromMillis(2000));
 
     newest = tmpDir.newFile("newest").toPath();

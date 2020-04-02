@@ -49,10 +49,10 @@ import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.hashing.FileHashLoader;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -85,12 +85,12 @@ public class DirectHeaderMapTest {
     // Get the first file we're symlinking
     Path link1 = Paths.get("file");
     file1 = tmpDir.newFile();
-    Files.write(file1.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file1.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
 
     // Get the second file we're symlinking
     Path link2 = Paths.get("directory", "then", "file");
     file2 = tmpDir.newFile();
-    Files.write(file2.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file2.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
 
     // Setup the map representing the link tree.
     links =
@@ -152,7 +152,7 @@ public class DirectHeaderMapTest {
   @Test
   public void testSymlinkTreeRuleKeysChangeIfLinkMapChanges() throws Exception {
     AbsPath aFile = tmpDir.newFile();
-    Files.write(aFile.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(aFile.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
     ImmutableMap.Builder<Path, SourcePath> modifiedLinksBuilder = ImmutableMap.builder();
     for (Path p : links.keySet()) {
       modifiedLinksBuilder.put(tmpDir.getRoot().resolve("modified-" + p).getPath(), links.get(p));

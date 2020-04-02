@@ -51,7 +51,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Charsets;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -63,6 +62,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
@@ -663,19 +663,19 @@ class HeaderSearchPaths {
       boolean shouldCreateHeadersSymlinks,
       boolean shouldCreateHeaderMap) {
     Hasher hasher = Hashing.sha1().newHasher();
-    hasher.putBytes(ruleKeyConfiguration.getCoreKey().getBytes(Charsets.UTF_8));
+    hasher.putBytes(ruleKeyConfiguration.getCoreKey().getBytes(StandardCharsets.UTF_8));
     String symlinkState = shouldCreateHeadersSymlinks ? "symlinks-enabled" : "symlinks-disabled";
-    byte[] symlinkStateValue = symlinkState.getBytes(Charsets.UTF_8);
+    byte[] symlinkStateValue = symlinkState.getBytes(StandardCharsets.UTF_8);
     hasher.putInt(symlinkStateValue.length);
     hasher.putBytes(symlinkStateValue);
     String hmapState = shouldCreateHeaderMap ? "hmap-enabled" : "hmap-disabled";
-    byte[] hmapStateValue = hmapState.getBytes(Charsets.UTF_8);
+    byte[] hmapStateValue = hmapState.getBytes(StandardCharsets.UTF_8);
     hasher.putInt(hmapStateValue.length);
     hasher.putBytes(hmapStateValue);
     hasher.putInt(0);
     for (Map.Entry<Path, Path> entry : contents.entrySet()) {
-      byte[] key = entry.getKey().toString().getBytes(Charsets.UTF_8);
-      byte[] value = entry.getValue().toString().getBytes(Charsets.UTF_8);
+      byte[] key = entry.getKey().toString().getBytes(StandardCharsets.UTF_8);
+      byte[] value = entry.getValue().toString().getBytes(StandardCharsets.UTF_8);
       hasher.putInt(key.length);
       hasher.putBytes(key);
       hasher.putInt(value.length);
@@ -828,7 +828,7 @@ class HeaderSearchPaths {
                             .getBuildTarget()
                             .getUnflavoredBuildTarget()
                             .getFullyQualifiedName(),
-                        Charsets.UTF_8)
+                        StandardCharsets.UTF_8)
                     .asBytes())
             .substring(0, 10);
     return Paths.get(hashedPath + suffix);

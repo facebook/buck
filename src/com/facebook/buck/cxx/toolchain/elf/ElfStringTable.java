@@ -18,10 +18,10 @@ package com.facebook.buck.cxx.toolchain.elf;
 
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -115,7 +115,9 @@ public class ElfStringTable {
   public static ImmutableList<Integer> writeStringTableFromStrings(
       Iterable<String> strings, OutputStream output) throws IOException {
     return writeStringTable(
-        RichStream.from(strings).map(s -> new Entry(s.getBytes(Charsets.UTF_8))).toImmutableList(),
+        RichStream.from(strings)
+            .map(s -> new Entry(s.getBytes(StandardCharsets.UTF_8)))
+            .toImmutableList(),
         output);
   }
 
@@ -177,7 +179,7 @@ public class ElfStringTable {
 
     @Override
     public String toString() {
-      return new String(data, offset, len, Charsets.UTF_8);
+      return new String(data, offset, len, StandardCharsets.UTF_8);
     }
   }
 }

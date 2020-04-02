@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -140,7 +140,7 @@ public class IntellijModulesListParserTest {
   private void validateModulesList(String xml, Set<String> expectedModuleFilePaths)
       throws IOException {
     final AbsPath modulesPath = temporaryPaths.newFile();
-    Files.write(modulesPath.getPath(), xml.getBytes(Charset.forName("UTF-8")));
+    Files.write(modulesPath.getPath(), xml.getBytes(StandardCharsets.UTF_8));
     IntellijModulesListParser parser = new IntellijModulesListParser();
     final ImmutableSortedSet<String> parsedModulePaths =
         parser.getAllModules(new FileInputStream(modulesPath.toFile())).stream()

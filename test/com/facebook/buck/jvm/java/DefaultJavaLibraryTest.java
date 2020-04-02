@@ -82,7 +82,6 @@ import com.facebook.buck.util.hashing.FileHashLoader;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.zip.CustomJarOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
-import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
@@ -1423,7 +1422,8 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             "bkhajdifcge.txt",
             "cabfghjekid.txt",
             "chkdbafijge.txt")) {
-      fileHashes.put(filename, Hashing.sha1().hashString(filename, Charsets.UTF_8).toString());
+      fileHashes.put(
+          filename, Hashing.sha1().hashString(filename, StandardCharsets.UTF_8).toString());
     }
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(

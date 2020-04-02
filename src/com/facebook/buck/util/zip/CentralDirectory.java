@@ -16,9 +16,9 @@
 
 package com.facebook.buck.util.zip;
 
-import com.google.common.base.Charsets;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 
 /**
@@ -148,7 +148,7 @@ class CentralDirectory {
     size += ByteIo.writeInt(out, Math.min(entry.getCompressedSize(), ZipConstants.ZIP64_MAGICVAL));
     size += ByteIo.writeInt(out, Math.min(entry.getSize(), ZipConstants.ZIP64_MAGICVAL));
 
-    byte[] nameBytes = entry.getName().getBytes(Charsets.UTF_8);
+    byte[] nameBytes = entry.getName().getBytes(StandardCharsets.UTF_8);
     long externalAttributes = entry.getExternalAttributes();
     // Length of name.
     size += ByteIo.writeShort(out, nameBytes.length);

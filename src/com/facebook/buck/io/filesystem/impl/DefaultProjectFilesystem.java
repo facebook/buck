@@ -35,7 +35,6 @@ import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
@@ -58,6 +57,7 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.channels.Channels;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.CopyOption;
 import java.nio.file.DirectoryStream;
 import java.nio.file.DirectoryStream.Filter;
@@ -421,7 +421,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
     if (exists(propertiesFile)) {
       try (BufferedReader reader =
           new BufferedReader(
-              new InputStreamReader(newFileInputStream(propertiesFile), Charsets.UTF_8))) {
+              new InputStreamReader(newFileInputStream(propertiesFile), StandardCharsets.UTF_8))) {
         properties.load(reader);
       }
       return properties;
@@ -729,7 +729,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
     try (Writer writer =
         new BufferedWriter(
             new OutputStreamWriter(
-                newFileOutputStream(pathRelativeToProjectRoot, attrs), Charsets.UTF_8))) {
+                newFileOutputStream(pathRelativeToProjectRoot, attrs), StandardCharsets.UTF_8))) {
       for (String line : lines) {
         writer.write(line);
         writer.write('\n');
@@ -741,7 +741,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   public void writeContentsToPath(
       String contents, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException {
-    writeBytesToPath(contents.getBytes(Charsets.UTF_8), pathRelativeToProjectRoot, attrs);
+    writeBytesToPath(contents.getBytes(StandardCharsets.UTF_8), pathRelativeToProjectRoot, attrs);
   }
 
   @Override
@@ -821,7 +821,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
     if (Files.isRegularFile(fileToRead)) {
       String contents;
       try {
-        contents = new String(Files.readAllBytes(fileToRead), Charsets.UTF_8);
+        contents = new String(Files.readAllBytes(fileToRead), StandardCharsets.UTF_8);
       } catch (IOException e) {
         // Alternatively, we could return Optional.empty(), though something seems suspicious if we
         // have already verified that fileToRead is a file and then we cannot read it.
@@ -865,7 +865,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   @Override
   public Optional<String> readFirstLineFromFile(Path file) {
     try {
-      try (BufferedReader reader = Files.newBufferedReader(file, Charsets.UTF_8)) {
+      try (BufferedReader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
         return Optional.ofNullable(reader.readLine());
       }
     } catch (IOException e) {
@@ -877,7 +877,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   @Override
   public List<String> readLines(Path pathRelativeToProjectRoot) throws IOException {
     Path file = getPathForRelativePath(pathRelativeToProjectRoot);
-    return Files.readAllLines(file, Charsets.UTF_8);
+    return Files.readAllLines(file, StandardCharsets.UTF_8);
   }
 
   /**

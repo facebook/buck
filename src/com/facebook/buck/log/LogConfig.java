@@ -18,7 +18,6 @@ package com.facebook.buck.log;
 
 import com.facebook.buck.io.file.PathListing;
 import com.facebook.buck.io.pathformat.PathFormatter;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import java.io.ByteArrayInputStream;
@@ -27,6 +26,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -136,7 +136,7 @@ public class LogConfig {
       ImmutableList.Builder<InputStream> inputStreamsBuilder)
       throws IOException {
     try {
-      String template = new String(Files.readAllBytes(path), Charsets.UTF_8);
+      String template = new String(Files.readAllBytes(path), StandardCharsets.UTF_8);
       ST st = new ST(template);
       st.add(
           "default_file_pattern",
@@ -144,7 +144,7 @@ public class LogConfig {
       st.add("default_count", logConfigSetup.getCount());
       st.add("default_max_size_bytes", logConfigSetup.getMaxLogSizeBytes());
       String result = st.render();
-      inputStreamsBuilder.add(new ByteArrayInputStream(result.getBytes(Charsets.UTF_8)));
+      inputStreamsBuilder.add(new ByteArrayInputStream(result.getBytes(StandardCharsets.UTF_8)));
       inputStreamsBuilder.add(new ByteArrayInputStream(NEWLINE));
       return true;
     } catch (FileNotFoundException e) {

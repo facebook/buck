@@ -34,7 +34,6 @@ import com.facebook.buck.util.sqlite.SQLiteUtils;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -49,6 +48,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -344,7 +344,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
       out.writeInt(metadata.size());
       for (Map.Entry<String, String> entry : metadata.entrySet()) {
         out.writeUTF(entry.getKey());
-        byte[] value = entry.getValue().getBytes(Charsets.UTF_8);
+        byte[] value = entry.getValue().getBytes(StandardCharsets.UTF_8);
         out.writeInt(value.length);
         out.write(value);
       }
@@ -362,7 +362,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
         int valueLength = in.readInt();
         byte[] value = new byte[valueLength];
         ByteStreams.readFully(in, value);
-        builder.put(key, new String(value, Charsets.UTF_8));
+        builder.put(key, new String(value, StandardCharsets.UTF_8));
       }
     }
     return builder.build();

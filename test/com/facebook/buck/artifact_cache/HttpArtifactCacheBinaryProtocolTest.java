@@ -19,7 +19,6 @@ package com.facebook.buck.artifact_cache;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.rulekey.RuleKey;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -32,6 +31,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,7 +51,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
         HttpArtifactCacheBinaryProtocol.createMetadataHeader(
             ImmutableSet.of(ruleKey),
             ImmutableMap.of("key", "value"),
-            ByteSource.wrap(data.getBytes(Charsets.UTF_8)));
+            ByteSource.wrap(data.getBytes(StandardCharsets.UTF_8)));
     assertThat(metadata, Matchers.equalTo(BaseEncoding.base64().decode(base64EncodedData)));
   }
 
@@ -81,7 +81,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
             new ByteSource() {
               @Override
               public InputStream openStream() {
-                return new ByteArrayInputStream(data.getBytes(Charsets.UTF_8));
+                return new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
               }
             });
     assertThat(fetchResponse.getContentLength(), Matchers.is(110L));
@@ -98,7 +98,9 @@ public class HttpArtifactCacheBinaryProtocolTest {
 
     assertThat(responseReadResult.getRuleKeys(), Matchers.containsInAnyOrder(ruleKey, ruleKey2));
     assertThat(responseReadResult.getMetadata(), Matchers.equalTo(metadata));
-    assertThat(fetchResponsePayload.toByteArray(), Matchers.equalTo(data.getBytes(Charsets.UTF_8)));
+    assertThat(
+        fetchResponsePayload.toByteArray(),
+        Matchers.equalTo(data.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Test
@@ -115,10 +117,10 @@ public class HttpArtifactCacheBinaryProtocolTest {
           HttpArtifactCacheBinaryProtocol.createMetadataHeader(
               ImmutableSet.of(ruleKey),
               ImmutableMap.of(),
-              ByteSource.wrap(data.getBytes(Charsets.UTF_8)));
+              ByteSource.wrap(data.getBytes(StandardCharsets.UTF_8)));
       dataOut.writeInt(metadata.length);
       dataOut.write(metadata);
-      dataOut.write(data.getBytes(Charsets.UTF_8));
+      dataOut.write(data.getBytes(StandardCharsets.UTF_8));
       expectedData = out.toByteArray();
     }
     assertThat(expectedData, Matchers.equalTo(BaseEncoding.base64().decode(base64EncodedData)));
@@ -128,7 +130,8 @@ public class HttpArtifactCacheBinaryProtocolTest {
       HttpArtifactCacheBinaryProtocol.FetchResponseReadResult result =
           HttpArtifactCacheBinaryProtocol.readFetchResponse(inputStream, outputStream);
       assertThat(result.getRuleKeys(), Matchers.contains(ruleKey));
-      assertThat(outputStream.toByteArray(), Matchers.equalTo(data.getBytes(Charsets.UTF_8)));
+      assertThat(
+          outputStream.toByteArray(), Matchers.equalTo(data.getBytes(StandardCharsets.UTF_8)));
       assertThat(result.getActualHashCode(), Matchers.equalTo(HashCode.fromString("d73076be")));
       assertThat(result.getExpectedHashCode(), Matchers.equalTo(HashCode.fromString("d73076be")));
       assertThat(result.getMetadata(), Matchers.anEmptyMap());
@@ -145,11 +148,11 @@ public class HttpArtifactCacheBinaryProtocolTest {
       valueBuilder.append('x');
     }
     String value = valueBuilder.toString();
-    long valueLength = value.getBytes(Charsets.UTF_8).length;
+    long valueLength = value.getBytes(StandardCharsets.UTF_8).length;
 
     while (metadataSize > 0) {
-      String key = "key" + Long.toString(metadataSize);
-      metadataSize -= key.getBytes(Charsets.UTF_8).length + valueLength;
+      String key = "key" + metadataSize;
+      metadataSize -= key.getBytes(StandardCharsets.UTF_8).length + valueLength;
       metadataBuilder.put(key, value);
     }
 
@@ -158,7 +161,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
     HttpArtifactCacheBinaryProtocol.createMetadataHeader(
         ImmutableSet.of(new RuleKey("0000")),
         metadataBuilder.build(),
-        ByteSource.wrap("wsad".getBytes(Charsets.UTF_8)));
+        ByteSource.wrap("wsad".getBytes(StandardCharsets.UTF_8)));
   }
 
   @Test
@@ -191,7 +194,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
             new ByteSource() {
               @Override
               public InputStream openStream() {
-                return new ByteArrayInputStream(data.getBytes(Charsets.UTF_8));
+                return new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8));
               }
             });
 
@@ -207,7 +210,8 @@ public class HttpArtifactCacheBinaryProtocolTest {
     assertThat(readStoreRequest.getRuleKeys(), Matchers.containsInAnyOrder(ruleKey, ruleKey2));
     assertThat(readStoreRequest.getMetadata(), Matchers.equalTo(metadata));
     assertThat(
-        storeRequestPayloadStream.toByteArray(), Matchers.equalTo(data.getBytes(Charsets.UTF_8)));
+        storeRequestPayloadStream.toByteArray(),
+        Matchers.equalTo(data.getBytes(StandardCharsets.UTF_8)));
   }
 
   @Test
@@ -229,7 +233,7 @@ public class HttpArtifactCacheBinaryProtocolTest {
             new ByteSource() {
               @Override
               public InputStream openStream() {
-                return new ByteArrayInputStream("datadata".getBytes(Charsets.UTF_8));
+                return new ByteArrayInputStream("datadata".getBytes(StandardCharsets.UTF_8));
               }
             });
 

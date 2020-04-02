@@ -38,7 +38,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.facebook.buck.zip.ZipScrubberStep;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
@@ -49,6 +48,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -716,7 +716,8 @@ public class ExopackageInstallerIntegrationTest {
                     entry -> {
                       try {
                         return Files.toString(
-                            Objects.requireNonNull(entry.getValue()).toFile(), Charsets.UTF_8);
+                            Objects.requireNonNull(entry.getValue()).toFile(),
+                            StandardCharsets.UTF_8);
                       } catch (IOException e) {
                         throw new RuntimeException(e);
                       }
@@ -725,18 +726,18 @@ public class ExopackageInstallerIntegrationTest {
   }
 
   private void writeFakeApk(String apkContent) throws IOException {
-    String hash = Hashing.sha1().hashString(apkContent, Charsets.US_ASCII).toString();
+    String hash = Hashing.sha1().hashString(apkContent, StandardCharsets.US_ASCII).toString();
     try (ZipOutputStream zf =
         new ZipOutputStream(new FileOutputStream(filesystem.resolve(apkPath).toFile()))) {
       ZipEntry signature = new ZipEntry("META-INF/SIG.SF");
       zf.putNextEntry(signature);
       String data = "SHA1-Digest-Manifest: " + hash + "\n";
-      zf.write(data.getBytes(Charsets.US_ASCII), 0, data.length());
+      zf.write(data.getBytes(StandardCharsets.US_ASCII), 0, data.length());
       zf.closeEntry();
 
       ZipEntry content = new ZipEntry("content");
       zf.putNextEntry(content);
-      zf.write(apkContent.getBytes(Charsets.US_ASCII), 0, apkContent.length());
+      zf.write(apkContent.getBytes(StandardCharsets.US_ASCII), 0, apkContent.length());
       zf.closeEntry();
     }
     ZipScrubberStep.of(filesystem.resolve(apkPath)).execute(executionContext);

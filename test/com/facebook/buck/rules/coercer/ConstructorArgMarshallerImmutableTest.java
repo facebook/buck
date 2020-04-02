@@ -319,7 +319,7 @@ public class ConstructorArgMarshallerImmutableTest {
     DtoWithBuildTargetList built =
         invokePopulate(
             DtoWithBuildTargetList.class,
-            ImmutableMap.<String, Object>of(
+            ImmutableMap.of(
                 "single", UnconfiguredBuildTargetParser.parse("//com/example:cheese"),
                 "sameBuildFileTarget", UnconfiguredBuildTargetParser.parse("//example/path:cake"),
                 "targets",
@@ -530,7 +530,7 @@ public class ConstructorArgMarshallerImmutableTest {
             builder(DtoWithString.class),
             declaredDeps,
             configurationDeps,
-            ImmutableMap.<String, Object>of("string", selectorList, "name", "unused"));
+            ImmutableMap.of("string", selectorList, "name", "unused"));
 
     assertEquals("string2string4", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());

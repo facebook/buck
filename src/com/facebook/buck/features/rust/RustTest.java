@@ -47,11 +47,11 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -200,7 +200,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private ImmutableList<TestResultSummary> parseTestResults() throws IOException {
 
     Map<String, ResultType> testToResult = new HashMap<>();
-    try (BufferedReader reader = Files.newBufferedReader(testOutputFile, Charsets.UTF_8)) {
+    try (BufferedReader reader = Files.newBufferedReader(testOutputFile, StandardCharsets.UTF_8)) {
       String line;
       while ((line = reader.readLine()) != null) {
         String[] resultAndTestName = line.split(" ");
@@ -226,7 +226,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     Map<String, String> testToStdout = new HashMap<>();
-    try (BufferedReader reader = Files.newBufferedReader(testStdoutFile, Charsets.UTF_8)) {
+    try (BufferedReader reader = Files.newBufferedReader(testStdoutFile, StandardCharsets.UTF_8)) {
 
       StringBuilder stdout = new StringBuilder();
       String currentStdoutTestName = null;

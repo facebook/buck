@@ -33,11 +33,11 @@ import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.zip.ZipConstants;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -148,10 +148,10 @@ public class UnzipTest {
       ZipArchiveEntry entry = new ZipArchiveEntry("link.txt");
       entry.setUnixMode((int) MostFiles.S_IFLNK);
       String target = "target.txt";
-      entry.setSize(target.getBytes(Charsets.UTF_8).length);
+      entry.setSize(target.getBytes(StandardCharsets.UTF_8).length);
       entry.setMethod(ZipEntry.STORED);
       zip.putArchiveEntry(entry);
-      zip.write(target.getBytes(Charsets.UTF_8));
+      zip.write(target.getBytes(StandardCharsets.UTF_8));
       zip.closeArchiveEntry();
     }
 
@@ -179,7 +179,7 @@ public class UnzipTest {
       ZipArchiveEntry entry = new ZipArchiveEntry("link.txt");
       entry.setUnixMode((int) MostFiles.S_IFLNK);
       String target = "target.txt";
-      entry.setSize(target.getBytes(Charsets.UTF_8).length);
+      entry.setSize(target.getBytes(StandardCharsets.UTF_8).length);
       entry.setMethod(ZipEntry.STORED);
 
       // Mark the file as being executable.
@@ -190,7 +190,7 @@ public class UnzipTest {
       entry.setExternalAttributes(externalAttributes);
 
       zip.putArchiveEntry(entry);
-      zip.write(target.getBytes(Charsets.UTF_8));
+      zip.write(target.getBytes(StandardCharsets.UTF_8));
       zip.closeArchiveEntry();
     }
 
@@ -238,7 +238,7 @@ public class UnzipTest {
 
   @Test
   public void testNonCanonicalPaths() throws InterruptedException, IOException {
-    String names[] = {
+    String[] names = {
       "foo/./", "foo/./bar/", "foo/./bar/baz.cpp", "foo/./bar/baz.h",
     };
 
@@ -321,7 +321,7 @@ public class UnzipTest {
 
   @Test
   public void testStripsPrefixAndIgnoresSiblings() throws IOException {
-    byte[] bazDotSh = "echo \"baz.sh\"\n".getBytes(Charsets.UTF_8);
+    byte[] bazDotSh = "echo \"baz.sh\"\n".getBytes(StandardCharsets.UTF_8);
     try (ZipArchiveOutputStream zip = new ZipArchiveOutputStream(zipFile.toFile())) {
       zip.putArchiveEntry(new ZipArchiveEntry("foo"));
       zip.closeArchiveEntry();

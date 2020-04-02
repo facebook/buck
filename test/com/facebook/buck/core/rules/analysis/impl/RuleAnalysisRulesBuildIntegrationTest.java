@@ -37,12 +37,12 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -589,7 +589,7 @@ public class RuleAnalysisRulesBuildIntegrationTest {
   }
 
   private ImmutableList<JsonNode> parseTestResults(Path pathToJson) throws IOException {
-    return Files.readAllLines(pathToJson, Charsets.UTF_8).stream()
+    return Files.readAllLines(pathToJson, StandardCharsets.UTF_8).stream()
         .map(
             line -> {
               try {

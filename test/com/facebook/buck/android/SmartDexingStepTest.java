@@ -30,7 +30,6 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.step.fs.XzStep;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.util.sha1.Sha1HashCode;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -41,6 +40,7 @@ import com.google.common.io.Files;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
@@ -68,7 +68,7 @@ public class SmartDexingStepTest {
 
     File outputFile = tmpDir.newFile("out.dex");
     Path outputHashFile = new File(tmpDir.getRoot(), "out.dex.hash").toPath();
-    Files.write("dummy", outputHashFile.toFile(), Charsets.UTF_8);
+    Files.write("dummy", outputHashFile.toFile(), StandardCharsets.UTF_8);
 
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpDir.getRoot().toPath());
@@ -96,7 +96,7 @@ public class SmartDexingStepTest {
     // yields true.
     String actualHash = rule.hashInputs();
     assertFalse(actualHash.isEmpty());
-    Files.write(actualHash, outputHashFile.toFile(), Charsets.UTF_8);
+    Files.write(actualHash, outputHashFile.toFile(), StandardCharsets.UTF_8);
 
     assertTrue("Matching input hash should be considered cached", rule.checkIsCached());
   }

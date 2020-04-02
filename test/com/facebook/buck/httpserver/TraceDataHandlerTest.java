@@ -22,12 +22,12 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.util.trace.BuildTraces;
-import com.google.common.base.Charsets;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter; // NOPMD required by API
 import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.regex.Matcher;
@@ -74,7 +74,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     BuildTraces buildTraces = createMock(BuildTraces.class);
     Iterable<InputStream> traces =
         Collections.singletonList(
-            new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)));
+            new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(StandardCharsets.UTF_8)));
     expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
     TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
 
@@ -105,8 +105,8 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     BuildTraces buildTraces = createMock(BuildTraces.class);
     Iterable<InputStream> traces =
         Arrays.asList(
-            new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
-            new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
+            new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(StandardCharsets.UTF_8)),
+            new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(StandardCharsets.UTF_8)));
     expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
 
     TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
@@ -138,7 +138,7 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     BuildTraces buildTraces = createMock(BuildTraces.class);
     Iterable<InputStream> traces =
         Collections.singletonList(
-            new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)));
+            new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(StandardCharsets.UTF_8)));
     expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
     TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);
 
@@ -169,8 +169,8 @@ public class TraceDataHandlerTest extends EasyMockSupport {
     BuildTraces buildTraces = createMock(BuildTraces.class);
     Iterable<InputStream> traces =
         Arrays.asList(
-            new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(Charsets.UTF_8)),
-            new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(Charsets.UTF_8)));
+            new ByteArrayInputStream("{\"foo\":\"bar\"}".getBytes(StandardCharsets.UTF_8)),
+            new ByteArrayInputStream("{\"baz\":\"blech\"}".getBytes(StandardCharsets.UTF_8)));
     expect(buildTraces.getInputsForTraces("abcdef")).andReturn(traces);
 
     TraceDataHandler traceDataHandler = new TraceDataHandler(buildTraces);

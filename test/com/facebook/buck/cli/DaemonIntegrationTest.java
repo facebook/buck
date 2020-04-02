@@ -39,7 +39,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Threads;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
-import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -243,7 +242,8 @@ public class DaemonIntegrationTest {
     workspace.setBuildFileSearchMethodConfig(buildFileSearchMethod);
 
     String appBuckFile = "apps/myapp/BUCK";
-    Files.write(workspace.getPath(appBuckFile), "Some Illegal Python".getBytes(Charsets.UTF_8));
+    Files.write(
+        workspace.getPath(appBuckFile), "Some Illegal Python".getBytes(StandardCharsets.UTF_8));
     workspace.runBuckdCommand("build", "//apps/...").assertExitCode(null, ExitCode.PARSE_ERROR);
 
     Files.delete(workspace.getPath(appBuckFile));
@@ -293,7 +293,8 @@ public class DaemonIntegrationTest {
     workspace.runBuckdCommand("build", "app").assertSuccess();
 
     String fileName = "apps/myapp/BUCK";
-    Files.write(workspace.getPath(fileName), "Some Illegal Python".getBytes(Charsets.UTF_8));
+    Files.write(
+        workspace.getPath(fileName), "Some Illegal Python".getBytes(StandardCharsets.UTF_8));
 
     ProcessResult result = workspace.runBuckdCommand("build", "app");
     assertThat(
@@ -368,7 +369,7 @@ public class DaemonIntegrationTest {
     result.assertSuccess();
 
     String fileName = "sum.cpp";
-    Files.write(secondary.getPath(fileName), "#error Failure".getBytes(Charsets.UTF_8));
+    Files.write(secondary.getPath(fileName), "#error Failure".getBytes(StandardCharsets.UTF_8));
 
     result = primary.runBuckdCommand("build", "//:cxxbinary");
     assertThat(
@@ -380,7 +381,7 @@ public class DaemonIntegrationTest {
     // Make the file valid again, but change the output
     Files.write(
         secondary.getPath(fileName),
-        "#include \"sum.hpp\"\nint sum(int a, int b) {return a;}".getBytes(Charsets.UTF_8));
+        "#include \"sum.hpp\"\nint sum(int a, int b) {return a;}".getBytes(StandardCharsets.UTF_8));
 
     primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
     result = primary.runBuckdCommand("run", "//:cxxbinary");
@@ -405,7 +406,8 @@ public class DaemonIntegrationTest {
     primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
 
     String fileName = "BUCK";
-    Files.write(secondary.getPath(fileName), "Some Invalid Python".getBytes(Charsets.UTF_8));
+    Files.write(
+        secondary.getPath(fileName), "Some Invalid Python".getBytes(StandardCharsets.UTF_8));
 
     ProcessResult processResult = primary.runBuckdCommand("build", "//:cxxbinary");
     processResult.assertFailure();

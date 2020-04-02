@@ -29,10 +29,10 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Escaper;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Resources;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -93,7 +93,7 @@ abstract class LuaScriptStarter implements Starter {
   private String getPureStarterTemplate() {
     try {
       return Resources.toString(
-          Resources.getResource(LuaScriptStarter.class, STARTER), Charsets.UTF_8);
+          Resources.getResource(LuaScriptStarter.class, STARTER), StandardCharsets.UTF_8);
     } catch (IOException e) {
       throw new RuntimeException(e);
     }

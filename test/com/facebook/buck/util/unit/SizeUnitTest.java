@@ -31,7 +31,7 @@ public class SizeUnitTest {
 
   @Test
   public void testParseBytes() {
-    assertEquals(Long.MAX_VALUE, SizeUnit.parseBytes(Long.toString(Long.MAX_VALUE) + "00 B"));
+    assertEquals(Long.MAX_VALUE, SizeUnit.parseBytes(Long.MAX_VALUE + "00 B"));
     assertEquals(0L, SizeUnit.parseBytes("0GB"));
     assertEquals(123L, SizeUnit.parseBytes("123 B"));
     assertEquals(123L, SizeUnit.parseBytes("123 Bytes"));

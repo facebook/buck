@@ -28,7 +28,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.TestProcessExecutorFactory;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -38,6 +37,7 @@ import com.google.common.io.Files;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -173,7 +173,8 @@ public class HgCmdLineInterfaceIntegrationTest {
             "");
     try (InputStream diffFileStream =
         repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3").get().get()) {
-      InputStreamReader diffFileReader = new InputStreamReader(diffFileStream, Charsets.UTF_8);
+      InputStreamReader diffFileReader =
+          new InputStreamReader(diffFileStream, StandardCharsets.UTF_8);
       String actualDiff = CharStreams.toString(diffFileReader);
       // The output message from FB hg is a bit more than that from open source hg, use contains
       // here.
@@ -222,7 +223,7 @@ public class HgCmdLineInterfaceIntegrationTest {
 
   private static void addTestBookmarks(String hg, Path bookmarksFile, Path hgRepoPath)
       throws IOException, InterruptedException {
-    List<String> lines = Files.readLines(bookmarksFile.toFile(), Charsets.UTF_8);
+    List<String> lines = Files.readLines(bookmarksFile.toFile(), StandardCharsets.UTF_8);
     for (String line : lines) {
       String[] parts = line.split(" ");
       run(hgRepoPath, hg, "bookmark", "-r", parts[1], parts[0]);

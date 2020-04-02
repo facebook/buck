@@ -16,12 +16,12 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -52,8 +52,10 @@ public class FakeProcess extends Process {
     this(
         exitValue,
         new ByteArrayOutputStream(),
-        new ByteArrayInputStream(Preconditions.checkNotNull(stdout).getBytes(Charsets.UTF_8)),
-        new ByteArrayInputStream(Preconditions.checkNotNull(stderr).getBytes(Charsets.UTF_8)),
+        new ByteArrayInputStream(
+            Preconditions.checkNotNull(stdout).getBytes(StandardCharsets.UTF_8)),
+        new ByteArrayInputStream(
+            Preconditions.checkNotNull(stderr).getBytes(StandardCharsets.UTF_8)),
         waitForException);
   }
 

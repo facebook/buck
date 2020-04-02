@@ -16,12 +16,12 @@
 
 package com.facebook.buck.android.resources;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -96,7 +96,7 @@ public class StringPool extends ResChunk {
       lengthBuf.position(0);
       String value = stringsList.get(i);
       putEncodedLength(lengthBuf, value.length());
-      ByteBuffer encoded = Charsets.UTF_8.encode(value);
+      ByteBuffer encoded = StandardCharsets.UTF_8.encode(value);
       putEncodedLength(lengthBuf, encoded.limit());
 
       stringOffsets.putInt(i * 4, stringData.size());
@@ -226,7 +226,7 @@ public class StringPool extends ResChunk {
     stringData.position(start);
     stringData.get(data);
     stringData.position(0);
-    return new String(data, utf8 ? Charsets.UTF_8 : Charsets.UTF_16LE);
+    return new String(data, utf8 ? StandardCharsets.UTF_8 : StandardCharsets.UTF_16LE);
   }
 
   public void dump(PrintStream out) {

@@ -20,9 +20,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.util.CapturingPrintStream;
-import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.collect.ImmutableList;
+import java.nio.charset.StandardCharsets;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.ExpectedException;
 import org.junit.Rule;
@@ -42,7 +42,8 @@ public class UserInputTest {
     String questionString = "question";
     String response = input.ask(questionString);
     assertThat(
-        outputStream.getContentsAsString(Charsets.UTF_8), Matchers.containsString(questionString));
+        outputStream.getContentsAsString(StandardCharsets.UTF_8),
+        Matchers.containsString(questionString));
     assertThat(response, Matchers.equalTo(cannedAnswer));
   }
 

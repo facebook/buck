@@ -37,7 +37,6 @@ import com.facebook.buck.util.versioncontrol.VersionControlSupplier;
 import com.facebook.buck.util.zip.CustomZipEntry;
 import com.facebook.buck.util.zip.CustomZipOutputStream;
 import com.facebook.buck.util.zip.ZipOutputStreams;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,6 +47,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -227,7 +227,7 @@ public class DefaultDefectReporter implements DefectReporter {
       }
 
       try (InputStream inputStream = response.getBody()) {
-        return CharStreams.toString(new InputStreamReader(inputStream, Charsets.UTF_8));
+        return CharStreams.toString(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
       }
     } catch (IOException e) {
       throw new IOException(String.format("Failed uploading report because [%s].", e.getMessage()));
@@ -261,7 +261,7 @@ public class DefaultDefectReporter implements DefectReporter {
 
     DoctorJsonResponse json =
         ObjectMappers.READER.readValue(
-            ObjectMappers.createParser(responseBody.getBytes(Charsets.UTF_8)),
+            ObjectMappers.createParser(responseBody.getBytes(StandardCharsets.UTF_8)),
             DoctorJsonResponse.class);
 
     return ImmutableDefectSubmitResult.builder()

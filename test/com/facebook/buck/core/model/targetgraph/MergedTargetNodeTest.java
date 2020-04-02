@@ -16,7 +16,7 @@
 
 package com.facebook.buck.core.model.targetgraph;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;

@@ -33,7 +33,6 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.sha1.Sha1HashCode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
@@ -47,6 +46,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -285,7 +285,7 @@ public class PreDexedFilesSorter {
           // The only thing unique to canary classes is the index,
           // which is captured by canaryDirName.
           Hasher hasher = Hashing.sha1().newHasher();
-          hasher.putString(canaryDirName, Charsets.UTF_8);
+          hasher.putString(canaryDirName, StandardCharsets.UTF_8);
           return Sha1HashCode.fromHashCode(hasher.hash());
         }
       };

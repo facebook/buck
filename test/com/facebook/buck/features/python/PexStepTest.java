@@ -32,7 +32,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,6 +39,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -141,10 +141,10 @@ public class PexStepTest {
     Files.createDirectories(realDir1);
     Files.createDirectories(realDir2);
     Files.createDirectories(childFile.getParent());
-    Files.write(file1, "print(\"file1\")".getBytes(Charsets.UTF_8));
+    Files.write(file1, "print(\"file1\")".getBytes(StandardCharsets.UTF_8));
     Files.createDirectories(file2.getParent());
-    Files.write(file2, "print(\"file2\")".getBytes(Charsets.UTF_8));
-    Files.write(childFile, "print(\"child\")".getBytes(Charsets.UTF_8));
+    Files.write(file2, "print(\"file2\")".getBytes(StandardCharsets.UTF_8));
+    Files.write(childFile, "print(\"child\")".getBytes(StandardCharsets.UTF_8));
 
     PexStep step =
         new PexStep(

@@ -27,12 +27,12 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.CapturingPrintStream;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -104,7 +104,7 @@ public class KotlincStep implements Step {
               workingDirectory,
               filesystem);
 
-      String firstOrderStderr = stderr.getContentsAsString(Charsets.UTF_8);
+      String firstOrderStderr = stderr.getContentsAsString(StandardCharsets.UTF_8);
       Optional<String> returnedStderr;
       if (declaredDepsBuildResult != StepExecutionResults.SUCCESS_EXIT_CODE) {
         returnedStderr = Optional.of(firstOrderStderr);

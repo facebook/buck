@@ -17,13 +17,13 @@
 package com.facebook.buck.android.resources;
 
 import com.facebook.buck.util.MoreSuppliers;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Maps;
 import java.io.PrintStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -189,7 +189,7 @@ public class ResTablePackage extends ResChunk {
         MoreSuppliers.memoize(
             () -> {
               // Construct a string from the full name data. This will end with a bunch of \0.
-              String fullData = new String(nameData, Charsets.UTF_16LE);
+              String fullData = new String(nameData, StandardCharsets.UTF_16LE);
               return fullData.substring(0, fullData.indexOf(0));
             });
     Preconditions.checkState(this.packageId == APP_PACKAGE_ID);

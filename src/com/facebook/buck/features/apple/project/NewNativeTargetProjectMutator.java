@@ -62,7 +62,6 @@ import com.facebook.buck.features.apple.common.CopyInXcode;
 import com.facebook.buck.features.js.JsBundleOutputs;
 import com.facebook.buck.features.js.JsBundleOutputsDescription;
 import com.facebook.buck.rules.coercer.FrameworkPath;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -72,6 +71,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -92,10 +92,12 @@ import org.stringtemplate.v4.ST;
  * PBXProject object graph.
  */
 class NewNativeTargetProjectMutator {
+
   private static final Logger LOG = Logger.get(NewNativeTargetProjectMutator.class);
   private static final String JS_BUNDLE_TEMPLATE = "js-bundle.st";
 
   public static class Result {
+
     public final PBXNativeTarget target;
     public final Optional<PBXGroup> targetGroup;
 
@@ -835,7 +837,7 @@ class NewNativeTargetProjectMutator {
           new ST(
               Resources.toString(
                   Resources.getResource(NewNativeTargetProjectMutator.class, JS_BUNDLE_TEMPLATE),
-                  Charsets.UTF_8));
+                  StandardCharsets.UTF_8));
     } catch (IOException e) {
       throw new RuntimeException(
           String.format("There was an error loading '%s' template", JS_BUNDLE_TEMPLATE), e);

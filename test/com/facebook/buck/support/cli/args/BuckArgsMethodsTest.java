@@ -24,11 +24,11 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -339,10 +339,10 @@ public class BuckArgsMethodsTest {
     AbsPath staticArgs = tmp.newFile("args_static");
     AbsPath pythonArgs = tmp.newFile("args.py");
 
-    Files.write(staticArgs.getPath(), "--foo\n\nbar \n--baz\n\n".getBytes(Charsets.UTF_8));
+    Files.write(staticArgs.getPath(), "--foo\n\nbar \n--baz\n\n".getBytes(StandardCharsets.UTF_8));
     Files.write(
         pythonArgs.getPath(),
-        "print(\"--py-foo\\n\\npy-bar \\n--py-baz\\n\")\n".getBytes(Charsets.UTF_8));
+        "print(\"--py-foo\\n\\npy-bar \\n--py-baz\\n\")\n".getBytes(StandardCharsets.UTF_8));
 
     ImmutableMap<CellName, AbsPath> cellMapping =
         ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot());

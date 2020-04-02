@@ -919,7 +919,7 @@ public class RustBinaryIntegrationTest {
 
     Path programPath = workspace.buildAndReturnOutput("//:hello-shared");
     java.lang.Process process =
-        new java.lang.ProcessBuilder(new String[] {programPath.toString()})
+        new java.lang.ProcessBuilder(programPath.toString())
             .directory(programPath.getRoot().toFile())
             .start();
     assertThat(process.waitFor(), Matchers.equalTo(0));

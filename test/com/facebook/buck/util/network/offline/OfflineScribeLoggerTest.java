@@ -40,7 +40,6 @@ import com.facebook.buck.util.network.ScribeLogger;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.fasterxml.jackson.core.JsonParser;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.ObjectArrays;
@@ -52,6 +51,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -207,7 +207,7 @@ public class OfflineScribeLoggerTest {
                 .writeValueAsString(
                     ImmutableScribeData.ofImpl(
                         category, ImmutableList.of(line, line, line, line), Optional.empty()))
-                .getBytes(Charsets.UTF_8);
+                .getBytes(StandardCharsets.UTF_8);
         logFileStoreStream.write(scribeData);
       }
       logFileStoreStream.close();

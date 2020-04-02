@@ -44,7 +44,6 @@ import com.facebook.buck.slb.HttpService;
 import com.facebook.buck.slb.OkHttpResponseWrapper;
 import com.facebook.buck.util.timing.IncrementingFakeClock;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -58,6 +57,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -105,7 +105,7 @@ public class HttpArtifactCacheTest {
           HttpArtifactCacheBinaryProtocol.createMetadataHeader(ruleKeys, metadata, source);
       dataOut.writeInt(rawMetadata.length);
       dataOut.write(rawMetadata);
-      dataOut.write(data.getBytes(Charsets.UTF_8));
+      dataOut.write(data.getBytes(StandardCharsets.UTF_8));
       return ResponseBody.create(OCTET_STREAM, out.toByteArray());
     }
   }
@@ -212,7 +212,7 @@ public class HttpArtifactCacheTest {
                           createResponseBody(
                               ImmutableSet.of(ruleKey),
                               ImmutableMap.of(),
-                              ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
+                              ByteSource.wrap(data.getBytes(StandardCharsets.UTF_8)),
                               data))
                       .message("")
                       .build();
@@ -348,7 +348,8 @@ public class HttpArtifactCacheTest {
                           createResponseBody(
                               ImmutableSet.of(ruleKey),
                               ImmutableMap.of(),
-                              ByteSource.wrap("more data than length".getBytes(Charsets.UTF_8)),
+                              ByteSource.wrap(
+                                  "more data than length".getBytes(StandardCharsets.UTF_8)),
                               "small"))
                       .message("")
                       .build();
@@ -414,10 +415,10 @@ public class HttpArtifactCacheTest {
                     HttpArtifactCacheBinaryProtocol.createMetadataHeader(
                         ImmutableSet.of(ruleKey),
                         ImmutableMap.of(),
-                        ByteSource.wrap(data.getBytes(Charsets.UTF_8)));
+                        ByteSource.wrap(data.getBytes(StandardCharsets.UTF_8)));
                 dataOut.writeInt(metadata.length);
                 dataOut.write(metadata);
-                dataOut.write(data.getBytes(Charsets.UTF_8));
+                dataOut.write(data.getBytes(StandardCharsets.UTF_8));
                 expectedData = out.toByteArray();
               }
 
@@ -563,7 +564,7 @@ public class HttpArtifactCacheTest {
                           createResponseBody(
                               ImmutableSet.of(otherRuleKey),
                               ImmutableMap.of(),
-                              ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
+                              ByteSource.wrap(data.getBytes(StandardCharsets.UTF_8)),
                               data))
                       .message("")
                       .build();
@@ -598,7 +599,7 @@ public class HttpArtifactCacheTest {
                           createResponseBody(
                               ImmutableSet.of(ruleKey),
                               metadata,
-                              ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
+                              ByteSource.wrap(data.getBytes(StandardCharsets.UTF_8)),
                               data))
                       .build();
               return new OkHttpResponseWrapper(response);
@@ -648,7 +649,7 @@ public class HttpArtifactCacheTest {
                               createResponseBody(
                                   ImmutableSet.of(otherRuleKey),
                                   ImmutableMap.of(),
-                                  ByteSource.wrap(data.getBytes(Charsets.UTF_8)),
+                                  ByteSource.wrap(data.getBytes(StandardCharsets.UTF_8)),
                                   data))
                           .message("")
                           .build();

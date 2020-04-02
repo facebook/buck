@@ -16,11 +16,11 @@
 
 package com.facebook.buck.util;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
@@ -46,7 +46,7 @@ public class ByteBufferReplacer {
     byte[] bytes = str.getBytes(charset);
 
     // Strip off the byte-order-markers for UTF-16.
-    if (charset == Charsets.UTF_16) {
+    if (charset == StandardCharsets.UTF_16) {
       bytes = Arrays.copyOfRange(bytes, 2, bytes.length);
     }
 
@@ -103,7 +103,7 @@ public class ByteBufferReplacer {
       // Since we can't use Pattern on a byte[], we need to convert our search byte array
       // to a string.  To do this we use ISO-8859-1 since it maps 1-to-1 in 0-0xFF range.
       Pattern pattern =
-          Pattern.compile(new String(entry.getKey(), Charsets.ISO_8859_1), Pattern.LITERAL);
+          Pattern.compile(new String(entry.getKey(), StandardCharsets.ISO_8859_1), Pattern.LITERAL);
       Matcher matcher = pattern.matcher(charSequence);
 
       while (matcher.find() && (numReplacements < maxReplacements || maxReplacements == -1)) {

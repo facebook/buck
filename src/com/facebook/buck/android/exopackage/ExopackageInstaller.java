@@ -29,7 +29,6 @@ import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.NamedTemporaryFile;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableListMultimap;
@@ -42,6 +41,7 @@ import com.google.common.collect.Ordering;
 import com.google.common.io.Closer;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -343,7 +343,7 @@ public class ExopackageInstaller {
       for (Map.Entry<Path, String> entry : metadataToInstall.entrySet()) {
         NamedTemporaryFile temp = closer.register(new NamedTemporaryFile("metadata", "tmp"));
         com.google.common.io.Files.write(
-            entry.getValue().getBytes(Charsets.UTF_8), temp.get().toFile());
+            entry.getValue().getBytes(StandardCharsets.UTF_8), temp.get().toFile());
         filesToInstall.put(entry.getKey(), temp.get());
       }
       installFiles("metadata", ImmutableMap.copyOf(filesToInstall));

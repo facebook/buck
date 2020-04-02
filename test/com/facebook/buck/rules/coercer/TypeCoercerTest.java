@@ -204,15 +204,15 @@ public class TypeCoercerTest {
     Matcher<Iterable<?>> matcher =
         Matchers.contains(
             ImmutableList.of(
-                sameInstance((Object) input),
-                is((Object) "foo"),
-                sameInstance((Object) input.get("foo")),
-                is((Object) "//foo:bar"),
-                is((Object) "//foo:baz"),
-                is((Object) "bar"),
-                sameInstance((Object) input.get("bar")),
-                is((Object) ":bar"),
-                is((Object) "//foo:foo")));
+                sameInstance(input),
+                is("foo"),
+                sameInstance(input.get("foo")),
+                is("//foo:bar"),
+                is("//foo:baz"),
+                is("bar"),
+                sameInstance(input.get("bar")),
+                is(":bar"),
+                is("//foo:foo")));
     assertThat(traversal.getObjects(), matcher);
   }
 
@@ -357,8 +357,7 @@ public class TypeCoercerTest {
         traversal.getObjects(),
         Matchers.contains(
             ImmutableList.of(
-                sameInstance((Object) input.getRight()),
-                sameInstance((Object) input.getRight().get(0)))));
+                sameInstance(input.getRight()), sameInstance(input.getRight().get(0)))));
 
     traversal = new TestTraversal();
     Either<String, List<String>> input2 = Either.ofLeft("foo");
@@ -422,9 +421,7 @@ public class TypeCoercerTest {
     assertThat(
         traversal.getObjects(),
         Matchers.contains(
-            ImmutableList.of(
-                sameInstance((Object) input.getFirst()),
-                sameInstance((Object) input.getSecond()))));
+            ImmutableList.of(sameInstance(input.getFirst()), sameInstance(input.getSecond()))));
   }
 
   @Test

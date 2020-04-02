@@ -18,13 +18,13 @@ package com.facebook.buck.cxx.toolchain.objectfile;
 
 import com.facebook.buck.util.ObjectFileCommonModificationDate;
 import com.facebook.buck.util.nio.ByteBufferUnmapper;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Ints;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -140,7 +140,7 @@ public class Machos {
             break;
           case LC_SEGMENT:
             byte[] segmentNameBytes = ObjectFileScrubbers.getBytes(map, 16);
-            String segmentName = new String(segmentNameBytes, Charsets.US_ASCII);
+            String segmentName = new String(segmentNameBytes, StandardCharsets.US_ASCII);
             if (segmentName.startsWith(LINKEDIT)) {
               linkEditSegmentFound = true;
               /* vm address */ ObjectFileScrubbers.getLittleEndianInt(map);
@@ -161,7 +161,7 @@ public class Machos {
             break;
           case LC_SEGMENT_64:
             byte[] segment64NameBytes = ObjectFileScrubbers.getBytes(map, 16);
-            String segment64Name = new String(segment64NameBytes, Charsets.US_ASCII);
+            String segment64Name = new String(segment64NameBytes, StandardCharsets.US_ASCII);
             if (segment64Name.startsWith(LINKEDIT)) {
               linkEditSegmentFound = true;
               /* vm address */ ObjectFileScrubbers.getLittleEndianLong(map);
@@ -358,8 +358,8 @@ public class Machos {
       }
       replacementPrefix = replacementPrefix + "/";
 
-      byte[] searchPrefixBytes = searchPrefix.getBytes(Charsets.UTF_8);
-      byte[] replacementBytes = replacementPrefix.getBytes(Charsets.UTF_8);
+      byte[] searchPrefixBytes = searchPrefix.getBytes(StandardCharsets.UTF_8);
+      byte[] replacementBytes = replacementPrefix.getBytes(StandardCharsets.UTF_8);
 
       if (replacementBytes.length > searchPrefixBytes.length) {
         throw new IllegalStateException(

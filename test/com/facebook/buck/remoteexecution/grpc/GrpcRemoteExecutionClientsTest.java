@@ -33,7 +33,6 @@ import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
 import com.facebook.buck.remoteexecution.util.LocalContentAddressedStorage;
 import com.facebook.buck.remoteexecution.util.OutputsMaterializer.FilesystemFileMaterializer;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
@@ -46,6 +45,7 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -112,7 +112,7 @@ public class GrpcRemoteExecutionClientsTest {
         clients
             .getRemoteExecutionService()
             .execute(
-                clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)),
+                clients.getProtocol().computeDigest("".getBytes(StandardCharsets.UTF_8)),
                 "",
                 "",
                 MetadataProviderFactory.emptyMetadataProvider())
@@ -141,7 +141,7 @@ public class GrpcRemoteExecutionClientsTest {
         clients
             .getRemoteExecutionService()
             .execute(
-                clients.getProtocol().computeDigest("".getBytes(Charsets.UTF_8)),
+                clients.getProtocol().computeDigest("".getBytes(StandardCharsets.UTF_8)),
                 "",
                 "",
                 MetadataProviderFactory.emptyMetadataProvider());
@@ -174,16 +174,20 @@ public class GrpcRemoteExecutionClientsTest {
     List<UploadDataSupplier> requiredData = new ArrayList<>();
 
     String data1 = "data1";
-    Digest digest1 = protocol.computeDigest(data1.getBytes(Charsets.UTF_8));
+    Digest digest1 = protocol.computeDigest(data1.getBytes(StandardCharsets.UTF_8));
     requiredData.add(
         UploadDataSupplier.of(
-            "data1", digest1, () -> new ByteArrayInputStream(data1.getBytes(Charsets.UTF_8))));
+            "data1",
+            digest1,
+            () -> new ByteArrayInputStream(data1.getBytes(StandardCharsets.UTF_8))));
 
     String data2 = "data2";
-    Digest digest2 = protocol.computeDigest(data2.getBytes(Charsets.UTF_8));
+    Digest digest2 = protocol.computeDigest(data2.getBytes(StandardCharsets.UTF_8));
     requiredData.add(
         UploadDataSupplier.of(
-            "data2", digest2, () -> new ByteArrayInputStream(data2.getBytes(Charsets.UTF_8))));
+            "data2",
+            digest2,
+            () -> new ByteArrayInputStream(data2.getBytes(StandardCharsets.UTF_8))));
 
     clients.getContentAddressedStorage().addMissing(requiredData).get();
 
@@ -215,7 +219,7 @@ public class GrpcRemoteExecutionClientsTest {
     try (Stream<Path> stream = Files.list(workDir)) {
       for (Path path : (Iterable<Path>) stream::iterator) {
         contentsBuilder.put(
-            workDir.relativize(path), new String(Files.readAllBytes(path), Charsets.UTF_8));
+            workDir.relativize(path), new String(Files.readAllBytes(path), StandardCharsets.UTF_8));
       }
     }
     return contentsBuilder.build();

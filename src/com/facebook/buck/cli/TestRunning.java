@@ -70,7 +70,6 @@ import com.facebook.buck.util.concurrent.MoreFutures;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -89,6 +88,7 @@ import com.google.common.util.concurrent.SettableFuture;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -402,7 +402,7 @@ public class TestRunning {
     // Write out the results as XML, if requested.
     Optional<String> path = options.getPathToXmlTestOutput();
     if (path.isPresent()) {
-      try (Writer writer = Files.newWriter(new File(path.get()), Charsets.UTF_8)) {
+      try (Writer writer = Files.newWriter(new File(path.get()), StandardCharsets.UTF_8)) {
         writeXmlOutput(completedResults, writer);
       }
     }

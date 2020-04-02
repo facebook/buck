@@ -26,7 +26,6 @@ import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
@@ -40,6 +39,7 @@ import com.google.common.hash.Hashing;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -308,7 +308,7 @@ public class DefaultOnDiskBuildInfo implements OnDiskBuildInfo {
       for (Path path : outputPaths) {
         String pathString = path.toString();
         HashCode fileHash = fileHashLoader.get(projectFilesystem, path);
-        hasher.putBytes(pathString.getBytes(Charsets.UTF_8));
+        hasher.putBytes(pathString.getBytes(StandardCharsets.UTF_8));
         hasher.putBytes(fileHash.asBytes());
         outputHashes.put(pathString, fileHash.toString());
       }

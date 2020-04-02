@@ -37,9 +37,9 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -71,6 +71,7 @@ import org.junit.runners.Parameterized;
  */
 @RunWith(Parameterized.class)
 public class AndroidBinaryInstallIntegrationTest {
+
   private static final String FAKE_PACKAGE_NAME = "buck.exotest.fake";
   private static final Path INSTALL_ROOT =
       ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.resolve(FAKE_PACKAGE_NAME);
@@ -662,7 +663,8 @@ public class AndroidBinaryInstallIntegrationTest {
 
     for (String dexDevicePath : dexDevicePaths) {
       AbsPath metadataPath = installRoot.resolve(dexDevicePath).resolve("metadata.txt");
-      List<String> metadataLines = Files.readAllLines(metadataPath.getPath(), Charsets.UTF_8);
+      List<String> metadataLines =
+          Files.readAllLines(metadataPath.getPath(), StandardCharsets.UTF_8);
       List<DexTestUtils.DexMetadata> dexMetadata = DexTestUtils.moduleMetadata(metadataLines);
       Set<Path> dexDirContents =
           Files.list(metadataPath.getParent().getPath())
@@ -675,6 +677,7 @@ public class AndroidBinaryInstallIntegrationTest {
   }
 
   private class ExoState {
+
     private final String mainJavaContent;
     private final String manifestContent;
     private final ImmutableList<String> secondaryDexesContents;
@@ -699,6 +702,7 @@ public class AndroidBinaryInstallIntegrationTest {
   }
 
   private static class ResourcesExoData {
+
     private final String mainResourcesData;
     private final String resourcesData;
     private final String assetsData;

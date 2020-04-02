@@ -19,7 +19,6 @@ package com.facebook.buck.android.resources;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.stream.RichStream;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
@@ -29,6 +28,7 @@ import com.google.common.io.ByteStreams;
 import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -179,7 +179,7 @@ public class ExoResourcesRewriter {
             cache.computeIfAbsent(
                 s, (k) -> String.format("0x%x", refMapping.map(Integer.parseInt(k, 16))));
     try {
-      List<String> lines = Files.readAllLines(inputRDotTxt, Charsets.UTF_8);
+      List<String> lines = Files.readAllLines(inputRDotTxt, StandardCharsets.UTF_8);
       List<String> mappedLines = new ArrayList<>(lines.size());
       Pattern regular = Pattern.compile("int ([^ ]*) ([^ ]*) 0x(7f[0-9a-f]{6})");
       Pattern styleable = Pattern.compile("int\\[] (styleable) ([^ ]*) \\{(.*) }");

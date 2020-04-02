@@ -67,7 +67,7 @@ public class WatchmanTestDaemon implements Closeable {
   }
 
   public static WatchmanTestDaemon start(AbsPath watchmanBaseDir, ListeningProcessExecutor executor)
-      throws IOException, InterruptedException, WatchmanNotFoundException {
+      throws IOException, InterruptedException {
     Path watchmanExe;
     try {
       watchmanExe =

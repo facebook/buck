@@ -20,11 +20,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -54,9 +54,9 @@ public class ProjectWorkspaceTest {
     Path testSubdir = sourceDir.resolve("subdir");
     java.nio.file.Files.createDirectory(testSubdir);
     Path testFile = testSubdir.resolve("test.file");
-    java.nio.file.Files.write(testFile, ImmutableList.of("Hello world"), Charsets.UTF_8);
+    java.nio.file.Files.write(testFile, ImmutableList.of("Hello world"), StandardCharsets.UTF_8);
     Path testFile2 = testSubdir.resolve("test.file2");
-    java.nio.file.Files.write(testFile2, ImmutableList.of("Goodbye world"), Charsets.UTF_8);
+    java.nio.file.Files.write(testFile2, ImmutableList.of("Goodbye world"), StandardCharsets.UTF_8);
 
     ProjectWorkspace workspace = new ProjectWorkspace(AbsPath.of(templateDir), tmpFolder.getRoot());
     workspace.copyRecursively(sourceDir, Paths.get("destdir"));

@@ -52,13 +52,13 @@ import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Sets;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -287,7 +287,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
     Files.write(
         absolutify(getRelativeVersionFilePath()),
-        versionScript.getBytes(Charsets.UTF_8),
+        versionScript.getBytes(StandardCharsets.UTF_8),
         StandardOpenOption.CREATE);
   }
 
@@ -303,7 +303,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
     Files.write(
         absolutify(dest),
         ImmutableSortedSet.copyOf(symbols),
-        Charsets.UTF_8,
+        StandardCharsets.UTF_8,
         StandardOpenOption.CREATE);
   }
 
@@ -311,7 +311,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
     ImmutableSet.Builder<String> symbolsNeeded = ImmutableSet.builder();
     for (SourcePath source : symbolsNeededPaths) {
       symbolsNeeded.addAll(
-          Files.readAllLines(pathResolver.getAbsolutePath(source), Charsets.UTF_8));
+          Files.readAllLines(pathResolver.getAbsolutePath(source), StandardCharsets.UTF_8));
     }
     return symbolsNeeded.build();
   }

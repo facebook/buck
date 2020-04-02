@@ -26,7 +26,6 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.facebook.buck.util.network.ScribeLogger;
 import com.facebook.buck.util.types.Unit;
 import com.fasterxml.jackson.core.JsonFactory;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -43,6 +42,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -167,7 +167,7 @@ public class OfflineScribeLogger extends ScribeLogger {
                 scribeData =
                     ObjectMappers.WRITER
                         .writeValueAsString(ImmutableScribeData.ofImpl(category, lines, bucket))
-                        .getBytes(Charsets.UTF_8);
+                        .getBytes(StandardCharsets.UTF_8);
               } catch (Exception e) {
                 if (categoriesReportedAnError.add(category)) {
                   LOG.error(
@@ -437,7 +437,7 @@ public class OfflineScribeLogger extends ScribeLogger {
 
     public synchronized void addLine(String line) {
       lines.add(line);
-      linesBytes += line.getBytes(Charsets.UTF_8).length;
+      linesBytes += line.getBytes(StandardCharsets.UTF_8).length;
     }
   }
 }

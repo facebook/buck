@@ -26,10 +26,10 @@ import com.facebook.buck.cxx.toolchain.ArchiveContents;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -112,7 +112,8 @@ class HaskellTestUtils {
     // Find the major version of the haskell compiler.
     ImmutableList<String> cmd = ImmutableList.of(compilerOptional.get().toString(), "--version");
     Process process = Runtime.getRuntime().exec(cmd.toArray(new String[0]));
-    String output = new String(ByteStreams.toByteArray(process.getInputStream()), Charsets.UTF_8);
+    String output =
+        new String(ByteStreams.toByteArray(process.getInputStream()), StandardCharsets.UTF_8);
     Pattern versionPattern = Pattern.compile(".*version ([0-9]+).*");
     Matcher matcher = versionPattern.matcher(output.trim());
     assertTrue(

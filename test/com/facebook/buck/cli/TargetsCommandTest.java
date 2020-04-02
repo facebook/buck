@@ -72,7 +72,6 @@ import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser.Feature;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -83,6 +82,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.SortedMap;
@@ -257,7 +257,7 @@ public class TargetsCommandTest {
     PrintStream printStream = new PrintStream(fakeStream);
     TargetsCommand.printTargets(targets, "\0", printStream);
     printStream.flush();
-    assertEquals("//foo:bar\0//foo:baz\0", fakeStream.toString(Charsets.UTF_8.name()));
+    assertEquals("//foo:bar\0//foo:baz\0", fakeStream.toString(StandardCharsets.UTF_8.name()));
   }
 
   @Test

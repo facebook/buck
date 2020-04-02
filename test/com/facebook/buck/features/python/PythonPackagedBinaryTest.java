@@ -37,13 +37,13 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.TestDefaultRuleKeyFactory;
 import com.facebook.buck.testutil.FakeFileHashCache;
-import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -112,11 +112,11 @@ public class PythonPackagedBinaryTest {
 
     // Create two different sources, which we'll swap in as different modules.
     Path main = tmpDir.newFile().toPath();
-    Files.write(main, "main".getBytes(Charsets.UTF_8));
+    Files.write(main, "main".getBytes(StandardCharsets.UTF_8));
     Path source1 = tmpDir.newFile().toPath();
-    Files.write(source1, "hello world".getBytes(Charsets.UTF_8));
+    Files.write(source1, "hello world".getBytes(StandardCharsets.UTF_8));
     Path source2 = tmpDir.newFile().toPath();
-    Files.write(source2, "goodbye world".getBytes(Charsets.UTF_8));
+    Files.write(source2, "goodbye world".getBytes(StandardCharsets.UTF_8));
 
     Path mainRelative = MorePaths.relativize(tmpDir.getRoot().toPath(), main);
     Path source1Relative = MorePaths.relativize(tmpDir.getRoot().toPath(), source1);

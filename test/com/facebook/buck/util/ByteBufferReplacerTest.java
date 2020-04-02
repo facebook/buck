@@ -20,12 +20,12 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeThat;
 
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -35,7 +35,7 @@ public class ByteBufferReplacerTest {
 
   @Test
   public void charSets() {
-    assumeThat(Charset.defaultCharset(), Matchers.equalTo(Charsets.UTF_8));
+    assumeThat(Charset.defaultCharset(), Matchers.equalTo(StandardCharsets.UTF_8));
 
     String blob = "something \n \ud003\ud001hello/world \n something";
     String fixedBlob = "something \n \ud003\ud001replaced/// \n something";
@@ -45,12 +45,12 @@ public class ByteBufferReplacerTest {
 
     ImmutableList<Charset> charSets =
         ImmutableList.of(
-            Charsets.ISO_8859_1,
-            Charsets.US_ASCII,
-            Charsets.UTF_8,
-            Charsets.UTF_16,
-            Charsets.UTF_16BE,
-            Charsets.UTF_16LE);
+            StandardCharsets.ISO_8859_1,
+            StandardCharsets.US_ASCII,
+            StandardCharsets.UTF_8,
+            StandardCharsets.UTF_16,
+            StandardCharsets.UTF_16BE,
+            StandardCharsets.UTF_16LE);
 
     for (Charset charset : charSets) {
       ByteBufferReplacer replacer =
@@ -61,7 +61,7 @@ public class ByteBufferReplacerTest {
       assertEquals(String.format("Charset %s", charset), 1, numReplacements);
       assertArrayEquals(
           String.format(
-              "Charset %s: \'%s\' != \'%s\'", charset, fixedBlob, new String(rawBytes, charset)),
+              "Charset %s: '%s' != '%s'", charset, fixedBlob, new String(rawBytes, charset)),
           fixedBlob.getBytes(charset),
           rawBytes);
     }

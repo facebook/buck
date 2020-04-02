@@ -21,7 +21,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.util.hash.HasherInputStream;
 import com.facebook.buck.util.hash.HasherOutputStream;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
@@ -37,6 +36,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /** Implements the binary protocol used by Buck to talk to the cache server. */
@@ -113,7 +113,7 @@ public class HttpArtifactCacheBinaryProtocol {
           int valSize = metadataIn.readInt();
           byte[] val = new byte[valSize];
           ByteStreams.readFully(metadataIn, val);
-          result.putMetadata(key, new String(val, Charsets.UTF_8));
+          result.putMetadata(key, new String(val, StandardCharsets.UTF_8));
         }
       }
 
@@ -169,7 +169,7 @@ public class HttpArtifactCacheBinaryProtocol {
       out.writeInt(metadata.size());
       for (Map.Entry<String, String> ent : metadata.entrySet()) {
         out.writeUTF(ent.getKey());
-        byte[] val = ent.getValue().getBytes(Charsets.UTF_8);
+        byte[] val = ent.getValue().getBytes(StandardCharsets.UTF_8);
         out.writeInt(val.length);
         out.write(val);
         if (out.size() > MAX_METADATA_HEADER_SIZE) {

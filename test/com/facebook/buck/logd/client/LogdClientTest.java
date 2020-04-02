@@ -31,7 +31,6 @@ import com.facebook.buck.logd.proto.CreateLogResponse;
 import com.facebook.buck.logd.proto.LogMessage;
 import com.facebook.buck.logd.proto.LogType;
 import com.facebook.buck.logd.proto.LogdServiceGrpc;
-import com.google.common.base.Charsets;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -40,6 +39,7 @@ import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
 import io.grpc.util.MutableHandlerRegistry;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -179,7 +179,7 @@ public class LogdClientTest {
     try (LogdStream logdStream = client.openLog(logFileId)) {
       for (String message : messages) {
         sb.append(message);
-        logdStream.write(message.getBytes(Charsets.UTF_8));
+        logdStream.write(message.getBytes(StandardCharsets.UTF_8));
       }
     }
 
@@ -225,8 +225,8 @@ public class LogdClientTest {
     replay(testHelper);
 
     int logFileId = 1;
-    try (LogdStream logdStream = client.openLog(logFileId); ) {
-      logdStream.write("Hello".getBytes(Charsets.UTF_8));
+    try (LogdStream logdStream = client.openLog(logFileId)) {
+      logdStream.write("Hello".getBytes(StandardCharsets.UTF_8));
     }
 
     verify(testHelper);

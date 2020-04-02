@@ -18,10 +18,10 @@ package com.facebook.buck.util.zip;
 
 import static org.junit.Assert.assertThat;
 
-import com.google.common.base.Charsets;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -39,14 +39,14 @@ public class ZipScrubberTest {
     ByteArrayOutputStream bytesOutputStream = new ByteArrayOutputStream();
     try (ZipOutputStream out = new ZipOutputStream(bytesOutputStream)) {
       ZipEntry entry = new ZipEntry("file1");
-      byte[] data = "data1".getBytes(Charsets.UTF_8);
+      byte[] data = "data1".getBytes(StandardCharsets.UTF_8);
       entry.setSize(data.length);
       out.putNextEntry(entry);
       out.write(data);
       out.closeEntry();
 
       entry = new ZipEntry("file2");
-      data = "data2".getBytes(Charsets.UTF_8);
+      data = "data2".getBytes(StandardCharsets.UTF_8);
       entry.setSize(data.length);
       out.putNextEntry(entry);
       out.write(data);
@@ -69,7 +69,7 @@ public class ZipScrubberTest {
   @Test
   public void modificationTimesExceedShort() throws Exception {
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    byte[] data = "data1".getBytes(Charsets.UTF_8);
+    byte[] data = "data1".getBytes(StandardCharsets.UTF_8);
     try (ZipOutputStream out = new ZipOutputStream(byteArrayOutputStream)) {
       for (long i = 0; i < Short.MAX_VALUE + 1; i++) {
         ZipEntry entry = new ZipEntry("file" + i);
@@ -95,7 +95,7 @@ public class ZipScrubberTest {
   @Test
   public void modificationZip64Times() throws Exception {
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-    byte[] data = "data1".getBytes(Charsets.UTF_8);
+    byte[] data = "data1".getBytes(StandardCharsets.UTF_8);
     try (ZipOutputStream out = new ZipOutputStream(byteArrayOutputStream)) {
       for (long i = 0; i < 2 * Short.MAX_VALUE + 1; i++) {
         ZipEntry entry = new ZipEntry("file" + i);

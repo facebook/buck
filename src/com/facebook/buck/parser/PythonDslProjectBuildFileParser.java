@@ -61,7 +61,6 @@ import com.facebook.buck.util.types.Unit;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -77,6 +76,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -262,7 +262,8 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       buckPyProcessJsonParser =
           ObjectMappers.createParser(
               new InputStreamReader(
-                  Objects.requireNonNull(buckPyProcessInput).getInputStream(), Charsets.UTF_8));
+                  Objects.requireNonNull(buckPyProcessInput).getInputStream(),
+                  StandardCharsets.UTF_8));
 
       InputStream stderr = buckPyProcess.getStderr();
 

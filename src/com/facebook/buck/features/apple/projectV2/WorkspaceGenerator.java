@@ -20,11 +20,11 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.io.MoreProjectFilesystems;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.FileVisitor;
 import java.nio.file.Path;
@@ -251,7 +251,7 @@ class WorkspaceGenerator {
       transformer.transform(source, result);
       String contentsToWrite = outputStream.toString();
       if (MoreProjectFilesystems.fileContentsDiffer(
-          new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
+          new ByteArrayInputStream(contentsToWrite.getBytes(StandardCharsets.UTF_8)),
           serializedWorkspace,
           projectFilesystem)) {
         projectFilesystem.writeContentsToPath(contentsToWrite, serializedWorkspace);

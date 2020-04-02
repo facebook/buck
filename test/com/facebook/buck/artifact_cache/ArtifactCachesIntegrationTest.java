@@ -41,10 +41,10 @@ import com.facebook.buck.support.bgtasks.TaskManagerCommandScope;
 import com.facebook.buck.support.bgtasks.TestBackgroundTaskManager;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.HttpdForTests;
-import com.google.common.base.Charsets;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -304,12 +304,12 @@ public class ArtifactCachesIntegrationTest {
                 + SAMPLE_CA_INTERMEDIATE_CERT
                 + "\n"
                 + SAMPLE_CLIENT_INTERMEDIATE_KEY)
-            .getBytes(Charsets.UTF_8));
-    Files.write(clientCertPath, SAMPLE_CLIENT_CERT.getBytes(Charsets.UTF_8));
-    Files.write(clientKeyPath, SAMPLE_CLIENT_KEY.getBytes(Charsets.UTF_8));
-    Files.write(serverCertPath, SAMPLE_SERVER_CERT.getBytes(Charsets.UTF_8));
-    Files.write(serverKeyPath, SAMPLE_SERVER_KEY.getBytes(Charsets.UTF_8));
-    Files.write(caCertPath, SAMPLE_CA_CERT.getBytes(Charsets.UTF_8));
+            .getBytes(StandardCharsets.UTF_8));
+    Files.write(clientCertPath, SAMPLE_CLIENT_CERT.getBytes(StandardCharsets.UTF_8));
+    Files.write(clientKeyPath, SAMPLE_CLIENT_KEY.getBytes(StandardCharsets.UTF_8));
+    Files.write(serverCertPath, SAMPLE_SERVER_CERT.getBytes(StandardCharsets.UTF_8));
+    Files.write(serverKeyPath, SAMPLE_SERVER_KEY.getBytes(StandardCharsets.UTF_8));
+    Files.write(caCertPath, SAMPLE_CA_CERT.getBytes(StandardCharsets.UTF_8));
     clientCert =
         ClientCertificateHandler.parseCertificateChain(Optional.of(clientCertPath), true)
             .get()

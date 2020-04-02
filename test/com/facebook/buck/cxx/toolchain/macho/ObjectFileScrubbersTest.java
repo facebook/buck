@@ -25,9 +25,9 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.cxx.toolchain.objectfile.Machos;
 import com.facebook.buck.cxx.toolchain.objectfile.ObjectFileScrubbers;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
@@ -93,7 +93,7 @@ public class ObjectFileScrubbersTest {
 
   @Test
   public void getCStringBufferNonEmptyString() {
-    byte[] stringBytes = "TestString".getBytes(Charsets.UTF_8);
+    byte[] stringBytes = "TestString".getBytes(StandardCharsets.UTF_8);
     byte[] nullTermStringBytes = new byte[stringBytes.length + 1];
     System.arraycopy(stringBytes, 0, nullTermStringBytes, 0, stringBytes.length);
     nullTermStringBytes[stringBytes.length] = 0x0;
@@ -119,7 +119,7 @@ public class ObjectFileScrubbersTest {
 
   @Test
   public void putCStringBufferNonEmptyString() {
-    byte[] stringBytes = "TestString".getBytes(Charsets.UTF_8);
+    byte[] stringBytes = "TestString".getBytes(StandardCharsets.UTF_8);
     byte[] nullTermStringBytes = new byte[stringBytes.length + 1];
     ObjectFileScrubbers.putCharByteBuffer(
         ByteBuffer.wrap(nullTermStringBytes), 0, ByteBuffer.wrap(stringBytes));
@@ -149,8 +149,8 @@ public class ObjectFileScrubbersTest {
         Machos.generateReplacementMap(ImmutableMap.of(Paths.get("/Users/fb/repo"), Paths.get("")));
     assertThat(map.size(), equalTo(1));
 
-    byte[] expectedSearchPrefix = "/Users/fb/repo/".getBytes(Charsets.UTF_8);
-    byte[] expectedReplacementPrefix = "./".getBytes(Charsets.UTF_8);
+    byte[] expectedSearchPrefix = "/Users/fb/repo/".getBytes(StandardCharsets.UTF_8);
+    byte[] expectedReplacementPrefix = "./".getBytes(StandardCharsets.UTF_8);
 
     Map.Entry<byte[], byte[]> mapEntry = map.entrySet().iterator().next();
     assertThat(expectedSearchPrefix, equalTo(mapEntry.getKey()));
@@ -166,8 +166,8 @@ public class ObjectFileScrubbersTest {
             ImmutableMap.of(Paths.get("/Users/fb/repo/cell"), Paths.get("cell")));
     assertThat(map.size(), equalTo(1));
 
-    byte[] expectedSearchPrefix = "/Users/fb/repo/cell/".getBytes(Charsets.UTF_8);
-    byte[] expectedReplacementPrefix = "cell/".getBytes(Charsets.UTF_8);
+    byte[] expectedSearchPrefix = "/Users/fb/repo/cell/".getBytes(StandardCharsets.UTF_8);
+    byte[] expectedReplacementPrefix = "cell/".getBytes(StandardCharsets.UTF_8);
 
     Map.Entry<byte[], byte[]> mapEntry = map.entrySet().iterator().next();
     assertThat(expectedSearchPrefix, equalTo(mapEntry.getKey()));
@@ -225,7 +225,7 @@ public class ObjectFileScrubbersTest {
   }
 
   private static byte[] makeNullTerminatedCString(String string) {
-    byte[] stringBytes = string.getBytes(Charsets.UTF_8);
+    byte[] stringBytes = string.getBytes(StandardCharsets.UTF_8);
     byte[] nullTermStringBytes = new byte[stringBytes.length + 1];
     System.arraycopy(stringBytes, 0, nullTermStringBytes, 0, stringBytes.length);
     nullTermStringBytes[stringBytes.length] = 0x0;

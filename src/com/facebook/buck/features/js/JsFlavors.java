@@ -26,11 +26,11 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.Set;
@@ -102,7 +102,7 @@ public class JsFlavors {
   public static Flavor fileFlavorForSourcePath(Path path) {
     String hash =
         Hashing.sha1()
-            .hashString(PathFormatter.pathWithUnixSeparators(path), Charsets.UTF_8)
+            .hashString(PathFormatter.pathWithUnixSeparators(path), StandardCharsets.UTF_8)
             .toString()
             .substring(0, 10);
     String safeFileName = Flavor.replaceInvalidCharacters(path.getFileName().toString());

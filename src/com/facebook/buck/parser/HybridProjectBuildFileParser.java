@@ -23,12 +23,12 @@ import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.io.Files;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
 
@@ -101,7 +101,8 @@ public class HybridProjectBuildFileParser implements ProjectBuildFileParser {
   private ProjectBuildFileParser getParserForBuildFile(AbsPath buildFile)
       throws IOException, BuildFileParseException {
     @Nullable
-    String firstLine = Files.asCharSource(buildFile.toFile(), Charsets.UTF_8).readFirstLine();
+    String firstLine =
+        Files.asCharSource(buildFile.toFile(), StandardCharsets.UTF_8).readFirstLine();
 
     Syntax syntax = defaultSyntax;
     if (firstLine != null && firstLine.startsWith(SYNTAX_MARKER_START)) {

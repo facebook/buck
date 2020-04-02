@@ -24,8 +24,8 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.BuckConstant;
-import com.google.common.base.Charsets;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Rule;
@@ -53,7 +53,7 @@ public class MachineReadableLoggerIntegrationTest {
             pathname -> pathname.getName().equals(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME));
     assertEquals(logfiles.length, 1);
 
-    String data = new String(Files.readAllBytes(logfiles[0].toPath()), Charsets.UTF_8);
+    String data = new String(Files.readAllBytes(logfiles[0].toPath()), StandardCharsets.UTF_8);
 
     assertTrue("log contains ParseStarted.", data.contains("ParseStarted"));
     assertTrue("log contains ParseFinished.", data.contains("ParseFinished"));

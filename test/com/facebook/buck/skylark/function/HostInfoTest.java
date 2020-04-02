@@ -35,7 +35,6 @@ import com.facebook.buck.skylark.parser.RuleFunctionFactory;
 import com.facebook.buck.skylark.parser.SkylarkProjectBuildFileParser;
 import com.facebook.buck.util.environment.Architecture;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
@@ -46,6 +45,7 @@ import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.packages.SkylarkInfo;
 import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.EnumSet;
 import java.util.stream.Collectors;
@@ -243,8 +243,8 @@ public class HostInfoTest {
       throws IOException, InterruptedException {
     ProjectFilesystem fs = FakeProjectFilesystem.createRealTempFilesystem();
     Cells cell = new TestCellBuilder().setFilesystem(fs).build();
-    Files.write(fs.resolve("BUCK"), buildFile.getBytes(Charsets.UTF_8));
-    Files.write(fs.resolve("file.bzl"), macroFile.getBytes(Charsets.UTF_8));
+    Files.write(fs.resolve("BUCK"), buildFile.getBytes(StandardCharsets.UTF_8));
+    Files.write(fs.resolve("file.bzl"), macroFile.getBytes(StandardCharsets.UTF_8));
 
     SkylarkProjectBuildFileParser parser =
         createParser(cell.getRootCell().getFilesystem(), eventHandler);

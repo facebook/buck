@@ -64,13 +64,13 @@ import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.Subscribe;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentMap;
@@ -84,7 +84,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   private static final Logger LOG = Logger.get(MachineReadableLoggerListener.class);
 
-  private static final byte[] NEWLINE = "\n".getBytes(Charsets.UTF_8);
+  private static final byte[] NEWLINE = "\n".getBytes(StandardCharsets.UTF_8);
   private static final int SHUTDOWN_TIMEOUT_SECONDS = 30;
 
   private final InvocationInfo info;
@@ -357,7 +357,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   private synchronized void writeToLogImpl(String prefix, Object obj) {
     try {
-      outputStream.write((prefix + " ").getBytes(Charsets.UTF_8));
+      outputStream.write((prefix + " ").getBytes(StandardCharsets.UTF_8));
       objectWriter.without(Feature.AUTO_CLOSE_TARGET).writeValue(outputStream, obj);
       outputStream.write(NEWLINE);
       outputStream.flush();
@@ -395,7 +395,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
                 String.format(
                         PREFIX_EXIT_CODE + " {\"exitCode\":%d}",
                         exitCode.map(code -> code.getCode()).orElse(-1))
-                    .getBytes(Charsets.UTF_8));
+                    .getBytes(StandardCharsets.UTF_8));
 
             outputStream.close();
           } catch (IOException e) {

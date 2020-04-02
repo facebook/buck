@@ -23,8 +23,8 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
-import com.google.common.base.Charsets;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -164,8 +164,8 @@ public class TimeoutIntegrationTest {
   private void rewriteFileWithTransform(String path, Function<String, String> transform)
       throws IOException {
     Path javaFile = temporaryFolder.getRoot().resolve(path).getPath();
-    List<String> lines = Files.readAllLines(javaFile, Charsets.UTF_8);
+    List<String> lines = Files.readAllLines(javaFile, StandardCharsets.UTF_8);
     String java = lines.stream().map(transform).collect(Collectors.joining(""));
-    Files.write(javaFile, java.getBytes(Charsets.UTF_8));
+    Files.write(javaFile, java.getBytes(StandardCharsets.UTF_8));
   }
 }

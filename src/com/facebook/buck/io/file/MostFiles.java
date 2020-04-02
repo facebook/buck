@@ -21,7 +21,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.windowsfs.WindowsFS;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
-import com.google.common.base.Charsets;
 import com.google.common.base.Functions;
 import com.google.common.base.Objects;
 import com.google.common.io.ByteStreams;
@@ -31,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
@@ -256,7 +256,7 @@ public final class MostFiles {
 
   /** Writes the specified lines to the specified file, encoded as UTF-8. */
   public static void writeLinesToFile(Iterable<String> lines, Path file) throws IOException {
-    try (BufferedWriter writer = Files.newBufferedWriter(file, Charsets.UTF_8)) {
+    try (BufferedWriter writer = Files.newBufferedWriter(file, StandardCharsets.UTF_8)) {
       for (String line : lines) {
         writer.write(line);
         writer.newLine();
@@ -274,7 +274,7 @@ public final class MostFiles {
   static List<String> diffFileContents(Iterable<String> lines, File file) throws IOException {
     List<String> diffLines = new ArrayList<>();
     Iterator<String> iter = lines.iterator();
-    try (BufferedReader reader = Files.newBufferedReader(file.toPath(), Charsets.UTF_8)) {
+    try (BufferedReader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
       while (iter.hasNext()) {
         String lineA = reader.readLine();
         String lineB = iter.next();

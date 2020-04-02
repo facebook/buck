@@ -19,7 +19,6 @@ package com.facebook.buck.support.cli.args;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -28,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -49,7 +49,7 @@ public class BuckArgsMethods {
   }
 
   private static Iterable<String> getArgsFromTextFile(AbsPath argsPath) throws IOException {
-    return Files.readAllLines(argsPath.getPath(), Charsets.UTF_8).stream()
+    return Files.readAllLines(argsPath.getPath(), StandardCharsets.UTF_8).stream()
         .filter(line -> !line.isEmpty())
         .collect(ImmutableList.toImmutableList());
   }
@@ -61,7 +61,8 @@ public class BuckArgsMethods {
             .exec(new String[] {pythonInterpreter, argsPath.toString(), "--flavors", suffix});
     try (InputStream input = proc.getInputStream();
         OutputStream output = proc.getOutputStream();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(input, Charsets.UTF_8))) {
+        BufferedReader reader =
+            new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))) {
       return reader.lines().filter(line -> !line.isEmpty()).collect(Collectors.toList());
     }
   }

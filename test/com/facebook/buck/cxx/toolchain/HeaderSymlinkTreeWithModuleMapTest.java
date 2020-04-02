@@ -53,9 +53,9 @@ import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.DefaultFileHashCache;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.hashing.FileHashLoader;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -85,12 +85,12 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     // Get the first file we're symlinking
     Path link1 = Paths.get("SomeModule", "SomeModule.h");
     AbsPath file1 = tmpDir.newFile();
-    Files.write(file1.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file1.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
 
     // Get the second file we're symlinking
     Path link2 = Paths.get("SomeModule", "Header.h");
     AbsPath file2 = tmpDir.newFile();
-    Files.write(file2.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(file2.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
 
     // Setup the map representing the link tree.
     links =
@@ -174,7 +174,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
   @Test
   public void testSymlinkTreeRuleKeyChangesIfModuleNameChanges() throws Exception {
     AbsPath aFile = tmpDir.newFile();
-    Files.write(aFile.getPath(), "hello world".getBytes(Charsets.UTF_8));
+    Files.write(aFile.getPath(), "hello world".getBytes(StandardCharsets.UTF_8));
     HeaderSymlinkTreeWithModuleMap modifiedSymlinkTreeBuildRule =
         HeaderSymlinkTreeWithModuleMap.create(
             buildTarget,

@@ -24,8 +24,8 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.zip.ZipConstants;
-import com.google.common.base.Charsets;
 import java.io.FileInputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Date;
@@ -48,14 +48,14 @@ public class ZipScrubberStepIntegrationTest {
     AbsPath zip = tmp.newFile("output.zip");
     try (ZipOutputStream out = new ZipOutputStream(Files.newOutputStream(zip.getPath()))) {
       ZipEntry entry = new ZipEntry("file1");
-      byte[] data = "data1".getBytes(Charsets.UTF_8);
+      byte[] data = "data1".getBytes(StandardCharsets.UTF_8);
       entry.setSize(data.length);
       out.putNextEntry(entry);
       out.write(data);
       out.closeEntry();
 
       entry = new ZipEntry("file2");
-      data = "data2".getBytes(Charsets.UTF_8);
+      data = "data2".getBytes(StandardCharsets.UTF_8);
       entry.setSize(data.length);
       out.putNextEntry(entry);
       out.write(data);

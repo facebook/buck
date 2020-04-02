@@ -61,7 +61,6 @@ import com.facebook.buck.util.nio.ByteBufferUnmapper;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
@@ -81,6 +80,7 @@ import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -792,34 +792,34 @@ class NativeLibraryMergeEnhancer {
       // to create a unique string to add to our target.
       Hasher hasher = Hashing.murmur3_32().newHasher();
       for (NativeLinkable nativeLinkable : constituents.getLinkables()) {
-        hasher.putString(nativeLinkable.getBuildTarget().toString(), Charsets.UTF_8);
+        hasher.putString(nativeLinkable.getBuildTarget().toString(), StandardCharsets.UTF_8);
         hasher.putChar('^');
       }
       // Hash all the merged deps, in order.
-      hasher.putString("__DEPS__^", Charsets.UTF_8);
+      hasher.putString("__DEPS__^", StandardCharsets.UTF_8);
       for (MergedLibNativeLinkable dep : orderedDeps) {
-        hasher.putString(dep.getBuildTarget().toString(), Charsets.UTF_8);
+        hasher.putString(dep.getBuildTarget().toString(), StandardCharsets.UTF_8);
         hasher.putChar('^');
       }
       // Separate exported deps.  This doesn't affect linking, but it can affect our dependents
       // if we're building two apps at once.
-      hasher.putString("__EXPORT__^", Charsets.UTF_8);
+      hasher.putString("__EXPORT__^", StandardCharsets.UTF_8);
       for (MergedLibNativeLinkable dep : orderedExportedDeps) {
-        hasher.putString(dep.getBuildTarget().toString(), Charsets.UTF_8);
+        hasher.putString(dep.getBuildTarget().toString(), StandardCharsets.UTF_8);
         hasher.putChar('^');
       }
 
       // Glue can vary per-app, so include that in the hash as well.
       if (glueLinkable.isPresent()) {
-        hasher.putString("__GLUE__^", Charsets.UTF_8);
-        hasher.putString(glueLinkable.get().getBuildTarget().toString(), Charsets.UTF_8);
+        hasher.putString("__GLUE__^", StandardCharsets.UTF_8);
+        hasher.putString(glueLinkable.get().getBuildTarget().toString(), StandardCharsets.UTF_8);
         hasher.putChar('^');
       }
 
       // Symbols to localize can vary per-app, so include that in the hash as well.
       if (symbolsToLocalize.isPresent()) {
-        hasher.putString("__LOCALIZE__^", Charsets.UTF_8);
-        hasher.putString(Joiner.on(',').join(symbolsToLocalize.get()), Charsets.UTF_8);
+        hasher.putString("__LOCALIZE__^", StandardCharsets.UTF_8);
+        hasher.putString(Joiner.on(',').join(symbolsToLocalize.get()), StandardCharsets.UTF_8);
         hasher.putChar('^');
       }
 

@@ -29,7 +29,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.BuckFileSystem;
 import com.facebook.buck.testutil.BuckFSProviderDeleteError;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -211,7 +210,7 @@ public class MostFilesTest {
         ImmutableList.of("The", "quick brown fox", "jumps over", "the lazy dog.");
     MostFiles.writeLinesToFile(lines, outputFile);
 
-    List<String> observedLines = Files.readAllLines(outputFile.getPath(), Charsets.UTF_8);
+    List<String> observedLines = Files.readAllLines(outputFile.getPath(), UTF_8);
     assertEquals(lines, observedLines);
   }
 

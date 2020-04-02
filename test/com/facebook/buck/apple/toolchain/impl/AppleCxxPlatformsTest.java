@@ -87,7 +87,6 @@ import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.testutil.FakeFileHashCache;
 import com.facebook.buck.testutil.TestLogSink;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -97,6 +96,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -1147,7 +1147,7 @@ public class AppleCxxPlatformsTest {
     Files.createDirectories(platformRoot);
     Files.write(
         platformRoot.resolve("version.plist"),
-        "I am, as a matter of fact, an extremely invalid plist.".getBytes(Charsets.UTF_8));
+        "I am, as a matter of fact, an extremely invalid plist.".getBytes(StandardCharsets.UTF_8));
     AppleCxxPlatform platform = buildAppleCxxPlatform();
     assertThat(platform.getBuildVersion(), equalTo(Optional.empty()));
     assertThat(
@@ -1163,7 +1163,7 @@ public class AppleCxxPlatformsTest {
     Files.createDirectories(platformRoot);
     Files.write(
         platformRoot.resolve("version.plist"),
-        new NSDictionary().toXMLPropertyList().getBytes(Charsets.UTF_8));
+        new NSDictionary().toXMLPropertyList().getBytes(StandardCharsets.UTF_8));
     AppleCxxPlatform platform = buildAppleCxxPlatform();
     assertThat(platform.getBuildVersion(), equalTo(Optional.empty()));
     assertThat(
@@ -1217,7 +1217,7 @@ public class AppleCxxPlatformsTest {
                 + "\t<string>9F9999</string>\n"
                 + "</dict>\n"
                 + "</plist>")
-            .getBytes(Charsets.UTF_8));
+            .getBytes(StandardCharsets.UTF_8));
     AppleCxxPlatforms.XcodeBuildVersionCache cache = new AppleCxxPlatforms.XcodeBuildVersionCache();
     assertEquals(Optional.of("9F9999"), cache.lookup(developerDir));
   }

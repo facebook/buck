@@ -47,7 +47,6 @@ import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.result.type.ResultType;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -59,6 +58,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -170,7 +170,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private ImmutableList<TestResultSummary> parseTestResults() throws IOException {
     ImmutableList.Builder<TestResultSummary> summariesBuilder = ImmutableList.builder();
-    CharsetDecoder decoder = Charsets.UTF_8.newDecoder();
+    CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
     decoder.onMalformedInput(CodingErrorAction.REPLACE);
     decoder.replaceWith(NON_PRINTABLE_REPLACEMENT);
     try (BufferedReader reader =

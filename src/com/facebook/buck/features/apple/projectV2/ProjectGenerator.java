@@ -53,7 +53,6 @@ import com.facebook.buck.io.file.MorePosixFilePermissions;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.keys.config.RuleKeyConfiguration;
 import com.facebook.buck.swift.SwiftBuckConfig;
-import com.google.common.base.Charsets;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -64,6 +63,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -490,7 +490,7 @@ public class ProjectGenerator {
     String contentsToWrite = rootObject.toXMLPropertyList();
     // Before we write any files, check if the file contents have changed.
     if (MoreProjectFilesystems.fileContentsDiffer(
-        new ByteArrayInputStream(contentsToWrite.getBytes(Charsets.UTF_8)),
+        new ByteArrayInputStream(contentsToWrite.getBytes(StandardCharsets.UTF_8)),
         serializedProject,
         projectFilesystem)) {
       LOG.debug("Regenerating project at %s", serializedProject);

@@ -39,7 +39,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.ProcessExecutor;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -49,6 +48,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -185,7 +185,8 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                     builder.append(symbol);
                     builder.append(System.lineSeparator());
                   }
-                  return new ByteArrayInputStream(builder.toString().getBytes(Charsets.UTF_8));
+                  return new ByteArrayInputStream(
+                      builder.toString().getBytes(StandardCharsets.UTF_8));
                 }
               },
               output,

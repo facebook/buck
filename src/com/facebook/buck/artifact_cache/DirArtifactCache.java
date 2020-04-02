@@ -28,7 +28,6 @@ import com.facebook.buck.util.DirectoryCleaner;
 import com.facebook.buck.util.DirectoryCleanerArgs;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -40,6 +39,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -121,7 +121,7 @@ public class DirArtifactCache implements ArtifactCache {
           int valSize = in.readInt();
           byte[] val = new byte[valSize];
           ByteStreams.readFully(in, val);
-          metadata.put(key, new String(val, Charsets.UTF_8));
+          metadata.put(key, new String(val, StandardCharsets.UTF_8));
         }
       }
 
@@ -195,7 +195,7 @@ public class DirArtifactCache implements ArtifactCache {
           out.writeInt(info.getMetadata().size());
           for (Map.Entry<String, String> ent : info.getMetadata().entrySet()) {
             out.writeUTF(ent.getKey());
-            byte[] val = ent.getValue().getBytes(Charsets.UTF_8);
+            byte[] val = ent.getValue().getBytes(StandardCharsets.UTF_8);
             out.writeInt(val.length);
             out.write(val);
           }

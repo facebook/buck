@@ -19,8 +19,8 @@ package com.facebook.buck.logd.server;
 import com.facebook.buck.logd.proto.LogType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import okhttp3.HttpUrl;
 import okhttp3.MultipartBody;
@@ -145,7 +145,7 @@ public class LogdUploader {
           } else {
             LOG.info("Created log file in storage: {}", root.get(MESSAGE_FIELD_NAME).toString());
 
-            return Optional.of(logMessage.getBytes(Charsets.UTF_8).length);
+            return Optional.of(logMessage.getBytes(StandardCharsets.UTF_8).length);
           }
         }
       } catch (IOException e) {
@@ -189,7 +189,7 @@ public class LogdUploader {
         JsonNode root = objectMapper.readTree(response.body().byteStream());
         String status = root.get(MESSAGE_FIELD_NAME).toString();
         if (status.equals(SUCCESS_MESSAGE)) {
-          logFileData.updateOffset(logMessage.getBytes(Charsets.UTF_8).length);
+          logFileData.updateOffset(logMessage.getBytes(StandardCharsets.UTF_8).length);
         } else {
           LOG.error(
               "Failed to append to {}. Error: {}",

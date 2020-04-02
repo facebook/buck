@@ -18,10 +18,10 @@ package com.facebook.buck.android.dalvik;
 
 import com.facebook.buck.jvm.java.classes.AbstractFileLike;
 import com.facebook.buck.jvm.java.classes.FileLike;
-import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -103,7 +103,7 @@ public class CanaryFactory {
    */
   public static FileLike create(String store, String index) {
     String className = String.format(CANARY_PATH_FORMAT, store, index);
-    byte[] classNameBytes = className.getBytes(Charsets.UTF_8);
+    byte[] classNameBytes = className.getBytes(StandardCharsets.UTF_8);
     // See above comment regarding CONSTANT_Utf8_info
     byte[] stringInfo = new byte[3];
     stringInfo[0] = (byte) 0x01;

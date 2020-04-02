@@ -17,13 +17,13 @@
 package com.facebook.buck.util.zip;
 
 import com.facebook.buck.util.timing.Clock;
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
 import com.google.common.io.CountingOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.zip.Deflater;
@@ -222,7 +222,7 @@ class EntryAccounting {
       }
     }
 
-    byte[] nameBytes = entry.getName().getBytes(Charsets.UTF_8);
+    byte[] nameBytes = entry.getName().getBytes(StandardCharsets.UTF_8);
     ByteIo.writeShort(stream, nameBytes.length);
     ByteIo.writeShort(stream, useZip64 ? ZipConstants.ZIP64_LOCHDR : 0);
     stream.write(nameBytes);

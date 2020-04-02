@@ -26,7 +26,6 @@ import com.facebook.buck.rules.keys.config.impl.BuckVersion;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.environment.Platform;
 import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.base.Charsets;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -234,7 +233,7 @@ public abstract class AbstractWorkspace {
                     destPath.resolve(BuckConstant.getBuckOutputPath().resolve(".currentversion")),
                     ImmutableSet.<OpenOption>of(
                         StandardOpenOption.CREATE, StandardOpenOption.WRITE))))) {
-      outputStream.write(BuckVersion.getVersion().getBytes(Charsets.UTF_8));
+      outputStream.write(BuckVersion.getVersion().getBytes(UTF_8));
     }
   }
 

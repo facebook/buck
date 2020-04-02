@@ -36,6 +36,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
+import com.facebook.buck.testutil.AbstractWorkspace;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -131,7 +132,7 @@ public class IntraCellIntegrationTest {
     Map<String, Map<String, String>> childLocalConfigs =
         ImmutableMap.of("log", ImmutableMap.of("jul_build_log", "true"));
     workspace.writeContentsToPath(
-        workspace.convertToBuckConfig(childLocalConfigs), "child-repo/.buckconfig.local");
+        AbstractWorkspace.convertToBuckConfig(childLocalConfigs), "child-repo/.buckconfig.local");
 
     Path childRepoRoot = workspace.getPath("child-repo");
 
@@ -158,7 +159,7 @@ public class IntraCellIntegrationTest {
 
     Map<String, Map<String, String>> childLocalConfigs = ImmutableMap.of();
     workspace.writeContentsToPath(
-        workspace.convertToBuckConfig(childLocalConfigs), "child-repo/.buckconfig.local");
+        AbstractWorkspace.convertToBuckConfig(childLocalConfigs), "child-repo/.buckconfig.local");
 
     Path childRepoRoot = workspace.getPath("child-repo");
 

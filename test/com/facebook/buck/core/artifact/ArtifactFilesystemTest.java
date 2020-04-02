@@ -31,7 +31,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -42,6 +41,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -73,7 +73,7 @@ public class ArtifactFilesystemTest {
 
     OutputStream outputStream = artifactFilesystem.getOutputStream(artifact);
 
-    outputStream.write("foo".getBytes(Charsets.UTF_8));
+    outputStream.write("foo".getBytes(StandardCharsets.UTF_8));
     outputStream.close();
 
     assertEquals(

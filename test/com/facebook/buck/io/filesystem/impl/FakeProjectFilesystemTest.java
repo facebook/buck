@@ -31,7 +31,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.ZipArchive;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.facebook.buck.util.zip.Zip;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.CharStreams;
@@ -188,7 +187,7 @@ public class FakeProjectFilesystemTest {
     Path path = Paths.get("hello.txt");
     filesystem.writeContentsToPath("hello world", path);
     InputStreamReader reader =
-        new InputStreamReader(filesystem.newFileInputStream(path), Charsets.UTF_8);
+        new InputStreamReader(filesystem.newFileInputStream(path), StandardCharsets.UTF_8);
     String contents = CharStreams.toString(reader);
     assertEquals("hello world", contents);
   }

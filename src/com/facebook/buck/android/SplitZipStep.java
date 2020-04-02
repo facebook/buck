@@ -28,7 +28,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -42,6 +41,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.io.Files;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -211,7 +211,8 @@ public class SplitZipStep implements Step {
     for (APKModule dexStore : outputFiles.keySet()) {
       if (dexStore.getName().equals(SECONDARY_DEX_ID)) {
         try (BufferedWriter secondaryMetaInfoWriter =
-            Files.newWriter(filesystem.resolve(secondaryJarMetaPath).toFile(), Charsets.UTF_8)) {
+            Files.newWriter(
+                filesystem.resolve(secondaryJarMetaPath).toFile(), StandardCharsets.UTF_8)) {
           writeMetaList(
               secondaryMetaInfoWriter,
               dexStore,
@@ -229,7 +230,7 @@ public class SplitZipStep implements Step {
                     .resolve(dexStore.getName())
                     .resolve("metadata.txt")
                     .toFile(),
-                Charsets.UTF_8)) {
+                StandardCharsets.UTF_8)) {
           writeMetaList(
               secondaryMetaInfoWriter,
               dexStore,

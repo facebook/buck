@@ -50,9 +50,9 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -360,7 +360,7 @@ public class PythonTestIntegrationTest {
 
     String cmd = spec.get(cmdKey).textValue();
     Path script = Files.createTempFile("bash", testScriptName);
-    Files.write(script, cmd.getBytes(Charsets.UTF_8));
+    Files.write(script, cmd.getBytes(StandardCharsets.UTF_8));
     MostFiles.makeExecutable(script);
     DefaultProcessExecutor processExecutor =
         new DefaultProcessExecutor(Console.createNullConsole());

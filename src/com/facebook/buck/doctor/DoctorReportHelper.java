@@ -32,12 +32,12 @@ import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -120,7 +120,7 @@ public class DoctorReportHelper {
           Optional.of(
               Files.toString(
                   filesystem.resolve(entry.getMachineReadableLogFile().get()).toFile(),
-                  Charsets.UTF_8));
+                  StandardCharsets.UTF_8));
     } else {
       LOG.warn(String.format(WARNING_FILE_TEMPLATE, entry.toString(), "machine readable log"));
       machineLog = Optional.empty();
@@ -196,7 +196,7 @@ public class DoctorReportHelper {
 
     try {
       if (httpResponse.isSuccessful()) {
-        String body = new String(httpResponse.body().bytes(), Charsets.UTF_8);
+        String body = new String(httpResponse.body().bytes(), StandardCharsets.UTF_8);
         return ObjectMappers.readValue(body, DoctorEndpointResponse.class);
       }
       return createErrorDoctorEndpointResponse(
