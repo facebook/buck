@@ -50,7 +50,6 @@ import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
@@ -154,10 +153,7 @@ public class RunInfoTest {
                       ImmutableMap.of(RunInfo.PROVIDER.getName(), RunInfo.PROVIDER)))
               .build();
 
-      FuncallExpression ast = TestStarlarkParser.parseFuncall("RunInfo()");
-      ast.setLocation(Location.BUILTIN);
-
-      Object raw = ast.eval(env);
+      Object raw = TestStarlarkParser.eval(env, "RunInfo()");
       assertTrue(raw instanceof RunInfo);
       RunInfo runInfo = (RunInfo) raw;
 

@@ -18,6 +18,9 @@ package com.facebook.buck.core.starlark.testutil;
 
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventHandler;
+import com.google.devtools.build.lib.syntax.BuildFileAST;
+import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Parser;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
@@ -37,5 +40,10 @@ public class TestStarlarkParser {
         Parser.parseExpression(
             ParserInputSource.create(expr, PathFragment.EMPTY_FRAGMENT),
             new ThrowingEventHandler());
+  }
+
+  public static Object eval(Environment env, String expr)
+      throws InterruptedException, EvalException {
+    return BuildFileAST.eval(env, expr);
   }
 }

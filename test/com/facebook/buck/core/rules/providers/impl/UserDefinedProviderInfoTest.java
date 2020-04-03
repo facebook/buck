@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
+import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.facebook.buck.parser.LabelCache;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.google.common.collect.ImmutableList;
@@ -32,7 +33,6 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Printer;
@@ -122,13 +122,13 @@ public class UserDefinedProviderInfoTest {
                 Runtime.NONE));
 
     try (TestMutableEnv env = new TestMutableEnv(ImmutableMap.of("info", info))) {
-      assertEquals(info.getValue("foo"), BuildFileAST.eval(env.getEnv(), "info.foo"));
-      assertEquals(info.getValue("bar"), BuildFileAST.eval(env.getEnv(), "info.bar"));
-      assertEquals(info.getValue("empty"), BuildFileAST.eval(env.getEnv(), "info.empty"));
+      assertEquals(info.getValue("foo"), TestStarlarkParser.eval(env.getEnv(), "info.foo"));
+      assertEquals(info.getValue("bar"), TestStarlarkParser.eval(env.getEnv(), "info.bar"));
+      assertEquals(info.getValue("empty"), TestStarlarkParser.eval(env.getEnv(), "info.empty"));
 
       thrown.expect(EvalException.class);
       thrown.expectMessage("no field named invalid");
-      assertEquals(info.getValue("foo"), BuildFileAST.eval(env.getEnv(), "info.invalid"));
+      assertEquals(info.getValue("foo"), TestStarlarkParser.eval(env.getEnv(), "info.invalid"));
     }
   }
 
@@ -164,7 +164,7 @@ public class UserDefinedProviderInfoTest {
 
       assertFalse(mutableList.isImmutable());
 
-      out2 = (UserDefinedProviderInfo) BuildFileAST.eval(env.getEnv(), buildFile);
+      out2 = (UserDefinedProviderInfo) TestStarlarkParser.eval(env.getEnv(), buildFile);
 
       assertNotNull(out2);
       out1 = (UserDefinedProviderInfo) out2.getValue("value");

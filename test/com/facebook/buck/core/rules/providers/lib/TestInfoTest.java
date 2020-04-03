@@ -22,11 +22,11 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
+import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
@@ -102,7 +102,7 @@ public class TestInfoTest {
               .build();
 
       raw =
-          BuildFileAST.eval(
+          TestStarlarkParser.eval(
               env,
               String.format(
                   "TestInfo(test_name=\"%s\", test_case_name=\"%s\")", TEST_NAME, TEST_CASE_NAME));
@@ -150,7 +150,7 @@ public class TestInfoTest {
                   + "\n)",
               TEST_NAME, TEST_CASE_NAME, TYPE);
 
-      raw = BuildFileAST.eval(env, buildFile);
+      raw = TestStarlarkParser.eval(env, buildFile);
     }
     assertTrue(raw instanceof TestInfo);
     TestInfo testInfo = (TestInfo) raw;
@@ -178,7 +178,7 @@ public class TestInfoTest {
               .build();
 
       raw1 =
-          BuildFileAST.eval(
+          TestStarlarkParser.eval(
               env,
               String.format(
                   "TestInfo("
@@ -188,7 +188,7 @@ public class TestInfoTest {
                       + "\n)",
                   TEST_NAME, TEST_CASE_NAME, TEST_NAME, TEST_CASE_NAME));
       raw2 =
-          BuildFileAST.eval(
+          TestStarlarkParser.eval(
               env,
               String.format(
                   "TestInfo("

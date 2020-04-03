@@ -35,7 +35,6 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInputSource;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -225,9 +224,7 @@ public class BuiltInProviderInfoTest {
                       ImmutableMap.of(SomeInfo.PROVIDER.getName(), SomeInfo.PROVIDER)))
               .build();
 
-      FuncallExpression ast = TestStarlarkParser.parseFuncall("SomeInfo(str='d', my_info=4)");
-
-      o = ast.eval(env);
+      o = TestStarlarkParser.eval(env, "SomeInfo(str='d', my_info=4)");
     }
 
     assertThat(o, Matchers.instanceOf(SomeInfo.class));
@@ -291,10 +288,9 @@ public class BuiltInProviderInfoTest {
                           ImmutableSomeInfo.PROVIDER.getName(), ImmutableSomeInfo.PROVIDER)))
               .build();
 
-      FuncallExpression ast =
-          TestStarlarkParser.parseFuncall(ImmutableSomeInfo.PROVIDER.getName() + "(my_info=2)");
-
-      assertEquals(new ImmutableSomeInfo("default value", 2), ast.eval(env));
+      assertEquals(
+          new ImmutableSomeInfo("default value", 2),
+          TestStarlarkParser.eval(env, ImmutableSomeInfo.PROVIDER.getName() + "(my_info=2)"));
     }
   }
 
@@ -312,11 +308,10 @@ public class BuiltInProviderInfoTest {
                           InfoWithNoDefaultValOnAnnotation.PROVIDER)))
               .build();
 
-      FuncallExpression ast =
-          TestStarlarkParser.parseFuncall(
-              ImmutableInfoWithNoDefaultValOnAnnotation.PROVIDER.getName() + "(val=2)");
-
-      assertEquals(new ImmutableInfoWithNoDefaultValOnAnnotation(2), ast.eval(env));
+      assertEquals(
+          new ImmutableInfoWithNoDefaultValOnAnnotation(2),
+          TestStarlarkParser.eval(
+              env, ImmutableInfoWithNoDefaultValOnAnnotation.PROVIDER.getName() + "(val=2)"));
     }
   }
 
@@ -334,11 +329,9 @@ public class BuiltInProviderInfoTest {
                           SomeInfoWithInstantiate.PROVIDER)))
               .build();
 
-      FuncallExpression ast =
-          TestStarlarkParser.parseFuncall(
-              "SomeInfoWithInstantiate(str_list={'d': 'd_value'}, my_info=4)");
-
-      o = ast.eval(env);
+      o =
+          TestStarlarkParser.eval(
+              env, "SomeInfoWithInstantiate(str_list={'d': 'd_value'}, my_info=4)");
     }
 
     assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiate.class));
@@ -362,9 +355,7 @@ public class BuiltInProviderInfoTest {
                           SomeInfoWithInstantiate.PROVIDER)))
               .build();
 
-      FuncallExpression ast = TestStarlarkParser.parseFuncall("SomeInfoWithInstantiate(my_info=4)");
-
-      o = ast.eval(env);
+      o = TestStarlarkParser.eval(env, "SomeInfoWithInstantiate(my_info=4)");
     }
 
     assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiate.class));
@@ -387,12 +378,10 @@ public class BuiltInProviderInfoTest {
                           SomeInfoWithInstantiate.PROVIDER)))
               .build();
 
-      FuncallExpression ast =
-          TestStarlarkParser.parseFuncall("SomeInfoWithInstantiate(my_info='not a number')");
-
       thrown.expect(EvalException.class);
       thrown.expectMessage("expected value of type 'int'");
-      ast.eval(env);
+
+      TestStarlarkParser.eval(env, "SomeInfoWithInstantiate(my_info='not a number')");
     }
   }
 
@@ -448,8 +437,9 @@ public class BuiltInProviderInfoTest {
                           Runtime.NONE)))
               .build();
 
-      Object none = BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=1)");
-      Object strValue = BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=\"foo\", val=1)");
+      Object none = TestStarlarkParser.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=1)");
+      Object strValue =
+          TestStarlarkParser.eval(env, "SomeInfoWithNoneable(noneable_val=\"foo\", val=1)");
 
       assertThat(none, Matchers.instanceOf(SomeInfoWithNoneable.class));
       assertThat(strValue, Matchers.instanceOf(SomeInfoWithNoneable.class));
@@ -459,7 +449,7 @@ public class BuiltInProviderInfoTest {
 
       thrown.expect(EvalException.class);
       thrown.expectMessage("cannot be None");
-      BuildFileAST.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=None)");
+      TestStarlarkParser.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=None)");
     }
   }
 
@@ -489,7 +479,7 @@ public class BuiltInProviderInfoTest {
           SkylarkList.MutableList.of(env.getEnv(), 1, 2, 3);
       env.getEnv().updateAndExport("mutable_list", mutableList);
 
-      out = (SomeInfoWithMutableAndImmutable) BuildFileAST.eval(env.getEnv(), buildFile);
+      out = (SomeInfoWithMutableAndImmutable) TestStarlarkParser.eval(env.getEnv(), buildFile);
 
       assertNotNull(out);
       assertFalse(out.isImmutable());

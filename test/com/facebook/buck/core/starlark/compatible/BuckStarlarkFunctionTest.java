@@ -23,10 +23,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParamDescriptor;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -115,9 +113,7 @@ public class BuckStarlarkFunctionTest {
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
-      FuncallExpression ast = TestStarlarkParser.parseFuncall("toStr(num=1)");
-
-      assertEquals("1", ast.eval(env));
+      assertEquals("1", TestStarlarkParser.eval(env, "toStr(num=1)"));
     }
   }
 
@@ -140,9 +136,7 @@ public class BuckStarlarkFunctionTest {
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
-      FuncallExpression ast = TestStarlarkParser.parseFuncall("toStr(num=1)");
-
-      assertEquals("1", ast.eval(env));
+      assertEquals("1", TestStarlarkParser.eval(env, "toStr(num=1)"));
     }
   }
 
@@ -168,13 +162,10 @@ public class BuckStarlarkFunctionTest {
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
-      FuncallExpression ast = TestStarlarkParser.parseFuncall("myFoo(100, numNoDefault=10)");
+      assertEquals("111", TestStarlarkParser.eval(env, "myFoo(100, numNoDefault=10)"));
 
-      assertEquals("111", ast.eval(env));
-
-      ast = TestStarlarkParser.parseFuncall("myFoo(100, numNoDefault=10, numWithDefault=5)");
-
-      assertEquals("115", ast.eval(env));
+      assertEquals(
+          "115", TestStarlarkParser.eval(env, "myFoo(100, numNoDefault=10, numWithDefault=5)"));
     }
   }
 
@@ -232,9 +223,9 @@ public class BuckStarlarkFunctionTest {
                           Runtime.NONE)))
               .build();
 
-      Object none = BuildFileAST.eval(env, "withNone(noneable=None, non_noneable=1)[1]");
-      Object defaultNone = BuildFileAST.eval(env, "withNone(non_noneable=1)[1]");
-      Object nonNull = BuildFileAST.eval(env, "withNone(noneable=2, non_noneable=1)[1]");
+      Object none = TestStarlarkParser.eval(env, "withNone(noneable=None, non_noneable=1)[1]");
+      Object defaultNone = TestStarlarkParser.eval(env, "withNone(non_noneable=1)[1]");
+      Object nonNull = TestStarlarkParser.eval(env, "withNone(noneable=2, non_noneable=1)[1]");
 
       assertEquals(Runtime.NONE, none);
       assertEquals(Runtime.NONE, defaultNone);
@@ -242,7 +233,7 @@ public class BuckStarlarkFunctionTest {
 
       expectedException.expect(EvalException.class);
       expectedException.expectMessage("cannot be None");
-      BuildFileAST.eval(env, "withNone(noneable=2, non_noneable=None)[1]");
+      TestStarlarkParser.eval(env, "withNone(noneable=2, non_noneable=None)[1]");
     }
   }
 }

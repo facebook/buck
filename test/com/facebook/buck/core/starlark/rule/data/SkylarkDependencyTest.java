@@ -26,9 +26,9 @@ import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectio
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
+import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
@@ -54,7 +54,7 @@ public class SkylarkDependencyTest {
     try (TestMutableEnv env = env(dep)) {
       boolean labelString =
           (boolean)
-              BuildFileAST.eval(
+              TestStarlarkParser.eval(
                   env.getEnv(), "dep.label.name == \"bar\" and dep.label.package == \"foo\"");
       assertTrue(labelString);
     }
@@ -82,8 +82,10 @@ public class SkylarkDependencyTest {
 
     try (TestMutableEnv env = env(dep)) {
       boolean presentProvider =
-          (boolean) BuildFileAST.eval(env.getEnv(), "len(dep[DefaultInfo].default_outputs) == 0");
-      boolean missingProvider = (boolean) BuildFileAST.eval(env.getEnv(), "dep[FakeInfo] == None");
+          (boolean)
+              TestStarlarkParser.eval(env.getEnv(), "len(dep[DefaultInfo].default_outputs) == 0");
+      boolean missingProvider =
+          (boolean) TestStarlarkParser.eval(env.getEnv(), "dep[FakeInfo] == None");
       assertTrue(presentProvider);
       assertTrue(missingProvider);
     }
@@ -98,8 +100,9 @@ public class SkylarkDependencyTest {
                 .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of())));
 
     try (TestMutableEnv env = env(dep)) {
-      boolean presentProvider = (boolean) BuildFileAST.eval(env.getEnv(), "DefaultInfo in dep");
-      boolean missingProvider = (boolean) BuildFileAST.eval(env.getEnv(), "FakeInfo in dep");
+      boolean presentProvider =
+          (boolean) TestStarlarkParser.eval(env.getEnv(), "DefaultInfo in dep");
+      boolean missingProvider = (boolean) TestStarlarkParser.eval(env.getEnv(), "FakeInfo in dep");
       assertTrue(presentProvider);
       assertFalse(missingProvider);
     }
