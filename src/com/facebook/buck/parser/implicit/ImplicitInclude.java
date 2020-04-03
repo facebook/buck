@@ -22,7 +22,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.SkylarkImport;
+import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import java.util.Arrays;
 import java.util.Map;
 import org.immutables.value.Value;
@@ -33,37 +34,39 @@ public abstract class ImplicitInclude {
   @JsonIgnore
   abstract String getRawImportLabel();
 
+  /** Validate raw import label. */
+  @Value.Check
+  protected void check() {
+    try {
+      Label.parseAbsolute(getRawImportLabel(), ImmutableMap.of());
+    } catch (LabelSyntaxException e) {
+      throw new HumanReadableException("Invalid implicit label provided: " + e.getMessage());
+    }
+  }
+
   @JsonProperty("load_symbols")
   public abstract ImmutableMap<String, String> getSymbols();
 
   @JsonProperty("load_path")
   @Value.Derived
   public String getImportString() {
-    return getLoadPath().getImportString();
+    return getLoadPath();
   }
 
-  /**
-   * Returns the load path for the given path. SkylarkImport is used to eagerly compute fewer
-   * objects up front and centralize error handling
-   */
+  /** Returns the load path for the given path. */
   @JsonIgnore
   @Value.Derived
-  public SkylarkImport getLoadPath() {
-    String label = getRawImportLabel();
-    try {
-      return SkylarkImport.create(label);
-    } catch (SkylarkImport.SkylarkImportSyntaxException e) {
-      throw new HumanReadableException(e, "Invalid implicit label provided: %s", label);
-    }
+  public String getLoadPath() {
+    return getRawImportLabel();
   }
 
   /**
-   * Constructs a {@link AbstractImplicitInclude} from a configuration string in the form of
+   * Constructs a {@link ImplicitInclude} from a configuration string in the form of
    *
    * <p>//path/to:bzl_file.bzl::symbol_to_import::second_symbol_to_import
    *
    * @param configurationString The string used in configuration
-   * @return A parsed {@link AbstractImplicitInclude} object
+   * @return A parsed {@link ImplicitInclude} object
    * @throws {@link HumanReadableException} if the configuration string is invalid
    */
   public static ImplicitInclude fromConfigurationString(String configurationString) {

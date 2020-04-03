@@ -20,7 +20,6 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.syntax.SkylarkImport;
 import javax.annotation.Nullable;
 
 /**
@@ -74,22 +73,25 @@ public class UserDefinedRuleNames {
   }
 
   /**
-   * Convert a 'buck.type' string into a SkylarkImport object
+   * Convert a 'buck.type' string into a import string.
    *
    * @param identifier the result from buck.type
-   * @return A {@link SkylarkImport} object if {@code identifier} is parsable as a UDR identifier,
-   *     else {@code null}
+   * @return A skylark import if {@code identifier} is parsable as a UDR identifier, else {@code
+   *     null}
    */
   @Nullable
-  public static SkylarkImport importFromIdentifier(String identifier) {
+  public static String importFromIdentifier(String identifier) {
     int idx = identifier.lastIndexOf(':');
     if (idx == -1 || idx == identifier.length() - 1) {
       return null;
     }
-    try {
-      return SkylarkImport.create(identifier.substring(0, idx));
-    } catch (SkylarkImport.SkylarkImportSyntaxException e) {
+
+    if (!identifier.startsWith("@")
+        && !identifier.startsWith("//")
+        && !identifier.startsWith(":")) {
       return null;
     }
+
+    return identifier.substring(0, idx);
   }
 }

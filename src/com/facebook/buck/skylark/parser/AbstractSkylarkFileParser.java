@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.devtools.build.lib.cmdline.Label;
+import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventHandler;
@@ -148,7 +149,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         throw BuildFileParseException.createForUnknownParseError(
             String.format(
                 "Could not find symbol '%s' in implicitly loaded extension '%s'",
-                kvp.getValue(), implicitInclude.get().getLoadPath().getImportString()));
+                kvp.getValue(), implicitInclude.get().getLoadPath()));
       }
       loaded.put(kvp.getKey(), symbol);
     }
@@ -217,7 +218,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       @Nullable ExtensionData implicitLoadExtensionData)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableList<ExtensionData> dependencies =
-        loadExtensions(containingLabel, buildFileAst.getImports());
+        loadExtensions(
+            containingLabel,
+            buildFileAst.getImports().stream()
+                .map(SkylarkImport::getImportString)
+                .collect(ImmutableList.toImmutableList()));
     ImmutableMap<String, Environment.Extension> importMap =
         toImportMap(dependencies, implicitLoadExtensionData);
     Environment env =
@@ -350,22 +355,26 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     ImmutableList<IncludesData> dependencies =
         fileAst.getImports().isEmpty()
             ? ImmutableList.of()
-            : loadIncludes(label, fileAst.getImports());
+            : loadIncludes(
+                label,
+                fileAst.getImports().stream()
+                    .map(SkylarkImport::getImportString)
+                    .collect(ImmutableList.toImmutableList()));
 
     return ImmutableIncludesData.ofImpl(
         filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies, null));
   }
 
-  /** Collects all the included files identified by corresponding {@link SkylarkImport}s. */
+  /** Collects all the included files identified by corresponding Starlark imports. */
   private ImmutableList<IncludesData> loadIncludes(
-      Label containingLabel, ImmutableList<SkylarkImport> skylarkImports)
+      Label containingLabel, ImmutableList<String> skylarkImports)
       throws BuildFileParseException, IOException, InterruptedException {
-    Set<SkylarkImport> processed = new HashSet<>(skylarkImports.size());
+    Set<String> processed = new HashSet<>(skylarkImports.size());
     ImmutableList.Builder<IncludesData> includes =
         ImmutableList.builderWithExpectedSize(skylarkImports.size());
     // foreach is not used to avoid iterator overhead
     for (int i = 0; i < skylarkImports.size(); ++i) {
-      SkylarkImport skylarkImport = skylarkImports.get(i);
+      String skylarkImport = skylarkImports.get(i);
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport)) continue;
       LoadImport loadImport = ImmutableLoadImport.ofImpl(containingLabel, skylarkImport);
@@ -394,16 +403,16 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     return includedPathsBuilder.build();
   }
 
-  /** Loads all extensions identified by corresponding {@link SkylarkImport}s. */
+  /** Loads all extensions identified by corresponding imports. */
   protected ImmutableList<ExtensionData> loadExtensions(
-      Label containingLabel, ImmutableList<SkylarkImport> skylarkImports)
+      Label containingLabel, ImmutableList<String> skylarkImports)
       throws BuildFileParseException, IOException, InterruptedException {
-    Set<SkylarkImport> processed = new HashSet<>(skylarkImports.size());
+    Set<String> processed = new HashSet<>(skylarkImports.size());
     ImmutableList.Builder<ExtensionData> extensions =
         ImmutableList.builderWithExpectedSize(skylarkImports.size());
     // foreach is not used to avoid iterator overhead
     for (int i = 0; i < skylarkImports.size(); ++i) {
-      SkylarkImport skylarkImport = skylarkImports.get(i);
+      String skylarkImport = skylarkImports.get(i);
       // sometimes users include the same extension multiple times...
       if (!processed.add(skylarkImport)) continue;
       try {
@@ -524,8 +533,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       return load.getLabel();
     }
 
-    // Returns SkylarkImport object for this extension load
-    public SkylarkImport getSkylarkImport() {
+    // Returns starlark import string for this extension load
+    public String getSkylarkImport() {
       return load.getImport();
     }
   }
@@ -546,8 +555,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     for (LoadImport dependency : dependencies) {
       ExtensionData extension =
           lookupExtensionForImport(
-              getImportPath(dependency.getLabel(), dependency.getImport()),
-              dependency.getImport().getImportString());
+              getImportPath(dependency.getLabel(), dependency.getImport()), dependency.getImport());
 
       if (extension == null) {
         throw BuildFileParseException.createForUnknownParseError(
@@ -605,7 +613,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     boolean haveUnsatisfiedDeps = false;
     for (int i = 0; i < load.getAST().getImports().size(); ++i) {
       LoadImport dependency =
-          ImmutableLoadImport.ofImpl(load.getLabel(), load.getAST().getImports().get(i));
+          ImmutableLoadImport.ofImpl(
+              load.getLabel(), load.getAST().getImports().get(i).getImportString());
 
       // Record dependency for this load.
       load.addDependency(dependency);
@@ -669,7 +678,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         loadedExtension,
         load.getPath(),
         dependencies,
-        load.getSkylarkImport().getImportString(),
+        load.getSkylarkImport(),
         toLoadedPaths(load.getPath(), dependencies, null));
   }
 
@@ -724,8 +733,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     while (!work.isEmpty()) {
       ExtensionLoadState load = work.peek();
-      extension =
-          lookupExtensionForImport(load.getPath(), load.getSkylarkImport().getImportString());
+      extension = lookupExtensionForImport(load.getPath(), load.getSkylarkImport());
 
       if (extension != null) {
         // It's possible that some lower level dependencies already loaded
@@ -761,11 +769,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     {@code repo} is located at {@code /repo}.
    */
   private com.google.devtools.build.lib.vfs.Path getImportPath(
-      Label containingLabel, SkylarkImport skylarkImport) throws BuildFileParseException {
-    if (isRelativeLoad(skylarkImport) && skylarkImport.getImportString().contains("/")) {
+      Label containingLabel, String skylarkImport) throws BuildFileParseException {
+    if (isRelativeLoad(skylarkImport) && skylarkImport.contains("/")) {
       throw BuildFileParseException.createForUnknownParseError(
           "Relative loads work only for files in the same directory but "
-              + skylarkImport.getImportString()
+              + skylarkImport
               + " is trying to load a file from a nested directory. "
               + "Please use absolute label instead ([cell]//pkg[/pkg]:target).");
     }
@@ -780,13 +788,13 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     @Nullable AbsPath repositoryPath = options.getCellRoots().get(repositoryName);
     if (repositoryPath == null) {
       throw BuildFileParseException.createForUnknownParseError(
-          skylarkImport.getImportString() + " references an unknown repository " + repositoryName);
+          skylarkImport + " references an unknown repository " + repositoryName);
     }
     return fileSystem.getPath(repositoryPath.resolve(relativeExtensionPath.toString()).toString());
   }
 
-  private boolean isRelativeLoad(SkylarkImport skylarkImport) {
-    return skylarkImport.getImportString().startsWith(":");
+  private boolean isRelativeLoad(String skylarkImport) {
+    return skylarkImport.startsWith(":");
   }
 
   /**
@@ -813,7 +821,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     BuildFileAST buildFileAst =
         parseSkylarkFile(buildFilePath, containingLabel, getBuckOrPackage().fileKind);
     ImmutableList<IncludesData> dependencies =
-        loadIncludes(containingLabel, buildFileAst.getImports());
+        loadIncludes(
+            containingLabel,
+            buildFileAst.getImports().stream()
+                .map(SkylarkImport::getImportString)
+                .collect(ImmutableList.toImmutableList()));
 
     // it might be potentially faster to keep sorted sets for each dependency separately and just
     // merge sorted lists as we aggregate transitive close up
@@ -828,9 +840,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   }
 
   /**
-   * A value object for information about load function import, since {@link SkylarkImport} does not
-   * provide enough context. For instance, the same {@link SkylarkImport} can represent different
-   * logical imports depending on which repository it is resolved in.
+   * A value object for information about load function import, since import string does not provide
+   * enough context. For instance, the same import string can represent different logical imports
+   * depending on which repository it is resolved in.
    */
   @BuckStyleValue
   abstract static class LoadImport {
@@ -838,11 +850,15 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     abstract Label getContainingLabel();
 
     /** Returns a Skylark import. */
-    abstract SkylarkImport getImport();
+    abstract String getImport();
 
     /** Returns a label of current import file. */
     Label getLabel() {
-      return getImport().getLabel(getContainingLabel());
+      try {
+        return getContainingLabel().getRelativeWithRemapping(getImport(), ImmutableMap.of());
+      } catch (LabelSyntaxException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 

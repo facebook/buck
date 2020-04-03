@@ -30,22 +30,18 @@ public class ImplicitIncludeTest {
   public void returnsProperLoadPath() {
     Assert.assertEquals(
         "//:foo.bzl",
-        ImplicitInclude.of("//:foo.bzl", ImmutableMap.of("get_name", "get_name"))
-            .getLoadPath()
-            .getImportString());
+        ImplicitInclude.of("//:foo.bzl", ImmutableMap.of("get_name", "get_name")).getLoadPath());
 
     Assert.assertEquals(
         "//foo/bar/baz:include.bzl",
         ImplicitInclude.of("//foo/bar/baz:include.bzl", ImmutableMap.of("get_name", "get_name"))
-            .getLoadPath()
-            .getImportString());
+            .getLoadPath());
 
     Assert.assertEquals(
         "@cell//foo/bar/baz:include.bzl",
         ImplicitInclude.of(
                 "@cell//foo/bar/baz:include.bzl", ImmutableMap.of("get_name", "get_name"))
-            .getLoadPath()
-            .getImportString());
+            .getLoadPath());
   }
 
   @Test

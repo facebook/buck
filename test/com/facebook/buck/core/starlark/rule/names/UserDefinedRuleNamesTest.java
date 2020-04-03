@@ -26,7 +26,6 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.syntax.SkylarkImport;
 import org.junit.Test;
 
 public class UserDefinedRuleNamesTest {
@@ -76,13 +75,12 @@ public class UserDefinedRuleNamesTest {
     assertNull(UserDefinedRuleNames.importFromIdentifier("//foo:"));
     assertNull(UserDefinedRuleNames.importFromIdentifier("something:invalid"));
 
-    SkylarkImport import1 = UserDefinedRuleNames.importFromIdentifier("//foo:bar.bzl:baz_rule");
-    SkylarkImport import2 =
-        UserDefinedRuleNames.importFromIdentifier("@cell//foo:bar.bzl:baz_rule");
+    String import1 = UserDefinedRuleNames.importFromIdentifier("//foo:bar.bzl:baz_rule");
+    String import2 = UserDefinedRuleNames.importFromIdentifier("@cell//foo:bar.bzl:baz_rule");
 
     assertNotNull(import1);
-    assertEquals("//foo:bar.bzl", import1.getImportString());
+    assertEquals("//foo:bar.bzl", import1);
     assertNotNull(import2);
-    assertEquals("@cell//foo:bar.bzl", import2.getImportString());
+    assertEquals("@cell//foo:bar.bzl", import2);
   }
 }

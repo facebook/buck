@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.EventHandler;
-import com.google.devtools.build.lib.syntax.SkylarkImport;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -247,7 +246,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
   @Override
   public void loadExtensionsForUserDefinedRules(AbsPath buildFile, BuildFileManifest manifest) {
-    ImmutableList<SkylarkImport> extensionsToLoad =
+    ImmutableList<String> extensionsToLoad =
         manifest.getTargets().values().stream()
             .map(props -> UserDefinedRuleNames.importFromIdentifier(props.getBuckType()))
             .filter(Objects::nonNull)
