@@ -70,7 +70,7 @@ public class ClientCertificateHandler {
     public ImmutableList<X509Certificate> getChain() {
       return chain;
     }
-  };
+  }
 
   private static final Pattern privateKeyExtractor =
       Pattern.compile(

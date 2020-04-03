@@ -324,7 +324,7 @@ public class AppleTestDescription
             LinkerMapMode.NO_LINKER_MAP.getFlavor(),
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     AppleBundle bundle =
-        AppleBundle.class.cast(
+        (AppleBundle)
             graphBuilder.computeIfAbsent(
                 appleBundleBuildTarget,
                 ignored ->
@@ -372,7 +372,7 @@ public class AppleTestDescription
                         swiftBuckConfig.getCopyStdlibToFrameworks(),
                         cxxBuckConfig.shouldCacheStrip(),
                         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
-                        Predicates.alwaysTrue())));
+                        Predicates.alwaysTrue()));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);

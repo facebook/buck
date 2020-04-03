@@ -30,7 +30,7 @@ public class MoreIterables {
 
   private MoreIterables() {}
 
-  private static <T> ImmutableList<Iterator<T>> iterators(Iterable<T> inputs[]) {
+  private static <T> ImmutableList<Iterator<T>> iterators(Iterable<T>[] inputs) {
     ImmutableList.Builder<Iterator<T>> iterators = ImmutableList.builder();
     for (Iterable<T> input : inputs) {
       iterators.add(input.iterator());

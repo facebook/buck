@@ -79,14 +79,11 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
         .anyMatch(
             dep -> {
               ConstructorArg constructorArg = targetGraph.get(dep).getConstructorArg();
+              // AndroidPrebuiltAar implements HasAndroidResourceDeps
               if (constructorArg instanceof AndroidResourceDescriptionArg) {
                 // AndroidResource implements HasAndroidResourceDeps
                 return true;
-              } else if (constructorArg instanceof AndroidPrebuiltAarDescriptionArg) {
-                // AndroidPrebuiltAar implements HasAndroidResourceDeps
-                return true;
-              }
-              return false;
+              } else return constructorArg instanceof AndroidPrebuiltAarDescriptionArg;
             });
   }
 

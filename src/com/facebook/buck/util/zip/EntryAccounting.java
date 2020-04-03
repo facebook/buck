@@ -193,11 +193,7 @@ class EntryAccounting {
     ByteIo.writeInt(stream, ZipEntry.LOCSIG);
 
     boolean useZip64;
-    if (!requiresDataDescriptor() && entry.getSize() >= ZipConstants.ZIP64_MAGICVAL) {
-      useZip64 = true;
-    } else {
-      useZip64 = false;
-    }
+    useZip64 = !requiresDataDescriptor() && entry.getSize() >= ZipConstants.ZIP64_MAGICVAL;
 
     ByteIo.writeShort(stream, getRequiredExtractVersion(useZip64));
     ByteIo.writeShort(stream, flags);

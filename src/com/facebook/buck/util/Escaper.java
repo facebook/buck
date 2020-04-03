@@ -37,7 +37,7 @@ public final class Escaper {
     SINGLE {
       @Override
       public String quote(String str) {
-        return '\'' + str.replace("\'", "'\\''") + '\'';
+        return '\'' + str.replace("'", "'\\''") + '\'';
       }
     },
     DOUBLE {

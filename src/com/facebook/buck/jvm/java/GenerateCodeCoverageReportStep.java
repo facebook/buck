@@ -183,8 +183,7 @@ public class GenerateCodeCoverageReportStep extends ShellStep {
       ProjectFilesystemFactory projectFilesystemFactory, Path outputJar, Path classesDir)
       throws InterruptedException {
     try {
-      Preconditions.checkState(
-          filesystem.exists(outputJar), String.valueOf(outputJar) + " does not exist");
+      Preconditions.checkState(filesystem.exists(outputJar), outputJar + " does not exist");
       ArchiveFormat.ZIP
           .getUnarchiver()
           .extractArchive(

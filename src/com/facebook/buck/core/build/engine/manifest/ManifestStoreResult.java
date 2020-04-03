@@ -52,5 +52,5 @@ public interface ManifestStoreResult {
     return new Builder();
   }
 
-  static class Builder extends ImmutableManifestStoreResult.Builder {}
+  class Builder extends ImmutableManifestStoreResult.Builder {}
 }

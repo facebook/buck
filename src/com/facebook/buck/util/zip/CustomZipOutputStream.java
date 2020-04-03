@@ -52,7 +52,7 @@ public class CustomZipOutputStream extends OutputStream {
      * the stream has not been closed, and that a {@link ZipEntry} has already been put on the
      * stream and not closed.
      */
-    void actuallyWrite(byte b[], int off, int len) throws IOException;
+    void actuallyWrite(byte[] b, int off, int len) throws IOException;
 
     void actuallyClose() throws IOException;
   }

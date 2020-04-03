@@ -130,14 +130,10 @@ class TreeBackedTypes implements Types {
   }
 
   private boolean isSameTypeVariable(TypeVariable t1, TypeVariable t2) {
-    if (!t1.asElement().equals(t2.asElement())) {
-      return false;
-    }
+    return t1.asElement().equals(t2.asElement());
 
     // TODO(jkeljo): Upper and lower bounds could also matter if the type variable is the result of
     // capture conversion, but we don't support capture conversion yet (or maybe ever).
-
-    return true;
   }
 
   private boolean isSameIntersectionType(IntersectionType t1, IntersectionType t2) {

@@ -158,7 +158,7 @@ public class JavaBinaryDescription
               buildTarget,
               projectFilesystem,
               params.copyAppendingExtraDeps(
-                  Suppliers.<Iterable<BuildRule>>ofInstance(
+                  Suppliers.ofInstance(
                       Iterables.concat(
                           graphBuilder.filterBuildRuleInputs(
                               ImmutableList.<SourcePath>builder()

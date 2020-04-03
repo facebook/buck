@@ -52,5 +52,5 @@ abstract class SwiftAttributes {
   @Value.Default
   ImmutableMap<Path, Path> publicHeaderMapEntries() {
     return ImmutableMap.of();
-  };
+  }
 }

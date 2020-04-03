@@ -265,7 +265,7 @@ public class AppleDeviceController {
       return Optional.empty();
     }
 
-    String output[] = result.getStdout().get().split(" ");
+    String[] output = result.getStdout().get().split(" ");
     return Optional.of(output[1]);
   }
 

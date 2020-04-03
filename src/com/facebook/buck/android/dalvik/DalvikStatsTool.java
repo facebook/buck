@@ -319,12 +319,12 @@ public class DalvikStatsTool {
 
         String uid =
             String.valueOf(DalvikMemberReference.of(bsm.getOwner(), name, desc).hashCode());
-        createAdditionalFieldsForDesugar(uid + String.valueOf(bsm.hashCode()));
+        createAdditionalFieldsForDesugar(uid + bsm.hashCode());
         for (Object arg : bsmArgs) {
           if (arg instanceof Handle) {
             registerMethodHandleType((Handle) arg);
           }
-          createAdditionalFieldsForDesugar(uid + String.valueOf(arg.hashCode()));
+          createAdditionalFieldsForDesugar(uid + arg.hashCode());
         }
       }
 

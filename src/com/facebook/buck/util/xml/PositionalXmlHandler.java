@@ -87,7 +87,7 @@ public class PositionalXmlHandler extends DefaultHandler {
   }
 
   @Override
-  public void characters(char ch[], int start, int length) {
+  public void characters(char[] ch, int start, int length) {
     textBuffer.append(ch, start, length);
   }
 

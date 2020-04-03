@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.util.ClassLoaderCache;
 import com.google.common.collect.ImmutableList;
-import java.net.URL;
 
 // Counter part of AnnotationProcessorFactory
 public class PluginFactory implements AutoCloseable {
@@ -57,7 +56,7 @@ public class PluginFactory implements AutoCloseable {
     return cache.getClassLoaderForClassPath(
         compilerClassLoader,
         pluginGroups.stream()
-            .<URL>flatMap(pluginGroup -> pluginGroup.getClasspath().stream())
+            .flatMap(pluginGroup -> pluginGroup.getClasspath().stream())
             .collect(ImmutableList.toImmutableList()));
   }
 }

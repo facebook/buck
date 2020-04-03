@@ -32,7 +32,7 @@ import com.facebook.buck.swift.SwiftLibraryDescriptionArg;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -43,7 +43,7 @@ public class Utils {
   static Path getDerivedSourcesDirectoryForBuildTarget(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
     String fullTargetName = buildTarget.getFullyQualifiedName();
-    byte[] utf8Bytes = fullTargetName.getBytes(Charset.forName("UTF-8"));
+    byte[] utf8Bytes = fullTargetName.getBytes(StandardCharsets.UTF_8);
 
     Hasher hasher = Hashing.sha1().newHasher();
     hasher.putBytes(utf8Bytes);

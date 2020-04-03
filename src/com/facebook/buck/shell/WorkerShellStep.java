@@ -172,7 +172,7 @@ public class WorkerShellStep implements Step {
   @Override
   public final String getDescription(ExecutionContext context) {
     return String.format(
-        "Sending job with args \'%s\' to the process started with \'%s\'",
+        "Sending job with args '%s' to the process started with '%s'",
         getExpandedJobArgs(context),
         factory
             .getCommand(

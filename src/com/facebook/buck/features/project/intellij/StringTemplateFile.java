@@ -51,7 +51,7 @@ enum StringTemplateFile {
                   DELIMITER,
                   DELIMITER));
 
-  private StringTemplateFile(String templateName) {
+  StringTemplateFile(String templateName) {
     this.templateName = templateName;
   }
 

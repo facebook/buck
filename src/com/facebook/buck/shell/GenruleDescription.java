@@ -121,7 +121,7 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
 
     @Value.Check
     default void check() {
-      if (!(getOut().isPresent() ^ getOuts().isPresent())) {
+      if (getOut().isPresent() == getOuts().isPresent()) {
         throw new HumanReadableException(
             "One and only one of 'out' or 'outs' must be present in genrule.");
       }

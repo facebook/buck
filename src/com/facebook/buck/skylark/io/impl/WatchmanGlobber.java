@@ -143,7 +143,7 @@ public class WatchmanGlobber {
    */
   public Optional<ImmutableSet<String>> run(
       Collection<String> include, Collection<String> exclude, EnumSet<Option> options)
-      throws IOException, InterruptedException, WatchmanQueryFailedException {
+      throws IOException, InterruptedException {
     ImmutableMap<String, ?> watchmanQuery = createWatchmanQuery(include, exclude, options);
 
     Optional<? extends Map<String, ?>> result =

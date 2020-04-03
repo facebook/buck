@@ -162,7 +162,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     // or
     //   ?event=Foo,Bar,Baz
     // ... or even both
-    ImmutableSet.Builder<String> subscribed = ImmutableSet.<String>builder();
+    ImmutableSet.Builder<String> subscribed = ImmutableSet.builder();
     events.forEach(
         e -> subscribed.addAll(Splitter.on(',').trimResults().omitEmptyStrings().splitToList(e)));
     return subscribed.build();

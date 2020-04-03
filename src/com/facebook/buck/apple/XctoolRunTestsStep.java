@@ -466,7 +466,7 @@ class XctoolRunTestsStep implements Step {
           console.printErrorText(selector + " is not a valid selector for xcodebuildtool.");
           return 1;
         } else {
-          sb.append(fileName.substring(0, extensionPosition));
+          sb.append(fileName, 0, extensionPosition);
         }
         sb.append("/");
         sb.append(className);

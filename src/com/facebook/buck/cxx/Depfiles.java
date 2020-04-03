@@ -250,7 +250,7 @@ class Depfiles {
         // We don't require the tree structure here, we remove the spaces
         return includes.stream().map(String::trim).collect(ImmutableList.toImmutableList());
       case NONE:
-        return ImmutableList.<String>of();
+        return ImmutableList.of();
       default:
         // never happens
         throw new IllegalStateException();

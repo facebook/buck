@@ -187,7 +187,6 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.NoSuchFileException;
@@ -3553,7 +3552,7 @@ public class ProjectGenerator {
   private static Path getDerivedSourcesDirectoryForBuildTarget(
       BuildTarget buildTarget, ProjectFilesystem fs) {
     String fullTargetName = buildTarget.getFullyQualifiedName();
-    byte[] utf8Bytes = fullTargetName.getBytes(Charset.forName("UTF-8"));
+    byte[] utf8Bytes = fullTargetName.getBytes(StandardCharsets.UTF_8);
 
     Hasher hasher = Hashing.sha1().newHasher();
     hasher.putBytes(utf8Bytes);

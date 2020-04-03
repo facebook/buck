@@ -29,6 +29,6 @@ public class BuildEngineActionToBuildRuleResolver {
 
   public BuildRule resolve(BuildEngineAction action) {
     // TODO(bobyf): add support for Actions
-    return BuildRule.class.cast(action);
+    return (BuildRule) action;
   }
 }

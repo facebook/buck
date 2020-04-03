@@ -224,9 +224,7 @@ public abstract class UnusedDependenciesFinder implements Step {
     if (dependencyAbiOutput != null) {
       final Path dependencyAbiOutputPath =
           sourcePathResolverAdapter.getAbsolutePath(dependencyAbiOutput);
-      if (usedJars.contains(dependencyAbiOutputPath)) {
-        return true;
-      }
+      return usedJars.contains(dependencyAbiOutputPath);
     }
 
     return false;
@@ -278,12 +276,12 @@ public abstract class UnusedDependenciesFinder implements Step {
           Joiner.on('\n')
               .join(
                   getDeps().stream()
-                      .map(dep -> dep.dependency.buildTarget.toString())
+                      .map(dep -> dep.dependency.buildTarget)
                       .collect(Collectors.toList())),
           Joiner.on('\n')
               .join(
                   getProvidedDeps().stream()
-                      .map(dep -> dep.dependency.buildTarget.toString())
+                      .map(dep -> dep.dependency.buildTarget)
                       .collect(Collectors.toList())));
     }
   }

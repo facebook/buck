@@ -485,11 +485,7 @@ public class IdbRunTestsStep implements Step {
     } else {
       processExitCode = processExecutor.waitForLaunchedProcess(launchedProcess).getExitCode();
     }
-    if (processExitCode == 0) {
-      return 0;
-    } else {
-      return processExitCode;
-    }
+    return processExitCode;
   }
 
   private int listAndFilterTestThenFormatIdbParams(

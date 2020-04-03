@@ -69,7 +69,7 @@ public abstract class TestXmlUnescaper {
     @Override
     protected int unescapeStr(String s, int offset, StringBuilder sb) {
       if (s.startsWith("&apos;", offset)) {
-        sb.append("\'");
+        sb.append("'");
         return "&apos;".length();
       }
       if (s.startsWith("&quot;", offset)) {

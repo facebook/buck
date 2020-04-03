@@ -84,7 +84,7 @@ public class WorkerProcess implements Closeable {
       return;
     }
     LOG.debug(
-        "Starting up process %d using command: \'%s\'",
+        "Starting up process %d using command: '%s'",
         this.hashCode(), Joiner.on(' ').join(processParams.getCommand()));
     launchedProcess = executor.launchProcess(processParams);
     protocol =
@@ -118,7 +118,7 @@ public class WorkerProcess implements Closeable {
     filesystem.writeContentsToPath(jobArgs, argsPath);
 
     LOG.debug(
-        "Sending job %d to process %d \n" + " job arguments: \'%s\'",
+        "Sending job %d to process %d \n" + " job arguments: '%s'",
         messageID, this.hashCode(), jobArgs);
     protocol.send(
         messageID, ImmutableWorkerProcessCommand.ofImpl(argsPath, stdoutPath, stderrPath));

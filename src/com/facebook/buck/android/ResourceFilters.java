@@ -126,7 +126,7 @@ public class ResourceFilters {
     public static Qualifiers from(Path path) {
       ResourceFilters.Density density = Density.NO_QUALIFIER;
       StringBuilder othersBuilder = new StringBuilder();
-      String parts[] = path.getFileName().toString().split("-");
+      String[] parts = path.getFileName().toString().split("-");
       Preconditions.checkState(parts.length > 0);
       Preconditions.checkState(SUPPORTED_RESOURCE_DIRECTORIES.contains(parts[0]));
       for (int i = 1; i < parts.length; i++) {
@@ -252,7 +252,7 @@ public class ResourceFilters {
   }
 
   private static String getResourceType(Path resourceFolder) {
-    String parts[] = resourceFolder.getFileName().toString().split("-");
+    String[] parts = resourceFolder.getFileName().toString().split("-");
     return parts[0];
   }
 

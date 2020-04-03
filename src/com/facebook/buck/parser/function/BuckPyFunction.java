@@ -126,7 +126,7 @@ public class BuckPyFunction {
   private static final ImmutableList<String> UDR_IMPLICIT_OPTIONAL_ATTRIBUTES =
       getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES, false);
   private static final ImmutableList<String> UDR_IMPLICIT_REQUIRED_TEST_ATTRIBUTES =
-      getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_TEST_ATTRIBUTES, true);;
+      getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_TEST_ATTRIBUTES, true);
   private static final ImmutableList<String> UDR_IMPLICIT_OPTIONAL_TEST_ATTRIBUTES =
       getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_TEST_ATTRIBUTES, false);
 

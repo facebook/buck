@@ -28,9 +28,9 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
-import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -126,7 +126,7 @@ public final class EdenProjectFilesystemDelegate implements ProjectFilesystemDel
           ByteBuffer buf = ByteBuffer.allocate(SHA1_HEX_LENGTH);
           view.read("sha1", buf);
           buf.position(0);
-          CharsetDecoder decoder = Charset.forName("UTF-8").newDecoder();
+          CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
           decoder.onUnmappableCharacter(CodingErrorAction.REPORT);
           try {
             return Optional.of(Sha1HashCode.of(decoder.decode(buf).toString()));

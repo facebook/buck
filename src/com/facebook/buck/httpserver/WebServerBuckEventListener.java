@@ -324,6 +324,6 @@ public class WebServerBuckEventListener implements BuckEventListener {
     STARTING,
     PARSING,
     BUILDING_ACTION_GRAPH,
-    BUILDING;
+    BUILDING
   }
 }

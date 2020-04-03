@@ -258,6 +258,6 @@ public class HgCmdLineInterface implements VersionControlCmdLineInterface {
   }
 
   private static String cleanResultString(String result) {
-    return result.trim().replace("\'", "").replace("\n", "");
+    return result.trim().replace("'", "").replace("\n", "");
   }
 }

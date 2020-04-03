@@ -21,7 +21,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 /** Information gathered from a device during buck install. */
 @BuckStyleValue
 public interface AndroidDeviceInfo {
-  static final int TVDPI_DPI = 213;
+  int TVDPI_DPI = 213;
 
   /** The display density category of the device. */
   enum DensityClass {

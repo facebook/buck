@@ -95,7 +95,7 @@ public class WatchmanBuildPackageComputation
   @Override
   public BuildPackagePaths transform(
       BuildTargetPatternToBuildPackagePathKey key, ComputationEnvironment env)
-      throws IOException, InterruptedException, WatchmanQueryTimedOutException {
+      throws IOException, InterruptedException {
     BuildTargetPattern targetPattern = key.getPattern();
     Path basePath =
         targetPattern

@@ -280,7 +280,7 @@ class ProvisioningProfileCopyStep implements Step {
         AppleInfoPlistParsing.getBundleTypeFromPlistStream(
                 infoPlist, filesystem.getInputStreamForRelativePath(infoPlist))
             .get();
-    if ("APPL".equalsIgnoreCase(bundleType.toString())) {
+    if ("APPL".equalsIgnoreCase(bundleType)) {
       // Skip additional keys for watchOS bundles (property keys whitelist)
       Optional<Boolean> isWatchOSApp =
           AppleInfoPlistParsing.isWatchOSAppFromPlistStream(
