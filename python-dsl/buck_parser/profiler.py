@@ -23,6 +23,7 @@ import threading
 import time
 from collections import namedtuple
 
+
 PROFILING_TIMER_DELAY = 0.01
 BLACKLIST = [
     "copy.py:_deepcopy_dict",
@@ -210,7 +211,7 @@ class Profiler(object):
 
     @staticmethod
     def _recursive_write_callstack_report(node, prefix_str, highlights_set):
-        """Generate an aggregated call stack tree that looks like this one:
+        r"""Generate an aggregated call stack tree that looks like this one:
 
         |-0.04 glob_watchman (glob_watchman.py:103)
         | \-0.04 wrapped (util.py:76)

@@ -104,7 +104,7 @@ _LOAD_TARGET_PATH_RE = re.compile(
 
 # matches anything equivalent to recursive glob on all dirs
 # e.g. "**/", "*/**/", "*/*/**/"
-_RECURSIVE_GLOB_PATTERN = re.compile("^(\*/)*\*\*/")  # type: Pattern[str]
+_RECURSIVE_GLOB_PATTERN = re.compile(r"^(\*/)*\*\*/")  # type: Pattern[str]
 
 
 class AbstractContext(object):
