@@ -196,8 +196,13 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
                 ast.getLocation(),
                 "method invocation returned None, please file a bug report: "
                     + getName()
-                    + Printer.printAbbreviatedList(
-                        ImmutableList.copyOf(args), "(", ", ", ")", null));
+                    + "("
+                    + String.join(
+                        ", ",
+                        args.stream()
+                            .map(Objects::toString)
+                            .collect(ImmutableList.toImmutableList()))
+                    + ")");
           }
         }
         if (!EvalUtils.isSkylarkAcceptable(result.getClass())) {
