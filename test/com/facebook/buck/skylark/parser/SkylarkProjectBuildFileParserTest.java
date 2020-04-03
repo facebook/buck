@@ -515,7 +515,8 @@ public class SkylarkProjectBuildFileParserTest {
   @Test
   public void canLoadSameExtensionMultipleTimes() throws Exception {
     Path buildFile = projectFilesystem.resolve("BUCK");
-    Files.write(buildFile, Arrays.asList("load('//:ext.bzl', 'ext')", "load('//:ext.bzl', 'ext')"));
+    Files.write(
+        buildFile, Arrays.asList("load('//:ext.bzl', 'ext')", "load('//:ext.bzl', ext2='ext')"));
     Path extensionFile = projectFilesystem.resolve("ext.bzl");
     Files.write(extensionFile, Arrays.asList("ext = 'hello'", "print('hello world')"));
     assertTrue(parser.getManifest(AbsPath.of(buildFile)).getTargets().isEmpty());
@@ -591,7 +592,9 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(
         ext1,
         Arrays.asList(
-            "load('//:ext_2.bzl', 'ext_2')", "load('//:ext_2.bzl', 'ext_2')", "ext_1 = ext_2"));
+            "load('//:ext_2.bzl', 'ext_2')",
+            "load('//:ext_2.bzl', ext2_copy='ext_2')",
+            "ext_1 = ext_2"));
 
     Path ext2 = projectFilesystem.resolve("ext_2.bzl");
     Files.write(ext2, Arrays.asList("ext_2 = 'hello'"));
@@ -605,7 +608,8 @@ public class SkylarkProjectBuildFileParserTest {
     // file.
     Path buildFile = projectFilesystem.resolve("BUCK");
     Files.write(
-        buildFile, Arrays.asList("load('//:ext_1.bzl', 'ext_1')", "load('//:ext_1.bzl', 'ext_1')"));
+        buildFile,
+        Arrays.asList("load('//:ext_1.bzl', 'ext_1')", "load('//:ext_1.bzl', ext1_copy='ext_1')"));
 
     Path ext1 = projectFilesystem.resolve("ext_1.bzl");
     Files.write(ext1, Arrays.asList("ext_1 = 'hello'"));
