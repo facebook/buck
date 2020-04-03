@@ -63,6 +63,23 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
   private static Logger LOGGER = Logger.getInstance(BuckAddDependencyIntention.class);
 
   /**
+   * Creates an {@link com.intellij.codeInsight.intention.IntentionAction} with {@link
+   * AddImportAction}
+   */
+  @Nullable
+  public static BuckAddDependencyIntention create(PsiReference reference, PsiClass psiClass) {
+    return create(
+        reference,
+        psiClass,
+        new BuckAddImportAction() {
+          @Override
+          public boolean execute(
+              Project project, PsiReference reference, Editor editor, PsiClass psiClass) {
+            return new AddImportAction(project, reference, editor, psiClass).execute();
+          }
+        });
+  }
+  /**
    * Creates an {@link com.intellij.codeInsight.intention.IntentionAction} that will create an
    * dependency edge in both the Buck target graph and IntelliJ module graph from the nodes for the
    * given reference element to those of the given psiClass.
@@ -73,7 +90,8 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
    * graph (or both).
    */
   @Nullable
-  public static BuckAddDependencyIntention create(PsiReference reference, PsiClass psiClass) {
+  public static BuckAddDependencyIntention create(
+      PsiReference reference, PsiClass psiClass, @Nullable BuckAddImportAction addImportAction) {
     VirtualFile editSourceFile = reference.getElement().getContainingFile().getVirtualFile();
     if (editSourceFile == null) {
       return null;
@@ -133,7 +151,8 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
         importBuildFile,
         importSourceFile,
         importSourceTarget,
-        importModule);
+        importModule,
+        addImportAction);
   }
 
   private Project project;
@@ -154,6 +173,9 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
   private BuckTarget importTarget;
   private Module importModule;
 
+  // Add import action
+  private @Nullable BuckAddImportAction addImportAction;
+
   BuckAddDependencyIntention(
       Project project,
       PsiReference reference,
@@ -165,7 +187,8 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
       VirtualFile importBuildFile,
       VirtualFile importSourceFile,
       BuckTarget importSourceTarget,
-      Module importModule) {
+      Module importModule,
+      @Nullable BuckAddImportAction addImportAction) {
     this.project = project;
     this.reference = reference;
     this.editBuildFile = editBuildFile;
@@ -177,6 +200,7 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
     this.importSourceFile = importSourceFile;
     this.importSourceTarget = importSourceTarget;
     this.importModule = importModule;
+    this.addImportAction = addImportAction;
     String message = "Add BUCK dependency on owner(" + importSourceTarget + ")";
     setText(message);
   }
@@ -396,7 +420,9 @@ public class BuckAddDependencyIntention extends BaseIntentionAction {
                     + " on "
                     + importModule.getName());
           }
-          new AddImportAction(project, reference, editor, psiClass).execute();
+          if (addImportAction != null) {
+            addImportAction.execute(project, reference, editor, psiClass);
+          }
         }));
   }
 }
