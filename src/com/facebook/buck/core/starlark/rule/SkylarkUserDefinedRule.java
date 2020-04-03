@@ -145,22 +145,6 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     return Runtime.NONE;
   }
 
-  /**
-   * Override the built-in signature printer, as it prints out '*' unconditionally if all arguments
-   * are kwargs
-   */
-  @Override
-  public String toString() {
-    StringBuilder builder = new StringBuilder();
-    String funcName = name == null ? "<incomplete function>" : getName();
-    builder.append(funcName).append("(");
-    Objects.requireNonNull(getSignature()).toStringBuilder(builder);
-    int starIdx = builder.indexOf("*, ");
-    builder.delete(starIdx, starIdx + 3);
-    builder.append(")");
-    return builder.toString();
-  }
-
   /** Create an instance of {@link SkylarkUserDefinedRule} */
   public static SkylarkUserDefinedRule of(
       Location location,

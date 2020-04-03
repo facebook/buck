@@ -378,7 +378,7 @@ public class SkylarkUserDefinedRuleTest {
 
       expectedException.expect(EvalException.class);
       expectedException.expectMessage(
-          "missing mandatory named-only argument 'arg4' while calling @foo//bar:extension.bzl:baz_rule(name, arg2, arg4, arg1 = \"some string\", arg3 = 5)");
+          "missing mandatory named-only argument 'arg4' while calling @foo//bar:extension.bzl:baz_rule(*, name, arg2, arg4, arg1 = \"some string\", arg3 = 5)");
       rule.call(
           ImmutableList.of(),
           ImmutableMap.of("name", "some_rule_name", "arg2", "arg2_val"),
