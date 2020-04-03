@@ -30,13 +30,15 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehavior;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -261,17 +263,22 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   @Test
   @Override
   public void complex() throws IOException {
-    BuildRule mockRule = createStrictMock(BuildRule.class);
+    HasMultipleOutputs mockRule = createStrictMock(HasMultipleOutputs.class);
     BuildTarget target = BuildTargetFactory.newInstance("//some/build:target");
+    OutputLabel outputLabel = OutputLabel.of("some_output_label");
     expect(ruleFinder.getRule((SourcePath) anyObject())).andReturn(Optional.of(mockRule));
-    mockRule.getSourcePathToOutput();
-    expectLastCall().andReturn(ExplicitBuildTargetSourcePath.of(target, Paths.get("and.path")));
+    mockRule.getSourcePathToOutput(outputLabel);
+    expectLastCall()
+        .andReturn(
+            ImmutableSortedSet.of(
+                ExplicitBuildTargetSourcePath.of(
+                    BuildTargetWithOutputs.of(target, outputLabel), Paths.get("and.path"))));
     replay(mockRule);
     test(
         new Complex(),
         expected ->
             expected.replace(
-                "SourcePath(//some/build:target)",
+                "SourcePath(//some/build:target[some_output_label])",
                 "SourcePath(Pair(//some/build:target, and.path))"));
     verify(mockRule);
   }

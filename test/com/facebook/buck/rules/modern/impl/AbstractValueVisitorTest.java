@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.OutputLabel;
@@ -410,7 +411,9 @@ public abstract class AbstractValueVisitorTest {
                   ImmutableSortedSet.of(
                       FakeSourcePath.of(rootFilesystem, "some/path"),
                       DefaultBuildTargetSourcePath.of(
-                          BuildTargetFactory.newInstance("//some/build:target")))));
+                          BuildTargetWithOutputs.of(
+                              BuildTargetFactory.newInstance("//some/build:target"),
+                              OutputLabel.of("some_output_label"))))));
     }
 
     @AddToRuleKey private final String string = "hello";

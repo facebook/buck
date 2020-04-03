@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
+import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -28,7 +29,9 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehaviorTag;
 import com.facebook.buck.core.rulekey.CustomFieldSerializationTag;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
+import com.facebook.buck.core.rules.attr.HasMultipleOutputs;
 import com.facebook.buck.core.rules.modern.annotations.CustomClassBehaviorTag;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -50,6 +53,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.common.hash.HashCode;
 import com.google.common.reflect.TypeToken;
@@ -229,7 +233,16 @@ public class Serializer {
     @Override
     public void visitSourcePath(SourcePath value) throws IOException {
       if (value instanceof DefaultBuildTargetSourcePath) {
-        value = ruleFinder.getRule(value).get().getSourcePathToOutput();
+        BuildRule rule = ruleFinder.getRule(value).get();
+        if (rule instanceof HasMultipleOutputs) {
+          OutputLabel outputLabel =
+              ((DefaultBuildTargetSourcePath) value).getTargetWithOutputs().getOutputLabel();
+          value =
+              Iterables.getOnlyElement(
+                  ((HasMultipleOutputs) rule).getSourcePathToOutput(outputLabel));
+        } else {
+          value = rule.getSourcePathToOutput();
+        }
         Objects.requireNonNull(value);
       }
 

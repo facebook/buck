@@ -182,7 +182,7 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
             + "    SortedSet<\n"
             + "    >\n"
             + "    SortedSet<\n"
-            + "      SourcePath(//some/build:target)\n"
+            + "      SourcePath(//some/build:target[some_output_label])\n"
             + "      SourcePath($ROOT$/some/path)\n"
             + "    >\n"
             + "  >\n"
