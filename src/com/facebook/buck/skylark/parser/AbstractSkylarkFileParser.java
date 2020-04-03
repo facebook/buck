@@ -165,7 +165,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     ImplicitlyLoadedExtension implicitLoad =
         loadImplicitExtension(basePath.toPath(parseFile.getFileSystem()), containingLabel);
 
-    BuildFileAST buildFileAst = parseFile(buildFilePath, containingLabel);
+    BuildFileAST buildFileAst =
+        parseSkylarkFile(buildFilePath, containingLabel, getBuckOrPackage().fileKind);
     Globber globber = getGlobber(parseFile.getPath());
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
@@ -201,20 +202,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       return getParseResult(parseFile.getPath(), parseContext, globber, loadedPaths.build());
     }
-  }
-
-  private BuildFileAST parseFile(
-      com.google.devtools.build.lib.vfs.Path parseFilePath, Label containingLabel)
-      throws IOException {
-    BuildFileAST buildFileAst =
-        parseSkylarkFile(parseFilePath, containingLabel, getBuckOrPackage().fileKind);
-
-    if (buildFileAst.containsErrors()) {
-      throw BuildFileParseException.createForUnknownParseError(
-          "Cannot parse build file %s", parseFilePath);
-    }
-
-    return buildFileAst;
   }
 
   /**
@@ -822,7 +809,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad =
         loadImplicitExtension(basePath.toPath(parseFile.getFileSystem()), containingLabel);
-    BuildFileAST buildFileAst = parseFile(buildFilePath, containingLabel);
+
+    BuildFileAST buildFileAst =
+        parseSkylarkFile(buildFilePath, containingLabel, getBuckOrPackage().fileKind);
     ImmutableList<IncludesData> dependencies =
         loadIncludes(containingLabel, buildFileAst.getImports());
 
