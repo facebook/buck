@@ -19,7 +19,10 @@ apple_library(
     srcs = select({
         "//config/os:ios": ["bar-ios.m"],
         "//config/os:tvos": ["bar-tvos.m"],
-    }),
+        "DEFAULT": [],
+    }) + [
+        "bar-all.m",
+    ],
     default_target_platform = "//config/platform:tvos",
 )
 
