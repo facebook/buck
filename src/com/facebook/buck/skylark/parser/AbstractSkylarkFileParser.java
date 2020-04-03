@@ -120,7 +120,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         PackageImplicitIncludesFinder.fromConfiguration(options.getPackageImplicitIncludes());
   }
 
-  abstract FileKind getFileKind();
+  abstract BuckOrPackage getBuckOrPackage();
 
   abstract ParseResult getParseResult(
       Path parseFile, ParseContext context, Globber globber, ImmutableList<String> loadedPaths);
@@ -206,7 +206,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private BuildFileAST parseFile(
       com.google.devtools.build.lib.vfs.Path parseFilePath, Label containingLabel)
       throws IOException {
-    BuildFileAST buildFileAst = parseSkylarkFile(parseFilePath, containingLabel, getFileKind());
+    BuildFileAST buildFileAst =
+        parseSkylarkFile(parseFilePath, containingLabel, getBuckOrPackage().fileKind);
 
     if (buildFileAst.containsErrors()) {
       throw BuildFileParseException.createForUnknownParseError(

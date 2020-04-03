@@ -72,8 +72,8 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
   }
 
   @Override
-  FileKind getFileKind() {
-    return FileKind.BUCK;
+  BuckOrPackage getBuckOrPackage() {
+    return BuckOrPackage.PACKAGE;
   }
 
   @Override

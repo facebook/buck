@@ -104,8 +104,8 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
   }
 
   @Override
-  FileKind getFileKind() {
-    return FileKind.BUCK;
+  BuckOrPackage getBuckOrPackage() {
+    return BuckOrPackage.BUCK;
   }
 
   @Override
