@@ -55,7 +55,7 @@ public class TestRunnerSpecCoercerTest {
   @Test
   public void coerceMapWithMacros() throws CoerceFailedException {
     TestRunnerSpec spec =
-        coercer.coerce(
+        coercer.coerceBoth(
             cellNameResolver,
             filesystem,
             basePath,
@@ -75,7 +75,7 @@ public class TestRunnerSpecCoercerTest {
   @Test
   public void coerceListWithMacros() throws CoerceFailedException {
     TestRunnerSpec spec =
-        coercer.coerce(
+        coercer.coerceBoth(
             cellNameResolver,
             filesystem,
             basePath,
@@ -97,7 +97,7 @@ public class TestRunnerSpecCoercerTest {
   @Test
   public void coerceNestedWithMacros() throws CoerceFailedException {
     TestRunnerSpec spec =
-        coercer.coerce(
+        coercer.coerceBoth(
             cellNameResolver,
             filesystem,
             basePath,
@@ -123,7 +123,7 @@ public class TestRunnerSpecCoercerTest {
   @Test
   public void coerceNumbers() throws CoerceFailedException {
     TestRunnerSpec spec =
-        coercer.coerce(
+        coercer.coerceBoth(
             cellNameResolver,
             filesystem,
             basePath,
@@ -144,7 +144,7 @@ public class TestRunnerSpecCoercerTest {
   @Test
   public void coerceBooleans() throws CoerceFailedException {
     TestRunnerSpec spec =
-        coercer.coerce(
+        coercer.coerceBoth(
             cellNameResolver,
             filesystem,
             basePath,
@@ -166,7 +166,7 @@ public class TestRunnerSpecCoercerTest {
   public void coerceFailsWhenMapKeysNotStringWithMacros() throws CoerceFailedException {
     expectedException.expect(CoerceFailedException.class);
 
-    coercer.coerce(
+    coercer.coerceBoth(
         cellNameResolver,
         filesystem,
         basePath,
@@ -179,7 +179,7 @@ public class TestRunnerSpecCoercerTest {
   public void coerceFailsWhenMapKeysAreInt() throws CoerceFailedException {
     expectedException.expect(CoerceFailedException.class);
 
-    coercer.coerce(
+    coercer.coerceBoth(
         cellNameResolver,
         filesystem,
         basePath,

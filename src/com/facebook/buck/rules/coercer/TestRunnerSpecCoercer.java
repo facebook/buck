@@ -20,9 +20,11 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.test.rule.TestRunnerSpec;
+import com.facebook.buck.core.test.rule.UnconfiguredTestRunnerSpec;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import java.util.Map;
@@ -31,14 +33,15 @@ import java.util.Map;
  * Coerces a freeform JSON as a {@link TestRunnerSpec}, which is basically a JSON containing {@link
  * StringWithMacros}
  */
-public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec> {
+public class TestRunnerSpecCoercer
+    implements TypeCoercer<UnconfiguredTestRunnerSpec, TestRunnerSpec> {
 
   private final TypeCoercer<UnconfiguredStringWithMacros, StringWithMacros> macrosTypeCoercer;
   private final TypeCoercer<
-          ImmutableMap<UnconfiguredStringWithMacros, Object>,
+          ImmutableMap<UnconfiguredStringWithMacros, UnconfiguredTestRunnerSpec>,
           ImmutableMap<StringWithMacros, TestRunnerSpec>>
       mapTypeCoercer;
-  private final ListTypeCoercer<Object, TestRunnerSpec> listTypeCoercer;
+  private final ListTypeCoercer<UnconfiguredTestRunnerSpec, TestRunnerSpec> listTypeCoercer;
 
   public TestRunnerSpecCoercer(
       TypeCoercer<UnconfiguredStringWithMacros, StringWithMacros> macrosTypeCoercer) {
@@ -53,8 +56,8 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<UnconfiguredTestRunnerSpec> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredTestRunnerSpec.class);
   }
 
   @Override
@@ -66,14 +69,31 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
   public void traverse(CellNameResolver cellRoots, TestRunnerSpec object, Traversal traversal) {}
 
   @Override
-  public Object coerceToUnconfigured(
+  public UnconfiguredTestRunnerSpec coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    // TODO(nga): make it 2p
-    return object;
+    if (object instanceof Map) {
+      return UnconfiguredTestRunnerSpec.ofMap(
+          mapTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
+    }
+    if (object instanceof Iterable) {
+      return UnconfiguredTestRunnerSpec.ofList(
+          listTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
+    }
+    if (object instanceof Number) {
+      return UnconfiguredTestRunnerSpec.ofNumber((Number) object);
+    } else if (object instanceof Boolean) {
+      return UnconfiguredTestRunnerSpec.ofBoolean((Boolean) object);
+    } else {
+      return UnconfiguredTestRunnerSpec.ofStringWithMacros(
+          macrosTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object));
+    }
   }
 
   @Override
@@ -83,42 +103,59 @@ public class TestRunnerSpecCoercer implements TypeCoercer<Object, TestRunnerSpec
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      UnconfiguredTestRunnerSpec object)
       throws CoerceFailedException {
+    return object.match(
+        new UnconfiguredTestRunnerSpec.Matcher<TestRunnerSpec, CoerceFailedException>() {
+          @Override
+          public TestRunnerSpec map(
+              ImmutableMap<UnconfiguredStringWithMacros, UnconfiguredTestRunnerSpec> map)
+              throws CoerceFailedException {
+            return TestRunnerSpec.ofMap(
+                mapTypeCoercer.coerce(
+                    cellRoots,
+                    filesystem,
+                    pathRelativeToProjectRoot,
+                    targetConfiguration,
+                    hostConfiguration,
+                    map));
+          }
 
-    if (object instanceof Map) {
-      return TestRunnerSpec.ofMap(
-          mapTypeCoercer.coerceBoth(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object));
-    }
-    if (object instanceof Iterable) {
-      return TestRunnerSpec.ofList(
-          listTypeCoercer.coerceBoth(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object));
-    }
-    if (object instanceof Number) {
-      return TestRunnerSpec.ofNumber((Number) object);
-    } else if (object instanceof Boolean) {
-      return TestRunnerSpec.ofBoolean((Boolean) object);
-    } else {
-      return TestRunnerSpec.ofStringWithMacros(
-          macrosTypeCoercer.coerceBoth(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object));
-    }
+          @Override
+          public TestRunnerSpec list(ImmutableList<UnconfiguredTestRunnerSpec> list)
+              throws CoerceFailedException {
+            return TestRunnerSpec.ofList(
+                listTypeCoercer.coerce(
+                    cellRoots,
+                    filesystem,
+                    pathRelativeToProjectRoot,
+                    targetConfiguration,
+                    hostConfiguration,
+                    list));
+          }
+
+          @Override
+          public TestRunnerSpec stringWithMacros(UnconfiguredStringWithMacros stringWithMacros)
+              throws CoerceFailedException {
+            return TestRunnerSpec.ofStringWithMacros(
+                macrosTypeCoercer.coerce(
+                    cellRoots,
+                    filesystem,
+                    pathRelativeToProjectRoot,
+                    targetConfiguration,
+                    hostConfiguration,
+                    stringWithMacros));
+          }
+
+          @Override
+          public TestRunnerSpec number(Number number) {
+            return TestRunnerSpec.ofNumber(number);
+          }
+
+          @Override
+          public TestRunnerSpec bool(boolean b) {
+            return TestRunnerSpec.ofBoolean(b);
+          }
+        });
   }
 }
