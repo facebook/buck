@@ -26,7 +26,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgFactory;
 import com.facebook.buck.core.util.immutables.RuleArg;
@@ -128,7 +127,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     TypeCoercer<Path, Path> pathTypeCoercer = new PathTypeCoercer();
     TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer =
         new SourcePathTypeCoercer(buildTargetWithOutputsTypeCoercer, pathTypeCoercer);
-    TypeCoercer<Object, SourceWithFlags> sourceWithFlagsTypeCoercer =
+    SourceWithFlagsTypeCoercer sourceWithFlagsTypeCoercer =
         new SourceWithFlagsTypeCoercer(
             sourcePathTypeCoercer, new ListTypeCoercer<>(stringTypeCoercer));
     TypeCoercer<Integer, Integer> intTypeCoercer = new NumberTypeCoercer<>(Integer.class);

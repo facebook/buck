@@ -50,6 +50,7 @@ import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourceWithFlags;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -116,7 +117,11 @@ public class TargetNodeTest {
                 UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
                     "example/path/MyClass.java")),
             "appleSource",
-            Optional.of("//example/path:five"),
+            Optional.of(
+                UnconfiguredSourceWithFlags.of(
+                    UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
+                        "//example/path:five"),
+                    ImmutableList.of())),
             "source",
             Optional.of(Paths.get("example/path/AnotherClass.java")));
 

@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourceWithFlags;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
@@ -29,15 +30,17 @@ import java.util.List;
 
 /** Coerce to {@link com.facebook.buck.rules.coercer.SourceWithFlagsList}. */
 public class SourceWithFlagsListTypeCoercer implements TypeCoercer<Object, SourceWithFlagsList> {
-  private final TypeCoercer<ImmutableList<Object>, ImmutableSortedSet<SourceWithFlags>>
+  private final TypeCoercer<
+          ImmutableList<UnconfiguredSourceWithFlags>, ImmutableSortedSet<SourceWithFlags>>
       unnamedSourcesTypeCoercer;
   private final TypeCoercer<
-          ImmutableSortedMap<String, Object>, ImmutableSortedMap<String, SourceWithFlags>>
+          ImmutableSortedMap<String, UnconfiguredSourceWithFlags>,
+          ImmutableSortedMap<String, SourceWithFlags>>
       namedSourcesTypeCoercer;
 
   SourceWithFlagsListTypeCoercer(
       TypeCoercer<String, String> stringTypeCoercer,
-      TypeCoercer<Object, SourceWithFlags> sourceWithFlagsTypeCoercer) {
+      TypeCoercer<UnconfiguredSourceWithFlags, SourceWithFlags> sourceWithFlagsTypeCoercer) {
     this.unnamedSourcesTypeCoercer = new SortedSetTypeCoercer<>(sourceWithFlagsTypeCoercer);
     this.namedSourcesTypeCoercer =
         new SortedMapTypeCoercer<>(stringTypeCoercer, sourceWithFlagsTypeCoercer);

@@ -22,6 +22,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
+import com.facebook.buck.core.sourcepath.UnconfiguredSourceWithFlags;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -29,7 +30,8 @@ import com.google.common.reflect.TypeToken;
 import java.util.Collection;
 
 /** A type coercer to handle source entries with a list of flags. */
-public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWithFlags> {
+public class SourceWithFlagsTypeCoercer
+    implements TypeCoercer<UnconfiguredSourceWithFlags, SourceWithFlags> {
   private final TypeCoercer<UnconfiguredSourcePath, SourcePath> sourcePathTypeCoercer;
   private final TypeCoercer<ImmutableList<String>, ImmutableList<String>> flagsTypeCoercer;
   private final TypeCoercer<
@@ -52,8 +54,8 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWit
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<UnconfiguredSourceWithFlags> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredSourceWithFlags.class);
   }
 
   @Override
@@ -68,13 +70,34 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWit
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public UnconfiguredSourceWithFlags coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    return object;
+
+    // We're expecting one of two types here. They can be differentiated pretty easily.
+    if (object instanceof String) {
+      return UnconfiguredSourceWithFlags.of(
+          sourcePathTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object),
+          ImmutableList.of());
+    }
+
+    // If we get this far, we're dealing with a Pair of a SourcePath and a String.
+    if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
+      Pair<UnconfiguredSourcePath, ImmutableList<String>> sourcePathWithFlags =
+          sourcePathWithFlagsTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, object);
+      return UnconfiguredSourceWithFlags.of(
+          sourcePathWithFlags.getFirst(), sourcePathWithFlags.getSecond());
+    }
+
+    throw CoerceFailedException.simple(
+        object,
+        getOutputType(),
+        "input should be either a source path or a pair of a source path and a list of flags");
   }
 
   @Override
@@ -84,40 +107,8 @@ public class SourceWithFlagsTypeCoercer implements TypeCoercer<Object, SourceWit
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      UnconfiguredSourceWithFlags object)
       throws CoerceFailedException {
-    if (object instanceof SourceWithFlags) {
-      return (SourceWithFlags) object;
-    }
-
-    // We're expecting one of two types here. They can be differentiated pretty easily.
-    if (object instanceof String) {
-      return SourceWithFlags.of(
-          sourcePathTypeCoercer.coerceBoth(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object));
-    }
-
-    // If we get this far, we're dealing with a Pair of a SourcePath and a String.
-    if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
-      Pair<SourcePath, ImmutableList<String>> sourcePathWithFlags =
-          sourcePathWithFlagsTypeCoercer.coerceBoth(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object);
-      return SourceWithFlags.of(sourcePathWithFlags.getFirst(), sourcePathWithFlags.getSecond());
-    }
-
-    throw CoerceFailedException.simple(
-        object,
-        getOutputType(),
-        "input should be either a source path or a pair of a source path and a list of flags");
+    return object.configure(cellRoots, filesystem, targetConfiguration);
   }
 }
