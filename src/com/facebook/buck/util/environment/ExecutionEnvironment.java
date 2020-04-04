@@ -43,4 +43,7 @@ public interface ExecutionEnvironment {
 
   /** Gets the environment variable indicated by the specified key. */
   Optional<String> getenv(String key);
+
+  /** @return The oncall responsible for the invocation of Buck, if provided. */
+  Optional<String> getOncall();
 }

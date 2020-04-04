@@ -51,6 +51,9 @@ public abstract class FakeExecutionEnvironment implements ExecutionEnvironment {
     return Optional.ofNullable(getEnvironment().get(key));
   }
 
+  @Override
+  public abstract Optional<String> getOncall();
+
   public static FakeExecutionEnvironment of(
       String hostname,
       String username,
@@ -59,7 +62,8 @@ public abstract class FakeExecutionEnvironment implements ExecutionEnvironment {
       Platform platform,
       Network likelyActiveNetwork,
       Optional<String> wifiSsid,
-      Map<String, ? extends String> environment) {
+      Map<String, ? extends String> environment,
+      Optional<String> oncall) {
     return ImmutableFakeExecutionEnvironment.ofImpl(
         hostname,
         username,
@@ -68,6 +72,7 @@ public abstract class FakeExecutionEnvironment implements ExecutionEnvironment {
         platform,
         likelyActiveNetwork,
         wifiSsid,
-        environment);
+        environment,
+        oncall);
   }
 }

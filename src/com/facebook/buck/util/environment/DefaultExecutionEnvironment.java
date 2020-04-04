@@ -83,4 +83,9 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   public Optional<String> getenv(String key) {
     return Optional.ofNullable(environment.get(key));
   }
+
+  @Override
+  public Optional<String> getOncall() {
+    return Optional.empty();
+  }
 }
