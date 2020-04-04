@@ -26,7 +26,9 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
+import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleCreationContextWithTargetGraph;
@@ -75,13 +77,17 @@ public class PythonBinaryDescription
     implements DescriptionWithTargetGraph<PythonBinaryDescriptionArg>,
         ImplicitDepsInferringDescription<
             PythonBinaryDescription.AbstractPythonBinaryDescriptionArg>,
-        VersionRoot<PythonBinaryDescriptionArg> {
+        VersionRoot<PythonBinaryDescriptionArg>,
+        Flavored {
 
   private static final Logger LOG = Logger.get(PythonBinaryDescription.class);
 
   private final ToolchainProvider toolchainProvider;
   private final PythonBuckConfig pythonBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+
+  static FlavorDomain<PythonBuckConfig.PackageStyle> PACKAGE_STYLE =
+      FlavorDomain.from("Package Style", PythonBuckConfig.PackageStyle.class);
 
   public PythonBinaryDescription(
       ToolchainProvider toolchainProvider,
@@ -99,6 +105,12 @@ public class PythonBinaryDescription
 
   public static BuildTarget getEmptyInitTarget(BuildTarget baseTarget) {
     return baseTarget.withAppendedFlavors(InternalFlavor.of("__init__"));
+  }
+
+  @Override
+  public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
+      TargetConfiguration toolchainTargetConfiguration) {
+    return Optional.of(ImmutableSet.of(PACKAGE_STYLE));
   }
 
   public static SourcePath createEmptyInitModule(
@@ -269,6 +281,13 @@ public class PythonBinaryDescription
                 .orElse(cxxPlatformsProvider.getDefaultUnresolvedCxxPlatform()));
   }
 
+  private PythonBuckConfig.PackageStyle getPackageStyle(
+      BuildTarget target, AbstractPythonBinaryDescriptionArg args) {
+    return PACKAGE_STYLE
+        .getValue(target)
+        .orElse(args.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle()));
+  }
+
   @Override
   public PythonBinary createBuildRule(
       BuildRuleCreationContextWithTargetGraph context,
@@ -376,7 +395,7 @@ public class PythonBinaryDescription
         args.getExtension(),
         allPackageComponents,
         args.getBuildArgs(),
-        args.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle()),
+        getPackageStyle(buildTarget, args),
         PythonUtil.getPreloadNames(graphBuilder, cxxPlatform, args.getPreloadDeps()));
   }
 
@@ -393,8 +412,7 @@ public class PythonBinaryDescription
         getCxxPlatform(buildTarget, constructorArg)
             .getLinkerParseTimeDeps(buildTarget.getTargetConfiguration()));
 
-    if (constructorArg.getPackageStyle().orElse(pythonBuckConfig.getPackageStyle())
-        == PythonBuckConfig.PackageStyle.STANDALONE) {
+    if (getPackageStyle(buildTarget, constructorArg) == PythonBuckConfig.PackageStyle.STANDALONE) {
       Optionals.addIfPresent(
           pythonBuckConfig.getPexTarget(buildTarget.getTargetConfiguration()), extraDepsBuilder);
       Optionals.addIfPresent(

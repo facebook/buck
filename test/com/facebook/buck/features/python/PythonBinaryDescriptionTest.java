@@ -82,6 +82,7 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.util.cache.FileHashCacheMode;
 import com.facebook.buck.util.cache.impl.StackedFileHashCache;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -1009,6 +1010,27 @@ public class PythonBinaryDescriptionTest {
             Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libASrc)),
             Matchers.not(
                 Matchers.hasItem(graphBuilder.getSourcePathResolver().getAbsolutePath(libBSrc)))));
+  }
+
+  @Test
+  public void packageStyleFlavor() {
+    for (Pair<PythonBuckConfig.PackageStyle, ? extends Class<?>> style :
+        ImmutableList.of(
+            new Pair<>(PythonBuckConfig.PackageStyle.INPLACE, PythonInPlaceBinary.class),
+            new Pair<>(PythonBuckConfig.PackageStyle.STANDALONE, PythonPackagedBinary.class))) {
+      PythonBinaryBuilder pythonBinaryBuilder =
+          PythonBinaryBuilder.create(BuildTargetFactory.newInstance("//:bin"))
+              .setMainModule("main");
+      TargetGraph targetGraph = TargetGraphFactory.newInstance(pythonBinaryBuilder.build());
+      ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+      PythonBinary pythonBinary =
+          (PythonBinary)
+              graphBuilder.requireRule(
+                  pythonBinaryBuilder
+                      .getTarget()
+                      .withAppendedFlavors(style.getFirst().getFlavor()));
+      assertThat(pythonBinary, Matchers.instanceOf(style.getSecond()));
+    }
   }
 
   private RuleKey calculateRuleKey(BuildRuleResolver ruleResolver, BuildRule rule) {
