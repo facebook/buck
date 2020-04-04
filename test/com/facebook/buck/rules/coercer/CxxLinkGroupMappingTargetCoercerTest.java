@@ -61,7 +61,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     String targetString = "//foo:bar";
     ImmutableList<Object> input = ImmutableList.of(targetString, "tree");
     CxxLinkGroupMappingTarget target =
-        coercer.coerce(
+        coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
@@ -77,7 +77,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     String targetString = "//foo:bar";
     ImmutableList<Object> input = ImmutableList.of(targetString, "node");
     CxxLinkGroupMappingTarget target =
-        coercer.coerce(
+        coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,
@@ -95,7 +95,7 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     String labelMatch = "label:" + labelRegex;
     ImmutableList<Object> input = ImmutableList.of(targetString, "tree", labelMatch);
     CxxLinkGroupMappingTarget target =
-        coercer.coerce(
+        coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,

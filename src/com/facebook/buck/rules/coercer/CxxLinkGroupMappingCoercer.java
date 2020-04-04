@@ -19,6 +19,8 @@ package com.facebook.buck.rules.coercer;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
+import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMapping;
+import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -33,18 +35,23 @@ import java.util.Collection;
  * <p>This {@link TypeCoercer} is used to convert a single link group mapping entry (i.e., single
  * element in the list of <code>link_group_map</code> to a {@link CxxLinkGroupMapping}.
  */
-public class CxxLinkGroupMappingCoercer implements TypeCoercer<Object, CxxLinkGroupMapping> {
+public class CxxLinkGroupMappingCoercer
+    implements TypeCoercer<UnconfiguredCxxLinkGroupMapping, CxxLinkGroupMapping> {
   private final TypeCoercer<String, String> linkGroupTypeCoercer;
-  private final TypeCoercer<ImmutableList<Object>, ImmutableList<CxxLinkGroupMappingTarget>>
+  private final TypeCoercer<
+          ImmutableList<UnconfiguredCxxLinkGroupMappingTarget>,
+          ImmutableList<CxxLinkGroupMappingTarget>>
       mappingTargetsCoercer;
   private final TypeCoercer<
-          Pair<String, ImmutableList<Object>>,
+          Pair<String, ImmutableList<UnconfiguredCxxLinkGroupMappingTarget>>,
           Pair<String, ImmutableList<CxxLinkGroupMappingTarget>>>
       buildTargetWithTraversalTypeCoercer;
 
   public CxxLinkGroupMappingCoercer(
       TypeCoercer<String, String> linkGroupTypeCoercer,
-      TypeCoercer<ImmutableList<Object>, ImmutableList<CxxLinkGroupMappingTarget>>
+      TypeCoercer<
+              ImmutableList<UnconfiguredCxxLinkGroupMappingTarget>,
+              ImmutableList<CxxLinkGroupMappingTarget>>
           mappingTargetCoercer) {
     this.linkGroupTypeCoercer = linkGroupTypeCoercer;
     this.mappingTargetsCoercer = mappingTargetCoercer;
@@ -58,8 +65,8 @@ public class CxxLinkGroupMappingCoercer implements TypeCoercer<Object, CxxLinkGr
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<UnconfiguredCxxLinkGroupMapping> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredCxxLinkGroupMapping.class);
   }
 
   @Override
@@ -76,13 +83,25 @@ public class CxxLinkGroupMappingCoercer implements TypeCoercer<Object, CxxLinkGr
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public UnconfiguredCxxLinkGroupMapping coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    return object;
+    if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
+      Pair<String, ImmutableList<UnconfiguredCxxLinkGroupMappingTarget>>
+          linkGroupWithMappingTargets =
+              buildTargetWithTraversalTypeCoercer.coerceToUnconfigured(
+                  cellRoots, filesystem, pathRelativeToProjectRoot, object);
+      return UnconfiguredCxxLinkGroupMapping.of(
+          linkGroupWithMappingTargets.getFirst(), linkGroupWithMappingTargets.getSecond());
+    }
+
+    throw CoerceFailedException.simple(
+        object,
+        getOutputType(),
+        "input should be pair of a link group and list of mapping targets");
   }
 
   @Override
@@ -92,29 +111,16 @@ public class CxxLinkGroupMappingCoercer implements TypeCoercer<Object, CxxLinkGr
       ForwardRelativePath pathRelativeToProjectRoot,
       TargetConfiguration targetConfiguration,
       TargetConfiguration hostConfiguration,
-      Object object)
+      UnconfiguredCxxLinkGroupMapping object)
       throws CoerceFailedException {
-
-    if (object instanceof CxxLinkGroupMapping) {
-      return (CxxLinkGroupMapping) object;
-    }
-
-    if (object instanceof Collection<?> && ((Collection<?>) object).size() == 2) {
-      Pair<String, ImmutableList<CxxLinkGroupMappingTarget>> linkGroupWithMappingTargets =
-          buildTargetWithTraversalTypeCoercer.coerceBoth(
-              cellRoots,
-              filesystem,
-              pathRelativeToProjectRoot,
-              targetConfiguration,
-              hostConfiguration,
-              object);
-      return CxxLinkGroupMapping.of(
-          linkGroupWithMappingTargets.getFirst(), linkGroupWithMappingTargets.getSecond());
-    }
-
-    throw CoerceFailedException.simple(
-        object,
-        getOutputType(),
-        "input should be pair of a link group and list of mapping targets");
+    return CxxLinkGroupMapping.of(
+        object.getLinkGroup(),
+        mappingTargetsCoercer.coerce(
+            cellRoots,
+            filesystem,
+            pathRelativeToProjectRoot,
+            targetConfiguration,
+            hostConfiguration,
+            object.getMappingTargets()));
   }
 }

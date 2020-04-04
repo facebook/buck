@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
+import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -35,7 +36,7 @@ import java.util.regex.Pattern;
  * ("//Some:Target", "tree")</code>) to a {@link CxxLinkGroupMappingTarget}.
  */
 public class CxxLinkGroupMappingTargetCoercer
-    implements TypeCoercer<Object, CxxLinkGroupMappingTarget> {
+    implements TypeCoercer<UnconfiguredCxxLinkGroupMappingTarget, CxxLinkGroupMappingTarget> {
   private final TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer;
   private final TypeCoercer<
           CxxLinkGroupMappingTarget.Traversal, CxxLinkGroupMappingTarget.Traversal>
@@ -60,8 +61,8 @@ public class CxxLinkGroupMappingTargetCoercer
   }
 
   @Override
-  public TypeToken<Object> getUnconfiguredType() {
-    return TypeToken.of(Object.class);
+  public TypeToken<UnconfiguredCxxLinkGroupMappingTarget> getUnconfiguredType() {
+    return TypeToken.of(UnconfiguredCxxLinkGroupMappingTarget.class);
   }
 
   @Override
@@ -77,64 +78,33 @@ public class CxxLinkGroupMappingTargetCoercer
   }
 
   @Override
-  public Object coerceToUnconfigured(
+  public UnconfiguredCxxLinkGroupMappingTarget coerceToUnconfigured(
       CellNameResolver cellRoots,
       ProjectFilesystem filesystem,
       ForwardRelativePath pathRelativeToProjectRoot,
       Object object)
       throws CoerceFailedException {
-    return object;
-  }
-
-  @Override
-  public CxxLinkGroupMappingTarget coerce(
-      CellNameResolver cellRoots,
-      ProjectFilesystem filesystem,
-      ForwardRelativePath pathRelativeToProjectRoot,
-      TargetConfiguration targetConfiguration,
-      TargetConfiguration hostConfiguration,
-      Object object)
-      throws CoerceFailedException {
-
-    if (object instanceof CxxLinkGroupMappingTarget) {
-      return (CxxLinkGroupMappingTarget) object;
-    }
 
     if (object instanceof Collection<?>) {
       Collection<?> collection = ((Collection<?>) object);
       if (2 <= collection.size() && collection.size() <= 3) {
         Object[] objects = collection.toArray();
-        BuildTarget buildTarget =
-            buildTargetTypeCoercer.coerceBoth(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                hostConfiguration,
-                objects[0]);
+        UnconfiguredBuildTarget buildTarget =
+            buildTargetTypeCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, objects[0]);
         CxxLinkGroupMappingTarget.Traversal traversal =
-            traversalCoercer.coerceBoth(
-                cellRoots,
-                filesystem,
-                pathRelativeToProjectRoot,
-                targetConfiguration,
-                hostConfiguration,
-                objects[1]);
+            traversalCoercer.coerceToUnconfigured(
+                cellRoots, filesystem, pathRelativeToProjectRoot, objects[1]);
         Optional<Pattern> labelPattern = Optional.empty();
         if (collection.size() >= 3) {
           String regexString = extractLabelRegexString(objects[2]);
           labelPattern =
               Optional.of(
-                  patternTypeCoercer.coerceBoth(
-                      cellRoots,
-                      filesystem,
-                      pathRelativeToProjectRoot,
-                      targetConfiguration,
-                      hostConfiguration,
-                      regexString));
+                  patternTypeCoercer.coerceToUnconfigured(
+                      cellRoots, filesystem, pathRelativeToProjectRoot, regexString));
         }
 
-        return CxxLinkGroupMappingTarget.of(buildTarget, traversal, labelPattern);
+        return UnconfiguredCxxLinkGroupMappingTarget.of(buildTarget, traversal, labelPattern);
       }
     }
 
@@ -157,5 +127,20 @@ public class CxxLinkGroupMappingTargetCoercer
     }
 
     return prefixWithRegex.substring(LABEL_REGEX_PREFIX.length());
+  }
+
+  @Override
+  public CxxLinkGroupMappingTarget coerce(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      TargetConfiguration targetConfiguration,
+      TargetConfiguration hostConfiguration,
+      UnconfiguredCxxLinkGroupMappingTarget object)
+      throws CoerceFailedException {
+    return CxxLinkGroupMappingTarget.of(
+        object.getBuildTarget().configure(targetConfiguration),
+        object.getTraversal(),
+        object.getLabelPattern());
   }
 }

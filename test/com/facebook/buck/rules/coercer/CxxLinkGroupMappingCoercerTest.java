@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
+import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -36,7 +37,8 @@ public class CxxLinkGroupMappingCoercerTest {
   private CxxLinkGroupMappingCoercer coercer;
 
   public static CxxLinkGroupMappingCoercer buildTypeCoercer(
-      TypeCoercer<Object, CxxLinkGroupMappingTarget> targetTypeCoercer) {
+      TypeCoercer<UnconfiguredCxxLinkGroupMappingTarget, CxxLinkGroupMappingTarget>
+          targetTypeCoercer) {
     return new CxxLinkGroupMappingCoercer(
         new StringTypeCoercer(), new ListTypeCoercer<>(targetTypeCoercer));
   }
@@ -45,8 +47,8 @@ public class CxxLinkGroupMappingCoercerTest {
   public void setUp() {
     CxxLinkGroupMappingTargetTraversalCoercer traversalCoercer =
         CxxLinkGroupMappingTargetTraversalCoercerTest.buildTypeCoercer();
-    TypeCoercer<Object, CxxLinkGroupMappingTarget> targetTypeCoercer =
-        CxxLinkGroupMappingTargetCoercerTest.buildTypeCoercer(traversalCoercer);
+    TypeCoercer<UnconfiguredCxxLinkGroupMappingTarget, CxxLinkGroupMappingTarget>
+        targetTypeCoercer = CxxLinkGroupMappingTargetCoercerTest.buildTypeCoercer(traversalCoercer);
     coercer = buildTypeCoercer(targetTypeCoercer);
   }
 
@@ -62,7 +64,7 @@ public class CxxLinkGroupMappingCoercerTest {
     ImmutableList<Object> linkGroupMap = ImmutableList.of(linkGroup, targetMappings);
 
     CxxLinkGroupMapping mapping =
-        coercer.coerce(
+        coercer.coerceBoth(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             basePath,

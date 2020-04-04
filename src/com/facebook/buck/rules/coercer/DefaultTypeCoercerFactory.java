@@ -18,8 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.description.arg.DataTransferObject;
-import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
+import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -142,12 +142,14 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
         buildTargetsTypeCoercer = new ListTypeCoercer<>(buildTargetTypeCoercer);
     TypeCoercer<CxxLinkGroupMappingTarget.Traversal, CxxLinkGroupMappingTarget.Traversal>
         linkGroupMappingTraversalCoercer = new CxxLinkGroupMappingTargetTraversalCoercer();
-    TypeCoercer<Object, CxxLinkGroupMappingTarget> linkGroupMappingTargetCoercer =
+    CxxLinkGroupMappingTargetCoercer linkGroupMappingTargetCoercer =
         new CxxLinkGroupMappingTargetCoercer(
             buildTargetTypeCoercer, linkGroupMappingTraversalCoercer, patternTypeCoercer);
-    TypeCoercer<ImmutableList<Object>, ImmutableList<CxxLinkGroupMappingTarget>>
+    TypeCoercer<
+            ImmutableList<UnconfiguredCxxLinkGroupMappingTarget>,
+            ImmutableList<CxxLinkGroupMappingTarget>>
         linkGroupMappingTargetsCoercer = new ListTypeCoercer<>(linkGroupMappingTargetCoercer);
-    TypeCoercer<Object, CxxLinkGroupMapping> linkGroupMappingCoercer =
+    CxxLinkGroupMappingCoercer linkGroupMappingCoercer =
         new CxxLinkGroupMappingCoercer(stringTypeCoercer, linkGroupMappingTargetsCoercer);
     TypeCoercer<UnconfiguredStringWithMacros, StringWithMacros> stringWithMacrosCoercer =
         StringWithMacrosTypeCoercer.builder()
