@@ -23,11 +23,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSortedMap;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
 
@@ -40,7 +39,7 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
       Path relativePath,
       ProjectFilesystem filesystem,
       CellPathResolver cellPathResolver) {
-    ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
+    ImmutableMap<Path, Map<Path, Integer>> classUsageMap = tracker.getClassUsageMap();
     try {
       Path parent = relativePath.getParent();
       Preconditions.checkState(filesystem.exists(parent), "directory must exist: %s", parent);
@@ -52,17 +51,14 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
     }
   }
 
-  private static ImmutableSetMultimap<Path, Path> relativizeMap(
-      ImmutableSetMultimap<Path, Path> classUsageMap,
+  private static ImmutableSortedMap<Path, Map<Path, Integer>> relativizeMap(
+      ImmutableMap<Path, Map<Path, Integer>> classUsageMap,
       ProjectFilesystem filesystem,
       CellPathResolver cellPathResolver) {
-    ImmutableSetMultimap.Builder<Path, Path> builder = ImmutableSetMultimap.builder();
+    ImmutableSortedMap.Builder<Path, Map<Path, Integer>> builder =
+        ImmutableSortedMap.naturalOrder();
 
-    // Ensure deterministic ordering.
-    builder.orderKeysBy(Comparator.naturalOrder());
-    builder.orderValuesBy(Comparator.naturalOrder());
-
-    for (Map.Entry<Path, Collection<Path>> jarClassesEntry : classUsageMap.asMap().entrySet()) {
+    for (Map.Entry<Path, Map<Path, Integer>> jarClassesEntry : classUsageMap.entrySet()) {
       Path jarAbsolutePath = jarClassesEntry.getKey();
       // Don't include jars that are outside of the project
       // Paths outside the project would make these class usage files problematic for caching.
@@ -76,7 +72,9 @@ public final class DefaultClassUsageFileWriter implements ClassUsageFileWriter {
           .getPathRelativeToProjectRoot(jarAbsolutePath)
           .map(Optional::of)
           .orElseGet(() -> getCrossCellPath(jarAbsolutePath, cellPathResolver))
-          .ifPresent(projectPath -> builder.putAll(projectPath, jarClassesEntry.getValue()));
+          .ifPresent(
+              projectPath ->
+                  builder.put(projectPath, ImmutableSortedMap.copyOf(jarClassesEntry.getValue())));
     }
 
     return builder.build();

@@ -144,7 +144,7 @@ public class DefaultClassUsageFileWriterTest {
         new String(Files.readAllBytes(outputOne)),
         new JsonMatcher(
             String.format(
-                "{" + "\"home.jar\": [\"HomeCellClass\"], %s: [ \"AwayCellClass\" ]" + "}",
+                "{%s: {\"AwayCellClass\":1},\"home.jar\":{\"HomeCellClass\":1}}",
                 escapedExpectedAwayCellPath)));
   }
 }

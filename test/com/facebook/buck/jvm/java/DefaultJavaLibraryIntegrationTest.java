@@ -40,7 +40,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.json.HasJsonField;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.jvm.java.testutil.Bootclasspath;
@@ -777,12 +776,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
     JsonNode jsonNode = ObjectMappers.READER.readTree(lines.get(0));
-    assertThat(
-        jsonNode,
-        new HasJsonField(
-            utilJarPath,
-            Matchers.equalTo(
-                ObjectMappers.legacyCreate().valueToTree(new String[] {utilClassPath}))));
+    assertEquals(
+        jsonNode.toString(), String.format("{\"%s\":{\"%s\":1}}", utilJarPath, utilClassPath));
   }
 
   @Test
@@ -858,7 +853,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     String utilClassPath = MorePaths.pathWithPlatformSeparators("com/example/Util.class");
 
     JsonMatcher expectedOutputMatcher =
-        new JsonMatcher(String.format("{ \"%s\": [ \"%s\" ] }", utilJarPath, utilClassPath));
+        new JsonMatcher(String.format("{\"%s\":{\"%s\":1}}", utilJarPath, utilClassPath));
     assertThat(usedClasses, expectedOutputMatcher);
   }
 

@@ -21,8 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.jimfs.Configuration;
 import com.google.common.jimfs.Jimfs;
@@ -31,6 +30,8 @@ import java.io.IOException;
 import java.nio.file.FileSystem;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Set;
 import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
 import org.junit.Before;
@@ -282,6 +283,16 @@ public class ClassUsageTrackerTest {
   }
 
   @Test
+  public void readingFileTwiceShouldBeTracked() throws IOException {
+    JavaFileObject javaFileObject =
+        fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
+
+    javaFileObject.openReader(false);
+    javaFileObject.openReader(false);
+    assertFileWasReadWithCount(TEST_JAR_PATH, SINGLE_FILE_NAME, 2);
+  }
+
+  @Test
   public void readingFileWithGetCharContentShouldBeTracked() throws IOException {
     JavaFileObject javaFileObject =
         fileManager.getJavaFileForInput(null, SINGLE_FILE_NAME, JavaFileObject.Kind.CLASS);
@@ -338,16 +349,22 @@ public class ClassUsageTrackerTest {
   }
 
   private boolean fileWasRead(Path jarPath, String fileName) {
-    ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
-    ImmutableSet<Path> paths = classUsageMap.get(jarPath);
+    ImmutableMap<Path, Map<Path, Integer>> classUsageMap = tracker.getClassUsageMap();
+    Set<Path> paths = classUsageMap.get(jarPath).keySet();
 
     return paths.contains(Paths.get(fileName));
   }
 
-  private void assertFilesRead(Path jarPath, String... files) {
-    ImmutableSetMultimap<Path, Path> classUsageMap = tracker.getClassUsageMap();
+  private void assertFileWasReadWithCount(Path jarPath, String fileName, int count) {
+    ImmutableMap<Path, Map<Path, Integer>> classUsageMap = tracker.getClassUsageMap();
 
-    ImmutableSet<Path> paths = classUsageMap.get(jarPath);
+    assertEquals(Integer.valueOf(count), classUsageMap.get(jarPath).get(Paths.get(fileName)));
+  }
+
+  private void assertFilesRead(Path jarPath, String... files) {
+    ImmutableMap<Path, Map<Path, Integer>> classUsageMap = tracker.getClassUsageMap();
+
+    Set<Path> paths = classUsageMap.get(jarPath).keySet();
 
     assertEquals(files.length, paths.size());
 

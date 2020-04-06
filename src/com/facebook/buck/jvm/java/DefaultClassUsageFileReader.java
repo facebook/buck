@@ -39,10 +39,10 @@ class DefaultClassUsageFileReader {
   /** Utility code, not instantiable */
   private DefaultClassUsageFileReader() {}
 
-  private static ImmutableMap<String, ImmutableList<String>> loadClassUsageMap(Path mapFilePath)
-      throws IOException {
+  private static ImmutableMap<String, ImmutableMap<String, Integer>> loadClassUsageMap(
+      Path mapFilePath) throws IOException {
     return ObjectMappers.readValue(
-        mapFilePath, new TypeReference<ImmutableMap<String, ImmutableList<String>>>() {});
+        mapFilePath, new TypeReference<ImmutableMap<String, ImmutableMap<String, Integer>>>() {});
   }
 
   /**
@@ -57,9 +57,10 @@ class DefaultClassUsageFileReader {
       ImmutableMap<Path, SourcePath> jarPathToSourcePath) {
     ImmutableList.Builder<SourcePath> builder = ImmutableList.builder();
     try {
-      ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
-          loadClassUsageMap(classUsageFilePath).entrySet();
-      for (Map.Entry<String, ImmutableList<String>> jarUsedClassesEntry : classUsageEntries) {
+      ImmutableMap<String, ImmutableMap<String, Integer>> classUsageEntries =
+          loadClassUsageMap(classUsageFilePath);
+      for (Map.Entry<String, ImmutableMap<String, Integer>> jarUsedClassesEntry :
+          classUsageEntries.entrySet()) {
         Path jarAbsolutePath =
             convertRecordedJarPathToAbsolute(
                 projectFilesystem, cellPathResolver, jarUsedClassesEntry.getKey());
@@ -70,7 +71,7 @@ class DefaultClassUsageFileReader {
           continue;
         }
 
-        for (String classAbsolutePath : jarUsedClassesEntry.getValue()) {
+        for (String classAbsolutePath : jarUsedClassesEntry.getValue().keySet()) {
           builder.add(ArchiveMemberSourcePath.of(sourcePath, Paths.get(classAbsolutePath)));
         }
       }
@@ -89,12 +90,11 @@ class DefaultClassUsageFileReader {
       Path classUsageFilePath)
       throws IOException {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-    ImmutableSet<Map.Entry<String, ImmutableList<String>>> classUsageEntries =
-        loadClassUsageMap(classUsageFilePath).entrySet();
-    for (Map.Entry<String, ImmutableList<String>> jarUsedClassesEntry : classUsageEntries) {
+    ImmutableMap<String, ImmutableMap<String, Integer>> classUsageEntries =
+        loadClassUsageMap(classUsageFilePath);
+    for (String jarPath : classUsageEntries.keySet()) {
       Path jarAbsolutePath =
-          convertRecordedJarPathToAbsolute(
-              projectFilesystem, cellPathResolver, jarUsedClassesEntry.getKey());
+          convertRecordedJarPathToAbsolute(projectFilesystem, cellPathResolver, jarPath);
       builder.add(jarAbsolutePath);
     }
     return builder.build();
