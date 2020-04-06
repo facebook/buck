@@ -43,7 +43,8 @@ public class PBXBuildPhasesTest {
 
   @Before
   public void setUp() {
-    project = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
+    project =
+        new PBXProject("TestProject", Optional.empty(), AbstractPBXObjectFactory.DefaultFactory());
     serializer = new XcodeprojSerializer(new GidGenerator(), project);
     target = new PBXNativeTarget("TestTarget", AbstractPBXObjectFactory.DefaultFactory());
     project.getTargets().add(target);

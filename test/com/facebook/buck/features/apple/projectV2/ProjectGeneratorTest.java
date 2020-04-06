@@ -4636,7 +4636,7 @@ public class ProjectGeneratorTest {
 
   private XcodeProjectWriteOptions xcodeProjectWriteOptions() {
     return XcodeProjectWriteOptions.of(
-        new PBXProject(PROJECT_NAME, AbstractPBXObjectFactory.DefaultFactory()),
+        new PBXProject(PROJECT_NAME, Optional.empty(), AbstractPBXObjectFactory.DefaultFactory()),
         new PBXObjectGIDFactory(),
         OUTPUT_DIRECTORY);
   }

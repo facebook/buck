@@ -46,8 +46,9 @@ public final class PBXObjectGIDFactory extends AbstractPBXObjectFactory {
   }
 
   @Override
-  public PBXProject createProject(String name) {
-    return objectWithGid(new PBXProject(name, this));
+  public PBXProject createProject(
+      String name, Optional<PBXProject.MainGroupContext> mainGroupContext) {
+    return objectWithGid(new PBXProject(name, mainGroupContext, this));
   }
 
   @Override

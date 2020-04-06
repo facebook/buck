@@ -22,13 +22,15 @@ import static org.junit.Assert.assertTrue;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSString;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
+import java.util.Optional;
 import org.junit.Test;
 
 public class XcodeprojSerializerTest {
 
   @Test
   public void testEmptyProject() {
-    PBXProject project = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
+    PBXProject project =
+        new PBXProject("TestProject", Optional.empty(), AbstractPBXObjectFactory.DefaultFactory());
     XcodeprojSerializer xcodeprojSerializer = new XcodeprojSerializer(new GidGenerator(), project);
     NSDictionary rootObject = xcodeprojSerializer.toPlist();
 

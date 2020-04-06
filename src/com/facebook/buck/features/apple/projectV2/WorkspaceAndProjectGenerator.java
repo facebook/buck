@@ -33,6 +33,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -256,7 +257,13 @@ public class WorkspaceAndProjectGenerator {
     PBXObjectGIDFactory objectFactory = new PBXObjectGIDFactory();
     XcodeProjectWriteOptions xcodeProjectWriteOptions =
         XcodeProjectWriteOptions.of(
-            objectFactory.createProject(workspaceName), objectFactory, outputDirectory);
+            objectFactory.createProject(
+                workspaceName,
+                Optional.of(
+                    new PBXProject.MainGroupContext(
+                        rootCell.getRoot(), RelPath.of(outputDirectory)))),
+            objectFactory,
+            outputDirectory);
 
     generateProject(
         listeningExecutorService,

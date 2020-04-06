@@ -25,6 +25,7 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 /** A collection of files in Xcode's virtual filesystem hierarchy. */
@@ -49,6 +50,30 @@ public class PBXGroup extends PBXReference {
   private final LoadingCache<SourceTreePath, PBXFileReference> fileReferencesBySourceTreePath;
   private final LoadingCache<SourceTreePath, XCVersionGroup> childVersionGroupsBySourceTreePath;
 
+  /**
+   * Cache loader for a PBXGroup type. If `setPath` is true, it will automatically set the path
+   * reference of the PBXGroup. This fork is to maintain backwards compatibility with projectv1;
+   * once v1 is removed, this code can be simplified and this layer of indirection removed.
+   */
+  private static class PBXGroupCacheLoader<T extends PBXGroup> extends CacheLoader<String, T> {
+    private final BiFunction<String, String, T> objectLoader;
+    private final boolean setPath;
+
+    public PBXGroupCacheLoader(BiFunction<String, String, T> objectLoader, boolean setPath) {
+      this.objectLoader = objectLoader;
+      this.setPath = setPath;
+    }
+
+    @Override
+    public T load(String key) {
+      if (this.setPath) {
+        return this.objectLoader.apply(key, key);
+      }
+
+      return this.objectLoader.apply(key, null);
+    }
+  }
+
   public PBXGroup(
       String name,
       @Nullable String path,
@@ -62,27 +87,26 @@ public class PBXGroup extends PBXReference {
     childGroupsByName =
         CacheBuilder.newBuilder()
             .build(
-                new CacheLoader<String, PBXGroup>() {
-                  @Override
-                  public PBXGroup load(String key) {
-                    PBXGroup group = objectFactory.createPBXGroup(key, null, SourceTree.GROUP);
-                    children.add(group);
-                    return group;
-                  }
-                });
+                new PBXGroupCacheLoader<>(
+                    (key, groupPath) -> {
+                      PBXGroup group =
+                          objectFactory.createPBXGroup(key, groupPath, SourceTree.GROUP);
+                      children.add(group);
+                      return group;
+                    },
+                    path != null));
 
     childVariantGroupsByName =
         CacheBuilder.newBuilder()
             .build(
-                new CacheLoader<String, PBXVariantGroup>() {
-                  @Override
-                  public PBXVariantGroup load(String key) {
-                    PBXVariantGroup group =
-                        objectFactory.createVariantGroup(key, null, SourceTree.GROUP);
-                    children.add(group);
-                    return group;
-                  }
-                });
+                new PBXGroupCacheLoader<>(
+                    (key, groupPath) -> {
+                      PBXVariantGroup group =
+                          objectFactory.createVariantGroup(key, groupPath, SourceTree.GROUP);
+                      children.add(group);
+                      return group;
+                    },
+                    path != null));
 
     fileReferencesBySourceTreePath =
         CacheBuilder.newBuilder()

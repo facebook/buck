@@ -48,7 +48,8 @@ public abstract class AbstractPBXObjectFactory {
     return new DefaultPBXObjectFactory();
   }
 
-  public abstract PBXProject createProject(String name);
+  public abstract PBXProject createProject(
+      String name, Optional<PBXProject.MainGroupContext> mainGroupContext);
 
   public abstract PBXBuildFile createBuildFile(PBXReference ref);
 
@@ -93,8 +94,9 @@ public abstract class AbstractPBXObjectFactory {
 /** The default PBX object factory; forwards all calls to the new() */
 final class DefaultPBXObjectFactory extends AbstractPBXObjectFactory {
   @Override
-  public PBXProject createProject(String name) {
-    return new PBXProject(name, this);
+  public PBXProject createProject(
+      String name, Optional<PBXProject.MainGroupContext> mainGroupContext) {
+    return new PBXProject(name, mainGroupContext, this);
   }
 
   @Override

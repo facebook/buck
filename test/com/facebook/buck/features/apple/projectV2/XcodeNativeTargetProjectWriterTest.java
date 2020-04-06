@@ -71,7 +71,8 @@ public class XcodeNativeTargetProjectWriterTest {
   public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     projectFilesystem = new FakeProjectFilesystem();
-    generatedProject = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
+    generatedProject =
+        new PBXProject("TestProject", Optional.empty(), AbstractPBXObjectFactory.DefaultFactory());
     buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     appleConfig = AppleProjectHelper.createDefaultAppleConfig(new FakeProjectFilesystem());
     buildRuleResolver = new TestActionGraphBuilder();

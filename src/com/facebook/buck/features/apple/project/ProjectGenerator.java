@@ -382,7 +382,8 @@ public class ProjectGenerator {
         projectFilesystem.getRootPath(),
         this.pathRelativizer.outputDirToRootRelative(Paths.get(".")));
 
-    this.project = new PBXProject(projectName, AbstractPBXObjectFactory.DefaultFactory());
+    this.project =
+        new PBXProject(projectName, Optional.empty(), AbstractPBXObjectFactory.DefaultFactory());
     this.headerSymlinkTrees = new ArrayList<>();
 
     this.targetNodeToGeneratedProjectTargetBuilder = ImmutableMultimap.builder();

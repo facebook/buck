@@ -91,7 +91,8 @@ public class XcodeNativeTargetProjectWriterTest {
   @Before
   public void setUp() {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
-    generatedProject = new PBXProject("TestProject", AbstractPBXObjectFactory.DefaultFactory());
+    generatedProject =
+        new PBXProject("TestProject", Optional.empty(), AbstractPBXObjectFactory.DefaultFactory());
     buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
     pathRelativizer =
