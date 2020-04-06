@@ -48,4 +48,9 @@ public class ClangWindowsCompiler extends ClangCompiler {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     return builder.add("--rsp-quoting=windows").build();
   }
+
+  @Override
+  public ImmutableList<String> getPicFlags() {
+    return ImmutableList.of();
+  }
 }
