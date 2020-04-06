@@ -29,6 +29,7 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import java.util.function.Function;
 import java.util.stream.StreamSupport;
 
 /** Matches a {@link TargetNode} that corresponds to a single build target */
@@ -87,21 +88,16 @@ public abstract class BuildTargetSpec implements TargetNodeSpec {
   @Override
   public ImmutableMap<BuildTarget, TargetNodeMaybeIncompatible> filter(
       Iterable<TargetNodeMaybeIncompatible> nodes) {
-    TargetNodeMaybeIncompatible firstMatchingNode =
-        StreamSupport.stream(nodes.spliterator(), false)
-            .filter(
-                input ->
-                    input
-                        .getBuildTarget()
-                        .getUnflavoredBuildTarget()
-                        .equals(getUnconfiguredBuildTarget().getUnflavoredBuildTarget()))
-            .findFirst()
-            .orElseThrow(
-                () ->
-                    new IllegalStateException(
-                        "Cannot find target node for build target "
-                            + getUnconfiguredBuildTarget()));
-    return ImmutableMap.of(firstMatchingNode.getBuildTarget(), firstMatchingNode);
+    return StreamSupport.stream(nodes.spliterator(), false)
+        .filter(
+            input ->
+                input
+                    .getBuildTarget()
+                    .getUnflavoredBuildTarget()
+                    .equals(getUnconfiguredBuildTarget().getUnflavoredBuildTarget()))
+        .collect(
+            ImmutableMap.toImmutableMap(
+                TargetNodeMaybeIncompatible::getBuildTarget, Function.identity()));
   }
 
   @Override
