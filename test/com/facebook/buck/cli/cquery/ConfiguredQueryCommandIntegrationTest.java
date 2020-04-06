@@ -108,7 +108,6 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void multipleLinesPrintedForOneTargetInMulitpleConfigurations() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
@@ -117,7 +116,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "cquery",
-            "set(config(//lib:foo, //config/platform:ios) config(//lib:foo, //config/platform:macos))");
+            "config(//lib:foo, //config/platform:ios) + config(//lib:foo, //config/platform:macos)");
     assertLinesMatch(
         "stdout-multiple-lines-printed-for-one-target-in-multiple-configurations",
         result,
