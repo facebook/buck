@@ -265,7 +265,8 @@ public class AndroidInstrumentationApkDescription
             new NoopAndroidNativeTargetConfigurationMatcher(),
             androidBuckConfig.getFailOnLegacyAaptErrors(),
             false /* useAapt2LocaleFiltering */,
-            ImmutableSet.of());
+            ImmutableSet.of(),
+            androidBuckConfig.getRDotJavaWeightFactor());
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
     AndroidBinaryFilesInfo filesInfo =

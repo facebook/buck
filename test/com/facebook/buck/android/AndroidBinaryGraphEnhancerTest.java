@@ -1084,7 +1084,8 @@ public class AndroidBinaryGraphEnhancerTest {
         new NoopAndroidNativeTargetConfigurationMatcher(),
         /* failOnLegacyAapt2Errors */ false,
         false,
-        ImmutableSet.of());
+        ImmutableSet.of(),
+        8);
   }
 
   private NonPreDexedDexBuildable.NonPredexedDexBuildableArgs defaultNonPredexedArgs() {

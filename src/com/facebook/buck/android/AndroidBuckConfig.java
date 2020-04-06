@@ -397,4 +397,8 @@ public class AndroidBuckConfig {
     }
     return null;
   }
+
+  public int getRDotJavaWeightFactor() {
+    return delegate.getInteger("android", "r_dot_java_weight_factor").orElse(8);
+  }
 }
