@@ -1085,7 +1085,8 @@ public class AndroidBinaryGraphEnhancerTest {
         /* failOnLegacyAapt2Errors */ false,
         false,
         ImmutableSet.of(),
-        8);
+        8,
+        ImmutableSet.of());
   }
 
   private NonPreDexedDexBuildable.NonPredexedDexBuildableArgs defaultNonPredexedArgs() {

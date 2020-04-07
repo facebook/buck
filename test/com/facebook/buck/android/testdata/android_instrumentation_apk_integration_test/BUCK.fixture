@@ -7,6 +7,7 @@ android_binary(
     ],
     deps = [
         "//java/com/sample/lib:lib",
+        "//res:res",
     ],
 )
 
@@ -47,5 +48,15 @@ android_instrumentation_apk(
     deps = [
         "//:cxx",
         "//java/com/sample/app:app",
+    ],
+)
+
+android_instrumentation_apk(
+    name = "instrumentation_apk_with_r_dot_java_conflict",
+    apk = ":app",
+    manifest = "AndroidManifest.xml",
+    deps = [
+        "//java/com/sample/app:app",
+        "//res:res2",
     ],
 )

@@ -193,6 +193,11 @@ public class AndroidPackageableCollector {
     return this;
   }
 
+  public void addResourcePackage(BuildTarget owner, String rDotJavaPackage) {
+    ResourceCollector collector = getResourceCollector(owner);
+    collector.addResourcePackage(rDotJavaPackage);
+  }
+
   public AndroidPackageableCollector addNativeLibsDirectory(
       BuildTarget owner, SourcePath nativeLibDir) {
     if (nativeLibsToExclude.contains(nativeLibDir)) {
@@ -393,6 +398,7 @@ public class AndroidPackageableCollector {
         ImmutableList.builder();
     private final ImmutableList.Builder<BuildTarget> resourcesWithAssets = ImmutableList.builder();
     private final ImmutableList.Builder<SourcePath> resourceDirectories = ImmutableList.builder();
+    private final ImmutableSet.Builder<String> resourcePackages = ImmutableSet.builder();
 
     public void addWhitelistedStringDirectories(SourcePath resourceDir) {
       resourceDetailsBuilder.addWhitelistedStringDirectories(resourceDir);
@@ -415,6 +421,7 @@ public class AndroidPackageableCollector {
       resourceDetailsBuilder.setResourcesWithNonEmptyResDir(
           resourcesWithNonEmptyResDir.build().reverse());
 
+      resourceDetailsBuilder.setResourcePackages(resourcePackages.build());
       return resourceDetailsBuilder.build();
     }
 
@@ -425,6 +432,10 @@ public class AndroidPackageableCollector {
     public void doAddResourceDirectory(BuildTarget owner, SourcePath resourceDir) {
       resourcesWithNonEmptyResDir.add(owner);
       resourceDirectories.add(resourceDir);
+    }
+
+    public void addResourcePackage(String rDotJavaPackage) {
+      resourcePackages.add(rDotJavaPackage);
     }
   }
 }

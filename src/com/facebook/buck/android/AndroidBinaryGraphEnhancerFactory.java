@@ -220,7 +220,8 @@ public class AndroidBinaryGraphEnhancerFactory {
         androidBuckConfig.getFailOnLegacyAaptErrors(),
         args.isAapt2LocaleFiltering(),
         args.getExtraFilteredResources(),
-        androidBuckConfig.getRDotJavaWeightFactor());
+        androidBuckConfig.getRDotJavaWeightFactor(),
+        ImmutableSet.of());
   }
 
   private ImmutableSet<String> addFallbackLocales(ImmutableSet<String> locales) {

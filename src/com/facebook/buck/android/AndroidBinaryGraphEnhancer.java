@@ -42,6 +42,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
+import com.facebook.buck.jvm.java.DefaultJavaLibraryRules;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaLibraryClasspathProvider;
@@ -51,6 +52,7 @@ import com.facebook.buck.jvm.java.JavacFactory;
 import com.facebook.buck.jvm.java.JavacLanguageLevelOptions;
 import com.facebook.buck.jvm.java.JavacOptions;
 import com.facebook.buck.jvm.java.PrebuiltJar;
+import com.facebook.buck.jvm.java.RemoveClassesPatternsMatcher;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.BuildConfigFields;
 import com.facebook.buck.rules.coercer.ManifestEntries;
@@ -147,6 +149,7 @@ public class AndroidBinaryGraphEnhancer {
   private final Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex;
   private final AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher;
   private final int rDotJavaWeightFactor;
+  private final ImmutableSet<String> resourcePackagesToExclude;
 
   AndroidBinaryGraphEnhancer(
       ToolchainProvider toolchainProvider,
@@ -216,7 +219,8 @@ public class AndroidBinaryGraphEnhancer {
       boolean failOnLegacyAapt2Errors,
       boolean useAapt2LocaleFiltering,
       ImmutableSet<String> extraFilteredResources,
-      int rDotJavaWeightFactor) {
+      int rDotJavaWeightFactor,
+      ImmutableSet<String> resourcePackagesToExclude) {
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
@@ -306,6 +310,7 @@ public class AndroidBinaryGraphEnhancer {
         javacFactory.create(graphBuilder, null, originalBuildTarget.getTargetConfiguration());
     this.androidNativeTargetConfigurationMatcher = androidNativeTargetConfigurationMatcher;
     this.rDotJavaWeightFactor = rDotJavaWeightFactor;
+    this.resourcePackagesToExclude = resourcePackagesToExclude;
   }
 
   AndroidGraphEnhancementResult createAdditionalBuildables() {
@@ -548,7 +553,8 @@ public class AndroidBinaryGraphEnhancer {
     // Create rule to compile uber R.java sources.
     BuildRuleParams paramsForCompileUberRDotJava =
         buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(trimUberRDotJava));
-    JavaLibrary compileUberRDotJava =
+
+    DefaultJavaLibraryRules.Builder compileUberRDotJavaBuilder =
         DefaultJavaLibrary.rulesBuilder(
                 originalBuildTarget.withAppendedFlavors(COMPILE_UBER_R_DOT_JAVA_FLAVOR),
                 projectFilesystem,
@@ -572,9 +578,18 @@ public class AndroidBinaryGraphEnhancer {
                         paramsForCompileUberRDotJava.getDeclaredDeps().get().stream()
                             .map(BuildRule::getBuildTarget)
                             .collect(Collectors.toList()))
-                    .build())
-            .build()
-            .buildLibrary();
+                    .build());
+
+    if (!resourcePackagesToExclude.isEmpty()) {
+      ImmutableSet<Pattern> excludedResourcePackagePatterns =
+          resourcePackagesToExclude.stream()
+              .map(pkg -> "^" + pkg.replaceAll("\\.", "[.]") + "[.]R([$].*)?$")
+              .map(Pattern::compile)
+              .collect(ImmutableSet.toImmutableSet());
+      compileUberRDotJavaBuilder.setClassesToRemoveFromJar(
+          new RemoveClassesPatternsMatcher(excludedResourcePackagePatterns));
+    }
+    DefaultJavaLibrary compileUberRDotJava = compileUberRDotJavaBuilder.build().buildLibrary();
     graphBuilder.addToIndex(compileUberRDotJava);
     return compileUberRDotJava;
   }

@@ -132,6 +132,9 @@ public class AndroidInstrumentationApkDescription
                 resourceDetails.getResourcesWithNonEmptyResDir(),
                 resourceDetails.getResourcesWithEmptyResButNonEmptyAssetsDir()));
 
+    // Exclude package names used by the APK under test to avoid creating conflicting R classes
+    ImmutableSet<String> resourcePackagesToExclude = resourceDetails.getResourcePackages();
+
     ImmutableCollection<SourcePath> nativeLibsToExclude =
         apkUnderTest
             .getAndroidPackageableCollection()
@@ -266,7 +269,8 @@ public class AndroidInstrumentationApkDescription
             androidBuckConfig.getFailOnLegacyAaptErrors(),
             false /* useAapt2LocaleFiltering */,
             ImmutableSet.of(),
-            androidBuckConfig.getRDotJavaWeightFactor());
+            androidBuckConfig.getRDotJavaWeightFactor(),
+            resourcePackagesToExclude);
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();
     AndroidBinaryFilesInfo filesInfo =

@@ -25,10 +25,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.testutil.AbiCompilationModeTest;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
+import com.facebook.buck.testutil.integration.DexInspector;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import java.io.IOException;
+import java.nio.file.Path;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -90,5 +92,30 @@ public class AndroidInstrumentationApkIntegrationTest extends AbiCompilationMode
             "In //:instrumentation_apk_with_instrumentation_apk, apk='//:app_cxx_lib_dep'"
                 + " must be an android_binary() or apk_genrule() but was"
                 + " android_instrumentation_apk()."));
+  }
+
+  @Test
+  public void instrumentationApkExcludesRDotJava() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "android_instrumentation_apk_integration_test", tmpFolder);
+    workspace.setUp();
+    AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
+    AssumeAndroidPlatform.get(workspace).assumeNdkIsAvailable();
+    setWorkspaceCompilationMode(workspace);
+
+    Path apkUnderTestPath = workspace.buildAndReturnOutput("//:app");
+    DexInspector apkUnderTestDexInspector = new DexInspector(apkUnderTestPath, "classes.dex");
+    apkUnderTestDexInspector.assertTypeExists("Lcom/example/R;");
+    apkUnderTestDexInspector.assertTypeExists("Lcom/example/R$color;");
+
+    Path apkPath =
+        workspace.buildAndReturnOutput("//:instrumentation_apk_with_r_dot_java_conflict");
+    ZipInspector zipInspector = new ZipInspector(apkPath);
+    zipInspector.assertFileExists("classes.dex");
+
+    DexInspector testApkDexInspector = new DexInspector(apkPath, "classes.dex");
+    testApkDexInspector.assertTypeDoesNotExist("Lcom/example/R;");
+    testApkDexInspector.assertTypeDoesNotExist("Lcom/example/R$color;");
   }
 }

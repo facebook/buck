@@ -409,6 +409,9 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
     if (manifestFile != null) {
       collector.addManifestPiece(getBuildTarget(), manifestFile);
     }
+    if (rDotJavaPackageArgument != null) {
+      collector.addResourcePackage(getBuildTarget(), rDotJavaPackageArgument);
+    }
   }
 
   @Override

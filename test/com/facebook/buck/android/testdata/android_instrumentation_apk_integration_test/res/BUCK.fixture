@@ -1,0 +1,17 @@
+android_resource(
+    name = "res",
+    package = "com.example",
+    res = "res",
+    visibility = [
+        "PUBLIC",
+    ],
+)
+
+android_resource(
+    name = "res2",
+    package = "com.example",
+    res = "res2",
+    visibility = [
+        "PUBLIC",
+    ],
+)

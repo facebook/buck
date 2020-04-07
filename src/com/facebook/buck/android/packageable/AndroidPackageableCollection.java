@@ -62,6 +62,13 @@ public interface AndroidPackageableCollection {
     /** Unlike {@link #getResourcesWithNonEmptyResDir}, these resources only contain "assets". */
     public abstract Set<BuildTarget> getResourcesWithEmptyResButNonEmptyAssetsDir();
 
+    /**
+     * A set of package strings used by all resources. Does not include packages read from
+     * AndroidManifest.xml, in instances where no package is passed as an argument to {@link
+     * com.facebook.buck.android.AndroidResource}
+     */
+    public abstract ImmutableSet<String> getResourcePackages();
+
     @Value.Derived
     public boolean hasResources() {
       return !getResourceDirectories().isEmpty();
