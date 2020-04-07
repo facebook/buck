@@ -117,7 +117,7 @@ java_test(
     ),
     has_immutable_types = True,
     deps = [
-        "//src-gen:protobuf",
+        "//src-gen:remoteexecution-protobuf",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",

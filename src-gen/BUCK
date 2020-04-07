@@ -20,7 +20,7 @@ java_library(
 )
 
 java_library(
-    name = "protobuf",
+    name = "remoteexecution-protobuf",
     srcs = glob(
         ["**/remoteexecution/proto/**/*.java"],
     ),

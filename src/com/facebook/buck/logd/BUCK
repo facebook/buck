@@ -8,7 +8,6 @@ java_library(
     exported_deps = [
         ":log4j2-config",
         "//src-gen:logd-protobuf",
-        "//src-gen:protobuf",
         "//src/com/facebook/buck/core/exceptions:exceptions",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/util:constants",
