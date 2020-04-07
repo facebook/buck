@@ -293,8 +293,16 @@
 
   <pathconvert refid="module.processorpath" property="module.processorpath" />
 
-  <target name="clean" description="remove all generated files" depends="clear-successful-build">
-    <delete file="${build.dir}/**" />
+  <target name="clean" description="remove all generated files" depends="clear-successful-build,antout.check" if="dir.exists">
+    <delete includeEmptyDirs="true" >
+      <fileset dir="${build.dir}" includes="**/*" defaultexcludes="no"/>
+    </delete>
+  </target>
+
+  <target name="antout.check">
+    <condition property="dir.exists">
+      <available file="${build.dir}" type="dir"/>
+    </condition>
   </target>
 
   <target name="clear-successful-build">
