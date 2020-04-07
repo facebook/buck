@@ -281,7 +281,7 @@ jobs:
             export PATH="$(pyenv root)/shims:${PATH}"
             export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
             set -eux
-            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.lua.LuaBinaryIntegrationTest#switchingBetweenPacakgedFormats)).*[Ii]ntegration.*'
+            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.lua.LuaBinaryIntegrationTest)).*[Ii]ntegration.*'
             #${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
 
   linux_test_heavy_integration:
@@ -609,7 +609,7 @@ jobs:
             # Should run this:
             #${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
             # But there are some test failures, exclude them for now and fix them later.
-            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest|com.facebook.buck.features.lua.LuaBinaryIntegrationTest#switchingBetweenPacakgedFormats)).*[Ii]ntegration.*'
+            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest|com.facebook.buck.features.lua.LuaBinaryIntegrationTest)).*[Ii]ntegration.*'
 
   macos_test_heavy_integration:
     environment:
