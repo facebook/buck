@@ -3,6 +3,20 @@ version: 2.1
 orbs:
   win: circleci/windows@2.2.0
 
+install_lua: &install_lua
+  name: Install Lua
+  command: |
+    lua_version="5.3.5"
+    curl -R -O http://www.lua.org/ftp/lua-${lua_version}.tar.gz
+    tar zxf lua-${lua_version}.tar.gz
+    cd lua-${lua_version}
+    if [ "${PLATFORM}" == "linux" ]; then
+      make linux install
+    elif [ "${PLATFORM}" == "macos" ]; then
+      make macosx install
+    fi
+    lua -v
+
 install_openjdk8: &install_openjdk8
   name: Install OpenJDK8
   command: |
@@ -178,6 +192,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_lua
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_groovy
@@ -241,6 +257,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_lua
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_ghc
@@ -274,6 +292,8 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - run:
+          <<: *install_lua
       - run:
           <<: *install_android_sdk
       - run:
@@ -487,6 +507,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_lua
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_groovy
@@ -551,6 +573,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_lua
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_ghc
@@ -596,6 +620,8 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - run:
+          <<: *install_lua
       - run:
           <<: *install_android_sdk
       - run:
