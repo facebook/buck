@@ -60,16 +60,13 @@ public class LogFileData {
     return logFilePath;
   }
 
-  public synchronized int getOffset() {
-    return offset;
-  }
-
   /**
-   * Updates current offset
+   * Appends log to storage and updates file offset
    *
-   * @param messageSize message size in bytes
+   * @param message log to be appended to log file
    */
-  public synchronized void updateOffset(int messageSize) {
-    offset += messageSize;
+  public synchronized void updateStorage(String message) {
+    LogdUploader.uploadLogToStorage(buildId, logType, offset, message)
+        .ifPresent(newOffset -> offset = newOffset);
   }
 }

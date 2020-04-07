@@ -304,7 +304,7 @@ public class LogdServer implements LogDaemonServer {
 
       if (IS_UPLOADING_LOG_TO_STORAGE) {
         LogFileData logFileData = fileIdToFileData.get(fileId);
-        LogdUploader.uploadLogToStorage(logFileData, message);
+        logFileData.updateStorage(message);
       }
     }
 

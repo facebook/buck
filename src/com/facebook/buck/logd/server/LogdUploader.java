@@ -109,7 +109,6 @@ public class LogdUploader {
       String buildId, LogType logType) {
     HttpUrl url =
         HttpUrl.get(BASE_URL).newBuilder().addQueryParameter(UUID_FIELD_NAME, buildId).build();
-    LOG.info("Create log file url: {}", url.toString());
 
     String logMessage =
         String.format(
@@ -157,16 +156,16 @@ public class LogdUploader {
   }
 
   /**
-   * Appends logs to an existing file in storage
+   * Appends logs to an existing file in storage.
    *
-   * @param logFileData data object associated with a log file
-   * @param logMessage log to be appended
+   * @param buildId buck command's uuid
+   * @param logType log type
+   * @param currentOffset size of log file in storage
+   * @param logMessage log message to be appended
+   * @return an Optional of the new file offset if append operation is successful or empty otherwise
    */
-  public static void uploadLogToStorage(LogFileData logFileData, String logMessage) {
-    String buildId = logFileData.getBuildId();
-    LogType logType = logFileData.getLogType();
-    int currentOffset = logFileData.getOffset();
-
+  public static Optional<Integer> uploadLogToStorage(
+      String buildId, LogType logType, int currentOffset, String logMessage) {
     HttpUrl url =
         HttpUrl.get(BASE_URL).newBuilder().addQueryParameter(UUID_FIELD_NAME, buildId).build();
 
@@ -189,16 +188,19 @@ public class LogdUploader {
         JsonNode root = objectMapper.readTree(response.body().byteStream());
         String status = root.get(MESSAGE_FIELD_NAME).toString();
         if (status.equals(SUCCESS_MESSAGE)) {
-          logFileData.updateOffset(logMessage.getBytes(StandardCharsets.UTF_8).length);
+          return Optional.of(currentOffset + logMessage.getBytes(StandardCharsets.UTF_8).length);
         } else {
           LOG.error(
-              "Failed to append to {}. Error: {}",
-              logFileData.getLogType().getValueDescriptor().getName(),
+              "Failed to append to {} at offset {}. Error: {}",
+              logType.getValueDescriptor().getName(),
+              currentOffset,
               root.toString());
         }
       }
     } catch (IOException e) {
       LOG.debug("Could not upload log to storage", e);
     }
+
+    return Optional.empty();
   }
 }
