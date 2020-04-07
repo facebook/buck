@@ -123,7 +123,7 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
           message.append("'").append(element).append("'").append(", ");
         }
         message.append("]");
-        throw new JsonParseException(null, message.toString());
+        throw new IllegalArgumentException(message.toString());
       }
     }
     if (token != JsonToken.END_ARRAY) {

@@ -470,9 +470,9 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
               projectPrefix,
               "packageImplicitLoad",
               packageImplicitIncludeFinder.findIncludeForBuildFile(getBasePath(buildFile))));
-      } catch (JsonParseException jpe) {
+      } catch (IllegalArgumentException iae) {
         throw BuildFileParseException.createForBuildFileParseError(
-          buildFile, createParseException(buildFile, buckPyPath.getParent(), jpe.getMessage(), null));
+          buildFile, createParseException(buildFile, buckPyPath.getParent(), iae.getMessage(), null));
       }
       handleDiagnostics(
           buildFile, buckPyPath.getParent(), resultObject.getDiagnostics(), buckEventBus);
