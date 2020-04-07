@@ -34,7 +34,7 @@ import org.junit.runners.model.InitializationError;
  */
 public class CompilerTreeApiTestRunner extends BlockJUnit4ClassRunner {
   private static final Supplier<TestClassLoader> TEST_CLASS_LOADER =
-      MoreSuppliers.memoize(() -> new TestClassLoader());
+      MoreSuppliers.memoize(TestClassLoader::new);
 
   public CompilerTreeApiTestRunner(Class<?> klass) throws InitializationError {
     // The way runners work, the test class has already been loaded (that's how it knows which

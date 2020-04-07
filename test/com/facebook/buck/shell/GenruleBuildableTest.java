@@ -417,7 +417,7 @@ public class GenruleBuildableTest {
 
     ImmutableSet<Path> actual =
         buildable.getOutputs(OutputLabel.of("label2")).stream()
-            .map(p -> outputPathResolver.resolvePath(p))
+            .map(outputPathResolver::resolvePath)
             .collect(ImmutableSet.toImmutableSet());
 
     assertThat(
@@ -451,7 +451,7 @@ public class GenruleBuildableTest {
 
     ImmutableSet<Path> actual =
         buildable.getOutputs(OutputLabel.of("label1")).stream()
-            .map(p -> outputPathResolver.resolvePath(p))
+            .map(outputPathResolver::resolvePath)
             .collect(ImmutableSet.toImmutableSet());
 
     assertThat(
@@ -521,7 +521,7 @@ public class GenruleBuildableTest {
 
     ImmutableSet<Path> actual =
         buildable.getOutputs(OutputLabel.defaultLabel()).stream()
-            .map(p -> outputPathResolver.resolvePath(p))
+            .map(outputPathResolver::resolvePath)
             .collect(ImmutableSet.toImmutableSet());
 
     // "out" uses the legacy path that isn't suffixed with "__"

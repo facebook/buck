@@ -180,8 +180,7 @@ public class JsLibraryDescriptionTest {
     BuildRule filesRule = internalFileRule(scenario.graphBuilder);
     assertThat(
         filesRule.getBuildDeps(),
-        hasItems(
-            Stream.of(a, b, c).map(JsFileMatcher::new).toArray(size -> new JsFileMatcher[size])));
+        hasItems(Stream.of(a, b, c).map(JsFileMatcher::new).toArray(JsFileMatcher[]::new)));
   }
 
   @Test

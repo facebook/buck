@@ -78,7 +78,7 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
 
     SkylarkDict<String, Set<Artifact>> namedOutputs =
         getNamedOutputs(context.actionRegistry(), args);
-    namedOutputs.values().forEach(artifacts -> allArtifactsBuilder.addAll(artifacts));
+    namedOutputs.values().forEach(allArtifactsBuilder::addAll);
 
     FakeAction.FakeActionExecuteLambda actionExecution =
         new FakeAction.FakeActionExecuteLambda() {

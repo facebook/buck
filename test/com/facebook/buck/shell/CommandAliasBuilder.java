@@ -110,10 +110,7 @@ public class CommandAliasBuilder
   }
 
   private void addTargetsForMacros(Stream<StringWithMacros> values) {
-    RichStream.from(
-            values
-                .map(stringWithMacros -> stringWithMacros.getMacros())
-                .flatMap(Collection::stream))
+    RichStream.from(values.map(StringWithMacros::getMacros).flatMap(Collection::stream))
         .map(MacroContainer::getMacro)
         .filter(LocationMacro.class)
         .map(LocationMacro::getTarget)

@@ -91,7 +91,7 @@ public class FlavorDomainTest {
     assertEquals((Integer) 14, lengths.getValue(goodbye));
   }
 
-  class SimpleFlavorConvertible implements FlavorConvertible {
+  static class SimpleFlavorConvertible implements FlavorConvertible {
     final String value;
     final String flavor;
 

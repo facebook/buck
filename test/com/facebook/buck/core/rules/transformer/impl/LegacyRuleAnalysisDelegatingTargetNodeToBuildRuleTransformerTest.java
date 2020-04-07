@@ -75,6 +75,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -85,7 +86,8 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
 
   private final ProjectFilesystem fakeFilesystem = new FakeProjectFilesystem();
 
-  private class FakeRuleRuleDescription<T extends BuildRuleArg> implements RuleDescription<T> {
+  private static class FakeRuleRuleDescription<T extends BuildRuleArg>
+      implements RuleDescription<T> {
     private final RuleDescription<T> delegate;
 
     private FakeRuleRuleDescription(RuleDescription<T> delegate) {
@@ -242,7 +244,7 @@ public class LegacyRuleAnalysisDelegatingTargetNodeToBuildRuleTransformerTest {
                   fakeActionAnalysisRegistry.getRegistered().entrySet().stream()
                       .collect(
                           ImmutableMap.toImmutableMap(
-                              entry -> entry.getKey().getID(), entry -> entry.getValue())));
+                              entry -> entry.getKey().getID(), Map.Entry::getValue)));
             });
 
     TargetNodeToBuildRuleTransformer delegate =

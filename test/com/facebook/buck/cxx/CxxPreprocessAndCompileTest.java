@@ -691,13 +691,13 @@ public class CxxPreprocessAndCompileTest {
   }
 
   @JsonIgnoreType
-  abstract class FileSystemMixIn {}
+  abstract static class FileSystemMixIn {}
 
-  abstract class MemoizingSupplierMixIn<T> {
+  abstract static class MemoizingSupplierMixIn<T> {
     @JsonIgnore Supplier<T> delegate;
   }
 
-  abstract class PreprocessorDelegateMixIn {
+  abstract static class PreprocessorDelegateMixIn {
     @JsonIgnore Optional<BuildRule> aggregatedDeps;
   }
 

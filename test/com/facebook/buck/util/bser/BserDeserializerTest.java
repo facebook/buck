@@ -50,11 +50,11 @@ public class BserDeserializerTest {
   private static final String LONG_11223344CCDDEEFF;
   private static final String REAL_0DOT123456789;
   private static final Map.Entry<String, Object> FOO_MAP_ENTRY =
-      new SimpleImmutableEntry<String, Object>("foo", (byte) 0x23);
+      new SimpleImmutableEntry<>("foo", (byte) 0x23);
   private static final Map.Entry<String, Object> BAR_MAP_ENTRY =
-      new SimpleImmutableEntry<String, Object>("bar", (byte) 0x42);
+      new SimpleImmutableEntry<>("bar", (byte) 0x42);
   private static final Map.Entry<String, Object> BAZ_MAP_ENTRY =
-      new SimpleImmutableEntry<String, Object>("baz", (byte) 0xF0);
+      new SimpleImmutableEntry<>("baz", (byte) 0xF0);
 
   static {
     if (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN) {

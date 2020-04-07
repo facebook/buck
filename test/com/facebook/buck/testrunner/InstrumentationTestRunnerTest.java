@@ -18,7 +18,6 @@ package com.facebook.buck.testrunner;
 
 import com.android.ddmlib.IDevice;
 import com.android.ddmlib.IShellEnabledDevice;
-import com.android.ddmlib.testrunner.ITestRunListener;
 import com.android.ddmlib.testrunner.InstrumentationResultParser;
 import com.android.ddmlib.testrunner.RemoteAndroidTestRunner;
 import com.facebook.buck.android.TestDevice;
@@ -49,7 +48,7 @@ public class InstrumentationTestRunnerTest {
 
     Field field = RemoteAndroidTestRunner.class.getDeclaredField("mParser");
     field.setAccessible(true);
-    field.set(runner, new InstrumentationResultParser("fooBar", new ArrayList<ITestRunListener>()));
+    field.set(runner, new InstrumentationResultParser("fooBar", new ArrayList<>()));
 
     InstrumentationTestRunner.setTrimLine(runner, true);
   }

@@ -95,7 +95,7 @@ public class AndroidBinaryFilesInfoTest {
     Assert.assertEquals(metadataAndSourcePath.getSecond(), dexInfo.getDirectory());
   }
 
-  private class FakePreDexMerge extends PreDexSplitDexMerge {
+  private static class FakePreDexMerge extends PreDexSplitDexMerge {
     DexFilesInfo dexInfo;
     List<Pair<SourcePath, SourcePath>> moduleMetadataAndDexSources;
 

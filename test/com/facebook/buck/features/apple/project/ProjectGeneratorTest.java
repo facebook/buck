@@ -150,6 +150,7 @@ import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -6020,11 +6021,10 @@ public class ProjectGeneratorTest {
     ImmutableSet<PBXBuildPhase> fakeDepPhases =
         FluentIterable.from(pbxTarget.getBuildPhases())
             .filter(
-                phase -> {
-                  return phase
-                      .getName()
-                      .equals(Optional.of("Fake Swift Dependencies (Copy Files Phase)"));
-                })
+                phase ->
+                    phase
+                        .getName()
+                        .equals(Optional.of("Fake Swift Dependencies (Copy Files Phase)")))
             .toSet();
     assertThat(fakeDepPhases.size(), equalTo(1));
 
@@ -6801,13 +6801,11 @@ public class ProjectGeneratorTest {
   private void assertHasConfigurations(PBXTarget target, String... names) {
     Map<String, XCBuildConfiguration> buildConfigurationMap =
         target.getBuildConfigurationList().getBuildConfigurationsByName().asMap();
-    HashSet<String> configs = new HashSet<String>();
+    HashSet<String> configs = new HashSet<>();
     configs.add(CxxPlatformXcodeConfigGenerator.DEBUG_BUILD_CONFIGURATION_NAME);
     configs.add(CxxPlatformXcodeConfigGenerator.PROFILE_BUILD_CONFIGURATION_NAME);
     configs.add(CxxPlatformXcodeConfigGenerator.RELEASE_BUILD_CONFIGURATION_NAME);
-    for (String config : names) {
-      configs.add(config);
-    }
+    configs.addAll(Arrays.asList(names));
     assertEquals(
         "Configuration list has expected number of entries",
         configs.size(),

@@ -676,7 +676,7 @@ public class ArtifactCachesIntegrationTest {
         clientCertificateHandler);
   }
 
-  class NotFoundHandler extends AbstractHandler {
+  static class NotFoundHandler extends AbstractHandler {
 
     private final boolean isThrift;
     private final boolean isStore;

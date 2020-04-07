@@ -952,7 +952,7 @@ public class RuleKeyTest {
 
   interface ExtendsBadUseAndOther extends EmptyInterface, BadUseOfAddValueMethodsToRuleKey {}
 
-  abstract class EmptyClass {}
+  abstract static class EmptyClass {}
 
   abstract class ExtendsFurtherBadUseAndOther extends EmptyClass
       implements EmptyInterface, ExtendsBadUseAndOther {}
@@ -987,7 +987,7 @@ public class RuleKeyTest {
         .build(RuleKey::new);
   }
 
-  abstract class ImplementsBadUseOfAddValueMethodsToRuleKey
+  abstract static class ImplementsBadUseOfAddValueMethodsToRuleKey
       implements BadUseOfAddValueMethodsToRuleKey {}
 
   abstract class DerivedFromImplementsBadUseOfAddValueMethodsToRuleKey

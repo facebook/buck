@@ -53,7 +53,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
 
   @Test
   public void testResultHasCorrectSdkRootTakenFromAppendConfig() {
-    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<>();
     appendConfig.put(CxxPlatformXcodeConfigGenerator.SDKROOT, "somesdkroot");
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformXcodeConfigGenerator.getDefaultXcodeBuildConfigurationsFromCxxPlatform(
@@ -160,7 +160,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
 
   @Test
   public void testResultHasCxxLanguageStardardValueTakenFromAppendConfigIfPresent() {
-    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<>();
     appendConfig.put(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LANGUAGE_STANDARD, "value");
 
     CxxPlatform platform =
@@ -198,7 +198,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
 
   @Test
   public void testResultHasCxxLibraryValueTakenFromAppendConfigIfPresent() {
-    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<>();
     appendConfig.put(CxxPlatformXcodeConfigGenerator.CLANG_CXX_LIBRARY, "value");
 
     CxxPlatform platform =
@@ -234,7 +234,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
 
   @Test
   public void testResultHasOtherCxxFlagsTakenFromPlatformCxxflagsAndMergedWithAppendConfig() {
-    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<>();
     appendConfig.put(CxxPlatformXcodeConfigGenerator.OTHER_CPLUSPLUSFLAGS, "-flag1 -flag2");
     CxxPlatform platform =
         CxxPlatform.builder()
@@ -255,7 +255,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
   public void testResultHasValuesMergedFromAppendConfig() {
     String someCrazyKey = "SOME_CRAZY_KEY";
 
-    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<>();
     appendConfig.put(someCrazyKey, "value");
 
     CxxPlatform platform =
@@ -278,7 +278,7 @@ public class CxxPlatformXcodeConfigGeneratorTest {
   public void testAllBuildConfigurationsHaveSameConfigs() {
     String someCrazyKey = "SOME_CRAZY_KEY";
 
-    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendConfig = new LinkedHashMap<>();
     appendConfig.put(someCrazyKey, "value");
 
     CxxPlatform platform =

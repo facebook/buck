@@ -61,7 +61,7 @@ public class FixEndToEndTest {
   }
 
   private String fixPyCommand() {
-    String command = String.format("{repository_root}/fix.py --build-details {fix_spec_path}");
+    String command = "{repository_root}/fix.py --build-details {fix_spec_path}";
     if (Platform.detect() == Platform.WINDOWS) {
       command = String.format("%s %s", findPython(), command);
     }

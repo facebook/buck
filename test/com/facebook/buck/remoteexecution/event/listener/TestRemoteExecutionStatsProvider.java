@@ -37,7 +37,7 @@ public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsPro
 
   public TestRemoteExecutionStatsProvider() {
     for (State state : State.values()) {
-      actionsPerState.put(state, new Integer(0));
+      actionsPerState.put(state, 0);
     }
   }
 

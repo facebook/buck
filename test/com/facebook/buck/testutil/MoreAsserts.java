@@ -164,7 +164,7 @@ public final class MoreAsserts {
       failWith(
           userMessage,
           "Found "
-              + Integer.valueOf(seen)
+              + seen
               + " occurrences of '"
               + expectedItem
               + "' in container, expected to find only one.");
@@ -224,9 +224,7 @@ public final class MoreAsserts {
   public static void assertStepsNames(
       String userMessage, List<String> expectedStepDescriptions, List<Step> observedSteps) {
     ImmutableList<String> commands =
-        observedSteps.stream()
-            .map(step -> step.getShortName())
-            .collect(ImmutableList.toImmutableList());
+        observedSteps.stream().map(Step::getShortName).collect(ImmutableList.toImmutableList());
     assertListEquals(userMessage, expectedStepDescriptions, commands);
   }
 

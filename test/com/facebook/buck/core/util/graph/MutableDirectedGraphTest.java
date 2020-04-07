@@ -28,7 +28,7 @@ public class MutableDirectedGraphTest {
 
   @Test
   public void testCreateNewGraph() {
-    MutableDirectedGraph<String> graph = new MutableDirectedGraph<String>();
+    MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
     assertEquals(0, graph.getNodeCount());
     assertEquals(0, graph.getEdgeCount());
     assertFalse(graph.containsNode("A"));
@@ -39,7 +39,7 @@ public class MutableDirectedGraphTest {
 
   @Test
   public void testCreateGraphWithOneEdge() {
-    MutableDirectedGraph<String> graph = new MutableDirectedGraph<String>();
+    MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
     Set<String> nodesView = graph.getNodes();
     assertEquals(ImmutableSet.<String>of(), nodesView);
     graph.addEdge("A", "B");
@@ -57,7 +57,7 @@ public class MutableDirectedGraphTest {
    */
   @Test
   public void testAddSelfReferentialEdge() {
-    MutableDirectedGraph<String> graph = new MutableDirectedGraph<String>();
+    MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
     graph.addEdge("A", "A");
     assertEquals(1, graph.getNodeCount());
     assertEquals(1, graph.getEdgeCount());
@@ -81,7 +81,7 @@ public class MutableDirectedGraphTest {
 
   @Test
   public void testIsAcyclic() {
-    MutableDirectedGraph<String> graph = new MutableDirectedGraph<String>();
+    MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
     graph.addEdge("A", "B");
     assertTrue(graph.isAcyclic());
     graph.addEdge("B", "C");
@@ -101,7 +101,7 @@ public class MutableDirectedGraphTest {
 
   @Test
   public void testFindCycles() {
-    MutableDirectedGraph<String> graph = new MutableDirectedGraph<String>();
+    MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
     graph.addEdge("A", "B");
     graph.addEdge("B", "C");
     graph.addEdge("C", "A");
@@ -116,7 +116,7 @@ public class MutableDirectedGraphTest {
 
   @Test
   public void testTrivialDisconnectedGraphIsAcyclic() {
-    MutableDirectedGraph<String> graph = new MutableDirectedGraph<String>();
+    MutableDirectedGraph<String> graph = new MutableDirectedGraph<>();
     graph.addNode("A");
     graph.addNode("B");
     graph.addNode("C");

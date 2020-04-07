@@ -118,7 +118,7 @@ public class GenruleTest {
    * get the rulekey. This doesn't let multiple targets in the same cache/graph, it's solely to help
    * generate standalone genrules
    */
-  private class StandaloneGenruleBuilder {
+  private static class StandaloneGenruleBuilder {
 
     private final ActionGraphBuilder graphBuilder;
     private final DefaultRuleKeyFactory ruleKeyFactory;

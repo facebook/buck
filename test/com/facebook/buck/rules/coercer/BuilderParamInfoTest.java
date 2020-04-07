@@ -121,7 +121,7 @@ public class BuilderParamInfoTest {
             .getParamInfosSorted());
   }
 
-  class BadFieldType {}
+  static class BadFieldType {}
 
   @RuleArg
   abstract static class AbstractDtoWithBadField implements DataTransferObject {

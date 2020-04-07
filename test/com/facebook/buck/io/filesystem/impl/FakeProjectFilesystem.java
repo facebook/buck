@@ -553,12 +553,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
         iterator.remove();
       }
     }
-    for (Iterator<Path> iterator = symLinks.keySet().iterator(); iterator.hasNext(); ) {
-      Path subPath = iterator.next();
-      if (subPath.startsWith(normalizedPath)) {
-        iterator.remove();
-      }
-    }
+    symLinks.keySet().removeIf(subPath -> subPath.startsWith(normalizedPath));
     fileLastModifiedTimes.remove(path);
     directories.remove(path);
   }

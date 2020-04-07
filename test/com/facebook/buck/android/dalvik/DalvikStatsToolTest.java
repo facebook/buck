@@ -226,7 +226,7 @@ public class DalvikStatsToolTest {
   }
 
   /** A file object used to represent source coming from a string. */
-  public class JavaSourceFromString extends SimpleJavaFileObject {
+  public static class JavaSourceFromString extends SimpleJavaFileObject {
 
     /** The source code of this "file". */
     final String code;

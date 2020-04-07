@@ -81,8 +81,7 @@ public class AppleTestDescriptionTest {
             RichStream.from(test.getBuildDeps())
                 .filter(AppleBundle.class)
                 .findFirst()
-                .get()
-                .getBinary()
+                .flatMap(AppleBundle::getBinary)
                 .get();
     BuildRule binary = strip.getBuildDeps().first();
     assertThat(binary, Matchers.instanceOf(CxxLink.class));

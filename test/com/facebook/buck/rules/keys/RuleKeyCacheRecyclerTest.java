@@ -130,12 +130,11 @@ public class RuleKeyCacheRecyclerTest {
     recycler.withRecycledCache(
         BUCK_EVENT_BUS,
         SETTINGS,
-        c -> {
-          cache.get(
-              appendable,
-              a -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()),
-              new NoOpCacheStatsTracker());
-        });
+        c ->
+            cache.get(
+                appendable,
+                a -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()),
+                new NoOpCacheStatsTracker()));
     assertTrue(cache.isCached(appendable));
     recycler.withRecycledCache(BUCK_EVENT_BUS, SETTINGS, c -> {});
     assertTrue(cache.isCached(appendable));
@@ -151,12 +150,11 @@ public class RuleKeyCacheRecyclerTest {
     recycler.withRecycledCache(
         BUCK_EVENT_BUS,
         SETTINGS,
-        c -> {
-          cache.get(
-              appendable,
-              a -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()),
-              new NoOpCacheStatsTracker());
-        });
+        c ->
+            cache.get(
+                appendable,
+                a -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()),
+                new NoOpCacheStatsTracker()));
     assertTrue(cache.isCached(appendable));
     recycler.withRecycledCache(
         BUCK_EVENT_BUS,
@@ -174,12 +172,11 @@ public class RuleKeyCacheRecyclerTest {
     recycler.withRecycledCache(
         BUCK_EVENT_BUS,
         SETTINGS,
-        c -> {
-          cache.get(
-              appendable,
-              a -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()),
-              new NoOpCacheStatsTracker());
-        });
+        c ->
+            cache.get(
+                appendable,
+                a -> new RuleKeyResult<>("", ImmutableList.of(), ImmutableList.of()),
+                new NoOpCacheStatsTracker()));
     assertTrue(cache.isCached(appendable));
     recycler.withRecycledCache(
         BUCK_EVENT_BUS,

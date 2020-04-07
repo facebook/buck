@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -40,7 +41,7 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.regex.Pattern;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -177,7 +178,7 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         FluentIterable.from(
                 lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
                     .getNativeLinkableExportedDeps(graphBuilder))
-            .transform(d -> d.getBuildTarget()),
+            .transform(NativeLinkable::getBuildTarget),
         Matchers.contains(dep.getBuildTarget()));
   }
 
@@ -210,14 +211,15 @@ public class PrebuiltCxxLibraryGroupDescriptionTest {
         FluentIterable.from(
                 lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
                     .getNativeLinkableExportedDeps(graphBuilder))
-            .transform(d -> d.getBuildTarget()),
+            .transform(NativeLinkable::getBuildTarget),
         Matchers.contains(dep.getBuildTarget()));
     assertThat(
         FluentIterable.from(
                 lib.getNativeLinkable(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
                     .getNativeLinkableExportedDeps(graphBuilder))
-            .transform(d -> d.getBuildTarget()),
-        Matchers.everyItem(Matchers.not(Matchers.in(Arrays.asList((otherDep.getBuildTarget()))))));
+            .transform(NativeLinkable::getBuildTarget),
+        Matchers.everyItem(
+            Matchers.not(Matchers.in(Collections.singletonList((otherDep.getBuildTarget()))))));
   }
 
   @Test

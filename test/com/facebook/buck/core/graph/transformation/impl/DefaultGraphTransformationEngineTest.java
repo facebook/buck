@@ -108,7 +108,7 @@ public class DefaultGraphTransformationEngineTest {
    * Demonstration of usage of {@link GraphEngineCache} with stats tracking used to verify behaviour
    * of the {@link DefaultGraphTransformationEngine}.
    */
-  private final class TrackingCache implements GraphEngineCache<LongNode, LongNode> {
+  private static final class TrackingCache implements GraphEngineCache<LongNode, LongNode> {
 
     private final ConcurrentHashMap<LongNode, LongNode> cache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<LongNode, LongAdder> hitStats = new ConcurrentHashMap<>();

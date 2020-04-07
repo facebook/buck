@@ -74,8 +74,7 @@ public class SerializationTestHelper {
             new DataProvider() {
               @Override
               public InputStream getData() {
-                return new ByteArrayInputStream(
-                    serialized.transform(left -> dataMap.get(left), right -> right));
+                return new ByteArrayInputStream(serialized.transform(dataMap::get, right -> right));
               }
 
               @Override

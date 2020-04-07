@@ -32,7 +32,7 @@ public class MemoryHandlerTest {
     new MemoryHandler().publish(logRecord);
   }
 
-  private class MyThrowable extends Throwable {
+  private static class MyThrowable extends Throwable {
     @JsonProperty Serializable wtf = new Serializable() {};
   }
 }

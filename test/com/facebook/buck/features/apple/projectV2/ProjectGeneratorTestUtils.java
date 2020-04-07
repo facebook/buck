@@ -163,7 +163,7 @@ public final class ProjectGeneratorTestUtils {
     String contents = projectFilesystem.readFileIfItExists(xcconfigPath).get();
 
     // Use a HashMap to allow for duplicate keys.
-    HashMap<String, String> builder = new HashMap<String, String>();
+    HashMap<String, String> builder = new HashMap<>();
     for (String line : contents.split("\n")) {
       String[] parts = line.split(" = ");
       builder.put(parts[0], parts[1]);

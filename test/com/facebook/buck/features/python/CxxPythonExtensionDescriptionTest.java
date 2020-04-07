@@ -50,6 +50,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
+import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.features.python.CxxPythonExtensionDescription.Type;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
@@ -376,7 +377,7 @@ public class CxxPythonExtensionDescriptionTest {
         rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(nativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
-            .transform(d -> d.getBuildTarget()),
+            .transform(NativeLinkable::getBuildTarget),
         Matchers.hasItem(dep.getBuildTarget()));
   }
 
@@ -400,7 +401,7 @@ public class CxxPythonExtensionDescriptionTest {
         rule.getNativeLinkTarget(platform, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(nativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
-            .transform(d -> d.getBuildTarget()),
+            .transform(NativeLinkable::getBuildTarget),
         Matchers.hasItem(PYTHON2_DEP_TARGET));
   }
 
@@ -461,13 +462,13 @@ public class CxxPythonExtensionDescriptionTest {
         rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(py2NativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
-            .transform(d -> d.getBuildTarget()),
+            .transform(NativeLinkable::getBuildTarget),
         Matchers.hasItem(dep.getBuildTarget()));
     NativeLinkTarget py3NativeLinkTarget =
         rule.getNativeLinkTarget(PY3, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
     assertThat(
         FluentIterable.from(py3NativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
-            .transform(d -> d.getBuildTarget()),
+            .transform(NativeLinkable::getBuildTarget),
         Matchers.not(Matchers.hasItem(dep.getBuildTarget())));
   }
 

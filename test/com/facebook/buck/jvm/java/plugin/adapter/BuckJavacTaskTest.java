@@ -173,7 +173,7 @@ public class BuckJavacTaskTest {
             "Plugin: finished ENTER"));
   }
 
-  class RecordingTaskListener implements TestTaskListener {
+  static class RecordingTaskListener implements TestTaskListener {
     private final String name;
     private final List<String> events;
 

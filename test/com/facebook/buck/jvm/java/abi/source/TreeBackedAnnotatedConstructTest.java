@@ -209,7 +209,7 @@ public class TreeBackedAnnotatedConstructTest extends CompilerTreeApiParameteriz
     private final Consumer<T> consumer;
 
     ProcessorCallingGetAnnotation<T> create(Class<T> annotationClass) {
-      return new ProcessorCallingGetAnnotation<T>(annotationClass);
+      return new ProcessorCallingGetAnnotation<>(annotationClass);
     }
 
     ProcessorCallingGetAnnotation(Class<T> annotationClass) {

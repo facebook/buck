@@ -132,8 +132,8 @@ public class HeaderMapTest {
   private byte[] getDataBytes(int[] data) {
     byte[] bytes = new byte[data.length * 4];
     ByteBuffer buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN);
-    for (int i = 0; i < data.length; i++) {
-      buffer.putInt(data[i]);
+    for (int datum : data) {
+      buffer.putInt(datum);
     }
     return bytes;
   }

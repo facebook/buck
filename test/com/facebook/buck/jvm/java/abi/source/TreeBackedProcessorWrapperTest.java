@@ -58,7 +58,7 @@ public class TreeBackedProcessorWrapperTest {
     runTestProcessor(
         (annotations, roundEnv) -> {
           assertTrue(
-              Boolean.valueOf(
+              Boolean.parseBoolean(
                   processingEnv
                       .getOptions()
                       .getOrDefault("com.facebook.buck.java.generating_abi", "false")));

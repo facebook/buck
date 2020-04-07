@@ -444,7 +444,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     assertThat(mainScheme.isPresent(), is(true));
 
-    XCScheme.BuildAction mainSchemeBuildAction = mainScheme.get().getBuildAction().get();
+    XCScheme.BuildAction mainSchemeBuildAction = mainScheme.flatMap(XCScheme::getBuildAction).get();
     List<BuildActionEntry> mainSchemeBuildActionEntries =
         mainSchemeBuildAction.getBuildActionEntries();
     assertThat(mainSchemeBuildActionEntries, hasSize(4));
@@ -478,7 +478,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     assertThat(fooScheme.isPresent(), is(true));
 
-    XCScheme.BuildAction fooSchemeBuildAction = fooScheme.get().getBuildAction().get();
+    XCScheme.BuildAction fooSchemeBuildAction = fooScheme.flatMap(XCScheme::getBuildAction).get();
     List<BuildActionEntry> fooSchemeBuildActionEntries =
         fooSchemeBuildAction.getBuildActionEntries();
     assertThat(fooSchemeBuildActionEntries, hasSize(3));
@@ -508,7 +508,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     assertThat(barScheme.isPresent(), is(true));
 
-    XCScheme.BuildAction barSchemeBuildAction = barScheme.get().getBuildAction().get();
+    XCScheme.BuildAction barSchemeBuildAction = barScheme.flatMap(XCScheme::getBuildAction).get();
     List<BuildActionEntry> barSchemeBuildActionEntries =
         barSchemeBuildAction.getBuildActionEntries();
     assertThat(barSchemeBuildActionEntries, hasSize(1));

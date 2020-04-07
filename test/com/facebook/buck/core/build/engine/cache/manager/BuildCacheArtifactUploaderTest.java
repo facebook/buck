@@ -71,7 +71,7 @@ public class BuildCacheArtifactUploaderTest {
 
     return new BuildCacheArtifactUploader(
         fakeRuleKey,
-        () -> Optional.empty(),
+        Optional::empty,
         preparer.onDiskBuildInfo,
         fakeRule,
         fakeRuleKeyManager,

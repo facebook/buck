@@ -1240,12 +1240,12 @@ public class IncrementalActionGraphScenarioTest {
     // missing, if any.
     Set<String> expectedBuildRuleNames =
         RichStream.from(expectedBuildRules)
-            .map(x -> x.getFullyQualifiedName())
+            .map(BuildRule::getFullyQualifiedName)
             .sorted()
             .collect(ImmutableSet.toImmutableSet());
     Set<String> actualBuildRuleNames =
         RichStream.from(actualBuildRules)
-            .map(x -> x.getFullyQualifiedName())
+            .map(BuildRule::getFullyQualifiedName)
             .sorted()
             .collect(ImmutableSet.toImmutableSet());
     assertEquals(expectedBuildRuleNames, actualBuildRuleNames);

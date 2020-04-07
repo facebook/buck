@@ -50,7 +50,7 @@ public class ObjectMappersTest {
     return Lists.cartesianProduct(
             paths.stream().map(p -> Paths.get(p)).collect(Collectors.toList()), typed)
         .stream()
-        .map(l -> l.toArray())
+        .map(List::toArray)
         .toArray();
   }
 

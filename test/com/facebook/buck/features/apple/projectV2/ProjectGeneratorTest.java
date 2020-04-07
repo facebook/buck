@@ -143,6 +143,7 @@ import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -4745,13 +4746,11 @@ public class ProjectGeneratorTest {
   private void assertHasConfigurations(PBXTarget target, String... names) {
     Map<String, XCBuildConfiguration> buildConfigurationMap =
         target.getBuildConfigurationList().getBuildConfigurationsByName().asMap();
-    HashSet<String> configs = new HashSet<String>();
+    HashSet<String> configs = new HashSet<>();
     configs.add(BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     configs.add(BuildConfiguration.PROFILE_BUILD_CONFIGURATION_NAME);
     configs.add(BuildConfiguration.RELEASE_BUILD_CONFIGURATION_NAME);
-    for (String config : names) {
-      configs.add(config);
-    }
+    configs.addAll(Arrays.asList(names));
     assertEquals(
         "Configuration list has expected number of entries",
         configs.size(),

@@ -48,7 +48,7 @@ public class HashMapWithStats<K, V> extends HashMap<K, V> {
 
   @Override
   public void putAll(Map<? extends K, ? extends V> m) {
-    m.entrySet().forEach(entry -> put(entry.getKey(), entry.getValue()));
+    m.forEach((key, value) -> put(key, value));
   }
 
   @Override

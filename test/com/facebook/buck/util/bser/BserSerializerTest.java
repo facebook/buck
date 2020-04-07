@@ -268,7 +268,7 @@ public class BserSerializerTest {
     assertThat(result, is(not(sameInstance(buffer))));
   }
 
-  class CloseableByteArrayOutputStream extends ByteArrayOutputStream {
+  static class CloseableByteArrayOutputStream extends ByteArrayOutputStream {
     private boolean closed = false;
 
     @Override

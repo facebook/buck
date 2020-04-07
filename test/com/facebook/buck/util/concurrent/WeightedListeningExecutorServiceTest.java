@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.hamcrest.Matchers;
@@ -54,14 +53,12 @@ public class WeightedListeningExecutorServiceTest {
             ResourceAmounts.of(1, 0, 0, 0),
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor()));
     service.submit(
-        new Runnable() {
-          @Override
-          public void run() {
-            while (true) {
-              /* block forever */
-            }
-          }
-        },
+        (Runnable)
+            () -> {
+              while (true) {
+                /* block forever */
+              }
+            },
         ResourceAmounts.of(1, 0, 0, 0));
     AtomicBoolean second = submitSetBool(service, ResourceAmounts.of(1, 0, 0, 0));
     assertFalse(second.get());
@@ -79,12 +76,9 @@ public class WeightedListeningExecutorServiceTest {
     AtomicBoolean flag = new AtomicBoolean(false);
     ListenableFuture<Unit> future =
         service.submit(
-            new Callable<Unit>() {
-              @Override
-              public Unit call() {
-                flag.set(true);
-                return Unit.UNIT;
-              }
+            () -> {
+              flag.set(true);
+              return Unit.UNIT;
             });
     assertFalse(future.isDone());
     assertThat(semaphore.getAvailableResources(), Matchers.equalTo(ResourceAmounts.zero()));
@@ -99,12 +93,9 @@ public class WeightedListeningExecutorServiceTest {
       WeightedListeningExecutorService service, ResourceAmounts amounts) {
     AtomicBoolean bool = new AtomicBoolean(false);
     service.submit(
-        new Callable<Unit>() {
-          @Override
-          public Unit call() {
-            bool.set(true);
-            return Unit.UNIT;
-          }
+        () -> {
+          bool.set(true);
+          return Unit.UNIT;
         },
         amounts);
     return bool;

@@ -59,7 +59,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
                     Callable<Object>,
                     DepsAwareTask.DepsSupplier<DefaultDepsAwareTask<Object>>,
                     DefaultDepsAwareTask<Object>>)
-                (callable, depsSupplier) -> DefaultDepsAwareTask.of(callable, depsSupplier)
+                DefaultDepsAwareTask::of
           },
           {
             (Function<
@@ -71,7 +71,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
                     Callable<Object>,
                     DepsAwareTask.DepsSupplier<DefaultDepsAwareTask<Object>>,
                     DefaultDepsAwareTask<Object>>)
-                (callable, depsSupplier) -> DefaultDepsAwareTask.of(callable, depsSupplier)
+                DefaultDepsAwareTask::of
           },
           {
             (Function<
@@ -82,7 +82,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
                     Callable<Object>,
                     DepsAwareTask.DepsSupplier<ToposortBasedDepsAwareTask<Object>>,
                     ToposortBasedDepsAwareTask<Object>>)
-                (callable, depsSupplier) -> ToposortBasedDepsAwareTask.of(callable, depsSupplier)
+                ToposortBasedDepsAwareTask::of
           }
         });
   }
@@ -469,7 +469,6 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
               try {
                 worker.loopForever();
               } catch (InterruptedException e) {
-                return;
               }
             });
     workerThreads.add(thread);

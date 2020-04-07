@@ -916,7 +916,7 @@ public class QueryCommandIntegrationTest {
                 workspace.getFileContents("stdout-maxrank-deps-one-with-attributes.json"))));
   }
 
-  class ParserProfileFinder extends SimpleFileVisitor<Path> {
+  static class ParserProfileFinder extends SimpleFileVisitor<Path> {
 
     private Path profilerPath = null;
 
@@ -1631,12 +1631,12 @@ public class QueryCommandIntegrationTest {
       return node;
     } else if (node.isArray()) {
       // Only if this is an array of strings, copy the array and sort it.
-      if (Iterables.all(node, (JsonNode child) -> child.isTextual())) {
+      if (Iterables.all(node, JsonNode::isTextual)) {
         ArrayList<String> values = new ArrayList<>();
-        Iterables.addAll(values, Iterables.transform(node, (JsonNode child) -> child.asText()));
+        Iterables.addAll(values, Iterables.transform(node, JsonNode::asText));
         values.sort(String::compareTo);
         ArrayNode normalized = (ArrayNode) ObjectMappers.READER.createArrayNode();
-        values.forEach((String value) -> normalized.add(value));
+        values.forEach(normalized::add);
         return normalized;
       } else {
         return node;

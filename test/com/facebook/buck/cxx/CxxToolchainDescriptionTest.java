@@ -147,7 +147,7 @@ public class CxxToolchainDescriptionTest {
         expected.getCommandPrefix(resolver), other.getCommandPrefix(resolver));
   }
 
-  private class SimpleToolRule extends FakeBuildRule implements BinaryBuildRule {
+  private static class SimpleToolRule extends FakeBuildRule implements BinaryBuildRule {
     private final Tool tool;
 
     public SimpleToolRule(BuildTarget buildTarget, Tool tool) {

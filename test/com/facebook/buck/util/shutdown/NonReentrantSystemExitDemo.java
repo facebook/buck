@@ -23,12 +23,10 @@ public class NonReentrantSystemExitDemo {
   public static void main(String[] args) {
     Runtime.getRuntime()
         .addShutdownHook(
-            new Thread() {
-              @Override
-              public void run() {
-                throw new RuntimeException("haha!");
-              }
-            });
+            new Thread(
+                () -> {
+                  throw new RuntimeException("haha!");
+                }));
     Thread.setDefaultUncaughtExceptionHandler(
         (t, e) -> {
           // Uncommenting the next line will cause the test to hang.

@@ -122,10 +122,7 @@ public class DaemonIntegrationTest {
     try (TestContext context =
         new TestContext(EnvVariablesProvider.getSystemEnv(), timeoutMillis)) {
       Thread thread = Thread.currentThread();
-      context.addClientListener(
-          reason -> {
-            Threads.interruptThread(thread);
-          });
+      context.addClientListener(reason -> Threads.interruptThread(thread));
       Thread.sleep(1000);
       fail("Should have been interrupted.");
     }

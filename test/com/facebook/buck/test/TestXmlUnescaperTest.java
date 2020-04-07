@@ -25,23 +25,22 @@ public class TestXmlUnescaperTest {
   @Test
   public void contentUnescaperReplacesCharacters() {
 
-    StringBuilder inputBuilder = new StringBuilder();
-    inputBuilder.append('\uFFFD'); // out of bounds
-    inputBuilder.append('h');
-    inputBuilder.append("&amp;");
-    inputBuilder.append("&lt;");
-    inputBuilder.append('1');
-    inputBuilder.append("&gt;");
-    String inputStr = inputBuilder.toString();
+    String inputStr =
+        "�" // out of bounds
+            + 'h'
+            + "&amp;"
+            + "&lt;"
+            + '1'
+            + "&gt;";
 
-    StringBuilder outputBuilder = new StringBuilder();
-    outputBuilder.append('\uFFFD'); // out of bounds
-    outputBuilder.append('h'); // not replaced
-    outputBuilder.append('&'); // replaced
-    outputBuilder.append('<'); // replaced
-    outputBuilder.append('1'); // not replaced
-    outputBuilder.append('>'); // replaced
-    String outputStr = outputBuilder.toString();
+    String outputStr =
+        "�" // out of bounds
+            + 'h' // not replaced
+            + '&' // replaced
+            + '<' // replaced
+            + '1' // not replaced
+            + '>' // replaced
+        ;
 
     assertEquals(outputStr, TestXmlUnescaper.CONTENT_UNESCAPER.unescape(inputStr));
   }
@@ -49,36 +48,34 @@ public class TestXmlUnescaperTest {
   @Test
   public void attributeUnescaperReplacesCharacters() {
 
-    StringBuilder inputBuilder = new StringBuilder();
-    inputBuilder.append('\uFFFD'); // out of bounds
-    inputBuilder.append('h');
-    inputBuilder.append("&amp;");
-    inputBuilder.append("&lt;");
-    inputBuilder.append('1');
-    inputBuilder.append("&gt;");
-    inputBuilder.append("&apos;");
-    inputBuilder.append("&quot;");
-    inputBuilder.append("&#x9;");
-    inputBuilder.append('!');
-    inputBuilder.append("&#xA;");
-    inputBuilder.append("&#xD;");
-    String inputStr = inputBuilder.toString();
+    String inputStr =
+        "�" // out of bounds
+            + 'h'
+            + "&amp;"
+            + "&lt;"
+            + '1'
+            + "&gt;"
+            + "&apos;"
+            + "&quot;"
+            + "&#x9;"
+            + '!'
+            + "&#xA;"
+            + "&#xD;";
 
-    StringBuilder outputBuilder = new StringBuilder();
-    outputBuilder.append('\uFFFD'); // out of bounds
-    outputBuilder.append('h'); // not replaced
-    outputBuilder.append('&'); // replaced
-    outputBuilder.append('<'); // replaced
-    outputBuilder.append('1'); // not replaced
-    outputBuilder.append('>'); // replaced
-    outputBuilder.append('\''); // replaced
-    outputBuilder.append('"'); // replaced
-    outputBuilder.append('\t'); // replaced
-    outputBuilder.append('!'); // not replaced
-    outputBuilder.append('\n'); // replaced
-    outputBuilder.append('\r'); // replaced
-
-    String outputStr = outputBuilder.toString();
+    String outputStr =
+        "�" // out of bounds
+            + 'h' // not replaced
+            + '&' // replaced
+            + '<' // replaced
+            + '1' // not replaced
+            + '>' // replaced
+            + '\'' // replaced
+            + '"' // replaced
+            + '\t' // replaced
+            + '!' // not replaced
+            + '\n' // replaced
+            + '\r' // replaced
+        ;
 
     assertEquals(outputStr, TestXmlUnescaper.ATTRIBUTE_UNESCAPER.unescape(inputStr));
   }

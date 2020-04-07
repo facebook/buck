@@ -49,7 +49,9 @@ public class DoctorConfigTest {
     assertThat(
         config.getReportUploadPath(), Matchers.equalTo(DoctorConfig.DEFAULT_REPORT_UPLOAD_PATH));
     assertThat(
-        config.getFrontendConfig().get().tryCreatingClientSideSlb(clock, eventBus),
+        config
+            .getFrontendConfig()
+            .flatMap(frontendConfig -> frontendConfig.tryCreatingClientSideSlb(clock, eventBus)),
         Matchers.equalTo(Optional.empty()));
   }
 
@@ -67,7 +69,9 @@ public class DoctorConfigTest {
     DoctorConfig config = DoctorConfig.of(buckConfig);
     assertThat(config.getReportUploadPath(), Matchers.equalTo(testPath));
     assertThat(
-        config.getFrontendConfig().get().tryCreatingClientSideSlb(clock, eventBus),
+        config
+            .getFrontendConfig()
+            .flatMap(frontendConfig -> frontendConfig.tryCreatingClientSideSlb(clock, eventBus)),
         Matchers.not(Matchers.equalTo(Optional.empty())));
   }
 }

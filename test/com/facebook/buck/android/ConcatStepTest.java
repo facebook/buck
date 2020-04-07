@@ -44,10 +44,10 @@ public class ConcatStepTest {
     File dest = temp.newFile();
     ImmutableList.Builder<Path> inputsBuilder = ImmutableList.builder();
     String[] fileContents = {"foo", "bar", "baz"};
-    for (int i = 0; i < fileContents.length; i++) {
+    for (String fileContent : fileContents) {
       File src = temp.newFile();
       PrintStream out = new PrintStream(src);
-      out.print(fileContents[i]);
+      out.print(fileContent);
       inputsBuilder.add(src.toPath());
       out.close();
     }

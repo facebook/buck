@@ -1590,7 +1590,7 @@ public class TargetsCommandIntegrationTest {
     assertThat(
         "B should depend on both A and test_library",
         Streams.stream(nodes.get("B").get("deps"))
-            .map(node -> node.asText())
+            .map(JsonNode::asText)
             .collect(Collectors.toList()),
         Matchers.containsInAnyOrder("//:A", "//:test-library"));
   }

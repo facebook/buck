@@ -42,11 +42,11 @@ public abstract class CompilerTreeApiParameterizedTest extends CompilerTreeApiTe
   }
 
   protected boolean testingJavac() {
-    return implementation == JAVAC;
+    return implementation.equals(JAVAC);
   }
 
   protected boolean testingTrees() {
-    return implementation == TREES;
+    return implementation.equals(TREES);
   }
 
   protected void withClasspathForJavacOnly(Map<String, String> fileNamesToContents)

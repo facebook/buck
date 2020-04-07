@@ -33,11 +33,10 @@ public class SimpleCellNameResolverProvider implements CellNameResolverProvider 
     this.cellNames =
         Arrays.stream(cellNames)
             .flatMap(
-                n -> {
-                  return n.getLegacyName().isPresent()
-                      ? Stream.of(n.getLegacyName().get())
-                      : Stream.empty();
-                })
+                n ->
+                    n.getLegacyName().isPresent()
+                        ? Stream.of(n.getLegacyName().get())
+                        : Stream.empty())
             .distinct()
             .collect(ImmutableList.toImmutableList());
   }

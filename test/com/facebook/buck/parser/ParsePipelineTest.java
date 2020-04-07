@@ -143,7 +143,7 @@ public class ParsePipelineTest {
             .getNode(cell, BuildTargetFactory.newInstance("//:lib"), DependencyStack.root())
             .assertGetTargetNode(DependencyStack.root());
 
-    waitForAll(libTargetNode.getBuildDeps(), dep -> fixture.targetExistsInCache(dep));
+    waitForAll(libTargetNode.getBuildDeps(), fixture::targetExistsInCache);
     fixture.close();
   }
 
@@ -162,7 +162,7 @@ public class ParsePipelineTest {
         FluentIterable.from(libTargetNodes)
             .transformAndConcat(
                 input -> input.assertGetTargetNode(DependencyStack.root()).getBuildDeps());
-    waitForAll(allDeps, dep -> fixture.targetExistsInCache(dep));
+    waitForAll(allDeps, fixture::targetExistsInCache);
     fixture.close();
   }
 

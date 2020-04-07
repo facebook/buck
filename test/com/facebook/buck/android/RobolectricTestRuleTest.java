@@ -51,7 +51,7 @@ import org.junit.Test;
 
 public class RobolectricTestRuleTest {
 
-  private class ResourceRule implements HasAndroidResourceDeps {
+  private static class ResourceRule implements HasAndroidResourceDeps {
     private final SourcePath resourceDirectory;
     private final SourcePath assetsDirectory;
 

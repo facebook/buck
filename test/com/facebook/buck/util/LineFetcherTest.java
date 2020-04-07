@@ -97,10 +97,10 @@ public class LineFetcherTest {
   private void verifyLineFetcherResponses(String sample, String[] expectedResponses)
       throws Exception {
     try (LineFetcher fetcher = new LineFetcher(new StringReader(sample))) {
-      for (int i = 0; i < expectedResponses.length; i++) {
+      for (String expectedRespons : expectedResponses) {
         assertEquals(
             "Mismatch in expected and actual response from LineFetcher",
-            expectedResponses[i],
+            expectedRespons,
             fetcher.readLine());
       }
 

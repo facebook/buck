@@ -56,8 +56,7 @@ public class CounterRegistryImplTest {
   private ScheduledFuture<?> mockFuture;
 
   private static class SnapshotEventListener {
-    public final List<CountersSnapshotEvent> snapshotEvents =
-        new ArrayList<CountersSnapshotEvent>();
+    public final List<CountersSnapshotEvent> snapshotEvents = new ArrayList<>();
 
     @Subscribe
     public void onCountersSnapshotEvent(CountersSnapshotEvent event) {

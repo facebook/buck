@@ -128,8 +128,8 @@ public class JsonObjectHashingTest {
 
   @Test
   public void mapOrderDoesNotChangeHash() {
-    Map<?, ?> map1 = ImmutableMap.of("firstKey", 24, "secondKey", new Float(13.5));
-    Map<?, ?> map2 = ImmutableMap.of("secondKey", new Float(13.5), "firstKey", 24);
+    Map<?, ?> map1 = ImmutableMap.of("firstKey", 24, "secondKey", 13.5f);
+    Map<?, ?> map2 = ImmutableMap.of("secondKey", 13.5f, "firstKey", 24);
 
     Hasher hasher1 = Hashing.sha1().newHasher();
     Hasher hasher2 = Hashing.sha1().newHasher();

@@ -320,11 +320,11 @@ public class IncrementalActionGraphGeneratorTest {
                     BuildRule child1 =
                         context
                             .getActionGraphBuilder()
-                            .computeIfAbsent(childTarget1, target -> new FakeBuildRule(target));
+                            .computeIfAbsent(childTarget1, FakeBuildRule::new);
                     BuildRule child2 =
                         context
                             .getActionGraphBuilder()
-                            .computeIfAbsent(childTarget2, target -> new FakeBuildRule(target));
+                            .computeIfAbsent(childTarget2, FakeBuildRule::new);
                     return new FakeBuildRule(parentTarget, child1, child2);
                   }
                 },
@@ -454,9 +454,7 @@ public class IncrementalActionGraphGeneratorTest {
                       BuildTarget buildTarget,
                       BuildRuleParams params,
                       FakeTargetNodeArg args) {
-                    BuildRule child =
-                        graphBuilder.computeIfAbsent(
-                            childTarget, target -> new FakeBuildRule(target));
+                    BuildRule child = graphBuilder.computeIfAbsent(childTarget, FakeBuildRule::new);
                     FakeBuildRule parent = new FakeBuildRule(parentTarget);
                     parent.setRuntimeDeps(child);
                     return parent;
@@ -499,11 +497,11 @@ public class IncrementalActionGraphGeneratorTest {
                     BuildRule child1 =
                         context
                             .getActionGraphBuilder()
-                            .computeIfAbsent(childTarget1, target -> new FakeBuildRule(target));
+                            .computeIfAbsent(childTarget1, FakeBuildRule::new);
                     BuildRule child2 =
                         context
                             .getActionGraphBuilder()
-                            .computeIfAbsent(childTarget2, target -> new FakeBuildRule(target));
+                            .computeIfAbsent(childTarget2, FakeBuildRule::new);
                     return new FakeBuildRule(parentTarget, child1, child2);
                   }
                 },
@@ -542,11 +540,11 @@ public class IncrementalActionGraphGeneratorTest {
                     BuildRule child1 =
                         context
                             .getActionGraphBuilder()
-                            .computeIfAbsent(childTarget1, target -> new FakeBuildRule(target));
+                            .computeIfAbsent(childTarget1, FakeBuildRule::new);
                     BuildRule child2 =
                         context
                             .getActionGraphBuilder()
-                            .computeIfAbsent(childTarget2, target -> new FakeBuildRule(target));
+                            .computeIfAbsent(childTarget2, FakeBuildRule::new);
                     return new FakeBuildRule(rootTarget1, child1, child2);
                   }
                 },

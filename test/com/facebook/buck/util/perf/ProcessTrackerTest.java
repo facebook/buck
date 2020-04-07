@@ -237,15 +237,15 @@ public class ProcessTrackerTest {
       throws Exception {
     dumpEvents(events);
     List<ProcessResourceConsumptionEvent> actualEvents = pollEvents(events);
-    for (int i = 0; i < actualEvents.size(); i++) {
-      String name = actualEvents.get(i).getExecutableName();
+    for (ProcessResourceConsumptionEvent actualEvent : actualEvents) {
+      String name = actualEvent.getExecutableName();
       if (expectedParams != null) {
         assertTrue("Unexpected event for '" + name + "'", expectedParams.containsKey(name));
-        assertEquals(expectedParams.get(name), actualEvents.get(i).getParams());
+        assertEquals(expectedParams.get(name), actualEvent.getParams());
       }
       if (expectedRes != null) {
         assertTrue("Unexpected event for '" + name + "'", expectedRes.containsKey(name));
-        assertEquals(expectedRes.get(name), actualEvents.get(i).getResourceConsumption());
+        assertEquals(expectedRes.get(name), actualEvent.getResourceConsumption());
       }
     }
     if (expectedParams != null) {

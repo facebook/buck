@@ -547,7 +547,7 @@ public class BuildCommandErrorsIntegrationTest {
     }
   }
 
-  private class ExitCodeRule extends AbstractBuildRule {
+  private static class ExitCodeRule extends AbstractBuildRule {
     private final int exitCode;
     private final String message;
 
@@ -592,7 +592,7 @@ public class BuildCommandErrorsIntegrationTest {
   @RuleArg
   interface AbstractMockArg extends BuildRuleArg {}
 
-  private class MockDescription implements DescriptionWithTargetGraph<MockArg> {
+  private static class MockDescription implements DescriptionWithTargetGraph<MockArg> {
     private BuildRuleFactory buildRuleFactory = null;
 
     @Override

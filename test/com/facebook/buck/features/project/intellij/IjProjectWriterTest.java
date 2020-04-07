@@ -46,7 +46,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Map;
 import org.junit.Test;
 
@@ -125,7 +125,7 @@ public class IjProjectWriterTest {
                     IjProjectWriter.INTELLIJ_TYPE,
                     IjProjectWriter.MODULE_TYPE,
                     IjProjectWriter.GENERATED_SOURCES,
-                    Arrays.asList(
+                    Collections.singletonList(
                         isWindows ? "buck-out\\annotation\\base" : "buck-out/annotation/base")),
             "//third_party/guava:guava",
                 ImmutableMap.of(
@@ -201,7 +201,7 @@ public class IjProjectWriterTest {
                 IjProjectWriter.INTELLIJ_TYPE,
                 IjProjectWriter.MODULE_TYPE,
                 IjProjectWriter.GENERATED_SOURCES,
-                Arrays.asList(
+                Collections.singletonList(
                     isWindows ? "buck-out\\annotation\\base" : "buck-out/annotation/base")),
             "//third_party/guava:guava",
             ImmutableMap.of(
@@ -411,7 +411,7 @@ public class IjProjectWriterTest {
   }
 
   // Mutable FakeClock, to provide distinct timestamps to a single FakeProjectFileSystem
-  class FakeDynamicClock extends FakeClock {
+  static class FakeDynamicClock extends FakeClock {
     long currentTime;
 
     public FakeDynamicClock(long currentTime) {

@@ -22,6 +22,6 @@ public class TestBuildRuleParams {
 
   public static BuildRuleParams create() {
     return new BuildRuleParams(
-        () -> ImmutableSortedSet.of(), () -> ImmutableSortedSet.of(), ImmutableSortedSet.of());
+        ImmutableSortedSet::of, ImmutableSortedSet::of, ImmutableSortedSet.of());
   }
 }

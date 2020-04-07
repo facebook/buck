@@ -389,7 +389,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
                   input.registry.getRegistered().entrySet().stream()
                       .collect(
                           ImmutableMap.toImmutableMap(
-                              entry -> entry.getKey().getID(), entry -> entry.getValue()));
+                              entry -> entry.getKey().getID(), Map.Entry::getValue));
               ActionWrapperData actionWrapperData =
                   (ActionWrapperData)
                       actionAnalysisDataMap.get(

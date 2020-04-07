@@ -23,6 +23,7 @@ import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.RawConfig;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
+import java.util.Map;
 
 public final class TestCellPathResolver {
   public static CellPathResolver get(ProjectFilesystem projectFilesystem) {
@@ -42,7 +43,7 @@ public final class TestCellPathResolver {
                     cellMappings.entrySet().stream()
                         .collect(
                             ImmutableMap.toImmutableMap(
-                                e -> e.getKey(), e -> e.getValue().toString())))));
+                                Map.Entry::getKey, e -> e.getValue().toString())))));
     return DefaultCellPathResolver.create(rootPath, config);
   }
 

@@ -119,7 +119,7 @@ public class FakeBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Stream<BuildTarget> getRuntimeDeps(BuildRuleResolver buildRuleResolver) {
-    return runtimeDeps.stream().map(x -> x.getBuildTarget());
+    return runtimeDeps.stream().map(BuildRule::getBuildTarget);
   }
 
   @Override

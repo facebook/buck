@@ -108,7 +108,7 @@ public class UIMessagesFormatterTest {
   private String formatExpectedComparisonMessage(
       Optional<String> suffix, Map<String, ConfigChange> diffs) {
     StringBuilder sb = new StringBuilder(COMPARISON_MESSAGE_PREFIX);
-    sb.append(System.lineSeparator() + "  ");
+    sb.append(System.lineSeparator()).append("  ");
     sb.append(
         diffs.entrySet().stream()
             .map(
@@ -122,7 +122,7 @@ public class UIMessagesFormatterTest {
 
     suffix.ifPresent(
         suffixValue -> {
-          sb.append(System.lineSeparator() + "  ");
+          sb.append(System.lineSeparator()).append("  ");
           sb.append(suffixValue);
         });
     return sb.toString();

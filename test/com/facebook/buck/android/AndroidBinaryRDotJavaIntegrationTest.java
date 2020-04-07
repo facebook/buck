@@ -222,7 +222,6 @@ public class AndroidBinaryRDotJavaIntegrationTest {
       m = SMALI_STATIC_FINAL_INT_PATTERN.matcher(line);
       if (m.matches()) {
         output.put(currentClass + ":" + m.group(1), m.group(2));
-        continue;
       }
     }
     return output.build();

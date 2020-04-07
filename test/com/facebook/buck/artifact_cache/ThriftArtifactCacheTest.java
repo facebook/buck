@@ -206,7 +206,7 @@ public class ThriftArtifactCacheTest {
           ByteBuffer.allocate(
               4
                   + serializedThrift.length
-                  + Arrays.stream(payloads).mapToInt(p -> p.length).reduce(0, (l, r) -> l + r));
+                  + Arrays.stream(payloads).mapToInt(p -> p.length).reduce(0, Integer::sum));
       buffer.order(ByteOrder.BIG_ENDIAN);
       buffer.putInt(serializedThrift.length);
       buffer.put(serializedThrift);

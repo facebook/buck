@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
 public class WatchmanTestDaemon implements Closeable {
-  public class StartingWatchmanTimedOutException extends IOException {}
+  public static class StartingWatchmanTimedOutException extends IOException {}
 
   private static final Logger LOG = Logger.get(WatchmanTestDaemon.class);
 

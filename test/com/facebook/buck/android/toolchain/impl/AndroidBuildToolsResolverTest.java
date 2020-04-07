@@ -176,8 +176,8 @@ public class AndroidBuildToolsResolverTest {
   }
 
   private void createBuildToolsVersions(AbsPath sdkDir, String... directoryNames) {
-    for (int i = 0; i < directoryNames.length; i++) {
-      File folder = sdkDir.resolve(directoryNames[i]).toFile();
+    for (String directoryName : directoryNames) {
+      File folder = sdkDir.resolve(directoryName).toFile();
       assertThat(folder.mkdirs(), Matchers.is(true));
     }
   }

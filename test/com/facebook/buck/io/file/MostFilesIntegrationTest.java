@@ -114,7 +114,7 @@ public class MostFilesIntegrationTest {
     diffLines = MostFiles.diffFileContents(Collections.singletonList("CCC"), testFile);
     assertEquals(diffLines, Arrays.asList("| AAA | CCC |", "| BBB |  |", "| CCC |  |"));
 
-    diffLines = MostFiles.diffFileContents(new ArrayList<String>(), testFile);
+    diffLines = MostFiles.diffFileContents(new ArrayList<>(), testFile);
     assertEquals(diffLines, Arrays.asList("| AAA |  |", "| BBB |  |", "| CCC |  |"));
 
     diffLines = MostFiles.diffFileContents(Arrays.asList("AAA", "BBB", "CCC", "xxx"), testFile);

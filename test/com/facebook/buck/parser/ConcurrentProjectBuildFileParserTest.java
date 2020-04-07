@@ -276,7 +276,7 @@ public class ConcurrentProjectBuildFileParserTest {
 
       Object[] allExceptionTypes =
           ObjectArrays.concat(
-              t.getClass(), Arrays.stream(t.getSuppressed()).map(s -> s.getClass()).toArray());
+              t.getClass(), Arrays.stream(t.getSuppressed()).map(Throwable::getClass).toArray());
 
       // one of the exceptions of expected type should be rethrown, others should be in suppressed
       // there is no requirement on the order
@@ -293,9 +293,7 @@ public class ConcurrentProjectBuildFileParserTest {
   @Test
   public void closeAllParsersWhenNoneThrow() {
     List<BiFunction<CountDownLatch, AtomicInteger, ProjectBuildFileParser>> parsers =
-        Lists.newArrayList(
-            (latch, counter) -> getParserDoesntThrow(latch, counter),
-            (latch, counter) -> getParserDoesntThrow(latch, counter));
+        Lists.newArrayList(this::getParserDoesntThrow, this::getParserDoesntThrow);
 
     executeAndCloseAndValidate(parsers);
   }
@@ -304,9 +302,9 @@ public class ConcurrentProjectBuildFileParserTest {
   public void close3ParsersWhen1stThrows() {
     List<BiFunction<CountDownLatch, AtomicInteger, ProjectBuildFileParser>> parsers =
         Lists.newArrayList(
-            (latch, counter) -> getParserThrowsParseException(latch, counter),
-            (latch, counter) -> getParserDoesntThrow(latch, counter),
-            (latch, counter) -> getParserDoesntThrow(latch, counter));
+            this::getParserThrowsParseException,
+            this::getParserDoesntThrow,
+            this::getParserDoesntThrow);
 
     executeAndCloseAndValidate(parsers, BuildFileParseException.class);
   }
@@ -315,9 +313,9 @@ public class ConcurrentProjectBuildFileParserTest {
   public void close3ParsersWhen2ndThrows() {
     List<BiFunction<CountDownLatch, AtomicInteger, ProjectBuildFileParser>> parsers =
         Lists.newArrayList(
-            (latch, counter) -> getParserDoesntThrow(latch, counter),
-            (latch, counter) -> getParserThrowsParseException(latch, counter),
-            (latch, counter) -> getParserDoesntThrow(latch, counter));
+            this::getParserDoesntThrow,
+            this::getParserThrowsParseException,
+            this::getParserDoesntThrow);
 
     executeAndCloseAndValidate(parsers, BuildFileParseException.class);
   }
@@ -326,9 +324,9 @@ public class ConcurrentProjectBuildFileParserTest {
   public void close3ParsersWhen1stAnd3rdThrow() {
     List<BiFunction<CountDownLatch, AtomicInteger, ProjectBuildFileParser>> parsers =
         Lists.newArrayList(
-            (latch, counter) -> getParserThrowsParseException(latch, counter),
-            (latch, counter) -> getParserDoesntThrow(latch, counter),
-            (latch, counter) -> getParserThrowsIOException(latch, counter));
+            this::getParserThrowsParseException,
+            this::getParserDoesntThrow,
+            this::getParserThrowsIOException);
 
     executeAndCloseAndValidate(parsers, BuildFileParseException.class, IOException.class);
   }
@@ -337,9 +335,9 @@ public class ConcurrentProjectBuildFileParserTest {
   public void close3ParsersWhenUncheckedExceptionIsThrown() {
     List<BiFunction<CountDownLatch, AtomicInteger, ProjectBuildFileParser>> parsers =
         Lists.newArrayList(
-            (latch, counter) -> getParserDoesntThrow(latch, counter),
-            (latch, counter) -> getParserThrowsUncheckedException(latch, counter),
-            (latch, counter) -> getParserDoesntThrow(latch, counter));
+            this::getParserDoesntThrow,
+            this::getParserThrowsUncheckedException,
+            this::getParserDoesntThrow);
 
     executeAndCloseAndValidate(parsers, RuntimeException.class);
   }
@@ -348,9 +346,9 @@ public class ConcurrentProjectBuildFileParserTest {
   public void close3ParsersWhenAllThrow() {
     List<BiFunction<CountDownLatch, AtomicInteger, ProjectBuildFileParser>> parsers =
         Lists.newArrayList(
-            (latch, counter) -> getParserThrowsIOException(latch, counter),
-            (latch, counter) -> getParserThrowsUncheckedException(latch, counter),
-            (latch, counter) -> getParserThrowsParseException(latch, counter));
+            this::getParserThrowsIOException,
+            this::getParserThrowsUncheckedException,
+            this::getParserThrowsParseException);
 
     executeAndCloseAndValidate(
         parsers, IOException.class, RuntimeException.class, BuildFileParseException.class);

@@ -42,11 +42,7 @@ public class WorkThreadTrackingTaskTest {
               return null;
             });
 
-    Thread thread =
-        new Thread(
-            () -> {
-              task.compute();
-            });
+    Thread thread = new Thread(task::compute);
     thread.start();
 
     assertBlocker.acquire();
@@ -75,7 +71,7 @@ public class WorkThreadTrackingTaskTest {
               return null;
             });
 
-    Thread t = new Thread(() -> workThreadTrackingTask.externalCompute());
+    Thread t = new Thread(workThreadTrackingTask::externalCompute);
     workThreadTrackingTask.externalCompute();
     t.join();
 

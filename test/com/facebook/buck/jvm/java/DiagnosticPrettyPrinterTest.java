@@ -176,7 +176,7 @@ public class DiagnosticPrettyPrinterTest {
     };
   }
 
-  private class StringJavaFileObject extends SimpleJavaFileObject {
+  private static class StringJavaFileObject extends SimpleJavaFileObject {
     private final String content;
 
     protected StringJavaFileObject(String pathToSource, String content) {

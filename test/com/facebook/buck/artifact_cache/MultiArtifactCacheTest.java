@@ -58,7 +58,7 @@ public class MultiArtifactCacheTest {
   private static final LazyPath dummyFile = LazyPath.ofInstance(Paths.get("dummy"));
 
   // An cache which always returns errors from fetching.
-  class ErroringArtifactCache extends NoopArtifactCache {
+  static class ErroringArtifactCache extends NoopArtifactCache {
     @Override
     public ListenableFuture<CacheResult> fetchAsync(
         BuildTarget target, RuleKey ruleKey, LazyPath output) {

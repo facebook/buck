@@ -54,18 +54,18 @@ public class FakeTargetNodeBuilder
   }
 
   public FakeTargetNodeBuilder setDeps(TargetNode<?>... deps) {
-    return setDeps(Stream.of(deps).map(x -> x.getBuildTarget()).toArray(BuildTarget[]::new));
+    return setDeps(Stream.of(deps).map(TargetNode::getBuildTarget).toArray(BuildTarget[]::new));
   }
 
   public FakeTargetNodeBuilder setExtraDeps(TargetNode<?>... deps) {
     description.setExtraDeps(
-        Stream.of(deps).map(x -> x.getBuildTarget()).collect(Collectors.toSet()));
+        Stream.of(deps).map(TargetNode::getBuildTarget).collect(Collectors.toSet()));
     return this;
   }
 
   public FakeTargetNodeBuilder setTargetGraphOnlyDeps(TargetNode<?>... deps) {
     description.setTargetGraphOnlyDeps(
-        Stream.of(deps).map(x -> x.getBuildTarget()).collect(Collectors.toSet()));
+        Stream.of(deps).map(TargetNode::getBuildTarget).collect(Collectors.toSet()));
     return this;
   }
 

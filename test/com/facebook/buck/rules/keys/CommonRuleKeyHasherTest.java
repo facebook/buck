@@ -81,7 +81,7 @@ public final class CommonRuleKeyHasherTest {
                 pair.apply("Key<\"\">", h -> h.putKey("")),
                 pair.apply("Key<\"42\">", h -> h.putKey("42")),
                 pair.apply("Key<\"4\">, Key<\"2\">", h -> h.putKey("4").putKey("2")),
-                pair.apply("null", h -> h.putNull()),
+                pair.apply("null", RuleKeyHasher::putNull),
                 pair.apply("true", h -> h.putBoolean(true)),
                 pair.apply("false", h -> h.putBoolean(false)))
             .addAll(

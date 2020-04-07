@@ -51,7 +51,7 @@ public class MorePosixFilePermissionsTest {
               Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE)),
           new Sample(0777, Sets.newHashSet(PosixFilePermission.values())),
           new Sample(01, Sets.newHashSet(PosixFilePermission.OTHERS_EXECUTE)),
-          new Sample(0, new HashSet<PosixFilePermission>()));
+          new Sample(0, new HashSet<>()));
 
   // Some examples that test various cases of adding in execute perms for readers.
   private static final ImmutableMap<String, String> ADD_EXECUTE_PERM_SAMPLES =

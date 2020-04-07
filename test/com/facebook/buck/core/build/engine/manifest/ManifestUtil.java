@@ -53,7 +53,7 @@ public class ManifestUtil {
         entryHashIndices[entryHashIndex++] =
             manifest.addHash(innerEntry.getKey(), innerEntry.getValue());
       }
-      manifest.entries.add(new Pair<RuleKey, int[]>(entry.getKey(), entryHashIndices));
+      manifest.entries.add(new Pair<>(entry.getKey(), entryHashIndices));
     }
     return manifest;
   }

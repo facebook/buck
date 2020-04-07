@@ -1769,7 +1769,7 @@ public class CachingBuildEngineTest {
       }
       // Now run a second build that gets a cache hit.  We use an empty `FakeFileHashCache` which
       // does *not* contain the path, so any attempts to hash it will fail.
-      FakeFileHashCache fakeFileHashCache = new FakeFileHashCache(new HashMap<Path, HashCode>());
+      FakeFileHashCache fakeFileHashCache = new FakeFileHashCache(new HashMap<>());
       try (CachingBuildEngine cachingBuildEngine =
           cachingBuildEngineFactory()
               .setCachingBuildEngineDelegate(new LocalCachingBuildEngineDelegate(fakeFileHashCache))
@@ -2317,7 +2317,7 @@ public class CachingBuildEngineTest {
                                     BuildRuleSuccessType.BUILT_LOCALLY, Optional.empty()));
                           }
                         }));
-        strategy.cancelCallback = () -> cancelSignal.countDown();
+        strategy.cancelCallback = cancelSignal::countDown;
 
         FakeBuildRule failingRule =
             new FakeBuildRule("//:failing_rule", filesystem) {
@@ -3626,9 +3626,8 @@ public class CachingBuildEngineTest {
     private void assertManifestLoaded(List<BuildRuleEvent.Finished> events) {
       assertFalse(events.isEmpty());
       events.forEach(
-          event -> {
-            assertFalse(event.getManifestStoreResult().get().getManifestLoadError().isPresent());
-          });
+          event ->
+              assertFalse(event.getManifestStoreResult().get().getManifestLoadError().isPresent()));
     }
   }
 
@@ -3743,7 +3742,7 @@ public class CachingBuildEngineTest {
       result2.get();
     }
 
-    private class ControlledRule extends AbstractBuildRule implements OverrideScheduleRule {
+    private static class ControlledRule extends AbstractBuildRule implements OverrideScheduleRule {
 
       private final RuleScheduleInfo ruleScheduleInfo;
 

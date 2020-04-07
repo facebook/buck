@@ -232,7 +232,7 @@ public abstract class CompilerTreeApiTest {
     assertThat(
         testCompiler.getDiagnosticMessages().stream()
             .map(ERROR_LINE::matcher)
-            .filter(matcher -> matcher.matches())
+            .filter(java.util.regex.Matcher::matches)
             .map(matcher -> matcher.group("message"))
             .collect(Collectors.toSet()),
         Matchers.containsInAnyOrder(messages));

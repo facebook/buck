@@ -27,6 +27,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -86,7 +87,7 @@ public class ResourcePoolTest {
               .collect(Collectors.toList());
 
       assertThat(
-          Futures.successfulAsList(results).get().stream().filter(r -> r != null).count(),
+          Futures.successfulAsList(results).get().stream().filter(Objects::nonNull).count(),
           equalTo(1L));
       expectedException.expectCause(Matchers.instanceOf(TestException.class));
       Futures.allAsList(results).get();

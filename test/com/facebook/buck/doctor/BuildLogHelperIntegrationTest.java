@@ -91,7 +91,8 @@ public class BuildLogHelperIntegrationTest {
     ImmutableMap<BuildId, OptionalInt> buildIdToCommandMap =
         buildLogs.stream()
             .collect(
-                ImmutableMap.toImmutableMap(e -> e.getBuildId().get(), e -> e.getBuildTimeMs()));
+                ImmutableMap.toImmutableMap(
+                    e -> e.getBuildId().get(), BuildLogEntry::getBuildTimeMs));
     assertThat(
         buildIdToCommandMap,
         Matchers.equalTo(

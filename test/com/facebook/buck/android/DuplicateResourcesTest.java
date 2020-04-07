@@ -206,7 +206,7 @@ public class DuplicateResourcesTest {
 
     assertThat(
         errorMessage,
-        command.stream().filter(s -> "-S".equals(s)).collect(ImmutableList.toImmutableList()),
+        command.stream().filter("-S"::equals).collect(ImmutableList.toImmutableList()),
         Matchers.hasSize(paths.length));
     int firstResourceFolderArgument = command.indexOf("-S");
 

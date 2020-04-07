@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -104,7 +105,7 @@ public class ActionGraphSerializerTest {
           assertActionGraphNode(iterator.next(), "f", "g");
           assertActionGraphNode(iterator.next(), "d", "f");
           assertLeaves(Arrays.asList(iterator.next(), iterator.next()), "r1", "r2");
-          assertActionGraphNode(iterator.next(), "a", Arrays.asList("d"), "r1", "r2");
+          assertActionGraphNode(iterator.next(), "a", Collections.singletonList("d"), "r1", "r2");
           assertActionGraphNode(iterator.next(), "e", "g");
           assertActionGraphNode(iterator.next(), "b", "e");
           assertActionGraphNode(iterator.next(), "c", "f");
@@ -164,7 +165,7 @@ public class ActionGraphSerializerTest {
     if (deps.isEmpty()) {
       assertThat(node.getBuildDeps(), is(empty()));
     } else {
-      assertDeps(node.getBuildDeps(), deps.toArray(new String[deps.size()]));
+      assertDeps(node.getBuildDeps(), deps.toArray(new String[0]));
     }
   }
 

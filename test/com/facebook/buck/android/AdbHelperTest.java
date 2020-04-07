@@ -224,15 +224,15 @@ public class AdbHelperTest {
           createEmulator("4", IDevice.DeviceState.ONLINE)
         };
 
-    for (int i = 0; i < devices.length; i++) {
+    for (IDevice device : devices) {
       AdbHelper myAdbHelper =
           createAdbHelper(
               createAdbOptions(),
-              new TargetDeviceOptions(false, false, Optional.of(devices[i].getSerialNumber())));
+              new TargetDeviceOptions(false, false, Optional.of(device.getSerialNumber())));
       List<IDevice> filteredDevices = myAdbHelper.filterDevices(devices);
       assertNotNull(filteredDevices);
       assertEquals(1, filteredDevices.size());
-      assertSame(devices[i], filteredDevices.get(0));
+      assertSame(device, filteredDevices.get(0));
     }
   }
 
@@ -247,19 +247,19 @@ public class AdbHelperTest {
           createEmulator("4", IDevice.DeviceState.ONLINE)
         };
 
-    for (int i = 0; i < devices.length; i++) {
+    for (IDevice device : devices) {
       AdbHelper myAdbHelper =
           createAdbHelper(
               TestExecutionContext.newBuilder()
                   .setEnvironment(
-                      ImmutableMap.of(AdbHelper.SERIAL_NUMBER_ENV, devices[i].getSerialNumber()))
+                      ImmutableMap.of(AdbHelper.SERIAL_NUMBER_ENV, device.getSerialNumber()))
                   .build(),
               createAdbOptions(),
               new TargetDeviceOptions());
       List<IDevice> filteredDevices = myAdbHelper.filterDevices(devices);
       assertNotNull(filteredDevices);
       assertEquals(1, filteredDevices.size());
-      assertSame(devices[i], filteredDevices.get(0));
+      assertSame(device, filteredDevices.get(0));
     }
   }
 

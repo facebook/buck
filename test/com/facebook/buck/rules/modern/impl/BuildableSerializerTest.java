@@ -121,7 +121,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
     test(new WithExcludeFromRuleKey());
   }
 
-  class CustomToolchainProvider extends BaseToolchainProvider {
+  static class CustomToolchainProvider extends BaseToolchainProvider {
     private final Map<String, Toolchain> toolchains = new HashMap<>();
 
     @Override

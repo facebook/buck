@@ -31,32 +31,32 @@ public class MoreAtomicsTest {
 
   @Test
   public void testSetMaxLong() {
-    AtomicLong atomic = new AtomicLong(0l);
-    long result = MoreAtomics.setMaxAndGet(1l, atomic);
+    AtomicLong atomic = new AtomicLong(0L);
+    long result = MoreAtomics.setMaxAndGet(1L, atomic);
 
-    assertEquals(1l, result);
-    assertEquals(1l, atomic.get());
+    assertEquals(1L, result);
+    assertEquals(1L, atomic.get());
 
-    result = MoreAtomics.setMaxAndGet(0l, atomic);
-    assertEquals(1l, result);
-    assertEquals(1l, atomic.get());
+    result = MoreAtomics.setMaxAndGet(0L, atomic);
+    assertEquals(1L, result);
+    assertEquals(1L, atomic.get());
   }
 
   @Test
   public void testSetMinLong() {
-    AtomicLong atomic = new AtomicLong(1l);
-    long result = MoreAtomics.setMinAndGet(0l, atomic);
-    assertEquals(0l, result);
-    assertEquals(0l, atomic.get());
+    AtomicLong atomic = new AtomicLong(1L);
+    long result = MoreAtomics.setMinAndGet(0L, atomic);
+    assertEquals(0L, result);
+    assertEquals(0L, atomic.get());
 
-    result = MoreAtomics.setMinAndGet(1l, atomic);
-    assertEquals(0l, result);
-    assertEquals(0l, atomic.get());
+    result = MoreAtomics.setMinAndGet(1L, atomic);
+    assertEquals(0L, result);
+    assertEquals(0L, atomic.get());
   }
 
   @Test
   public void testSetMaxLongConcurrent() throws InterruptedException {
-    AtomicLong atomic = new AtomicLong(0l);
+    AtomicLong atomic = new AtomicLong(0L);
 
     ExecutorService executor = Executors.newFixedThreadPool(10);
 
@@ -69,9 +69,9 @@ public class MoreAtomicsTest {
     AtomicInteger successThreeCounter = new AtomicInteger(0);
     CountDownLatch latch = new CountDownLatch(oneCount + twoCount + threeCount);
 
-    runSetMax(executor, 1l, atomic, successOneCounter, oneCount, latch);
-    runSetMax(executor, 3l, atomic, successThreeCounter, threeCount, latch);
-    runSetMax(executor, 2l, atomic, successTwoCounter, twoCount, latch);
+    runSetMax(executor, 1L, atomic, successOneCounter, oneCount, latch);
+    runSetMax(executor, 3L, atomic, successThreeCounter, threeCount, latch);
+    runSetMax(executor, 2L, atomic, successTwoCounter, twoCount, latch);
 
     // wait for all tasks to complete
     latch.await();
@@ -81,7 +81,7 @@ public class MoreAtomicsTest {
       executor.shutdownNow();
     }
 
-    assertEquals(3l, atomic.get());
+    assertEquals(3L, atomic.get());
 
     // maximum value should be returned back the same anount of times it was requested
     assertEquals(threeCount, successThreeCounter.get());

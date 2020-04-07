@@ -113,7 +113,7 @@ public class SkylarkPackageFileParserTest {
   public void canParsePackage() throws Exception {
     Path packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
     Files.createDirectories(packageFile.getParent());
-    Files.write(packageFile, Arrays.asList("package(visibility=['//:foo'])"));
+    Files.write(packageFile, Collections.singletonList("package(visibility=['//:foo'])"));
 
     PackageFileManifest packageFileManifest = parser.getManifest(AbsPath.of(packageFile));
     PackageMetadata pkg = packageFileManifest.getPackage();
@@ -124,7 +124,7 @@ public class SkylarkPackageFileParserTest {
   public void missingPackageCreatesDefault() throws Exception {
     Path packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
     Files.createDirectories(packageFile.getParent());
-    Files.write(packageFile, Arrays.asList());
+    Files.write(packageFile, Collections.emptyList());
 
     PackageFileManifest packageFileManifest = parser.getManifest(AbsPath.of(packageFile));
     assertNotNull(packageFileManifest.getPackage());

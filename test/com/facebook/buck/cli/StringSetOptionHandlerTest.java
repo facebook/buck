@@ -27,7 +27,7 @@ import org.kohsuke.args4j.Option;
 
 public class StringSetOptionHandlerTest {
 
-  private class TestBean {
+  private static class TestBean {
     @Option(name = "--option1", handler = StringSetOptionHandler.class)
     private Supplier<ImmutableSet<String>> option1;
 

@@ -37,7 +37,7 @@ public class CloseableResource<T extends AutoCloseable> extends ExternalResource
    */
   public static <U extends AutoCloseable> CloseableResource<U> of(Supplier<U> resourceSupplier) {
     return new CloseableResource<>(
-        ThrowingCloseableMemoizedSupplier.of(resourceSupplier, resource -> resource.close()));
+        ThrowingCloseableMemoizedSupplier.of(resourceSupplier, AutoCloseable::close));
   }
 
   /** @return the resource this wraps */

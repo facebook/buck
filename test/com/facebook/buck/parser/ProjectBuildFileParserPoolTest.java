@@ -160,13 +160,11 @@ public class ProjectBuildFileParserPoolTest {
                 parser.close();
                 EasyMock.expectLastCall()
                     .andAnswer(
-                        new IAnswer<Void>() {
-                          @Override
-                          public Void answer() {
-                            parserCount.decrementAndGet();
-                            return null;
-                          }
-                        });
+                        (IAnswer<Void>)
+                            () -> {
+                              parserCount.decrementAndGet();
+                              return null;
+                            });
               } catch (Exception e) {
                 Throwables.throwIfUnchecked(e);
                 throw new RuntimeException(e);

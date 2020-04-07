@@ -45,7 +45,7 @@ import org.junit.Test;
 
 public class DownloadStepTest {
 
-  class ConditionallyExplodingDownloader implements Downloader {
+  static class ConditionallyExplodingDownloader implements Downloader {
 
     private final Function<URI, Optional<byte[]>> fetcher;
 

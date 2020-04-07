@@ -676,7 +676,7 @@ public class AndroidBinaryInstallIntegrationTest {
     }
   }
 
-  private class ExoState {
+  private static class ExoState {
 
     private final String mainJavaContent;
     private final String manifestContent;

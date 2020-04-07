@@ -78,7 +78,7 @@ public class ThriftRuleKeyLoggerTest {
     }
   }
 
-  private class ErrorWriter extends OutputStream {
+  private static class ErrorWriter extends OutputStream {
     public int writeCalls = 0;
 
     @Override

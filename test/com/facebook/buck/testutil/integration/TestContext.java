@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -119,6 +120,6 @@ public class TestContext extends NGContext implements Closeable {
     out.close();
     err.close();
 
-    clientDisconnectService.ifPresent(service -> service.shutdownNow());
+    clientDisconnectService.ifPresent(ExecutorService::shutdownNow);
   }
 }

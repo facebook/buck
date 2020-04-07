@@ -74,7 +74,7 @@ public class RemoteExecutionStateRendererTest {
       // e.g. [RE]  - //:target0... 0.9s
       assertEquals(
           "[RE]  - //:target" + i + "... 0." + (9 - i) + "s",
-          testRenderer.renderStatusLine(Long.valueOf(i)));
+          testRenderer.renderStatusLine((long) i));
     }
   }
 
@@ -102,7 +102,7 @@ public class RemoteExecutionStateRendererTest {
     testRenderer = createTestRenderer(getEvents(createBuildTargets(numTargets)));
 
     for (int i = 0; i < numTargets; i++) {
-      assertEquals("[RE] [.]", testRenderer.renderShortStatus(Long.valueOf(i)));
+      assertEquals("[RE] [.]", testRenderer.renderShortStatus((long) i));
     }
   }
 

@@ -762,7 +762,7 @@ public class ExopackageInstallerIntegrationTest {
         + "</manifest>";
   }
 
-  private class ExoState {
+  private static class ExoState {
     private final String apkContent;
     private final String manifestContent;
     private final ImmutableList<String> secondaryDexesContents;

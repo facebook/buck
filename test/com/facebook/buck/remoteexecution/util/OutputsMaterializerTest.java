@@ -25,6 +25,7 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.remoteexecution.AsyncBlobFetcher;
 import com.facebook.buck.remoteexecution.ContentAddressedStorageClient.FileMaterializer;
+import com.facebook.buck.remoteexecution.UploadDataSupplier;
 import com.facebook.buck.remoteexecution.grpc.GrpcProtocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol;
 import com.facebook.buck.remoteexecution.interfaces.Protocol.Digest;
@@ -198,7 +199,7 @@ public class OutputsMaterializerTest {
             collectedOutputs.requiredData.stream()
                 .collect(
                     ImmutableMap.toImmutableMap(
-                        data -> data.getDigest(),
+                        UploadDataSupplier::getDigest,
                         data -> {
                           try (InputStream stream = data.get()) {
                             return ByteString.readFrom(stream);

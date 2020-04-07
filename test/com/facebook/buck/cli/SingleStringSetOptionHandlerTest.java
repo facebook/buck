@@ -33,7 +33,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 
 public class SingleStringSetOptionHandlerTest {
-  private class TestBean {
+  private static class TestBean {
     @Option(name = "--set", handler = SingleStringSetOptionHandler.class)
     Supplier<ImmutableSet<String>> someSet;
 

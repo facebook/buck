@@ -33,10 +33,10 @@ import java.util.concurrent.TimeUnit;
 
 public class FakeExecutor implements ScheduledExecutorService {
   private final List<AnnotatedRunnable> runnableList =
-      Collections.synchronizedList(new ArrayList<AnnotatedRunnable>());
+      Collections.synchronizedList(new ArrayList<>());
   private final CountDownLatch latch = new CountDownLatch(1);
   private final IdentityHashMap<ScheduledFuture<?>, ScheduledFuture<?>> outstandingTasks =
-      new IdentityHashMap<ScheduledFuture<?>, ScheduledFuture<?>>();
+      new IdentityHashMap<>();
 
   private volatile boolean rejectSubmission = false;
   private volatile boolean isShutdown = false;
@@ -93,7 +93,7 @@ public class FakeExecutor implements ScheduledExecutorService {
       throw new RejectedExecutionException();
     }
 
-    FakeScheduledFuture<V> future = new FakeScheduledFuture<V>(callable);
+    FakeScheduledFuture<V> future = new FakeScheduledFuture<>(callable);
     AnnotatedRunnable runnable = new AnnotatedRunnable(future, delay, -1, unit);
 
     runnable.setFuture(future);
@@ -115,7 +115,7 @@ public class FakeExecutor implements ScheduledExecutorService {
     runnableList.add(runnable);
 
     FakeScheduledFuture<Unit> future =
-        new FakeScheduledFuture<Unit>(Executors.callable(runnable, null));
+        new FakeScheduledFuture<>(Executors.callable(runnable, null));
 
     runnable.setFuture(future);
     outstandingTasks.put(future, future);
@@ -134,7 +134,7 @@ public class FakeExecutor implements ScheduledExecutorService {
     runnableList.add(runnable);
 
     FakeScheduledFuture<Unit> future =
-        new FakeScheduledFuture<Unit>(Executors.callable(runnable, null));
+        new FakeScheduledFuture<>(Executors.callable(runnable, null));
 
     runnable.setFuture(future);
     outstandingTasks.put(future, future);
@@ -153,7 +153,7 @@ public class FakeExecutor implements ScheduledExecutorService {
   public List<Runnable> shutdownNow() {
     cancelPendingTasks();
 
-    return new ArrayList<Runnable>(runnableList);
+    return new ArrayList<>(runnableList);
   }
 
   private void cancelPendingTasks() {
@@ -190,21 +190,21 @@ public class FakeExecutor implements ScheduledExecutorService {
               }
             }));
 
-    return new FakeScheduledFuture<T>(task);
+    return new FakeScheduledFuture<>(task);
   }
 
   @Override
   public <T> Future<T> submit(Runnable task, T result) {
     runnableList.add(new AnnotatedRunnable(task));
 
-    return new FakeScheduledFuture<T>(toCallable(task, result));
+    return new FakeScheduledFuture<>(toCallable(task, result));
   }
 
   @Override
   public Future<?> submit(Runnable task) {
     runnableList.add(new AnnotatedRunnable(task));
 
-    return new FakeScheduledFuture<Unit>(toCallable(task));
+    return new FakeScheduledFuture<>(toCallable(task));
   }
 
   @Override
@@ -251,7 +251,7 @@ public class FakeExecutor implements ScheduledExecutorService {
 
     for (AnnotatedRunnable runnable : rescheduleList) {
       FakeScheduledFuture<Unit> future =
-          new FakeScheduledFuture<Unit>(Executors.callable(runnable, null));
+          new FakeScheduledFuture<>(Executors.callable(runnable, null));
       runnable.setFuture(future);
       runnableList.add(runnable);
       outstandingTasks.put(runnable.getFuture(), runnable.getFuture());

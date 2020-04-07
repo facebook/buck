@@ -26,6 +26,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import javax.annotation.processing.AbstractProcessor;
@@ -62,7 +63,7 @@ public class DescriptorAndSignatureFactoryTestBase {
   final List<String> errors = new ArrayList<>();
 
   protected boolean isTestingWithDependencies() {
-    return testMode == WITH_DEPS;
+    return testMode.equals(WITH_DEPS);
   }
 
   protected void test(TestRunnable r) throws Exception {
@@ -83,7 +84,7 @@ public class DescriptorAndSignatureFactoryTestBase {
 
   private void runTest(TestRunnable r) throws Exception {
     testCompiler.addSourceFile(getSourceFile("Foo.java"));
-    if (testMode == WITH_DEPS) {
+    if (testMode.equals(WITH_DEPS)) {
       testCompiler.addClasspathSourceFile(getSourceFile("Dependency.java"));
       testCompiler.addClasspathSourceFile(getSourceFile("DependencyException.java"));
       testCompiler.addClasspathSourceFile(getSourceFile("DependencyInterface.java"));
@@ -196,13 +197,12 @@ public class DescriptorAndSignatureFactoryTestBase {
           fail(
               String.format(
                   "Didn't implement testing for element kind %s", enclosedElement.getKind()));
-          continue;
       }
     }
   }
 
   private void checkValue(String type, Name elementName, String expected, String actual) {
-    if (expected != actual && (expected == null || !expected.equals(actual))) {
+    if (!Objects.equals(expected, actual)) {
       errors.add(
           String.format(
               "%s %s:\n\tExpected: %s\n\tActual: %s", type, elementName, expected, actual));

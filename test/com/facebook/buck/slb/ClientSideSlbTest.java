@@ -36,7 +36,6 @@ import okhttp3.ResponseBody;
 import org.easymock.Capture;
 import org.easymock.EasyMock;
 import org.easymock.EasyMockSupport;
-import org.easymock.IAnswer;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -127,23 +126,19 @@ public class ClientSideSlbTest extends EasyMockSupport {
       mockCall.enqueue(EasyMock.anyObject(ClientSideSlb.ServerPing.class));
       EasyMock.expectLastCall()
           .andAnswer(
-              new IAnswer<Object>() {
-                @Override
-                public Object answer() throws Throwable {
-                  Callback callback = (Callback) EasyMock.getCurrentArguments()[0];
-                  ResponseBody body =
-                      ResponseBody.create(MediaType.parse("text/plain"), "The Body.");
-                  Response response =
-                      new Response.Builder()
-                          .body(body)
-                          .code(200)
-                          .protocol(Protocol.HTTP_1_1)
-                          .request(new Request.Builder().url(server.toString()).build())
-                          .message("")
-                          .build();
-                  callback.onResponse(mockCall, response);
-                  return null;
-                }
+              () -> {
+                Callback callback = (Callback) EasyMock.getCurrentArguments()[0];
+                ResponseBody body = ResponseBody.create(MediaType.parse("text/plain"), "The Body.");
+                Response response =
+                    new Response.Builder()
+                        .body(body)
+                        .code(200)
+                        .protocol(Protocol.HTTP_1_1)
+                        .request(new Request.Builder().url(server.toString()).build())
+                        .message("")
+                        .build();
+                callback.onResponse(mockCall, response);
+                return null;
               });
     }
     mockBus.post(EasyMock.anyObject(LoadBalancerPingEvent.class));

@@ -533,7 +533,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(ext1, Arrays.asList("load('//:ext_2.bzl', 'ext_2')", "ext_1 = ext_2"));
 
     Path ext2 = projectFilesystem.resolve("ext_2.bzl");
-    Files.write(ext2, Arrays.asList("ext_2 = 'hello'"));
+    Files.write(ext2, Collections.singletonList("ext_2 = 'hello'"));
 
     RecordingParser recordingParser = new RecordingParser(parser);
     recordingParser.getManifest(AbsPath.of(buildFile));
@@ -557,7 +557,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(ext1, Arrays.asList("load(':ext_2.bzl', 'ext_2')", "ext_1 = ext_2"));
 
     Path ext2 = projectFilesystem.resolve("ext_2.bzl");
-    Files.write(ext2, Arrays.asList("ext_2 = 'hello'"));
+    Files.write(ext2, Collections.singletonList("ext_2 = 'hello'"));
 
     RecordingParser recordingParser = new RecordingParser(parser);
     recordingParser.getManifest(AbsPath.of(buildFile));
@@ -571,7 +571,7 @@ public class SkylarkProjectBuildFileParserTest {
   public void doesNotReadSameBuildFileMultipleTimes() throws Exception {
     // Verifies BUILD file is accessed for IO and AST construction only once.
     Path buildFile = projectFilesystem.resolve("BUCK");
-    Files.write(buildFile, Arrays.asList("_var = 'hello'"));
+    Files.write(buildFile, Collections.singletonList("_var = 'hello'"));
 
     RecordingParser recordingParser = new RecordingParser(parser);
     recordingParser.getManifest(AbsPath.of(buildFile));
@@ -586,7 +586,7 @@ public class SkylarkProjectBuildFileParserTest {
     // Verifies we can handle the case when the same extension is loaded multiple times from another
     // extension.
     Path buildFile = projectFilesystem.resolve("BUCK");
-    Files.write(buildFile, Arrays.asList("load('//:ext_1.bzl', 'ext_1')"));
+    Files.write(buildFile, Collections.singletonList("load('//:ext_1.bzl', 'ext_1')"));
 
     Path ext1 = projectFilesystem.resolve("ext_1.bzl");
     Files.write(
@@ -597,7 +597,7 @@ public class SkylarkProjectBuildFileParserTest {
             "ext_1 = ext_2"));
 
     Path ext2 = projectFilesystem.resolve("ext_2.bzl");
-    Files.write(ext2, Arrays.asList("ext_2 = 'hello'"));
+    Files.write(ext2, Collections.singletonList("ext_2 = 'hello'"));
 
     parser.getManifest(AbsPath.of(buildFile));
   }
@@ -612,7 +612,7 @@ public class SkylarkProjectBuildFileParserTest {
         Arrays.asList("load('//:ext_1.bzl', 'ext_1')", "load('//:ext_1.bzl', ext1_copy='ext_1')"));
 
     Path ext1 = projectFilesystem.resolve("ext_1.bzl");
-    Files.write(ext1, Arrays.asList("ext_1 = 'hello'"));
+    Files.write(ext1, Collections.singletonList("ext_1 = 'hello'"));
 
     parser.getManifest(AbsPath.of(buildFile));
   }
@@ -1519,7 +1519,7 @@ public class SkylarkProjectBuildFileParserTest {
         extension,
         Arrays.asList(
             "def get_name():", "    return native.implicit_package_symbol('NAME', 'root')"));
-    Files.write(implicitExtension, Arrays.asList("NAME = 'src'"));
+    Files.write(implicitExtension, Collections.singletonList("NAME = 'src'"));
 
     parser =
         createParserWithOptions(
@@ -1580,7 +1580,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     Files.write(
         buildFile,
-        Arrays.asList(
+        Collections.singletonList(
             "prebuilt_jar(name=implicit_package_symbol('get_rule_name'), binary_jar=\"foo.jar\")"));
 
     getSingleRule(buildFile);
@@ -1604,7 +1604,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     Files.write(
         buildFile,
-        Arrays.asList(
+        Collections.singletonList(
             "prebuilt_jar(name=implicit_package_symbol('get_rule_name'), binary_jar=\"foo.jar\")"));
 
     getSingleRule(buildFile);
@@ -1617,7 +1617,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     Path implicitExtension = projectFilesystem.resolve("src").resolve("get_name.bzl");
     Files.createDirectories(implicitExtension.getParent());
-    Files.write(implicitExtension, Arrays.asList("def some_invalid_syntax():"));
+    Files.write(implicitExtension, Collections.singletonList("def some_invalid_syntax():"));
 
     parser =
         createParserWithOptions(
@@ -1634,7 +1634,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     Files.write(
         buildFile,
-        Arrays.asList(
+        Collections.singletonList(
             "prebuilt_jar(name=implicit_package_symbol('get_rule_name'), binary_jar=\"foo.jar\")"));
 
     getSingleRule(buildFile);
@@ -1664,7 +1664,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     Files.write(
         buildFile,
-        Arrays.asList(
+        Collections.singletonList(
             "prebuilt_jar(name=implicit_package_symbol('missing_method') + '_cant_concat_with_none', binary_jar=\"foo.jar\")"));
 
     getSingleRule(buildFile);

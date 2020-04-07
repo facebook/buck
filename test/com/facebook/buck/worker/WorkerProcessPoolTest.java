@@ -136,13 +136,12 @@ public class WorkerProcessPoolTest {
     acquireWorkersThenRunActionThenRelease(
         pool,
         1,
-        () -> {
-          createdWorkers.stream()
-              .findFirst()
-              .orElseThrow(IllegalStateException::new)
-              // closing a worker process will trigger removal from the pool
-              .close();
-        });
+        () ->
+            createdWorkers.stream()
+                .findFirst()
+                .orElseThrow(IllegalStateException::new)
+                // closing a worker process will trigger removal from the pool
+                .close());
 
     acquireWorkersThenRelease(pool, 1);
 

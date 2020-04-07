@@ -175,7 +175,7 @@ public class DepsAwareExecutorTest<TaskType extends DepsAwareTask<Object, TaskTy
       future.get();
     } catch (ExecutionException e) {
       Throwable cause = e.getCause();
-      return cause != null && cause instanceof InterruptedException;
+      return cause instanceof InterruptedException;
     } catch (InterruptedException e) {
       return false;
     }

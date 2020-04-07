@@ -367,7 +367,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return buildMultipleAndReturnStringOutputs(context, buildRoot, env, args).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
-                entry -> entry.getKey(), entry -> buildRoot.resolve(entry.getValue())));
+                Map.Entry::getKey, entry -> buildRoot.resolve(entry.getValue())));
   }
 
   public Path buildAndReturnOutput(Map<String, String> env, String... args) {
@@ -410,8 +410,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     return buildMultipleAndReturnStringOutputs(Optional.empty(), root, ImmutableMap.of(), args)
         .entrySet().stream()
         .collect(
-            ImmutableMap.toImmutableMap(
-                entry -> entry.getKey(), entry -> Paths.get(entry.getValue())));
+            ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> Paths.get(entry.getValue())));
   }
 
   public Path buildAndReturnRelativeOutput(String... args) {

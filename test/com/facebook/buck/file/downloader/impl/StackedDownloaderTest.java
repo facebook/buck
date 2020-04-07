@@ -297,6 +297,7 @@ public class StackedDownloaderTest {
         for (Downloader seen : downloaders) {
           if (clazz.isInstance(seen)) {
             seenRetrying = true;
+            break;
           }
         }
         return seenRetrying;

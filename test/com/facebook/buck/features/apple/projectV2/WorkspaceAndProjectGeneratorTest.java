@@ -350,7 +350,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
     assertThat(mainScheme.isPresent(), is(true));
 
-    XCScheme.BuildAction mainSchemeBuildAction = mainScheme.get().getBuildAction().get();
+    XCScheme.BuildAction mainSchemeBuildAction = mainScheme.flatMap(XCScheme::getBuildAction).get();
     List<BuildActionEntry> mainSchemeBuildActionEntries =
         mainSchemeBuildAction.getBuildActionEntries();
     assertThat(mainSchemeBuildActionEntries, hasSize(4));

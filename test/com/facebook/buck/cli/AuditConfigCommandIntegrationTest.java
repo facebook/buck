@@ -204,7 +204,7 @@ public class AuditConfigCommandIntegrationTest {
     auditIni.forEach(
         (section_name, section) -> {
           ImmutableMap.Builder<String, String> section_builder = ImmutableMap.builder();
-          section.forEach((k, v) -> section_builder.put(k, v));
+          section.forEach(section_builder::put);
           audit_config.put(section_name, section_builder.build());
         });
 

@@ -45,23 +45,22 @@ public class AsyncLogHandlerTest {
     CountDownLatch asyncProcessorCompletedLatch = new CountDownLatch(1);
     Executor executor = Executors.newSingleThreadExecutor();
     Executor executorDecorator =
-        (orginalRunnable) -> {
-          executor.execute(
-              () -> {
-                // Ensures that initially all calls to the Handler delegate happen asynchronously
-                // (via the ExecutorService running this current piece of code).
-                expectedThreadId.set(Thread.currentThread().getId());
+        (orginalRunnable) ->
+            executor.execute(
+                () -> {
+                  // Ensures that initially all calls to the Handler delegate happen asynchronously
+                  // (via the ExecutorService running this current piece of code).
+                  expectedThreadId.set(Thread.currentThread().getId());
 
-                try {
-                  orginalRunnable.run();
-                } catch (Exception ex) {
-                  unexpectedException.set(true);
-                  ex.printStackTrace();
-                }
+                  try {
+                    orginalRunnable.run();
+                  } catch (Exception ex) {
+                    unexpectedException.set(true);
+                    ex.printStackTrace();
+                  }
 
-                asyncProcessorCompletedLatch.countDown();
-              });
-        };
+                  asyncProcessorCompletedLatch.countDown();
+                });
 
     // Mock that will be used to ensure the correct calls are forwarded to the delegate Handler
     Handler delegateHandlerMock = createMock(Handler.class);

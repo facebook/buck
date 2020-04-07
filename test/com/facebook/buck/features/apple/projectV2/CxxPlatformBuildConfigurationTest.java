@@ -52,7 +52,7 @@ public class CxxPlatformBuildConfigurationTest {
 
   @Test
   public void testResultHasCorrectSdkRootTakenFromAppendSettings() {
-    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<>();
     appendSettings.put(CxxPlatformBuildConfiguration.SDKROOT, "somesdkroot");
     ImmutableMap<String, ImmutableMap<String, String>> buildConfigs =
         CxxPlatformBuildConfiguration.getDefaultBuildConfigurations(
@@ -159,7 +159,7 @@ public class CxxPlatformBuildConfigurationTest {
 
   @Test
   public void testResultHasCxxLanguageStardardValueTakenFromAppendSettingsIfPresent() {
-    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<>();
     appendSettings.put(CxxPlatformBuildConfiguration.CLANG_CXX_LANGUAGE_STANDARD, "value");
 
     CxxPlatform platform =
@@ -197,7 +197,7 @@ public class CxxPlatformBuildConfigurationTest {
 
   @Test
   public void testResultHasCxxLibraryValueTakenFromAppendSettingsIfPresent() {
-    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<>();
     appendSettings.put(CxxPlatformBuildConfiguration.CLANG_CXX_LIBRARY, "value");
 
     CxxPlatform platform =
@@ -233,7 +233,7 @@ public class CxxPlatformBuildConfigurationTest {
 
   @Test
   public void testResultHasOtherCxxFlagsTakenFromPlatformCxxflagsAndMergedWithAppendSettings() {
-    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<>();
     appendSettings.put(CxxPlatformBuildConfiguration.OTHER_CPLUSPLUSFLAGS, "-flag1 -flag2");
     CxxPlatform platform =
         CxxPlatform.builder()
@@ -254,7 +254,7 @@ public class CxxPlatformBuildConfigurationTest {
   public void testResultHasValuesMergedFromAppendSettings() {
     String someCrazyKey = "SOME_CRAZY_KEY";
 
-    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<>();
     appendSettings.put(someCrazyKey, "value");
 
     CxxPlatform platform =
@@ -277,7 +277,7 @@ public class CxxPlatformBuildConfigurationTest {
   public void testAllBuildConfigurationsHaveSameConfigs() {
     String someCrazyKey = "SOME_CRAZY_KEY";
 
-    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<String, String>();
+    LinkedHashMap<String, String> appendSettings = new LinkedHashMap<>();
     appendSettings.put(someCrazyKey, "value");
 
     CxxPlatform platform =

@@ -75,6 +75,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.hamcrest.Matchers;
@@ -214,7 +215,7 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
                   fakeActionAnalysisRegistry.getRegistered().entrySet().stream()
                       .collect(
                           ImmutableMap.toImmutableMap(
-                              entry -> entry.getKey().getID(), entry -> entry.getValue())));
+                              entry -> entry.getKey().getID(), Map.Entry::getValue)));
             });
 
     TargetNodeToBuildRuleTransformer delegate =

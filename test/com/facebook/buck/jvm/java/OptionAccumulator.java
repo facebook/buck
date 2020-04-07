@@ -23,9 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 class OptionAccumulator implements OptionsConsumer {
-  public final Map<String, String> keyVals = new HashMap<String, String>();
-  public final List<String> flags = new ArrayList<String>();
-  public final List<String> extras = new ArrayList<String>();
+  public final Map<String, String> keyVals = new HashMap<>();
+  public final List<String> flags = new ArrayList<>();
+  public final List<String> extras = new ArrayList<>();
 
   @Override
   public void addOptionValue(String option, String value) {

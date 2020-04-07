@@ -255,7 +255,7 @@ public class OfflineScribeLoggerTest {
    * Fake implementation of {@link OfflineScribeLogger} which fails to log after the first attempt
    * (which succeeds) and allows for checking count of stored categories with lines.
    */
-  private final class FakeFailingOfflineScribeLogger extends ScribeLogger {
+  private static final class FakeFailingOfflineScribeLogger extends ScribeLogger {
 
     private final ImmutableList<String> blacklistCategories;
     private final BuildId id;
