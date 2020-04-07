@@ -29,7 +29,6 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolver;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Verify;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
@@ -277,14 +276,6 @@ public abstract class AbstractSourcePathResolver implements SourcePathResolver {
       for (Path absolutePath : absolutePaths) {
         try {
           if (sourcePath instanceof PathSourcePath) {
-            // If the path doesn't start with the base path, then it's a reference to a file in a
-            // different package and violates package boundaries. We could just add it by the
-            // filename, but better to discourage violating package boundaries.
-            Verify.verify(
-                absolutePath.startsWith(basePath),
-                "Expected %s to start with %s.",
-                absolutePath,
-                basePath);
             addPathToRelativePathMap(
                 filesystem,
                 relativePathMap,
