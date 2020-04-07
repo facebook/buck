@@ -20,6 +20,7 @@
       <sourceFolder url="file://$MODULE_DIR$/third-party/java/aosp/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/core/util/immutables/resources" type="java-resource" />
       <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/logd/resources" type="java-resource" />
+      <sourceFolder url="file://$MODULE_DIR$/src/com/facebook/buck/downward/resources" type="java-resource" />
       <excludeFolder url="file://$MODULE_DIR$/.buckd" />
       <excludeFolder url="file://$MODULE_DIR$/.lsp-buck-out" />
       <excludeFolder url="file://$MODULE_DIR$/.lsp.buckd" />
@@ -159,5 +160,6 @@
     <orderEntry type="library" name="kotlinx-metadata" level="project" />
     <orderEntry type="library" name="jackson-module-kotlin-2.9.9" level="project" />
     <orderEntry type="library" name="log4j2" level="project" />
+    <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
   </component>
 </module>
