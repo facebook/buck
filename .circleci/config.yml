@@ -11,7 +11,7 @@ install_lua: &install_lua
     tar zxf lua-${lua_version}.tar.gz
     cd lua-${lua_version}
     if [ "${PLATFORM}" == "linux" ]; then
-      make linux install
+      sudo make linux install
     elif [ "${PLATFORM}" == "macos" ]; then
       make macosx install
     fi
