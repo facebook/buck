@@ -150,7 +150,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
 
     assertEquals(
         RuleType.of("java_library", RuleType.Kind.BUILD), unconfiguredTargetNode.getRuleType());
-    assertEquals(buildTarget, unconfiguredTargetNode.getBuildTarget());
+    assertEquals(buildTarget.getUnflavoredBuildTarget(), unconfiguredTargetNode.getBuildTarget());
 
     assertEquals(expectAttributes, unconfiguredTargetNode.getAttributes());
 

@@ -244,7 +244,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     }
 
     return ImmutableUnconfiguredTargetNode.of(
-        target,
+        target.getUnflavoredBuildTarget(),
         descriptor.getRuleType(),
         withSelects,
         visibilityPatterns,

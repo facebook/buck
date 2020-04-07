@@ -19,6 +19,7 @@ package com.facebook.buck.core.model.targetgraph.raw;
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
@@ -38,7 +39,7 @@ import java.util.Optional;
 public interface UnconfiguredTargetNode extends ComputeResult {
 
   /** Build target of this node. */
-  UnconfiguredBuildTarget getBuildTarget();
+  UnflavoredBuildTarget getBuildTarget();
 
   /** The type of a rule. */
   RuleType getRuleType();

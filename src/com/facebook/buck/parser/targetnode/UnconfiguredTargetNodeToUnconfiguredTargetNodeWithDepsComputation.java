@@ -81,8 +81,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputation
             .resolve(key.getPackagePath())
             .resolve(cell.getBuckConfig().getView(ParserConfig.class).getBuildFileName());
 
-    UnconfiguredBuildTarget unconfiguredBuildTarget =
-        key.getUnconfiguredTargetNode().getBuildTarget();
+    UnconfiguredBuildTarget unconfiguredBuildTarget = key.getUnconfiguredBuildTarget();
 
     // To discover dependencies, we coerce UnconfiguredTargetNode to TargetNode, get
     // dependencies out of

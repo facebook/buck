@@ -128,7 +128,11 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
         DependencyStack dependencyStack =
             DependencyStack.top(unconfiguredTargetNode.getBuildTarget());
         ImmutableSet<UnconfiguredBuildTarget> deps =
-            getTargetDeps(unconfiguredTargetNode, dependencyStack, buildFileAbsolutePath);
+            getTargetDeps(
+                unconfiguredBuildTarget,
+                unconfiguredTargetNode,
+                dependencyStack,
+                buildFileAbsolutePath);
         UnconfiguredTargetNodeWithDeps unconfiguredTargetNodeWithDeps =
             UnconfiguredTargetNodeWithDeps.of(unconfiguredTargetNode, deps);
         builder.put(unconfiguredBuildTarget.getName(), unconfiguredTargetNodeWithDeps);
@@ -172,6 +176,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
   }
 
   private ImmutableSet<UnconfiguredBuildTarget> getTargetDeps(
+      UnconfiguredBuildTarget unconfiguredBuildTarget,
       UnconfiguredTargetNode unconfiguredTargetNode,
       DependencyStack dependencyStack,
       AbsPath buildFileAbsolutePath) {
@@ -182,7 +187,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputation
     // configuration for Target Node (we use empty configuration at this point)
 
     BuildTarget buildTarget =
-        unconfiguredTargetNode.getBuildTarget().configure(UnconfiguredTargetConfiguration.INSTANCE);
+        unconfiguredBuildTarget.configure(UnconfiguredTargetConfiguration.INSTANCE);
 
     // All target nodes are created sequentially from raw target nodes
     // TODO: use RawTargetNodeToTargetNode transformation

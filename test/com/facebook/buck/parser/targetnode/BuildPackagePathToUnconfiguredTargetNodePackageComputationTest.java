@@ -99,7 +99,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             FlavorSet.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode1 =
         ImmutableUnconfiguredTargetNode.of(
-            unconfiguredBuildTarget1,
+            unconfiguredBuildTarget1.getUnflavoredBuildTarget(),
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes1,
             ImmutableSet.of(),
@@ -116,7 +116,7 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
             FlavorSet.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode2 =
         ImmutableUnconfiguredTargetNode.of(
-            unconfiguredBuildTarget2,
+            unconfiguredBuildTarget2.getUnflavoredBuildTarget(),
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes2,
             ImmutableSet.of(),

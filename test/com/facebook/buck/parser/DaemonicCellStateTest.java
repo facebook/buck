@@ -114,7 +114,7 @@ public class DaemonicCellStateTest {
 
   private UnconfiguredTargetNode rawTargetNode(String name) {
     return ImmutableUnconfiguredTargetNode.of(
-        UnconfiguredBuildTargetParser.parse("//" + name + ":" + name),
+        UnconfiguredBuildTargetParser.parse("//" + name + ":" + name).getUnflavoredBuildTarget(),
         RuleType.of("j_l", RuleType.Kind.BUILD),
         ImmutableMap.of(),
         ImmutableSet.of(),

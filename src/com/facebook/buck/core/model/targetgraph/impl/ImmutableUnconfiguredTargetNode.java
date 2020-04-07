@@ -18,6 +18,7 @@ package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
@@ -35,7 +36,7 @@ import java.util.Optional;
 public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTargetNode {
   @Override
   @JsonProperty("buildTarget")
-  public abstract UnconfiguredBuildTarget getBuildTarget();
+  public abstract UnflavoredBuildTarget getBuildTarget();
 
   @Override
   @JsonProperty("ruleType")
@@ -65,7 +66,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
   public abstract ImmutableList<UnconfiguredBuildTarget> getCompatibleWith();
 
   public static UnconfiguredTargetNode of(
-      UnconfiguredBuildTarget buildTarget,
+      UnflavoredBuildTarget buildTarget,
       RuleType ruleType,
       TwoArraysImmutableHashMap<String, Object> attributes,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
@@ -85,7 +86,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
   /** Kill me. */
   // TODO: kill me
   public static UnconfiguredTargetNode of(
-      UnconfiguredBuildTarget buildTarget,
+      UnflavoredBuildTarget buildTarget,
       RuleType ruleType,
       ImmutableMap<String, Object> attributes,
       ImmutableSet<VisibilityPattern> visibilityPatterns,

@@ -93,7 +93,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
             FlavorSet.NO_FLAVORS);
     UnconfiguredTargetNode unconfiguredTargetNode1 =
         ImmutableUnconfiguredTargetNode.of(
-            unconfiguredBuildTarget1,
+            unconfiguredBuildTarget1.getUnflavoredBuildTarget(),
             RuleType.of("java_library", RuleType.Kind.BUILD),
             rawAttributes1,
             ImmutableSet.of(),
@@ -107,7 +107,7 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
     UnconfiguredTargetNodeWithDeps rawTargetNode =
         computation.transform(
             ImmutableUnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey.ofImpl(
-                unconfiguredTargetNode1, Paths.get("")),
+                unconfiguredTargetNode1, unconfiguredBuildTarget1, Paths.get("")),
             new FakeComputationEnvironment(
                 ImmutableMap.of(
                     ImmutableBuildTargetToUnconfiguredTargetNodeKey.ofImpl(

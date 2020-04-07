@@ -18,6 +18,9 @@ package com.facebook.buck.core.model;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
@@ -28,6 +31,11 @@ import java.util.Objects;
  *
  * <pre>cell//path:rule</pre>
  */
+@JsonAutoDetect(
+    fieldVisibility = JsonAutoDetect.Visibility.NONE,
+    getterVisibility = JsonAutoDetect.Visibility.NONE,
+    isGetterVisibility = JsonAutoDetect.Visibility.NONE,
+    setterVisibility = JsonAutoDetect.Visibility.NONE)
 public class UnflavoredBuildTarget
     implements Comparable<UnflavoredBuildTarget>, DependencyStack.Element {
   private final CellRelativePath cellRelativeBasePath;
@@ -41,8 +49,19 @@ public class UnflavoredBuildTarget
     this.hash = Objects.hash(cellRelativeBasePath, localName);
   }
 
+  @JsonProperty("name")
   public String getLocalName() {
     return localName;
+  }
+
+  /**
+   * Base name of build target, i.e. part of fully qualified name before the colon If this build
+   * target were cell_name//third_party/java/guava:guava-latest, then this would return
+   * "//third_party/java/guava"
+   */
+  @JsonProperty("baseName")
+  private String getBaseNameString() {
+    return getBaseName().toString();
   }
 
   @Override
@@ -90,6 +109,7 @@ public class UnflavoredBuildTarget
     return of(CellRelativePath.of(cell, baseName.getPath()), localName);
   }
 
+  @JsonProperty("cell")
   public CanonicalCellName getCell() {
     return cellRelativeBasePath.getCellName();
   }
@@ -104,5 +124,13 @@ public class UnflavoredBuildTarget
 
   public CellRelativePath getCellRelativeBasePath() {
     return cellRelativeBasePath;
+  }
+
+  @JsonCreator
+  static UnflavoredBuildTarget fromJson(
+      @JsonProperty("cell") CanonicalCellName cell,
+      @JsonProperty("baseName") String baseName,
+      @JsonProperty("name") String name) {
+    return of(cell, BaseName.of(baseName), name);
   }
 }

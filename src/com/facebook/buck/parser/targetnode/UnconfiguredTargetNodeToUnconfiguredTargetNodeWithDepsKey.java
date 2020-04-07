@@ -19,6 +19,7 @@ package com.facebook.buck.parser.targetnode;
 import com.facebook.buck.core.graph.transformation.model.ClassBasedComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputationIdentifier;
 import com.facebook.buck.core.graph.transformation.model.ComputeKey;
+import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNodeWithDeps;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
@@ -44,6 +45,8 @@ public abstract class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsKey
    * UnconfiguredTargetNodeWithDeps}
    */
   public abstract UnconfiguredTargetNode getUnconfiguredTargetNode();
+
+  public abstract UnconfiguredBuildTarget getUnconfiguredBuildTarget();
 
   /**
    * {@link Path} to the root of a package that has this {@link UnconfiguredTargetNode}, relative to

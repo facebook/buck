@@ -24,6 +24,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -250,7 +251,10 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
                 for (UnconfiguredTargetNode from : allToConvert) {
                   ListenableFuture<TargetNodeMaybeIncompatible> targetNode =
                       configureRequestedTarget(
-                          cell, from.getBuildTarget(), globalTargetConfiguration, from);
+                          cell,
+                          UnconfiguredBuildTarget.of(from.getBuildTarget(), FlavorSet.NO_FLAVORS),
+                          globalTargetConfiguration,
+                          from);
                   allNodeJobs.add(targetNode);
                 }
 
@@ -330,7 +334,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     // not `default_target_platform` argument is passed
     Optional<TargetConfiguration> detectedTargetConfiguration =
         targetConfigurationDetector.detectTargetConfiguration(
-            unconfiguredTargetNode.getBuildTarget().getUnflavoredBuildTarget());
+            unconfiguredTargetNode.getBuildTarget());
     if (detectedTargetConfiguration.isPresent()) {
       return detectedTargetConfiguration.get();
     }
