@@ -41,7 +41,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import org.easymock.Capture;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -74,11 +73,6 @@ public class LogdServerTest {
         grpcCleanup.register(InProcessChannelBuilder.forName(serverName).directExecutor().build());
   }
 
-  @After
-  public void tearDown() {
-    server.stop();
-  }
-
   @Test
   public void createLogFile() {
     // This tests if a file is created upon a call to createLogFile to logD server
@@ -105,7 +99,7 @@ public class LogdServerTest {
 
     CreateLogResponse firstResponse = blockingStub.createLogFile(firstRequest);
     CreateLogResponse secondResponse = blockingStub.createLogFile(secondRequest);
-
+    server.stop();
     // check files were created
     assertTrue(new File(firstFilePath).exists());
     assertTrue(new File(secondFilePath).exists());
@@ -163,6 +157,8 @@ public class LogdServerTest {
 
     // client closes stream observer
     requestObserver.onCompleted();
+    // server shuts down and closes its writers
+    server.stop();
 
     // verify our expectations are true
     verify(responseObserver);

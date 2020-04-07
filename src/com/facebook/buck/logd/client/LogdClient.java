@@ -29,6 +29,8 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
@@ -49,11 +51,9 @@ public class LogdClient implements LogDaemonClient {
   private final ManagedChannel channel;
   private final LogdServiceGrpc.LogdServiceBlockingStub blockingStub;
   private final LogdServiceGrpc.LogdServiceStub asyncStub;
-
-  private final Map<Integer, LogdStream> fileIdToLogdStream = new ConcurrentHashMap<>();
-  private final Map<Integer, StreamObserver<Status>> responseObservers = new ConcurrentHashMap<>();
   private final Map<Integer, String> fileIdToPath = new ConcurrentHashMap<>();
   private final StreamObserverFactory streamObserverFactory;
+  private final List<LogdStream> logdStreams = new ArrayList<>();
 
   /**
    * Constructs a LogdClient that is connected to localhost at provided port number.
@@ -182,15 +182,12 @@ public class LogdClient implements LogDaemonClient {
     // LogD server will then return the client with a requestObserver which observes and processes
     //   incoming logs from client i.e. subsequent logs are sent via requestObserver.onNext(...)
     // The returned requestObserver will be wrapped in a LogdStream and returned to the caller
-    responseObservers.computeIfAbsent(
-        logFileId,
-        newLogFileId -> streamObserverFactory.createStreamObserver(fileIdToPath.get(newLogFileId)));
-
+    StreamObserver<Status> responseObserver =
+        streamObserverFactory.createStreamObserver(fileIdToPath.get(logFileId));
+    LogdStream logdStream = new LogdStream(asyncStub.openLog(responseObserver), logFileId);
+    logdStreams.add(logdStream);
     LOG.info("Opening a logd stream to {}", fileIdToPath.get(logFileId));
-    return fileIdToLogdStream.computeIfAbsent(
-        logFileId,
-        newLogFileId ->
-            new LogdStream(asyncStub.openLog(responseObservers.get(newLogFileId)), newLogFileId));
+    return logdStream;
   }
 
   @Override
@@ -207,7 +204,7 @@ public class LogdClient implements LogDaemonClient {
 
   private void closeAllStreams() {
     LOG.info("Force closing all logd streams before client shutdown...");
-    for (LogdStream logdStream : fileIdToLogdStream.values()) {
+    for (LogdStream logdStream : logdStreams) {
       logdStream.close();
     }
   }

@@ -144,6 +144,7 @@ public class LogdServer implements LogDaemonServer {
     private final Map<Integer, BufferedWriter> logStreams = new ConcurrentHashMap<>();
     private final LogFileIdGenerator logFileIdGenerator = new LogFileIdGenerator();
     private final Map<Integer, LogFileData> fileIdToFileData = new ConcurrentHashMap<>();
+    private final Map<LogType, LogFileData> logTypeToFileData = new ConcurrentHashMap<>();
 
     @Override
     public void createLogDir(
@@ -218,28 +219,9 @@ public class LogdServer implements LogDaemonServer {
 
         @Override
         public void onCompleted() {
-          // if client calls onCompleted and closes the stream
-          // then close FileOutputStream of corresponding StreamObserver
-          String logFilePath = fileIdToFileData.remove(logId).getLogFilePath();
-          try {
-            logStreams.remove(logId).close();
-            LOG.info("LogD closed stream to log file at {}", logFilePath);
-            responseObserver.onNext(
-                Status.newBuilder()
-                    .setCode(ExitCode.SUCCESS.getCode())
-                    .setMessage("LogD closed stream to " + logFilePath)
-                    .build());
-
-          } catch (IOException e) {
-            responseObserver.onNext(
-                Status.newBuilder()
-                    .setCode(ExitCode.BUILD_ERROR.getCode())
-                    .setMessage("Failed to close log stream to " + logFilePath)
-                    .build());
-          }
-
-          // TODO(qahoang): silence warning where LogdStream fails to call onCompleted() before
-          // LogD server is shutdown
+          // closes grpc stream and do nothing else because there might be multiple grpc streams
+          // writing to the same LogdMultiWriter
+          responseObserver.onNext(Status.newBuilder().setCode(ExitCode.SUCCESS.getCode()).build());
           responseObserver.onCompleted();
         }
       };
@@ -266,6 +248,14 @@ public class LogdServer implements LogDaemonServer {
       Path logFilePath = Paths.get(filePath);
       String buildId = createLogRequest.getBuildId();
       LogType logType = createLogRequest.getLogType();
+
+      // TODO(qahoang): change this map to logFileNameToFileData when we move from log type and path
+      // to using log file name
+      if (logTypeToFileData.containsKey(logType)) {
+        return CreateLogResponse.newBuilder()
+            .setLogId(logTypeToFileData.get(logType).getLogFileId())
+            .build();
+      }
 
       try {
         Files.createDirectories(logFilePath.getParent());
@@ -295,6 +285,7 @@ public class LogdServer implements LogDaemonServer {
 
         LogFileData newFile = new LogFileData(genFileId, buildId, logType, filePath, offset);
         fileIdToFileData.put(genFileId, newFile);
+        logTypeToFileData.put(logType, newFile);
 
         return CreateLogResponse.newBuilder().setLogId(genFileId).build();
       } catch (IOException e) {
