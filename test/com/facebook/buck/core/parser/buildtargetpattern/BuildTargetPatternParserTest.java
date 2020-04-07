@@ -37,7 +37,7 @@ import org.junit.runner.RunWith;
 @RunWith(JUnitParamsRunner.class)
 public class BuildTargetPatternParserTest {
 
-  private CellNameResolver cellNameResolver = TestCellNameResolver.forRoot("a", "cell");
+  private final CellNameResolver cellNameResolver = TestCellNameResolver.forRoot("a", "cell");
 
   @Rule public ExpectedException exception = ExpectedException.none();
 

@@ -40,10 +40,10 @@ import org.junit.rules.TemporaryFolder;
 
 public class BuildReportFileUploaderTest {
 
-  private BuildId buildId = new BuildId();
-  private String TRACE_FILE_KIND = "test_file_kind";
-  private String TEST_FILE_NAME = "test_file";
-  private String TEST_CONTENT = "rjcgtchjbhhhnjfbjdfjgilbehfvebue";
+  private final BuildId buildId = new BuildId();
+  private final String TRACE_FILE_KIND = "test_file_kind";
+  private final String TEST_FILE_NAME = "test_file";
+  private final String TEST_CONTENT = "rjcgtchjbhhhnjfbjdfjgilbehfvebue";
 
   private final BuckConfig buckConfig = FakeBuckConfig.builder().build();
 

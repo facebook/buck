@@ -44,8 +44,8 @@ public class ListenableFileManagerTest {
 
   private ListenableFileManager fileManager;
   private FakeStandardJavaFileManager fakeFileManager;
-  private List<FileObject> filesRead = new ArrayList<>();
-  private List<FileObject> filesWritten = new ArrayList<>();
+  private final List<FileObject> filesRead = new ArrayList<>();
+  private final List<FileObject> filesWritten = new ArrayList<>();
 
   @Before
   public void setUp() {

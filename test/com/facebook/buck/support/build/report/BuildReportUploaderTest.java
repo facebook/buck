@@ -53,7 +53,7 @@ public class BuildReportUploaderTest {
           .setPathsChangedInWorkingDirectory(ImmutableSet.of("hello.txt"))
           .build();
 
-  private BuildId buildId = new BuildId();
+  private final BuildId buildId = new BuildId();
 
   private class BuildReportHandler extends AbstractHandler {
     @Override

@@ -78,12 +78,12 @@ public class BuildTargetMacroTypeCoercerTest {
     }
   }
 
-  private TargetConfiguration hostConfiguration =
+  private final TargetConfiguration hostConfiguration =
       RuleBasedTargetConfiguration.of(ConfigurationBuildTargetFactoryForTests.newInstance("//:h"));
-  private TargetConfiguration targetConfiguration =
+  private final TargetConfiguration targetConfiguration =
       RuleBasedTargetConfiguration.of(ConfigurationBuildTargetFactoryForTests.newInstance("//:t"));
 
-  TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
+  final TypeCoercer<UnconfiguredBuildTargetWithOutputs, BuildTargetWithOutputs>
       buildTargetWithOutputsTypeCoercer =
           new BuildTargetWithOutputsTypeCoercer(
               new UnconfiguredBuildTargetWithOutputsTypeCoercer(

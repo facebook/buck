@@ -27,8 +27,8 @@ import org.junit.After;
 import org.junit.Test;
 
 public class TargetPatternCollectorTest {
-  private Collection<String> collectedLiterals = new HashSet<>();
-  private QueryExpression.Visitor collector = new TargetPatternCollector(collectedLiterals);
+  private final Collection<String> collectedLiterals = new HashSet<>();
+  private final QueryExpression.Visitor collector = new TargetPatternCollector(collectedLiterals);
 
   @After
   public void tearDown() {

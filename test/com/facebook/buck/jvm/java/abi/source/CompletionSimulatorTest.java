@@ -32,7 +32,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class CompletionSimulatorTest extends CompilerTreeApiTest {
-  private TestSourceOnlyAbiRuleInfo ruleInfo = new TestSourceOnlyAbiRuleInfo("//:test");
+  private final TestSourceOnlyAbiRuleInfo ruleInfo = new TestSourceOnlyAbiRuleInfo("//:test");
   private CompletionSimulator completer;
 
   @Before

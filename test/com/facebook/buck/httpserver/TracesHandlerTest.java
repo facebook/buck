@@ -32,7 +32,8 @@ import org.eclipse.jetty.server.Request;
 import org.junit.Test;
 
 public class TracesHandlerTest extends EasyMockSupport {
-  private static Path traceDir = BuckConstant.getBuckOutputPath().resolve("log").resolve("traces");
+  private static final Path traceDir =
+      BuckConstant.getBuckOutputPath().resolve("log").resolve("traces");
 
   @Test
   public void testHandleGet() throws IOException {

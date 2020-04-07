@@ -75,7 +75,7 @@ public class DownloadStepTest {
   ProjectFilesystem filesystem;
   BuckEventBusForTests.CapturingConsoleEventListener listener;
   ExecutionContext context;
-  Path outputPath = Paths.get("some", "dir", "out.txt");
+  final Path outputPath = Paths.get("some", "dir", "out.txt");
 
   @Before
   public void setUp() {

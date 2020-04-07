@@ -40,7 +40,7 @@ import org.junit.Test;
 
 public class NamedPipesTest {
 
-  private static Logger LOG = Logger.get(NamedPipesTest.class);
+  private static final Logger LOG = Logger.get(NamedPipesTest.class);
 
   private static final String DELIMITER = "^^^";
 

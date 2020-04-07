@@ -476,7 +476,7 @@ public class CxxSourceRuleFactoryTest {
   @RunWith(Parameterized.class)
   public static class RulesForDifferentSourcesShouldCreateSeaparateTargets {
     @SuppressWarnings("serial")
-    Map<String, String[]> testExampleSourceSets =
+    final Map<String, String[]> testExampleSourceSets =
         new HashMap<String, String[]>() {
           {
             put("Preprocessable type", new String[] {"1/2/3.c", "1_2/3.c", "1/2_3.c", "1_2_3.c"});
@@ -617,13 +617,13 @@ public class CxxSourceRuleFactoryTest {
     public ImmutableList<String> expectedPreprocessorFlags;
 
     // Some common boilerplate.
-    private ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    private SourcePathResolverAdapter sourcePathResolverAdapter =
+    private final ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    private final SourcePathResolverAdapter sourcePathResolverAdapter =
         graphBuilder.getSourcePathResolver();
-    private BuildContext context =
+    private final BuildContext context =
         FakeBuildContext.withSourcePathResolver(sourcePathResolverAdapter);
-    private BuildTarget target = BuildTargetFactory.newInstance("//:target");
-    private Joiner space = Joiner.on(" ");
+    private final BuildTarget target = BuildTargetFactory.newInstance("//:target");
+    private final Joiner space = Joiner.on(" ");
 
     @Test
     public void forPreprocess() {

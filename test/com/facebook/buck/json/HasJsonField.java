@@ -25,8 +25,8 @@ import org.hamcrest.Matcher;
 
 /** Matches an {@link JsonNode} which has the specified field. */
 public class HasJsonField extends BaseMatcher<JsonNode> {
-  private String fieldName;
-  private Matcher<? super JsonNode> valueMatcher;
+  private final String fieldName;
+  private final Matcher<? super JsonNode> valueMatcher;
 
   public HasJsonField(String fieldName, Matcher<? super JsonNode> valueMatcher) {
     this.fieldName = fieldName;

@@ -31,8 +31,8 @@ import org.junit.Test;
 
 public class FileSystemMapTest {
 
-  private FileSystemMap.ValueLoader<Boolean> loader = path -> true;
-  private FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final FileSystemMap.ValueLoader<Boolean> loader = path -> true;
+  private final FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Test
   public void testPutLeafNodeWithEmptyTrie() {

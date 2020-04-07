@@ -46,7 +46,7 @@ public class TestExecutionContext {
 
   // For test code, use a global class loader cache to avoid having to call ExecutionContext.close()
   // in each test case.
-  private static ClassLoaderCache testClassLoaderCache = new ClassLoaderCache();
+  private static final ClassLoaderCache testClassLoaderCache = new ClassLoaderCache();
 
   public static ExecutionContext.Builder newBuilder() {
     Map<ExecutorPool, ListeningExecutorService> executors = new HashMap<>();

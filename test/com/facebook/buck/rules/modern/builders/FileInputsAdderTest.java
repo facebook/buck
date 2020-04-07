@@ -128,9 +128,7 @@ public class FileInputsAdderTest {
     fileHashes.put(file, HashCode.fromInt(1));
     adder.addInput(file);
 
-    Directory result = rootDirectory;
-
-    new Directory().addFile("file", 1).assertSame(result);
+    new Directory().addFile("file", 1).assertSame(rootDirectory);
   }
 
   @Test
@@ -140,8 +138,9 @@ public class FileInputsAdderTest {
     fileHashes.put(file, HashCode.fromInt(1));
     adder.addInput(file);
 
-    Directory result = rootDirectory;
-    new Directory().addChild("subdir1", new Directory().addFile("file", 1)).assertSame(result);
+    new Directory()
+        .addChild("subdir1", new Directory().addFile("file", 1))
+        .assertSame(rootDirectory);
   }
 
   @Test
@@ -154,11 +153,9 @@ public class FileInputsAdderTest {
     fileHashes.put(file2, HashCode.fromInt(2));
     adder.addInput(subdir);
 
-    Directory result = rootDirectory;
-
     new Directory()
         .addChild("subdir1", new Directory().addFile("file1", 1).addFile("file2", 2))
-        .assertSame(result);
+        .assertSame(rootDirectory);
   }
 
   @Test
@@ -172,11 +169,10 @@ public class FileInputsAdderTest {
 
     adder.addInput(link1);
 
-    Directory result = rootDirectory;
     new Directory()
         .addChild("subdir1", new Directory().addSymlink("link1", "../file1"))
         .addFile("file1", 1)
-        .assertSame(result);
+        .assertSame(rootDirectory);
   }
 
   @Test
@@ -187,9 +183,7 @@ public class FileInputsAdderTest {
 
     adder.addInput(link1);
 
-    Directory result = rootDirectory;
-
-    new Directory().addSymlink("link1", absoluteTarget.toString()).assertSame(result);
+    new Directory().addSymlink("link1", absoluteTarget.toString()).assertSame(rootDirectory);
   }
 
   @Test

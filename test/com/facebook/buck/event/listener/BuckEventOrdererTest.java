@@ -37,8 +37,8 @@ public class BuckEventOrdererTest {
   private static final long THREAD_TWO = 2;
   private static final long MAX_SKEW = 10;
 
-  private Deque<BuckEvent> serializedEvents = new ArrayDeque<>();
-  private java.util.function.Consumer<BuckEvent> addToSerializedEventsFunction =
+  private final Deque<BuckEvent> serializedEvents = new ArrayDeque<>();
+  private final java.util.function.Consumer<BuckEvent> addToSerializedEventsFunction =
       serializedEvents::add;
 
   @Test

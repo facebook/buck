@@ -42,11 +42,11 @@ class InstallLimitingAndroidDevice extends DelegatingAndroidDevice {
   private int allowedInstalledResources;
   private int allowedInstalledModules;
 
-  private List<Path> installedApks;
-  private List<Path> installedDexes;
-  private List<Path> installedLibs;
-  private List<Path> installedResources;
-  private List<Path> installedModules;
+  private final List<Path> installedApks;
+  private final List<Path> installedDexes;
+  private final List<Path> installedLibs;
+  private final List<Path> installedResources;
+  private final List<Path> installedModules;
 
   private final Path apkPath;
   private final Path agentApkPath;

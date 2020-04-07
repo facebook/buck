@@ -59,10 +59,10 @@ public class SecondLevelContentKeyTest {
         });
   }
 
-  private String raw;
-  private SecondLevelContentKey contentKey;
-  private SecondLevelContentKey.Type expectedType;
-  private String expectedKey;
+  private final String raw;
+  private final SecondLevelContentKey contentKey;
+  private final SecondLevelContentKey.Type expectedType;
+  private final String expectedKey;
 
   public SecondLevelContentKeyTest(
       @SuppressWarnings("unused") String label,

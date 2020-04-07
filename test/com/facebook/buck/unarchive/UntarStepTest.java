@@ -125,8 +125,6 @@ public class UntarStepTest {
     try {
       new UntarStep(createJavaOnlyFilesystem(), tarFile, outputDirectory, Optional.empty(), format);
       Assert.fail(String.format("Format %s should throw an exception, and it didn't", format));
-    } catch (AssertionError e) {
-      throw e;
     } catch (RuntimeException e) {
       Assert.assertThat(
           e.getMessage(), Matchers.containsString("Invalid archive format given to untar step"));

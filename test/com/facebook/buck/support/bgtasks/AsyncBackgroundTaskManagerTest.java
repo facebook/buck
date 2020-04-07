@@ -413,7 +413,7 @@ public class AsyncBackgroundTaskManagerTest {
   }
 
   static class TestArgs {
-    private Optional<Exception> failure;
+    private final Optional<Exception> failure;
     private final @Nullable CountDownLatch taskBlocker;
     private final @Nullable CountDownLatch taskWaiter;
     private final @Nullable CountDownLatch taskStarted;

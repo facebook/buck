@@ -48,7 +48,7 @@ public class CellMappingsFactoryTest {
    * [repositories] section.
    */
   static class SimpleConfigBuilder {
-    ImmutableMap.Builder<String, String> repositories = ImmutableMap.builder();
+    final ImmutableMap.Builder<String, String> repositories = ImmutableMap.builder();
 
     SimpleConfigBuilder put(String cellName, String relativePath) {
       repositories.put(cellName, relativePath);

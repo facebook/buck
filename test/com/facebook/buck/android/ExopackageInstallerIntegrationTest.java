@@ -514,8 +514,8 @@ public class ExopackageInstallerIntegrationTest {
   }
 
   class ExpectedStateBuilder {
-    Map<String, String> expectedApkState = new TreeMap<>();
-    Map<String, String> expectedFilesState = new TreeMap<>();
+    final Map<String, String> expectedApkState = new TreeMap<>();
+    final Map<String, String> expectedFilesState = new TreeMap<>();
 
     void addApk(String packageName, Path hostPath) throws IOException {
       expectedApkState.put(packageName, filesystem.computeSha1(hostPath).toString());

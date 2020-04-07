@@ -62,16 +62,16 @@ import org.junit.runners.model.Statement;
  * </ul>
  */
 public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
-  private TemporaryPaths tempPath = new TemporaryPaths();
+  private final TemporaryPaths tempPath = new TemporaryPaths();
   private final ProcessExecutor processExecutor = new DefaultProcessExecutor(new TestConsole());
   private boolean ranWithBuckd = false;
   private final ProcessHelper processHelper = ProcessHelper.getInstance();
 
   private static final String TESTDATA_DIRECTORY = "testdata";
   private static final Long buildResultTimeoutMS = TimeUnit.SECONDS.toMillis(5);
-  private Set<String> addedTemplates = new HashSet<>();
+  private final Set<String> addedTemplates = new HashSet<>();
 
-  private PlatformUtils platformUtils = PlatformUtils.getForPlatform();
+  private final PlatformUtils platformUtils = PlatformUtils.getForPlatform();
 
   /**
    * Constructor for EndToEndWorkspace. Note that setup and teardown should be called in between

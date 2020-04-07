@@ -82,7 +82,7 @@ public class TargetCompatibilityCheckerTest {
   private ConfigSettingRule nonCompatibleConfigSetting;
   private ConfigSettingRule compatibleConfigSettingWithValues;
 
-  private BuckConfig buckConfig = FakeBuckConfig.builder().build();
+  private final BuckConfig buckConfig = FakeBuckConfig.builder().build();
 
   @Before
   public void setUp() {

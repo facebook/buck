@@ -6927,7 +6927,7 @@ public class StubJarTest {
     private Path stubJarPath;
     private Path fullJarPath;
     private boolean issueAPWarnings;
-    private Pattern javaVersionSpecificPattern = Pattern.compile("^JDK(\\d+):.*");
+    private final Pattern javaVersionSpecificPattern = Pattern.compile("^JDK(\\d+):.*");
 
     public Tester(Language language) {
       this.language = language;

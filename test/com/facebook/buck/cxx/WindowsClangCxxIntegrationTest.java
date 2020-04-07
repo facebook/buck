@@ -56,7 +56,7 @@ public class WindowsClangCxxIntegrationTest {
 
   private ProjectWorkspace workspace2;
 
-  private WindowsClangUtils windowsUtils = new WindowsClangUtils();
+  private final WindowsClangUtils windowsUtils = new WindowsClangUtils();
 
   @Before
   public void setUp() throws IOException {

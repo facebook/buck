@@ -37,8 +37,8 @@ import java.util.concurrent.TimeUnit;
 /** NGContext test double. */
 public class TestContext extends NGContext implements Closeable {
 
-  private Properties properties;
-  private Set<NGClientListener> listeners;
+  private final Properties properties;
+  private final Set<NGClientListener> listeners;
   private Optional<ScheduledExecutorService> clientDisconnectService = Optional.empty();
 
   /** Simulates client that never disconnects, with normal system environment. */

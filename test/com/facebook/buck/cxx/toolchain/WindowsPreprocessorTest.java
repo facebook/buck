@@ -32,7 +32,7 @@ import org.junit.Test;
 public class WindowsPreprocessorTest {
 
   private WindowsPreprocessor preprocessor;
-  private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
   @Before
   public void setUp() {

@@ -350,8 +350,7 @@ public class WatchmanGlobberTest {
     private ImmutableList<Object> query;
 
     @Override
-    public Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
-        long timeoutNanos, Object... query) {
+    public Optional<? extends Map<String, ?>> queryWithTimeout(long timeoutNanos, Object... query) {
       this.query = ImmutableList.copyOf(query);
       return Optional.empty();
     }

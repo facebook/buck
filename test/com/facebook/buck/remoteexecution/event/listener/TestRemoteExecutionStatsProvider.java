@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class TestRemoteExecutionStatsProvider implements RemoteExecutionStatsProvider {
-  public Map<State, Integer> actionsPerState = Maps.newHashMap();
+  public final Map<State, Integer> actionsPerState = Maps.newHashMap();
   public int casDownloads = 0;
   public int casDownladedBytes = 0;
   public LocalFallbackStats localFallbackStats =

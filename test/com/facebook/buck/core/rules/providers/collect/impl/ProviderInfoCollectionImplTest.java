@@ -47,7 +47,7 @@ public class ProviderInfoCollectionImplTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  StarlarkContext ctx = new StarlarkContext() {};
+  final StarlarkContext ctx = new StarlarkContext() {};
 
   private static final DefaultInfo DEFAULT_INFO =
       new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of());

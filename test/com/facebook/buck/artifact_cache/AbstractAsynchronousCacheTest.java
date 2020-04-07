@@ -270,9 +270,9 @@ public class AbstractAsynchronousCacheTest {
             .collect(ImmutableSet.toImmutableSet());
     private final List<ImmutableList<RuleKey>> requestedRuleKeys;
     private final List<ImmutableSet<RuleKey>> checkedRuleKeys;
-    private int multiFetchLimit;
-    private int concurrency;
-    private boolean isMultiCheckEnabled;
+    private final int multiFetchLimit;
+    private final int concurrency;
+    private final boolean isMultiCheckEnabled;
 
     public RequestedKeyRecordingAsynchronousCache(
         ExplicitRunExecutorService service,

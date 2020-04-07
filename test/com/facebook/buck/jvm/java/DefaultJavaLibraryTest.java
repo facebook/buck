@@ -148,13 +148,13 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     Path src = Paths.get(folder, "Main.java");
     tmp.newFile(src.toString());
 
-    DefaultJavaLibrary libraryRule =
-        AndroidLibraryBuilder.createBuilder(buildTarget).addSrc(src).build(graphBuilder);
-    DefaultJavaLibrary javaLibrary = libraryRule;
-
     BuildContext context = createBuildContext();
 
-    List<Step> steps = javaLibrary.getBuildSteps(context, new FakeBuildableContext());
+    List<Step> steps =
+        AndroidLibraryBuilder.createBuilder(buildTarget)
+            .addSrc(src)
+            .build(graphBuilder)
+            .getBuildSteps(context, new FakeBuildableContext());
 
     // Find the JavacStep and verify its bootclasspath.
     JavacStep javac = getJavacStep(steps);
@@ -1384,7 +1384,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
           }
         };
     ActionGraphBuilder graphBuilder1 = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder1 = graphBuilder1;
     DefaultJavaLibrary rule1 =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//lib:lib"))
             .addSrc(Paths.get("agifhbkjdec.java"))
@@ -1398,7 +1397,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
             .build(graphBuilder1, filesystem);
 
     ActionGraphBuilder graphBuilder2 = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder2 = graphBuilder2;
     DefaultJavaLibrary rule2 =
         createJavaLibraryBuilder(BuildTargetFactory.newInstance("//lib:lib"))
             .addSrc(Paths.get("cfiabkjehgd.java"))
@@ -1427,10 +1425,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     }
     DefaultRuleKeyFactory ruleKeyFactory =
         new TestDefaultRuleKeyFactory(
-            FakeFileHashCache.createFromStrings(fileHashes.build()), ruleFinder1);
+            FakeFileHashCache.createFromStrings(fileHashes.build()), graphBuilder1);
     DefaultRuleKeyFactory ruleKeyFactory2 =
         new TestDefaultRuleKeyFactory(
-            FakeFileHashCache.createFromStrings(fileHashes.build()), ruleFinder2);
+            FakeFileHashCache.createFromStrings(fileHashes.build()), graphBuilder2);
 
     RuleKey key1 = ruleKeyFactory.build(rule1);
     RuleKey key2 = ruleKeyFactory2.build(rule2);
@@ -1440,15 +1438,13 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
   @Test
   public void testWhenNoJavacIsProvidedAJavacInMemoryStepIsAdded() {
     BuildTarget libraryOneTarget = BuildTargetFactory.newInstance("//:libone");
-    DefaultJavaLibrary rule =
+    ImmutableList<Step> steps =
         createJavaLibraryBuilder(libraryOneTarget)
             .addSrc(Paths.get("java/src/com/libone/Bar.java"))
-            .build(graphBuilder);
-    DefaultJavaLibrary buildRule = rule;
-    ImmutableList<Step> steps =
-        buildRule.getBuildSteps(
-            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
-            new FakeBuildableContext());
+            .build(graphBuilder)
+            .getBuildSteps(
+                FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
+                new FakeBuildableContext());
 
     assertEquals(25, steps.size());
     JavacStep javac = getJavacStep(steps);
@@ -1543,7 +1539,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
     public abstract BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException;
   }
 
-  private TestBuildTargetTarget validPrebuiltJar =
+  private final TestBuildTargetTarget validPrebuiltJar =
       new TestBuildTargetTarget("//tools/java/src/com/facebook/library:prebuilt-processors") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
@@ -1553,7 +1549,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         }
       };
 
-  private TestBuildTargetTarget validJavaBinary =
+  private final TestBuildTargetTarget validJavaBinary =
       new TestBuildTargetTarget("//tools/java/src/com/facebook/annotations:custom-processors") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
@@ -1563,7 +1559,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         }
       };
 
-  private TestBuildTargetTarget validJavaLibrary =
+  private final TestBuildTargetTarget validJavaLibrary =
       new TestBuildTargetTarget("//tools/java/src/com/facebook/somejava:library") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {
@@ -1574,7 +1570,7 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
         }
       };
 
-  private TestBuildTargetTarget validJavaLibraryAbi =
+  private final TestBuildTargetTarget validJavaLibraryAbi =
       new TestBuildTargetTarget("//tools/java/src/com/facebook/somejava:library#class-abi") {
         @Override
         public BuildRule createRule(BuildTarget target) throws NoSuchBuildTargetException {

@@ -27,7 +27,7 @@ import org.hamcrest.TypeSafeDiagnosingMatcher;
 
 public class JsonMatcher extends TypeSafeDiagnosingMatcher<String> {
 
-  private String expectedJson;
+  private final String expectedJson;
 
   public JsonMatcher(String json) {
     this.expectedJson = json;

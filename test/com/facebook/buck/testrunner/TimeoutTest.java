@@ -97,9 +97,9 @@ public class TimeoutTest {
   }
 
   public static class ThreadGuardedTest {
-    public static AtomicBoolean isBeingUsedForTimeoutTest = new AtomicBoolean(false);
+    public static final AtomicBoolean isBeingUsedForTimeoutTest = new AtomicBoolean(false);
 
-    private long creatorThreadId = Thread.currentThread().getId();
+    private final long creatorThreadId = Thread.currentThread().getId();
 
     @Test
     public void verifyTestRunsOnCreatorThread() {

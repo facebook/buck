@@ -95,7 +95,7 @@ public class WatchmanDiagnosticEventListenerTest {
 
   /** A listener that receives and records console events. */
   private static class SnoopingListener implements BuckEventListener {
-    List<ConsoleEvent> receivedEvents = new ArrayList<>();
+    final List<ConsoleEvent> receivedEvents = new ArrayList<>();
 
     @Subscribe
     public void on(ConsoleEvent event) {

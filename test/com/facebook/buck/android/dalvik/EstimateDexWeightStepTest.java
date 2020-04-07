@@ -40,7 +40,7 @@ public class EstimateDexWeightStepTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  private DexWeightEstimator dexWeightEstimator =
+  private final DexWeightEstimator dexWeightEstimator =
       new FakeDexWeightEstimator(
           ImmutableMap.<String, Integer>builder()
               .put(pathWithPlatformSeparators("com/example/Foo.class"), 100)

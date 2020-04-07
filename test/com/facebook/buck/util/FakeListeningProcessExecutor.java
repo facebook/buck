@@ -70,7 +70,7 @@ public class FakeListeningProcessExecutor extends ListeningProcessExecutor {
     public boolean stdinClosed;
     public boolean wantsWrite;
     public int exitCode;
-    public long startTimeNanos;
+    public final long startTimeNanos;
     public long processTimeNanos;
 
     public FakeLaunchedProcessImpl(

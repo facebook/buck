@@ -31,11 +31,10 @@ public class BuildEngineActionToBuildRuleResolverTest {
   public void resolvesBuildEngineActionToBuildRule() {
     BuildTarget target = BuildTargetFactory.newInstance("//my:foo");
     BuildRule rule = new FakeBuildRule(target);
-    BuildEngineAction ruleAsAction = rule;
 
     BuildEngineActionToBuildRuleResolver ruleResolver = new BuildEngineActionToBuildRuleResolver();
 
-    BuildEngineAction resolved = ruleResolver.resolve(ruleAsAction);
+    BuildEngineAction resolved = ruleResolver.resolve(rule);
     assertEquals(rule, resolved);
   }
 }

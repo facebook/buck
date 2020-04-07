@@ -24,7 +24,7 @@ import java.util.List;
 
 /** Calls back when the ENTER phase is complete. */
 abstract class PostEnterCallback implements TaskListener {
-  private List<CompilationUnitTree> compilationUnits = new ArrayList<>();
+  private final List<CompilationUnitTree> compilationUnits = new ArrayList<>();
   private int enterCount = 0;
 
   @Override

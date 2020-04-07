@@ -2388,13 +2388,10 @@ public class CxxBinaryIntegrationTest {
         .runBuckCommand("build", "--config", "cxx.cxxflags=-g", target.getFullyQualifiedName())
         .assertSuccess();
 
-    BuildTarget binaryWithLinkerMap = target;
-
     Path binaryWithLinkerMapPath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, binaryWithLinkerMap, "%s"));
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"));
     Path linkerMapPath =
-        workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, binaryWithLinkerMap, "%s-LinkMap.txt"));
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s-LinkMap.txt"));
     assertThat(Files.exists(binaryWithLinkerMapPath), Matchers.equalTo(true));
     assertThat(Files.exists(linkerMapPath), Matchers.equalTo(true));
 
@@ -2405,13 +2402,11 @@ public class CxxBinaryIntegrationTest {
             "build", "--config", "cxx.cxxflags=-g", withoutLinkerMapTarget.getFullyQualifiedName())
         .assertSuccess();
 
-    BuildTarget binaryWithoutLinkerMap = withoutLinkerMapTarget;
-
     Path binaryWithoutLinkerMapPath =
-        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, binaryWithoutLinkerMap, "%s"));
+        workspace.getPath(BuildTargetPaths.getGenPath(filesystem, withoutLinkerMapTarget, "%s"));
     linkerMapPath =
         workspace.getPath(
-            BuildTargetPaths.getGenPath(filesystem, binaryWithoutLinkerMap, "%s-LinkMap.txt"));
+            BuildTargetPaths.getGenPath(filesystem, withoutLinkerMapTarget, "%s-LinkMap.txt"));
     assertThat(Files.exists(binaryWithoutLinkerMapPath), Matchers.equalTo(true));
     assertThat(Files.exists(linkerMapPath), Matchers.equalTo(false));
   }

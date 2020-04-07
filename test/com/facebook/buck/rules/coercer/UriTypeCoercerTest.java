@@ -31,9 +31,9 @@ import org.junit.Test;
 
 public class UriTypeCoercerTest {
 
-  private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private ForwardRelativePath pathFromRoot = ForwardRelativePath.of("third-party/java");
-  private CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final ForwardRelativePath pathFromRoot = ForwardRelativePath.of("third-party/java");
+  private final CellPathResolver cellRoots = TestCellPathResolver.get(filesystem);
 
   @Test
   public void canCoerceAValidHttpURI() throws CoerceFailedException, URISyntaxException {

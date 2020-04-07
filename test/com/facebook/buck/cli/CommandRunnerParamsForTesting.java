@@ -227,11 +227,11 @@ public class CommandRunnerParamsForTesting {
     private DepsAwareExecutor<? super ComputeResult, ?> executor;
     private ArtifactCache artifactCache = new NoopArtifactCache();
     private Console console = new TestConsole();
-    private BuckConfig config = FakeBuckConfig.builder().build();
-    private BuckEventBus eventBus = BuckEventBusForTests.newInstance();
-    private Platform platform = Platform.detect();
-    private ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();
-    private JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
+    private final BuckConfig config = FakeBuckConfig.builder().build();
+    private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+    private final Platform platform = Platform.detect();
+    private final ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();
+    private final JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
     private Optional<WebServer> webServer = Optional.empty();
     @Nullable private ToolchainProvider toolchainProvider = null;
 

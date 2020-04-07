@@ -115,7 +115,7 @@ public class InstallTriggerIntegrationTest {
     private static class InstallTriggerRule extends AbstractBuildRule implements NoopInstallable {
       @AddToRuleKey private final InstallTrigger trigger;
       @AddToRuleKey private final ImmutableSortedSet<SourcePath> inputs;
-      private SortedSet<BuildRule> buildDeps;
+      private final SortedSet<BuildRule> buildDeps;
 
       public InstallTriggerRule(
           BuildTarget buildTarget,

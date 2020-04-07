@@ -44,11 +44,11 @@ import org.junit.Test;
 
 public class WatchmanFactoryTest {
 
-  private String root = Paths.get("/some/root").toAbsolutePath().toString();
-  private ImmutableSet<AbsPath> rootPaths = ImmutableSet.of(AbsPath.get(root));
-  private String exe = Paths.get("/opt/bin/watchman").toAbsolutePath().toString();
-  private FakeExecutableFinder finder = new FakeExecutableFinder(Paths.get(exe));
-  private ImmutableMap<String, String> env = ImmutableMap.of();
+  private final String root = Paths.get("/some/root").toAbsolutePath().toString();
+  private final ImmutableSet<AbsPath> rootPaths = ImmutableSet.of(AbsPath.get(root));
+  private final String exe = Paths.get("/opt/bin/watchman").toAbsolutePath().toString();
+  private final FakeExecutableFinder finder = new FakeExecutableFinder(Paths.get(exe));
+  private final ImmutableMap<String, String> env = ImmutableMap.of();
   private static final ImmutableList<Object> VERSION_QUERY =
       ImmutableList.of(
           "version",
@@ -66,7 +66,7 @@ public class WatchmanFactoryTest {
   private static WatchmanFactory createFakeWatchmanFactory(
       Path socketName,
       long queryElapsedTimeNanos,
-      Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>> queryResults) {
+      Map<? extends List<?>, ? extends Map<String, ?>> queryResults) {
     InitialWatchmanClientFactory factory =
         (path, console, clock) -> {
           if (path.equals(socketName)) {

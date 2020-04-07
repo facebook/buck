@@ -37,12 +37,12 @@ import org.openjdk.jmh.runner.RunnerException;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class StringWithMacrosTypeCoercerBenchmark {
 
-  private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private CellNameResolver cellNameResolver =
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final CellNameResolver cellNameResolver =
       TestCellPathResolver.get(filesystem).getCellNameResolver();
-  private ForwardRelativePath basePath = ForwardRelativePath.of("");
+  private final ForwardRelativePath basePath = ForwardRelativePath.of("");
 
-  private StringWithMacrosTypeCoercer coercer = StringWithMacrosTypeCoercer.builder().build();
+  private final StringWithMacrosTypeCoercer coercer = StringWithMacrosTypeCoercer.builder().build();
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)

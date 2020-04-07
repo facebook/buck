@@ -42,7 +42,7 @@ import java.util.function.Consumer;
 import org.junit.Test;
 
 public class InputsMapBuilderTest extends AbstractValueVisitorTest {
-  private Consumer<SourcePath> inputsConsumer = createStrictMock(Consumer.class);
+  private final Consumer<SourcePath> inputsConsumer = createStrictMock(Consumer.class);
 
   private void apply(Buildable value) {
     replay(inputsConsumer);

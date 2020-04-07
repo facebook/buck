@@ -28,7 +28,7 @@ import java.util.Optional;
  * components
  */
 public class EndToEndHelper {
-  private static PlatformUtils platformUtils = PlatformUtils.getForPlatform();
+  private static final PlatformUtils platformUtils = PlatformUtils.getForPlatform();
 
   // util class, no instances
   private EndToEndHelper() {}

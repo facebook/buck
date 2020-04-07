@@ -46,9 +46,9 @@ public class TestCellBuilder {
   @Nullable private ProjectFilesystem filesystem;
   private BuckConfig buckConfig;
   private CellConfig cellConfig;
-  private Map<String, String> environment = new HashMap<>();
+  private final Map<String, String> environment = new HashMap<>();
   @Nullable private ToolchainProvider toolchainProvider = null;
-  private Map<CanonicalCellName, ProjectFilesystem> cells = new HashMap<>();
+  private final Map<CanonicalCellName, ProjectFilesystem> cells = new HashMap<>();
 
   public TestCellBuilder() {
     cellConfig = CellConfig.EMPTY_INSTANCE;

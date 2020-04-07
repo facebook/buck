@@ -154,7 +154,7 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashLoader, ruleFinder);
 
     class AppendingField extends EmptyFakeBuildRule {
-      @AddToRuleKey private Adder field = new Adder();
+      @AddToRuleKey private final Adder field = new Adder();
 
       public AppendingField() {
         super(target);
@@ -181,7 +181,7 @@ public class DefaultRuleKeyFactoryTest {
     DefaultRuleKeyFactory factory = new TestDefaultRuleKeyFactory(fileHashLoader, ruleFinder);
 
     class AppendingField extends EmptyFakeBuildRule {
-      @AddToRuleKey private Appender field = new Appender();
+      @AddToRuleKey private final Appender field = new Appender();
 
       public AppendingField() {
         super(target);
@@ -208,7 +208,7 @@ public class DefaultRuleKeyFactoryTest {
 
     class AppendingField extends EmptyFakeBuildRule {
       @AddToRuleKey(stringify = true)
-      private Adder field = new Adder();
+      private final Adder field = new Adder();
 
       public AppendingField() {
         super(target);
@@ -236,7 +236,7 @@ public class DefaultRuleKeyFactoryTest {
 
     class AppendingField extends EmptyFakeBuildRule {
       @AddToRuleKey(stringify = true)
-      private Appender field = new Appender();
+      private final Appender field = new Appender();
 
       public AppendingField() {
         super(target);

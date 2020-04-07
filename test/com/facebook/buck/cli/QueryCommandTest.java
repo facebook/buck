@@ -75,7 +75,7 @@ public class QueryCommandTest {
   private CommandRunnerParams params;
 
   private int callsCount = 0;
-  private Set<String> expectedExpressions = new HashSet<>();
+  private final Set<String> expectedExpressions = new HashSet<>();
 
   private BuckQueryEnvironment env;
 

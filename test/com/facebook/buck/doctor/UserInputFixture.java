@@ -24,8 +24,8 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 
 public class UserInputFixture {
-  private CapturingPrintStream outputStream;
-  private UserInput userInput;
+  private final CapturingPrintStream outputStream;
+  private final UserInput userInput;
 
   public UserInputFixture(String cannedAnswer) {
     outputStream = new CapturingPrintStream();

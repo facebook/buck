@@ -43,7 +43,7 @@ public class BuckFixSpecParserTest {
 
   @Rule public TemporaryPaths tempFolder = new TemporaryPaths();
 
-  BuckConfig sampleConfig =
+  final BuckConfig sampleConfig =
       FakeBuckConfig.builder()
           .setSections(
               ImmutableMap.of(
@@ -58,13 +58,16 @@ public class BuckFixSpecParserTest {
                       "legacy_fix_script",
                       "legacy/script/location")))
           .build();
-  FixBuckConfig fixConfig = sampleConfig.getView(FixBuckConfig.class);
+  final FixBuckConfig fixConfig = sampleConfig.getView(FixBuckConfig.class);
 
   ProjectFilesystem filesystem;
-  BuildId buildCommandId = new BuildId("2ef9b523-fc4e-48a3-aa9f-baab9ca36386");
-  String buildCommandDir = "2019-05-21_15h18m53s_buildcommand_2ef9b523-fc4e-48a3-aa9f-baab9ca36386";
-  String buildCommandTrace = "build.2019-05-21.08-18-53.2ef9b523-fc4e-48a3-aa9f-baab9ca36386.trace";
-  String launchCommandDir = "2019-05-21_15h54m33s_launch_f15b0963-e77b-7f2c-281a-992afdc386e8";
+  final BuildId buildCommandId = new BuildId("2ef9b523-fc4e-48a3-aa9f-baab9ca36386");
+  final String buildCommandDir =
+      "2019-05-21_15h18m53s_buildcommand_2ef9b523-fc4e-48a3-aa9f-baab9ca36386";
+  final String buildCommandTrace =
+      "build.2019-05-21.08-18-53.2ef9b523-fc4e-48a3-aa9f-baab9ca36386.trace";
+  final String launchCommandDir =
+      "2019-05-21_15h54m33s_launch_f15b0963-e77b-7f2c-281a-992afdc386e8";
 
   @Before
   public void setUp() {

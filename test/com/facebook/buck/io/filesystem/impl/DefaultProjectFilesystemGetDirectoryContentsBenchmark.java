@@ -46,7 +46,7 @@ public class DefaultProjectFilesystemGetDirectoryContentsBenchmark {
   @Param({"0", "1", "10", "100", "1000", "10000"})
   public int totalFileCount;
 
-  private TemporaryPaths temporaryPaths = new TemporaryPaths();
+  private final TemporaryPaths temporaryPaths = new TemporaryPaths();
   private DefaultProjectFilesystem fileSystem;
   private DefaultProjectFilesystemView fileSystemView;
   private AbsPath pathToEnumerate;

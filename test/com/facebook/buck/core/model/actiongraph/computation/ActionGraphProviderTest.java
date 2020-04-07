@@ -83,7 +83,7 @@ public class ActionGraphProviderTest {
   private TargetGraph targetGraph2;
 
   private BuckEventBus eventBus;
-  private BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
+  private final BlockingQueue<BuckEvent> trackedEvents = new LinkedBlockingQueue<>();
   private final int keySeed = 0;
 
   @Rule public ExpectedException expectedException = ExpectedException.none();

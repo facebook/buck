@@ -45,8 +45,8 @@ public class PathUtilsTest {
   @Rule public final ExpectedException exception = ExpectedException.none();
 
   private final ProjectFilesystem fileSystem = new FakeProjectFilesystem();
-  private ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-  private SourcePathResolverAdapter pathResolver =
+  private final ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+  private final SourcePathResolverAdapter pathResolver =
       new SourcePathResolverAdapter(DefaultSourcePathResolver.from(graphBuilder));
 
   @Test

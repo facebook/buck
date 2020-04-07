@@ -817,7 +817,7 @@ public class ChromeTraceBuildListenerTest {
       List<ChromeTraceEvent> resultList,
       String expectedName,
       ChromeTraceEvent.Phase expectedPhase,
-      ImmutableMap<String, ? extends Object> expectedArgs) {
+      ImmutableMap<String, ?> expectedArgs) {
     assertTrue(resultList.size() > 0);
     assertEquals(expectedName, resultList.get(0).getName());
     assertEquals(expectedPhase, resultList.get(0).getPhase());

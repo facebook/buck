@@ -60,7 +60,7 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
         }
       };
 
-  private List<JavaFileObject> files = new ArrayList<>();
+  private final List<JavaFileObject> files = new ArrayList<>();
 
   public void addFile(Path jarPath, String fileName, JavaFileObject.Kind kind) {
     files.add(new FakeJavaFileObject(jarPath, fileName, kind));

@@ -64,7 +64,7 @@ public class ConcurrentMapCacheTest {
   }
 
   private static class WeirdInt {
-    private int value;
+    private final int value;
 
     public WeirdInt(int value) {
       this.value = value;

@@ -43,7 +43,7 @@ public class CloseableMemoizedSupplierTest<T extends AbstractCloseableMemoizedSu
         Supplier<Object> supplier, ThrowingConsumer<Object, Exception> closer);
   }
 
-  private CloseableFactory<T> closeableFactory;
+  private final CloseableFactory<T> closeableFactory;
 
   public CloseableMemoizedSupplierTest(CloseableFactory<T> closeableFactory) {
     this.closeableFactory = closeableFactory;
@@ -83,7 +83,7 @@ public class CloseableMemoizedSupplierTest<T extends AbstractCloseableMemoizedSu
   }
 
   private static class ObjectFactory {
-    private AtomicInteger creationCount = new AtomicInteger(0);
+    private final AtomicInteger creationCount = new AtomicInteger(0);
 
     public int getCreationCount() {
       return creationCount.get();

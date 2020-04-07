@@ -135,7 +135,10 @@ public class JavacPluginPropertiesTest {
         new FakeJavaLibrary(
             BuildTargetFactory.newInstance("//:internal_java_lib"),
             ImmutableSortedSet.of(),
-            resource.isPresent() ? ImmutableSortedSet.of(resource.get()) : ImmutableSortedSet.of());
+            resource
+                .<ImmutableSortedSet<com.facebook.buck.core.sourcepath.SourcePath>>map(
+                    ImmutableSortedSet::of)
+                .orElseGet(ImmutableSortedSet::of));
     graphBuilder.computeIfAbsent(javaLibrary.getBuildTarget(), buildTarget -> javaLibrary);
 
     JavaAnnotationProcessorDescriptionArg annotationProcessorDescriptionArg =
@@ -153,16 +156,13 @@ public class JavacPluginPropertiesTest {
             .withDeclaredDeps(
                 graphBuilder.getAllRules(annotationProcessorDescriptionArg.getDeps()));
 
-    JavaAnnotationProcessor javaAnnotationProcessor =
-        (JavaAnnotationProcessor)
-            new JavaAnnotationProcessorDescription()
-                .createBuildRule(
-                    TestBuildRuleCreationContextFactory.create(graphBuilder, filesystem),
-                    BuildTargetFactory.newInstance("//:annotation_processor"),
-                    params,
-                    annotationProcessorDescriptionArg);
-
-    return javaAnnotationProcessor;
+    return (JavaAnnotationProcessor)
+        new JavaAnnotationProcessorDescription()
+            .createBuildRule(
+                TestBuildRuleCreationContextFactory.create(graphBuilder, filesystem),
+                BuildTargetFactory.newInstance("//:annotation_processor"),
+                params,
+                annotationProcessorDescriptionArg);
   }
 
   private RuleKey createInputRuleKey(Optional<String> resourceName) {
@@ -170,9 +170,7 @@ public class JavacPluginPropertiesTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     Optional<PathSourcePath> resource =
-        resourceName.isPresent()
-            ? Optional.of(PathSourcePath.of(filesystem, Paths.get(resourceName.get())))
-            : Optional.empty();
+        resourceName.map(s -> PathSourcePath.of(filesystem, Paths.get(s)));
     JavaAnnotationProcessor processor =
         createAnnotationProcessor(resource, graphBuilder, filesystem);
 
@@ -185,11 +183,11 @@ public class JavacPluginPropertiesTest {
                         BuildTargetFactory.newInstance("//:internal_java_lib"),
                         "%s.jar")),
                 HashCode.fromInt(0));
-    if (resource.isPresent()) {
-      builder.put(
-          graphBuilder.getSourcePathResolver().getAbsolutePath(resource.get()),
-          HashCode.fromInt(resourceName.get().hashCode()));
-    }
+    resource.ifPresent(
+        pathSourcePath ->
+            builder.put(
+                graphBuilder.getSourcePathResolver().getAbsolutePath(pathSourcePath),
+                HashCode.fromInt(resourceName.get().hashCode())));
     FakeFileHashCache hashCache = new FakeFileHashCache(builder.build());
 
     return new TestInputBasedRuleKeyFactory(hashCache, graphBuilder).build(processor);

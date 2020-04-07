@@ -32,7 +32,6 @@ import com.facebook.buck.core.model.targetgraph.TestBuildRuleCreationContextFact
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
@@ -98,7 +97,6 @@ public class ApkGenruleTest {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     FileSystem fileSystem = projectFilesystem.getRootPath().getFileSystem();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
-    SourcePathRuleFinder ruleFinder = graphBuilder;
     createSampleAndroidBinaryRule(graphBuilder, projectFilesystem);
 
     // From the Python object, create a ApkGenruleBuildRuleFactory to create a ApkGenrule.Builder
@@ -146,7 +144,7 @@ public class ApkGenruleTest {
                 .resolve("sign_fb4a.apk"));
     assertEquals(
         expectedApkOutput,
-        ruleFinder.getSourcePathResolver().getAbsolutePath(apkGenrule.getSourcePathToOutput()));
+        graphBuilder.getSourcePathResolver().getAbsolutePath(apkGenrule.getSourcePathToOutput()));
     assertEquals(
         "The apk that this rule is modifying must have the apk in its deps.",
         ImmutableSet.of(apkTarget.toString()),

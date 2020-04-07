@@ -34,7 +34,7 @@ import java.util.Optional;
  * testing
  */
 public abstract class PlatformUtils {
-  private ExecutableFinder executableFinder = new ExecutableFinder();
+  private final ExecutableFinder executableFinder = new ExecutableFinder();
 
   protected PlatformUtils() {}
 

@@ -40,7 +40,7 @@ public class AndroidResourceRuleBuilder {
   public static class Builder {
 
     private SourcePathRuleFinder ruleFinder;
-    private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     private BuildTarget buildTarget;
     private ImmutableSortedSet<BuildRule> deps = ImmutableSortedSet.of();
     private SourcePath res;
@@ -49,7 +49,7 @@ public class AndroidResourceRuleBuilder {
     private SourcePath assets;
     private ImmutableSortedMap<Path, SourcePath> assetsSrcs = ImmutableSortedMap.of();
     private SourcePath manifest;
-    private boolean hasWhitelistedStrings = false;
+    private final boolean hasWhitelistedStrings = false;
 
     public AndroidResource build() {
       return new AndroidResource(

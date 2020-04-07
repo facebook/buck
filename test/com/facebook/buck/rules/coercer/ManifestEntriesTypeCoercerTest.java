@@ -35,8 +35,9 @@ public class ManifestEntriesTypeCoercerTest {
 
   private ManifestEntriesTypeCoercer manifestEntriesTypeCoercer;
 
-  private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final ForwardRelativePath basePath =
+      ForwardRelativePath.of("java/com/facebook/buck/example");
 
   @Before
   public void setUp() {

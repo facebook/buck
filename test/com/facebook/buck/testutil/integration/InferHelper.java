@@ -94,10 +94,10 @@ public class InferHelper {
 
   private static class InferConfigGenerator {
 
-    private Path inferBin;
-    private Path clangCompiler;
-    private Path clangPlugin;
-    private Optional<String> rawBlacklistRegex;
+    private final Path inferBin;
+    private final Path clangCompiler;
+    private final Path clangPlugin;
+    private final Optional<String> rawBlacklistRegex;
 
     public InferConfigGenerator(
         Path inferBin, Path facebookClangPluginRoot, Optional<String> rawBlacklistRegex) {

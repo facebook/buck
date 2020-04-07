@@ -162,8 +162,7 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
 
   private ImmutableSet<Artifact> getDefaultOutputs(
       ActionRegistry actionRegistry, Optional<ImmutableSet<String>> defaultOuts) {
-    return declareArtifacts(
-        actionRegistry, defaultOuts.isPresent() ? defaultOuts.get() : ImmutableSet.of("output"));
+    return declareArtifacts(actionRegistry, defaultOuts.orElseGet(() -> ImmutableSet.of("output")));
   }
 
   private SkylarkDict<String, Set<Artifact>> getNamedOutputs(

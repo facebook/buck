@@ -21,8 +21,8 @@ import java.util.Map;
 
 /** HashMap with stats for operations */
 public class HashMapWithStats<K, V> extends HashMap<K, V> {
-  private Map<K, Integer> putsByKey = new HashMap<>();
-  private Map<Object, Integer> getsByKey = new HashMap<>();
+  private final Map<K, Integer> putsByKey = new HashMap<>();
+  private final Map<Object, Integer> getsByKey = new HashMap<>();
 
   public int numPutsForKey(K key) {
     return putsByKey.getOrDefault(key, 0);

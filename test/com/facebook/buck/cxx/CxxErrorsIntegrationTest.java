@@ -40,7 +40,7 @@ public class CxxErrorsIntegrationTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
-  private WindowsUtils windowsUtils = new WindowsUtils();
+  private final WindowsUtils windowsUtils = new WindowsUtils();
 
   @Before
   public void setUp() throws IOException {

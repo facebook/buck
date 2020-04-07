@@ -378,7 +378,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     }
   }
 
-  static Pattern META_FILE_PATTERN = Pattern.compile("jar:(\\d*) dex:\\d*");
+  static final Pattern META_FILE_PATTERN = Pattern.compile("jar:(\\d*) dex:\\d*");
 
   public static int readJarSize(String metaContents) {
     Matcher matcher = META_FILE_PATTERN.matcher(metaContents);

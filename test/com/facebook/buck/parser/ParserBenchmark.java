@@ -52,9 +52,9 @@ public class ParserBenchmark {
   private int targetCount = 10;
 
   @Param({"1", "2", "10"})
-  private int threadCount = 1;
+  private final int threadCount = 1;
 
-  private TemporaryPaths tempDir = new TemporaryPaths();
+  private final TemporaryPaths tempDir = new TemporaryPaths();
 
   private Parser parser;
   private ProjectFilesystem filesystem;

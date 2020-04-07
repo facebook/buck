@@ -44,7 +44,7 @@ public class TestTaskListenerAdapter implements TaskListener {
 
   private static final Map<TestTaskListener, TaskListener> taskListeners = new IdentityHashMap<>();
 
-  private TestTaskListener listener;
+  private final TestTaskListener listener;
 
   private TestTaskListenerAdapter(TestTaskListener listener) {
     this.listener = listener;

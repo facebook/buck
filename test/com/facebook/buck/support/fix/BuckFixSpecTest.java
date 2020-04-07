@@ -30,7 +30,7 @@ import org.junit.Test;
 
 public class BuckFixSpecTest {
 
-  public static BuckFixSpec specWithPaths =
+  public static final BuckFixSpec specWithPaths =
       ImmutableBuckFixSpec.ofImpl(
           new BuildId("foo-bar-baz"),
           "run",

@@ -37,7 +37,7 @@ public class WorkThreadTrackingTaskTest {
               try {
                 assertBlocker.release();
                 blocker.acquire();
-              } catch (InterruptedException e) {
+              } catch (InterruptedException ignored) {
               }
               return null;
             });

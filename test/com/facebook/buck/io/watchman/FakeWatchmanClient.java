@@ -25,19 +25,17 @@ import java.util.Optional;
 /** Fake implementation of {@link com.facebook.buck.io.watchman.WatchmanClient} for tests. */
 public class FakeWatchmanClient implements WatchmanClient {
   private final long queryElapsedTimeNanos;
-  private final Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>>
-      queryResults;
+  private final Map<? extends List<?>, ? extends Map<String, ?>> queryResults;
   private final Exception exceptionToThrow;
 
   public FakeWatchmanClient(
-      long queryElapsedTimeNanos,
-      Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>> queryResults) {
+      long queryElapsedTimeNanos, Map<? extends List<?>, ? extends Map<String, ?>> queryResults) {
     this(queryElapsedTimeNanos, queryResults, null);
   }
 
   public FakeWatchmanClient(
       long queryElapsedTimeNanos,
-      Map<? extends List<? extends Object>, ? extends Map<String, ? extends Object>> queryResults,
+      Map<? extends List<?>, ? extends Map<String, ?>> queryResults,
       Exception exceptionToThrow) {
     this.queryElapsedTimeNanos = queryElapsedTimeNanos;
     this.queryResults = queryResults;
@@ -45,9 +43,9 @@ public class FakeWatchmanClient implements WatchmanClient {
   }
 
   @Override
-  public Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
-      long timeoutNanos, Object... query) throws InterruptedException, IOException {
-    Map<String, ? extends Object> result = queryResults.get(Arrays.asList(query));
+  public Optional<? extends Map<String, ?>> queryWithTimeout(long timeoutNanos, Object... query)
+      throws InterruptedException, IOException {
+    Map<String, ?> result = queryResults.get(Arrays.asList(query));
     if (result == null) {
       throw new RuntimeException(
           String.format(

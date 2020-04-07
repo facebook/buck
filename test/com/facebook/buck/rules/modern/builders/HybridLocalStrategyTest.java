@@ -290,7 +290,7 @@ public class HybridLocalStrategyTest {
             public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
               delegateStarted.release();
               return new StrategyBuildResult() {
-                SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
+                final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
 
                 @Override
                 public void cancel(Throwable cause) {}
@@ -373,7 +373,7 @@ public class HybridLocalStrategyTest {
             public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
               delegateScheduled.incrementAndGet();
               return new StrategyBuildResult() {
-                SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
+                final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
 
                 @Override
                 public void cancel(Throwable cause) {}
@@ -469,7 +469,7 @@ public class HybridLocalStrategyTest {
             @Override
             public StrategyBuildResult build(BuildRule rule, BuildStrategyContext strategyContext) {
               return new StrategyBuildResult() {
-                SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
+                final SettableFuture<Optional<BuildResult>> future = SettableFuture.create();
 
                 @Override
                 public void cancel(Throwable cause) {}

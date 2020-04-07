@@ -29,7 +29,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class InterfaceValidatorTest extends CompilerTreeApiTest {
-  ImmutableMap<String, String> CLASSPATH_WITH_COMPLEX_MEMBER_TYPES =
+  final ImmutableMap<String, String> CLASSPATH_WITH_COMPLEX_MEMBER_TYPES =
       ImmutableMap.of(
           "com/facebook/bar/Bar.java",
           Joiner.on('\n')

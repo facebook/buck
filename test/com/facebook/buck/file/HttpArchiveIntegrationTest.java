@@ -47,11 +47,12 @@ import org.junit.Test;
 
 public class HttpArchiveIntegrationTest {
 
-  private static Path mainDotJavaPath = Paths.get("src", "com", "facebook", "buck", "Main.java");
-  private static String mainDotJavaContents =
+  private static final Path mainDotJavaPath =
+      Paths.get("src", "com", "facebook", "buck", "Main.java");
+  private static final String mainDotJavaContents =
       "class Main { public static void main(String[] args) { return; } }\n";
-  private static Path echoDotShPath = Paths.get("echo.sh");
-  private static String echoDotShContents = "#!/bin/sh\necho 'testing'\n";
+  private static final Path echoDotShPath = Paths.get("echo.sh");
+  private static final String echoDotShContents = "#!/bin/sh\necho 'testing'\n";
 
   public @Rule TemporaryPaths temporaryDir = new TemporaryPaths();
 

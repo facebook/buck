@@ -72,7 +72,7 @@ public class DepsAwareExecutorTest<TaskType extends DepsAwareTask<Object, TaskTy
     this.executor = executorSupplier.get();
   }
 
-  private DepsAwareExecutor<Object, TaskType> executor;
+  private final DepsAwareExecutor<Object, TaskType> executor;
 
   public @Rule ExpectedException expectedException = ExpectedException.none();
 

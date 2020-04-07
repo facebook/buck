@@ -36,7 +36,7 @@ import java.util.Set;
  */
 public class BuckFSProviderDeleteError extends BuckFileSystemProvider {
 
-  Set<Path> filesNotToDelete;
+  final Set<Path> filesNotToDelete;
 
   public BuckFSProviderDeleteError(FileSystem defaultFileSystem) {
     super(defaultFileSystem);

@@ -106,7 +106,7 @@ public class DelegateRunNotifierTest {
 
   private static class FakeRunner extends Runner {
 
-    private Class<?> clazz;
+    private final Class<?> clazz;
 
     public FakeRunner(Class<?> testClass) {
       this.clazz = testClass;

@@ -33,13 +33,13 @@ import java.util.Map;
  */
 public class EndToEndEnvironment {
 
-  private List<String[]> templates = new ArrayList<>();
+  private final List<String[]> templates = new ArrayList<>();
   private String command;
   private String[] buildTargets = new String[] {};
   private String[] arguments = new String[] {};
   private ToggleState buckdToggled = ToggleState.OFF;
-  private List<Map<String, String>> variableMaps = new ArrayList<>();
-  private List<Map<String, Map<String, String>>> localConfigSets = new ArrayList<>();
+  private final List<Map<String, String>> variableMaps = new ArrayList<>();
+  private final List<Map<String, Map<String, String>>> localConfigSets = new ArrayList<>();
 
   public EndToEndEnvironment() {}
 

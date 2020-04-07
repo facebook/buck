@@ -136,7 +136,7 @@ public class BuildFileManifestPojoizerTest {
   }
 
   private static class CustomClass<T> {
-    public T prop1;
+    public final T prop1;
 
     public CustomClass(T prop1) {
       this.prop1 = prop1;

@@ -30,9 +30,9 @@ import org.junit.Test;
 
 public class AuditInputCommandIntegrationTest {
 
-  private String expectedStdout =
+  private final String expectedStdout =
       Platform.detect() == Platform.WINDOWS ? "stdout-windows" : "stdout";
-  private String expectedStdoutJson =
+  private final String expectedStdoutJson =
       Platform.detect() == Platform.WINDOWS ? "stdout-windows.json" : "stdout.json";
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();

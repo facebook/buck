@@ -122,7 +122,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
   }
 
   class CustomToolchainProvider extends BaseToolchainProvider {
-    private Map<String, Toolchain> toolchains = new HashMap<>();
+    private final Map<String, Toolchain> toolchains = new HashMap<>();
 
     @Override
     public Toolchain getByName(

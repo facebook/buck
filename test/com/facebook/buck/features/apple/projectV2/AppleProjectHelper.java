@@ -36,16 +36,14 @@ public class AppleProjectHelper {
 
   static BuckConfig createDefaultBuckConfig(ProjectFilesystem filesystem) throws IOException {
     Path path = getBuildScriptPath(filesystem);
-    BuckConfig buckConfig =
-        FakeBuckConfig.builder()
-            .setSections(
-                ImmutableMap.of(
-                    AppleConfig.APPLE_SECTION,
-                    ImmutableMap.of(AppleConfig.BUILD_SCRIPT, path.toString())))
-            .setFilesystem(filesystem)
-            .build();
 
-    return buckConfig;
+    return FakeBuckConfig.builder()
+        .setSections(
+            ImmutableMap.of(
+                AppleConfig.APPLE_SECTION,
+                ImmutableMap.of(AppleConfig.BUILD_SCRIPT, path.toString())))
+        .setFilesystem(filesystem)
+        .build();
   }
 
   static AppleConfig createDefaultAppleConfig(ProjectFilesystem filesystem) throws IOException {

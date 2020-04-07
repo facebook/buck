@@ -166,11 +166,7 @@ public class JsBundleWorkerJobArgsTest {
             .resolve("escaping")
             .toAbsolutePath()
             .toString();
-    if (Platform.detect() == Platform.WINDOWS) {
-      expectedStr = String.format("[\"1 %s 2\"]", JsUtil.escapeJsonForStringEmbedding(genPath));
-    } else {
-      expectedStr = String.format("[\"1 %s 2\"]", JsUtil.escapeJsonForStringEmbedding(genPath));
-    }
+    expectedStr = String.format("[\"1 %s 2\"]", JsUtil.escapeJsonForStringEmbedding(genPath));
 
     assertThat(getJobJson(bundle).get("extraData").toString(), equalTo(expectedStr));
   }

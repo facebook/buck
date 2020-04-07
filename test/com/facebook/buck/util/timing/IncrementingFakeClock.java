@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * #currentTimeMillis()} and {@link #nanoTime()} by a fixed amount every time either is queried.
  */
 public class IncrementingFakeClock implements Clock {
-  private AtomicLong counter;
+  private final AtomicLong counter;
   private final long increment;
 
   public IncrementingFakeClock() {

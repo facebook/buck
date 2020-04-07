@@ -341,8 +341,8 @@ public class OutputsMaterializerTest {
   }
 
   private static class RecordingFileMaterializer implements FileMaterializer {
-    private Map<Path, OutputItemState> outputs = new ConcurrentHashMap<>();
-    private Set<Path> dirs = Sets.newConcurrentHashSet();
+    private final Map<Path, OutputItemState> outputs = new ConcurrentHashMap<>();
+    private final Set<Path> dirs = Sets.newConcurrentHashSet();
 
     @Override
     public WritableByteChannel getOutputChannel(Path path, boolean executable) {

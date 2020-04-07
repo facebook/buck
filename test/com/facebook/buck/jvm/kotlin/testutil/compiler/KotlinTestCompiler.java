@@ -53,15 +53,15 @@ import org.junit.rules.TemporaryFolder;
  */
 public class KotlinTestCompiler extends ExternalResource implements AutoCloseable {
 
-  private K2JVMCompiler kotlinCompiler = new K2JVMCompiler();
-  private TemporaryFolder inputFolder = new TemporaryFolder();
-  private TemporaryFolder outputFolder = new TemporaryFolder();
-  private TemporaryFolder abiOutputFolder = new TemporaryFolder();
+  private final K2JVMCompiler kotlinCompiler = new K2JVMCompiler();
+  private final TemporaryFolder inputFolder = new TemporaryFolder();
+  private final TemporaryFolder outputFolder = new TemporaryFolder();
+  private final TemporaryFolder abiOutputFolder = new TemporaryFolder();
 
-  private List<File> sourceFiles = new ArrayList<>();
-  private Set<String> classpath = new HashSet<>();
-  private Classes classes = new ClassesImpl(outputFolder);
-  private Classes abiClasses = new ClassesImpl(abiOutputFolder);
+  private final List<File> sourceFiles = new ArrayList<>();
+  private final Set<String> classpath = new HashSet<>();
+  private final Classes classes = new ClassesImpl(outputFolder);
+  private final Classes abiClasses = new ClassesImpl(abiOutputFolder);
 
   public void addSourceFileContents(String fileName, String... lines) throws IOException {
     Path sourceFilePath = inputFolder.getRoot().toPath().resolve(fileName);
@@ -80,23 +80,23 @@ public class KotlinTestCompiler extends ExternalResource implements AutoCloseabl
     PrintingMessageCollector collector =
         new PrintingMessageCollector(System.err, MessageRenderer.PLAIN_RELATIVE_PATHS, true);
     K2JVMCompilerArguments k2JVMCompilerArguments = new K2JVMCompilerArguments();
-    K2JVMCompilerArguments it = k2JVMCompilerArguments;
-    it.setNoStdlib(true);
-    it.setNoReflect(true);
-    it.setFreeArgs(
+    k2JVMCompilerArguments.setNoStdlib(true);
+    k2JVMCompilerArguments.setNoReflect(true);
+    k2JVMCompilerArguments.setFreeArgs(
         sourceFiles.stream()
             .map(File::getAbsolutePath)
             .distinct()
             .collect(ImmutableList.toImmutableList()));
-    it.setDestination(outputFolder.getRoot().toString());
+    k2JVMCompilerArguments.setDestination(outputFolder.getRoot().toString());
 
-    it.setClasspath(
+    k2JVMCompilerArguments.setClasspath(
         String.join(File.pathSeparator, classpath)
             + File.pathSeparator
             + System.getProperty("java.class.path"));
 
-    it.setPluginClasspaths(new String[] {"third-party/java/kotlin/jvm-abi-gen.jar"});
-    it.setPluginOptions(
+    k2JVMCompilerArguments.setPluginClasspaths(
+        new String[] {"third-party/java/kotlin/jvm-abi-gen.jar"});
+    k2JVMCompilerArguments.setPluginOptions(
         new String[] {
           "plugin:org.jetbrains.kotlin.jvm.abi:outputDir=" + abiOutputFolder.getRoot()
         });

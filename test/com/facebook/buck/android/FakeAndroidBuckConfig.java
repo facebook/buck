@@ -24,8 +24,8 @@ import java.util.Map;
 
 public class FakeAndroidBuckConfig {
 
-  private Map<String, String> androidSection;
-  private Map<String, String> ndkSection;
+  private final Map<String, String> androidSection;
+  private final Map<String, String> ndkSection;
 
   FakeAndroidBuckConfig() {
     this.androidSection = new HashMap<>();

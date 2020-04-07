@@ -367,7 +367,7 @@ public class TypeCoercerTest {
   }
 
   static class TestTraversal implements TypeCoercer.Traversal {
-    private List<Object> objects = new ArrayList<>();
+    private final List<Object> objects = new ArrayList<>();
 
     public List<Object> getObjects() {
       return objects;

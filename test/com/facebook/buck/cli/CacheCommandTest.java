@@ -328,7 +328,7 @@ public class CacheCommandTest {
     private final CacheResult cacheResult;
 
     private final AtomicBoolean closed = new AtomicBoolean(false);
-    private ImmutableList.Builder<Pair<Optional<BuildTarget>, RuleKey>> requestedArtifacts =
+    private final ImmutableList.Builder<Pair<Optional<BuildTarget>, RuleKey>> requestedArtifacts =
         new ImmutableList.Builder();
     private ImmutableList<Pair<Optional<BuildTarget>, RuleKey>> finalArtifacts;
 

@@ -108,15 +108,13 @@ public class FakeProcess extends Process {
 
   @Override
   public int waitFor() throws InterruptedException {
-    if (isWaitedFor) {
-      return exitValue;
-    } else {
+    if (!isWaitedFor) {
       isWaitedFor = true;
       if (waitForException.isPresent()) {
         throw waitForException.get();
       }
-      return exitValue;
     }
+    return exitValue;
   }
 
   @Override

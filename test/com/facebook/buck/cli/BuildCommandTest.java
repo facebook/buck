@@ -630,9 +630,7 @@ public class BuildCommandTest {
     }
     ActionGraphBuilder actionGraphBuilder =
         new FakeActionGraphBuilder(targetGraph, builder.build());
-    ActionGraphAndBuilder actionGraphAndBuilder =
-        ActionGraphAndBuilder.of(new ActionGraph(ImmutableSet.of()), actionGraphBuilder);
-    return actionGraphAndBuilder;
+    return ActionGraphAndBuilder.of(new ActionGraph(ImmutableSet.of()), actionGraphBuilder);
   }
 
   private BuildCommand getCommand(String... args) throws CmdLineException {

@@ -36,8 +36,9 @@ public class BuildTargetTypeCoercerTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private ForwardRelativePath basePath = ForwardRelativePath.of("java/com/facebook/buck/example");
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final ForwardRelativePath basePath =
+      ForwardRelativePath.of("java/com/facebook/buck/example");
 
   private UnconfiguredBuildTargetTypeCoercer unconfiguredBuildTargetTypeCoercer;
 

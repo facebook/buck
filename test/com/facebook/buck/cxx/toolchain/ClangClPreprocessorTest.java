@@ -32,7 +32,7 @@ import org.junit.Test;
 public class ClangClPreprocessorTest {
 
   private ClangClPreprocessor preprocessor;
-  private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
   @Before
   public void setUp() {

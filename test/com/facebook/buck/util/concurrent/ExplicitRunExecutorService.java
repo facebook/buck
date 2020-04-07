@@ -20,7 +20,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 public class ExplicitRunExecutorService extends FakeListeningExecutorService {
-  private Deque<Runnable> runnables = new ArrayDeque<>();
+  private final Deque<Runnable> runnables = new ArrayDeque<>();
 
   public void run() {
     while (!runnables.isEmpty()) {

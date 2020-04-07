@@ -52,7 +52,7 @@ import org.junit.rules.ExpectedException;
 public class MerkleTreeNodeCacheTest {
   @Rule public TemporaryPaths tmpRoot = new TemporaryPaths();
   @Rule public ExpectedException expected = ExpectedException.none();
-  private GrpcProtocol protocol = new GrpcProtocol();
+  private final GrpcProtocol protocol = new GrpcProtocol();
 
   @Test
   public void testSimple() {

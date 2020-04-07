@@ -66,9 +66,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
             TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath()),
             buckConfig,
             new CxxBuckConfig(buckConfig));
-    if (testPlatform.isPresent()) {
-      platforms.add(testPlatform.get().getFlavor());
-    }
+    testPlatform.ifPresent(cxxPlatform -> platforms.add(cxxPlatform.getFlavor()));
 
     return ParameterizedTests.getPermutations(
         ImmutableList.of("cxx_library", "prebuilt_cxx_library"),

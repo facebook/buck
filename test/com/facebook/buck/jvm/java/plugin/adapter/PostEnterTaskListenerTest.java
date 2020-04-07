@@ -42,7 +42,7 @@ import org.junit.runner.RunWith;
 @RunWith(CompilerTreeApiTestRunner.class)
 public class PostEnterTaskListenerTest {
   @Rule public TestCompiler compiler = new TestCompiler();
-  private List<String> callbacksIssued = new ArrayList<>();
+  private final List<String> callbacksIssued = new ArrayList<>();
 
   @Test
   public void testCallbackIssuedAfterJustEnterWithoutAPs() throws IOException {

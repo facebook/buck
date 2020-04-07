@@ -49,16 +49,16 @@ public class CachingBuildEngineFactory {
   private DepFiles depFiles = DepFiles.ENABLED;
   private long maxDepFileCacheEntries = 256L;
   private Optional<Long> artifactCacheSizeLimit = Optional.empty();
-  private long inputFileSizeLimit = Long.MAX_VALUE;
+  private final long inputFileSizeLimit = Long.MAX_VALUE;
   private Optional<RuleKeyFactories> ruleKeyFactories = Optional.empty();
   private CachingBuildEngineDelegate cachingBuildEngineDelegate;
   private WeightedListeningExecutorService executorService;
-  private BuildRuleResolver buildRuleResolver;
-  private BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
-  private ResourceAwareSchedulingInfo resourceAwareSchedulingInfo =
+  private final BuildRuleResolver buildRuleResolver;
+  private final BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver;
+  private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo =
       ResourceAwareSchedulingInfo.NON_AWARE_SCHEDULING_INFO;
   private boolean logBuildRuleFailuresInline = true;
-  private BuildInfoStoreManager buildInfoStoreManager;
+  private final BuildInfoStoreManager buildInfoStoreManager;
   private Optional<BuildRuleStrategy> customBuildRuleStrategy = Optional.empty();
 
   public CachingBuildEngineFactory(
@@ -136,45 +136,48 @@ public class CachingBuildEngineFactory {
     TargetConfigurationSerializer targetConfigurationSerializer =
         TargetConfigurationSerializerForTests.create(
             TestCellPathResolver.get(new FakeProjectFilesystem()));
-    if (ruleKeyFactories.isPresent()) {
-      return new CachingBuildEngine(
-          cachingBuildEngineDelegate,
-          customBuildRuleStrategy,
-          executorService,
-          buildMode,
-          depFiles,
-          maxDepFileCacheEntries,
-          artifactCacheSizeLimit,
-          buildRuleResolver,
-          buildInfoStoreManager,
-          actionToBuildRuleResolver,
-          targetConfigurationSerializer,
-          ruleKeyFactories.get(),
-          resourceAwareSchedulingInfo,
-          RuleKeyDiagnostics.nop(),
-          logBuildRuleFailuresInline);
-    }
-
-    return new CachingBuildEngine(
-        cachingBuildEngineDelegate,
-        customBuildRuleStrategy,
-        executorService,
-        buildMode,
-        depFiles,
-        maxDepFileCacheEntries,
-        artifactCacheSizeLimit,
-        buildRuleResolver,
-        actionToBuildRuleResolver,
-        targetConfigurationSerializer,
-        buildInfoStoreManager,
-        resourceAwareSchedulingInfo,
-        logBuildRuleFailuresInline,
-        RuleKeyFactories.of(
-            TestRuleKeyConfigurationFactory.create(),
-            cachingBuildEngineDelegate.getFileHashCache(),
-            buildRuleResolver,
-            inputFileSizeLimit,
-            new TrackedRuleKeyCache<>(new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker())));
+    return ruleKeyFactories
+        .map(
+            keyFactories ->
+                new CachingBuildEngine(
+                    cachingBuildEngineDelegate,
+                    customBuildRuleStrategy,
+                    executorService,
+                    buildMode,
+                    depFiles,
+                    maxDepFileCacheEntries,
+                    artifactCacheSizeLimit,
+                    buildRuleResolver,
+                    buildInfoStoreManager,
+                    actionToBuildRuleResolver,
+                    targetConfigurationSerializer,
+                    keyFactories,
+                    resourceAwareSchedulingInfo,
+                    RuleKeyDiagnostics.nop(),
+                    logBuildRuleFailuresInline))
+        .orElseGet(
+            () ->
+                new CachingBuildEngine(
+                    cachingBuildEngineDelegate,
+                    customBuildRuleStrategy,
+                    executorService,
+                    buildMode,
+                    depFiles,
+                    maxDepFileCacheEntries,
+                    artifactCacheSizeLimit,
+                    buildRuleResolver,
+                    actionToBuildRuleResolver,
+                    targetConfigurationSerializer,
+                    buildInfoStoreManager,
+                    resourceAwareSchedulingInfo,
+                    logBuildRuleFailuresInline,
+                    RuleKeyFactories.of(
+                        TestRuleKeyConfigurationFactory.create(),
+                        cachingBuildEngineDelegate.getFileHashCache(),
+                        buildRuleResolver,
+                        inputFileSizeLimit,
+                        new TrackedRuleKeyCache<>(
+                            new DefaultRuleKeyCache<>(), new NoOpCacheStatsTracker()))));
   }
 
   private static WeightedListeningExecutorService toWeighted(ListeningExecutorService service) {

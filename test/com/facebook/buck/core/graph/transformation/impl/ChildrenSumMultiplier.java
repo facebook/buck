@@ -52,7 +52,7 @@ public class ChildrenSumMultiplier implements GraphComputation<LongMultNode, Lon
 
   @BuckStylePrehashedValue
   public abstract static class LongMultNode implements ComputeKey<LongMultNode>, ComputeResult {
-    public static ComputationIdentifier<LongMultNode> IDENTIFIER =
+    public static final ComputationIdentifier<LongMultNode> IDENTIFIER =
         ClassBasedComputationIdentifier.of(LongMultNode.class, LongMultNode.class);
 
     @Value.Parameter

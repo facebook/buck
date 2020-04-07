@@ -37,10 +37,10 @@ import org.openjdk.jmh.runner.RunnerException;
 @Fork(1)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class FasterPatternBenchmark {
-  private String what = ".*/usr/lib/clang/.*";
-  private Pattern pattern = Pattern.compile(what, Pattern.DOTALL);
-  private FasterPattern fasterPattern = FasterPattern.compile(what);
-  private String fileName = "/Users/somebody/repo/project/subproject/module/header.h";
+  private final String what = ".*/usr/lib/clang/.*";
+  private final Pattern pattern = Pattern.compile(what, Pattern.DOTALL);
+  private final FasterPattern fasterPattern = FasterPattern.compile(what);
+  private final String fileName = "/Users/somebody/repo/project/subproject/module/header.h";
 
   @Benchmark
   @BenchmarkMode(Mode.AverageTime)

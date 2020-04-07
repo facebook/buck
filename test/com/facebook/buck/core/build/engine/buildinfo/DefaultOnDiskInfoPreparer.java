@@ -33,7 +33,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class DefaultOnDiskInfoPreparer {
-  public ProjectFilesystem projectFilesystem;
+  public final ProjectFilesystem projectFilesystem;
 
   public Path metadataDirectory;
   public Path filePath;

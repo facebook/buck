@@ -46,7 +46,7 @@ public class CompilerTypeResolutionSimulatorTest extends CompilerTreeApiTest {
 
   @Parameter public ResolvedTypeKind kind;
 
-  private TestSourceOnlyAbiRuleInfo ruleInfo = new TestSourceOnlyAbiRuleInfo("//:test");
+  private final TestSourceOnlyAbiRuleInfo ruleInfo = new TestSourceOnlyAbiRuleInfo("//:test");
   private CompilerTypeResolutionSimulator resolver;
 
   @Before

@@ -61,7 +61,7 @@ import org.junit.runners.model.Statement;
  * class' usage.
  */
 public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
-  private Map<String, Optional<EndToEndEnvironment>> environmentMap = new HashMap<>();
+  private final Map<String, Optional<EndToEndEnvironment>> environmentMap = new HashMap<>();
   private EndToEndEnvironment defaultEnv;
   private Throwable setupError;
 
@@ -98,9 +98,7 @@ public class EndToEndRunner extends ParentRunner<EndToEndTestDescriptor> {
     }
     Optional<EndToEndEnvironment> defaultEnv =
         getEnvironmentFromAnnotatedMethod(environmentMethods.get(0));
-    if (defaultEnv.isPresent()) {
-      this.defaultEnv = defaultEnv.get();
-    }
+    defaultEnv.ifPresent(endToEndEnvironment -> this.defaultEnv = endToEndEnvironment);
   }
 
   /**

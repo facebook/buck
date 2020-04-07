@@ -63,7 +63,7 @@ public class SkylarkUserDefinedRuleTest {
   private static final Set<String> HIDDEN_IMPLICIT_ATTRIBUTES = ImmutableSet.of();
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  Location location = Location.BUILTIN;
+  final Location location = Location.BUILTIN;
 
   private static final ImmutableMap<String, Attribute<?>> TEST_IMPLICIT_ATTRIBUTES =
       ImmutableMap.of("name", IMPLICIT_ATTRIBUTES.get("name"));

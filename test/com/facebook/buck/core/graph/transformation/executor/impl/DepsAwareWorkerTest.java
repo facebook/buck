@@ -103,7 +103,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
   private AbstractDepsAwareWorker<?> worker1;
   private AbstractDepsAwareWorker<?> worker2;
 
-  private List<Thread> workerThreads = new ArrayList<>();
+  private final List<Thread> workerThreads = new ArrayList<>();
 
   @Before
   public void setUp() {

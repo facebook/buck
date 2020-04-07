@@ -683,7 +683,7 @@ public class AndroidBinaryInstallIntegrationTest {
     private final ImmutableList<String> secondaryDexesContents;
     private final ImmutableList<String> nativeLibsContents;
     private final ResourcesExoData resourcesData;
-    private ImmutableList<String> modularDexesContents;
+    private final ImmutableList<String> modularDexesContents;
 
     public ExoState(
         String mainJavaContent,

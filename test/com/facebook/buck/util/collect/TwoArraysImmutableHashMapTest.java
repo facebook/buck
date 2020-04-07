@@ -36,7 +36,7 @@ public class TwoArraysImmutableHashMapTest {
   public @Rule ExpectedException expectedException = ExpectedException.none();
 
   // Random is created per-test with specified seed, so tests are determinstic.
-  private Random random = new Random(1);
+  private final Random random = new Random(1);
 
   private <A> void assertIteratorsEqual(Iterator<A> guava, Iterator<A> twoArrays) {
     while (guava.hasNext()) {
@@ -127,12 +127,9 @@ public class TwoArraysImmutableHashMapTest {
 
       for (int j = 0; j < size; ++j) {
         int key;
-        for (; ; ) {
+        do {
           key = random.nextInt(1000);
-          if (seenKeys.add(Integer.toString(key))) {
-            break;
-          }
-        }
+        } while (!seenKeys.add(Integer.toString(key)));
         twoArraysBuilder.put(Integer.toString(key), key);
         guavaBuilder.put(Integer.toString(key), key);
       }

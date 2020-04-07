@@ -65,10 +65,9 @@ public class AssumeAndroidPlatform {
 
   public boolean isArmAvailable() {
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-    if (!androidNdk.isPresent()) {
-      return false;
-    }
-    return VERSION_STRING_COMPARATOR.compare(androidNdk.get().getNdkVersion(), "17") < 0;
+    return androidNdk
+        .filter(ndk -> VERSION_STRING_COMPARATOR.compare(ndk.getNdkVersion(), "17") < 0)
+        .isPresent();
   }
 
   public void assumeGnuStlIsAvailable() {
@@ -81,11 +80,9 @@ public class AssumeAndroidPlatform {
 
   public boolean isGnuStlAvailable() {
     Optional<AndroidNdk> androidNdk = AndroidNdkHelper.detectAndroidNdk(projectFilesystem);
-    if (!androidNdk.isPresent()) {
-      return false;
-    }
-
-    return VERSION_STRING_COMPARATOR.compare(androidNdk.get().getNdkVersion(), "18") < 0;
+    return androidNdk
+        .filter(ndk -> VERSION_STRING_COMPARATOR.compare(ndk.getNdkVersion(), "18") < 0)
+        .isPresent();
   }
 
   public void assumeUnifiedHeadersAvailable() {

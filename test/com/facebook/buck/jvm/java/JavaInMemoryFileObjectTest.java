@@ -141,8 +141,6 @@ public class JavaInMemoryFileObjectTest {
     }
     try (OutputStream stream = inMemoryFileObject.openOutputStream()) {
       stream.write("Hello World!".getBytes());
-    } catch (IOException e) {
-      throw e;
     }
   }
 

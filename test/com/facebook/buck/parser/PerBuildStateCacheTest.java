@@ -108,8 +108,7 @@ public class PerBuildStateCacheTest {
     packageCache.putComputedNodeIfNotPresent(
         cells.getRootCell(), packageFile, pkg, false, eventBus);
 
-    lookupPackage =
-        lookupPackage = packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
+    lookupPackage = packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
     Assert.assertSame(lookupPackage.get(), pkg);
   }
 

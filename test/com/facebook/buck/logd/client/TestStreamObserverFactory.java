@@ -26,7 +26,7 @@ import io.grpc.stub.StreamObserver;
  */
 public class TestStreamObserverFactory implements StreamObserverFactory {
   private static final Logger LOG = Logger.get(TestStreamObserverFactory.class.getName());
-  private TestHelper testHelper;
+  private final TestHelper testHelper;
 
   public TestStreamObserverFactory(TestHelper testHelper) {
     this.testHelper = testHelper;

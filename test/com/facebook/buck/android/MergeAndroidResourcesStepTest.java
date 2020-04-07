@@ -992,10 +992,10 @@ public class MergeAndroidResourcesStepTest {
   }
 
   static class RDotTxtFile {
-    public ImmutableList<String> contents;
+    public final ImmutableList<String> contents;
 
-    String packageName;
-    Path filePath;
+    final String packageName;
+    final Path filePath;
 
     RDotTxtFile(String packageName, String filePath, ImmutableList<String> contents) {
       this.packageName = packageName;

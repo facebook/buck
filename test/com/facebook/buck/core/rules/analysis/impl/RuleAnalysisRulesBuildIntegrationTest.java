@@ -783,36 +783,33 @@ public class RuleAnalysisRulesBuildIntegrationTest {
   }
 
   private Matcher<Map<String, Object>> ruleOutputToMatchers(RuleOutput ruleOutput) {
-    Matcher<Map<? extends String, ? extends Object>> targetMatcher =
+    Matcher<Map<? extends String, ?>> targetMatcher =
         Matchers.hasEntry("target", ruleOutput.target);
-    Matcher<Map<? extends String, ? extends Object>> valMatcher =
-        Matchers.hasEntry("val", ruleOutput.val);
+    Matcher<Map<? extends String, ?>> valMatcher = Matchers.hasEntry("val", ruleOutput.val);
 
     Matcher<Object> srcs = createEndOfPathMatcher(ruleOutput.srcs);
     Matcher<Object> deps =
         (Matcher<Object>)
-            (Matcher<? extends Object>)
+            (Matcher<?>)
                 Matchers.containsInAnyOrder(
                     Collections2.transform(
                         ruleOutput.deps,
                         d -> (Matcher<? super Object>) (Matcher<?>) ruleOutputToMatchers(d)));
     Matcher<Object> outputs = createEndOfPathMatcher(ruleOutput.outputs);
 
-    Matcher<Map<? extends String, ? extends Object>> srcsMatcher =
-        Matchers.hasEntry(Matchers.is("srcs"), srcs);
-    Matcher<Map<? extends String, ? extends Object>> depMatcher =
-        Matchers.hasEntry(Matchers.is("dep"), deps);
-    Matcher<Map<? extends String, ? extends Object>> outputsMatcher =
+    Matcher<Map<? extends String, ?>> srcsMatcher = Matchers.hasEntry(Matchers.is("srcs"), srcs);
+    Matcher<Map<? extends String, ?>> depMatcher = Matchers.hasEntry(Matchers.is("dep"), deps);
+    Matcher<Map<? extends String, ?>> outputsMatcher =
         Matchers.hasEntry(Matchers.is("outputs"), outputs);
 
-    Matcher<? extends Map<? extends String, ? extends Object>> matcher =
+    Matcher<? extends Map<? extends String, ?>> matcher =
         Matchers.allOf(targetMatcher, valMatcher, srcsMatcher, depMatcher, outputsMatcher);
     return (Matcher<Map<String, Object>>) matcher;
   }
 
   private static Matcher<Object> createEndOfPathMatcher(List<Path> toMatch) {
     return (Matcher<Object>)
-        (Matcher<? extends Object>)
+        (Matcher<?>)
             Matchers.containsInAnyOrder(
                 Collections2.transform(
                     toMatch,

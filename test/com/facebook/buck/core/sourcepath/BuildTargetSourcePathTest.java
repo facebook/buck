@@ -34,7 +34,7 @@ import org.junit.Test;
 
 public class BuildTargetSourcePathTest {
 
-  private BuildTarget target = BuildTargetFactory.newInstance("//example:target");
+  private final BuildTarget target = BuildTargetFactory.newInstance("//example:target");
 
   @Test
   public void shouldThrowAnExceptionIfRuleDoesNotHaveAnOutput() {

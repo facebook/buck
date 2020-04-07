@@ -47,8 +47,8 @@ import org.hamcrest.Matchers;
 public class SkylarkProjectBuildFileParserTestUtils {
   // A simple wrapper around skylark parser that records interesting events.
   static class RecordingParser extends SkylarkProjectBuildFileParser {
-    Map<Path, Integer> readCounts;
-    Map<Path, Integer> buildCounts;
+    final Map<Path, Integer> readCounts;
+    final Map<Path, Integer> buildCounts;
 
     public RecordingParser(SkylarkProjectBuildFileParser delegate) {
       super(delegate);

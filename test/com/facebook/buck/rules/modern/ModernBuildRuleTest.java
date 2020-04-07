@@ -29,7 +29,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -51,9 +50,8 @@ public class ModernBuildRuleTest {
   public void shouldErrorWhenPublicOutputPathIsInsideTempPath() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    BuildRuleResolver buildRuleResolver = new TestActionGraphBuilder();
-    SourcePathRuleFinder finder = buildRuleResolver;
-    ModernBuildRule rule = new InvalidPublicOutputPathBuildRule(target, filesystem, finder);
+    ModernBuildRule rule =
+        new InvalidPublicOutputPathBuildRule(target, filesystem, new TestActionGraphBuilder());
 
     BuildableContext buildableContext = new FakeBuildableContext();
     try {

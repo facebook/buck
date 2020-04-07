@@ -183,7 +183,6 @@ public class DirectHeaderMapTest {
   public void testRuleKeyDoesNotChangeIfLinkTargetsChange() throws IOException {
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     graphBuilder.addToIndex(buildRule);
-    SourcePathRuleFinder ruleFinder = graphBuilder;
     // Calculate their rule keys and verify they're different.
     DefaultFileHashCache hashCache =
         DefaultFileHashCache.createDefaultFileHashCache(
@@ -191,14 +190,14 @@ public class DirectHeaderMapTest {
             FileHashCacheMode.DEFAULT);
     FileHashLoader hashLoader = new StackedFileHashCache(ImmutableList.of(hashCache));
 
-    RuleKey defaultKey1 = new TestDefaultRuleKeyFactory(hashLoader, ruleFinder).build(buildRule);
-    RuleKey inputKey1 = new TestInputBasedRuleKeyFactory(hashLoader, ruleFinder).build(buildRule);
+    RuleKey defaultKey1 = new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(buildRule);
+    RuleKey inputKey1 = new TestInputBasedRuleKeyFactory(hashLoader, graphBuilder).build(buildRule);
 
     Files.write(file1.getPath(), "hello other world".getBytes());
     hashCache.invalidateAll();
 
-    RuleKey defaultKey2 = new TestDefaultRuleKeyFactory(hashLoader, ruleFinder).build(buildRule);
-    RuleKey inputKey2 = new TestInputBasedRuleKeyFactory(hashLoader, ruleFinder).build(buildRule);
+    RuleKey defaultKey2 = new TestDefaultRuleKeyFactory(hashLoader, graphBuilder).build(buildRule);
+    RuleKey inputKey2 = new TestInputBasedRuleKeyFactory(hashLoader, graphBuilder).build(buildRule);
 
     // When the file content changes, the rulekey should change but the input rulekey should be
     // unchanged. This ensures that a dependent's rulekey changes correctly.

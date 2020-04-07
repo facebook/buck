@@ -19,7 +19,7 @@ package com.facebook.buck.android.resources;
 import java.nio.IntBuffer;
 
 class ReversingMapper implements ReferenceMapper {
-  private ResourceTable resourceTable;
+  private final ResourceTable resourceTable;
 
   public ReversingMapper(ResourceTable resourceTable) {
     this.resourceTable = resourceTable;

@@ -52,10 +52,10 @@ public class SQLiteArtifactCacheBenchmark {
   @Rule public TemporaryPaths tmpDir = new TemporaryPaths();
 
   @Param({"1000", "10000", "100000"})
-  private int opCount = 100;
+  private final int opCount = 100;
 
   @Param({"5", "10"})
-  private int threadCount = 2;
+  private final int threadCount = 2;
 
   private static final Random random = new Random(12345);
   private static final long MAX_INLINED_BYTES = 1024;

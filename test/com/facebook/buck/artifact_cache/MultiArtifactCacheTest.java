@@ -196,7 +196,7 @@ public class MultiArtifactCacheTest {
 
   private static class SimpleArtifactCache implements ArtifactCache {
     private final ProjectFilesystem filesystem;
-    @Nullable public AtomicReference<RuleKey> storedKey;
+    @Nullable public final AtomicReference<RuleKey> storedKey;
 
     public SimpleArtifactCache(ProjectFilesystem filesystem) {
       this.filesystem = filesystem;

@@ -461,7 +461,8 @@ public class CompileStringsStepTest {
 
   private class FakeProjectFileSystem extends DefaultProjectFilesystem {
 
-    private ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder = ImmutableMap.builder();
+    private final ImmutableMap.Builder<String, byte[]> fileContentsMapBuilder =
+        ImmutableMap.builder();
 
     public FakeProjectFileSystem() {
       this(AbsPath.of(Paths.get(".").toAbsolutePath()));

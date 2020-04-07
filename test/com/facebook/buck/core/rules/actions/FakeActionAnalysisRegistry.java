@@ -25,7 +25,7 @@ import java.util.Map;
 
 public class FakeActionAnalysisRegistry implements ActionAnalysisDataRegistry {
 
-  private Map<ActionAnalysisDataKey, ActionAnalysisData> registry = new HashMap<>();
+  private final Map<ActionAnalysisDataKey, ActionAnalysisData> registry = new HashMap<>();
 
   @Override
   public void registerAction(ActionAnalysisData actionAnalysisData) {

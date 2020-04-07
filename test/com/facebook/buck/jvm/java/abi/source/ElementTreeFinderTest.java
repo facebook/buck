@@ -31,7 +31,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class ElementTreeFinderTest extends CompilerTreeApiTest {
-  private static String SOURCE_CODE =
+  private static final String SOURCE_CODE =
       Joiner.on('\n')
           .join(
               "class AClass<ClassTypeParam> {",

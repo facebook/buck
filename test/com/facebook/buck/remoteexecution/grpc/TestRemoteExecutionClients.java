@@ -38,7 +38,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class TestRemoteExecutionClients implements RemoteExecutionClients {
-  private BuckEventBus eventBus;
+  private final BuckEventBus eventBus;
   private Server server;
 
   private RemoteExecutionClients clients;

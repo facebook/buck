@@ -78,8 +78,8 @@ public class JsBundleGenruleBuilder
   }
 
   public static class Options {
-    BuildTarget genruleTarget;
-    BuildTarget jsBundle;
+    final BuildTarget genruleTarget;
+    final BuildTarget jsBundle;
     boolean rewriteSourcemap = false;
     boolean rewriteMisc = false;
     boolean rewriteDepsFile = false;

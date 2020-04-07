@@ -23,7 +23,7 @@ import java.util.Map;
 /** Builds some common .buckconfig configuration sets to be used with E2E tests */
 public class ConfigSetBuilder {
   private Map<String, Map<String, String>> configSet = new HashMap<>();
-  private PlatformUtils platformUtils = PlatformUtils.getForPlatform();
+  private final PlatformUtils platformUtils = PlatformUtils.getForPlatform();
 
   public ConfigSetBuilder() {}
 

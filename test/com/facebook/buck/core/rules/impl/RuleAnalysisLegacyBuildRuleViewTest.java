@@ -88,7 +88,7 @@ import org.junit.rules.ExpectedException;
 public class RuleAnalysisLegacyBuildRuleViewTest {
   @Rule public final ExpectedException exception = ExpectedException.none();
 
-  private ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Test
   public void buildRuleViewReturnsCorrectInformation()

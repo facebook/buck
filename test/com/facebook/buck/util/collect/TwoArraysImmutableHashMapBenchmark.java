@@ -42,13 +42,13 @@ import org.openjdk.jmh.runner.RunnerException;
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class TwoArraysImmutableHashMapBenchmark {
 
-  private ImmutableList<String> keys10 =
+  private final ImmutableList<String> keys10 =
       IntStream.range(0, 10).mapToObj(Integer::toString).collect(ImmutableList.toImmutableList());
 
-  private ImmutableMap<String, String> immutableMap10 =
+  private final ImmutableMap<String, String> immutableMap10 =
       keys10.stream().collect(ImmutableMap.toImmutableMap(i -> i, i -> i + "a"));
 
-  private TwoArraysImmutableHashMap<String, String> twoArraysMap10 =
+  private final TwoArraysImmutableHashMap<String, String> twoArraysMap10 =
       TwoArraysImmutableHashMap.copyOf(immutableMap10);
 
   private void runIteration(Blackhole bh, Map<String, String> map) {

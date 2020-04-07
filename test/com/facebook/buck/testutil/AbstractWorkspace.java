@@ -103,7 +103,7 @@ public abstract class AbstractWorkspace {
 
   private Optional<String> testClassFixtureSuffix = Optional.empty();
   private Optional<String> testCaseFixtureSuffix = Optional.empty();
-  private Map<Path, FixtureLevel> writtenFileFixtureLevel = new HashMap<>();
+  private final Map<Path, FixtureLevel> writtenFileFixtureLevel = new HashMap<>();
 
   /**
    * Constructor for AbstractWorkspace

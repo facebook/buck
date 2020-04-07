@@ -18,7 +18,7 @@ package com.facebook.buck.util.shutdown;
 
 public class NonReentrantSystemExitDemo {
 
-  private static NonReentrantSystemExit nonReentrantSystemExit = new NonReentrantSystemExit();
+  private static final NonReentrantSystemExit nonReentrantSystemExit = new NonReentrantSystemExit();
 
   public static void main(String[] args) {
     Runtime.getRuntime()

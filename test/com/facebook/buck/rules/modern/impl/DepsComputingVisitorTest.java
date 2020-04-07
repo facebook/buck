@@ -52,8 +52,8 @@ import java.util.stream.Stream;
 import org.junit.Test;
 
 public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
-  private Consumer<BuildRule> depsBuilder = createStrictMock(Consumer.class);
-  private InputRuleResolver inputRuleResolver = createStrictMock(InputRuleResolver.class);
+  private final Consumer<BuildRule> depsBuilder = createStrictMock(Consumer.class);
+  private final InputRuleResolver inputRuleResolver = createStrictMock(InputRuleResolver.class);
 
   private void apply(Buildable value) {
     replay(depsBuilder, inputRuleResolver);

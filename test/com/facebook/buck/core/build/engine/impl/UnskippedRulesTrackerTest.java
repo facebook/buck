@@ -54,7 +54,7 @@ public class UnskippedRulesTrackerTest {
 
   private UnskippedBuildEngineActionTracker unskippedRulesTracker;
   private BuckEventBus eventBus;
-  private BlockingQueue<BuckEvent> events = new LinkedBlockingQueue<>();
+  private final BlockingQueue<BuckEvent> events = new LinkedBlockingQueue<>();
 
   private BuildRule ruleA;
   private BuildRule ruleB;

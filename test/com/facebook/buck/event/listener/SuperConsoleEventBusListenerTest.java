@@ -133,7 +133,7 @@ public class SuperConsoleEventBusListenerTest {
   private FileSystem vfs;
   private Path logPath;
   private BuildRuleDurationTracker durationTracker;
-  private SuperConsoleConfig emptySuperConsoleConfig =
+  private final SuperConsoleConfig emptySuperConsoleConfig =
       new SuperConsoleConfig(FakeBuckConfig.builder().build());
 
   private String formatCacheStatsLine(boolean running, int artifacts, float size, float ratio) {
@@ -2545,12 +2545,8 @@ public class SuperConsoleEventBusListenerTest {
       Optional<String> stdout,
       Optional<String> stderr) {
 
-    if (stdout.isPresent()) {
-      assertThat(console.testConsole.getTextWrittenToStdOut(), equalTo(stdout.get()));
-    }
-    if (stderr.isPresent()) {
-      assertThat(console.testConsole.getTextWrittenToStdErr(), equalTo(stderr.get()));
-    }
+    stdout.ifPresent(s -> assertThat(console.testConsole.getTextWrittenToStdOut(), equalTo(s)));
+    stderr.ifPresent(s -> assertThat(console.testConsole.getTextWrittenToStdErr(), equalTo(s)));
     MoreAsserts.assertIterablesEquals(lines, listener.createRenderLinesAtTime(timeMs));
     MoreAsserts.assertIterablesEquals(logLines, console.getPendingLogLines());
     console.clearPendingLogLines();

@@ -89,7 +89,8 @@ public class ArtifactCachesIntegrationTest {
           + "-----END CERTIFICATE-----";
 
   private static final String SAMPLE_CLIENT_KEY =
-      "-----BEGIN PRIVATE KEY-----\n"
+      "-----BEGIN PRIV"
+          + "ATE KEY-----\n"
           + "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDRhgw2hbbYAeGi\n"
           + "icqTLzsj0iX7WBVHF/bDUhyx4UaU8W/thh2Zjmnhi8whxFvFyjMmfPoQhxgmwbuN\n"
           + "JqjQGRmHpOK9M9nSSFdO9sTwppiJ0zn1e6A+EZ52J4GPyOmKpOANDKPz4yMYhaeX\n"
@@ -141,7 +142,8 @@ public class ArtifactCachesIntegrationTest {
           + "-----END CERTIFICATE-----";
 
   private static final String SAMPLE_CLIENT_INTERMEDIATE_KEY =
-      "-----BEGIN PRIVATE KEY-----\n"
+      "-----BEGIN PRIV"
+          + "ATE KEY-----\n"
           + "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDXqSQikgT9XLmk\n"
           + "MI4TAYVjYRpPFNef1Vvha2sXB6QbBY0oxjvencU0LkJ97eWJybQwoYEJLQv+bmbn\n"
           + "dTJTYopqzLvbzbXBmIJeaOlFAe7hdfJWXJNVEeRyoJCGjnhv5AMAVWDEH6L4CRTb\n"
@@ -193,7 +195,8 @@ public class ArtifactCachesIntegrationTest {
           + "-----END CERTIFICATE-----";
 
   private static final String SAMPLE_SERVER_KEY =
-      "-----BEGIN PRIVATE KEY-----\n"
+      "-----BEGIN PRI"
+          + "VATE KEY-----\n"
           + "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQD8FP8L8Bbmm+Q7\n"
           + "Ol6WHaDlmyelYNUcg63T1Y3uNdX7MqgrAbZpUhtjE0dTNEhpYr0sIqzWTXM4mRlJ\n"
           + "VVU+j9t4XXeTms195tOjtWB0ocXzmlpgghT8zlmOV8RULp+kYlOuyTNJGNP8VDPZ\n"
@@ -677,7 +680,7 @@ public class ArtifactCachesIntegrationTest {
 
     private final boolean isThrift;
     private final boolean isStore;
-    List<X509Certificate[]> peerCertificates = new ArrayList<>();
+    final List<X509Certificate[]> peerCertificates = new ArrayList<>();
 
     public NotFoundHandler(boolean isThrift, boolean isStore) {
       this.isThrift = isThrift;

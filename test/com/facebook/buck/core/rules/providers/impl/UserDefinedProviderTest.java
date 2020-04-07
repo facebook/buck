@@ -39,7 +39,7 @@ import org.junit.rules.ExpectedException;
 public class UserDefinedProviderTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  Location location =
+  final Location location =
       Location.fromPathAndStartColumn(
           PathFragment.create("package").getChild("file.bzl"),
           0,

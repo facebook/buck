@@ -29,8 +29,8 @@ import org.junit.Test;
 public class LogLevelTypeCoercerTest {
 
   private LogLevelTypeCoercer coercer;
-  private ProjectFilesystem filesystem = new FakeProjectFilesystem();
-  private ForwardRelativePath pathFromRoot = ForwardRelativePath.of("third-party/java");
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final ForwardRelativePath pathFromRoot = ForwardRelativePath.of("third-party/java");
 
   @Before
   public void setUp() {

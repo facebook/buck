@@ -59,7 +59,7 @@ public class DescriptorAndSignatureFactoryTestBase {
 
   private Classes correctClasses;
   protected Elements elements;
-  List<String> errors = new ArrayList<>();
+  final List<String> errors = new ArrayList<>();
 
   protected boolean isTestingWithDependencies() {
     return testMode == WITH_DEPS;

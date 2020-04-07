@@ -644,7 +644,7 @@ public class ModernBuildRuleStrategyIntegrationTest {
   private static class FunnyStringBuilder {
     private Character curr = null;
     private int count = 0;
-    private StringBuilder builder = new StringBuilder();
+    private final StringBuilder builder = new StringBuilder();
 
     public void append(char c) {
       if (Objects.equals(curr, c)) {

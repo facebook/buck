@@ -62,7 +62,7 @@ public class DefaultFileHashCacheTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
   @Rule public ExpectedException expectedException = ExpectedException.none();
-  private FileHashCacheMode fileHashCacheMode;
+  private final FileHashCacheMode fileHashCacheMode;
 
   @Parameterized.Parameters(name = "{0}")
   public static Collection<Object[]> data() {

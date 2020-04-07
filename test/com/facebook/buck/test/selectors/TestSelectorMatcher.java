@@ -21,7 +21,7 @@ import org.hamcrest.TypeSafeMatcher;
 
 /** A Hamcrest matcher that matches when the {@link TestSelector} matches. */
 public class TestSelectorMatcher extends TypeSafeMatcher<TestDescription> {
-  private TestSelector testSelector;
+  private final TestSelector testSelector;
 
   public TestSelectorMatcher(TestSelector testSelector) {
     super(TestDescription.class);

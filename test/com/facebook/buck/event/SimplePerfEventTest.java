@@ -148,7 +148,7 @@ public class SimplePerfEventTest {
   }
 
   private static class SimplePerfEventListener {
-    private ImmutableList.Builder<SimplePerfEvent> perfEventBuilder = ImmutableList.builder();
+    private final ImmutableList.Builder<SimplePerfEvent> perfEventBuilder = ImmutableList.builder();
 
     public ImmutableList<SimplePerfEvent> getPerfEvents() {
       return perfEventBuilder.build();

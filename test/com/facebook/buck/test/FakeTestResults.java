@@ -44,11 +44,9 @@ public class FakeTestResults {
   }
 
   public static TestResults newFailedInstance(String name) {
-    String testCaseName = name;
     TestResultSummary testResultSummary =
-        new TestResultSummary(testCaseName, null, ResultType.FAILURE, 0, null, null, null, null);
-    TestCaseSummary testCase =
-        new TestCaseSummary(testCaseName, ImmutableList.of(testResultSummary));
+        new TestResultSummary(name, null, ResultType.FAILURE, 0, null, null, null, null);
+    TestCaseSummary testCase = new TestCaseSummary(name, ImmutableList.of(testResultSummary));
     ImmutableList<TestCaseSummary> testCases = ImmutableList.of(testCase);
     return FakeTestResults.of(testCases);
   }

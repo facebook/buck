@@ -845,11 +845,12 @@ public class ProjectWorkspace extends AbstractWorkspace {
           observedObject = null;
         }
 
-        assertTrue(
+        assertEquals(
             String.format(
                 "In %s, expected plist to be of %s type.",
                 cleanPathToObservedFile, (expectedObject != null) ? "binary" : "XML"),
-            (expectedObject != null) == (observedObject != null));
+            (expectedObject != null),
+            (observedObject != null));
 
         if (expectedObject != null) {
           // These keys depend on the locally installed version of Xcode, so ignore them

@@ -35,15 +35,15 @@ import org.junit.Test;
 /** Unit tests for {@link PathHashing}. */
 public class PathHashingTest {
 
-  private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
-  private ProjectFileHashCache fileHashCache =
+  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private final ProjectFileHashCache fileHashCache =
       FakeProjectFileHashCache.createFromStrings(
           projectFilesystem,
           ImmutableMap.of(
               "foo/foo.txt", "abcdef",
               "foo/bar.txt", "abcdef",
               "foo/baz.txt", "abcdef"));
-  private ProjectFileHashCache modifiedFileHashCache =
+  private final ProjectFileHashCache modifiedFileHashCache =
       FakeProjectFileHashCache.createFromStrings(
           projectFilesystem,
           ImmutableMap.of(

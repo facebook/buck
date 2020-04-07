@@ -114,9 +114,7 @@ public class PythonDslProjectBuildFileParserTest {
       Optional<String> stdout) {
     Map<String, Object> outputToSerialize = new LinkedHashMap<>();
     outputToSerialize.put("values", values);
-    if (diagnostics.isPresent()) {
-      outputToSerialize.put("diagnostics", diagnostics.get());
-    }
+    diagnostics.ifPresent(objects -> outputToSerialize.put("diagnostics", objects));
     byte[] serialized;
     try {
       serialized = ObjectMappers.WRITER.writeValueAsBytes(outputToSerialize);

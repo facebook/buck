@@ -29,7 +29,7 @@ import org.junit.Test;
 
 public class AttrFilterFunctionTest {
   private QueryEnvironment<QueryTarget> queryEnvironment;
-  private QueryBuildTarget onlyTarget =
+  private final QueryBuildTarget onlyTarget =
       QueryBuildTarget.of(BuildTargetFactory.newInstance("//x:y"));
 
   @Test
@@ -75,8 +75,8 @@ public class AttrFilterFunctionTest {
   }
 
   private class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryTarget> {
-    private String attributeName;
-    private Object attributeValue;
+    private final String attributeName;
+    private final Object attributeValue;
 
     public TestQueryEnvironment(String attributeName, Object attributeValue) {
       this.attributeName = attributeName;

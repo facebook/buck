@@ -355,7 +355,7 @@ public class HttpdForTests implements AutoCloseable {
    */
   public static class CapturingHttpHandler extends AbstractHandler {
 
-    private ImmutableMap<String, byte[]> contentMap;
+    private final ImmutableMap<String, byte[]> contentMap;
     private final List<String> requestedPaths = new ArrayList<>();
 
     /**

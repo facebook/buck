@@ -23,8 +23,8 @@ import java.nio.charset.StandardCharsets;
 public interface ProcessListeners {
   class CapturingListener implements ListeningProcessExecutor.ProcessListener {
     protected ListeningProcessExecutor.LaunchedProcess process;
-    public ByteArrayOutputStream capturedStdout = new ByteArrayOutputStream();
-    public ByteArrayOutputStream capturedStderr = new ByteArrayOutputStream();
+    public final ByteArrayOutputStream capturedStdout = new ByteArrayOutputStream();
+    public final ByteArrayOutputStream capturedStderr = new ByteArrayOutputStream();
 
     @Override
     public void onStart(ListeningProcessExecutor.LaunchedProcess process) {
@@ -44,7 +44,7 @@ public interface ProcessListeners {
       writeBufferToStream(buffer, capturedStderr);
     }
 
-    private final void writeBufferToStream(ByteBuffer buffer, ByteArrayOutputStream stream) {
+    private void writeBufferToStream(ByteBuffer buffer, ByteArrayOutputStream stream) {
       if (buffer.hasArray()) {
         stream.write(buffer.array(), buffer.position(), buffer.remaining());
         buffer.position(buffer.limit());

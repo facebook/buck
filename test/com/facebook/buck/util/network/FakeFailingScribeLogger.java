@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public final class FakeFailingScribeLogger extends ScribeLogger {
 
-  private AtomicBoolean failLogging = new AtomicBoolean(false);
+  private final AtomicBoolean failLogging = new AtomicBoolean(false);
 
   @Override
   public ListenableFuture<Unit> log(

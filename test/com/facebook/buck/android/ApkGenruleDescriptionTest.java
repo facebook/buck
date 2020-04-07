@@ -82,7 +82,7 @@ public class ApkGenruleDescriptionTest {
 
   private static class FakeInstallable extends FakeBuildRule implements HasInstallableApk {
 
-    SourcePath apkPath =
+    final SourcePath apkPath =
         ExplicitBuildTargetSourcePath.of(getBuildTarget(), Paths.get("buck-out", "app.apk"));
 
     public FakeInstallable(BuildTarget buildTarget) {

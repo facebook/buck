@@ -144,7 +144,7 @@ public class MoreThrowablesTest {
 
   public static class CausedBy extends TypeSafeMatcher<Throwable> {
 
-    private Throwable cause;
+    private final Throwable cause;
 
     public CausedBy(Throwable cause) {
       this.cause = cause;

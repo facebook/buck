@@ -26,8 +26,8 @@ import org.junit.Test;
 
 public class BuckDepComparatorTest {
 
-  private BuckDepComparator comparator = new BuckDepComparator();
-  private SortedSet<String> sorted = new TreeSet<>(comparator);
+  private final BuckDepComparator comparator = new BuckDepComparator();
+  private final SortedSet<String> sorted = new TreeSet<>(comparator);
 
   @Test
   public void orderingOfLocalTargetsWorksAsExpected() {

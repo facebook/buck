@@ -100,8 +100,8 @@ abstract class RustAssumptions {
     String[] rustVersionParts = rustOut[1].split("\\.");
 
     for (int i = 0; i < versionParts.length && i < rustVersionParts.length; i++) {
-      Integer rustcVer = Integer.parseInt(rustVersionParts[i]);
-      Integer wantVer = Integer.parseInt(versionParts[i]);
+      int rustcVer = Integer.parseInt(rustVersionParts[i]);
+      int wantVer = Integer.parseInt(versionParts[i]);
 
       assumeTrue(
           String.format("rustc version %s doesn't meet %s", rustOut[1], version),

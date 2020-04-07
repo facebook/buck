@@ -110,8 +110,8 @@ public class AbstractBreadthFirstTraversalTest {
   }
 
   private static class FakeNode implements Comparable<FakeNode> {
-    protected String name;
-    protected ImmutableSortedSet<FakeNode> deps;
+    protected final String name;
+    protected final ImmutableSortedSet<FakeNode> deps;
 
     public FakeNode(String name, ImmutableSortedSet<FakeNode> deps) {
       this.name = name;

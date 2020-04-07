@@ -25,7 +25,7 @@ import org.junit.runner.RunWith;
 
 @RunWith(CompilerTreeApiTestRunner.class)
 public class TaskListenerWrapperTest {
-  private TaskListener innerListener = EasyMock.createMock(TaskListener.class);
+  private final TaskListener innerListener = EasyMock.createMock(TaskListener.class);
 
   @Test
   public void testChainsToInnerOnStart() {

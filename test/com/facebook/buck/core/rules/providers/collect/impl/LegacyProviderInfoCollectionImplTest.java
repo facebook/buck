@@ -36,7 +36,7 @@ public class LegacyProviderInfoCollectionImplTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  StarlarkContext ctx = new StarlarkContext() {};
+  final StarlarkContext ctx = new StarlarkContext() {};
 
   @Test
   public void getIndexThrowsWhenKeyNotProvider() throws EvalException {

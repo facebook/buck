@@ -178,10 +178,8 @@ public class BuckUnixPathTest {
   @Test
   @Parameters({"", "/", "/a", "a", "a/b/c", "/a/b/c"})
   public void hashcodeMethodEquals(String data) {
-    String data1 = data;
-    String data2 = data;
-    Path path1 = BuckUnixPathUtils.createPath(data1);
-    Path path2 = BuckUnixPathUtils.createPath(data2);
+    Path path1 = BuckUnixPathUtils.createPath(data);
+    Path path2 = BuckUnixPathUtils.createPath(data);
     assertEquals(path1.hashCode(), path2.hashCode());
   }
 

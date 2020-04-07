@@ -127,16 +127,16 @@ public class CxxPreprocessAndCompileTest {
     }
   }
 
-  private ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+  private final ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
 
-  private Preprocessor DEFAULT_PREPROCESSOR =
+  private final Preprocessor DEFAULT_PREPROCESSOR =
       new GccPreprocessor(
           new HashedFileTool(
               () ->
                   PathSourcePath.of(
                       projectFilesystem,
                       PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/preprocessor")))));
-  private Compiler DEFAULT_COMPILER =
+  private final Compiler DEFAULT_COMPILER =
       new GccCompiler(
           new HashedFileTool(
               () ->
@@ -146,14 +146,14 @@ public class CxxPreprocessAndCompileTest {
           ToolType.CXX,
           false,
           false);
-  private Preprocessor PREPROCESSOR_WITH_COLOR_SUPPORT =
+  private final Preprocessor PREPROCESSOR_WITH_COLOR_SUPPORT =
       new PreprocessorWithColorSupport(
           new HashedFileTool(
               () ->
                   PathSourcePath.of(
                       projectFilesystem,
                       PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/preprocessor")))));
-  private Compiler COMPILER_WITH_COLOR_SUPPORT =
+  private final Compiler COMPILER_WITH_COLOR_SUPPORT =
       new CompilerWithColorSupport(
           new HashedFileTool(
               () ->

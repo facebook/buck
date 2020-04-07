@@ -25,7 +25,6 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -137,8 +136,8 @@ public class HybridThriftOverHttpServiceImplTest {
     }
 
     Assert.assertEquals(announcementOriginal, announcementResponse);
-    Assert.assertTrue(Arrays.equals(payload1, payload1Actual.toByteArray()));
-    Assert.assertTrue(Arrays.equals(payload2, payload2Actual.toByteArray()));
+    Assert.assertArrayEquals(payload1, payload1Actual.toByteArray());
+    Assert.assertArrayEquals(payload2, payload2Actual.toByteArray());
   }
 
   private static DataInputStream toDataInputStream(InputStream innerStream) {

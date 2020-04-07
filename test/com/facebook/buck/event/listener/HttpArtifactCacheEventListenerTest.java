@@ -42,7 +42,7 @@ import org.junit.Test;
 public class HttpArtifactCacheEventListenerTest {
 
   private static class TestBatchingLogger extends AbstractBatchingLogger {
-    private List<String> logEntries = new ArrayList<>();
+    private final List<String> logEntries = new ArrayList<>();
 
     public TestBatchingLogger(int minBatchSize) {
       super(minBatchSize);

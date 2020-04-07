@@ -31,7 +31,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class BuckFixSpecWriterTest {
-  BuckFixSpec specWithPaths = BuckFixSpecTest.specWithPaths;
+  final BuckFixSpec specWithPaths = BuckFixSpecTest.specWithPaths;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 

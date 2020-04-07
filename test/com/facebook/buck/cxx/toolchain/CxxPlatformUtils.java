@@ -100,7 +100,7 @@ public class CxxPlatformUtils {
   public static final SourcePathResolverAdapter DEFAULT_PATH_RESOLVER =
       new SourcePathResolverAdapter(DefaultSourcePathResolver.from(new TestActionGraphBuilder()));
 
-  public static final CxxPlatform buildPlatformWithLdArgs(ImmutableList<String> ldArgs) {
+  public static CxxPlatform buildPlatformWithLdArgs(ImmutableList<String> ldArgs) {
     CommandTool.Builder commandToolBuilder = new CommandTool.Builder();
     for (String ldArg : ldArgs) {
       commandToolBuilder.addArg(ldArg);

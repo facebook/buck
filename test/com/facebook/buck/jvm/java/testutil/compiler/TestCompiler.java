@@ -93,7 +93,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
   private BuckJavacTask javacTask;
   private boolean useFrontendOnlyJavacTask = false;
   private boolean allowCompilationErrors = false;
-  private Set<String> classpath = new LinkedHashSet<>();
+  private final Set<String> classpath = new LinkedHashSet<>();
 
   public void addClasspathFileContents(String fileName, String... lines) throws IOException {
     if (javacTask != null) {
@@ -356,7 +356,7 @@ public class TestCompiler extends ExternalResource implements AutoCloseable {
    * diagnostic at the time its reported and collect that instead.
    */
   private static class DiagnosticMessageCollector<S> implements DiagnosticListener<S> {
-    private List<Diagnostic<? extends S>> diagnostics = new ArrayList<>();
+    private final List<Diagnostic<? extends S>> diagnostics = new ArrayList<>();
 
     @Override
     public void report(Diagnostic<? extends S> diagnostic) {

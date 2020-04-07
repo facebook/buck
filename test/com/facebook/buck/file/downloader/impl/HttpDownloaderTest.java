@@ -46,7 +46,7 @@ import org.junit.Test;
 public class HttpDownloaderTest {
 
   private final Path neverUsed = Paths.get("never/used");
-  private BuckEventBus eventBus = BuckEventBusForTests.newInstance();
+  private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
 
   private HttpDownloader getDownloader(HttpURLConnection connection) {
     return new HttpDownloader() {

@@ -31,7 +31,7 @@ import org.junit.Test;
 
 public class PackageFactoryTest {
 
-  private Cells cell = new TestCellBuilder().build();
+  private final Cells cell = new TestCellBuilder().build();
 
   private Package createGenericPackage() {
     Path packageFile = Paths.get("foo/PACKAGE");
@@ -39,9 +39,7 @@ public class PackageFactoryTest {
     PackageMetadata rawPackage =
         PackageMetadata.of(false, ImmutableList.of("//a/..."), ImmutableList.of("//b/..."));
 
-    Package pkg =
-        PackageFactory.create(cell.getRootCell(), packageFile, rawPackage, Optional.empty());
-    return pkg;
+    return PackageFactory.create(cell.getRootCell(), packageFile, rawPackage, Optional.empty());
   }
 
   @Test

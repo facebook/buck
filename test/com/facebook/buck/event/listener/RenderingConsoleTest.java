@@ -32,8 +32,8 @@ import org.junit.After;
 import org.junit.Test;
 
 public class RenderingConsoleTest {
-  TestConsole console = new TestConsole();
-  RenderingConsole renderingConsole = new RenderingConsole(FakeClock.doNotCare(), console);
+  final TestConsole console = new TestConsole();
+  final RenderingConsole renderingConsole = new RenderingConsole(FakeClock.doNotCare(), console);
   int lastNumLinesRead = 0;
 
   @After

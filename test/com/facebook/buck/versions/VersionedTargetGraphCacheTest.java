@@ -53,9 +53,9 @@ public class VersionedTargetGraphCacheTest {
 
   private UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
 
-  private Version version1 = Version.of("v1");
-  private Version version2 = Version.of("v2");
-  private BuildTarget versionedAlias = BuildTargetFactory.newInstance("//:alias");
+  private final Version version1 = Version.of("v1");
+  private final Version version2 = Version.of("v2");
+  private final BuildTarget versionedAlias = BuildTargetFactory.newInstance("//:alias");
 
   @Rule
   public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor =

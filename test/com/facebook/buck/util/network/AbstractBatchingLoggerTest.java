@@ -30,7 +30,7 @@ import org.junit.Test;
 public class AbstractBatchingLoggerTest {
 
   private static class TestBatchingLogger extends AbstractBatchingLogger {
-    private List<ImmutableCollection<BatchEntry>> uploadedBatches = new ArrayList<>();
+    private final List<ImmutableCollection<BatchEntry>> uploadedBatches = new ArrayList<>();
 
     public TestBatchingLogger(int minBatchSize) {
       super(minBatchSize);

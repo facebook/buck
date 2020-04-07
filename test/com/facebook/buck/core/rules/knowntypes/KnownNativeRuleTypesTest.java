@@ -52,7 +52,7 @@ public class KnownNativeRuleTypesTest {
   @ClassRule public static TemporaryFolder folder = new TemporaryFolder();
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
-  private ExecutableFinder executableFinder = new ExecutableFinder();
+  private final ExecutableFinder executableFinder = new ExecutableFinder();
 
   @Test(expected = IllegalStateException.class)
   public void whenRegisteringDescriptionsWithSameTypeErrorIsThrown() {

@@ -37,7 +37,8 @@ import org.junit.rules.ExpectedException;
 public class AppleAssetCatalogTest {
 
   private ProjectFilesystem filesystem;
-  private SourcePathResolverAdapter resolver = new TestActionGraphBuilder().getSourcePathResolver();
+  private final SourcePathResolverAdapter resolver =
+      new TestActionGraphBuilder().getSourcePathResolver();
 
   @Rule public final TemporaryPaths tmp = new TemporaryPaths();
 

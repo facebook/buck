@@ -41,9 +41,9 @@ import org.junit.Test;
 /** Test generation of command line flags based on creation parameters */
 public class AaptStepTest {
 
-  private AbsPath basePath =
+  private final AbsPath basePath =
       AbsPath.of(Paths.get("/java/com/facebook/buck/example").toAbsolutePath());
-  private Path proguardConfig = basePath.resolve("mock_proguard.txt").getPath();
+  private final Path proguardConfig = basePath.resolve("mock_proguard.txt").getPath();
 
   private AaptStep buildAaptStep(
       Path pathToGeneratedProguardConfig,

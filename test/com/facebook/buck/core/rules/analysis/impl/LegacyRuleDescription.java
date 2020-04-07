@@ -83,77 +83,73 @@ public class LegacyRuleDescription
             .asBound()
             .getSourcePath();
 
-    FakeBuildRule rule =
-        new FakeBuildRule(buildTarget, context.getProjectFilesystem(), params) {
+    return new FakeBuildRule(buildTarget, context.getProjectFilesystem(), params) {
 
-          @Nullable
-          @Override
-          public SourcePath getSourcePathToOutput() {
-            return declaredOutput;
-          }
+      @Nullable
+      @Override
+      public SourcePath getSourcePathToOutput() {
+        return declaredOutput;
+      }
 
-          @Override
-          public ImmutableList<Step> getBuildSteps(
-              BuildContext context, BuildableContext buildableContext) {
-            ImmutableList.Builder<Step> steps = ImmutableList.builder();
+      @Override
+      public ImmutableList<Step> getBuildSteps(
+          BuildContext context1, BuildableContext buildableContext) {
+        ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-            Map<String, Object> data = new HashMap<>();
-            data.put("target", buildTarget.getShortName());
-            data.put("val", args.getVal());
+        Map<String, Object> data = new HashMap<>();
+        data.put("target", buildTarget.getShortName());
+        data.put("val", args.getVal());
 
-            // AbstractLegacyRuleDescriptionArg doesn't implement HasSrcs, but we still write an
-            // empty list into the JSON for consistency in tests
-            List<Path> srcs = new ArrayList<>();
-            data.put("srcs", srcs);
+        // AbstractLegacyRuleDescriptionArg doesn't implement HasSrcs, but we still write an
+        // empty list into the JSON for consistency in tests
+        List<Path> srcs = new ArrayList<>();
+        data.put("srcs", srcs);
 
-            SortedSet<BuildRule> depRules = getBuildDeps();
-            List<Object> deps = new ArrayList<>();
-            data.put("dep", deps);
-            Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
-            data.put("outputs", ImmutableList.of(output));
+        SortedSet<BuildRule> depRules = getBuildDeps();
+        List<Object> deps = new ArrayList<>();
+        data.put("dep", deps);
+        Path output = context1.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
+        data.put("outputs", ImmutableList.of(output));
 
-            ImmutableList<Path> toRead =
-                depRules.stream()
-                    .map(BuildRule::getSourcePathToOutput)
-                    .map(sourcePath -> context.getSourcePathResolver().getAbsolutePath(sourcePath))
-                    .collect(ImmutableList.toImmutableList());
+        ImmutableList<Path> toRead =
+            depRules.stream()
+                .map(BuildRule::getSourcePathToOutput)
+                .map(sourcePath -> context1.getSourcePathResolver().getAbsolutePath(sourcePath))
+                .collect(ImmutableList.toImmutableList());
 
-            steps.add(
-                new AbstractExecutionStep("read vals") {
-                  @Override
-                  public StepExecutionResult execute(ExecutionContext ctx) throws IOException {
-                    for (Path path : toRead) {
-                      deps.add(ObjectMappers.createParser(path).readValueAs(Map.class));
-                    }
-                    return StepExecutionResult.of(0);
-                  }
-                });
+        steps.add(
+            new AbstractExecutionStep("read vals") {
+              @Override
+              public StepExecutionResult execute(ExecutionContext ctx) throws IOException {
+                for (Path path : toRead) {
+                  deps.add(ObjectMappers.createParser(path).readValueAs(Map.class));
+                }
+                return StepExecutionResult.of(0);
+              }
+            });
 
-            steps.addAll(
-                MakeCleanDirectoryStep.of(
-                    BuildCellRelativePath.of(
-                        context
-                            .getSourcePathResolver()
-                            .getRelativePath(getSourcePathToOutput())
-                            .getParent())));
-            steps.add(
-                new AbstractExecutionStep("write json") {
-                  @Override
-                  public StepExecutionResult execute(ExecutionContext ctx) throws IOException {
-                    getProjectFilesystem()
-                        .writeContentsToPath(
-                            ObjectMappers.WRITER.writeValueAsString(data),
-                            context
-                                .getSourcePathResolver()
-                                .getRelativePath(getSourcePathToOutput()));
-                    return StepExecutionResult.of(0);
-                  }
-                });
+        steps.addAll(
+            MakeCleanDirectoryStep.of(
+                BuildCellRelativePath.of(
+                    context1
+                        .getSourcePathResolver()
+                        .getRelativePath(getSourcePathToOutput())
+                        .getParent())));
+        steps.add(
+            new AbstractExecutionStep("write json") {
+              @Override
+              public StepExecutionResult execute(ExecutionContext ctx) throws IOException {
+                getProjectFilesystem()
+                    .writeContentsToPath(
+                        ObjectMappers.WRITER.writeValueAsString(data),
+                        context1.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));
+                return StepExecutionResult.of(0);
+              }
+            });
 
-            return steps.build();
-          }
-        };
-    return rule;
+        return steps.build();
+      }
+    };
   }
 
   @Override

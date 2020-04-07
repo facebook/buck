@@ -110,8 +110,8 @@ public class ConcurrentProjectBuildFileParserTest {
    */
   private abstract static class WaitingProjectBuildFileParser implements ProjectBuildFileParser {
 
-    private CountDownLatch latch;
-    private AtomicInteger closeCallCounter;
+    private final CountDownLatch latch;
+    private final AtomicInteger closeCallCounter;
 
     public WaitingProjectBuildFileParser(CountDownLatch latch, AtomicInteger closeCallCounter) {
       this.latch = latch;

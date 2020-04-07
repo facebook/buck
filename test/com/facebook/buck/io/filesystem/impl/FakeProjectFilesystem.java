@@ -469,7 +469,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
     Preconditions.checkState(isDirectory(relativize(absolutePath)));
     return new DirectoryStream<Path>() {
 
-      private FluentIterable<Path> iterable =
+      private final FluentIterable<Path> iterable =
           FluentIterable.from(fileContents.keySet())
               .append(directories)
               .filter(

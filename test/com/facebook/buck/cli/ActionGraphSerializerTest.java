@@ -41,7 +41,7 @@ import org.junit.Test;
 
 public class ActionGraphSerializerTest {
 
-  private ActionGraphBuilder buildRuleResolver = new TestActionGraphBuilder();
+  private final ActionGraphBuilder buildRuleResolver = new TestActionGraphBuilder();
 
   /**
    * Test for finding critical path in the following action graph:

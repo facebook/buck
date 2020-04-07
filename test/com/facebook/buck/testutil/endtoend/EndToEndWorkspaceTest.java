@@ -27,7 +27,7 @@ import org.junit.Test;
 public class EndToEndWorkspaceTest {
   @Rule public EndToEndWorkspace workspace = new EndToEndWorkspace();
 
-  private PlatformUtils platformUtils = PlatformUtils.getForPlatform();
+  private final PlatformUtils platformUtils = PlatformUtils.getForPlatform();
 
   @Before
   public void buildCppEnv() throws Exception {

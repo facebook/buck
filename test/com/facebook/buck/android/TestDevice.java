@@ -41,7 +41,7 @@ public class TestDevice implements IDevice {
   private String name;
   private String serialNumber;
   private DeviceState state;
-  private Map<String, String> properties;
+  private final Map<String, String> properties;
 
   public static TestDevice createEmulator(String serial) {
     TestDevice device = new TestDevice();

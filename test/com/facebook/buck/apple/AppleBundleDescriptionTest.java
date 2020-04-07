@@ -42,7 +42,7 @@ import org.junit.Test;
 
 public class AppleBundleDescriptionTest {
 
-  private ProjectFilesystem filesystem = new FakeProjectFilesystem();
+  private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
 
   @Before
   public void setUp() {

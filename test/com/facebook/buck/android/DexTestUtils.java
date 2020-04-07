@@ -107,8 +107,8 @@ public class DexTestUtils {
   }
 
   public static class DexMetadata implements Comparable<DexMetadata> {
-    Path dexFile;
-    String canaryName;
+    final Path dexFile;
+    final String canaryName;
 
     public DexMetadata(Path dexFile, String canaryName) {
       this.dexFile = dexFile;

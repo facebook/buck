@@ -48,12 +48,11 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     DeclaredType fooTypeMirror = types.getDeclaredType(fooElement);
 
     assertEquals(TypeKind.DECLARED, fooTypeMirror.getKind());
-    DeclaredType fooDeclaredType = fooTypeMirror;
-    assertNotSame(fooElement.asType(), fooDeclaredType);
-    assertSame(fooElement, fooDeclaredType.asElement());
-    assertEquals(0, fooDeclaredType.getTypeArguments().size());
+    assertNotSame(fooElement.asType(), fooTypeMirror);
+    assertSame(fooElement, fooTypeMirror.asElement());
+    assertEquals(0, fooTypeMirror.getTypeArguments().size());
 
-    TypeMirror enclosingType = fooDeclaredType.getEnclosingType();
+    TypeMirror enclosingType = fooTypeMirror.getEnclosingType();
     assertEquals(TypeKind.NONE, enclosingType.getKind());
     assertTrue(enclosingType instanceof NoType);
   }
@@ -66,12 +65,11 @@ public class TreeBackedTypesTest extends CompilerTreeApiParameterizedTest {
     DeclaredType fooTypeMirror = types.getDeclaredType(fooElement);
 
     assertEquals(TypeKind.DECLARED, fooTypeMirror.getKind());
-    DeclaredType fooDeclaredType = fooTypeMirror;
-    assertNotSame(fooElement.asType(), fooDeclaredType);
-    assertSame(fooElement, fooDeclaredType.asElement());
-    assertEquals(0, fooDeclaredType.getTypeArguments().size());
+    assertNotSame(fooElement.asType(), fooTypeMirror);
+    assertSame(fooElement, fooTypeMirror.asElement());
+    assertEquals(0, fooTypeMirror.getTypeArguments().size());
 
-    TypeMirror enclosingType = fooDeclaredType.getEnclosingType();
+    TypeMirror enclosingType = fooTypeMirror.getEnclosingType();
     assertEquals(TypeKind.NONE, enclosingType.getKind());
     assertTrue(enclosingType instanceof NoType);
   }

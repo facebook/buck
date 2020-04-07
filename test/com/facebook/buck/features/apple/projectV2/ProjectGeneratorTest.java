@@ -31,6 +31,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -1446,9 +1447,8 @@ public class ProjectGeneratorTest {
             + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-priv/.hmap", rootPath),
         buildSettings.get("HEADER_SEARCH_PATHS"));
 
-    assertEquals(
+    assertNull(
         "USER_HEADER_SEARCH_PATHS should not be set",
-        null,
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
@@ -1511,9 +1511,8 @@ public class ProjectGeneratorTest {
                 .normalize()
                 .toString(),
         buildSettings.get("HEADER_SEARCH_PATHS"));
-    assertEquals(
+    assertNull(
         "USER_HEADER_SEARCH_PATHS should not be set",
-        null,
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
@@ -1568,9 +1567,8 @@ public class ProjectGeneratorTest {
             + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap ", rootPath)
             + String.format("%s/buck-out/gen/_p/CwkbTNOBmb-priv/.hmap", rootPath),
         buildSettings.get("HEADER_SEARCH_PATHS"));
-    assertEquals(
+    assertNull(
         "USER_HEADER_SEARCH_PATHS should not be set",
-        null,
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
@@ -1625,9 +1623,8 @@ public class ProjectGeneratorTest {
             + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap ", rootPath)
             + String.format("%s/buck-out/gen/_p/4UdYl649ee-priv/.hmap", rootPath),
         buildSettings.get("HEADER_SEARCH_PATHS"));
-    assertEquals(
+    assertNull(
         "USER_HEADER_SEARCH_PATHS should not be set",
-        null,
         buildSettings.get("USER_HEADER_SEARCH_PATHS"));
   }
 
@@ -2478,7 +2475,7 @@ public class ProjectGeneratorTest {
         "$(inherited) "
             + "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -fbar-iphone",
         settings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
-    assertEquals(null, settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
+    assertNull(settings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
 
     PBXTarget dependentTarget =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
@@ -2494,7 +2491,7 @@ public class ProjectGeneratorTest {
         "$(inherited) "
             + "-Wundeclared-selector -Wno-objc-designated-initializers '-DDEBUG=1' -ffoo-iphone -fbar-iphone",
         dependentSettings.get("OTHER_CPLUSPLUSFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
-    assertEquals(null, dependentSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
+    assertNull(dependentSettings.get("OTHER_LDFLAGS[sdk=iphonesimulator*][arch=x86_64]"));
   }
 
   @Test
@@ -2586,7 +2583,7 @@ public class ProjectGeneratorTest {
             + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-priv/.hmap ", rootPath)
             + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap", rootPath),
         settings.get("HEADER_SEARCH_PATHS"));
-    assertEquals(null, settings.get("USER_HEADER_SEARCH_PATHS"));
+    assertNull(settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("$(inherited) $BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals("$(inherited) $BUILT_PRODUCTS_DIR", settings.get("FRAMEWORK_SEARCH_PATHS"));
   }
@@ -2720,7 +2717,7 @@ public class ProjectGeneratorTest {
             + String.format("%s/buck-out/gen/_p/ptQfVNNRRE-priv/.hmap ", rootPath)
             + String.format("%s/buck-out/gen/_p/pub-hmap/.hmap", rootPath),
         settings.get("HEADER_SEARCH_PATHS"));
-    assertEquals(null, settings.get("USER_HEADER_SEARCH_PATHS"));
+    assertNull(settings.get("USER_HEADER_SEARCH_PATHS"));
     assertEquals("$(inherited) " + "$BUILT_PRODUCTS_DIR", settings.get("LIBRARY_SEARCH_PATHS"));
     assertEquals("$(inherited) " + "$BUILT_PRODUCTS_DIR", settings.get("FRAMEWORK_SEARCH_PATHS"));
   }

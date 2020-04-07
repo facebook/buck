@@ -35,7 +35,7 @@ public class CloseableWrapperTest<T extends AbstractCloseableWrapper> {
         AtomicInteger obj, ThrowingConsumer<AtomicInteger, Exception> closer);
   }
 
-  private CloseableFactory<T> closeableFactory;
+  private final CloseableFactory<T> closeableFactory;
 
   public CloseableWrapperTest(CloseableFactory<T> closeableFactory) {
     this.closeableFactory = closeableFactory;

@@ -36,11 +36,11 @@ import org.junit.Test;
 
 public class CacheBenchmark {
   @Param({"10000", "100000", "250000"})
-  private int leavesCount = 100;
+  private final int leavesCount = 100;
 
   private static final Random random = new Random(123);
-  private List<String> folders = Lists.newArrayList("");
-  private List<String> leaves = Lists.newArrayList();
+  private final List<String> folders = Lists.newArrayList("");
+  private final List<String> leaves = Lists.newArrayList();
 
   private FakeProjectFilesystem projectFilesystem;
   private WatchedFileHashCache cache;

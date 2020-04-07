@@ -29,9 +29,9 @@ import org.junit.runners.Parameterized;
 @RunWith(Parameterized.class)
 public class RDotTxtEntryOrderingTest {
 
-  private RDotTxtEntry entry1;
-  private RDotTxtEntry entry2;
-  private int result;
+  private final RDotTxtEntry entry1;
+  private final RDotTxtEntry entry2;
+  private final int result;
 
   @Parameterized.Parameters
   public static Collection<Object[]> testData() {

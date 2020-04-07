@@ -28,9 +28,9 @@ import javax.lang.model.util.Elements;
 
 public class TestSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
   private final String ruleName;
-  private boolean requiredForSourceOnlyAbi = false;
-  private Map<String, String> owningRules = new HashMap<>();
-  private Set<String> rulesAvailableForSourceOnlyAbi = new HashSet<>();
+  private final boolean requiredForSourceOnlyAbi = false;
+  private final Map<String, String> owningRules = new HashMap<>();
+  private final Set<String> rulesAvailableForSourceOnlyAbi = new HashSet<>();
 
   public TestSourceOnlyAbiRuleInfo(String ruleName) {
     this.ruleName = ruleName;

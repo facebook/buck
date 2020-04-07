@@ -62,7 +62,7 @@ public class GrpcRemoteExecutionClientsTest {
   @Rule public TemporaryPaths temporaryPaths = new TemporaryPaths();
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  private List<BindableService> services = new ArrayList<>();
+  private final List<BindableService> services = new ArrayList<>();
   private RemoteExecutionClients clients;
 
   public void setupServer() throws IOException {
