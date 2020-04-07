@@ -26,6 +26,7 @@ import com.facebook.buck.logd.proto.LogdServiceGrpc;
 import com.facebook.buck.logd.proto.ShutdownRequest;
 import com.facebook.buck.util.ExitCode;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.rpc.Status;
 import io.grpc.Server;
@@ -33,6 +34,7 @@ import io.grpc.ServerBuilder;
 import io.grpc.stub.StreamObserver;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -135,13 +137,11 @@ public class LogdServer implements LogDaemonServer {
   private static class LogdServiceImpl extends LogdServiceGrpc.LogdServiceImplBase {
     private static final boolean IS_UPLOADING_LOG_TO_STORAGE =
         Boolean.parseBoolean(System.getProperty("logd.manifold.upload", "false"));
-
-    static {
-      LOG.info("logd.manifold.upload: {}", IS_UPLOADING_LOG_TO_STORAGE);
-    }
+    private static final int KB_IN_BYTES = 1024;
+    private static final int UPLOAD_BUFFER_SIZE = 250 * KB_IN_BYTES;
 
     private final SettableFuture<Boolean> logdServiceFinished = SettableFuture.create();
-    private final Map<Integer, BufferedWriter> logStreams = new ConcurrentHashMap<>();
+    private final Map<Integer, LogdMultiWriter> logStreams = new ConcurrentHashMap<>();
     private final LogFileIdGenerator logFileIdGenerator = new LogFileIdGenerator();
     private final Map<Integer, LogFileData> fileIdToFileData = new ConcurrentHashMap<>();
     private final Map<LogType, LogFileData> logTypeToFileData = new ConcurrentHashMap<>();
@@ -173,7 +173,6 @@ public class LogdServer implements LogDaemonServer {
       String logFilePath = request.getLogFilePath();
       try {
         responseObserver.onNext(createFile(request));
-        LOG.debug("Log file created at {}", logFilePath);
       } catch (LogDaemonException e) {
         LOG.error("Failed to create log file at {}", logFilePath, e);
         responseObserver.onError(e);
@@ -256,23 +255,26 @@ public class LogdServer implements LogDaemonServer {
             .setLogId(logTypeToFileData.get(logType).getLogFileId())
             .build();
       }
+      int genFileId = logFileIdGenerator.generateFileId();
 
+      ImmutableList.Builder<Writer> writerBuilder = ImmutableList.builder();
       try {
         Files.createDirectories(logFilePath.getParent());
-
-        int genFileId = logFileIdGenerator.generateFileId();
-        logStreams.put(
-            genFileId,
+        writerBuilder.add(
             Files.newBufferedWriter(
                 logFilePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND));
+
         LOG.info("LogD opened new writer stream to {}", logFilePath.toString());
 
-        int offset = 0;
+        LogFileData newFile = new LogFileData(genFileId, buildId, logType, filePath, 0);
         if (IS_UPLOADING_LOG_TO_STORAGE) {
           Optional<Integer> result =
               LogdUploader.sendCreateLogFileRequestToController(buildId, logType);
           if (result.isPresent()) {
-            offset = result.get();
+            int offset = result.get();
+            newFile = new LogFileData(genFileId, buildId, logType, filePath, offset);
+            writerBuilder.add(
+                new BufferedWriter(new LogdStorageWriter(newFile), UPLOAD_BUFFER_SIZE));
             LOG.info(
                 "LogD created a new log file of type '{}' in storage",
                 logType.getValueDescriptor().getName());
@@ -283,7 +285,7 @@ public class LogdServer implements LogDaemonServer {
           }
         }
 
-        LogFileData newFile = new LogFileData(genFileId, buildId, logType, filePath, offset);
+        logStreams.put(genFileId, new LogdMultiWriter(writerBuilder.build()));
         fileIdToFileData.put(genFileId, newFile);
         logTypeToFileData.put(logType, newFile);
 
@@ -299,19 +301,14 @@ public class LogdServer implements LogDaemonServer {
     }
 
     private void appendLog(int fileId, String message) throws IOException {
-      BufferedWriter writer = logStreams.get(fileId);
+      LogdMultiWriter writer = logStreams.get(fileId);
       writer.write(message);
-
-      if (IS_UPLOADING_LOG_TO_STORAGE) {
-        LogFileData logFileData = fileIdToFileData.get(fileId);
-        logFileData.updateStorage(message);
-      }
     }
 
     private void closeAllStreams() {
       for (Integer logFileId : logStreams.keySet()) {
         String logFilePath = fileIdToFileData.remove(logFileId).getLogFilePath();
-        BufferedWriter writer = logStreams.remove(logFileId);
+        LogdMultiWriter writer = logStreams.remove(logFileId);
         try {
           writer.close();
           LOG.info("LogD closed stream to log file at {}", logFilePath);
