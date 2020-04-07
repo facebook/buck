@@ -1,5 +1,3 @@
-LOGD_SRCS = glob(["**/logd/**/*.java"])
-
 java_library(
     name = "thrift",
     srcs = glob(["**/thrift/**/*.java"]),
@@ -24,8 +22,7 @@ java_library(
 java_library(
     name = "protobuf",
     srcs = glob(
-        ["**/proto/**/*.java"],
-        exclude = LOGD_SRCS,
+        ["**/remoteexecution/proto/**/*.java"],
     ),
     visibility = ["PUBLIC"],
     deps = select({
@@ -41,7 +38,7 @@ java_library(
 
 java_library(
     name = "logd-protobuf",
-    srcs = LOGD_SRCS,
+    srcs = glob(["**/logd/proto/**/*.java"]),
     visibility = ["PUBLIC"],
     deps = select({
         # protobuf generated .java files depend on javax.annotation.Generated, which has been removed
@@ -52,5 +49,20 @@ java_library(
     exported_deps = [
         "//third-party/java/protobuf:protobuf",
         "//third-party/java/remote-apis:remote-apis",
+    ],
+)
+
+java_library(
+    name = "downward-model",
+    srcs = glob(["**/downward/model/**/*.java"]),
+    visibility = ["PUBLIC"],
+    deps = select({
+        # protobuf generated .java files depend on javax.annotation.Generated, which has been removed
+        # from the JCL in Java 11. Add it back via this third party library.
+        "//tools/build/config:java_11": ["//third-party/java/jakarta.annotation-api:jakarta.annotation-api"],
+        "DEFAULT": [],
+    }),
+    exported_deps = [
+        "//third-party/java/protobuf:protobuf",
     ],
 )
