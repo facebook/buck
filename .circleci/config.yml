@@ -13,7 +13,7 @@ install_lua: &install_lua
     if [ "${PLATFORM}" == "linux" ]; then
       sudo make linux install
     elif [ "${PLATFORM}" == "macos" ]; then
-      make macosx install
+      sudo make macosx install
     fi
     lua -v
 
