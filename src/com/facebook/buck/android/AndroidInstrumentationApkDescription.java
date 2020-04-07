@@ -270,6 +270,7 @@ public class AndroidInstrumentationApkDescription
             false /* useAapt2LocaleFiltering */,
             ImmutableSet.of(),
             androidBuckConfig.getRDotJavaWeightFactor(),
+            androidBuckConfig.getSecondaryDexWeightLimit(),
             resourcePackagesToExclude);
 
     AndroidGraphEnhancementResult enhancementResult = graphEnhancer.createAdditionalBuildables();

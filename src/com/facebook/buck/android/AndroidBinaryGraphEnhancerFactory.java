@@ -221,6 +221,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.isAapt2LocaleFiltering(),
         args.getExtraFilteredResources(),
         androidBuckConfig.getRDotJavaWeightFactor(),
+        androidBuckConfig.getSecondaryDexWeightLimit(),
         ImmutableSet.of());
   }
 

@@ -80,6 +80,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
         SupportsInputBasedRuleKey {
 
   @AddToRuleKey private final DexSplitMode dexSplitMode;
+  @AddToRuleKey final int secondaryDexWeightLimit;
 
   private final APKModuleGraph apkModuleGraph;
   final APKModule apkModule;
@@ -114,7 +115,8 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       ListeningExecutorService dxExecutorService,
       int xzCompressionLevel,
       Optional<String> dxMaxHeapSize,
-      Optional<Integer> groupIndex) {
+      Optional<Integer> groupIndex,
+      int secondaryDexWeightLimit) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
     this.dexTool = dexTool;
@@ -131,6 +133,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
         preDexDeps.stream()
             .map(DexProducedFromJavaLibrary::getSourcePathToDex)
             .collect(ImmutableList.toImmutableList());
+    this.secondaryDexWeightLimit = secondaryDexWeightLimit;
   }
 
   public List<DexWithClasses> getDexWithClasses() {
@@ -186,9 +189,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             apkModuleGraph,
             apkModule,
             canaryDir,
-            // We kind of overload the "getLinearAllocHardLimit" parameter
-            // to set the dex weight limit during pre-dex merging.
-            dexSplitMode.getLinearAllocHardLimit(),
+            secondaryDexWeightLimit,
             dexSplitMode.getDexStore(),
             secondaryDexDir,
             groupIndex);

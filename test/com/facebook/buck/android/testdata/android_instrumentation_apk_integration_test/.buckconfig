@@ -1,2 +1,5 @@
 [ndk]
   ndk_version = 17
+
+[android]
+  secondary_dex_weight_limit = 4194304

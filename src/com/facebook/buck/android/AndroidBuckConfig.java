@@ -401,4 +401,8 @@ public class AndroidBuckConfig {
   public int getRDotJavaWeightFactor() {
     return delegate.getInteger("android", "r_dot_java_weight_factor").orElse(8);
   }
+
+  public int getSecondaryDexWeightLimit() {
+    return delegate.getInteger("android", "secondary_dex_weight_limit").orElse(12 * 1024 * 1024);
+  }
 }

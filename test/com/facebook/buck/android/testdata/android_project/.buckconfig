@@ -12,6 +12,7 @@
 
 [android]
   redex = //tools/redex:redex
+  secondary_dex_weight_limit = 4194304
 
 # The proguard included in the Android SDK is very old and doesn't support 1.8
 # .class files. In case we use an Android SDK > 23, we must use a newer version of

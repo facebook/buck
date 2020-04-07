@@ -149,6 +149,7 @@ public class AndroidBinaryGraphEnhancer {
   private final Supplier<ImmutableSet<JavaLibrary>> rulesToExcludeFromDex;
   private final AndroidNativeTargetConfigurationMatcher androidNativeTargetConfigurationMatcher;
   private final int rDotJavaWeightFactor;
+  private final int secondaryDexWeightLimit;
   private final ImmutableSet<String> resourcePackagesToExclude;
 
   AndroidBinaryGraphEnhancer(
@@ -220,6 +221,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean useAapt2LocaleFiltering,
       ImmutableSet<String> extraFilteredResources,
       int rDotJavaWeightFactor,
+      int secondaryDexWeightLimit,
       ImmutableSet<String> resourcePackagesToExclude) {
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
@@ -310,6 +312,7 @@ public class AndroidBinaryGraphEnhancer {
         javacFactory.create(graphBuilder, null, originalBuildTarget.getTargetConfiguration());
     this.androidNativeTargetConfigurationMatcher = androidNativeTargetConfigurationMatcher;
     this.rDotJavaWeightFactor = rDotJavaWeightFactor;
+    this.secondaryDexWeightLimit = secondaryDexWeightLimit;
     this.resourcePackagesToExclude = resourcePackagesToExclude;
   }
 
@@ -765,7 +768,8 @@ public class AndroidBinaryGraphEnhancer {
         dxExecutorService,
         xzCompressionLevel,
         dxConfig.getDxMaxHeapSize(),
-        group);
+        group,
+        secondaryDexWeightLimit);
   }
 
   /**

@@ -1086,6 +1086,7 @@ public class AndroidBinaryGraphEnhancerTest {
         false,
         ImmutableSet.of(),
         8,
+        4 * 1024 * 1024,
         ImmutableSet.of());
   }
 
