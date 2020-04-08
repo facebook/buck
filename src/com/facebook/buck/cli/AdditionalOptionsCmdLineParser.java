@@ -18,7 +18,14 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.support.cli.args.PluginBasedSubCommandFactory;
 import com.facebook.buck.support.cli.args.PluginBasedSubCommands;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -41,6 +48,7 @@ import org.pf4j.PluginManager;
  * <p>Fields annotated with it should be of classes which have a default constructor, and will be
  * automatically instantiated.
  */
+@JsonSerialize(using = AdditionalOptionsCmdLineParser.Serializer.class)
 public class AdditionalOptionsCmdLineParser extends CmdLineParser {
 
   @SuppressWarnings("rawtypes")
@@ -128,6 +136,18 @@ public class AdditionalOptionsCmdLineParser extends CmdLineParser {
 
       new FieldSetter(bean, f).addValue(commands);
       commands.forEach(cmd -> parseAnnotations(classParser, cmd, visited));
+    }
+  }
+
+  protected static class Serializer extends JsonSerializer<AdditionalOptionsCmdLineParser> {
+
+    @Override
+    public void serialize(
+        AdditionalOptionsCmdLineParser value, JsonGenerator gen, SerializerProvider serializers)
+        throws IOException {
+      ByteArrayOutputStream stream = new ByteArrayOutputStream();
+      value.printUsage(stream);
+      gen.writeString(stream.toString(Charsets.UTF_8.name()));
     }
   }
 }
