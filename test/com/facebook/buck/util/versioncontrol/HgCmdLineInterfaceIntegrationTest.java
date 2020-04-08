@@ -175,7 +175,9 @@ public class HgCmdLineInterfaceIntegrationTest {
         repoThreeCmdLine.diffBetweenRevisions("b1fd7e", "2911b3").get().get()) {
       InputStreamReader diffFileReader = new InputStreamReader(diffFileStream, Charsets.UTF_8);
       String actualDiff = CharStreams.toString(diffFileReader);
-      assertEquals(String.join("\n", expectedValue), actualDiff);
+      // The output message from FB hg is a bit more than that from open source hg, use contains
+      // here.
+      assertThat(String.join("\n", expectedValue), Matchers.containsString(actualDiff));
     }
   }
 
