@@ -141,6 +141,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
               deps,
               exportedDeps,
               Linkage.ANY,
+              true, /* includeInAndroidMergeMapOutput */
               NativeLinkableInfo.fixedDelegate(NativeLinkableInput.of(), ImmutableMap.of()),
               NativeLinkableInfo.defaults());
         });

@@ -51,6 +51,7 @@ public class SystemLuaCxxLibrary implements AbstractCxxLibraryGroup, NativeLinka
             ImmutableList.of(),
             ImmutableList.of(),
             Linkage.SHARED,
+            true, /* includeInAndroidMergeMapOutput */
             NativeLinkableInfo.fixedDelegate(linkableInput, ImmutableMap.of()),
             NativeLinkableInfo.defaults().setSupportsOmnibusLinking(false));
   }

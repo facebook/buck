@@ -102,6 +102,11 @@ class OmnibusNode implements NativeLinkable {
   }
 
   @Override
+  public boolean getIncludeInAndroidMergeMapOutput() {
+    return true;
+  }
+
+  @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder) {
     return ImmutableMap.of(
         getBuildTarget().toString(), FakeSourcePath.of(getBuildTarget().toString()));

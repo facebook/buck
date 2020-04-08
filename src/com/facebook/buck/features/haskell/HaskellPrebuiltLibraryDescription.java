@@ -166,6 +166,7 @@ public class HaskellPrebuiltLibraryDescription
                   ImmutableList.of(),
                   exportedDeps,
                   Linkage.ANY,
+                  true, /* includeInAndroidMergeMapOutput */
                   new NativeLinkableInfo.Delegate() {
                     @Override
                     public NativeLinkableInput computeInput(

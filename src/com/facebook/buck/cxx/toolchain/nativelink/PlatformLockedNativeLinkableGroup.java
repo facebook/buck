@@ -108,6 +108,11 @@ public class PlatformLockedNativeLinkableGroup implements NativeLinkable {
   }
 
   @Override
+  public boolean getIncludeInAndroidMergeMapOutput() {
+    return underlyingGroup.getIncludeInAndroidMergeMapOutput(cxxPlatform);
+  }
+
+  @Override
   public ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder) {
     return underlyingGroup.getSharedLibraries(cxxPlatform, graphBuilder);
   }

@@ -75,6 +75,9 @@ public interface NativeLinkable {
   /** @return The preferred {@link NativeLinkableGroup.Linkage} for this linkable. */
   NativeLinkableGroup.Linkage getPreferredLinkage();
 
+  /** @return Whether this library should be included in merge map code gen. */
+  boolean getIncludeInAndroidMergeMapOutput();
+
   /**
    * @return a map of shared library SONAME to shared library path for the given {@link
    *     CxxPlatform}.

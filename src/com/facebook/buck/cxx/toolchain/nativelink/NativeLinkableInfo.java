@@ -147,6 +147,7 @@ public class NativeLinkableInfo implements NativeLinkable {
   private final ImmutableList<NativeLinkable> deps;
   private final ImmutableList<NativeLinkable> exportedDeps;
   private final NativeLinkableGroup.Linkage preferredLinkage;
+  private final boolean includeInAndroidMergeMapOutput;
   private final ImmutableList<? extends Arg> exportedLinkerFlags;
   private final ImmutableList<? extends Arg> exportedPostLinkerFlags;
   private final boolean supportsOmnibusLinking;
@@ -166,6 +167,7 @@ public class NativeLinkableInfo implements NativeLinkable {
       ImmutableList<NativeLinkable> deps,
       ImmutableList<NativeLinkable> exportedDeps,
       NativeLinkableGroup.Linkage preferredLinkage,
+      boolean includeInAndroidMergeMapOutput,
       Delegate delegate,
       Configuration config) {
     this.buildTarget = buildTarget;
@@ -175,6 +177,7 @@ public class NativeLinkableInfo implements NativeLinkable {
     this.exportedLinkerFlags = config.exportedLinkerFlags;
     this.exportedPostLinkerFlags = config.exportedPostLinkerFlags;
     this.preferredLinkage = preferredLinkage;
+    this.includeInAndroidMergeMapOutput = includeInAndroidMergeMapOutput;
     this.supportsOmnibusLinking = config.supportsOmnibusLinking;
     this.supportsOmnibusLinkingForHaskell = config.supportsOmnibusLinkingForHaskell;
     this.forceLinkWholeForHaskellOmnibus = config.forceLinkWholeForHaskellOmnibus;
@@ -268,6 +271,11 @@ public class NativeLinkableInfo implements NativeLinkable {
   @Override
   public NativeLinkableGroup.Linkage getPreferredLinkage() {
     return preferredLinkage;
+  }
+
+  @Override
+  public boolean getIncludeInAndroidMergeMapOutput() {
+    return includeInAndroidMergeMapOutput;
   }
 
   @Override

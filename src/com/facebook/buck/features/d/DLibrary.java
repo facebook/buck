@@ -78,6 +78,7 @@ public class DLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps implements N
               ImmutableList.of(),
               exportedDeps,
               Linkage.STATIC,
+              true, /* includeInAndroidMergeMapOutput */
               NativeLinkableInfo.fixedDelegate(linkableInput, ImmutableMap.of()),
               NativeLinkableInfo.defaults());
         });

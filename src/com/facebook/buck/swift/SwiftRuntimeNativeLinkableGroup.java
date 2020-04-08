@@ -75,6 +75,7 @@ public final class SwiftRuntimeNativeLinkableGroup implements NativeLinkableGrou
                 ImmutableList.of(),
                 ImmutableList.of(),
                 Linkage.SHARED,
+                true, /* includeInAndroidMergeMapOutput */
                 new NativeLinkableInfo.Delegate() {
                   @Override
                   public NativeLinkableInput computeInput(

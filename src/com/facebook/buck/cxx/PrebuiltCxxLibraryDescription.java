@@ -701,6 +701,7 @@ public class PrebuiltCxxLibraryDescription
               ImmutableList.of(),
               ImmutableList.of(),
               Linkage.ANY,
+              true, /* includeInAndroidMergeMapOutput */
               NativeLinkableInfo.fixedDelegate(NativeLinkableInput.of(), ImmutableMap.of()),
               NativeLinkableInfo.defaults());
         }
@@ -737,6 +738,7 @@ public class PrebuiltCxxLibraryDescription
             deps,
             exportedDeps,
             getPreferredLinkage(cxxPlatform),
+            getIncludeInAndroidMergeMapOutput(),
             new NativeLinkableInfo.Delegate() {
               @Override
               public NativeLinkableInput computeInput(
@@ -871,6 +873,10 @@ public class PrebuiltCxxLibraryDescription
         Optional<Linkage> inferredLinkage =
             paths.getLinkage(projectFilesystem, cellRoots, cxxPlatform);
         return inferredLinkage.orElse(Linkage.ANY);
+      }
+
+      public boolean getIncludeInAndroidMergeMapOutput() {
+        return args.getIncludeInAndroidMergeMapOutput();
       }
 
       public boolean supportsOmnibusLinking(CxxPlatform cxxPlatform) {

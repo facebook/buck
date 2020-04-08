@@ -150,6 +150,7 @@ public class HalideLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
               deps,
               ImmutableList.of(),
               Linkage.STATIC,
+              true, /* includeInAndroidMergeMapOutput */
               delegate,
               NativeLinkableInfo.defaults());
         });

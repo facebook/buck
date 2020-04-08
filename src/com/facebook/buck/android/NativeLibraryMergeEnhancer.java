@@ -964,6 +964,11 @@ class NativeLibraryMergeEnhancer {
     }
 
     @Override
+    public boolean getIncludeInAndroidMergeMapOutput() {
+      return true;
+    }
+
+    @Override
     public ImmutableMap<String, SourcePath> getSharedLibraries(ActionGraphBuilder graphBuilder) {
       if (getPreferredLinkage() == NativeLinkableGroup.Linkage.STATIC) {
         return ImmutableMap.of();
