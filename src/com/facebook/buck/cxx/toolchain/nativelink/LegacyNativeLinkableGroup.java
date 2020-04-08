@@ -181,6 +181,13 @@ public interface LegacyNativeLinkableGroup extends NativeLinkableGroup {
   @Deprecated
   Linkage getPreferredLinkage(CxxPlatform cxxPlatform);
 
+  /** Whether the library should be included in merge map codegen. */
+  @Deprecated
+  @SuppressWarnings("unused")
+  default boolean getIncludeInAndroidMergeMapOutput(CxxPlatform cxxPlatform) {
+    return true;
+  }
+
   /**
    * @return a map of shared library SONAME to shared library path for the given {@link
    *     CxxPlatform}.

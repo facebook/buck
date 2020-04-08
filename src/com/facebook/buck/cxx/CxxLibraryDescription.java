@@ -547,5 +547,11 @@ public class CxxLibraryDescription
   }
 
   @RuleArg
-  interface AbstractCxxLibraryDescriptionArg extends CommonArg {}
+  interface AbstractCxxLibraryDescriptionArg extends CommonArg {
+    /** Whether the library should be included in merge map codegen. */
+    @Value.Default
+    default boolean getIncludeInAndroidMergeMapOutput() {
+      return true;
+    }
+  }
 }

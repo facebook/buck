@@ -99,6 +99,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<FrameworkPath> libraries;
   private final Linkage linkage;
   private final boolean linkWhole;
+  private final boolean includeInAndroidMergeMapOutput;
   private final Optional<String> soname;
   private final ImmutableSortedSet<BuildTarget> tests;
   private final boolean canBeAsset;
@@ -143,6 +144,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<FrameworkPath> frameworks,
       ImmutableSet<FrameworkPath> libraries,
       Linkage linkage,
+      boolean includeInAndroidMergeMapOutput,
       boolean linkWhole,
       Optional<String> soname,
       ImmutableSortedSet<BuildTarget> tests,
@@ -162,6 +164,7 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.frameworks = frameworks;
     this.libraries = libraries;
     this.linkage = linkage;
+    this.includeInAndroidMergeMapOutput = includeInAndroidMergeMapOutput;
     this.linkWhole = linkWhole;
     this.soname = soname;
     this.tests = tests;
@@ -473,6 +476,11 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
   @Override
   public NativeLinkableGroup.Linkage getPreferredLinkage(CxxPlatform cxxPlatform) {
     return linkage;
+  }
+
+  @Override
+  public boolean getIncludeInAndroidMergeMapOutput(CxxPlatform cxxPlatform) {
+    return includeInAndroidMergeMapOutput;
   }
 
   @Override

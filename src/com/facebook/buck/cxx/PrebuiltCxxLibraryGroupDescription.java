@@ -421,5 +421,11 @@ public class PrebuiltCxxLibraryGroupDescription
     }
 
     Optional<Pattern> getSupportedPlatformsRegex();
+
+    /** Whether the library should be included in merge map codegen. */
+    @Value.Default
+    default boolean getIncludeInAndroidMergeMapOutput() {
+      return true;
+    }
   }
 }

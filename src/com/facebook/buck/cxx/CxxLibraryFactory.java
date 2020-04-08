@@ -380,6 +380,7 @@ public class CxxLibraryFactory {
         args.getForceStatic().orElse(false)
             ? NativeLinkableGroup.Linkage.STATIC
             : args.getPreferredLinkage().orElse(NativeLinkableGroup.Linkage.ANY),
+        args.getIncludeInAndroidMergeMapOutput(),
         args.getLinkWhole().orElse(false),
         args.getSoname(),
         args.getTests(),
