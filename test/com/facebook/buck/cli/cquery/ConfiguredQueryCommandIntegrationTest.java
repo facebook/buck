@@ -25,7 +25,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -122,7 +121,6 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void twoTargetsInTargetUniverseCausesOverlapToBePrintedInBothConfigurations()
       throws IOException {
     ProjectWorkspace workspace =

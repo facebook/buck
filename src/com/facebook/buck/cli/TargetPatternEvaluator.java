@@ -169,8 +169,7 @@ class TargetPatternEvaluator {
     for (int index = 0; index < buildTargets.size(); index++) {
       ImmutableSet<BuildTarget> targets = buildTargets.get(index);
       // Sorting to have predictable results across different java libraries implementations.
-      ImmutableSet.Builder<QueryTarget> builder =
-          new ImmutableSortedSet.Builder<>(QueryTarget::compare);
+      ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
       for (BuildTarget target : targets) {
         builder.add(QueryBuildTarget.of(target));
       }

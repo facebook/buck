@@ -1016,11 +1016,9 @@ public class QueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("query", "attrregexfilter(tests, '.*-tests', '//example/...')");
     result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                "//example/app:seven\n//example:four\n//example:one\n//example:six\n")));
+    assertEquals(
+        OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())),
+        "//example/app:seven\n//example:four\n//example:one\n//example:six\n");
 
     result =
         workspace.runBuckCommand(
