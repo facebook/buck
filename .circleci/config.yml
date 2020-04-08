@@ -157,13 +157,13 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - /Users/distiller/android-sdk
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
       - restore_cache:
@@ -200,13 +200,13 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - /Users/distiller/android-sdk
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_groovy
       - run:
@@ -247,13 +247,13 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - /Users/distiller/android-sdk
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
       - restore_cache:
@@ -291,13 +291,13 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - /Users/distiller/android-sdk
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_ghc
       - run:
@@ -339,13 +339,13 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - /Users/distiller/android-sdk
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           name: Install Android NDK
           command: |
@@ -388,13 +388,13 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - /Users/distiller/android-sdk
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           name: Install Android NDK 15
           command: |
@@ -437,13 +437,13 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - /Users/distiller/android-sdk
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           name: Install Android NDK 16
           command: |
@@ -486,13 +486,13 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - /Users/distiller/android-sdk
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           name: Install Android NDK 17
           command: |
@@ -542,13 +542,13 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - /Users/distiller/android-sdk
-          key: v1.0-buck-andoid-sdk-{{ .Branch }}
+          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           name: Install Android NDK 18
           command: |
