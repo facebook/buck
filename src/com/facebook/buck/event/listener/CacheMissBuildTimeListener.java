@@ -24,6 +24,7 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.google.common.eventbus.Subscribe;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 /**
  * This listener adds up the amount of time that is spent in building artifacts that were built as a
@@ -63,9 +64,16 @@ public class CacheMissBuildTimeListener implements BuckEventListener {
                       buildTimestamps.getSecond() - buildTimestamps.getFirst()));
       if (timeBuildingArtifactsInMillis.get()
           > TimeUnit.SECONDS.toMillis(config.getDivergenceWarningThresholdInSec())) {
-        buckEventBus.post(
-            ConsoleEvent.warning(
-                String.format("%s%n%n", config.getDivergenceWarningMessage().get())));
+        for (String regex : config.getDivergenceWarningMessageMap().keySet()) {
+          if (Pattern.compile(regex)
+              .matcher(finished.getBuildRule().getFullyQualifiedName())
+              .matches()) {
+            buckEventBus.post(
+                ConsoleEvent.warning(
+                    String.format("%s", config.getDivergenceWarningMessageMap().get(regex))));
+            break;
+          }
+        }
         unregister();
       }
     }

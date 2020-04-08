@@ -20,6 +20,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -51,8 +52,8 @@ public abstract class RuleKeyCheckListenerConfig implements ConfigView<BuckConfi
     return ImmutableList.copyOf(raw.stream().map(Pattern::compile).collect(Collectors.toList()));
   }
 
-  public Optional<String> getDivergenceWarningMessage() {
-    return getDelegate().getValue(SECTION_NAME, "divergence_warning_message");
+  public ImmutableMap<String, String> getDivergenceWarningMessageMap() {
+    return getDelegate().getMap(SECTION_NAME, "divergence_warning_message");
   }
 
   public int getDivergenceWarningThresholdInSec() {

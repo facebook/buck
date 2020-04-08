@@ -146,7 +146,7 @@ public class RuleKeyCheckListener implements BuckEventListener {
         isTopLevelResultCalculated = true;
         buckEventBus.post(new TopLevelCacheCheckEvent(result));
         if (result == RuleKeyCheckResult.TARGET_BUILT_NO_RULEKEY_MATCH
-            && ruleKeyCheckListenerConfig.getDivergenceWarningMessage().isPresent()) {
+            && !ruleKeyCheckListenerConfig.getDivergenceWarningMessageMap().isEmpty()) {
           buckEventBus.register(
               new CacheMissBuildTimeListener(buckEventBus, ruleKeyCheckListenerConfig));
         }

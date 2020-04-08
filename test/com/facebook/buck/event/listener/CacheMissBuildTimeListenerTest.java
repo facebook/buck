@@ -17,6 +17,7 @@
 package com.facebook.buck.event.listener;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
@@ -60,7 +61,7 @@ public class CacheMissBuildTimeListenerTest {
         FakeBuckConfig.builder()
             .setSections(
                 "[rulekey_check]",
-                "divergence_warning_message = warning message",
+                "divergence_warning_message = //repo/.* => warning message",
                 "divergence_warning_threshold_in_sec = 60")
             .build()
             .getView(RuleKeyCheckListenerConfig.class);
@@ -123,12 +124,12 @@ public class CacheMissBuildTimeListenerTest {
     buckEventBus.post(finished);
     assertEquals(2, fakeBuckEventListener.getEvents().size());
     assertEquals(finished, fakeBuckEventListener.getEvents().get(0));
-    assertThat(fakeBuckEventListener.getEvents().get(1), instanceOf(ConsoleEvent.class));
+    assertThat(fakeBuckEventListener.getEvents().get(1), is(instanceOf(ConsoleEvent.class)));
     ConsoleEvent consoleEvent = (ConsoleEvent) fakeBuckEventListener.getEvents().get(1);
     assertEquals(Level.WARNING, consoleEvent.getLevel());
     assertEquals(
         consoleEvent.getMessage(),
-        String.format("%s%n%n", config.getDivergenceWarningMessage().get()));
+        String.format("%s", config.getDivergenceWarningMessageMap().get("//repo/.*")));
   }
 
   @Test
@@ -178,11 +179,11 @@ public class CacheMissBuildTimeListenerTest {
     assertEquals(3, fakeBuckEventListener.getEvents().size());
     assertEquals(firstBuildRuleFinished, fakeBuckEventListener.getEvents().get(0));
     assertEquals(secondBuildRuleFinished, fakeBuckEventListener.getEvents().get(2));
-    assertThat(fakeBuckEventListener.getEvents().get(1), instanceOf(ConsoleEvent.class));
+    assertThat(fakeBuckEventListener.getEvents().get(1), is(instanceOf(ConsoleEvent.class)));
     ConsoleEvent consoleEvent = (ConsoleEvent) fakeBuckEventListener.getEvents().get(1);
     assertEquals(Level.WARNING, consoleEvent.getLevel());
     assertEquals(
         consoleEvent.getMessage(),
-        String.format("%s%n%n", config.getDivergenceWarningMessage().get()));
+        String.format("%s", config.getDivergenceWarningMessageMap().get("//repo/.*")));
   }
 }
