@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
+import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
@@ -31,15 +32,28 @@ import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
+import org.kohsuke.args4j.Option;
 
 /** Buck subcommand which facilitates querying information about the configured target graph. */
 public class ConfiguredQueryCommand extends AbstractQueryCommand {
+
+  @Option(
+      name = "--target-universe",
+      usage =
+          "Comma separated list of targets at which to root the queryable universe. "
+              + "This is useful since targets can exist in multiple configurations. "
+              + "While this argument isn't required, it's recommended for basically all queries")
+  @Nullable
+  private String targetUniverseParam = null;
+
   @Override
   public String getShortDescription() {
     return "provides facilities to query information about the configured target nodes graph";
@@ -69,14 +83,19 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
                     createParsingContext(params.getCells(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
-      // TODO(srice): We shouldn't be using an LegacyQueryUniverse for cquery, we should be
-      // asking for the target universe from the CLI and using that.
-      LegacyQueryUniverse targetUniverse = LegacyQueryUniverse.from(params, parserState);
-      BuckQueryEnvironment env =
-          BuckQueryEnvironment.from(
-              params,
-              targetUniverse,
-              createParsingContext(params.getCells(), pool.getListeningExecutorService()));
+      ParsingContext parsingContext =
+          createParsingContext(params.getCells(), pool.getListeningExecutorService());
+      // TODO(srice): Stop using `LegacyQueryUniverse`. When no `--target-universe` is provided we
+      // should infer the root targets from the query string.
+      TargetUniverse targetUniverse =
+          targetUniverseParam == null
+              ? LegacyQueryUniverse.from(params, parserState)
+              : PrecomputedTargetUniverse.createFromRootTargets(
+                  Splitter.on(',').splitToList(targetUniverseParam),
+                  params,
+                  parserState,
+                  parsingContext);
+      BuckQueryEnvironment env = BuckQueryEnvironment.from(params, targetUniverse, parsingContext);
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);

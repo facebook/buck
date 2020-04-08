@@ -77,7 +77,6 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void targetUniverseChangesOutput() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
@@ -85,7 +84,7 @@ public class ConfiguredQueryCommandIntegrationTest {
 
     ProcessResult tvOSResult =
         workspace.runBuckCommand("cquery", "//lib:foo", "--target-universe", "//bin:tvos-bin");
-    assertEquals("//lib:foo (//config/platform:tvos)", tvOSResult.getStdout());
+    assertEquals("//lib:foo (//config/platform:tvos)", tvOSResult.getStdout().trim());
 
     ProcessResult macOSResult =
         workspace.runBuckCommand("cquery", "//lib:foo", "--target-universe", "//bin:mac-bin");
@@ -93,7 +92,6 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void ownerForFileWithOwnerThatsOutsideTargetUniverseReturnsNothing() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
