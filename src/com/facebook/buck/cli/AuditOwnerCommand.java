@@ -76,10 +76,11 @@ public class AuditOwnerCommand extends AbstractCommand {
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED)
                         .withExcludeUnsupportedTargets(false),
                     params.getParser().getPermState())) {
+      LegacyQueryUniverse targetUniverse = LegacyQueryUniverse.from(params, parserState);
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params,
-              parserState,
+              targetUniverse,
               createParsingContext(params.getCells(), pool.getListeningExecutorService()));
       QueryCommand command =
           new QueryCommand(

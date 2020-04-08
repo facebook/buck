@@ -37,7 +37,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
-import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
@@ -134,26 +133,25 @@ public class QueryCommandTest {
                     .setSpeculativeParsing(SpeculativeParsing.ENABLED)
                     .build(),
                 params.getParser().getPermState());
+    LegacyQueryUniverse targetUniverse = LegacyQueryUniverse.from(params, perBuildState);
     TargetConfigurationFactory targetConfigurationFactory =
         new TargetConfigurationFactory(
             buildTargetViewFactory, cell.getRootCell().getCellPathResolver());
     env =
         new FakeBuckQueryEnvironment(
+            targetUniverse,
             cell.getRootCell(),
             OwnersReport.builder(
+                targetUniverse,
                 params.getCells().getRootCell(),
                 params.getClientWorkingDir(),
-                params.getParser(),
-                perBuildState,
                 Optional.empty()),
-            params.getParser(),
-            perBuildState,
             targetConfigurationFactory,
             new TargetPatternEvaluator(
+                targetUniverse,
                 params.getCells().getRootCell(),
                 params.getClientWorkingDir(),
                 params.getBuckConfig(),
-                params.getParser(),
                 ParsingContext.builder(params.getCells(), executorService).build(),
                 Optional.empty()),
             eventBus,
@@ -162,19 +160,17 @@ public class QueryCommandTest {
 
   private class FakeBuckQueryEnvironment extends BuckQueryEnvironment {
     protected FakeBuckQueryEnvironment(
+        LegacyQueryUniverse targetUniverse,
         Cell rootCell,
         Builder ownersReportBuilder,
-        Parser parser,
-        PerBuildState parserState,
         TargetConfigurationFactory targetConfigurationFactory,
         TargetPatternEvaluator targetPatternEvaluator,
         BuckEventBus eventBus,
         TypeCoercerFactory typeCoercerFactory) {
       super(
+          targetUniverse,
           rootCell,
           ownersReportBuilder,
-          parser,
-          parserState,
           targetConfigurationFactory,
           targetPatternEvaluator,
           eventBus,

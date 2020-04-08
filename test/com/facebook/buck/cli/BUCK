@@ -401,6 +401,7 @@ java_test(
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/parser/exceptions:exceptions",
         "//src/com/facebook/buck/parser/syntax:syntax",
+        "//src/com/facebook/buck/parser/temporarytargetuniquenesschecker:temporarytargetuniquenesschecker",
         "//src/com/facebook/buck/query:query",
         "//src/com/facebook/buck/remoteexecution:remoteexecution",
         "//src/com/facebook/buck/rules/args:args",

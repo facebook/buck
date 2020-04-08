@@ -69,10 +69,13 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
                     createParsingContext(params.getCells(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
+      // TODO(srice): We shouldn't be using an LegacyQueryUniverse for cquery, we should be
+      // asking for the target universe from the CLI and using that.
+      LegacyQueryUniverse targetUniverse = LegacyQueryUniverse.from(params, parserState);
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params,
-              parserState,
+              targetUniverse,
               createParsingContext(params.getCells(), pool.getListeningExecutorService()));
       formatAndRunQuery(params, env);
     } catch (QueryException e) {

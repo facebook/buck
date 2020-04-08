@@ -17,7 +17,6 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
@@ -25,10 +24,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
-import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.config.ParserConfig;
-import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -158,31 +154,27 @@ final class OwnersReport {
   }
 
   static Builder builder(
+      TargetUniverse targetUniverse,
       Cell rootCell,
       Path clientWorkingDir,
-      Parser parser,
-      PerBuildState parserState,
       Optional<TargetConfiguration> targetConfiguration) {
-    return new Builder(rootCell, clientWorkingDir, parser, parserState, targetConfiguration);
+    return new Builder(targetUniverse, rootCell, clientWorkingDir, targetConfiguration);
   }
 
   static final class Builder {
+    private final TargetUniverse targetUniverse;
     private final Cell rootCell;
     private final Path clientWorkingDir;
-    private final Parser parser;
-    private final PerBuildState parserState;
     private final Optional<TargetConfiguration> targetConfiguration;
 
     private Builder(
+        TargetUniverse targetUniverse,
         Cell rootCell,
         Path clientWorkingDir,
-        Parser parser,
-        PerBuildState parserState,
         Optional<TargetConfiguration> targetConfiguration) {
+      this.targetUniverse = targetUniverse;
       this.rootCell = rootCell;
       this.clientWorkingDir = clientWorkingDir;
-      this.parser = parser;
-      this.parserState = parserState;
       this.targetConfiguration = targetConfiguration;
     }
 
@@ -198,14 +190,9 @@ final class OwnersReport {
       ImmutableList<TargetNode<?>> targetNodes =
           map.computeIfAbsent(
               buckFile,
-              basePath1 -> {
-                try {
-                  return parser.getAllTargetNodesWithTargetCompatibilityFiltering(
-                      parserState, cell, basePath1, targetConfiguration);
-                } catch (BuildFileParseException e) {
-                  throw new HumanReadableException(e);
-                }
-              });
+              basePath1 ->
+                  targetUniverse.getAllTargetNodesWithTargetCompatibilityFiltering(
+                      cell, basePath1, targetConfiguration));
       return targetNodes.stream()
           .map(targetNode -> generateOwnersReport(cell, targetNode, cellRelativePath.toString()))
           .reduce(OwnersReport.emptyReport(), OwnersReport::updatedWith);

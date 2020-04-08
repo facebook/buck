@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.BuildTargetMatcherTargetNodeParser;
@@ -51,7 +50,7 @@ import java.util.Optional;
 class TargetPatternEvaluator {
   private static final Logger LOG = Logger.get(TargetPatternEvaluator.class);
 
-  private final Parser parser;
+  private final TargetUniverse targetUniverse;
   private final ParsingContext parsingContext;
   private final AbsPath projectRoot;
   private final CommandLineTargetNodeSpecParser targetNodeSpecParser;
@@ -62,14 +61,14 @@ class TargetPatternEvaluator {
   private Map<String, ImmutableSet<QueryTarget>> resolvedTargets = new HashMap<>();
 
   public TargetPatternEvaluator(
+      TargetUniverse targetUniverse,
       Cell rootCell,
       Path absoluteClientWorkingDir,
       BuckConfig buckConfig,
-      Parser parser,
       ParsingContext parsingContext,
       Optional<TargetConfiguration> targetConfiguration) {
+    this.targetUniverse = targetUniverse;
     this.rootCell = rootCell;
-    this.parser = parser;
     this.parsingContext = parsingContext;
     this.buckConfig = buckConfig;
     this.projectRoot = rootCell.getFilesystem().getRootPath();
@@ -162,7 +161,7 @@ class TargetPatternEvaluator {
       specs.addAll(targetNodeSpecParser.parse(rootCell, pattern));
     }
     ImmutableList<ImmutableSet<BuildTarget>> buildTargets =
-        parser.resolveTargetSpecs(parsingContext, specs, targetConfiguration);
+        targetUniverse.resolveTargetSpecs(specs, targetConfiguration, parsingContext);
     LOG.verbose("Resolved target patterns %s -> targets %s", patterns, buildTargets);
 
     // Convert the ordered result into a result map of pattern to set of resolved targets.

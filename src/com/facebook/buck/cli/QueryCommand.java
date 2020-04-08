@@ -84,6 +84,8 @@ import org.kohsuke.args4j.Option;
  */
 public class QueryCommand extends AbstractQueryCommand {
 
+  private LegacyQueryUniverse targetUniverse;
+
   public QueryCommand() {
     this(OutputFormat.LIST);
   }
@@ -178,10 +180,11 @@ public class QueryCommand extends AbstractQueryCommand {
                     createParsingContext(params.getCells(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
+      targetUniverse = LegacyQueryUniverse.from(params, parserState);
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params,
-              parserState,
+              targetUniverse,
               createParsingContext(params.getCells(), pool.getListeningExecutorService()));
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
@@ -367,7 +370,7 @@ public class QueryCommand extends AbstractQueryCommand {
       PrintStream printStream,
       boolean compactMode)
       throws IOException, QueryException {
-    MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(env.getTargetGraph());
+    MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(targetUniverse.getTargetGraph());
 
     ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
     ImmutableSet<UnflavoredBuildTarget> targetsFromQueryTargets =
@@ -384,18 +387,17 @@ public class QueryCommand extends AbstractQueryCommand {
             .setCompactMode(compactMode);
     if (shouldOutputAttributes()) {
       Function<MergedTargetNode, ImmutableSortedMap<String, String>> nodeToAttributes =
-          getNodeToAttributeFunction(params, env);
+          getNodeToAttributeFunction(params);
       dotBuilder.setNodeToAttributes(nodeToAttributes);
     }
     dotBuilder.build().writeOutput(printStream);
   }
 
   private Function<MergedTargetNode, ImmutableSortedMap<String, String>> getNodeToAttributeFunction(
-      CommandRunnerParams params, BuckQueryEnvironment env) {
+      CommandRunnerParams params) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     return node ->
-        getAttributes(
-                params, env, patternsMatcher, node, DependencyStack.top(node.getBuildTarget()))
+        getAttributes(params, patternsMatcher, node, DependencyStack.top(node.getBuildTarget()))
             .map(
                 attrs ->
                     attrs.entrySet().stream()
@@ -420,7 +422,7 @@ public class QueryCommand extends AbstractQueryCommand {
     } else {
       Map<UnflavoredBuildTarget, Integer> ranks =
           computeRanksByTarget(
-              env.getTargetGraph(), env.getNodesFromQueryTargets(queryResult)::contains);
+              targetUniverse.getTargetGraph(), env.getNodesFromQueryTargets(queryResult)::contains);
 
       printRankOutputAsPlainText(ranks, printStream);
     }
@@ -448,7 +450,7 @@ public class QueryCommand extends AbstractQueryCommand {
       PrintStream printStream)
       throws IOException, QueryException {
 
-    DirectedAcyclicGraph<TargetNode<?>> targetGraph = env.getTargetGraph();
+    DirectedAcyclicGraph<TargetNode<?>> targetGraph = targetUniverse.getTargetGraph();
     MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(targetGraph);
 
     ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
@@ -465,7 +467,7 @@ public class QueryCommand extends AbstractQueryCommand {
 
     if (shouldOutputAttributes()) {
       Function<MergedTargetNode, ImmutableSortedMap<String, String>> nodeToAttributes =
-          getNodeToAttributeFunction(params, env);
+          getNodeToAttributeFunction(params);
       targetNodeBuilder.nodeToAttributesFunction(nodeToAttributes);
     }
 
@@ -483,7 +485,7 @@ public class QueryCommand extends AbstractQueryCommand {
           throws QueryException {
     ImmutableSet<TargetNode<?>> nodes = env.getNodesFromQueryTargets(queryResult);
     Map<UnflavoredBuildTarget, Integer> rankEntries =
-        computeRanksByTarget(env.getTargetGraph(), nodes::contains);
+        computeRanksByTarget(targetUniverse.getTargetGraph(), nodes::contains);
 
     ImmutableCollection<MergedTargetNode> mergedNodes = MergedTargetNode.group(nodes).values();
 
@@ -508,7 +510,6 @@ public class QueryCommand extends AbstractQueryCommand {
                       SortedMap<String, Object> attributes =
                           getAttributes(
                                   params,
-                                  env,
                                   patternsMatcher,
                                   node,
                                   DependencyStack.top(node.getBuildTarget()))
@@ -596,8 +597,7 @@ public class QueryCommand extends AbstractQueryCommand {
     Map<String, SortedMap<String, Object>> attributesMap = new HashMap<>();
     for (MergedTargetNode node : mergedNodes) {
       try {
-        getAttributes(
-                params, env, patternsMatcher, node, DependencyStack.top(node.getBuildTarget()))
+        getAttributes(params, patternsMatcher, node, DependencyStack.top(node.getBuildTarget()))
             .ifPresent(attrMap -> attributesMap.put(toPresentationForm(node), attrMap));
 
       } catch (BuildFileParseException e) {
@@ -618,14 +618,14 @@ public class QueryCommand extends AbstractQueryCommand {
         continue;
       }
 
-      builder.add(env.getNode((QueryBuildTarget) target));
+      QueryBuildTarget queryBuildTarget = (QueryBuildTarget) target;
+      builder.add(env.getTargetUniverse().getNode(queryBuildTarget.getBuildTarget()));
     }
     return builder.build();
   }
 
   private Optional<SortedMap<String, Object>> getAttributes(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
       PatternsMatcher patternsMatcher,
       MergedTargetNode node,
       DependencyStack dependencyStack) {
@@ -633,7 +633,7 @@ public class QueryCommand extends AbstractQueryCommand {
         params
             .getParser()
             .getTargetNodeRawAttributes(
-                env.getParserState(),
+                targetUniverse.getParserState(),
                 params.getCells().getRootCell(),
                 node.getAnyNode(),
                 dependencyStack);

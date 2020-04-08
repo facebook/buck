@@ -50,6 +50,7 @@ import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.config.ParserConfig;
+import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconfiguredTargetToTargetUniquenessChecker;
 import com.facebook.buck.query.QueryBuildTarget;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryTarget;
@@ -144,27 +145,28 @@ public class BuckQueryEnvironmentTest {
     TargetConfigurationFactory targetConfigurationFactory =
         new TargetConfigurationFactory(
             buildTargetViewFactory, cells.getRootCell().getCellPathResolver());
+    LegacyQueryUniverse targetUniverse =
+        new LegacyQueryUniverse(
+            parser, parserState, TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
     TargetPatternEvaluator targetPatternEvaluator =
         new TargetPatternEvaluator(
+            targetUniverse,
             cells.getRootCell(),
             cells.getRootCell().getRoot().getPath(),
             FakeBuckConfig.builder().build(),
-            parser,
             ParsingContext.builder(cells, executor).build(),
             Optional.empty());
     OwnersReport.Builder ownersReportBuilder =
         OwnersReport.builder(
+            targetUniverse,
             cells.getRootCell(),
             cells.getRootCell().getRoot().getPath(),
-            parser,
-            parserState,
             Optional.empty());
     buckQueryEnvironment =
         BuckQueryEnvironment.from(
+            targetUniverse,
             cells.getRootCell(),
             ownersReportBuilder,
-            parser,
-            parserState,
             targetConfigurationFactory,
             targetPatternEvaluator,
             eventBus,

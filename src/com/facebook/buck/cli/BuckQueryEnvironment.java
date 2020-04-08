@@ -16,12 +16,8 @@
 
 package com.facebook.buck.cli;
 
-import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInstanceOf;
-
 import com.facebook.buck.cli.OwnersReport.Builder;
-import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
-import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
@@ -34,24 +30,13 @@ import com.facebook.buck.core.model.tc.factory.TargetConfigurationFactory;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
-import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayload;
-import com.facebook.buck.core.util.graph.CycleException;
-import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
-import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
-import com.facebook.buck.core.util.graph.MutableDirectedGraph;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.parser.Parser;
-import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.ParsingContext;
-import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
-import com.facebook.buck.parser.exceptions.BuildTargetException;
-import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconfiguredTargetToTargetUniquenessChecker;
 import com.facebook.buck.query.AllPathsFunction;
 import com.facebook.buck.query.AttrFilterFunction;
 import com.facebook.buck.query.AttrRegexFilterFunction;
@@ -74,35 +59,22 @@ import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.QueryTargetAccessor;
-import com.facebook.buck.util.MoreExceptions;
-import com.facebook.buck.util.types.Pair;
-import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Functions;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
-import com.google.common.util.concurrent.SettableFuture;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -132,8 +104,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
           new RdepsFunction<>(),
           new TestsOfFunction<>());
 
-  private final Parser parser;
-  private final PerBuildState parserState;
+  private final TargetUniverse targetUniverse;
   private final Cell rootCell;
   private final OwnersReport.Builder ownersReportBuilder;
   private final TargetConfigurationFactory targetConfigurationFactory;
@@ -145,25 +116,17 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   private final ImmutableMap<Cell, BuildFileTree> buildFileTrees;
   private final Map<BuildTarget, QueryBuildTarget> buildTargetToQueryTarget = new HashMap<>();
 
-  // Query execution is single threaded, however the buildTransitiveClosure implementation
-  // traverses the graph in parallel.
-  private MutableDirectedGraph<TargetNode<?>> graph = MutableDirectedGraph.createConcurrent();
-  private Map<BuildTarget, TargetNode<?>> targetsToNodes = new ConcurrentHashMap<>();
-  private TemporaryUnconfiguredTargetToTargetUniquenessChecker checker;
-
   @VisibleForTesting
   protected BuckQueryEnvironment(
+      TargetUniverse targetUniverse,
       Cell rootCell,
       Builder ownersReportBuilder,
-      Parser parser,
-      PerBuildState parserState,
       TargetConfigurationFactory targetConfigurationFactory,
       TargetPatternEvaluator targetPatternEvaluator,
       BuckEventBus eventBus,
       TypeCoercerFactory typeCoercerFactory) {
-    this.parser = parser;
+    this.targetUniverse = targetUniverse;
     this.eventBus = eventBus;
-    this.parserState = parserState;
     this.targetConfigurationFactory = targetConfigurationFactory;
     this.rootCell = rootCell;
     this.ownersReportBuilder = ownersReportBuilder;
@@ -179,25 +142,20 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     this.targetPatternEvaluator = targetPatternEvaluator;
     this.queryTargetEvaluator = new TargetEvaluator(targetPatternEvaluator);
     this.typeCoercerFactory = typeCoercerFactory;
-    this.checker =
-        TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(
-            BuildBuckConfig.of(rootCell.getBuckConfig()).shouldBuckOutIncludeTargetConfigHash());
   }
 
   public static BuckQueryEnvironment from(
+      TargetUniverse targetUniverse,
       Cell rootCell,
       OwnersReport.Builder ownersReportBuilder,
-      Parser parser,
-      PerBuildState parserState,
       TargetConfigurationFactory targetConfigurationFactory,
       TargetPatternEvaluator targetPatternEvaluator,
       BuckEventBus eventBus,
       TypeCoercerFactory typeCoercerFactory) {
     return new BuckQueryEnvironment(
+        targetUniverse,
         rootCell,
         ownersReportBuilder,
-        parser,
-        parserState,
         targetConfigurationFactory,
         targetPatternEvaluator,
         eventBus,
@@ -205,23 +163,21 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   public static BuckQueryEnvironment from(
-      CommandRunnerParams params, PerBuildState parserState, ParsingContext parsingContext) {
+      CommandRunnerParams params, TargetUniverse targetUniverse, ParsingContext parsingContext) {
     return from(
+        targetUniverse,
         params.getCells().getRootCell(),
         OwnersReport.builder(
+            targetUniverse,
             params.getCells().getRootCell(),
             params.getClientWorkingDir(),
-            params.getParser(),
-            parserState,
             params.getTargetConfiguration()),
-        params.getParser(),
-        parserState,
         params.getTargetConfigurationFactory(),
         new TargetPatternEvaluator(
+            targetUniverse,
             params.getCells().getRootCell(),
             params.getClientWorkingDir(),
             params.getBuckConfig(),
-            params.getParser(),
             // We disable mapping //path/to:lib to //path/to:lib#default,static
             // because the query engine doesn't handle flavors very well.
             parsingContext.withApplyDefaultFlavorsMode(
@@ -231,12 +187,8 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
         params.getTypeCoercerFactory());
   }
 
-  public DirectedAcyclicGraph<TargetNode<?>> getTargetGraph() {
-    return new DirectedAcyclicGraph<>(graph);
-  }
-
-  public PerBuildState getParserState() {
-    return parserState;
+  public TargetUniverse getTargetUniverse() {
+    return targetUniverse;
   }
 
   public void preloadTargetPatterns(Iterable<String> patterns)
@@ -269,21 +221,6 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     return evaluateQuery(QueryExpression.parse(query, this.getQueryParserEnv()));
   }
 
-  TargetNode<?> getNode(QueryBuildTarget target) throws QueryException {
-    BuildTarget buildTarget = target.getBuildTarget();
-    TargetNode<?> node = targetsToNodes.get(buildTarget);
-    if (node != null) {
-      return node;
-    }
-
-    try {
-      return parser.getTargetNodeAssertCompatible(
-          parserState, buildTarget, DependencyStack.top(buildTarget));
-    } catch (BuildFileParseException e) {
-      throw new QueryException(e, "Error getting target node for %s\n%s", target, e.getMessage());
-    }
-  }
-
   private QueryBuildTarget getOrCreateQueryBuildTarget(BuildTarget buildTarget) {
     return buildTargetToQueryTarget.computeIfAbsent(buildTarget, QueryBuildTarget::of);
   }
@@ -313,38 +250,34 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     ImmutableSet.Builder<TargetNode<?>> builder =
         ImmutableSet.builderWithExpectedSize(input.size());
     for (QueryBuildTarget target : input) {
-      builder.add(getNode(target));
+      builder.add(targetUniverse.getNode(target.getBuildTarget()));
     }
     return builder.build();
   }
 
   @Override
   public ImmutableSet<QueryTarget> getFwdDeps(Iterable<QueryTarget> targets) throws QueryException {
-    ImmutableSet.Builder<QueryTarget> result = new ImmutableSet.Builder<>();
-    for (QueryBuildTarget target : allBuildTargets(targets)) {
-      TargetNode<?> node = getNode(target);
-      result.addAll(getTargetsFromTargetNodes(graph.getOutgoingNodesFor(node)));
-    }
-    return result.build();
+    return allBuildTargets(targets).stream()
+        .map(QueryBuildTarget::getBuildTarget)
+        .flatMap(target -> targetUniverse.getAllTargetsFromOutgoingEdgesOf(target).stream())
+        .map(this::getOrCreateQueryBuildTarget)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
   public Set<QueryTarget> getReverseDeps(Iterable<QueryTarget> targets) throws QueryException {
-    Set<QueryTarget> result = new LinkedHashSet<>();
-    for (QueryBuildTarget target : allBuildTargets(targets)) {
-      TargetNode<?> node = getNode(target);
-      for (TargetNode<?> parentNode : graph.getIncomingNodesFor(node)) {
-        result.add(getOrCreateQueryBuildTarget(parentNode.getBuildTarget()));
-      }
-    }
-    return result;
+    return allBuildTargets(targets).stream()
+        .map(QueryBuildTarget::getBuildTarget)
+        .flatMap(target -> targetUniverse.getAllTargetsFromIncomingEdgesOf(target).stream())
+        .map(this::getOrCreateQueryBuildTarget)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
   public Set<QueryTarget> getInputs(QueryTarget target) throws QueryException {
     // TODO: Give an error message if this cast fails.
     QueryBuildTarget queryBuildTarget = (QueryBuildTarget) target;
-    TargetNode<?> node = getNode(queryBuildTarget);
+    TargetNode<?> node = targetUniverse.getNode(queryBuildTarget.getBuildTarget());
     BuildTarget buildTarget = queryBuildTarget.getBuildTarget();
     Cell cell = rootCell.getCell(buildTarget.getCell());
     return node.getInputs().stream()
@@ -362,163 +295,34 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   @Override
   public ImmutableSet<QueryTarget> getTransitiveClosure(Set<QueryTarget> targets)
       throws QueryException {
-    Set<TargetNode<?>> nodes = new LinkedHashSet<>(targets.size());
-    for (QueryBuildTarget target : allBuildTargets(targets)) {
-      nodes.add(getNode(target));
-    }
-    ImmutableSet.Builder<QueryTarget> result = ImmutableSet.builder();
-
-    new AbstractBreadthFirstTraversal<TargetNode<?>>(nodes) {
-      @Override
-      public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
-        result.add(getOrCreateQueryBuildTarget(node.getBuildTarget()));
-        return node.getParseDeps().stream()
-            .map(targetsToNodes::get)
+    ImmutableSet<BuildTarget> buildTargets =
+        allBuildTargets(targets).stream()
+            .map(QueryBuildTarget::getBuildTarget)
             .collect(ImmutableSet.toImmutableSet());
-      }
-    }.start();
-
-    return result.build();
+    ImmutableSet<BuildTarget> transitiveClosure = targetUniverse.getTransitiveClosure(buildTargets);
+    return transitiveClosure.stream()
+        .map(this::getOrCreateQueryBuildTarget)
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   @Override
   public void buildTransitiveClosure(Set<QueryTarget> targets, int maxDepth) throws QueryException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
-    ImmutableSet<BuildTarget> newBuildTargets =
+    ImmutableSet<BuildTarget> buildTargets =
         targets.stream()
             .filter(target -> target instanceof QueryBuildTarget)
             .map(target -> ((QueryBuildTarget) target).getBuildTarget())
-            .filter(buildTarget -> !targetsToNodes.containsKey(buildTarget))
             .collect(ImmutableSet.toImmutableSet());
 
-    // TODO(mkosiba): This looks more and more like the Parser.buildTargetGraph method. Unify the
-    // two.
-
-    ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache = new ConcurrentHashMap<>();
-
-    try {
-      List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
-      for (BuildTarget buildTarget : newBuildTargets) {
-        discoverNewTargetsConcurrently(buildTarget, DependencyStack.top(buildTarget), jobsCache)
-            .ifPresent(dep -> depsFuture.add(dep));
-      }
-      Futures.allAsList(depsFuture).get();
-    } catch (ExecutionException e) {
-      if (e.getCause() != null) {
-        throw new QueryException(
-            e.getCause(),
-            "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e.getCause()));
-      }
-      propagateCauseIfInstanceOf(e, ExecutionException.class);
-      propagateCauseIfInstanceOf(e, UncheckedExecutionException.class);
-    } catch (BuildFileParseException | InterruptedException e) {
-      throw new QueryException(
-          e, "Failed parsing: " + MoreExceptions.getHumanReadableOrLocalizedMessage(e));
-    }
-
-    GraphTraversableWithPayload<BuildTarget, TargetNode<?>> traversable =
-        target -> {
-          TargetNode<?> node =
-              Preconditions.checkNotNull(
-                  targetsToNodes.get(target),
-                  "Node %s should have been discovered by `discoverNewTargetsConcurrently`.",
-                  target);
-
-          // If a node has been added to the graph it means it and all of its children have been
-          // visited by an acyclic traversal and added to the graph. From this it follows that there
-          // are no outgoing edges from the graph (as it had been "fully" explored before) back out
-          // to the set of nodes we're currently exploring. Based on that:
-          //  - we can't have a cycle involving the "old" nodes,
-          //  - there are no new edges or nodes to be discovered by descending into the "old" nodes,
-          // making this node safe to skip.
-          if (graph.getNodes().contains(node)) {
-            return new Pair<>(node, ImmutableSet.<BuildTarget>of().iterator());
-          }
-          return new Pair<>(node, node.getParseDeps().iterator());
-        };
-
-    AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, TargetNode<?>> targetNodeTraversal =
-        new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
-    try {
-      for (Pair<BuildTarget, TargetNode<?>> entry : targetNodeTraversal.traverse(newBuildTargets)) {
-        TargetNode<?> node = entry.getSecond();
-        graph.addNode(node);
-        for (BuildTarget dep : node.getParseDeps()) {
-          graph.addEdge(
-              node,
-              Preconditions.checkNotNull(
-                  targetsToNodes.get(dep), "Couldn't find TargetNode for %s", dep));
-        }
-      }
-    } catch (CycleException e) {
-      throw new QueryException(e, e.getMessage());
-    }
-
-    jobsCache.keySet().forEach(this::getOrCreateQueryBuildTarget);
-  }
-
-  private Optional<ListenableFuture<Unit>> discoverNewTargetsConcurrently(
-      BuildTarget buildTarget,
-      DependencyStack dependencyStack,
-      ConcurrentHashMap<BuildTarget, ListenableFuture<Unit>> jobsCache)
-      throws BuildFileParseException {
-    ListenableFuture<Unit> job = jobsCache.get(buildTarget);
-    if (job != null) {
-      return Optional.empty();
-    }
-    SettableFuture<Unit> newJob = SettableFuture.create();
-    if (jobsCache.putIfAbsent(buildTarget, newJob) != null) {
-      return Optional.empty();
-    }
-
-    ListenableFuture<Unit> future =
-        Futures.transformAsync(
-            parser.getTargetNodeJobAssertCompatible(parserState, buildTarget, dependencyStack),
-            targetNode -> {
-              targetsToNodes.put(buildTarget, targetNode);
-              checker.addTarget(buildTarget, dependencyStack);
-              List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
-              Set<BuildTarget> parseDeps = targetNode.getParseDeps();
-              for (BuildTarget parseDep : parseDeps) {
-                discoverNewTargetsConcurrently(parseDep, dependencyStack.child(parseDep), jobsCache)
-                    .ifPresent(
-                        depWork ->
-                            depsFuture.add(
-                                attachParentNodeToErrorMessage(buildTarget, parseDep, depWork)));
-              }
-              return Futures.transform(
-                  Futures.allAsList(depsFuture),
-                  Functions.constant(null),
-                  MoreExecutors.directExecutor());
-            });
-    newJob.setFuture(future);
-    return Optional.of(newJob);
-  }
-
-  private static ListenableFuture<Unit> attachParentNodeToErrorMessage(
-      BuildTarget buildTarget, BuildTarget parseDep, ListenableFuture<Unit> depWork) {
-    return Futures.catchingAsync(
-        depWork,
-        Exception.class,
-        exceptionInput -> {
-          if (exceptionInput instanceof BuildFileParseException) {
-            if (exceptionInput instanceof BuildTargetException) {
-              throw ParserMessages.createReadableExceptionWithWhenSuffix(
-                  buildTarget, parseDep, (BuildTargetException) exceptionInput);
-            } else {
-              throw ParserMessages.createReadableExceptionWithWhenSuffix(
-                  buildTarget, parseDep, (BuildFileParseException) exceptionInput);
-            }
-          }
-          throw exceptionInput;
-        });
+    targetUniverse.buildTransitiveClosure(buildTargets);
   }
 
   @Override
   public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException {
+    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
     return ImmutableSet.copyOf(
         getTargetsFromBuildTargets(
-            TargetNodes.getTestTargetsForNode(getNode((QueryBuildTarget) target))));
+            TargetNodes.getTestTargetsForNode(targetUniverse.getNode(buildTarget))));
   }
 
   // TODO: This should be moved closer to QueryTarget itself, not a helper on BuckQueryEnvironment.
@@ -599,15 +403,17 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
 
   @Override
   public String getTargetKind(QueryTarget target) throws QueryException {
-    return getNode((QueryBuildTarget) target).getRuleType().getName();
+    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+    return targetUniverse.getNode(buildTarget).getRuleType().getName();
   }
 
   @Override
   public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
       throws QueryException {
+    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
     return QueryTargetAccessor.getTargetsInAttribute(
         typeCoercerFactory,
-        getNode((QueryBuildTarget) target),
+        targetUniverse.getNode(buildTarget),
         attribute,
         rootCell.getCellNameResolver());
   }
@@ -615,9 +421,10 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   @Override
   public ImmutableSet<Object> filterAttributeContents(
       QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException {
+    BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
     return QueryTargetAccessor.filterAttributeContents(
         typeCoercerFactory,
-        getNode((QueryBuildTarget) target),
+        targetUniverse.getNode(buildTarget),
         attribute,
         predicate,
         rootCell.getCellNameResolver());

@@ -46,10 +46,12 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.Parser;
+import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.parser.TestPerBuildStateFactory;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.parser.temporarytargetuniquenesschecker.TemporaryUnconfiguredTargetToTargetUniquenessChecker;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.util.stream.RichStream;
@@ -291,12 +293,17 @@ public class OwnersReportTest {
 
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
     Parser parser = TestParserFactory.create(executor.get(), cell.getRootCell());
+    PerBuildState perBuildState = TestPerBuildStateFactory.create(parser, cell.getRootCell());
+    LegacyQueryUniverse targetUniverse =
+        new LegacyQueryUniverse(
+            parser,
+            perBuildState,
+            TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
     OwnersReport report =
         OwnersReport.builder(
+                targetUniverse,
                 cell.getRootCell(),
                 cell.getRootCell().getRoot().getPath(),
-                TestParserFactory.create(executor.get(), cell.getRootCell()),
-                TestPerBuildStateFactory.create(parser, cell.getRootCell()),
                 Optional.empty())
             .build(getBuildFileTrees(cell.getRootCell()), ImmutableSet.of(input));
 
@@ -327,14 +334,15 @@ public class OwnersReportTest {
 
     Cells cell = new TestCellBuilder().setFilesystem(filesystem).build();
     Parser parser = TestParserFactory.create(executor.get(), cell.getRootCell());
+    PerBuildState perBuildState = TestPerBuildStateFactory.create(parser, cell.getRootCell());
+    LegacyQueryUniverse targetUniverse =
+        new LegacyQueryUniverse(
+            parser,
+            perBuildState,
+            TemporaryUnconfiguredTargetToTargetUniquenessChecker.create(true));
 
     OwnersReport report =
-        OwnersReport.builder(
-                cell.getRootCell(),
-                workingDir,
-                parser,
-                TestPerBuildStateFactory.create(parser, cell.getRootCell()),
-                Optional.empty())
+        OwnersReport.builder(targetUniverse, cell.getRootCell(), workingDir, Optional.empty())
             .build(getBuildFileTrees(cell.getRootCell()), inputs);
 
     assertTrue(report.nonFileInputs.isEmpty());
