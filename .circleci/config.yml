@@ -33,6 +33,7 @@ install_android_sdk: &install_android_sdk
       echo 'y' |sdkmanager --install platform-tools
       echo 'y' |sdkmanager --install "build-tools;28.0.0"
       echo 'y' |sdkmanager --install "platforms;android-23"
+      rm "${sdk_zip_filename}"
     fi
     # Install 32 bit libraries
     # https://stackoverflow.com/questions/36911709/cannot-run-program-aapt
@@ -157,13 +158,13 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
+          key: v1.2-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - save_cache:
           paths:
             - /Users/distiller/android-sdk
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
+          key: v1.2-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
       - restore_cache:
@@ -200,13 +201,9 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
+          key: v1.2-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - /Users/distiller/android-sdk
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_groovy
       - run:
@@ -216,10 +213,6 @@ jobs:
           key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
-      - save_cache:
-          paths:
-            - /opt/circleci/.pyenv
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
@@ -247,13 +240,9 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
+          key: v1.2-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - /Users/distiller/android-sdk
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
       - restore_cache:
@@ -261,10 +250,6 @@ jobs:
           key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
-      - save_cache:
-          paths:
-            - /opt/circleci/.pyenv
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
@@ -291,13 +276,9 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
+          key: v1.2-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - /Users/distiller/android-sdk
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_ghc
       - run:
@@ -307,10 +288,6 @@ jobs:
           key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
-      - save_cache:
-          paths:
-            - /opt/circleci/.pyenv
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_groovy
       - run:
@@ -339,13 +316,9 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
+          key: v1.2-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - /Users/distiller/android-sdk
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           name: Install Android NDK
           command: |
@@ -359,10 +332,6 @@ jobs:
           key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
-      - save_cache:
-          paths:
-            - /opt/circleci/.pyenv
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
@@ -388,13 +357,9 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
+          key: v1.2-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - /Users/distiller/android-sdk
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           name: Install Android NDK 15
           command: |
@@ -408,10 +373,6 @@ jobs:
           key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
-      - save_cache:
-          paths:
-            - /opt/circleci/.pyenv
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
@@ -437,13 +398,9 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
+          key: v1.2-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - /Users/distiller/android-sdk
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           name: Install Android NDK 16
           command: |
@@ -457,10 +414,6 @@ jobs:
           key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
-      - save_cache:
-          paths:
-            - /opt/circleci/.pyenv
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
@@ -486,13 +439,9 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
+          key: v1.2-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - /Users/distiller/android-sdk
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           name: Install Android NDK 17
           command: |
@@ -506,10 +455,6 @@ jobs:
           key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
-      - save_cache:
-          paths:
-            - /opt/circleci/.pyenv
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
@@ -542,13 +487,9 @@ jobs:
           <<: *install_openjdk8
       - restore_cache:
           # Change this key when upgrading sdk.
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
+          key: v1.2-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - /Users/distiller/android-sdk
-          key: v1.1-buck-andoid-sdk-{{ .Branch }}
       - run:
           name: Install Android NDK 18
           command: |
@@ -562,10 +503,6 @@ jobs:
           key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
-      - save_cache:
-          paths:
-            - /opt/circleci/.pyenv
-          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
