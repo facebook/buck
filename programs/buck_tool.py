@@ -914,12 +914,21 @@ class BuckTool(object):
                 time.sleep(wait_seconds)
 
             if not transport_exists(buckd_transport_file_path):
+                message = (
+                    "Transport file {} did not exist while starting buck.\n"
+                    "Buck command was {}"
+                ).format(buckd_transport_file_path, "  \n".join(command))
+                logging.debug(message)
                 return False
 
             returncode = process.poll()
 
             # If the process has exited then daemon failed to start
             if returncode is not None:
+                message = (
+                    "Buckd stopped early with code {}\nBuck command was {}"
+                ).format(returncode, "  \n".join(command))
+                logging.debug(message)
                 return False
 
             # Save pid of running daemon
