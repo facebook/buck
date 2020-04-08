@@ -68,10 +68,10 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.BazelLibrary;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -349,8 +349,8 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
       throws EvalException {
     SkylarkDict<String, Set<Artifact>> dict;
     try (Mutability mutability = Mutability.create("test")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setGlobals(BazelLibrary.GLOBALS)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .build();

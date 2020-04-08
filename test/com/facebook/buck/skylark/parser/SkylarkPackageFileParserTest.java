@@ -192,7 +192,7 @@ public class SkylarkPackageFileParserTest {
     Files.createDirectories(buildFile.getParent());
     Files.write(buildFile, Collections.singletonList("prebuilt_jar(" + "name='guava'," + ")"));
 
-    thrown.expectMessage("Cannot parse file");
+    thrown.expectMessage("Cannot evaluate");
     parser.getManifest(AbsPath.of(buildFile));
 
     Event event = Iterables.getOnlyElement(eventCollector);

@@ -48,19 +48,21 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
+import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.packages.SkylarkExportable;
 import com.google.devtools.build.lib.syntax.AssignmentStatement;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.Environment;
-import com.google.devtools.build.lib.syntax.Environment.Extension;
+import com.google.devtools.build.lib.syntax.Eval;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Identifier;
+import com.google.devtools.build.lib.syntax.LoadStatement;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInputSource;
-import com.google.devtools.build.lib.syntax.SkylarkImport;
+import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.SkylarkUtils.Phase;
+import com.google.devtools.build.lib.syntax.StarlarkFile;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.Statement;
 import com.google.devtools.build.lib.syntax.ValidationEnvironment;
 import com.google.devtools.build.lib.vfs.FileSystem;
@@ -75,6 +77,7 @@ import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
@@ -88,7 +91,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   protected final EventHandler eventHandler;
   protected final BuckGlobals buckGlobals;
 
-  private final Cache<com.google.devtools.build.lib.vfs.Path, BuildFileAST> astCache;
+  private final Cache<com.google.devtools.build.lib.vfs.Path, StarlarkFile> astCache;
   private final Cache<com.google.devtools.build.lib.vfs.Path, ExtensionData> extensionDataCache;
   private final LoadingCache<LoadImport, IncludesData> includesDataCache;
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
@@ -166,7 +169,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     ImplicitlyLoadedExtension implicitLoad =
         loadImplicitExtension(basePath.toPath(parseFile.getFileSystem()), containingLabel);
 
-    BuildFileAST buildFileAst =
+    StarlarkFile buildFileAst =
         parseSkylarkFile(buildFilePath, containingLabel, getBuckOrPackage().fileKind);
     Globber globber = getGlobber(parseFile.getPath());
     PackageContext packageContext =
@@ -181,17 +184,15 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               mutability,
               parseContext,
               implicitLoad.getExtensionData());
-      if (!ValidationEnvironment.checkBuildSyntax(
-          buildFileAst.getStatements(), eventHandler, envData.getEnvironment())) {
-        throw BuildFileParseException.createForUnknownParseError("Cannot parse file " + parseFile);
-      }
-      boolean exec = buildFileAst.exec(envData.getEnvironment(), eventHandler);
-      if (!exec) {
+
+      try {
+        EvalUtils.exec(buildFileAst, envData.getEnvironment());
+      } catch (EvalException e) {
+        eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
         // buildFileAst.exec reports extended error information to console with eventHandler
         // but this is not propagated to BuildFileParseException. So in case of resilient parsing
         // when exceptions are stored in BuildFileManifest they do not have detailed information.
         // TODO(sergeyb): propagate detailed error information from AST evaluation to exception
-
         throw BuildFileParseException.createForUnknownParseError(
             "Cannot evaluate file " + parseFile);
       }
@@ -212,21 +213,17 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private EnvironmentData createBuildFileEvaluationEnvironment(
       com.google.devtools.build.lib.vfs.Path buildFilePath,
       Label containingLabel,
-      BuildFileAST buildFileAst,
+      StarlarkFile buildFileAst,
       Mutability mutability,
       ParseContext parseContext,
       @Nullable ExtensionData implicitLoadExtensionData)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableList<ExtensionData> dependencies =
-        loadExtensions(
-            containingLabel,
-            buildFileAst.getImports().stream()
-                .map(SkylarkImport::getImportString)
-                .collect(ImmutableList.toImmutableList()));
-    ImmutableMap<String, Environment.Extension> importMap =
+        loadExtensions(containingLabel, getImports(buildFileAst));
+    ImmutableMap<String, StarlarkThread.Extension> importMap =
         toImportMap(dependencies, implicitLoadExtensionData);
-    Environment env =
-        Environment.builder(mutability)
+    StarlarkThread env =
+        StarlarkThread.builder(mutability)
             .setImportedExtensions(importMap)
             .setGlobals(buckGlobals.getBuckBuildFileContextGlobals())
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
@@ -301,42 +298,78 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    * @return abstract syntax tree; does not handle any errors.
    */
   @VisibleForTesting
-  protected BuildFileAST readSkylarkAST(
-      com.google.devtools.build.lib.vfs.Path path, FileKind fileKind) throws IOException {
-    ParserInputSource input =
-        ParserInputSource.create(
+  protected StarlarkFile readSkylarkAST(com.google.devtools.build.lib.vfs.Path path)
+      throws IOException {
+    ParserInput input =
+        ParserInput.create(
             FileSystemUtils.readContent(path, StandardCharsets.UTF_8), path.asFragment());
-    switch (fileKind) {
-      case BUCK:
-        return BuildFileAST.parseBuildFile(input, eventHandler);
-      case BZL:
-        return BuildFileAST.parseSkylarkFile(input, eventHandler);
-      case PACKAGE:
-        return BuildFileAST.parseBuildFile(input, eventHandler);
-      default:
-        throw new AssertionError("unreachable");
-    }
+    StarlarkFile file = StarlarkFile.parse(input);
+    Event.replayEventsOn(eventHandler, file.errors());
+    return file;
   }
 
-  private BuildFileAST parseSkylarkFile(
+  private static final boolean ENABLE_PROPER_VALIDATION = false;
+
+  private StarlarkThread.GlobalFrame getGlobals(FileKind fileKind) {
+    return fileKind == FileKind.BZL
+        ? buckGlobals.getBuckLoadContextGlobals()
+        : buckGlobals.getBuckBuildFileContextGlobals();
+  }
+
+  private StarlarkFile parseSkylarkFile(
       com.google.devtools.build.lib.vfs.Path path, Label containingLabel, FileKind fileKind)
       throws BuildFileParseException, IOException {
-    BuildFileAST result = astCache.getIfPresent(path);
+    StarlarkFile result = astCache.getIfPresent(path);
     if (result == null) {
       try {
-        result = readSkylarkAST(path, fileKind);
+        result = readSkylarkAST(path);
       } catch (FileNotFoundException e) {
         throw BuildFileParseException.createForUnknownParseError(
             "%s cannot be loaded because it does not exist. It was referenced from %s",
             path, containingLabel);
       }
-      if (result.containsErrors()) {
+      if (!result.errors().isEmpty()) {
         throw BuildFileParseException.createForUnknownParseError(
             "Cannot parse %s.  It was referenced from %s", path, containingLabel);
       }
+
+      // TODO(nga): these enable proper file validation (e. g. denies global redefinition)
+      //   but nice stack trace becomes unavailable.
+      //   So for example, ParserIntegrationTest fails
+      if (ENABLE_PROPER_VALIDATION) {
+        ValidationEnvironment.validateFile(
+            result, getGlobals(fileKind), BuckStarlark.BUCK_STARLARK_SEMANTICS, false);
+        Event.replayEventsOn(eventHandler, result.errors());
+
+        if (!result.errors().isEmpty()) {
+          throw BuildFileParseException.createForUnknownParseError(
+              "Cannot parse %s.  It was referenced from %s", path, containingLabel);
+        }
+      }
+
+      if (fileKind != FileKind.BZL) {
+        if (!StarlarkBuckFileSyntax.checkBuildSyntax(result, eventHandler)) {
+          throw BuildFileParseException.createForUnknownParseError(
+              "Cannot parse %s.  It was referenced from %s", path, containingLabel);
+        }
+      }
+
       astCache.put(path, result);
     }
     return result;
+  }
+
+  private static ImmutableList<String> getImports(StarlarkFile file) {
+    return file.getStatements().stream()
+        .flatMap(
+            s -> {
+              if (s instanceof LoadStatement) {
+                return Stream.of(((LoadStatement) s).getImport().getValue());
+              } else {
+                return Stream.empty();
+              }
+            })
+        .collect(ImmutableList.toImmutableList());
   }
 
   /**
@@ -349,17 +382,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     Label label = loadImport.getLabel();
     com.google.devtools.build.lib.vfs.Path filePath = getImportPath(label, loadImport.getImport());
 
-    BuildFileAST fileAst =
+    StarlarkFile fileAst =
         parseSkylarkFile(filePath, loadImport.getContainingLabel(), FileKind.BZL);
 
-    ImmutableList<IncludesData> dependencies =
-        fileAst.getImports().isEmpty()
-            ? ImmutableList.of()
-            : loadIncludes(
-                label,
-                fileAst.getImports().stream()
-                    .map(SkylarkImport::getImportString)
-                    .collect(ImmutableList.toImmutableList()));
+    ImmutableList<IncludesData> dependencies = loadIncludes(label, getImports(fileAst));
 
     return ImmutableIncludesData.ofImpl(
         filePath, dependencies, toIncludedPaths(filePath.toString(), dependencies, null));
@@ -451,12 +477,13 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
   /**
    * @return The map from skylark import string like {@code //pkg:build_rules.bzl} to an {@link
-   *     Environment.Extension} for provided {@code dependencies}.
+   *     com.google.devtools.build.lib.syntax.StarlarkThread.Extension} for provided {@code
+   *     dependencies}.
    */
-  private ImmutableMap<String, Environment.Extension> toImportMap(
+  private ImmutableMap<String, StarlarkThread.Extension> toImportMap(
       ImmutableList<ExtensionData> dependencies,
       @Nullable ExtensionData implicitLoadExtensionData) {
-    ImmutableMap.Builder<String, Environment.Extension> builder =
+    ImmutableMap.Builder<String, StarlarkThread.Extension> builder =
         ImmutableMap.builderWithExpectedSize(
             dependencies.size() + (implicitLoadExtensionData == null ? 0 : 1));
     // foreach is not used to avoid iterator overhead
@@ -484,7 +511,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     // List of dependencies this extension uses.
     private final Set<LoadImport> dependencies;
     // This extension AST.
-    private @Nullable BuildFileAST ast;
+    private @Nullable StarlarkFile ast;
 
     private ExtensionLoadState(
         LoadImport load, com.google.devtools.build.lib.vfs.Path extensionPath) {
@@ -503,12 +530,12 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       return ast != null;
     }
 
-    public void setAST(BuildFileAST ast) {
+    public void setAST(StarlarkFile ast) {
       Preconditions.checkArgument(!haveAST(), "AST can be set only once");
       this.ast = ast;
     }
 
-    public BuildFileAST getAST() {
+    public StarlarkFile getAST() {
       Preconditions.checkNotNull(ast);
       return ast;
     }
@@ -611,10 +638,11 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     // Update this load state with the list of its dependencies.
     // Schedule missing dependencies to be loaded.
     boolean haveUnsatisfiedDeps = false;
-    for (int i = 0; i < load.getAST().getImports().size(); ++i) {
-      LoadImport dependency =
-          ImmutableLoadImport.ofImpl(
-              load.getLabel(), load.getAST().getImports().get(i).getImportString());
+
+    ImmutableList<String> imports = getImports(load.getAST());
+
+    for (int i = 0; i < imports.size(); ++i) {
+      LoadImport dependency = ImmutableLoadImport.ofImpl(load.getLabel(), imports.get(i));
 
       // Record dependency for this load.
       load.addDependency(dependency);
@@ -640,27 +668,32 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   protected ExtensionData buildExtensionData(ExtensionLoadState load) throws InterruptedException {
     ImmutableList<ExtensionData> dependencies =
         getDependenciesExtensionData(load.getLabel(), load.getDependencies());
-    Extension loadedExtension = null;
+    StarlarkThread.Extension loadedExtension;
     try (Mutability mutability = Mutability.create("importing extension")) {
-      Environment.Builder envBuilder =
-          Environment.builder(mutability)
+      StarlarkThread.Builder envBuilder =
+          StarlarkThread.builder(mutability)
               .setEventHandler(eventHandler)
               .setGlobals(buckGlobals.getBuckLoadContextGlobals().withLabel(load.getLabel()));
       envBuilder.setImportedExtensions(toImportMap(dependencies, null));
 
       // Create this extension.
-      Environment extensionEnv =
+      StarlarkThread extensionEnv =
           envBuilder.setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS).build();
       SkylarkUtils.setPhase(extensionEnv, Phase.LOADING);
 
-      BuildFileAST ast = load.getAST();
+      StarlarkFile ast = load.getAST();
       buckGlobals.getKnownUserDefinedRuleTypes().invalidateExtension(load.getLabel());
       for (Statement stmt : ast.getStatements()) {
-        if (!ast.execTopLevelStatement(stmt, extensionEnv, eventHandler)) {
+        try {
+          Eval.execToplevelStatement(extensionEnv, stmt);
+        } catch (EvalException e) {
+          // TODO(nga): what about stack trace
+          eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
           throw BuildFileParseException.createForUnknownParseError(
               "Cannot evaluate extension %s referenced from %s",
               load.getLabel(), load.getParentLabel());
         }
+        // TODO: rewrite using postAssignHook
         if (stmt.kind() == Statement.Kind.ASSIGNMENT) {
           try {
             ensureExportedIfExportable(extensionEnv, (AssignmentStatement) stmt);
@@ -671,7 +704,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
           }
         }
       }
-      loadedExtension = new Extension(extensionEnv);
+      loadedExtension = new StarlarkThread.Extension(extensionEnv);
     }
 
     return ImmutableExtensionData.ofImpl(
@@ -694,9 +727,9 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *     is bound
    * @param stmt The assignment statement used to lookup the variable in the environment
    */
-  private void ensureExportedIfExportable(Environment extensionEnv, AssignmentStatement stmt)
+  private void ensureExportedIfExportable(StarlarkThread extensionEnv, AssignmentStatement stmt)
       throws BuildFileParseException, EvalException {
-    ImmutableSet<Identifier> identifiers = ValidationEnvironment.boundIdentifiers(stmt.getLHS());
+    ImmutableSet<Identifier> identifiers = Identifier.boundIdentifiers(stmt.getLHS());
     if (identifiers.size() != 1) {
       return;
     }
@@ -705,7 +738,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     if (lookedUp instanceof SkylarkExportable) {
       SkylarkExportable exportable = (SkylarkExportable) lookedUp;
       if (!exportable.isExported()) {
-        Label extensionLabel = extensionEnv.getGlobals().getLabel();
+        Label extensionLabel = (Label) extensionEnv.getGlobals().getLabel();
         if (extensionLabel != null) {
           exportable.export(extensionLabel, identifier);
           if (lookedUp instanceof SkylarkUserDefinedRule) {
@@ -817,15 +850,10 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     Label containingLabel = createContainingLabel(basePath);
     ImplicitlyLoadedExtension implicitLoad =
         loadImplicitExtension(basePath.toPath(parseFile.getFileSystem()), containingLabel);
-
-    BuildFileAST buildFileAst =
+    StarlarkFile buildFileAst =
         parseSkylarkFile(buildFilePath, containingLabel, getBuckOrPackage().fileKind);
     ImmutableList<IncludesData> dependencies =
-        loadIncludes(
-            containingLabel,
-            buildFileAst.getImports().stream()
-                .map(SkylarkImport::getImportString)
-                .collect(ImmutableList.toImmutableList()));
+        loadIncludes(containingLabel, getImports(buildFileAst));
 
     // it might be potentially faster to keep sorted sets for each dependency separately and just
     // merge sorted lists as we aggregate transitive close up

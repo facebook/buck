@@ -18,15 +18,15 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 
 /**
- * Captures {@link Environment} and information related to its parsing like all {@link
+ * Captures {@link StarlarkThread} and information related to its parsing like all {@link
  * com.google.devtools.build.lib.vfs.Path} used in order to create this environment.
  */
 @BuckStyleValue
 public abstract class EnvironmentData {
-  public abstract Environment getEnvironment();
+  public abstract StarlarkThread getEnvironment();
 
   public abstract ImmutableSet<String> getLoadedPaths();
 }

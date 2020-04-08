@@ -30,14 +30,13 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.cmdline.LabelValidator;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.BaseFunction;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -70,14 +69,13 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   }
 
   @Override
-  public Label label(String labelString, Location loc, Environment env, StarlarkContext context)
-      throws EvalException {
+  public Label label(String labelString, Location loc, StarlarkThread env) throws EvalException {
     // There is some extra implementation work in the Bazel version. At the moment we do not do
     // cell remapping, so we take a simpler approach of making sure that root-relative labels map
     // to whatever cell we're currently executing within. This has the side effect of making any
     // non-root cell labels become absolute.
     try {
-      Label parentLabel = env.getGlobals().getLabel();
+      Label parentLabel = (Label) env.getGlobals().getLabel();
       if (parentLabel != null) {
         LabelValidator.parseAbsoluteLabel(labelString);
         labelString =
@@ -99,7 +97,7 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
       boolean test,
       Location loc,
       FuncallExpression ast,
-      Environment env)
+      StarlarkThread env)
       throws EvalException {
     SkylarkUtils.checkLoadingOrWorkspacePhase(env, "rule", ast.getLocation());
 

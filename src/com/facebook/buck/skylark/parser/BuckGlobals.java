@@ -35,12 +35,11 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
+import com.google.devtools.build.lib.syntax.CallUtils;
 import com.google.devtools.build.lib.syntax.ClassObject;
-import com.google.devtools.build.lib.syntax.Environment;
-import com.google.devtools.build.lib.syntax.Environment.GlobalFrame;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodLibrary;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.function.Function;
 import org.immutables.value.Value.Lazy;
 
@@ -61,7 +60,7 @@ public abstract class BuckGlobals {
      * indirectly initializes {@link MethodLibrary} properly before freezing.
      */
     @SuppressWarnings("unused")
-    GlobalFrame globals = Environment.DEFAULT_GLOBALS;
+    StarlarkThread.GlobalFrame globals = StarlarkThread.DEFAULT_GLOBALS;
   }
 
   abstract SkylarkFunctionModule getSkylarkFunctionModule();
@@ -91,7 +90,7 @@ public abstract class BuckGlobals {
 
   /** Always disable implicit native imports in skylark rules, they should utilize native.foo */
   @Lazy
-  Environment.GlobalFrame getBuckLoadContextGlobals() {
+  StarlarkThread.GlobalFrame getBuckLoadContextGlobals() {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     addBuckGlobals(builder);
     builder.put("native", getNativeModule());
@@ -106,12 +105,12 @@ public abstract class BuckGlobals {
       // correct provider() is made available for user-defined rules in
       Runtime.setupSkylarkLibrary(builder, new SkylarkProviderFunction());
     }
-    return GlobalFrame.createForBuiltins(builder.build());
+    return StarlarkThread.GlobalFrame.createForBuiltins(builder.build());
   }
 
   /** Disable implicit native rules depending on configuration */
   @Lazy
-  Environment.GlobalFrame getBuckBuildFileContextGlobals() {
+  StarlarkThread.GlobalFrame getBuckBuildFileContextGlobals() {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     addBuckGlobals(builder);
     if (getImplicitNativeRulesState() == ImplicitNativeRulesState.ENABLED) {
@@ -119,7 +118,7 @@ public abstract class BuckGlobals {
     }
     Runtime.setupSkylarkLibrary(builder, getSkylarkFunctionModule());
     addNativeModuleFunctions(builder);
-    return GlobalFrame.createForBuiltins(builder.build());
+    return StarlarkThread.GlobalFrame.createForBuiltins(builder.build());
   }
 
   /**
@@ -160,11 +159,10 @@ public abstract class BuckGlobals {
   /** Puts all native module functions into provided {@code builder}. */
   private void addNativeModuleFunctions(ImmutableMap.Builder<String, Object> builder) {
     for (String nativeFunction :
-        FuncallExpression.getMethodNames(
+        CallUtils.getMethodNames(
             BuckStarlark.BUCK_STARLARK_SEMANTICS, getSkylarkFunctionModule().getClass())) {
       builder.put(
-          nativeFunction,
-          FuncallExpression.getBuiltinCallable(getSkylarkFunctionModule(), nativeFunction));
+          nativeFunction, CallUtils.getBuiltinCallable(getSkylarkFunctionModule(), nativeFunction));
     }
   }
 

@@ -28,11 +28,11 @@ import com.google.devtools.build.lib.packages.SkylarkExportable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 import com.google.devtools.build.lib.syntax.BaseFunction;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.Collections;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -59,16 +59,14 @@ public class UserDefinedProvider extends BaseFunction
    *
    * @param location The location where the provider was defined by the user
    * @param fieldNames List of kwargs that will be available when {@link #call(Object[],
-   *     FuncallExpression, Environment)} is called, and will be available as fields on the
-   *     resulting {@link UserDefinedProviderInfo} object
+   *     FuncallExpression, com.google.devtools.build.lib.syntax.StarlarkThread)} is called, and
+   *     will be available as fields on the resulting {@link UserDefinedProviderInfo} object
    */
   public UserDefinedProvider(Location location, String[] fieldNames) {
     super(
         null,
-        FunctionSignature.WithValues.create(
-            FunctionSignature.namedOnly(0, fieldNames),
-            Collections.nCopies(fieldNames.length, Runtime.NONE),
-            null),
+        FunctionSignature.namedOnly(0, fieldNames),
+        Collections.nCopies(fieldNames.length, Runtime.NONE),
         location);
     this.key = new Key();
   }
@@ -86,7 +84,7 @@ public class UserDefinedProvider extends BaseFunction
   @Override
   public void repr(SkylarkPrinter printer) {
     printer.format("%s(", getName());
-    MoreIterables.enumerate(Objects.requireNonNull(getSignature()).getSignature().getNames())
+    MoreIterables.enumerate(Objects.requireNonNull(getSignature()).getParameterNames())
         .forEach(
             pair -> {
               if (pair.getFirst() != 0) {
@@ -121,11 +119,10 @@ public class UserDefinedProvider extends BaseFunction
   }
 
   @Override
-  protected Object call(Object[] args, @Nullable FuncallExpression ast, Environment env) {
+  protected Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env) {
     Verify.verify(isExported, "Tried to call a Provider before exporting it");
 
-    ImmutableList<String> fieldNames =
-        Objects.requireNonNull(getSignature()).getSignature().getNames();
+    ImmutableList<String> fieldNames = Objects.requireNonNull(getSignature()).getParameterNames();
     Verify.verify(args.length == fieldNames.size());
 
     ImmutableMap.Builder<String, Object> builder =

@@ -38,6 +38,7 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.util.Objects;
 import org.junit.Rule;
 import org.junit.Test;
@@ -109,7 +110,7 @@ public class UserDefinedProviderInfoTest {
   }
 
   @Test
-  public void worksInSkylark() throws InterruptedException, EvalException {
+  public void worksInSkylark() throws InterruptedException, EvalException, SyntaxError {
     UserDefinedProviderInfo info =
         new UserDefinedProviderInfo(
             new FakeUserDefinedProvider(),
@@ -133,7 +134,8 @@ public class UserDefinedProviderInfoTest {
   }
 
   @Test
-  public void isImmutableWorks() throws InterruptedException, EvalException, LabelSyntaxException {
+  public void isImmutableWorks()
+      throws InterruptedException, EvalException, LabelSyntaxException, SyntaxError {
 
     String buildFile =
         "ui1 = UserInfo(value=\"foo\", immutable=immutable_list, mutable=mutable_list)\n"

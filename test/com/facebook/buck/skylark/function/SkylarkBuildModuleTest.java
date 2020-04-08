@@ -30,16 +30,19 @@ import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
+import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.packages.BazelLibrary;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.Environment;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
+import com.google.devtools.build.lib.syntax.CallUtils;
+import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInputSource;
+import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.SkylarkUtils.Phase;
+import com.google.devtools.build.lib.syntax.StarlarkFile;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -76,29 +79,28 @@ public class SkylarkBuildModuleTest {
     assertEquals(eventHandler.iterator().next().getMessage(), "name 'package' is not defined");
   }
 
-  private Environment evaluate(String expression, boolean expectSuccess)
+  private StarlarkThread evaluate(String expression, boolean expectSuccess)
       throws IOException, InterruptedException {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, expression);
     return evaluate(buildFile, expectSuccess);
   }
 
-  private Environment evaluate(Path buildFile, boolean expectSuccess)
+  private StarlarkThread evaluate(Path buildFile, boolean expectSuccess)
       throws IOException, InterruptedException {
     try (Mutability mutability = Mutability.create("BUCK")) {
       return evaluate(buildFile, mutability, expectSuccess);
     }
   }
 
-  private Environment evaluate(Path buildFile, Mutability mutability, boolean expectSuccess)
+  private StarlarkThread evaluate(Path buildFile, Mutability mutability, boolean expectSuccess)
       throws IOException, InterruptedException {
     byte[] buildFileContent =
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
-    BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(
-            ParserInputSource.create(buildFileContent, buildFile.asFragment()), eventHandler);
-    Environment env =
-        Environment.builder(mutability)
+    StarlarkFile buildFileAst =
+        StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+    StarlarkThread env =
+        StarlarkThread.builder(mutability)
             .setGlobals(BazelLibrary.GLOBALS)
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
@@ -113,10 +115,13 @@ public class SkylarkBuildModuleTest {
         .setup(env);
     env.setup(
         "package_name",
-        FuncallExpression.getBuiltinCallable(SkylarkBuildModule.BUILD_MODULE, "package_name"));
-    boolean exec = buildFileAst.exec(env, eventHandler);
-    if (!exec && expectSuccess) {
-      Assert.fail("Build file evaluation must have succeeded");
+        CallUtils.getBuiltinCallable(SkylarkBuildModule.BUILD_MODULE, "package_name"));
+    try {
+      EvalUtils.exec(buildFileAst, env);
+      Assert.assertTrue(expectSuccess);
+    } catch (EvalException e) {
+      eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
+      Assert.assertFalse(expectSuccess);
     }
     return env;
   }

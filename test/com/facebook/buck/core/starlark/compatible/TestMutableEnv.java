@@ -17,15 +17,15 @@
 package com.facebook.buck.core.starlark.compatible;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.MethodLibrary;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 
 /** Simple try-with-resources class that creates and cleans up a mutable environment */
 public class TestMutableEnv implements AutoCloseable {
   private final Mutability mutability;
-  private final Environment env;
+  private final StarlarkThread env;
 
   public TestMutableEnv() {
     this(ImmutableMap.of());
@@ -38,13 +38,13 @@ public class TestMutableEnv implements AutoCloseable {
     MethodLibrary.addBindingsToBuilder(builder);
     mutability = Mutability.create("testing");
     env =
-        Environment.builder(mutability)
-            .setGlobals(Environment.GlobalFrame.createForBuiltins(builder.build()))
+        StarlarkThread.builder(mutability)
+            .setGlobals(StarlarkThread.GlobalFrame.createForBuiltins(builder.build()))
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
   }
 
-  public Environment getEnv() {
+  public StarlarkThread getEnv() {
     return env;
   }
 

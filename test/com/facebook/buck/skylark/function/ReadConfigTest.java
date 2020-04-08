@@ -32,18 +32,19 @@ import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.packages.BazelLibrary;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.Environment;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
+import com.google.devtools.build.lib.syntax.CallUtils;
+import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInputSource;
+import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.StarlarkFile;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.util.EnumSet;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -81,27 +82,26 @@ public class ReadConfigTest {
         evaluate("value = read_config('foo', 'bar')").moduleLookup("value"), equalTo("value"));
   }
 
-  private Environment evaluate(String expression) throws IOException, InterruptedException {
+  private StarlarkThread evaluate(String expression) throws IOException, InterruptedException {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, expression);
     return evaluate(buildFile);
   }
 
-  private Environment evaluate(Path buildFile) throws IOException, InterruptedException {
+  private StarlarkThread evaluate(Path buildFile) throws IOException, InterruptedException {
     try (Mutability mutability = Mutability.create("BUCK")) {
       return evaluate(buildFile, mutability);
     }
   }
 
-  private Environment evaluate(Path buildFile, Mutability mutability)
+  private StarlarkThread evaluate(Path buildFile, Mutability mutability)
       throws IOException, InterruptedException {
     byte[] buildFileContent =
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
-    BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(
-            ParserInputSource.create(buildFileContent, buildFile.asFragment()), eventHandler);
-    Environment env =
-        Environment.builder(mutability)
+    StarlarkFile buildFileAst =
+        StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+    StarlarkThread env =
+        StarlarkThread.builder(mutability)
             .setGlobals(BazelLibrary.GLOBALS)
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
@@ -116,10 +116,11 @@ public class ReadConfigTest {
     parseContext.setup(env);
     env.setup(
         "read_config",
-        FuncallExpression.getBuiltinCallable(SkylarkBuildModule.BUILD_MODULE, "read_config"));
-    boolean exec = buildFileAst.exec(env, eventHandler);
-    if (!exec) {
-      Assert.fail("Build file evaluation must have succeeded");
+        CallUtils.getBuiltinCallable(SkylarkBuildModule.BUILD_MODULE, "read_config"));
+    try {
+      EvalUtils.exec(buildFileAst, env);
+    } catch (EvalException e) {
+      throw new RuntimeException(e);
     }
     return env;
   }

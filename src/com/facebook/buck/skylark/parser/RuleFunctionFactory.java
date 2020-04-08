@@ -31,11 +31,11 @@ import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -46,11 +46,11 @@ import java.util.stream.Collectors;
  * <p>For example for a {@link com.facebook.buck.jvm.java.JavaLibraryDescription} instance, a
  * Skylark function using snake case of its name prefix will be created - {@code java_library}.
  *
- * <p>Callers can setup created functions in the {@link Environment}.
+ * <p>Callers can setup created functions in the {@link
+ * com.google.devtools.build.lib.syntax.StarlarkThread}.
  */
 public class RuleFunctionFactory {
 
-  // URL prefix for all build rule documentation pages
   private static final String BUCK_RULE_DOC_URL_PREFIX = "https://buck.build/rule/";
 
   private final TypeCoercerFactory typeCoercerFactory;
@@ -71,12 +71,12 @@ public class RuleFunctionFactory {
    */
   BuiltinFunction create(BaseDescription<?> ruleClass) {
     String name = DescriptionCache.getRuleType(ruleClass).getName();
-    return new BuiltinFunction(
-        name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV, /*isRule=*/ true) {
+    return new BuiltinFunction(name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV) {
 
       @SuppressWarnings({"unused"})
       public Runtime.NoneType invoke(
-          Map<String, Object> kwargs, FuncallExpression ast, Environment env) throws EvalException {
+          Map<String, Object> kwargs, FuncallExpression ast, StarlarkThread env)
+          throws EvalException {
         ParseContext parseContext = ParseContext.getParseContext(env, ast);
         String basePath =
             parseContext
@@ -127,8 +127,10 @@ public class RuleFunctionFactory {
                   .map(ParamInfo::getPythonName)
                   .sorted(ParamInfo.NAME_COMPARATOR)
                   .collect(Collectors.joining(" and "))
-              + " but they are not provided.",
-          BUCK_RULE_DOC_URL_PREFIX + name);
+              + " but they are not provided.\n"
+              + "Need help? See "
+              + BUCK_RULE_DOC_URL_PREFIX
+              + name);
     }
   }
 

@@ -20,9 +20,9 @@ import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import javax.annotation.Nullable;
 
 /**
@@ -70,9 +70,9 @@ public abstract class AbstractSkylarkFunctions {
       documented = false, // this is an API that we should remove once select is available
       allowReturnNones = true,
       useAst = true,
-      useEnvironment = true)
+      useStarlarkThread = true)
   public Object readConfig(
-      String section, String field, Object defaultValue, FuncallExpression ast, Environment env)
+      String section, String field, Object defaultValue, FuncallExpression ast, StarlarkThread env)
       throws EvalException {
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
     @Nullable

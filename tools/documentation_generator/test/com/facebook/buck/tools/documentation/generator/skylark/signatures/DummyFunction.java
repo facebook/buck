@@ -31,7 +31,7 @@ public class DummyFunction {
       },
       documented = false,
       useAst = true,
-      useEnvironment = true)
+      useStarlarkThread = true)
   public SkylarkList<String> dummy(String seed) {
     return SkylarkList.createImmutable(Collections.singleton(seed));
   }

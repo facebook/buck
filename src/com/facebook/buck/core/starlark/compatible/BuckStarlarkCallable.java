@@ -163,17 +163,12 @@ class BuckStarlarkCallable implements SkylarkCallable {
   }
 
   @Override
-  public boolean useEnvironment() {
+  public boolean useStarlarkThread() {
     return false;
   }
 
   @Override
   public boolean useStarlarkSemantics() {
-    return false;
-  }
-
-  @Override
-  public boolean useContext() {
     return false;
   }
 

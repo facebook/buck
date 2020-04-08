@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.startsWith;
 import static org.hamcrest.Matchers.stringContainsInOrder;
 import static org.junit.Assert.assertEquals;
@@ -64,7 +65,7 @@ import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
-import com.google.devtools.build.lib.syntax.Type;
+import com.google.devtools.build.lib.syntax.SkylarkList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -139,9 +140,7 @@ public class SkylarkProjectBuildFileParserTest {
     RawTargetNode rule = getSingleRule(buildFile);
     assertThat(rule.get("name"), equalTo("guava"));
     assertThat(rule.get("binaryJar"), equalTo("guava.jar"));
-    assertThat(
-        Type.STRING_LIST.convert(rule.get("licenses"), "license"),
-        equalTo(ImmutableList.of("LICENSE")));
+    assertThat(rule.get("licenses"), equalTo(ImmutableList.of("LICENSE")));
     assertThat(rule.get("sourceJar"), equalTo("guava-sources.jar"));
     assertThat(rule.getVisibility(), equalTo(ImmutableList.of("PUBLIC")));
     assertThat(rule.getBasePath().toString(), equalTo("src/test"));
@@ -340,9 +339,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.createFile(directory.resolve("file2"));
     Files.createFile(directory.resolve("bad_file"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(
-        Type.STRING_LIST.convert(rule.get("licenses"), "license"),
-        equalTo(ImmutableList.of("file1", "file2")));
+    assertThat(rule.get("licenses"), equalTo(ImmutableList.of("file1", "file2")));
   }
 
   @Test
@@ -376,7 +373,10 @@ public class SkylarkProjectBuildFileParserTest {
         equalTo(
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.of(ImmutableList.of("f*"), ImmutableList.of(), true),
+                    GlobSpec.of(
+                        SkylarkList.MutableList.of(null, "f*"),
+                        SkylarkList.MutableList.of(null),
+                        true),
                     ImmutableSet.of("file1", "file2")))));
   }
 
@@ -825,8 +825,7 @@ public class SkylarkProjectBuildFileParserTest {
     RawTargetNode rule = getSingleRule(buildFile);
     assertThat(rule.get("name"), equalTo("foo"));
     assertThat(rule.get("binaryJar"), equalTo("foo.jar"));
-    assertThat(
-        Type.STRING_LIST.convert(rule.get("licenses"), "license"), equalTo(ImmutableList.of()));
+    assertThat(rule.get("licenses"), equalTo(ImmutableList.of()));
   }
 
   @Test
@@ -839,9 +838,7 @@ public class SkylarkProjectBuildFileParserTest {
         Collections.singletonList(
             "prebuilt_jar(name='a', binary_jar='a.jar', licenses=list(('l1', 'l2')))"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(
-        Type.STRING_LIST.convert(rule.get("licenses"), "license"),
-        equalTo(ImmutableList.of("l1", "l2")));
+    assertThat(rule.get("licenses"), equalTo(ImmutableList.of("l1", "l2")));
   }
 
   @Test
@@ -851,7 +848,7 @@ public class SkylarkProjectBuildFileParserTest {
     Path buildFile = directory.resolve("BUCK");
     Files.write(buildFile, Collections.singletonList("prebuilt_jar(name='β', binary_jar='a.jar')"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(Type.STRING.convert(rule.get("name"), "name"), equalTo("β"));
+    assertThat(rule.get("name"), equalTo("β"));
   }
 
   @Test
@@ -862,7 +859,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(buildFile, Arrays.asList("def foo():", "  pass"));
 
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot parse file");
+    thrown.expectMessage("Cannot parse");
 
     parser.getManifest(AbsPath.of(buildFile));
   }
@@ -875,13 +872,14 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(buildFile, Collections.singletonList("foo()"));
 
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot parse file " + buildFile);
+    thrown.expectMessage("Cannot evaluate file " + buildFile);
 
     parser.getManifest(AbsPath.of(buildFile));
   }
 
   @Test
-  public void extensionFileEvaluationErrorIsReported() throws Exception {
+  public void extensioSkylarkPackageFileParserTestnFileEvaluationErrorIsReported()
+      throws Exception {
     Path directory = projectFilesystem.resolve("src").resolve("test");
     Files.createDirectories(directory);
     Path buildFile = directory.resolve("BUCK");
@@ -891,7 +889,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(extensionFile, Collections.singletonList("error"));
 
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate extension //src/test:build_rules.bzl");
+    thrown.expectMessage(matchesPattern("Cannot (parse|evaluate).*build_rules.bzl.*"));
 
     parser.getManifest(AbsPath.of(buildFile));
   }
@@ -911,9 +909,7 @@ public class SkylarkProjectBuildFileParserTest {
             "def guava_jar(name):",
             "  native.prebuilt_jar(name=name, binary_jar='foo.jar', licenses=list(('l1', 'l2')))"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(
-        Type.STRING_LIST.convert(rule.get("licenses"), "license"),
-        equalTo(ImmutableList.of("l1", "l2")));
+    assertThat(rule.get("licenses"), equalTo(ImmutableList.of("l1", "l2")));
   }
 
   @Test
@@ -1154,7 +1150,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot parse file");
+    thrown.expectMessage("Cannot evaluate");
 
     try {
       parser.getManifest(AbsPath.of(projectFilesystem.resolve(buildFile)));
@@ -1190,7 +1186,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate file");
+    thrown.expectMessage("Cannot evaluate");
 
     try {
       parser.getManifest(AbsPath.of(projectFilesystem.resolve(buildFile)));
@@ -1198,7 +1194,7 @@ public class SkylarkProjectBuildFileParserTest {
       Event event = eventCollector.iterator().next();
       assertEquals(EventKind.ERROR, event.getKind());
       assertThat(event.getMessage(), containsString("name 'prebuilt_jar' is not defined"));
-      assertThat(event.getMessage(), containsString("extension.bzl\", line 2, in make_jar"));
+      assertThat(event.getLocation().toString(), containsString("extension.bzl:2"));
       throw e;
     }
   }
@@ -1277,7 +1273,7 @@ public class SkylarkProjectBuildFileParserTest {
 
     parser = createParserWithOptions(eventCollector, options);
     thrown.expect(BuildFileParseException.class);
-    thrown.expectMessage("Cannot evaluate file");
+    thrown.expectMessage("Cannot evaluate");
 
     try {
       parser.getManifest(AbsPath.of(projectFilesystem.resolve(buildFile)));
@@ -1285,7 +1281,7 @@ public class SkylarkProjectBuildFileParserTest {
       Event event = eventCollector.iterator().next();
       assertEquals(EventKind.ERROR, event.getKind());
       assertThat(event.getMessage(), containsString("name 'prebuilt_jar' is not defined"));
-      assertThat(event.getMessage(), containsString("extension.bzl\", line 2, in make_jar"));
+      assertThat(event.getLocation().toString(), containsString("extension.bzl:2"));
       throw e;
     }
   }
@@ -1680,7 +1676,7 @@ public class SkylarkProjectBuildFileParserTest {
       parser.getManifest(AbsPath.of(buildFile));
       fail("Should not reach here.");
     } catch (BuildFileParseException e) {
-      assertThat(e.getMessage(), startsWith("Cannot parse file "));
+      assertThat(e.getMessage(), startsWith("Cannot evaluate "));
     }
     assertThat(eventCollector.count(), is(1));
     assertThat(

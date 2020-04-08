@@ -42,7 +42,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
       },
       documented = false,
       useAst = true,
-      useEnvironment = true)
+      useStarlarkThread = true)
   public SkylarkList<String> dummy(String seed) {
     return SkylarkList.createImmutable(Collections.singleton(seed));
   }
@@ -52,7 +52,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
       doc = "Returns a dummy list of strings.",
       documented = false,
       useAst = true,
-      useEnvironment = true)
+      useStarlarkThread = true)
   public SkylarkList<String> dummyWithoutArgs() {
     return SkylarkList.createImmutable(Collections.emptyList());
   }
@@ -63,7 +63,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
       extraKeywords = @Param(name = "kwargs", doc = "the dummy attributes."),
       documented = false,
       useAst = true,
-      useEnvironment = true)
+      useStarlarkThread = true)
   public SkylarkList<String> dummyWithKwargs(Map<String, Object> kwargs) {
     return SkylarkList.createImmutable(kwargs.keySet());
   }
@@ -73,7 +73,7 @@ public class SoyTemplateSkylarkSignatureRendererTest {
       doc = "Doc with {} inside.",
       documented = false,
       useAst = true,
-      useEnvironment = true)
+      useStarlarkThread = true)
   public SkylarkList<String> dummyWithBracesInside() {
     return SkylarkList.createImmutable(Collections.emptyList());
   }

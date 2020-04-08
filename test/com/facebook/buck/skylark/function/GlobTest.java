@@ -28,8 +28,6 @@ import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
 import com.facebook.buck.skylark.io.impl.NativeGlobber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
-import com.facebook.buck.util.types.Pair;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -37,21 +35,21 @@ import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
-import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.packages.BazelLibrary;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.Environment;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
+import com.google.devtools.build.lib.syntax.CallUtils;
+import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInputSource;
+import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkFile;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.util.EnumSet;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -69,7 +67,7 @@ public class GlobTest {
   }
 
   @Test
-  public void testGlobFindsIncludedFiles() throws IOException, InterruptedException {
+  public void testGlobFindsIncludedFiles() throws IOException, InterruptedException, EvalException {
     FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
@@ -81,7 +79,8 @@ public class GlobTest {
   }
 
   @Test
-  public void testGlobFindsIncludedFilesUsingKeyword() throws IOException, InterruptedException {
+  public void testGlobFindsIncludedFilesUsingKeyword()
+      throws IOException, InterruptedException, EvalException {
     FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
@@ -93,7 +92,8 @@ public class GlobTest {
   }
 
   @Test
-  public void testGlobExcludedElementsAreNotReturned() throws IOException, InterruptedException {
+  public void testGlobExcludedElementsAreNotReturned()
+      throws IOException, InterruptedException, EvalException {
     FileSystemUtils.createEmptyFile(root.getChild("foo.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.txt"));
     FileSystemUtils.createEmptyFile(root.getChild("bar.jpg"));
@@ -154,33 +154,21 @@ public class GlobTest {
                 + "Please use an empty list ([]) instead."));
   }
 
-  private Environment assertEvaluate(Path buildFile) throws IOException, InterruptedException {
+  private StarlarkThread assertEvaluate(Path buildFile)
+      throws IOException, InterruptedException, EvalException {
     try (Mutability mutability = Mutability.create("BUCK")) {
       return assertEvaluate(buildFile, mutability);
     }
   }
 
-  private Environment assertEvaluate(Path buildFile, Mutability mutability)
-      throws IOException, InterruptedException {
-    Pair<Boolean, Environment> result = evaluate(buildFile, mutability, eventHandler);
-    if (!result.getFirst()) {
-      String message =
-          "Build file evaluation failed:\n" + Joiner.on("\n").join(eventHandler.iterator());
-      Assert.fail(message);
-    }
-    return result.getSecond();
-  }
-
-  private Pair<Boolean, Environment> evaluate(
-      Path buildFile, Mutability mutability, EventHandler eventHandler)
-      throws IOException, InterruptedException {
+  private StarlarkThread assertEvaluate(Path buildFile, Mutability mutability)
+      throws IOException, InterruptedException, EvalException {
     byte[] buildFileContent =
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
-    BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(
-            ParserInputSource.create(buildFileContent, buildFile.asFragment()), eventHandler);
-    Environment env =
-        Environment.builder(mutability)
+    StarlarkFile buildFileAst =
+        StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+    StarlarkThread env =
+        StarlarkThread.builder(mutability)
             .setGlobals(BazelLibrary.GLOBALS)
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
@@ -192,8 +180,10 @@ public class GlobTest {
                 eventHandler,
                 ImmutableMap.of()))
         .setup(env);
-    env.setup(
-        "glob", FuncallExpression.getBuiltinCallable(SkylarkBuildModule.BUILD_MODULE, "glob"));
-    return new Pair<>(buildFileAst.exec(env, eventHandler), env);
+    env.setup("glob", CallUtils.getBuiltinCallable(SkylarkBuildModule.BUILD_MODULE, "glob"));
+
+    EvalUtils.exec(buildFileAst, env);
+
+    return env;
   }
 }

@@ -16,34 +16,28 @@
 
 package com.facebook.buck.core.starlark.testutil;
 
-import com.google.devtools.build.lib.events.Event;
-import com.google.devtools.build.lib.events.EventHandler;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.EvalUtils;
+import com.google.devtools.build.lib.syntax.Expression;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.Parser;
-import com.google.devtools.build.lib.syntax.ParserInputSource;
+import com.google.devtools.build.lib.syntax.ParserInput;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.SyntaxError;
 import com.google.devtools.build.lib.vfs.PathFragment;
 
 public class TestStarlarkParser {
 
-  private static class ThrowingEventHandler implements EventHandler {
-    @Override
-    public void handle(Event event) {
-      throw new AssertionError("unexpected: " + event);
+  public static FuncallExpression parseFuncall(String expr) {
+    try {
+      return (FuncallExpression)
+          Expression.parse(ParserInput.create(expr, PathFragment.EMPTY_FRAGMENT));
+    } catch (SyntaxError syntaxError) {
+      throw new RuntimeException(syntaxError);
     }
   }
 
-  public static FuncallExpression parseFuncall(String expr) {
-    return (FuncallExpression)
-        Parser.parseExpression(
-            ParserInputSource.create(expr, PathFragment.EMPTY_FRAGMENT),
-            new ThrowingEventHandler());
-  }
-
-  public static Object eval(Environment env, String expr)
-      throws InterruptedException, EvalException {
-    return BuildFileAST.eval(env, expr);
+  public static Object eval(StarlarkThread env, String expr)
+      throws EvalException, InterruptedException, SyntaxError {
+    return EvalUtils.execOrEval(ParserInput.create(expr, PathFragment.EMPTY_FRAGMENT), env);
   }
 }

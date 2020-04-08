@@ -44,10 +44,10 @@ import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.BazelLibrary;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
@@ -173,8 +173,8 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
     ImmutableMap<String, ImmutableSet<String>> namedOuts = args.getNamedOuts().get();
     SkylarkDict<String, Set<Artifact>> dict;
     try (Mutability mutability = Mutability.create("test")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setGlobals(BazelLibrary.GLOBALS)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .build();

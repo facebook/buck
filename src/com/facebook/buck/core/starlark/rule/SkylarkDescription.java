@@ -45,11 +45,11 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.syntax.BaseFunction;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -82,8 +82,8 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
               args.getCoercedAttrValues(context));
 
       try (Mutability mutability = Mutability.create("analysing target")) {
-        Environment env =
-            Environment.builder(mutability)
+        StarlarkThread env =
+            StarlarkThread.builder(mutability)
                 .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
                 .setEventHandler(
                     new ConsoleEventHandler(

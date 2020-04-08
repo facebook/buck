@@ -30,11 +30,11 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.BaseFunction;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.Nullable;
@@ -93,11 +93,12 @@ public class FakeSkylarkUserDefinedRuleFactory {
       String label,
       Function<SkylarkRuleContext, Object> callable)
       throws EvalException, LabelSyntaxException {
-    FunctionSignature signature = FunctionSignature.of(1, 0, 0, false, false, "ctx");
+    FunctionSignature signature =
+        FunctionSignature.create(1, 0, 0, 0, false, false, ImmutableList.of("ctx"));
     BaseFunction implementation =
         new BaseFunction("unconfigured", signature) {
           @Override
-          public Object call(Object[] args, @Nullable FuncallExpression ast, Environment env) {
+          public Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env) {
             Preconditions.checkArgument(args.length == 1);
             Preconditions.checkArgument(args[0] instanceof SkylarkRuleContext);
             return callable.apply((SkylarkRuleContext) args[0]);

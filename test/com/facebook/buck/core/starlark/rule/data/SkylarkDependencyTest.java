@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.SyntaxError;
 import org.junit.Test;
 
 public class SkylarkDependencyTest {
@@ -44,7 +45,7 @@ public class SkylarkDependencyTest {
   }
 
   @Test
-  public void returnsLabel() throws InterruptedException, EvalException {
+  public void returnsLabel() throws InterruptedException, EvalException, SyntaxError {
     SkylarkDependency dep =
         new SkylarkDependency(
             BuildTargetFactory.newInstance("//foo:bar"),
@@ -72,7 +73,7 @@ public class SkylarkDependencyTest {
   }
 
   @Test
-  public void byIndexWorks() throws InterruptedException, EvalException {
+  public void byIndexWorks() throws InterruptedException, EvalException, SyntaxError {
 
     SkylarkDependency dep =
         new SkylarkDependency(
@@ -92,7 +93,7 @@ public class SkylarkDependencyTest {
   }
 
   @Test
-  public void containsWorks() throws InterruptedException, EvalException {
+  public void containsWorks() throws InterruptedException, EvalException, SyntaxError {
     SkylarkDependency dep =
         new SkylarkDependency(
             BuildTargetFactory.newInstance("//foo:bar"),

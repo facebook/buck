@@ -27,6 +27,7 @@ import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -34,13 +35,11 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.SkylarkExportable;
 import com.google.devtools.build.lib.syntax.BaseFunction;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Runtime;
-import com.google.devtools.build.lib.syntax.SkylarkType;
-import java.util.ArrayList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
@@ -70,7 +69,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   private final ParamsInfo params;
 
   private SkylarkUserDefinedRule(
-      FunctionSignature.WithValues<Object, SkylarkType> signature,
+      FunctionSignature signature,
+      ImmutableList<Object> defaultValues,
       Location location,
       BaseFunction implementation,
       ImmutableMap<String, Attribute<?>> attrs,
@@ -81,7 +81,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
      * The name is incomplete until {@link #export(Label, String)} is called, so we know what is on
      * the left side of the assignment operator to create a function name
      */
-    super("<incomplete rule>", signature, location);
+    super("<incomplete rule>", signature, defaultValues, location);
     this.implementation = implementation;
     this.attrs = attrs;
     this.hiddenImplicitAttributes = hiddenImplicitAttributes;
@@ -96,15 +96,14 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
 
   @Override
   @SuppressWarnings("unchecked")
-  protected Object call(Object[] args, @Nullable FuncallExpression ast, Environment env)
+  protected Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env)
       throws EvalException, InterruptedException {
     // We're being called directly somewhere that is not in the parser (e.g. with Location.BuiltIn)
     if (ast == null) {
       throw new EvalException(
           location, "Invalid parser state while trying to call result of rule()");
     }
-    ImmutableList<String> names =
-        Objects.requireNonNull(this.getSignature()).getSignature().getNames();
+    ImmutableList<String> names = Objects.requireNonNull(this.getSignature()).getParameterNames();
     Preconditions.checkArgument(
         names.size() == args.length, "Got different number of arguments than expected");
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
@@ -161,10 +160,11 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     ImmutableMap<String, Attribute<?>> validatedAttrs =
         validateAttrs(location, implicitAttributes, attrs);
 
-    FunctionSignature.WithValues<Object, SkylarkType> signature =
+    Pair<FunctionSignature, ImmutableList<Object>> signature =
         createSignature(validatedAttrs, location);
     return new SkylarkUserDefinedRule(
-        signature,
+        signature.getFirst(),
+        signature.getSecond(),
         location,
         implementation,
         validatedAttrs,
@@ -176,11 +176,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   private static void validateImplementation(Location location, BaseFunction implementation)
       throws EvalException {
     // Make sure we only take a single (ctx) argument
-    int numArgs =
-        Objects.requireNonNull(implementation.getSignature())
-            .getSignature()
-            .getShape()
-            .getArguments();
+    int numArgs = Objects.requireNonNull(implementation.getSignature()).getParameterNames().size();
     if (numArgs != 1) {
       throw new EvalException(
           location,
@@ -221,7 +217,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         .build();
   }
 
-  private static FunctionSignature.WithValues<Object, SkylarkType> createSignature(
+  private static Pair<FunctionSignature, ImmutableList<Object>> createSignature(
       ImmutableMap<String, Attribute<?>> parameters, Location location) throws EvalException {
     /**
      * See {@link FunctionSignature} for details on how argument ordering works. We make all
@@ -230,7 +226,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     Preconditions.checkState(!parameters.isEmpty());
     int mandatory = 0;
     String[] names = new String[parameters.size()];
-    ArrayList<Object> defaultValues = new ArrayList<>(parameters.size());
+    ImmutableList.Builder<Object> defaultValues =
+        ImmutableList.builderWithExpectedSize(parameters.size());
 
     Stream<Map.Entry<String, Attribute<?>>> sortedStream =
         parameters.entrySet().stream()
@@ -259,10 +256,12 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     }
 
     try {
-      FunctionSignature signature = FunctionSignature.of(0, 0, mandatory, false, false, names);
-      return FunctionSignature.WithValues.create(signature, defaultValues, null);
+      return new Pair<>(
+          FunctionSignature.create(
+              0, 0, mandatory, names.length - mandatory, false, false, ImmutableList.copyOf(names)),
+          defaultValues.build());
     } catch (Exception e) {
-      throw new EvalException(location, "Could not create FunctionSignature");
+      throw new EvalException(location, "Could not create FunctionSignature", e);
     }
   }
 

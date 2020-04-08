@@ -21,7 +21,6 @@ import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -36,15 +35,14 @@ public class LegacyProviderInfoCollectionImpl implements ProviderInfoCollection 
   private LegacyProviderInfoCollectionImpl() {}
 
   @Override
-  public Object getIndex(Object key, Location loc, StarlarkContext context) throws EvalException {
+  public Object getIndex(Object key, Location loc) throws EvalException {
     verifyKeyIsProvider(
         key, loc, "Type Target only supports indexing by object constructors, got %s instead");
     return Runtime.NONE;
   }
 
   @Override
-  public boolean containsKey(Object key, Location loc, StarlarkContext context)
-      throws EvalException {
+  public boolean containsKey(Object key, Location loc) throws EvalException {
     verifyKeyIsProvider(
         key, loc, "Type Target only supports querying by object constructors, got %s instead");
     return false;

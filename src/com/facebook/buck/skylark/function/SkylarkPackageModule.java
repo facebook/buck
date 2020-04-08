@@ -24,10 +24,10 @@ import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 
 /**
  * A class for the Skylark native module providing functions for parsing package files. It provides
@@ -50,7 +50,7 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
       doc = "Allows defining attributes applied to all targets in the build file.",
       documented = true,
       useAst = true,
-      useEnvironment = true,
+      useStarlarkThread = true,
       allowReturnNones = true,
       parameters = {
         @Param(
@@ -82,7 +82,7 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
       SkylarkList<String> visibility,
       SkylarkList<String> within_view,
       FuncallExpression ast,
-      Environment env)
+      StarlarkThread env)
       throws EvalException {
     ParseContext.getParseContext(env, ast)
         .recordPackage(

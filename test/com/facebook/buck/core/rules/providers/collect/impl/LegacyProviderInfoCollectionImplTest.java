@@ -24,7 +24,6 @@ import com.facebook.buck.core.rules.analysis.impl.FakeInfo;
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Runtime;
 import java.util.Optional;
@@ -36,20 +35,18 @@ public class LegacyProviderInfoCollectionImplTest {
 
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
-  final StarlarkContext ctx = new StarlarkContext() {};
-
   @Test
   public void getIndexThrowsWhenKeyNotProvider() throws EvalException {
     expectedException.expect(EvalException.class);
     ProviderInfoCollection providerInfoCollection = LegacyProviderInfoCollectionImpl.of();
-    providerInfoCollection.getIndex(new Object(), Location.BUILTIN, ctx);
+    providerInfoCollection.getIndex(new Object(), Location.BUILTIN);
   }
 
   @Test
   public void containsKeyThrowsWhenKeyNotProvider() throws EvalException {
     expectedException.expect(EvalException.class);
     ProviderInfoCollection providerInfoCollection = LegacyProviderInfoCollectionImpl.of();
-    providerInfoCollection.containsKey(new Object(), Location.BUILTIN, ctx);
+    providerInfoCollection.containsKey(new Object(), Location.BUILTIN);
   }
 
   @Test
@@ -58,7 +55,7 @@ public class LegacyProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection = LegacyProviderInfoCollectionImpl.of();
 
     assertEquals(Optional.empty(), providerInfoCollection.get(provider));
-    assertEquals(Runtime.NONE, providerInfoCollection.getIndex(provider, Location.BUILTIN, ctx));
+    assertEquals(Runtime.NONE, providerInfoCollection.getIndex(provider, Location.BUILTIN));
   }
 
   @Test

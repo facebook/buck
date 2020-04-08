@@ -27,11 +27,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -90,14 +91,14 @@ public class TestInfoTest {
   }
 
   @Test
-  public void usesDefaultSkylarkValues() throws InterruptedException, EvalException {
+  public void usesDefaultSkylarkValues() throws InterruptedException, EvalException, SyntaxError {
     Object raw;
     try (Mutability mutability = Mutability.create("providertest")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER)))
               .build();
 
@@ -120,14 +121,15 @@ public class TestInfoTest {
   }
 
   @Test
-  public void instantiatesFromSkylarkProperly() throws EvalException, InterruptedException {
+  public void instantiatesFromSkylarkProperly()
+      throws EvalException, InterruptedException, SyntaxError {
     Object raw;
     try (Mutability mutability = Mutability.create("providertest")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(
                           TestInfo.PROVIDER.getName(),
                           TestInfo.PROVIDER,
@@ -165,15 +167,15 @@ public class TestInfoTest {
   }
 
   @Test
-  public void coercesTimeout() throws InterruptedException, EvalException {
+  public void coercesTimeout() throws InterruptedException, EvalException, SyntaxError {
     Object raw1;
     Object raw2;
     try (Mutability mutability = Mutability.create("providertest")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER)))
               .build();
 

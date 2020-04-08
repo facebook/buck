@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.function;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
@@ -30,21 +31,23 @@ import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
+import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.packages.BazelLibrary;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.Environment;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
+import com.google.devtools.build.lib.syntax.CallUtils;
+import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInputSource;
+import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
+import com.google.devtools.build.lib.syntax.StarlarkFile;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.util.EnumSet;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -98,11 +101,10 @@ public class SkylarkPackageModuleTest {
       throws IOException, InterruptedException {
     byte[] buildFileContent =
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
-    BuildFileAST buildFileAst =
-        BuildFileAST.parseBuildFile(
-            ParserInputSource.create(buildFileContent, buildFile.asFragment()), eventHandler);
-    Environment env =
-        Environment.builder(mutability)
+    StarlarkFile buildFileAst =
+        StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+    StarlarkThread env =
+        StarlarkThread.builder(mutability)
             .setGlobals(BazelLibrary.GLOBALS)
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
@@ -117,11 +119,13 @@ public class SkylarkPackageModuleTest {
                 ImmutableMap.of()));
     parseContext.setup(env);
     env.setup(
-        "package",
-        FuncallExpression.getBuiltinCallable(SkylarkPackageModule.PACKAGE_MODULE, "package"));
-    boolean exec = buildFileAst.exec(env, eventHandler);
-    if (!exec && expectSuccess) {
-      Assert.fail("Package file evaluation must have succeeded");
+        "package", CallUtils.getBuiltinCallable(SkylarkPackageModule.PACKAGE_MODULE, "package"));
+    try {
+      EvalUtils.exec(buildFileAst, env);
+      assertTrue(expectSuccess);
+    } catch (EvalException e) {
+      eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
+      assertFalse(expectSuccess);
     }
     return parseContext;
   }

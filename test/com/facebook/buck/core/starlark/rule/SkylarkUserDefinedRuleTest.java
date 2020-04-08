@@ -42,13 +42,12 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.packages.BazelLibrary;
 import com.google.devtools.build.lib.syntax.BaseFunction;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
-import com.google.devtools.build.lib.syntax.SkylarkType;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.util.Set;
@@ -71,30 +70,32 @@ public class SkylarkUserDefinedRuleTest {
   public static class SimpleFunction extends BaseFunction {
 
     public SimpleFunction(
-        String name, FunctionSignature.WithValues<Object, SkylarkType> signature) {
+        String name, FunctionSignature signature, ImmutableList<Object> defaultValues) {
+      super(name, signature, defaultValues, null);
+    }
+
+    public SimpleFunction(String name, FunctionSignature signature) {
       super(name, signature);
     }
 
     static SimpleFunction of(int numArgs) {
-      String[] names =
+      ImmutableList<String> names =
           IntStream.range(0, numArgs)
               .mapToObj(i -> String.format("arg%d", i))
-              .toArray(String[]::new);
+              .collect(ImmutableList.toImmutableList());
 
-      FunctionSignature.WithValues<Object, SkylarkType> signature =
-          FunctionSignature.WithValues.create(
-              FunctionSignature.of(numArgs, 0, 0, false, false, names), null, null);
+      FunctionSignature signature = FunctionSignature.create(numArgs, 0, 0, 0, false, false, names);
       return new SimpleFunction("a_func", signature);
     }
 
     @Override
-    public Object call(Object[] args, @Nullable FuncallExpression ast, Environment env)
+    public Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env)
         throws EvalException, InterruptedException {
       throw new UnsupportedOperationException();
     }
   }
 
-  private Environment newEnvironment(Mutability mutability) throws LabelSyntaxException {
+  private StarlarkThread newEnvironment(Mutability mutability) throws LabelSyntaxException {
     PrintingEventHandler eventHandler = new PrintingEventHandler(EventKind.ALL_EVENTS);
     ParseContext parseContext =
         new ParseContext(
@@ -108,8 +109,8 @@ public class SkylarkUserDefinedRuleTest {
                 eventHandler,
                 ImmutableMap.of()));
 
-    Environment env =
-        Environment.builder(mutability)
+    StarlarkThread env =
+        StarlarkThread.builder(mutability)
             .setGlobals(BazelLibrary.GLOBALS)
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
@@ -174,7 +175,7 @@ public class SkylarkUserDefinedRuleTest {
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
-    assertEquals(expectedOrder, rule.getSignature().getSignature().getNames());
+    assertEquals(expectedOrder, rule.getSignature().getParameterNames());
     assertEquals(expectedRawArgs, ImmutableList.copyOf(rule.getAttrs().keySet()));
   }
 
@@ -205,7 +206,7 @@ public class SkylarkUserDefinedRuleTest {
             false);
     rule.export(Label.parseAbsolute("@foo//bar:extension.bzl", ImmutableMap.of()), "baz_rule");
 
-    assertEquals(expectedOrder, rule.getSignature().getSignature().getNames());
+    assertEquals(expectedOrder, rule.getSignature().getParameterNames());
   }
 
   @Test
@@ -283,7 +284,7 @@ public class SkylarkUserDefinedRuleTest {
 
     try (Mutability mutability = Mutability.create("argtest")) {
 
-      Environment env = newEnvironment(mutability);
+      StarlarkThread env = newEnvironment(mutability);
 
       Object res =
           rule.call(
@@ -331,7 +332,7 @@ public class SkylarkUserDefinedRuleTest {
 
     try (Mutability mutability = Mutability.create("argtest")) {
 
-      Environment env = newEnvironment(mutability);
+      StarlarkThread env = newEnvironment(mutability);
 
       Object res =
           rule.call(
@@ -374,7 +375,7 @@ public class SkylarkUserDefinedRuleTest {
 
     try (Mutability mutability = Mutability.create("argtest")) {
 
-      Environment env = newEnvironment(mutability);
+      StarlarkThread env = newEnvironment(mutability);
 
       expectedException.expect(EvalException.class);
       expectedException.expectMessage(
@@ -453,7 +454,7 @@ public class SkylarkUserDefinedRuleTest {
 
     try (Mutability mutability = Mutability.create("argtest")) {
 
-      Environment env = newEnvironment(mutability);
+      StarlarkThread env = newEnvironment(mutability);
 
       Object res =
           rule.call(

@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.EventHandler;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
+import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.vfs.Path;
 import java.io.IOException;
 import java.util.HashMap;
@@ -57,9 +57,9 @@ public class SkylarkProjectBuildFileParserTestUtils {
     }
 
     @Override
-    public BuildFileAST readSkylarkAST(Path path, FileKind fileKind) throws IOException {
+    public StarlarkFile readSkylarkAST(Path path) throws IOException {
       readCounts.compute(path, (k, v) -> v == null ? 1 : v + 1);
-      return super.readSkylarkAST(path, fileKind);
+      return super.readSkylarkAST(path);
     }
 
     @Override

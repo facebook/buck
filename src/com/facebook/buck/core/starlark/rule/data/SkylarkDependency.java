@@ -25,7 +25,6 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
-import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.SkylarkIndexable;
 
@@ -71,13 +70,12 @@ public class SkylarkDependency implements SkylarkValue, SkylarkIndexable {
   }
 
   @Override
-  public Object getIndex(Object key, Location loc, StarlarkContext context) throws EvalException {
-    return providerInfos.getIndex(key, loc, context);
+  public Object getIndex(Object key, Location loc) throws EvalException {
+    return providerInfos.getIndex(key, loc);
   }
 
   @Override
-  public boolean containsKey(Object key, Location loc, StarlarkContext context)
-      throws EvalException {
-    return providerInfos.containsKey(key, loc, context);
+  public boolean containsKey(Object key, Location loc) throws EvalException {
+    return providerInfos.containsKey(key, loc);
   }
 }

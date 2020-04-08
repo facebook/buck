@@ -24,7 +24,7 @@ import com.google.devtools.build.lib.profiler.ProfilerTask;
 import com.google.devtools.build.lib.profiler.SilentCloseable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
-import com.google.devtools.build.lib.syntax.Environment;
+import com.google.devtools.build.lib.syntax.CallUtils;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
@@ -32,6 +32,7 @@ import com.google.devtools.build.lib.syntax.MethodDescriptor;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.StarlarkCallable;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.WrongMethodTypeException;
@@ -90,7 +91,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
    *
    * @param methodName the function name exposed to skylark
    * @param method a method that will eventually be called in {@link #call(List, Map,
-   *     FuncallExpression, Environment)}
+   *     FuncallExpression, StarlarkThread)}
    * @param namedParams a list of named parameters for skylark. The names are mapped in order to the
    *     parameters of {@code method}
    * @param defaultSkylarkValues a list of default values for parameters in skylark. The values are
@@ -165,7 +166,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
       List<Object> args,
       @Nullable Map<String, Object> kwargs,
       @Nullable FuncallExpression nullableAst,
-      Environment env)
+      StarlarkThread env)
       throws EvalException, InterruptedException {
 
     FuncallExpression ast =
@@ -176,8 +177,8 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
     try (SilentCloseable c =
         Profiler.instance().profile(ProfilerTask.STARLARK_BUILTIN_FN, methodDescriptor.getName())) {
       Object[] javaArguments =
-          ast.convertStarlarkArgumentsToJavaMethodArguments(
-              methodDescriptor, getClass(), args, kwargs, env);
+          CallUtils.convertStarlarkArgumentsToJavaMethodArguments(
+              env, ast, methodDescriptor, getClass(), args, kwargs);
 
       // TODO: deal with Optionals and some java/skylark object coercing
       ImmutableList<Object> argsForReflectionBuilder = ImmutableList.copyOf(javaArguments);
@@ -216,11 +217,11 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
       } catch (WrongMethodTypeException e) {
         throw new EvalException(ast.getLocation(), "Method invocation failed: " + e);
       } catch (Throwable e) {
-        if (e.getCause() instanceof FuncallExpression.FuncallException) {
-          throw new EvalException(ast.getLocation(), e.getCause().getMessage());
+        if (e.getCause() instanceof EvalException) {
+          throw (EvalException) e.getCause();
         } else if (e.getCause() != null) {
           Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
-          throw new EvalException.EvalExceptionWithJavaCause(ast.getLocation(), e.getCause());
+          throw new EvalException(ast.getLocation(), e.getCause());
         } else {
           // This is unlikely to happen
           throw new EvalException(ast.getLocation(), "method invocation failed: " + e);

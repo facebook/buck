@@ -32,14 +32,15 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.syntax.BuildFileAST;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.ParserInputSource;
+import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.SyntaxError;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
@@ -201,7 +202,7 @@ public class BuiltInProviderInfoTest {
   @Test
   public void someInfoProviderCreatesCorrectInfo()
       throws IllegalAccessException, InstantiationException, InvocationTargetException,
-          InterruptedException, EvalException {
+          InterruptedException, EvalException, SyntaxError {
     SomeInfo someInfo1 = new ImmutableSomeInfo("a", 1);
     assertEquals("a", someInfo1.str());
     assertEquals(1, someInfo1.myInfo());
@@ -216,11 +217,11 @@ public class BuiltInProviderInfoTest {
 
     Object o;
     try (Mutability mutability = Mutability.create("providertest")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(SomeInfo.PROVIDER.getName(), SomeInfo.PROVIDER)))
               .build();
 
@@ -276,14 +277,15 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void defaultValuesWorkInStarlarkContext() throws InterruptedException, EvalException {
+  public void defaultValuesWorkInStarlarkContext()
+      throws InterruptedException, EvalException, SyntaxError {
 
     try (Mutability mutability = Mutability.create("test")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(
                           ImmutableSomeInfo.PROVIDER.getName(), ImmutableSomeInfo.PROVIDER)))
               .build();
@@ -295,14 +297,15 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void infoWithNoDefaultValueOnAnnotationWorks() throws InterruptedException, EvalException {
+  public void infoWithNoDefaultValueOnAnnotationWorks()
+      throws InterruptedException, EvalException, SyntaxError {
 
     try (Mutability mutability = Mutability.create("test")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(
                           InfoWithNoDefaultValOnAnnotation.PROVIDER.getName(),
                           InfoWithNoDefaultValOnAnnotation.PROVIDER)))
@@ -316,14 +319,15 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void instantiatesFromStaticMethodIfPresent() throws InterruptedException, EvalException {
+  public void instantiatesFromStaticMethodIfPresent()
+      throws InterruptedException, EvalException, SyntaxError {
     Object o;
     try (Mutability mutability = Mutability.create("providertest")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(
                           SomeInfoWithInstantiate.PROVIDER.getName(),
                           SomeInfoWithInstantiate.PROVIDER)))
@@ -342,14 +346,14 @@ public class BuiltInProviderInfoTest {
 
   @Test
   public void instantiatesFromStaticMethodWithDefaultValuesIfPresent()
-      throws InterruptedException, EvalException {
+      throws InterruptedException, EvalException, SyntaxError {
     Object o;
     try (Mutability mutability = Mutability.create("providertest")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(
                           SomeInfoWithInstantiate.PROVIDER.getName(),
                           SomeInfoWithInstantiate.PROVIDER)))
@@ -366,13 +370,13 @@ public class BuiltInProviderInfoTest {
 
   @Test
   public void validatesTypesWhenInstantiatingFromStaticMethod()
-      throws InterruptedException, EvalException {
+      throws InterruptedException, EvalException, SyntaxError {
     try (Mutability mutability = Mutability.create("providertest")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(
                           SomeInfoWithInstantiate.PROVIDER.getName(),
                           SomeInfoWithInstantiate.PROVIDER)))
@@ -387,30 +391,29 @@ public class BuiltInProviderInfoTest {
 
   @Test
   public void passesLocationWhenInstantiatingFromStaticMethod()
-      throws InterruptedException, EvalException {
+      throws InterruptedException, EvalException, SyntaxError {
     Location location =
         Location.fromPathAndStartColumn(
             PathFragment.create("foo/bar.bzl"), 0, 0, new Location.LineAndColumn(1, 1));
     Object o;
     try (Mutability mutability = Mutability.create("providertest")) {
 
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(
                           SomeInfoWithInstantiateAndLocation.PROVIDER.getName(),
                           SomeInfoWithInstantiateAndLocation.PROVIDER)))
               .build();
 
       o =
-          BuildFileAST.parseSkylarkFileWithoutImports(
-                  ParserInputSource.create(
-                      "SomeInfoWithInstantiateAndLocation(my_info=1)",
-                      PathFragment.create("foo/bar.bzl")),
-                  env.getEventHandler())
-              .eval(env);
+          EvalUtils.execOrEval(
+              ParserInput.create(
+                  "SomeInfoWithInstantiateAndLocation(my_info=1)",
+                  PathFragment.create("foo/bar.bzl")),
+              env);
     }
 
     assertThat(o, Matchers.instanceOf(SomeInfoWithInstantiateAndLocation.class));
@@ -422,14 +425,15 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void allowsNoneAsAParamToStaticMethod() throws InterruptedException, EvalException {
+  public void allowsNoneAsAParamToStaticMethod()
+      throws InterruptedException, EvalException, SyntaxError {
     try (Mutability mutability = Mutability.create("providertest")) {
 
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(
                           SomeInfoWithNoneable.PROVIDER.getName(),
                           SomeInfoWithNoneable.PROVIDER,
@@ -463,7 +467,7 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void isImmutableWorks() throws EvalException, InterruptedException {
+  public void isImmutableWorks() throws EvalException, InterruptedException, SyntaxError {
 
     String buildFile =
         "SomeInfoWithMutableAndImmutable("

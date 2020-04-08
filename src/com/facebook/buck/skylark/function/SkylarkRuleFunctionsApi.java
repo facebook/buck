@@ -26,13 +26,12 @@ import com.google.devtools.build.lib.skylarkinterface.ParamType;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkConstructor;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkGlobalLibrary;
-import com.google.devtools.build.lib.skylarkinterface.StarlarkContext;
 import com.google.devtools.build.lib.syntax.BaseFunction;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 
 /**
  * Interface for a global Skylark library containing rule-related helper and registration functions.
@@ -50,11 +49,9 @@ public interface SkylarkRuleFunctionsApi {
         @Param(name = "label_string", type = String.class, doc = "the label string."),
       },
       useLocation = true,
-      useEnvironment = true,
-      useContext = true)
+      useStarlarkThread = true)
   @SkylarkConstructor(objectType = Label.class)
-  Label label(String labelString, Location loc, Environment env, StarlarkContext context)
-      throws EvalException;
+  Label label(String labelString, Location loc, StarlarkThread env) throws EvalException;
 
   @SkylarkCallable(
       name = "rule",
@@ -108,7 +105,7 @@ public interface SkylarkRuleFunctionsApi {
                     + "must be returned. If a TestInfo provider is not returned, Buck will attempt "
                     + "to create one from various implicit parameters.")
       },
-      useEnvironment = true,
+      useStarlarkThread = true,
       useAst = true,
       useLocation = true)
   SkylarkUserDefinedRule rule(
@@ -118,7 +115,7 @@ public interface SkylarkRuleFunctionsApi {
       boolean test,
       Location loc,
       FuncallExpression ast,
-      Environment env)
+      StarlarkThread env)
       throws EvalException;
 
   @SkylarkCallable(

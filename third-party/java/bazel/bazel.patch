@@ -1,14 +1,14 @@
-commit 8fb833c3d94b90df85cd9462ec26636e71c2dd43
+commit bf4c6e1765b8e2b42b580737538f39a308770930
 Author: Stiopa Koltsov <stepan.koltsov@gmail.com>
 Date:   Sun Mar 29 19:44:12 2020 +0100
 
     bazel import patch
 
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index a29ed4f9e9..b84884e3a3 100644
+index 1dc5a8bdca..7ff433f36e 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -1553,3 +1553,61 @@ java_library(
+@@ -1527,3 +1527,64 @@ java_library(
          "analysis/BuildInfo.java",
      ],
  )
@@ -56,9 +56,12 @@ index a29ed4f9e9..b84884e3a3 100644
 +        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization",
 +        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization/autocodec:autocodec-annotation",
 +        "//src/main/java/com/google/devtools/build/lib/skylarkbuildapi",
++        "//src/main/java/com/google/devtools/build/lib/syntax:evaluator",
++        "//src/main/java/com/google/devtools/build/lib/syntax:frontend",
++        "//src/main/java/com/google/devtools/build/lib/syntax:semantics",
 +        "//src/main/java/com/google/devtools/build/lib/vfs",
-+        "//src/main/java/com/google/devtools/build/lib/vfs:pathfragment",
 +        "//src/main/java/com/google/devtools/build/lib/vfs/inmemoryfs",
++        "//src/main/java/com/google/devtools/build/lib/vfs:pathfragment",
 +        "//src/main/java/com/google/devtools/common/options",
 +        "//third_party:asm",
 +        "//third_party:asm-commons",
@@ -71,7 +74,7 @@ index a29ed4f9e9..b84884e3a3 100644
 +)
 +
 diff --git a/src/main/java/com/google/devtools/build/lib/cmdline/Label.java b/src/main/java/com/google/devtools/build/lib/cmdline/Label.java
-index 017714daec..e03e713814 100644
+index a58f47adc7..2a4b7888a9 100644
 --- a/src/main/java/com/google/devtools/build/lib/cmdline/Label.java
 +++ b/src/main/java/com/google/devtools/build/lib/cmdline/Label.java
 @@ -364,15 +364,6 @@ public final class Label
@@ -90,11 +93,12 @@ index 017714daec..e03e713814 100644
    public String getWorkspaceRoot() {
      return packageIdentifier.getRepository().getSourceRoot().toString();
    }
-@@ -540,7 +531,10 @@ public final class Label
+@@ -539,8 +530,10 @@ public final class Label
        },
-       useContext = true)
-   public Label getRelative(String relName, StarlarkContext context) throws LabelSyntaxException {
--    return getRelativeWithRemapping(relName, ((HasRepoMapping) context).getRepoMapping());
+       useStarlarkThread = true)
+   public Label getRelative(String relName, StarlarkThread thread) throws LabelSyntaxException {
+-    HasRepoMapping hrm = thread.getThreadLocal(HasRepoMapping.class);
+-    return getRelativeWithRemapping(relName, hrm.getRepoMapping());
 +    // Bazel uses a BazelStarlarkContext in order to get the repo mapping. At this time, we
 +    // do not support this remapping and do not provide a BazelStarlarkContext, so remove its
 +    // invocation. Also, this is the only usage of BazelStarlarkContext, so we remove that dep.
@@ -102,52 +106,32 @@ index 017714daec..e03e713814 100644
    }
  
    /**
-diff --git a/src/main/java/com/google/devtools/build/lib/collect/nestedset/BUILD b/src/main/java/com/google/devtools/build/lib/collect/nestedset/BUILD
-index 563e5aa1e6..cd65b47597 100644
---- a/src/main/java/com/google/devtools/build/lib/collect/nestedset/BUILD
-+++ b/src/main/java/com/google/devtools/build/lib/collect/nestedset/BUILD
-@@ -29,7 +29,6 @@ java_library(
-         "//src/main/java/com/google/devtools/build/lib/skyframe/serialization:constants",
-         "//src/main/java/com/google/devtools/build/lib/skyframe/serialization/autocodec",
-         "//third_party:auto_value",
--        "//third_party:flogger",
-         "//third_party:guava",
-         "//third_party:jsr305",
-         "//third_party/protobuf:protobuf_java",
 diff --git a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
-index a6a734f8d7..5b3e6d8332 100644
+index 893b83f9f3..8a0678a6fc 100644
 --- a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
 +++ b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
-@@ -18,7 +18,6 @@ import static java.util.stream.Collectors.joining;
- import com.google.common.base.Preconditions;
- import com.google.common.collect.ImmutableList;
- import com.google.common.collect.ImmutableSet;
--import com.google.common.flogger.GoogleLogger;
- import com.google.common.util.concurrent.Futures;
- import com.google.common.util.concurrent.ListenableFuture;
- import com.google.devtools.build.lib.bugreport.BugReport;
-@@ -46,8 +45,6 @@ import javax.annotation.Nullable;
+@@ -47,8 +47,6 @@ import javax.annotation.Nullable;
  @SuppressWarnings("unchecked")
  @AutoCodec
  public final class NestedSet<E> implements Iterable<E> {
--  private static final GoogleLogger logger = GoogleLogger.forEnclosingClass();
+-  private static final Logger logger = Logger.getLogger(NestedSet.class.getName());
 -
    /**
     * Order and size of set packed into one int.
     *
-@@ -377,7 +374,6 @@ public final class NestedSet<E> implements Iterable<E> {
+@@ -391,7 +389,6 @@ public final class NestedSet<E> implements Iterable<E> {
          try {
            return Arrays.toString(Futures.getDone(future));
          } catch (ExecutionException e) {
--          logger.atSevere().withCause(e).log("Error getting %s", future);
+-          logger.log(Level.SEVERE, "Error getting " + future, e);
            // Don't rethrow, since we may be in the process of trying to construct an error message.
            return "Future " + future + " with error: " + e.getCause().getMessage();
          }
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index a6fad4e96e..321c106326 100644
+index 79a5ec5a15..321c106326 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-@@ -14,2274 +14,13 @@
+@@ -14,2273 +14,13 @@
  
  package com.google.devtools.build.lib.packages;
  
@@ -174,15 +158,14 @@ index a6fad4e96e..321c106326 100644
 -import com.google.devtools.build.lib.events.EventHandler;
 -import com.google.devtools.build.lib.events.Location;
 -import com.google.devtools.build.lib.packages.RuleClass.Builder.RuleClassNamePredicate;
+-import com.google.devtools.build.lib.packages.Type.ConversionException;
+-import com.google.devtools.build.lib.packages.Type.LabelClass;
 -import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec;
 -import com.google.devtools.build.lib.skyframe.serialization.autocodec.AutoCodec.VisibleForSerialization;
 -import com.google.devtools.build.lib.syntax.ClassObject;
 -import com.google.devtools.build.lib.syntax.EvalException;
 -import com.google.devtools.build.lib.syntax.EvalUtils;
 -import com.google.devtools.build.lib.syntax.Runtime;
--import com.google.devtools.build.lib.syntax.Type;
--import com.google.devtools.build.lib.syntax.Type.ConversionException;
--import com.google.devtools.build.lib.syntax.Type.LabelClass;
 -import com.google.devtools.build.lib.util.FileType;
 -import com.google.devtools.build.lib.util.FileTypeSet;
 -import com.google.devtools.build.lib.util.StringUtil;
@@ -2429,7 +2412,7 @@ index a6fad4e96e..321c106326 100644
  
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2291,14 +30,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2290,14 +30,6 @@ public final class Attribute implements Comparable<Attribute> {
      return name.startsWith("$");
    }
  
@@ -2444,7 +2427,7 @@ index a6fad4e96e..321c106326 100644
    /**
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
-@@ -2323,76 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2322,76 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
    }
@@ -2521,3 +2504,73 @@ index a6fad4e96e..321c106326 100644
 -    return cloneBuilder(this.type);
 -  }
  }
+diff --git a/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java b/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java
+index 459247fad9..ced141aa62 100644
+--- a/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java
++++ b/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java
+@@ -409,7 +409,7 @@ public final class CallUtils {
+    *     example, if any arguments are of unexpected type, or not all mandatory parameters are
+    *     specified by the user
+    */
+-  static Object[] convertStarlarkArgumentsToJavaMethodArguments(
++  public static Object[] convertStarlarkArgumentsToJavaMethodArguments(
+       StarlarkThread thread,
+       FuncallExpression call,
+       MethodDescriptor method,
+diff --git a/src/main/java/com/google/devtools/build/lib/syntax/Eval.java b/src/main/java/com/google/devtools/build/lib/syntax/Eval.java
+index 107524a9e2..1d83c92daf 100644
+--- a/src/main/java/com/google/devtools/build/lib/syntax/Eval.java
++++ b/src/main/java/com/google/devtools/build/lib/syntax/Eval.java
+@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
+ // Make all its methods static, and thread StarlarkThread (soon: StarlarkThread) explicitly.
+ // The only actual state is the return value, which can be saved in the StarlarkThread's call frame.
+ // Move remaining Expression.eval logic here, and simplify.
+-final class Eval {
++public final class Eval {
+ 
+   private static final AtomicReference<Debugger> debugger = new AtomicReference<>();
+ 
+@@ -61,7 +61,7 @@ final class Eval {
+     return eval.result;
+   }
+ 
+-  static void execToplevelStatement(StarlarkThread thread, Statement stmt)
++  public static void execToplevelStatement(StarlarkThread thread, Statement stmt)
+       throws EvalException, InterruptedException {
+     // Ignore the returned BREAK/CONTINUE/RETURN/PASS token:
+     // the first three don't exist at top-level, and the last is a no-op.
+@@ -398,7 +398,7 @@ final class Eval {
+    * @throws EvalException if the expression could not be evaluated.
+    * @throws InterruptedException may be thrown in a sub class.
+    */
+-  static Object eval(StarlarkThread thread, Expression expr)
++  public static Object eval(StarlarkThread thread, Expression expr)
+       throws EvalException, InterruptedException {
+     // TODO(adonovan): don't push and pop all the time. We should only need the stack of function
+     // call frames, and we should recycle them.
+diff --git a/src/main/java/com/google/devtools/build/lib/syntax/Identifier.java b/src/main/java/com/google/devtools/build/lib/syntax/Identifier.java
+index 82cdec44e2..8292128f79 100644
+--- a/src/main/java/com/google/devtools/build/lib/syntax/Identifier.java
++++ b/src/main/java/com/google/devtools/build/lib/syntax/Identifier.java
+@@ -110,7 +110,7 @@ public final class Identifier extends Expression {
+    *   <li><{@code x[5] = ..} does not bind any names.
+    * </ul>
+    */
+-  static ImmutableSet<Identifier> boundIdentifiers(Expression expr) {
++  public static ImmutableSet<Identifier> boundIdentifiers(Expression expr) {
+     if (expr instanceof Identifier) {
+       // Common case/fast path - skip the builder.
+       return ImmutableSet.of((Identifier) expr);
+diff --git a/src/main/java/com/google/devtools/build/lib/syntax/StarlarkThread.java b/src/main/java/com/google/devtools/build/lib/syntax/StarlarkThread.java
+index e1a33ab07b..fab444c8af 100644
+--- a/src/main/java/com/google/devtools/build/lib/syntax/StarlarkThread.java
++++ b/src/main/java/com/google/devtools/build/lib/syntax/StarlarkThread.java
+@@ -1057,7 +1057,7 @@ public final class StarlarkThread implements Freezable {
+   }
+ 
+   /** Modifies a binding in the current Frame. If it is the module Frame, also export it. */
+-  StarlarkThread updateAndExport(String varname, Object value) throws EvalException {
++  public StarlarkThread updateAndExport(String varname, Object value) throws EvalException {
+     update(varname, value);
+     if (isGlobal()) {
+       globalFrame.exportedBindings.add(varname);

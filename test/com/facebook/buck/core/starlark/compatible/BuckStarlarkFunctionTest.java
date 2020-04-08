@@ -23,12 +23,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParamDescriptor;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -105,11 +105,11 @@ public class BuckStarlarkFunctionTest {
         };
 
     try (Mutability mutability = Mutability.create("test")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
@@ -128,11 +128,11 @@ public class BuckStarlarkFunctionTest {
         };
 
     try (Mutability mutability = Mutability.create("test")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
@@ -154,11 +154,11 @@ public class BuckStarlarkFunctionTest {
         };
 
     try (Mutability mutability = Mutability.create("test")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
@@ -211,11 +211,11 @@ public class BuckStarlarkFunctionTest {
         };
 
     try (Mutability mutability = Mutability.create("test")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(
                           function.getMethodDescriptor().getName(),
                           function,

@@ -18,17 +18,17 @@ package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.Environment.Extension;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 
 /**
- * Captures {@link Extension} and information related to its parsing like all other extensions used
- * in order to load it. The main purpose of extra information is to properly captured all dependent
- * information for caching purposes.
+ * Captures {@link StarlarkThread.Extension} and information related to its parsing like all other
+ * extensions used in order to load it. The main purpose of extra information is to properly
+ * captured all dependent information for caching purposes.
  */
 @BuckStyleValue
 abstract class ExtensionData {
   /** @return an extension with its bindings */
-  public abstract Extension getExtension();
+  public abstract StarlarkThread.Extension getExtension();
 
   /** @return a path from which the extension was loaded from */
   public abstract com.google.devtools.build.lib.vfs.Path getPath();

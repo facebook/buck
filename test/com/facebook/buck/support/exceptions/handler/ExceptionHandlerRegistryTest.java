@@ -157,8 +157,7 @@ public class ExceptionHandlerRegistryTest {
   public void testWithRuleAnalysisException() {
     Exception e =
         new RuleAnalysisException(
-            new EvalException.EvalExceptionWithJavaCause(
-                Location.BUILTIN, new IllegalStateException("Bad state")),
+            new EvalException(Location.BUILTIN, new IllegalStateException("Bad state")),
             "error with user function");
     assertThat(registry.handleException(e), is(ExitCode.BUILD_ERROR));
   }

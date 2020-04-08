@@ -21,9 +21,9 @@ import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -133,7 +133,7 @@ public class ParseContext {
   }
 
   /** Get the {@link ParseContext} by looking up in the environment. */
-  public static ParseContext getParseContext(Environment env, FuncallExpression ast)
+  public static ParseContext getParseContext(StarlarkThread env, FuncallExpression ast)
       throws EvalException {
     @Nullable ParseContext value = env.getThreadLocal(ParseContext.class);
     if (value == null) {
@@ -148,7 +148,7 @@ public class ParseContext {
     return value;
   }
 
-  public void setup(Environment env) {
+  public void setup(StarlarkThread env) {
     env.setThreadLocal(ParseContext.class, this);
   }
 }

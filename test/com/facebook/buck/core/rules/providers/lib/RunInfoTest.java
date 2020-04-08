@@ -48,12 +48,13 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -64,8 +65,8 @@ public class RunInfoTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static Environment getEnv(Mutability mutability) {
-    return Environment.builder(mutability)
+  private static StarlarkThread getEnv(Mutability mutability) {
+    return StarlarkThread.builder(mutability)
         .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
         .build();
   }
@@ -143,13 +144,13 @@ public class RunInfoTest {
   }
 
   @Test
-  public void usesDefaultSkylarkValues() throws InterruptedException, EvalException {
+  public void usesDefaultSkylarkValues() throws InterruptedException, EvalException, SyntaxError {
     try (Mutability mutability = Mutability.create("providertest")) {
-      Environment env =
-          Environment.builder(mutability)
+      StarlarkThread env =
+          StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  Environment.GlobalFrame.createForBuiltins(
+                  StarlarkThread.GlobalFrame.createForBuiltins(
                       ImmutableMap.of(RunInfo.PROVIDER.getName(), RunInfo.PROVIDER)))
               .build();
 
@@ -180,7 +181,7 @@ public class RunInfoTest {
           (OutputArtifact) artifact2.asSkylarkOutputArtifact(Location.BUILTIN);
       Path artifact2Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
-      Environment environment = getEnv(mut);
+      StarlarkThread environment = getEnv(mut);
       SkylarkDict<String, String> env =
           SkylarkDict.of(environment, "foo", "foo_val", "bar", "bar_val");
       SkylarkList.MutableList<Object> args =

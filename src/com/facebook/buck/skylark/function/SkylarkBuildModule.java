@@ -25,12 +25,11 @@ import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
-import com.google.devtools.build.lib.syntax.Environment;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
-import com.google.devtools.build.lib.syntax.Type;
+import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.regex.Pattern;
@@ -65,8 +64,8 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
               + "This function is equivalent to the deprecated variable <code>PACKAGE_NAME</code>.",
       parameters = {},
       useAst = true,
-      useEnvironment = true)
-  public String packageName(FuncallExpression ast, Environment env) throws EvalException {
+      useStarlarkThread = true)
+  public String packageName(FuncallExpression ast, StarlarkThread env) throws EvalException {
     SkylarkUtils.checkLoadingPhase(env, "native.package_name", ast.getLocation());
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
     return parseContext
@@ -86,8 +85,8 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       parameters = {},
       useLocation = true,
       useAst = true,
-      useEnvironment = true)
-  public String repositoryName(Location location, FuncallExpression ast, Environment env)
+      useStarlarkThread = true)
+  public String repositoryName(Location location, FuncallExpression ast, StarlarkThread env)
       throws EvalException {
     SkylarkUtils.checkLoadingPhase(env, "native.repository_name", location);
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
@@ -101,8 +100,8 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
               + "or False if the rule with such name does not exist.",
       parameters = {@Param(name = "name", type = String.class, doc = "The name of the rule.")},
       useAst = true,
-      useEnvironment = true)
-  public Boolean ruleExists(String name, FuncallExpression ast, Environment env)
+      useStarlarkThread = true)
+  public Boolean ruleExists(String name, FuncallExpression ast, StarlarkThread env)
       throws EvalException {
     SkylarkUtils.checkLoadingOrWorkspacePhase(env, "native.rule_exists", ast.getLocation());
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
@@ -137,13 +136,13 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       },
       documented = false,
       useAst = true,
-      useEnvironment = true)
+      useStarlarkThread = true)
   public SkylarkList<String> glob(
       SkylarkList<String> include,
       SkylarkList<String> exclude,
       Boolean excludeDirectories,
       FuncallExpression ast,
-      Environment env)
+      StarlarkThread env)
       throws EvalException, IOException, InterruptedException {
     ParseContext parseContext = ParseContext.getParseContext(env, ast);
     if (include.isEmpty()) {
@@ -167,18 +166,14 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
     try {
       return SkylarkList.MutableList.copyOf(
           env,
-          parseContext.getPackageContext().getGlobber()
-              .run(
-                  Type.STRING_LIST.convert(include, "'glob' include"),
-                  Type.STRING_LIST.convert(exclude, "'glob' exclude"),
-                  excludeDirectories)
+          parseContext.getPackageContext().getGlobber().run(include, exclude, excludeDirectories)
               .stream()
               .sorted()
               .collect(ImmutableList.toImmutableList()));
     } catch (FileNotFoundException e) {
       throw new EvalException(ast.getLocation(), "Cannot find " + e.getMessage());
     } catch (Exception e) {
-      throw new EvalException.EvalExceptionWithJavaCause(ast.getLocation(), e);
+      throw new EvalException(ast.getLocation(), e);
     }
   }
 
@@ -226,7 +221,7 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
               + "`default` will be returned.",
       documented = true,
       useAst = true,
-      useEnvironment = true,
+      useStarlarkThread = true,
       allowReturnNones = true,
       parameters = {
         @Param(
@@ -241,7 +236,7 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
             doc = "if no implicit symbol with the requested name exists, return this value."),
       })
   public @Nullable Object implicitPackageSymbol(
-      String symbol, Object defaultValue, FuncallExpression ast, Environment env)
+      String symbol, Object defaultValue, FuncallExpression ast, StarlarkThread env)
       throws EvalException {
     return ParseContext.getParseContext(env, ast)
         .getPackageContext()
