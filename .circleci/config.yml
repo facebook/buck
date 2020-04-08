@@ -148,26 +148,12 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
-      - restore_cache:
-          # Change this key when upgrading sdk.
-          key: v1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
-      - save_cache:
-          paths:
-            - ${ANDROID_SDK}
-          key: v1-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
-      - restore_cache:
-          # Change this key when upgrading python.
-          key: v1-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
-      - save_cache:
-          paths:
-            - ~/.pyenv
-          key: v1-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
