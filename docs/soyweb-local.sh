@@ -15,6 +15,7 @@
 
 
 # Always run this script from the root of the Buck project directory.
-cd "$(git rev-parse --show-toplevel)/docs" || exit
+DOCS_DIR=$(dirname "$0")
+cd "$DOCS_DIR" || exit
 buck run //docs:generate_buckconfig_aliases
-exec java -jar plovr-81ed862.jar soyweb --dir . --globals globals.json $@
+exec java -jar plovr-81ed862.jar soyweb --dir . --globals globals.json "$@"

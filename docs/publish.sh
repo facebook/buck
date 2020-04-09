@@ -18,7 +18,7 @@ set -e
 
 start_soyweb() {
   echo "Starting soyweb-prod.sh" >&2
-  docs/soyweb-prod.sh >&2 &
+  ./soyweb-prod.sh >&2 &
   local soyweb_pid=$!
   sleep 2
   if ! kill -0 "$soyweb_pid" >/dev/null 2>&1; then
@@ -51,21 +51,26 @@ for arg do
   esac
 done
 
+DOCS_DIR=$(dirname "$0")
+BUCK_DIR=$(realpath "$DOCS_DIR/..")
+
+IS_GIT=
+[[ -d "$BUCK_DIR/.git" ]] && IS_GIT=1
+
 STATIC_FILES_DIR=$(mktemp -d)
 
+# Always run this from the the docs dir
+cd "$DOCS_DIR"
 buck run //docs:generate_buckconfig_aliases
-if ! git diff --quiet; then
-  echo "Git repository is not clean; refusing to publish"
+
+if ( [[ -n $IS_GIT ]] && ! git diff --quiet ) || hg status | grep -q .; then
+  echo "Repository is not clean; refusing to publish"
   exit 1
 fi
-
-# Always run this script from the root of the Buck project directory.
-cd $(git rev-parse --show-toplevel)
 
 if [ $START_SOYWEB -eq 1 ]; then
   SOYWEB_PID=$(($(start_soyweb) + 0))
 fi
-
 # Make sure we cleanup
 trap_command=""
 if [ $SOYWEB_PID -gt 0 ]; then
@@ -75,6 +80,7 @@ if [ $KEEP_FILES -eq 0 ] && [ -n "$STATIC_FILES_DIR" ]; then
   trap_command="${trap_command}echo 'Removing temp dir at ${STATIC_FILES_DIR}'; rm -rf ${STATIC_FILES_DIR};"
 fi
 if [ -n "$trap_command" ]; then
+  # shellcheck disable=SC2064
   trap "$trap_command" EXIT
 fi
 
@@ -83,30 +89,31 @@ echo "Documentation working directory is ${STATIC_FILES_DIR}"
 # Create a clean checkout of the gh-pages branch with no data:
 if [ -z "$1" ]
 then
-  git clone git@github.com:facebook/buck.git $STATIC_FILES_DIR
+  git clone git@github.com:facebook/buck.git "$STATIC_FILES_DIR"
 else
-  cp -r "$1" $STATIC_FILES_DIR
+  cp -r "$1" "$STATIC_FILES_DIR"
 fi
-cd $STATIC_FILES_DIR
+cd "$STATIC_FILES_DIR"
 
 # May need to do this if you are creating gh-pages for the first time.
 git checkout master
 
 git checkout --orphan gh-pages
 git rm -rf .
-cd -
+cd "$DOCS_DIR"
 
 # Generate the docs in the repo:
-./docs/soy2html.sh $STATIC_FILES_DIR
+"$DOCS_DIR/soy2html.sh" "$STATIC_FILES_DIR"
 
 # Commit the new version of the docs:
-cd $STATIC_FILES_DIR
+cd "$STATIC_FILES_DIR"
 git add .
 git commit -m "Updated HTML documentation."
 
 # Push the new version of the docs to GitHub:
 set +e
-git push origin gh-pages --force
+echo Actual push commented out to avoid overriding github/master docs by accident
+echo git push origin gh-pages --force
 EXIT_CODE=$?
 set -e
 

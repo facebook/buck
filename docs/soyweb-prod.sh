@@ -19,10 +19,14 @@
 #
 # Remove any residual files that could derail build and publication.
 #
-cd "$(git rev-parse --show-toplevel)" || exit
+
+DOCS_DIR=$(dirname "$0")
+BUCK_DIR=$(realpath "$DOCS_DIR/..")
+
+cd "$BUCK_DIR" || exit
 ant clean
 
-cd "$(git rev-parse --show-toplevel)/docs" || exit
+cd "$BUCK_DIR/docs" || exit
 buck run //docs:generate_buckconfig_aliases
 exec java -jar plovr-81ed862.jar soyweb --port 9814 --dir . --globals globals.json
 

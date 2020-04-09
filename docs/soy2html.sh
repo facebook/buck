@@ -16,8 +16,11 @@
 
 set -e
 
+DOCS_DIR=$(dirname "$0")
+BUCK_DIR=$(realpath "$DOCS_DIR/..")
+
 # Always run this script from the root of the Buck project directory.
-cd "$(git rev-parse --show-toplevel)"
+cd "$BUCK_DIR"
 
 # The output directory should be the one and only argument.
 OUTPUT_DIR="$1"
