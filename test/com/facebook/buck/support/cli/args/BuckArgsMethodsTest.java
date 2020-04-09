@@ -430,4 +430,30 @@ public class BuckArgsMethodsTest {
     BuckArgsMethods.adjustHelpArgs(args);
     assertEquals(ImmutableList.of("build", "foo", "--help"), args);
   }
+
+  @Test
+  public void handleBuckIsolationArgs() {
+
+    System.setProperty("buck.base_buck_out_dir", "foodir");
+
+    List<String> args = new ArrayList<>();
+    args.add("--isolation_prefix");
+    args.add("bar");
+    args.add("build");
+    args.add("foo");
+
+    BuckArgsMethods.handleIsolationArgs(args);
+    assertEquals(
+        ImmutableList.of("build", "foo", "--config", "buck.base_buck_out_dir=foodir"), args);
+
+    args = new ArrayList<>();
+    args.add("build");
+    args.add("foo");
+    args.add("--isolation_prefix");
+    args.add("bar");
+
+    BuckArgsMethods.handleIsolationArgs(args);
+    assertEquals(
+        ImmutableList.of("build", "foo", "--config", "buck.base_buck_out_dir=foodir"), args);
+  }
 }

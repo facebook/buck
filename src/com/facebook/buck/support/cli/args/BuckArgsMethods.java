@@ -250,6 +250,25 @@ public class BuckArgsMethods {
     }
   }
 
+  @VisibleForTesting
+  protected static void handleIsolationArgs(List<String> args) {
+    int isolationPrefixIndex = args.indexOf("--isolation_prefix");
+
+    if (isolationPrefixIndex == -1) {
+      return;
+    }
+
+    if (isolationPrefixIndex + 1 < args.size()) {
+      // Allow for the argument to --isolation_prefix
+      args.remove(isolationPrefixIndex + 1);
+      args.remove(isolationPrefixIndex);
+
+      args.add("--config");
+      args.add(
+          String.format("buck.base_buck_out_dir=%s", System.getProperty("buck.base_buck_out_dir")));
+    }
+  }
+
   /**
    * allow --help right after "buck" then followed by subcommand, in order for java code to process
    * this as help, move --help to after subcommand and replace `-h` with `--help`.
@@ -291,6 +310,7 @@ public class BuckArgsMethods {
 
     addArgsFromEnv(args, clientEnvironment);
     adjustHelpArgs(args);
+    handleIsolationArgs(args);
 
     return ImmutableList.<String>builderWithExpectedSize(args.size() + passThroughArgs.size())
         .addAll(args)

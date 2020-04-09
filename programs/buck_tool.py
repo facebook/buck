@@ -502,9 +502,7 @@ class BuckTool(object):
         But before optional arguments to test runner ("--")
         """
         if len(args) == 0:
-            return self._handle_buck_fix_args(
-                self._handle_isolation_args(argv), post_run_files
-            )
+            return self._handle_buck_fix_args(argv, post_run_files)
 
         try:
             pos = argv.index("--")
@@ -513,7 +511,7 @@ class BuckTool(object):
             pos = len(argv)
 
         return self._handle_buck_fix_args(
-            self._handle_isolation_args(argv[:pos] + args + argv[pos:]), post_run_files
+            argv[:pos] + args + argv[pos:], post_run_files
         )
 
     def _add_args_from_env(self, argv, post_run_files):
