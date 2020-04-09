@@ -37,7 +37,7 @@ public class ConfiguredQueryCommandIntegrationTest {
    * the specified file. Note that sort order is not guaranteed by {@code buck query} unless it is
    * specified explicitly via {@code --sort-output}.
    */
-  private void assertLinesMatch(
+  private void assertOutputMatchesFileContents(
       String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
       throws IOException {
     result.assertSuccess();
@@ -48,6 +48,19 @@ public class ConfiguredQueryCommandIntegrationTest {
     assertEquals(
         normalizeNewlines(workspace.getFileContents(expectedOutputFile)),
         OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())));
+  }
+
+  /**
+   * Asserts that the result succeeded and that the lines printed to stdout are identical to {@code
+   * sortedExpectedOutput}. The stdout of {@code result} is sorted by line before being compared to
+   * {@code sortedExpectedOutput} to ensure deterministic results.
+   */
+  private void assertOutputMatches(String sortedExpectedOutput, ProcessResult result) {
+    result.assertSuccess();
+
+    assertEquals(
+        sortedExpectedOutput,
+        OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())).trim());
   }
 
   @Test
@@ -61,7 +74,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     result.assertSuccess();
     // TODO(srice): We shouldn't expect it to print a readable name, but until we know what the hash
     // is going to be it doesn't matter what we put here.
-    assertEquals("//lib:foo (//config/platform:ios)", result.getStdout().trim());
+    assertOutputMatches("//lib:foo (//config/platform:ios)", result);
   }
 
   @Test
@@ -72,7 +85,7 @@ public class ConfiguredQueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand("cquery", "config(//lib:foo, //config/platform:tvos)");
-    assertEquals("//lib:foo (//config/platform:tvos)", result.getStdout().trim());
+    assertOutputMatches("//lib:foo (//config/platform:tvos)", result);
   }
 
   @Test
@@ -83,11 +96,11 @@ public class ConfiguredQueryCommandIntegrationTest {
 
     ProcessResult tvOSResult =
         workspace.runBuckCommand("cquery", "//lib:foo", "--target-universe", "//bin:tvos-bin");
-    assertEquals("//lib:foo (//config/platform:tvos)", tvOSResult.getStdout().trim());
+    assertOutputMatches("//lib:foo (//config/platform:tvos)", tvOSResult);
 
     ProcessResult macOSResult =
         workspace.runBuckCommand("cquery", "//lib:foo", "--target-universe", "//bin:mac-bin");
-    assertEquals("//lib:foo (//config/platform:macos)", macOSResult.getStdout().trim());
+    assertOutputMatches("//lib:foo (//config/platform:macos)", macOSResult);
   }
 
   @Test
@@ -114,15 +127,16 @@ public class ConfiguredQueryCommandIntegrationTest {
         workspace.runBuckCommand(
             "cquery",
             "config(//lib:foo, //config/platform:ios) + config(//lib:foo, //config/platform:macos)");
-    assertLinesMatch(
+    assertOutputMatchesFileContents(
         "stdout-multiple-lines-printed-for-one-target-in-multiple-configurations",
         result,
         workspace);
   }
 
   @Test
-  public void twoTargetsInTargetUniverseCausesOverlapToBePrintedInBothConfigurations()
-      throws IOException {
+  public void
+      twoTargetsWithDifferentConfigurationsInTargetUniverseBothGetPrintedWithRecursiveTargetSpec()
+          throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
     workspace.setUp();
@@ -130,9 +144,24 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "cquery", "set(//lib/...)", "--target-universe", "//bin:ios-bin,//bin:tvos-bin");
-    assertLinesMatch(
+    assertOutputMatchesFileContents(
         "stdout-two-targets-in-target-universe-causes-overlap-to-be-printed-in-both-configurations",
         result,
         workspace);
+  }
+
+  @Test
+  public void
+      twoTargetsWithDifferentConfigurationsInTargetUniverseBothGetPrintedWithSpecificTargetSpec()
+          throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "set(//lib:foo)", "--target-universe", "//bin:ios-bin,//bin:tvos-bin");
+    assertOutputMatches(
+        "//lib:foo (//config/platform:ios)\n//lib:foo (//config/platform:tvos)", result);
   }
 }
