@@ -250,6 +250,24 @@ public class BuckArgsMethods {
     }
   }
 
+  /**
+   * allow --help right after "buck" then followed by subcommand, in order for java code to process
+   * this as help, move --help to after subcommand and replace `-h` with `--help`.
+   */
+  @VisibleForTesting
+  protected static void adjustHelpArgs(List<String> args) {
+    if (args.indexOf("--help") == 0) {
+      args.remove(0);
+      args.add("--help");
+    }
+
+    int indexOfH = args.indexOf("-h");
+    if (indexOfH != -1) {
+      args.remove(indexOfH);
+      args.add("--help");
+    }
+  }
+
   public static ImmutableList<String> expandArgs(
       String pythonInterpreter,
       ImmutableList<String> argsv,
@@ -272,6 +290,7 @@ public class BuckArgsMethods {
     }
 
     addArgsFromEnv(args, clientEnvironment);
+    adjustHelpArgs(args);
 
     return ImmutableList.<String>builderWithExpectedSize(args.size() + passThroughArgs.size())
         .addAll(args)

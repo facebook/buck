@@ -497,8 +497,6 @@ class BuckTool(object):
 
     def _add_args(self, argv, args, post_run_files):
 
-        self._adjust_help_args(argv, args)
-
         """
         Add new arguments to the end of arguments string
         But before optional arguments to test runner ("--")
@@ -517,28 +515,6 @@ class BuckTool(object):
         return self._handle_buck_fix_args(
             self._handle_isolation_args(argv[:pos] + args + argv[pos:]), post_run_files
         )
-
-    def _adjust_help_args(self, argv, args):
-        # allow --help right after "buck" then followed by subcommand, in order for java code
-        # to process this as help, move --help to after subcommand
-        if len(argv) and argv[0] == "--help":
-            del argv[0]
-            args.append("--help")
-        else:
-            # '-h' need to be replaced by '--help' for java code to process as help
-            try:
-                pos_h = argv.index("-h")
-            except ValueError:
-                pos_h = -1
-            if pos_h >= 0:
-                try:
-                    # don't do the replacement if '-h' is after '--', it's for external runner
-                    pos_ex = argv.index("--")
-                except ValueError:
-                    pos_ex = -1
-                if pos_ex < 0 or pos_h < pos_ex:
-                    del argv[pos_h]
-                    args.append("--help")
 
     def _add_args_from_env(self, argv, post_run_files):
         """

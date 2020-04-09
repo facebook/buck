@@ -402,4 +402,32 @@ public class BuckArgsMethodsTest {
     BuckArgsMethods.addArgsFromEnv(args, env);
     assertEquals(ImmutableList.of("build", "foo", "-c", "cache.http_mode=readonly"), args);
   }
+
+  @Test
+  public void adjustHelpArgs() {
+
+    List<String> args = new ArrayList<>();
+    args.add("--help");
+    args.add("build");
+    args.add("foo");
+
+    BuckArgsMethods.adjustHelpArgs(args);
+    assertEquals(ImmutableList.of("build", "foo", "--help"), args);
+
+    args = new ArrayList<>();
+    args.add("-h");
+    args.add("build");
+    args.add("foo");
+
+    BuckArgsMethods.adjustHelpArgs(args);
+    assertEquals(ImmutableList.of("build", "foo", "--help"), args);
+
+    args = new ArrayList<>();
+    args.add("build");
+    args.add("foo");
+    args.add("--help");
+
+    BuckArgsMethods.adjustHelpArgs(args);
+    assertEquals(ImmutableList.of("build", "foo", "--help"), args);
+  }
 }
