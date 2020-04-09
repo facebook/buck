@@ -51,7 +51,7 @@ public class CxxPlatformUtils {
   public static final CxxBuckConfig DEFAULT_CONFIG =
       new CxxBuckConfig(new FakeBuckConfig.Builder().build());
 
-  private static final Tool DEFAULT_TOOL = new CommandTool.Builder().build();
+  public static final Tool DEFAULT_TOOL = new CommandTool.Builder().build();
 
   private static PreprocessorProvider defaultPreprocessorProvider(ToolType toolType) {
     return new PreprocessorProvider(
@@ -61,6 +61,10 @@ public class CxxPlatformUtils {
   private static CompilerProvider defaultCompilerProvider(ToolType toolType) {
     return new CompilerProvider(
         new ConstantToolProvider(DEFAULT_TOOL), CxxToolProvider.Type.GCC, toolType, false);
+  }
+
+  public static LinkerProvider defaultLinkerProvider(LinkerProvider.Type linkerType, Tool tool) {
+    return new DefaultLinkerProvider(linkerType, new ConstantToolProvider(tool), true);
   }
 
   public static final DebugPathSanitizer DEFAULT_COMPILER_DEBUG_PATH_SANITIZER =
@@ -80,9 +84,7 @@ public class CxxPlatformUtils {
           .setCudapp(defaultPreprocessorProvider(ToolType.CUDAPP))
           .setAsm(defaultCompilerProvider(ToolType.ASM))
           .setAsmpp(defaultPreprocessorProvider(ToolType.ASMPP))
-          .setLd(
-              new DefaultLinkerProvider(
-                  LinkerProvider.Type.GNU, new ConstantToolProvider(DEFAULT_TOOL), true))
+          .setLd(defaultLinkerProvider(LinkerProvider.Type.GNU, DEFAULT_TOOL))
           .setStrip(DEFAULT_TOOL)
           .setAr(ArchiverProvider.from(new GnuArchiver(DEFAULT_TOOL)))
           .setArchiveContents(ArchiveContents.NORMAL)
@@ -106,9 +108,6 @@ public class CxxPlatformUtils {
       commandToolBuilder.addArg(ldArg);
     }
 
-    DefaultLinkerProvider linkerProvider =
-        new DefaultLinkerProvider(
-            LinkerProvider.Type.GNU, new ConstantToolProvider(commandToolBuilder.build()), true);
     return CxxPlatform.builder()
         .setFlavor(DEFAULT_PLATFORM_FLAVOR)
         .setAs(defaultCompilerProvider(ToolType.AS))
@@ -121,7 +120,7 @@ public class CxxPlatformUtils {
         .setCudapp(defaultPreprocessorProvider(ToolType.CUDAPP))
         .setAsm(defaultCompilerProvider(ToolType.ASM))
         .setAsmpp(defaultPreprocessorProvider(ToolType.ASMPP))
-        .setLd(linkerProvider)
+        .setLd(defaultLinkerProvider(LinkerProvider.Type.GNU, commandToolBuilder.build()))
         .setStrip(DEFAULT_TOOL)
         .setAr(ArchiverProvider.from(new GnuArchiver(DEFAULT_TOOL)))
         .setArchiveContents(ArchiveContents.NORMAL)

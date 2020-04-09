@@ -145,9 +145,12 @@ public class CxxPythonExtensionDescription
   }
 
   @VisibleForTesting
-  static String getExtensionName(String moduleName) {
-    // .so is used on OS X too (as opposed to dylib).
-    return String.format("%s.so", moduleName);
+  static String getExtensionName(String moduleName, CxxPlatform cxxPlatform) {
+    // *.so is used on OS X too (as opposed to *.dylib)
+    // *.pyd is used on Windows (as opposed to *.dll)
+    return String.format(
+        "%s.%s",
+        moduleName, cxxPlatform.getLd().getType() == LinkerProvider.Type.WINDOWS ? "pyd" : "so");
   }
 
   private Path getExtensionPath(
@@ -155,10 +158,10 @@ public class CxxPythonExtensionDescription
       BuildTarget target,
       String moduleName,
       Flavor pythonPlatform,
-      Flavor platform) {
+      CxxPlatform cxxPlatform) {
     return BuildTargetPaths.getGenPath(
-            filesystem, getExtensionTarget(target, pythonPlatform, platform), "%s")
-        .resolve(getExtensionName(moduleName));
+            filesystem, getExtensionTarget(target, pythonPlatform, cxxPlatform.getFlavor()), "%s")
+        .resolve(getExtensionName(moduleName, cxxPlatform));
   }
 
   private ImmutableMap<CxxPreprocessAndCompile, SourcePath> requireCxxObjects(
@@ -323,14 +326,10 @@ public class CxxPythonExtensionDescription
       CxxPlatform cxxPlatform,
       CxxPythonExtensionDescriptionArg args) {
     String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
-    String extensionName = getExtensionName(moduleName);
+    String extensionName = getExtensionName(moduleName, cxxPlatform);
     Path extensionPath =
         getExtensionPath(
-            projectFilesystem,
-            buildTarget,
-            moduleName,
-            pythonPlatform.getFlavor(),
-            cxxPlatform.getFlavor());
+            projectFilesystem, buildTarget, moduleName, pythonPlatform.getFlavor(), cxxPlatform);
     ImmutableSet<BuildRule> deps = getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
@@ -461,9 +460,6 @@ public class CxxPythonExtensionDescription
 
     // Otherwise, we return the generic placeholder of this library, that dependents can use
     // get the real build rules via querying the action graph.
-    Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
-    String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
-    Path module = baseModule.resolve(getExtensionName(moduleName));
     return new CxxPythonExtension(buildTarget, projectFilesystem, params) {
 
       @Override
@@ -478,8 +474,10 @@ public class CxxPythonExtensionDescription
       }
 
       @Override
-      public Path getModule() {
-        return module;
+      public Path getModule(CxxPlatform cxxPlatform) {
+        Path baseModule = PythonUtil.getBasePath(buildTarget, args.getBaseModule());
+        String moduleName = args.getModuleName().orElse(buildTarget.getShortName());
+        return baseModule.resolve(getExtensionName(moduleName, cxxPlatform));
       }
 
       @Override
@@ -498,7 +496,8 @@ public class CxxPythonExtensionDescription
           PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
         BuildRule extension = getExtension(pythonPlatform, cxxPlatform, graphBuilder);
         SourcePath output = extension.getSourcePathToOutput();
-        return Optional.of(PythonMappedComponents.of(ImmutableSortedMap.of(module, output)));
+        return Optional.of(
+            PythonMappedComponents.of(ImmutableSortedMap.of(getModule(cxxPlatform), output)));
       }
 
       @Override

@@ -398,7 +398,8 @@ public class PythonUtil {
           allComponents.putModules(
               root.getKey(),
               PythonMappedComponents.of(
-                  ImmutableSortedMap.of(extension.getModule(), root.getValue().getPath())));
+                  ImmutableSortedMap.of(
+                      extension.getModule(cxxPlatform), root.getValue().getPath())));
         } else {
           NativeLinkTarget target =
               Preconditions.checkNotNull(

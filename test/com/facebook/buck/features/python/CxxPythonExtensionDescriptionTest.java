@@ -46,8 +46,10 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.CxxTestUtils;
 import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
@@ -143,7 +145,9 @@ public class CxxPythonExtensionDescriptionTest {
                 .getCellRelativeBasePath()
                 .getPath()
                 .toPath(filesystem.getFileSystem())
-                .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName()))),
+                .resolve(
+                    CxxPythonExtensionDescription.getExtensionName(
+                        target.getShortName(), CxxPlatformUtils.DEFAULT_PLATFORM))),
         normal
             .getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .map(modules -> modules.getComponents().keySet())
@@ -165,7 +169,9 @@ public class CxxPythonExtensionDescriptionTest {
     assertEquals(
         ImmutableSet.of(
             Paths.get(name)
-                .resolve(CxxPythonExtensionDescription.getExtensionName(target2.getShortName()))),
+                .resolve(
+                    CxxPythonExtensionDescription.getExtensionName(
+                        target2.getShortName(), CxxPlatformUtils.DEFAULT_PLATFORM))),
         baseModule
             .getPythonModules(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder)
             .map(modules -> modules.getComponents().keySet())
@@ -255,7 +261,9 @@ public class CxxPythonExtensionDescriptionTest {
                 .getCellRelativeBasePath()
                 .getPath()
                 .toPath(filesystem.getFileSystem())
-                .resolve(CxxPythonExtensionDescription.getExtensionName(target.getShortName())),
+                .resolve(
+                    CxxPythonExtensionDescription.getExtensionName(
+                        target.getShortName(), CxxPlatformUtils.DEFAULT_PLATFORM)),
             rule.getSourcePathToOutput()),
         modules);
     assertThat(extension.isPythonZipSafe(), Matchers.equalTo(Optional.of(false)));
@@ -563,8 +571,31 @@ public class CxxPythonExtensionDescriptionTest {
             .setModuleName("blah")
             .build(graphBuilder);
     assertThat(
-        cxxPythonExtension.getModule().toString(),
-        Matchers.endsWith(CxxPythonExtensionDescription.getExtensionName("blah")));
+        cxxPythonExtension.getModule(CxxPlatformUtils.DEFAULT_PLATFORM).toString(),
+        Matchers.endsWith(
+            CxxPythonExtensionDescription.getExtensionName(
+                "blah", CxxPlatformUtils.DEFAULT_PLATFORM)));
+  }
+
+  @Test
+  public void moduleNameWindows() {
+    LinkerProvider winLinkerProvider =
+        CxxPlatformUtils.defaultLinkerProvider(
+            LinkerProvider.Type.WINDOWS, CxxPlatformUtils.DEFAULT_TOOL);
+    CxxPlatform winCxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM.withLd(winLinkerProvider);
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
+    CxxPythonExtension cxxPythonExtension =
+        new CxxPythonExtensionBuilder(
+                BuildTargetFactory.newInstance("//:ext"),
+                FlavorDomain.of("Python Platform", PY2, PY3),
+                new CxxBuckConfig(FakeBuckConfig.builder().build()),
+                CxxTestUtils.createDefaultPlatforms())
+            .setModuleName("blah")
+            .build(graphBuilder);
+    String winExtension = CxxPythonExtensionDescription.getExtensionName("blah", winCxxPlatform);
+    assertThat(winExtension, Matchers.equalTo("blah.pyd"));
+    assertThat(
+        cxxPythonExtension.getModule(winCxxPlatform).toString(), Matchers.endsWith(winExtension));
   }
 
   @Test

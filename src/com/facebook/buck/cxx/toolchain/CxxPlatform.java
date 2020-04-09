@@ -268,5 +268,12 @@ public interface CxxPlatform extends FlavorConvertible {
     return builder().from(this).setCxx(compilerProvider).build();
   }
 
+  default CxxPlatform withLd(LinkerProvider linkerProvider) {
+    if (getLd().equals(linkerProvider)) {
+      return this;
+    }
+    return builder().from(this).setLd(linkerProvider).build();
+  }
+
   class Builder extends ImmutableCxxPlatform.Builder {}
 }

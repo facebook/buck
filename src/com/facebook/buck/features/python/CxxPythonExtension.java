@@ -42,7 +42,7 @@ public abstract class CxxPythonExtension extends NoopBuildRuleWithDeclaredAndExt
   protected abstract BuildRule getExtension(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder);
 
-  public abstract Path getModule();
+  public abstract Path getModule(CxxPlatform cxxPlatform);
 
   @Override
   public abstract Optional<PythonMappedComponents> getPythonModules(
