@@ -297,6 +297,7 @@ docsearch({
   {call buck.visibility_arg /}
   {call buck.licenses_arg /}
   {call buck.labels_arg /}
+  {call buck.contacts_arg /}
 </ul>
 
 {if $flavors}
@@ -1022,6 +1023,30 @@ docsearch({
   For more information,
   see {call buck.concept_link}{param page: 'visibility' /}{param name: 'visibility' /}{/call}.
   {/param}
+{/call}
+{/template}
+
+/***/
+{template .contacts_arg}
+{call buck.arg}
+{param name: 'contacts' /}
+{{param default : '[]' /}}
+{param desc}
+    <p>
+        A list of organizational contacts for this rule. These could be
+        individuals who you would contact in the event of a failure
+        or other issue with the rule.
+    </p>
+
+    <p>
+    <pre>
+{literal}
+        contacts = [ 'Joe Sixpack', 'Erika Mustermann' ]
+        {/literal}
+</pre>
+    </p>
+
+{/param}
 {/call}
 {/template}
 
