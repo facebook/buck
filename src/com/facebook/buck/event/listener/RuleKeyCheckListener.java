@@ -20,14 +20,17 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.EventKey;
 import com.facebook.buck.event.TopLevelRuleKeyCalculatedEvent;
+import com.facebook.buck.util.versioncontrol.CommonSlowVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsEvent;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.eventbus.Subscribe;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import okhttp3.FormBody;
 import okhttp3.OkHttpClient;
@@ -41,7 +44,8 @@ import okhttp3.Response;
  */
 public class RuleKeyCheckListener implements BuckEventListener {
   static final Logger LOG = Logger.get(RuleKeyCheckListener.class);
-  Optional<String> cleanRevision; // Set when there are no working directory changes and on master.
+  Optional<CommonSlowVersionControlStats>
+      versionControlStats; // Set when there are no working directory changes and on master.
   String username;
   boolean isTopLevelResultCalculated;
   Optional<TopLevelRuleKeyCalculatedEvent> topLevelRuleKeyCalculatedEvent;
@@ -88,7 +92,7 @@ public class RuleKeyCheckListener implements BuckEventListener {
       BuckEventBus buckEventBus,
       String username) {
     this.ruleKeyCheckListenerConfig = ruleKeyCheckListenerConfig;
-    this.cleanRevision = Optional.empty();
+    this.versionControlStats = Optional.empty();
     this.topLevelRuleKeyCalculatedEvent = Optional.empty();
     this.buckEventBus = buckEventBus;
     this.isTopLevelResultCalculated = false;
@@ -98,7 +102,11 @@ public class RuleKeyCheckListener implements BuckEventListener {
   RuleKeyCheckResult queryEndpoint(String target, String rulekey) {
     FormBody.Builder builder =
         new FormBody.Builder()
-            .add("revision", cleanRevision.orElse(""))
+            .add(
+                "revision",
+                versionControlStats.isPresent()
+                    ? versionControlStats.get().getCurrentRevisionId()
+                    : "")
             .add("rule_name", target)
             .add("rule_key", rulekey)
             .add("username", username);
@@ -130,7 +138,7 @@ public class RuleKeyCheckListener implements BuckEventListener {
   }
 
   private void tryQueryEndpointAndPostResult() {
-    if (cleanRevision.isPresent() && topLevelRuleKeyCalculatedEvent.isPresent()) {
+    if (versionControlStats.isPresent() && topLevelRuleKeyCalculatedEvent.isPresent()) {
       TopLevelRuleKeyCalculatedEvent event = topLevelRuleKeyCalculatedEvent.get();
       boolean didTargetMatch = false;
       for (Pattern pattern : ruleKeyCheckListenerConfig.getTargetsEnabledFor()) {
@@ -149,6 +157,18 @@ public class RuleKeyCheckListener implements BuckEventListener {
             && !ruleKeyCheckListenerConfig.getDivergenceWarningMessageMap().isEmpty()) {
           buckEventBus.register(
               new CacheMissBuildTimeListener(buckEventBus, ruleKeyCheckListenerConfig));
+        }
+        if (result == RuleKeyCheckResult.TARGET_NOT_BUILT
+            && TimeUnit.MILLISECONDS.toDays(
+                    System.currentTimeMillis()
+                        - versionControlStats.get().getBranchedFromMasterTS())
+                <= 3
+            && ruleKeyCheckListenerConfig
+                .getCachedTargets()
+                .contains(event.getFullyQualifiedRuleName())
+            && ruleKeyCheckListenerConfig.getUnstableRevisionWarning().isPresent()) {
+          buckEventBus.post(
+              ConsoleEvent.warning(ruleKeyCheckListenerConfig.getUnstableRevisionWarning().get()));
         }
       }
     }
@@ -171,8 +191,8 @@ public class RuleKeyCheckListener implements BuckEventListener {
 
   /**
    * This function listens for events from version control and sets {@link
-   * RuleKeyCheckListener#cleanRevision} if there are no working directory changes and if the user
-   * is on master and tries to query the backend.
+   * RuleKeyCheckListener#versionControlStats} if there are no working directory changes and if the
+   * user is on master and tries to query the backend.
    *
    * @param versionControlStatsEvent contains the data sent.
    */
@@ -186,8 +206,7 @@ public class RuleKeyCheckListener implements BuckEventListener {
             .equals(
                 versionControlStatsEvent.getVersionControlStats().getBranchedFromMasterRevisionId())
         && !isTopLevelResultCalculated) {
-      cleanRevision =
-          Optional.of(versionControlStatsEvent.getVersionControlStats().getCurrentRevisionId());
+      versionControlStats = Optional.of(versionControlStatsEvent.getVersionControlStats());
       tryQueryEndpointAndPostResult();
     }
   }

@@ -56,6 +56,14 @@ public abstract class RuleKeyCheckListenerConfig implements ConfigView<BuckConfi
     return getDelegate().getMap(SECTION_NAME, "divergence_warning_message");
   }
 
+  public ImmutableList<String> getCachedTargets() {
+    return getDelegate().getListWithoutComments(SECTION_NAME, "cached_targets");
+  }
+
+  public Optional<String> getUnstableRevisionWarning() {
+    return getDelegate().getValue(SECTION_NAME, "unstable_revision_warning");
+  }
+
   public int getDivergenceWarningThresholdInSec() {
     return getDelegate().getInteger(SECTION_NAME, "divergence_warning_threshold_in_sec").orElse(60);
   }

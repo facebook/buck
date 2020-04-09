@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
+import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.FakeBuckEventListener;
 import com.facebook.buck.event.TopLevelRuleKeyCalculatedEvent;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
@@ -57,7 +58,9 @@ public class RuleKeyCheckListenerTest {
             .setSections(
                 "[rulekey_check]",
                 "targets_enabled_for = //repo/.*, //repo2/*",
-                "endpoint_url = endpoint")
+                "endpoint_url = endpoint",
+                "cached_targets = //repo/path/to/target:target",
+                "unstable_revision_warning = warning")
             .build()
             .getView(RuleKeyCheckListenerConfig.class);
   }
@@ -82,7 +85,7 @@ public class RuleKeyCheckListenerTest {
               .setCurrentRevisionId("revisionId")
               .setBranchedFromMasterRevisionId("branchedFromMasterId")
               .setBranchedFromMasterTS((long) 1.00);
-      ruleKeyCheckListener.cleanRevision = Optional.empty();
+      ruleKeyCheckListener.versionControlStats = Optional.empty();
     }
 
     @After
@@ -94,7 +97,7 @@ public class RuleKeyCheckListenerTest {
     public void testWorkingDirectoryChangesOnBranch() {
       FullVersionControlStats versionControlStats = versionControlStatsBuilder.build();
       buckEventBus.post(new VersionControlStatsEvent(versionControlStats));
-      assertFalse(ruleKeyCheckListener.cleanRevision.isPresent());
+      assertFalse(ruleKeyCheckListener.versionControlStats.isPresent());
     }
 
     @Test
@@ -102,7 +105,7 @@ public class RuleKeyCheckListenerTest {
       FullVersionControlStats versionControlStats =
           versionControlStatsBuilder.setBranchedFromMasterRevisionId("revisionId").build();
       buckEventBus.post(new VersionControlStatsEvent(versionControlStats));
-      assertFalse(ruleKeyCheckListener.cleanRevision.isPresent());
+      assertFalse(ruleKeyCheckListener.versionControlStats.isPresent());
     }
 
     @Test
@@ -110,7 +113,7 @@ public class RuleKeyCheckListenerTest {
       FullVersionControlStats versionControlStats =
           versionControlStatsBuilder.setPathsChangedInWorkingDirectory(new ArrayList<>()).build();
       buckEventBus.post(new VersionControlStatsEvent(versionControlStats));
-      assertFalse(ruleKeyCheckListener.cleanRevision.isPresent());
+      assertFalse(ruleKeyCheckListener.versionControlStats.isPresent());
     }
 
     @Test
@@ -121,7 +124,7 @@ public class RuleKeyCheckListenerTest {
               .setBranchedFromMasterRevisionId("revisionId")
               .build();
       buckEventBus.post(new VersionControlStatsEvent(versionControlStats));
-      assertTrue(ruleKeyCheckListener.cleanRevision.isPresent());
+      assertTrue(ruleKeyCheckListener.versionControlStats.isPresent());
     }
   }
 
@@ -230,7 +233,7 @@ public class RuleKeyCheckListenerTest {
               .addAllPathsChangedInWorkingDirectory(new ArrayList<>())
               .setCurrentRevisionId("revisionId")
               .setBranchedFromMasterRevisionId("revisionId")
-              .setBranchedFromMasterTS((long) 1.00)
+              .setBranchedFromMasterTS(System.currentTimeMillis() - 2L)
               .build();
       buckEventBus.post(new VersionControlStatsEvent(versionControlStats));
 
@@ -238,15 +241,18 @@ public class RuleKeyCheckListenerTest {
       buckEventBus.register(fakeBuckEventListener);
       buckEventBus.post(event);
 
-      assertEquals(2, fakeBuckEventListener.getEvents().size());
+      assertEquals(3, fakeBuckEventListener.getEvents().size());
       assertThat(
           fakeBuckEventListener.getEvents().get(1),
           instanceOf(RuleKeyCheckListener.TopLevelCacheCheckEvent.class));
+      assertThat(fakeBuckEventListener.getEvents().get(2), instanceOf(ConsoleEvent.class));
       RuleKeyCheckListener.TopLevelCacheCheckEvent resultEvent =
           (RuleKeyCheckListener.TopLevelCacheCheckEvent) fakeBuckEventListener.getEvents().get(1);
       assertEquals(
           resultEvent.getTopLevelCacheCheckResult(),
           RuleKeyCheckListener.RuleKeyCheckResult.TARGET_NOT_BUILT.name());
+      assertEquals(
+          "warning", ((ConsoleEvent) fakeBuckEventListener.getEvents().get(2)).getMessage());
     }
   }
 
