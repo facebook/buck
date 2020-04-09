@@ -71,7 +71,7 @@ public abstract class UnconfiguredCxxGenruleFilterAndTargetsMacro implements Unc
       case LDFLAGS_STATIC:
         return LdflagsStaticMacro.of(getFilter(), configuredTargets);
       case LDFLAGS_STATIC_FILTER:
-        return LdflagsSharedFilterMacro.of(getFilter(), configuredTargets);
+        return LdflagsStaticFilterMacro.of(getFilter(), configuredTargets);
       case LDFLAGS_STATIC_PIC:
         return LdflagsStaticPicMacro.of(getFilter(), configuredTargets);
       case LDFLAGS_STATIC_PIC_FILTER:
