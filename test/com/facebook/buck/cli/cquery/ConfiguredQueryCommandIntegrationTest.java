@@ -127,7 +127,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "cquery", "owner(lib/maconly.m)", "--target-universe", "//bin:tvos-bin");
-    assertEquals("", result.getStdout().trim());
+    assertOutputMatches("", result);
   }
 
   @Test

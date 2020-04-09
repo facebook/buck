@@ -239,7 +239,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
     CellRelativePath cellRelativePath =
         CellRelativePath.of(
             cell.getCanonicalName(),
-            ForwardRelativePath.ofRelPath(buildFile.relativize(cell.getRoot())));
+            ForwardRelativePath.ofRelPath(cell.getRoot().relativize(buildFile)));
     return pathToBuildTargetIndex.get(cellRelativePath).stream()
         .map(targetToNodeIndex::get)
         .collect(ImmutableList.toImmutableList());
