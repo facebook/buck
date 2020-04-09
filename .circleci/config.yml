@@ -34,6 +34,8 @@ install_android_sdk: &install_android_sdk
       echo 'y' |sdkmanager --install "build-tools;28.0.0"
       echo 'y' |sdkmanager --install "platforms;android-23"
       rm "${sdk_zip_filename}"
+    else
+      echo "Android SDK restored from cache, skip installation."
     fi
     # Install 32 bit libraries
     # https://stackoverflow.com/questions/36911709/cannot-run-program-aapt
@@ -71,6 +73,8 @@ install_python: &install_python
     if [ "${python_version}" != "Python 3.6.2" ]; then
       pyenv install -s 3.6.2
       pyenv global 3.6.2 system
+    else
+      echo "Python3.6.2 restored from cache, skip installation."
     fi
     python --version
 
