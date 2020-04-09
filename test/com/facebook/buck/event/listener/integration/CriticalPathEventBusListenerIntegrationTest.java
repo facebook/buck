@@ -22,6 +22,7 @@ import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.facebook.buck.util.BuckConstant;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
@@ -48,7 +49,8 @@ public class CriticalPathEventBusListenerIntegrationTest {
     Path lastBuildCommandLogDir =
         EventBusListenerIntegrationTestsUtils.getLastBuildCommandLogDir(workspace);
     String fileContents =
-        workspace.getFileContents(lastBuildCommandLogDir.resolve("critical_path.log"));
+        workspace.getFileContents(
+            lastBuildCommandLogDir.resolve(BuckConstant.BUCK_CRITICAL_PATH_LOG_FILE_NAME));
     List<CriticalPathItem> criticalPaths = new ArrayList<>();
     for (String s : fileContents.split(System.lineSeparator())) {
       criticalPaths.add(toCriticalPathItem(s));

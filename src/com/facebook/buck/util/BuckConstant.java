@@ -35,6 +35,7 @@ public class BuckConstant {
   public static final String BUCK_FIX_SPEC_FILE_NAME = "buck_fix_spec.json";
 
   public static final String BUCK_SIMPLE_CONSOLE_LOG_FILE_NAME = "simple_console.log";
+  public static final String BUCK_CRITICAL_PATH_LOG_FILE_NAME = "critical_path.log";
 
   public static final boolean IS_LOGD_ENABLED =
       Boolean.parseBoolean(System.getProperty("logd.enabled", "false"));

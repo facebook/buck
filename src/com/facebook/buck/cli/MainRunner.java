@@ -310,8 +310,6 @@ public final class MainRunner {
 
   private static final int COMMAND_PATH_MAX_LENGTH = 150;
 
-  private static final String CRITICAL_PATH_FILE_NAME = "critical_path.log";
-
   private final InputStream stdIn;
 
   private final Architecture architecture;
@@ -2249,7 +2247,7 @@ public final class MainRunner {
 
     Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
     Path criticalPathDir = projectFilesystem.resolve(logDirectoryPath);
-    Path criticalPathLog = criticalPathDir.resolve(CRITICAL_PATH_FILE_NAME);
+    Path criticalPathLog = criticalPathDir.resolve(BuckConstant.BUCK_CRITICAL_PATH_LOG_FILE_NAME);
     projectFilesystem.mkdirs(criticalPathDir);
     CriticalPathEventListener criticalPathEventListener =
         new CriticalPathEventListener(logStreamFactory, criticalPathLog);
