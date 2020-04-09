@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -285,7 +284,7 @@ public class JavaTestDescription
         .addParseTimeDeps(targetGraphOnlyDepsBuilder, buildTarget.getTargetConfiguration());
   }
 
-  public interface CoreArg extends HasContacts, HasTestTimeout, JavaLibraryDescription.CoreArg {
+  public interface CoreArg extends HasTestTimeout, JavaLibraryDescription.CoreArg {
     ImmutableList<StringWithMacros> getVmArgs();
 
     Optional<TestType> getTestType();

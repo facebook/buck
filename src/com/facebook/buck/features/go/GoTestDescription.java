@@ -19,7 +19,6 @@ package com.facebook.buck.features.go;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
-import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
@@ -564,13 +563,7 @@ public class GoTestDescription
 
   @RuleArg
   interface AbstractGoTestDescriptionArg
-      extends BuildRuleArg,
-          HasContacts,
-          HasDeclaredDeps,
-          HasSrcs,
-          HasTestRunner,
-          HasTestTimeout,
-          HasGoLinkable {
+      extends BuildRuleArg, HasDeclaredDeps, HasSrcs, HasTestRunner, HasTestTimeout, HasGoLinkable {
     Optional<BuildTarget> getLibrary();
 
     Optional<String> getPackageName();

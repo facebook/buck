@@ -17,7 +17,6 @@
 package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
-import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -66,13 +65,6 @@ class SkylarkRuleFunctionImplicitAttributes {
   static ImmutableMap<String, Attribute<?>> computeTest() {
     ImmutableMap.Builder<String, Attribute<?>> attrs = ImmutableMap.builder();
     addCommon(attrs);
-    for (Method method : HasContacts.class.getMethods()) {
-      Optional<Pair<String, Attribute<?>>> pair = methodToAttribute(method);
-      if (pair.isPresent()) {
-        attrs.put(pair.get().getFirst(), pair.get().getSecond());
-      }
-    }
-
     return attrs.build();
   }
 

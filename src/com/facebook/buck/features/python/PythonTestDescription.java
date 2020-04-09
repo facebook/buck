@@ -20,7 +20,6 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
@@ -529,11 +528,7 @@ public class PythonTestDescription
 
   @RuleArg
   interface AbstractPythonTestDescriptionArg
-      extends HasContacts,
-          HasTestRunner,
-          HasTestTimeout,
-          PythonLibraryDescription.CoreArg,
-          HasVersionUniverse {
+      extends HasTestRunner, HasTestTimeout, PythonLibraryDescription.CoreArg, HasVersionUniverse {
     Optional<String> getMainModule();
 
     Optional<String> getPlatform();

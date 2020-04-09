@@ -25,7 +25,6 @@ import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
-import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -402,7 +401,6 @@ public class AppleBundleDescription
       extends BuildRuleArg,
           HasAppleBundleFields,
           HasAppleCodesignFields,
-          HasContacts,
           HasDefaultPlatform,
           HasDeclaredDeps,
           HasTests {

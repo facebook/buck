@@ -20,7 +20,6 @@ import static com.facebook.buck.features.d.DDescriptionUtils.SOURCE_LINK_TREE;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
-import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -139,8 +138,7 @@ public class DTestDescription
   }
 
   @RuleArg
-  interface AbstractDTestDescriptionArg
-      extends BuildRuleArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
+  interface AbstractDTestDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasTestTimeout {
     SourceSortedSet getSrcs();
 
     ImmutableList<String> getLinkerFlags();

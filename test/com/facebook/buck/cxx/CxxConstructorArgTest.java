@@ -223,5 +223,10 @@ public class CxxConstructorArgTest {
     public ImmutableSortedSet<FrameworkPath> getLibraries() {
       return ImmutableSortedSet.of();
     }
+
+    @Override
+    public ImmutableSortedSet<String> getContacts() {
+      return ImmutableSortedSet.of();
+    }
   }
 }

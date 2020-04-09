@@ -164,6 +164,7 @@ public class SkylarkDescriptionArg
   }
 
   /** @return contacts for this rule, or an empty set of `contacts` was not set */
+  @Override
   @SuppressWarnings("unchecked")
   public ImmutableSortedSet<String> getContacts() {
     // Unchecked as we validate this type with the Attribute

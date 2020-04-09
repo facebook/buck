@@ -23,7 +23,6 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
@@ -744,7 +743,7 @@ public class AppleBinaryDescription
 
   @RuleArg
   interface AbstractAppleBinaryDescriptionArg
-      extends AppleNativeTargetDescriptionArg, HasContacts, HasEntitlementsFile {
+      extends AppleNativeTargetDescriptionArg, HasEntitlementsFile {
     Optional<SourcePath> getInfoPlist();
 
     ImmutableMap<String, String> getInfoPlistSubstitutions();

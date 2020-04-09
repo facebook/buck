@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
-import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.model.BuildTarget;
@@ -120,8 +119,7 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
   }
 
   @RuleArg
-  interface AbstractShTestDescriptionArg
-      extends BuildRuleArg, HasContacts, HasDeclaredDeps, HasTestTimeout {
+  interface AbstractShTestDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasTestTimeout {
     Optional<SourcePath> getTest();
 
     ImmutableList<StringWithMacros> getArgs();

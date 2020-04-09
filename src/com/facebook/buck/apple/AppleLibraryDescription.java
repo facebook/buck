@@ -26,7 +26,6 @@ import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescription;
 import com.facebook.buck.core.description.impl.DescriptionCache;
@@ -1016,8 +1015,7 @@ public class AppleLibraryDescription
   }
 
   @RuleArg
-  interface AbstractAppleLibraryDescriptionArg
-      extends AppleNativeTargetDescriptionArg, HasContacts {
+  interface AbstractAppleLibraryDescriptionArg extends AppleNativeTargetDescriptionArg {
     Optional<SourcePath> getInfoPlist();
 
     ImmutableMap<String, String> getInfoPlistSubstitutions();

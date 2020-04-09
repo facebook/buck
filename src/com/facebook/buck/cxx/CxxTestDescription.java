@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.description.arg.HasContacts;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
@@ -460,8 +459,7 @@ public class CxxTestDescription
   }
 
   @RuleArg
-  interface AbstractCxxTestDescriptionArg
-      extends CxxBinaryDescription.CommonArg, HasContacts, HasTestTimeout {
+  interface AbstractCxxTestDescriptionArg extends CxxBinaryDescription.CommonArg, HasTestTimeout {
     Optional<CxxTestType> getFramework();
 
     ImmutableMap<String, StringWithMacros> getEnv();

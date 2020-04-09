@@ -181,7 +181,6 @@ public class RustTestDescription
 
   @RuleArg
   interface AbstractRustTestDescriptionArg extends RustCommonArgs, HasVersionUniverse {
-    ImmutableSet<String> getContacts();
 
     ImmutableList<StringWithMacros> getLinkerFlags();
 
