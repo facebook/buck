@@ -56,6 +56,7 @@ import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetInfo;
@@ -265,17 +266,19 @@ public class CxxPythonExtensionDescription
           .forEach(argsBuilder::add);
     }
 
-    // Embed a origin-relative library path into the binary so it can find the shared libraries.
-    argsBuilder.addAll(
-        StringArg.from(
-            Linkers.iXlinker(
-                "-rpath",
-                String.format(
-                    "%s/",
-                    cxxPlatform
-                        .getLd()
-                        .resolve(graphBuilder, target.getTargetConfiguration())
-                        .libOrigin()))));
+    if (cxxPlatform.getLd().getType() != LinkerProvider.Type.WINDOWS) {
+      // Embed a origin-relative library path into the binary so it can find the shared libraries.
+      argsBuilder.addAll(
+          StringArg.from(
+              Linkers.iXlinker(
+                  "-rpath",
+                  String.format(
+                      "%s/",
+                      cxxPlatform
+                          .getLd()
+                          .resolve(graphBuilder, target.getTargetConfiguration())
+                          .libOrigin()))));
+    }
 
     // Add object files into the args.
     ImmutableMap<CxxPreprocessAndCompile, SourcePath> picObjects =
