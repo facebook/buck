@@ -372,8 +372,8 @@ public class AndroidBinaryGraphEnhancer {
       graphBuilder.addToIndex(unstrippedNativeLibraries);
     }
 
-    Optional<ImmutableSortedMap<String, String>> sonameMergeMap =
-        nativeLibsEnhancementResult.getSonameMergeMap();
+    Optional<ImmutableSortedMap<String, NativeLibraryMergeEnhancer.SonameMergeData>>
+        sonameMergeMap = nativeLibsEnhancementResult.getSonameMergeMap();
     if (sonameMergeMap.isPresent() && nativeLibraryMergeCodeGenerator.isPresent()) {
       BuildRule generatorRule = graphBuilder.getRule(nativeLibraryMergeCodeGenerator.get());
 

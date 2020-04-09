@@ -119,7 +119,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
 
     Optional<ImmutableSortedSet<SourcePath>> getUnstrippedLibraries();
 
-    Optional<ImmutableSortedMap<String, String>> getSonameMergeMap();
+    Optional<ImmutableSortedMap<String, NativeLibraryMergeEnhancer.SonameMergeData>>
+        getSonameMergeMap();
 
     Optional<ImmutableSortedMap<String, ImmutableSortedSet<String>>> getSharedObjectTargets();
 
@@ -228,7 +229,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     ImmutableMap<TargetCpuType, NativeLinkableEnhancementResult> nativeLinkables =
         nativeLinkablesBuilder.build();
 
-    ImmutableSortedMap<String, String> sonameMapping = null;
+    ImmutableSortedMap<String, NativeLibraryMergeEnhancer.SonameMergeData> sonameMapping = null;
     ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets = null;
     if (nativeLibraryMergeMap.isPresent()
         && !nativeLibraryMergeMap.get().isEmpty()

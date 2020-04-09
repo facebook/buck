@@ -56,7 +56,9 @@ import java.util.Map;
  * it.
  */
 class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndExtraDeps {
-  @AddToRuleKey private final ImmutableSortedMap<String, String> mergeResult;
+  @AddToRuleKey(stringify = true)
+  private final ImmutableSortedMap<String, NativeLibraryMergeEnhancer.SonameMergeData> mergeResult;
+
   @AddToRuleKey private final BuildRule codeGenerator;
 
   @AddToRuleKey
@@ -66,7 +68,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
-      ImmutableSortedMap<String, String> mergeResult,
+      ImmutableSortedMap<String, NativeLibraryMergeEnhancer.SonameMergeData> mergeResult,
       ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets,
       BuildRule codeGenerator) {
     super(buildTarget, projectFilesystem, buildRuleParams);
@@ -129,10 +131,14 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
       try (Writer out =
           new BufferedWriter(
               new OutputStreamWriter(projectFilesystem.newFileOutputStream(getMappingPath())))) {
-        for (Map.Entry<String, String> entry : mergeResult.entrySet()) {
+        for (Map.Entry<String, NativeLibraryMergeEnhancer.SonameMergeData> entry :
+            mergeResult.entrySet()) {
+          if (!entry.getValue().getIncludeInAndroidMergeMapOutput()) {
+            continue;
+          }
           out.write(entry.getKey());
           out.write(' ');
-          out.write(entry.getValue());
+          out.write(entry.getValue().getSoname());
           out.write('\n');
         }
       }

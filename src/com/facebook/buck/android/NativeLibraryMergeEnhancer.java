@@ -135,14 +135,20 @@ class NativeLibraryMergeEnhancer {
 
     ImmutableSet<TargetCpuType> platforms = nativeLinkables.keySet();
 
-    Map<String, String> sonameMapBuilder = new HashMap<>();
+    Map<String, SonameMergeData> sonameMapBuilder = new HashMap<>();
     ImmutableSetMultimap.Builder<String, String> sonameTargetsBuilder =
         ImmutableSetMultimap.builder();
 
     SonameMapBuilder mapBuilder =
-        (isActuallyMerged, originalName, mergedName, targetName) -> {
+        (isActuallyMerged,
+            originalName,
+            mergedName,
+            targetName,
+            includeInAndroidMergeMapOutput) -> {
           if (isActuallyMerged) {
-            sonameMapBuilder.put(originalName, mergedName);
+            sonameMapBuilder.put(
+                originalName,
+                ImmutableSonameMergeData.ofImpl(mergedName, includeInAndroidMergeMapOutput));
           }
           if (targetName.isPresent()) {
             String actualName = isActuallyMerged ? mergedName : originalName;
@@ -254,7 +260,8 @@ class NativeLibraryMergeEnhancer {
                         linkable.constituents.isActuallyMerged(),
                         soname,
                         linkable.getSoname(),
-                        targetName);
+                        targetName,
+                        constituent.getIncludeInAndroidMergeMapOutput());
                   });
         }
       }
@@ -384,7 +391,8 @@ class NativeLibraryMergeEnhancer {
         boolean isActuallyMerged,
         String originalName,
         String mergedName,
-        Optional<String> targetName);
+        Optional<String> targetName,
+        boolean includeInAndroidMergeMapOutput);
   }
 
   /** Topo-sort the constituents objects so we can process deps first. */
@@ -644,13 +652,26 @@ class NativeLibraryMergeEnhancer {
     public abstract ImmutableMap<TargetCpuType, NativeLinkableEnhancementResult>
         getMergedLinkables();
 
-    /** Contains a map of original soname to merged soname. */
-    public abstract ImmutableSortedMap<String, String> getSonameMapping();
+    /**
+     * Contains a map of original soname to merged soname and other data like whether library should
+     * be included in merge map output.
+     */
+    public abstract ImmutableSortedMap<String, SonameMergeData> getSonameMapping();
 
     /**
      * This is for human consumption only. It records all the build targets merged into each lib.
      */
     public abstract ImmutableSortedMap<String, ImmutableSortedSet<String>> getSharedObjectTargets();
+  }
+
+  /** A data object to hold information about merged so library. */
+  @BuckStyleValue
+  abstract static class SonameMergeData {
+    /** Name of the merged library that this is part of. */
+    public abstract String getSoname();
+
+    /** Whether this library should be included in so merge map output code. */
+    public abstract boolean getIncludeInAndroidMergeMapOutput();
   }
 
   /**
