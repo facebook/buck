@@ -61,7 +61,7 @@ public class WindowsCompiler extends DefaultCompiler {
 
   @Override
   public ImmutableList<String> getPicFlags() {
-    throw new UnsupportedOperationException("PIC mode is not supported on Windows");
+    return ImmutableList.of();
   }
 
   @Override
