@@ -18,10 +18,13 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.cli.OwnersReport.Builder;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildFileTree;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.RuleBasedTargetConfiguration;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.FilesystemBackedBuildFileTree;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -382,23 +385,39 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   @Override
   public ImmutableSet<QueryTarget> getConfiguredTargets(
       Set<QueryTarget> targets, Optional<String> configurationName) throws QueryException {
-    // TODO(srice): When this is empty, we should use the default_target_platform of the target
-    if (!configurationName.isPresent()) {
-      throw new QueryException("Must pass configuration to `config()` function");
-    }
     ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
+    Optional<TargetConfiguration> explicitlyRequestedConfiguration =
+        configurationName.map(targetConfigurationFactory::create);
     for (QueryTarget target : targets) {
       if (!(target instanceof QueryBuildTarget)) {
         continue;
       }
       BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+      // Ideally we would use some form of `orElse` here but that doesn't play well with Throwables
       TargetConfiguration configuration =
-          targetConfigurationFactory.create(configurationName.get());
+          explicitlyRequestedConfiguration.isPresent()
+              ? explicitlyRequestedConfiguration.get()
+              : defaultTargetConfigurationForTarget(buildTarget);
       BuildTarget reconfiguredBuildTarget =
           buildTarget.getUnconfiguredBuildTarget().configure(configuration);
       builder.add(getOrCreateQueryBuildTarget(reconfiguredBuildTarget));
     }
     return builder.build();
+  }
+
+  private TargetConfiguration defaultTargetConfigurationForTarget(BuildTarget target)
+      throws QueryException {
+    TargetNode<?> node = targetUniverse.getNode(target);
+    ConstructorArg arg = node.getConstructorArg();
+    if (!(arg instanceof BuildRuleArg)) {
+      throw new QueryException("Cannot configure configuration rule (eg `platform()`): " + target);
+    }
+
+    BuildRuleArg buildRuleArg = (BuildRuleArg) arg;
+    return buildRuleArg
+        .getDefaultTargetPlatform()
+        .map(RuleBasedTargetConfiguration::of)
+        .orElseThrow(() -> new QueryException("No default_target_platform found for " + target));
   }
 
   @Override

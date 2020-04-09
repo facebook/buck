@@ -89,6 +89,19 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void configFunctionConfiguresTargetForDefaultTargetPlatformIfNoSecondArgumentGiven()
+      throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "config(//lib:bar)", "--target-universe", "//bin:ios-bin,//bin:tvos-bin");
+    assertOutputMatches("//lib:bar (//config/platform:tvos)", result);
+  }
+
+  @Test
   public void targetUniverseChangesOutput() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
