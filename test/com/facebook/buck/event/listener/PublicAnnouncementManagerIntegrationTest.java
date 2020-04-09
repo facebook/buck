@@ -121,7 +121,7 @@ public class PublicAnnouncementManagerIntegrationTest {
       BuckEventBus eventBus = BuckEventBusForTests.newInstance(clock);
       ExecutionEnvironment executionEnvironment =
           new DefaultExecutionEnvironment(
-              EnvVariablesProvider.getSystemEnv(), System.getProperties());
+              EnvVariablesProvider.getSystemEnv(), System.getProperties(), ImmutableSet.of());
       BuckConfig buckConfig =
           new FakeBuckConfig.Builder()
               .setSections(

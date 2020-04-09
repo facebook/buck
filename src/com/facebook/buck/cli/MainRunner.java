@@ -774,7 +774,8 @@ public final class MainRunner {
       printConsole = makeCustomConsole(context, verbosity, buckConfig);
 
       ExecutionEnvironment executionEnvironment =
-          new DefaultExecutionEnvironment(clientEnvironment, System.getProperties());
+          new DefaultExecutionEnvironment(
+              clientEnvironment, System.getProperties(), command.getOncalls());
 
       // Automatically use distributed build for supported repositories and users, unless
       // Remote Execution is in use. All RE builds should not use distributed build.

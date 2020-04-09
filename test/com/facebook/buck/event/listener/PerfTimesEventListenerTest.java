@@ -74,7 +74,7 @@ public class PerfTimesEventListenerTest {
             new Network(),
             Optional.empty(),
             ImmutableMap.of(),
-            Optional.empty());
+            ImmutableSet.of());
     durationTracker = new BuildRuleDurationTracker();
   }
 

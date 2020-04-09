@@ -42,7 +42,7 @@ public class AbstractConsoleEventBusListenerTest {
         FakeClock.doNotCare(),
         Locale.US,
         new DefaultExecutionEnvironment(
-            EnvVariablesProvider.getSystemEnv(), System.getProperties()),
+            EnvVariablesProvider.getSystemEnv(), System.getProperties(), ImmutableSet.of()),
         false,
         1,
         false,

@@ -29,6 +29,7 @@ import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.PrintStream;
 import java.util.Arrays;
@@ -201,5 +202,10 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
     return getSubcommand()
         .orElseThrow(() -> new IllegalArgumentException("Cannot create parsing context."))
         .createParsingContext(cells, executor);
+  }
+
+  @Override
+  public ImmutableSet<String> getOncalls() {
+    return getSubcommand().map(Command::getOncalls).orElseGet(ImmutableSet::of);
   }
 }

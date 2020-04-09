@@ -26,6 +26,7 @@ import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.timing.FakeClock;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Locale;
 import java.util.Properties;
 import org.junit.Test;
@@ -40,7 +41,8 @@ public class SilentConsoleEventBusListenerTest {
             new RenderingConsole(FakeClock.doNotCare(), testConsole),
             FakeClock.doNotCare(),
             Locale.US,
-            new DefaultExecutionEnvironment(ImmutableMap.of(), new Properties()));
+            new DefaultExecutionEnvironment(
+                ImmutableMap.of(), new Properties(), ImmutableSet.of()));
     eventListener.printSevereWarningDirectly("message");
     assertThat(testConsole.getTextWrittenToStdErr(), containsString("message"));
   }
@@ -53,7 +55,8 @@ public class SilentConsoleEventBusListenerTest {
             new RenderingConsole(FakeClock.doNotCare(), testConsole),
             FakeClock.doNotCare(),
             Locale.US,
-            new DefaultExecutionEnvironment(ImmutableMap.of(), new Properties()));
+            new DefaultExecutionEnvironment(
+                ImmutableMap.of(), new Properties(), ImmutableSet.of()));
     eventListener.logEvent(ConsoleEvent.severe("message"));
     assertThat(testConsole.getTextWrittenToStdErr(), containsString("message"));
   }
@@ -66,7 +69,8 @@ public class SilentConsoleEventBusListenerTest {
             new RenderingConsole(FakeClock.doNotCare(), testConsole),
             FakeClock.doNotCare(),
             Locale.US,
-            new DefaultExecutionEnvironment(ImmutableMap.of(), new Properties()));
+            new DefaultExecutionEnvironment(
+                ImmutableMap.of(), new Properties(), ImmutableSet.of()));
     eventListener.logEvent(ConsoleEvent.warning("message"));
     assertThat(testConsole.getTextWrittenToStdErr(), not(containsString("message")));
   }

@@ -1679,7 +1679,7 @@ public class SuperConsoleEventBusListenerTest {
             fakeClock,
             noisySummaryVerbosity,
             new DefaultExecutionEnvironment(
-                EnvVariablesProvider.getSystemEnv(), System.getProperties()),
+                EnvVariablesProvider.getSystemEnv(), System.getProperties(), ImmutableSet.of()),
             Locale.US,
             logPath,
             0L,
@@ -2633,7 +2633,7 @@ public class SuperConsoleEventBusListenerTest {
             clock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                EnvVariablesProvider.getSystemEnv(), System.getProperties()),
+                EnvVariablesProvider.getSystemEnv(), System.getProperties(), ImmutableSet.of()),
             Locale.US,
             logPath,
             0L,

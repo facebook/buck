@@ -61,6 +61,7 @@ import com.facebook.buck.util.config.Configs;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Splitter;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -88,6 +89,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -196,6 +198,12 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       usage = GlobalCliOptions.COMMAND_ARGS_FILE_HELP,
       hidden = true)
   protected String commandArgsFile;
+
+  @Option(
+      name = GlobalCliOptions.ONCALL_ARG,
+      usage = "Oncall(s) responsible for this particular invocation of Buck",
+      handler = StringSetOptionHandler.class)
+  private Supplier<ImmutableSet<String>> oncalls = Suppliers.ofInstance(ImmutableSet.of());
 
   /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */
   public boolean isNoCache() {
@@ -688,5 +696,10 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         .setEnableTargetCompatibilityChecks(
             cells.getBuckConfig().getView(ParserConfig.class).getEnableTargetCompatibilityChecks())
         .build();
+  }
+
+  @Override
+  public ImmutableSet<String> getOncalls() {
+    return oncalls.get();
   }
 }

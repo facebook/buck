@@ -18,6 +18,7 @@ package com.facebook.buck.util.environment;
 
 import com.facebook.buck.util.network.hostname.HostnameFetching;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.sun.management.OperatingSystemMXBean;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -28,12 +29,16 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   private final Platform platform;
   private final ImmutableMap<String, String> environment;
   private final Properties properties;
+  private final ImmutableSet<String> oncalls;
 
   public DefaultExecutionEnvironment(
-      ImmutableMap<String, String> environment, Properties properties) {
+      ImmutableMap<String, String> environment,
+      Properties properties,
+      ImmutableSet<String> oncalls) {
     this.platform = Platform.detect();
     this.environment = environment;
     this.properties = properties;
+    this.oncalls = oncalls;
   }
 
   @Override
@@ -85,7 +90,7 @@ public class DefaultExecutionEnvironment implements ExecutionEnvironment {
   }
 
   @Override
-  public Optional<String> getOncall() {
-    return Optional.empty();
+  public ImmutableSet<String> getOncalls() {
+    return oncalls;
   }
 }

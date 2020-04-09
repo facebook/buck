@@ -27,6 +27,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.PrintStream;
 import java.util.Map;
@@ -80,6 +81,9 @@ public interface Command {
   ImmutableList<String> getTargetPlatforms();
 
   Optional<String> getHostPlatform();
+
+  /** @return The oncall(s) responsible for this Buck invocation, if provided. */
+  ImmutableSet<String> getOncalls();
 
   /**
    * Creates a basic {@link ParsingContext} with some options populated from command's arguments.

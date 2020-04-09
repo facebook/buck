@@ -264,7 +264,7 @@ public class CacheCommandTest {
             clock,
             silentSummaryVerbosity,
             new DefaultExecutionEnvironment(
-                EnvVariablesProvider.getSystemEnv(), System.getProperties()),
+                EnvVariablesProvider.getSystemEnv(), System.getProperties(), ImmutableSet.of()),
             Locale.US,
             logPath,
             0L,

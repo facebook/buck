@@ -530,7 +530,7 @@ public class SimpleConsoleEventBusListenerTest {
             Locale.US,
             logPath,
             new DefaultExecutionEnvironment(
-                EnvVariablesProvider.getSystemEnv(), System.getProperties()),
+                EnvVariablesProvider.getSystemEnv(), System.getProperties(), ImmutableSet.of()),
             buildId,
             printBuildId,
             buildDetailsTemplate,

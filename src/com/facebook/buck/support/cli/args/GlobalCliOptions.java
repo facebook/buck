@@ -40,6 +40,7 @@ public class GlobalCliOptions {
       "--exclude-incompatible-targets";
   public static final String REUSE_CURRENT_CONFIG_ARG = "--reuse-current-config";
   public static final String COMMAND_ARGS_FILE_LONG_ARG = "--command-args-file";
+  public static final String ONCALL_ARG = "--oncall";
 
   public static final String COMMAND_ARGS_FILE_HELP =
       "Serialize any commands that need to be run by the python wrapper to this file.";
@@ -63,7 +64,8 @@ public class GlobalCliOptions {
           SKYLARK_PROFILE_LONG_ARG,
           TARGET_PLATFORMS_LONG_ARG,
           EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG,
-          REUSE_CURRENT_CONFIG_ARG);
+          REUSE_CURRENT_CONFIG_ARG,
+          ONCALL_ARG);
 
   public static boolean isGlobalOption(OptionHandler<?> optionHandler) {
     OptionDef option = optionHandler.option;
