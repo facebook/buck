@@ -547,11 +547,6 @@ class BuckTool(object):
         """
         args = []
 
-        if os.environ.get("BUCK_NO_CACHE") == "1" and "--no-cache" not in argv:
-            args.append("--no-cache")
-        if os.environ.get("BUCK_CACHE_READONLY") == "1":
-            args.append("-c")
-            args.append("cache.http_mode=readonly")
         return self._add_args(argv, args, post_run_files)
 
     def _run_with_nailgun(self, java_path, argv, env, post_run_files):

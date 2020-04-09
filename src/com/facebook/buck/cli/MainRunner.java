@@ -651,10 +651,11 @@ public final class MainRunner {
     AbsPath canonicalRootPath = AbsPath.of(projectRoot.toRealPath()).normalize();
     ImmutableMap<CellName, AbsPath> rootCellMapping = getCellMapping(canonicalRootPath);
     ImmutableList<String> args =
-        BuckArgsMethods.expandAtFiles(
+        BuckArgsMethods.expandArgs(
             BuckArgsMethods.getPythonInterpreter(clientEnvironment),
             unexpandedCommandLineArgs,
-            rootCellMapping);
+            rootCellMapping,
+            clientEnvironment);
 
     // Filter out things like --command-args-file from the arguments lists that we log
     ImmutableList<String> filteredUnexpandedArgsForLogging =

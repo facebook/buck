@@ -32,6 +32,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -368,5 +370,36 @@ public class BuckArgsMethodsTest {
             ImmutableList.of("arg1", atArg, "--", atArg),
             ImmutableMap.of(CellName.ROOT_CELL_NAME, tmp.getRoot())),
         Matchers.contains("arg1", "arg2", "arg3", "--", atArg));
+  }
+
+  @Test
+  public void addsCacheArgsFromEnv() {
+
+    List<String> args = new ArrayList<>();
+    args.add("build");
+    args.add("foo");
+
+    ImmutableMap<String, String> env = ImmutableMap.of("blah", "1");
+
+    BuckArgsMethods.addArgsFromEnv(args, env);
+    assertEquals(ImmutableList.of("build", "foo"), args);
+
+    args = new ArrayList<>();
+    args.add("build");
+    args.add("foo");
+
+    env = ImmutableMap.of("BUCK_NO_CACHE", "1");
+
+    BuckArgsMethods.addArgsFromEnv(args, env);
+    assertEquals(ImmutableList.of("build", "foo", "--no-cache"), args);
+
+    args = new ArrayList<>();
+    args.add("build");
+    args.add("foo");
+
+    env = ImmutableMap.of("BUCK_CACHE_READONLY", "1");
+
+    BuckArgsMethods.addArgsFromEnv(args, env);
+    assertEquals(ImmutableList.of("build", "foo", "-c", "cache.http_mode=readonly"), args);
   }
 }

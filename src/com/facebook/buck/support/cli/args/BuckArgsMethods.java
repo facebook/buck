@@ -19,6 +19,7 @@ package com.facebook.buck.support.cli.args;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -30,6 +31,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -230,5 +232,50 @@ public class BuckArgsMethods {
   public static String getPythonInterpreter(ImmutableMap<String, String> clientEnvironment) {
     return Objects.requireNonNull(
         clientEnvironment.get("BUCK_WRAPPER_PYTHON_BIN"), "BUCK_WRAPPER_PYTHON_BIN was not set!");
+  }
+
+  @VisibleForTesting
+  protected static void addArgsFromEnv(
+      List<String> args, ImmutableMap<String, String> clientEnvironment) {
+    // Implicitly add command line arguments based on environmental variables. This is a bad
+    // practice and should be considered for infrastructure / debugging purposes only
+    if (clientEnvironment.getOrDefault("BUCK_NO_CACHE", "0").equals("1")
+        && !args.contains("--no-cache")) {
+      args.add("--no-cache");
+    }
+
+    if (clientEnvironment.getOrDefault("BUCK_CACHE_READONLY", "0").equals("1")) {
+      args.add("-c");
+      args.add("cache.http_mode=readonly");
+    }
+  }
+
+  public static ImmutableList<String> expandArgs(
+      String pythonInterpreter,
+      ImmutableList<String> argsv,
+      ImmutableMap<CellName, AbsPath> rootCellMapping,
+      ImmutableMap<String, String> clientEnvironment) {
+    ImmutableList<String> fileExpandedArgs =
+        expandAtFiles(pythonInterpreter, argsv, rootCellMapping);
+    int passThroughPosition = fileExpandedArgs.indexOf(PASS_THROUGH_DELIMITER);
+
+    List<String> args;
+    List<String> passThroughArgs;
+
+    if (passThroughPosition == -1) {
+      args = new ArrayList<>(fileExpandedArgs);
+      passThroughArgs = new ArrayList<>();
+    } else {
+      args = new ArrayList<>(fileExpandedArgs.subList(0, passThroughPosition));
+      passThroughArgs =
+          new ArrayList<>(fileExpandedArgs.subList(passThroughPosition, fileExpandedArgs.size()));
+    }
+
+    addArgsFromEnv(args, clientEnvironment);
+
+    return ImmutableList.<String>builderWithExpectedSize(args.size() + passThroughArgs.size())
+        .addAll(args)
+        .addAll(passThroughArgs)
+        .build();
   }
 }
