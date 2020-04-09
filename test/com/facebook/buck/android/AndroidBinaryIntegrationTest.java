@@ -385,7 +385,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     return new Integer(matcher.group(1));
   }
 
-  //@Test(expected = AssertionError.class)
+  // @Test(expected = AssertionError.class)
   public void testRawDexTooManyDexes() {
     workspace.buildAndReturnOutput("//apps/multidex:raw_dex_over_100");
   }
