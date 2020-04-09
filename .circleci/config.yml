@@ -527,12 +527,26 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
+      - save_cache:
+          paths:
+            - ~/android-sdk
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
+      - save_cache:
+          paths:
+            - ~/.pyenv
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
@@ -556,12 +570,18 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_groovy
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -588,10 +608,16 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -620,12 +646,18 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_ghc
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -665,6 +697,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -675,6 +710,9 @@ jobs:
             ./scripts/circleci_install_android_ndk.sh "${PLATFORM}"
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -702,6 +740,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -712,6 +753,9 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r15c "${PLATFORM}"
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -737,6 +781,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -747,6 +794,9 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r16b "${PLATFORM}"
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -772,6 +822,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -782,6 +835,9 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r17b "${PLATFORM}"
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -818,6 +874,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -828,6 +887,9 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r18b "${PLATFORM}"
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
