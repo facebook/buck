@@ -39,6 +39,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
@@ -136,12 +137,18 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       Multimap<String, QueryTarget> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException {
-    if (outputFormat != OutputFormat.LIST) {
-      // TODO(srice): Change this.
-      throw new QueryException("cquery does not yet support non-list multiquery results");
+    if (shouldOutputAttributes()) {
+      // TODO(srice) Change this
+      throw new QueryException("cquery does not yet support printing attributes");
+    } else if (outputFormat == OutputFormat.LIST) {
+      printListOutput(queryResultMap, printStream);
+    } else if (outputFormat == OutputFormat.JSON) {
+      printJsonOutput(queryResultMap, printStream);
+    } else {
+      throw new QueryException(
+          "Multiqueries (those using `%s`) do not support printing with the given output format: "
+              + outputFormat.toString());
     }
-
-    printListOutput(queryResultMap, printStream);
   }
 
   // TODO: This API is too stringly typed. It's easy for users to provide strings here which will
@@ -203,6 +210,14 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
             .collect(ImmutableSet.toImmutableSet());
 
     ObjectMappers.WRITER.writeValue(printStream, targetsNames);
+  }
+
+  private void printJsonOutput(
+      Multimap<String, QueryTarget> queryResultMap, PrintStream printStream) throws IOException {
+    Multimap<String, String> targetsAndResultsNames =
+        Multimaps.transformValues(
+            queryResultMap, input -> toPresentationForm(Objects.requireNonNull(input)));
+    ObjectMappers.WRITER.writeValue(printStream, targetsAndResultsNames.asMap());
   }
 
   private String toPresentationForm(QueryTarget target) {
