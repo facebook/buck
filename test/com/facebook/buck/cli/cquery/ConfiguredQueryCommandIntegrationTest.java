@@ -50,6 +50,16 @@ public class ConfiguredQueryCommandIntegrationTest {
         OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())));
   }
 
+  private void assertJSONOutputMatchesFileContents(
+      String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
+      throws IOException {
+    result.assertSuccess();
+
+    assertEquals(
+        OutputHelper.parseJSON(workspace.getFileContents(expectedOutputFile)),
+        OutputHelper.parseJSON(result.getStdout()));
+  }
+
   /**
    * Asserts that the result succeeded and that the lines printed to stdout are identical to {@code
    * sortedExpectedOutput}. The stdout of {@code result} is sorted by line before being compared to
@@ -75,6 +85,18 @@ public class ConfiguredQueryCommandIntegrationTest {
     // TODO(srice): We shouldn't expect it to print a readable name, but until we know what the hash
     // is going to be it doesn't matter what we put here.
     assertOutputMatches("//lib:foo (//config/platform:ios)", result);
+  }
+
+  @Test
+  public void basicJsonPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "//lib/...", "--target-universe", "//bin:mac-bin", "--output-format", "json");
+    assertJSONOutputMatchesFileContents("stdout-basic-json-printing.json", result, workspace);
   }
 
   @Test
