@@ -184,8 +184,10 @@ public class NdkCxxPlatforms {
       return "7.0.2";
     } else if (ndkMajorVersion < 20) {
       return "8.0.2";
-    } else {
+    } else if (ndkMajorVersion < 21) {
       return "8.0.7";
+    } else {
+      return "9.0.8";
     }
   }
 
