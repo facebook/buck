@@ -62,7 +62,6 @@ java_library(
         "//third-party/java/infer-annotations:infer-annotations",
         "//third-party/java/jackson:jackson-annotations",
         "//third-party/java/jackson:jackson-core",
-        "//third-party/java/jackson:jackson-databind",
         "//third-party/java/jimfs:jimfs",
         "//third-party/java/jna:jna",
         "//third-party/java/jsr:jsr305",
@@ -75,6 +74,7 @@ java_library(
         "//src/com/facebook/buck/util/cache:cache",
         "//src/com/facebook/buck/util/hashing:hashing",
         "//src/com/facebook/buck/util/timing:timing",
+        "//third-party/java/jackson:jackson-databind",
         "//third-party/java/junit:junit",
     ],
 )

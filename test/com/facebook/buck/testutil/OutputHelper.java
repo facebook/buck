@@ -19,10 +19,18 @@ package com.facebook.buck.testutil;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.collect.Iterables;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.hamcrest.Matcher;
@@ -127,5 +135,39 @@ public class OutputHelper {
     List<String> lines = new ArrayList<>(unsortedLines.subList(0, unsortedLines.size() - 1));
     lines.sort(String::compareTo);
     return NEWLINE_JOINER.join(lines) + "\n";
+  }
+
+  public static JsonNode parseJSON(String content) throws IOException {
+    JsonNode original = ObjectMappers.READER.readTree(ObjectMappers.createParser(content));
+    return normalizeJson(original);
+  }
+
+  /** Normalizes the JSON by sorting all of the arrays of strings. */
+  private static JsonNode normalizeJson(JsonNode node) {
+    if (node.isValueNode()) {
+      return node;
+    } else if (node.isArray()) {
+      // Only if this is an array of strings, copy the array and sort it.
+      if (Iterables.all(node, JsonNode::isTextual)) {
+        ArrayList<String> values = new ArrayList<>();
+        Iterables.addAll(values, Iterables.transform(node, JsonNode::asText));
+        values.sort(String::compareTo);
+        ArrayNode normalized = (ArrayNode) ObjectMappers.READER.createArrayNode();
+        values.forEach(normalized::add);
+        return normalized;
+      } else {
+        return node;
+      }
+    } else if (node.isObject()) {
+      ObjectNode original = (ObjectNode) node;
+      ObjectNode normalized = (ObjectNode) ObjectMappers.READER.createObjectNode();
+      for (Iterator<Map.Entry<String, JsonNode>> iter = original.fields(); iter.hasNext(); ) {
+        Map.Entry<String, JsonNode> entry = iter.next();
+        normalized.set(entry.getKey(), normalizeJson(entry.getValue()));
+      }
+      return normalized;
+    } else {
+      throw new IllegalArgumentException("Unexpected node type: " + node);
+    }
   }
 }

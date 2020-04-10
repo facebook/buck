@@ -18,6 +18,7 @@ package com.facebook.buck.cli.query;
 
 import static com.facebook.buck.cli.ThriftOutputUtils.edgesToStringList;
 import static com.facebook.buck.cli.ThriftOutputUtils.nodesToStringList;
+import static com.facebook.buck.testutil.OutputHelper.parseJSON;
 import static com.facebook.buck.util.MoreStringsForTests.containsIgnoringPlatformNewlines;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
@@ -45,15 +46,11 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.CreateSymlinksForTests;
 import com.facebook.buck.util.ExitCode;
-import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
@@ -63,9 +60,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.hamcrest.Matchers;
@@ -1616,40 +1611,6 @@ public class QueryCommandIntegrationTest {
             "//example:three->//example:six",
             "//example:four->//example:six",
             "//example:five->//example:six"));
-  }
-
-  private static JsonNode parseJSON(String content) throws IOException {
-    JsonNode original = ObjectMappers.READER.readTree(ObjectMappers.createParser(content));
-    return normalizeJson(original);
-  }
-
-  /** Normalizes the JSON by sorting all of the arrays of strings. */
-  private static JsonNode normalizeJson(JsonNode node) {
-    if (node.isValueNode()) {
-      return node;
-    } else if (node.isArray()) {
-      // Only if this is an array of strings, copy the array and sort it.
-      if (Iterables.all(node, JsonNode::isTextual)) {
-        ArrayList<String> values = new ArrayList<>();
-        Iterables.addAll(values, Iterables.transform(node, JsonNode::asText));
-        values.sort(String::compareTo);
-        ArrayNode normalized = (ArrayNode) ObjectMappers.READER.createArrayNode();
-        values.forEach(normalized::add);
-        return normalized;
-      } else {
-        return node;
-      }
-    } else if (node.isObject()) {
-      ObjectNode original = (ObjectNode) node;
-      ObjectNode normalized = (ObjectNode) ObjectMappers.READER.createObjectNode();
-      for (Iterator<Map.Entry<String, JsonNode>> iter = original.fields(); iter.hasNext(); ) {
-        Map.Entry<String, JsonNode> entry = iter.next();
-        normalized.set(entry.getKey(), normalizeJson(entry.getValue()));
-      }
-      return normalized;
-    } else {
-      throw new IllegalArgumentException("Unexpected node type: " + node);
-    }
   }
 
   private static DirectedAcyclicGraph parseThrift(byte[] bytes) throws IOException {
