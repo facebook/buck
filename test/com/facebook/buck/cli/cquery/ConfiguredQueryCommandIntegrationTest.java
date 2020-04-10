@@ -177,4 +177,38 @@ public class ConfiguredQueryCommandIntegrationTest {
     assertOutputMatches(
         "//lib:foo (//config/platform:ios)\n//lib:foo (//config/platform:tvos)", result);
   }
+
+  @Test
+  public void targetPlatformsArgCausesUniverseToBeCreatedWithThatPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib:foo",
+            "--target-universe",
+            "//bin:tvos-bin",
+            "--target-platforms",
+            "//config/platform:ios");
+    assertOutputMatches("//lib:foo (//config/platform:ios)", result);
+  }
+
+  @Test
+  public void configFunctionCanCreateTargetsOtherThanTargetPlatform() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "config(//lib:foo, //config/platform:macos)",
+            "--target-universe",
+            "//bin:tvos-bin",
+            "--target-platforms",
+            "//config/platform:ios");
+    assertOutputMatches("//lib:foo (//config/platform:macos)", result);
+  }
 }
