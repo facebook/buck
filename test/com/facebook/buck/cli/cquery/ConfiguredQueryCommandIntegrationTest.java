@@ -78,6 +78,23 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void basicMultiQueryPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "%s",
+            "--target-universe",
+            "//bin:ios-bin,//bin:mac-bin",
+            "//lib:foo",
+            "//lib:maconly");
+    assertOutputMatchesFileContents("stdout-basic-multi-query-printing", result, workspace);
+  }
+
+  @Test
   public void configFunctionConfiguresTargetForSpecificPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);

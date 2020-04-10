@@ -136,7 +136,12 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       Multimap<String, QueryTarget> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException {
-    throw new QueryException("cquery is not yet capable of printing results");
+    if (outputFormat != OutputFormat.LIST) {
+      // TODO(srice): Change this.
+      throw new QueryException("cquery does not yet support non-list multiquery results");
+    }
+
+    printListOutput(queryResultMap, printStream);
   }
 
   // TODO: This API is too stringly typed. It's easy for users to provide strings here which will
@@ -181,6 +186,11 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private void printListOutput(Set<QueryTarget> queryResult, PrintStream printStream) {
     queryResult.stream().map(this::toPresentationForm).forEach(printStream::println);
+  }
+
+  private void printListOutput(
+      Multimap<String, QueryTarget> queryResultMap, PrintStream printStream) {
+    queryResultMap.values().stream().map(this::toPresentationForm).forEach(printStream::println);
   }
 
   private void printJsonOutput(Set<QueryTarget> queryResult, PrintStream printStream)

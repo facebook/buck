@@ -1,0 +1,3 @@
+//lib:foo (//config/platform:ios)
+//lib:foo (//config/platform:macos)
+//lib:maconly (//config/platform:macos)
