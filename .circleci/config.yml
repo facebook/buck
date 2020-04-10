@@ -12,6 +12,19 @@ install_dlang: &install_dlang
     curl https://dlang.org/install.sh | bash -s dmd-2.091.0
     source ~/dlang/dmd-2.091.0/activate
     dmd --version
+    
+install_ocaml: &install_ocaml
+  name: Install Ocaml
+  command: |
+    if [ "${PLATFORM}" == "linux" ]; then
+      sudo apt install ocaml
+    elif [ "${PLATFORM}" == "macos" ]; then
+      brew install opam
+      opam init -y
+      opam switch create 4.07.1
+      eval `opam env`
+    fi
+    ocaml -version
 
 install_openjdk8: &install_openjdk8
   name: Install OpenJDK8
@@ -198,6 +211,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_ocaml
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_groovy
@@ -263,6 +278,8 @@ jobs:
       - run:
           <<: *install_android_sdk
       - run:
+          <<: *install_ocaml
+      - run:
           <<: *install_ghc
       - run:
           <<: *install_golang
@@ -303,6 +320,8 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - run:
+          <<: *install_ocaml
       - run:
           <<: *install_android_sdk
       - run:
@@ -546,6 +565,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_ocaml
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_groovy
@@ -610,6 +631,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_ocaml
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_ghc
@@ -660,6 +683,8 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - run:
+          <<: *install_ocaml
       - run:
           <<: *install_android_sdk
       - run:
