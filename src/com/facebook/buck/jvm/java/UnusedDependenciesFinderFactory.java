@@ -31,6 +31,7 @@ import java.util.Optional;
 public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
   @AddToRuleKey private final Optional<String> buildozerPath;
   @AddToRuleKey private final boolean onlyPrintCommands;
+  @AddToRuleKey private final boolean doUltralightChecking;
 
   @ExcludeFromRuleKey(
       reason = "includes source paths",
@@ -53,6 +54,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
   public UnusedDependenciesFinderFactory(
       Optional<String> buildozerPath,
       boolean onlyPrintCommands,
+      boolean doUltralightChecking,
       ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> deps,
       ImmutableList<UnusedDependenciesFinder.DependencyAndExportedDeps> providedDeps,
       ImmutableList<String> exportedDeps) {
@@ -61,6 +63,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
     this.deps = deps;
     this.providedDeps = providedDeps;
     this.exportedDeps = exportedDeps;
+    this.doUltralightChecking = doUltralightChecking;
   }
 
   UnusedDependenciesFinder create(
@@ -78,6 +81,7 @@ public class UnusedDependenciesFinderFactory implements AddsToRuleKey {
         sourcePathResolverAdapter,
         unusedDependenciesAction,
         buildozerPath,
-        onlyPrintCommands);
+        onlyPrintCommands,
+        doUltralightChecking);
   }
 }

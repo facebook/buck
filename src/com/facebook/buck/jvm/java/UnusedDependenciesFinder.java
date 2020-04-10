@@ -86,6 +86,8 @@ public abstract class UnusedDependenciesFinder implements Step {
 
   public abstract boolean isOnlyPrintCommands();
 
+  public abstract boolean isDoUltralightChecking();
+
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     Preconditions.checkState(getUnusedDependenciesAction() != UnusedDependenciesAction.IGNORE);
@@ -116,7 +118,7 @@ public abstract class UnusedDependenciesFinder implements Step {
     }
 
     return DefaultClassUsageFileReader.loadUsedJarsFromFile(
-        getProjectFilesystem(), cellPathResolver, depFile);
+        getProjectFilesystem(), cellPathResolver, depFile, isDoUltralightChecking());
   }
 
   private MessageHandler chooseMessageHandler(ExecutionContext executionContext) {

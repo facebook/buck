@@ -265,6 +265,10 @@ public class JavaBuckConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(SECTION, "unused_dependencies_only_print_commands", false);
   }
 
+  public boolean isUnusedDependenciesUltralightChecking() {
+    return delegate.getBooleanValue(SECTION, "unused_dependencies_ultralight_checking", false);
+  }
+
   public boolean isUnusedDependenciesExportedDepsAsFirstOrderDeps() {
     return delegate.getBooleanValue(
         SECTION, "unused_dependencies_exported_deps_as_first_order_deps", false);

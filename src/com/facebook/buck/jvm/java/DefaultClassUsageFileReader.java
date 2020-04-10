@@ -23,6 +23,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -87,17 +88,38 @@ class DefaultClassUsageFileReader {
   public static ImmutableSet<Path> loadUsedJarsFromFile(
       ProjectFilesystem projectFilesystem,
       CellPathResolver cellPathResolver,
-      Path classUsageFilePath)
+      Path classUsageFilePath,
+      boolean doUltralightChecking)
       throws IOException {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
     ImmutableMap<String, ImmutableMap<String, Integer>> classUsageEntries =
         loadClassUsageMap(classUsageFilePath);
-    for (String jarPath : classUsageEntries.keySet()) {
+    for (Map.Entry<String, ImmutableMap<String, Integer>> entry : classUsageEntries.entrySet()) {
+      if (doUltralightChecking && isUltralightOnlyDependency(entry.getValue())) {
+        continue;
+      }
+
+      String jarPath = entry.getKey();
       Path jarAbsolutePath =
           convertRecordedJarPathToAbsolute(projectFilesystem, cellPathResolver, jarPath);
       builder.add(jarAbsolutePath);
     }
     return builder.build();
+  }
+
+  /**
+   * Wild hack that allows us to remove Ultralight-only dependencies from the unused deps checker. A
+   * dependency is Ultralight-only if we only loaded the Module-related classes.
+   *
+   * @deprecated T62272524
+   */
+  @Deprecated
+  @VisibleForTesting
+  static boolean isUltralightOnlyDependency(ImmutableMap<String, Integer> jarUsedClassesEntry) {
+    return jarUsedClassesEntry.size() == 2
+        && jarUsedClassesEntry.keySet().stream()
+            .anyMatch(path -> path.startsWith("_STRIPPED_RESOURCES/ultralight/modules/"))
+        && jarUsedClassesEntry.entrySet().stream().allMatch(entry -> entry.getValue().equals(1));
   }
 
   private static Path convertRecordedJarPathToAbsolute(
