@@ -53,8 +53,7 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
   }
 
   @Override
-  public void buildTransitiveClosure(Set<NODE_TYPE> targetNodes, int maxDepth)
-      throws QueryException {
+  public void buildTransitiveClosure(Set<NODE_TYPE> targetNodes) throws QueryException {
     throw new UnsupportedOperationException();
   }
 

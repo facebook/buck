@@ -50,7 +50,7 @@ public class InputsFunction<T> implements QueryFunction<T> {
       QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
     Set<T> targets = evaluator.eval(args.get(0).getExpression(), env);
-    env.buildTransitiveClosure(targets, 0);
+    env.buildTransitiveClosure(targets);
     return Unions.of((T target) -> env.getInputs(target), targets);
   }
 }

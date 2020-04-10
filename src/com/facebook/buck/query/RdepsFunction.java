@@ -80,7 +80,7 @@ public class RdepsFunction<T> implements QueryFunction<T> {
       QueryEvaluator<T> evaluator, QueryEnvironment<T> env, ImmutableList<Argument<T>> args)
       throws QueryException {
     Set<T> universeSet = evaluator.eval(args.get(0).getExpression(), env);
-    env.buildTransitiveClosure(universeSet, Integer.MAX_VALUE);
+    env.buildTransitiveClosure(universeSet);
     Set<T> transitiveClosureUniverse = env.getTransitiveClosure(universeSet);
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.

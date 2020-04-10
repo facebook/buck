@@ -63,9 +63,8 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
   }
 
   @Override
-  public void buildTransitiveClosure(Set<NODE_TYPE> targetNodes, int maxDepth)
-      throws QueryException {
-    delegate.buildTransitiveClosure(targetNodes, maxDepth);
+  public void buildTransitiveClosure(Set<NODE_TYPE> targetNodes) throws QueryException {
+    delegate.buildTransitiveClosure(targetNodes);
   }
 
   @Override

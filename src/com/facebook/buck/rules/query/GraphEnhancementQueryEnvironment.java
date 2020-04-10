@@ -160,7 +160,7 @@ public class GraphEnhancementQueryEnvironment implements QueryEnvironment<QueryT
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targetNodes, int maxDepth) {
+  public void buildTransitiveClosure(Set<QueryTarget> targetNodes) {
     // No-op, since the closure should have already been built during parsing
   }
 

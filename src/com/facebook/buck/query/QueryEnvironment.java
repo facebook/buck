@@ -247,7 +247,7 @@ public interface QueryEnvironment<NODE_TYPE> {
    * <p>If a larger transitive closure was already built, returns it to improve incrementality,
    * since all depth-constrained methods filter it after it is built anyway.
    */
-  void buildTransitiveClosure(Set<NODE_TYPE> targetNodes, int maxDepth) throws QueryException;
+  void buildTransitiveClosure(Set<NODE_TYPE> targetNodes) throws QueryException;
 
   String getTargetKind(NODE_TYPE target) throws QueryException;
 

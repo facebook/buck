@@ -309,7 +309,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   }
 
   @Override
-  public void buildTransitiveClosure(Set<QueryTarget> targets, int maxDepth) throws QueryException {
+  public void buildTransitiveClosure(Set<QueryTarget> targets) throws QueryException {
     // Filter QueryTargets that are build targets and not yet present in the build target graph.
     ImmutableSet<BuildTarget> buildTargets =
         targets.stream()

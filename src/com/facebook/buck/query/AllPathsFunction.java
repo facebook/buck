@@ -85,7 +85,7 @@ public class AllPathsFunction<T> implements QueryFunction<T> {
     //    the reverse dependencies. This will effectively compute the intersection between the nodes
     //    reachable from the "from" set and the reverse transitive closure of the "to" set.
 
-    env.buildTransitiveClosure(fromSet, Integer.MAX_VALUE);
+    env.buildTransitiveClosure(fromSet);
 
     Set<T> reachableFromX = env.getTransitiveClosure(fromSet);
     Set<T> result = intersection(reachableFromX, toSet);

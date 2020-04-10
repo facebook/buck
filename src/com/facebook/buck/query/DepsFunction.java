@@ -112,7 +112,7 @@ public class DepsFunction<T> implements QueryFunction<T> {
     int depthBound = args.size() > 1 ? args.get(1).getInteger() : Integer.MAX_VALUE;
     Optional<QueryExpression<T>> deps =
         args.size() > 2 ? Optional.of(args.get(2).getExpression()) : Optional.empty();
-    env.buildTransitiveClosure(argumentSet, depthBound);
+    env.buildTransitiveClosure(argumentSet);
 
     // LinkedHashSet preserves the order of insertion when iterating over the values.
     // The order by which we traverse the result is meaningful because the dependencies are
