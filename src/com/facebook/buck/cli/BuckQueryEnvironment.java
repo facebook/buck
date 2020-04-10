@@ -73,7 +73,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -87,25 +86,6 @@ import java.util.function.Predicate;
  * <p>The query language is documented at docs/command/query.soy
  */
 public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
-
-  /** List of the default query functions. */
-  private static final List<QueryFunction<QueryTarget>> QUERY_FUNCTIONS =
-      ImmutableList.of(
-          new AllPathsFunction<>(),
-          new AttrFilterFunction<>(),
-          new AttrRegexFilterFunction<>(),
-          new BuildFileFunction<>(),
-          new ConfigFunction<>(),
-          new DepsFunction<>(),
-          new DepsFunction.FirstOrderDepsFunction<>(),
-          new DepsFunction.LookupFunction<>(),
-          new InputsFunction<>(),
-          new FilterFunction<>(),
-          new KindFunction<>(),
-          new LabelsFunction<>(),
-          new OwnerFunction<>(),
-          new RdepsFunction<>(),
-          new TestsOfFunction<>());
 
   private final TargetUniverse targetUniverse;
   private final Cell rootCell;
@@ -449,9 +429,29 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
         rootCell.getCellNameResolver());
   }
 
+  /** The (genericized) set of functions available to this query environment */
+  public static <T> Iterable<QueryFunction<T>> defaultFunctions() {
+    return ImmutableList.of(
+        new AllPathsFunction<>(),
+        new AttrFilterFunction<>(),
+        new AttrRegexFilterFunction<>(),
+        new BuildFileFunction<>(),
+        new ConfigFunction<>(),
+        new DepsFunction<>(),
+        new DepsFunction.FirstOrderDepsFunction<>(),
+        new DepsFunction.LookupFunction<>(),
+        new InputsFunction<>(),
+        new FilterFunction<>(),
+        new KindFunction<>(),
+        new LabelsFunction<>(),
+        new OwnerFunction<>(),
+        new RdepsFunction<>(),
+        new TestsOfFunction<>());
+  }
+
   @Override
   public Iterable<QueryFunction<QueryTarget>> getFunctions() {
-    return QUERY_FUNCTIONS;
+    return defaultFunctions();
   }
 
   @Override

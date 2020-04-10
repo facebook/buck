@@ -147,7 +147,7 @@ public class DepsFunction<T> implements QueryFunction<T> {
    * A function that resolves to the current node's target being traversed when evaluating the deps
    * function.
    */
-  public static class FirstOrderDepsFunction<T extends QueryTarget> implements QueryFunction<T> {
+  public static class FirstOrderDepsFunction<T> implements QueryFunction<T> {
 
     private static final String NAME = "first_order_deps";
 

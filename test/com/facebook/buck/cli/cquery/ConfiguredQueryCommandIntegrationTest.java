@@ -89,6 +89,18 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void implicitTargetUniverseForRdeps() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    // Even though `//lib:bar` has a default_target_platform of tvos, the universe is created with
+    // ios-bin and therefore we match the version of bar that is configured for ios.
+    ProcessResult result = workspace.runBuckCommand("cquery", "rdeps(//bin:ios-bin, //lib:bar, 0)");
+    assertOutputMatches("//lib:bar (//config/platform:ios)", result);
+  }
+
+  @Test
   public void configFunctionConfiguresTargetForDefaultTargetPlatformIfNoSecondArgumentGiven()
       throws IOException {
     ProjectWorkspace workspace =

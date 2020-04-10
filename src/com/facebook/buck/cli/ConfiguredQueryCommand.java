@@ -25,18 +25,23 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.PerBuildStateFactory;
 import com.facebook.buck.parser.SpeculativeParsing;
 import com.facebook.buck.query.QueryBuildTarget;
+import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
+import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryFileTarget;
+import com.facebook.buck.query.QueryParserEnv;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Splitter;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -85,16 +90,9 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
                     params.getParser().getPermState())) {
       ParsingContext parsingContext =
           createParsingContext(params.getCells(), pool.getListeningExecutorService());
-      // TODO(srice): Stop using `LegacyQueryUniverse`. When no `--target-universe` is provided we
-      // should infer the root targets from the query string.
-      TargetUniverse targetUniverse =
-          targetUniverseParam == null
-              ? LegacyQueryUniverse.from(params, parserState)
-              : PrecomputedTargetUniverse.createFromRootTargets(
-                  Splitter.on(',').splitToList(targetUniverseParam),
-                  params,
-                  parserState,
-                  parsingContext);
+      PrecomputedTargetUniverse targetUniverse =
+          PrecomputedTargetUniverse.createFromRootTargets(
+              rootTargetsForUniverse(), params, parserState, parsingContext);
       BuckQueryEnvironment env = BuckQueryEnvironment.from(params, targetUniverse, parsingContext);
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
@@ -139,6 +137,28 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       PrintStream printStream)
       throws QueryException, IOException {
     throw new QueryException("cquery is not yet capable of printing results");
+  }
+
+  // TODO: This API is too stringly typed. It's easy for users to provide strings here which will
+  // cause us to have problems - if not outright crash - later down the line. We should use a type
+  // here which better reflects our intent, something like `BuildTargetPattern`.
+  private List<String> rootTargetsForUniverse() throws QueryException {
+    // Happy path - the user told us what universe they wanted.
+    if (targetUniverseParam != null) {
+      return Splitter.on(',').splitToList(targetUniverseParam);
+    }
+
+    // Less happy path - parse the query and try to infer the roots of the target universe.
+    RepeatingTargetEvaluator evaluator = new RepeatingTargetEvaluator();
+    QueryExpression<String> expression =
+        QueryExpression.parse(
+            arguments.get(0),
+            QueryParserEnv.of(BuckQueryEnvironment.defaultFunctions(), evaluator));
+    // TODO: Right now we use `expression.getTargets`, which gets all target literals referenced in
+    // the query. We don't want all literals, for example with `rdeps(//my:binary, //some:library)`
+    // we only want to include `//my:binary` in the universe, not both. We should provide a way for
+    // functions to specify which of their parameters should be used for the universe calculation.
+    return ImmutableList.copyOf(expression.getTargets(evaluator));
   }
 
   // Returns the output format that we should actually use based on what the user asked for.
@@ -193,5 +213,22 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
     // mess with us. Long term we hope to replace flavors with configurations anyway so in the end
     // this shouldn't really matter.
     return buildTarget.withoutFlavors().toStringWithConfiguration();
+  }
+
+  /**
+   * `QueryEnvironment.TargetEvaluator` implementation that simply repeats back the target string it
+   * was provided. Used to parse the query ahead of time and infer the target universe.
+   */
+  private static class RepeatingTargetEvaluator
+      implements QueryEnvironment.TargetEvaluator<String> {
+    @Override
+    public Type getType() {
+      return Type.LAZY;
+    }
+
+    @Override
+    public Set<String> evaluateTarget(String target) throws QueryException {
+      return ImmutableSet.of(target);
+    }
   }
 }
