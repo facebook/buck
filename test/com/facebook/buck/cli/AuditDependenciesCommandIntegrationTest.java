@@ -18,8 +18,11 @@ package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.OutputHelper;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -32,6 +35,16 @@ import org.junit.Test;
 public class AuditDependenciesCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  public void assertJSONEquals(
+      String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
+      throws IOException {
+    result.assertSuccess();
+
+    assertThat(
+        OutputHelper.parseJSON(workspace.getFileContents(expectedOutputFile)),
+        is(equalTo(OutputHelper.parseJSON(result.getStdout()))));
+  }
 
   @Test
   public void testRunningWithNoParameterCausesBuildError() throws IOException {
@@ -84,9 +97,7 @@ public class AuditDependenciesCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("audit", "dependencies", "--json", "//example:one");
     result.assertSuccess();
-    assertThat(
-        workspace.getFileContents("stdout-one.json"),
-        equalToIgnoringPlatformNewlines(result.getStdout()));
+    assertJSONEquals("stdout-one.json", result, workspace);
   }
 
   @Test
@@ -161,10 +172,7 @@ public class AuditDependenciesCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "audit", "dependencies", "--json", "//example:two", "//example:three");
-    result.assertSuccess();
-    assertThat(
-        workspace.getFileContents("stdout-two-three.json"),
-        equalToIgnoringPlatformNewlines(result.getStdout()));
+    assertJSONEquals("stdout-two-three.json", result, workspace);
   }
 
   @Test
@@ -183,10 +191,7 @@ public class AuditDependenciesCommandIntegrationTest {
             "//example:one",
             "//example:two",
             "//example:three");
-    result.assertSuccess();
-    assertThat(
-        workspace.getFileContents("stdout-one-two-three-transitive.json"),
-        equalToIgnoringPlatformNewlines(result.getStdout()));
+    assertJSONEquals("stdout-one-two-three-transitive.json", result, workspace);
   }
 
   @Test

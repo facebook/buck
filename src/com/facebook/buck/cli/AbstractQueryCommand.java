@@ -26,8 +26,8 @@ import com.facebook.buck.util.CommandLineException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.TreeMultimap;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -213,8 +213,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     env.preloadTargetPatterns(targetLiterals);
 
     // Now execute the query on the arguments one-by-one.
-    TreeMultimap<String, QueryTarget> queryResultMap =
-        TreeMultimap.create(String::compareTo, QueryTarget::compare);
+    LinkedHashMultimap<String, QueryTarget> queryResultMap = LinkedHashMultimap.create();
     for (String input : inputsFormattedAsBuildTargets) {
       String query = queryFormat.replace("%s", input);
       Set<QueryTarget> queryResult = env.evaluateQuery(query);

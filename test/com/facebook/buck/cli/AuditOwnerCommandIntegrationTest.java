@@ -17,8 +17,11 @@
 package com.facebook.buck.cli;
 
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.testutil.OutputHelper;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -62,7 +65,7 @@ public class AuditOwnerCommandIntegrationTest {
             isPlatformWindows ? "example\\lib\\2.txt" : "example/lib/2.txt");
     result.assertSuccess();
     assertThat(
-        workspace.getFileContents(expectedJson),
-        equalToIgnoringPlatformNewlines(result.getStdout()));
+        OutputHelper.parseJSON(workspace.getFileContents(expectedJson)),
+        is(equalTo(OutputHelper.parseJSON(result.getStdout()))));
   }
 }
