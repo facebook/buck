@@ -63,6 +63,7 @@ java_library(
         "DEFAULT": [],
     }),
     exported_deps = [
+        "//third-party/java/gson:gson",
         "//third-party/java/protobuf:protobuf",
     ],
 )

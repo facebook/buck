@@ -1,0 +1,13 @@
+java_library(
+    name = "downward_api",
+    srcs = glob(["**/*.java"]),
+    tests = [
+        "//test/com/facebook/buck/io/namedpipes:unit",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src-gen:downward-model",
+        "//third-party/java/jsr:jsr305",
+        "//third-party/java/protobuf:protobuf-util",
+    ],
+)
