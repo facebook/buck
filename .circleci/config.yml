@@ -3,6 +3,21 @@ version: 2.1
 orbs:
   win: circleci/windows@2.2.0
 
+install_lua: &install_lua
+  name: Install Lua
+  command: |
+    cd
+    lua_version="5.3.5"
+    curl -R -O http://www.lua.org/ftp/lua-${lua_version}.tar.gz
+    tar zxf lua-${lua_version}.tar.gz
+    cd lua-${lua_version}
+    if [ "${PLATFORM}" == "linux" ]; then
+      sudo make linux install
+    elif [ "${PLATFORM}" == "macos" ]; then
+      sudo make macosx install
+    fi
+    lua -v
+
 install_ocaml: &install_ocaml
   name: Install Ocaml
   command: |
@@ -201,6 +216,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_lua
+      - run:
           <<: *install_ocaml
       - run:
           <<: *install_android_sdk
@@ -266,6 +283,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_lua
+      - run:
           <<: *install_android_sdk
       - run:
           <<: *install_ocaml
@@ -293,7 +312,7 @@ jobs:
             export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
             set -eux
             # There is a bug in buck, see issue #2435 for details. skip the tests for now.
-            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.rust.RustBinaryIntegrationTest|com.facebook.buck.features.rust.RustLinkerIntegrationTest)).*[Ii]ntegration.*'
+            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.rust.RustBinaryIntegrationTest|com.facebook.buck.features.rust.RustLinkerIntegrationTest|com.facebook.buck.features.lua.LuaBinaryIntegrationTest)).*[Ii]ntegration.*'
             # Run this after the bug has been fixed:
             #${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
 
@@ -307,6 +326,8 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - run:
+          <<: *install_lua
       - run:
           <<: *install_ocaml
       - run:
@@ -537,6 +558,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_lua
+      - run:
           <<: *install_ocaml
       - run:
           <<: *install_android_sdk
@@ -603,6 +626,8 @@ jobs:
       - run:
           <<: *install_openjdk8
       - run:
+          <<: *install_lua
+      - run:
           <<: *install_ocaml
       - run:
           <<: *install_android_sdk
@@ -640,7 +665,7 @@ jobs:
             # Should run this:
             #${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
             # But there are some test failures, exclude them for now and fix them later.
-            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest)).*[Ii]ntegration.*'
+            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest|com.facebook.buck.features.lua.LuaBinaryIntegrationTest)).*[Ii]ntegration.*'
 
   macos_test_heavy_integration:
     environment:
@@ -652,6 +677,8 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - run:
+          <<: *install_lua
       - run:
           <<: *install_ocaml
       - run:
