@@ -17,6 +17,8 @@ Since Buck is used to build Buck, the initial build process involves 2 phases:
     cd buck
     ant
 
+You must be using Java 8 or 11 for this to compile successfully. If you see compilation errors from ant, check your `JAVA_HOME` is pointing at one of these versions.
+
 ##### 2. Use bootstrapped version of Buck to build Buck:
 
     ./bin/buck build --show-output buck
