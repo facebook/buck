@@ -21,7 +21,6 @@ import com.facebook.buck.event.EventKey;
 import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.google.common.collect.ImmutableMap;
-import com.sun.management.GcInfo;
 import java.lang.management.MemoryUsage;
 import java.util.Map;
 
@@ -49,12 +48,12 @@ public abstract class GCCollectionEvent extends AbstractBuckEvent {
   /** Memory usage statistics for this process after the end of the GC. */
   private final ImmutableMap<String, ImmutableMap<String, Long>> memoryUsageAfterGC;
 
-  GCCollectionEvent(EventKey eventKey, GcInfo info) {
+  GCCollectionEvent(EventKey eventKey, GCNotificationInfo info) {
     super(eventKey);
     this.id = info.getId();
     this.durationInMillis = info.getDuration();
-    this.memoryUsageBeforeGC = memoryUsageMap(info.getMemoryUsageBeforeGc());
-    this.memoryUsageAfterGC = memoryUsageMap(info.getMemoryUsageAfterGc());
+    this.memoryUsageBeforeGC = memoryUsageMap(info.getMemoryUsageBeforeGC());
+    this.memoryUsageAfterGC = memoryUsageMap(info.getMemoryUsageAfterGC());
   }
 
   @JsonView(JsonViews.MachineReadableLog.class)

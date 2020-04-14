@@ -20,7 +20,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventBus;
 import com.google.common.collect.ImmutableSet;
 import com.sun.management.GarbageCollectionNotificationInfo;
-import com.sun.management.GcInfo;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import javax.management.Notification;
@@ -116,7 +115,12 @@ public final class GCNotificationEventEmitter implements NotificationListener {
         .equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION)) {
       GarbageCollectionNotificationInfo notificationInfo =
           GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
-      GcInfo info = notificationInfo.getGcInfo();
+      GCNotificationInfo info =
+          GCNotificationInfo.of(
+              notificationInfo.getGcInfo().getId(),
+              notificationInfo.getGcInfo().getDuration(),
+              notificationInfo.getGcInfo().getMemoryUsageBeforeGc(),
+              notificationInfo.getGcInfo().getMemoryUsageAfterGc());
       if (isMinorGCBean((GarbageCollectorMXBean) handback)) {
         eventBus.post(new GCMinorCollectionEvent(info));
       } else {

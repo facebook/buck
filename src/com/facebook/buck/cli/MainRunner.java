@@ -88,6 +88,8 @@ import com.facebook.buck.event.listener.CacheRateStatsListener;
 import com.facebook.buck.event.listener.ChromeTraceBuildListener;
 import com.facebook.buck.event.listener.CriticalPathEventListener;
 import com.facebook.buck.event.listener.FileSerializationEventBusListener;
+import com.facebook.buck.event.listener.GCTimeSpentListener;
+import com.facebook.buck.event.listener.GCTimeSpentListenerConfig;
 import com.facebook.buck.event.listener.JavaUtilsLoggingBuildListener;
 import com.facebook.buck.event.listener.LoadBalancerEventsListener;
 import com.facebook.buck.event.listener.LogUploaderListener;
@@ -2250,6 +2252,13 @@ public final class MainRunner {
       eventListenersBuilder.add(new JavaUtilsLoggingBuildListener(projectFilesystem));
     }
 
+    if (logBuckConfig.isJavaGCEventLoggingEnabled()) {
+      eventListenersBuilder.add(
+          new GCTimeSpentListener(
+              buckEventBus,
+              buckConfig.getView(GCTimeSpentListenerConfig.class),
+              executionEnvironment));
+    }
     Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
     Path criticalPathDir = projectFilesystem.resolve(logDirectoryPath);
     Path criticalPathLog = criticalPathDir.resolve(BuckConstant.BUCK_CRITICAL_PATH_LOG_FILE_NAME);

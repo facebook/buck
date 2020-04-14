@@ -17,11 +17,10 @@
 package com.facebook.buck.support.jvm;
 
 import com.facebook.buck.event.EventKey;
-import com.sun.management.GcInfo;
 
 /** GC Buck event representing a major GC collection. */
 public class GCMinorCollectionEvent extends GCCollectionEvent {
-  public GCMinorCollectionEvent(GcInfo info) {
+  public GCMinorCollectionEvent(GCNotificationInfo info) {
     super(EventKey.unique(), info);
   }
 
