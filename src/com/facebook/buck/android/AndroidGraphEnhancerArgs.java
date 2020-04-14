@@ -137,6 +137,8 @@ public interface AndroidGraphEnhancerArgs
     return false;
   }
 
+  Optional<Integer> getSecondaryDexWeightLimit();
+
   Optional<String> getLocalizedStringFileName();
 
   @Value.Default

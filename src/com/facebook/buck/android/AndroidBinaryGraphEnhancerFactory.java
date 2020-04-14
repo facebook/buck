@@ -105,6 +105,9 @@ public class AndroidBinaryGraphEnhancerFactory {
             ? args.isSkipCrunchPngs().get()
             : androidBuckConfig.getSkipCrunchPngsDefault().orElse(false);
 
+    int secondaryDexWeightLimit =
+        args.getSecondaryDexWeightLimit().orElse(androidBuckConfig.getSecondaryDexWeightLimit());
+
     APKModuleGraph apkModuleGraph;
     if (args.getApplicationModuleConfigs().isEmpty()) {
       apkModuleGraph =
@@ -221,7 +224,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.isAapt2LocaleFiltering(),
         args.getExtraFilteredResources(),
         androidBuckConfig.getRDotJavaWeightFactor(),
-        androidBuckConfig.getSecondaryDexWeightLimit(),
+        secondaryDexWeightLimit,
         ImmutableSet.of());
   }
 

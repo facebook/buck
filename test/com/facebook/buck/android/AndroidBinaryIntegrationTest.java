@@ -317,6 +317,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     buildLog.assertTargetIsAbsent("//java/com/sample/lib:lib");
   }
 
+  @Test
   public void testXzsMultipleSecondaryDexes() throws IOException {
     Path apkPath = workspace.buildAndReturnOutput("//apps/multidex:xzs_multiple_dex");
 
@@ -385,7 +386,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     return new Integer(matcher.group(1));
   }
 
-  // @Test(expected = AssertionError.class)
+  @Test(expected = AssertionError.class)
   public void testRawDexTooManyDexes() {
     workspace.buildAndReturnOutput("//apps/multidex:raw_dex_over_100");
   }

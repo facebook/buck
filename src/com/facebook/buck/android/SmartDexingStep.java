@@ -220,9 +220,9 @@ public class SmartDexingStep implements Step {
         } else {
           context.logError(
               e,
-              "Secondary dex size exceeds 64k method ref limit."
-                  + "linear_alloc_hard_limit determines the maximum size in bytes of secondary dexes."
-                  + "Reduce linear_alloc_hard_limit until all secondary dexes are small enough. (16mb recommended)");
+              "Secondary dex size exceeds 64k method ref limit.\n"
+                  + "secondary_dex_weight_limit determines the maximum size in bytes of secondary dexes.\n"
+                  + "Reduce secondary_dex_weight_limit until all secondary dexes are small enough.");
         }
       } else {
         context.logError(e, "There was an error in smart dexing step.");

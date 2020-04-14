@@ -32,7 +32,7 @@ android_binary(
     name = "xzs_multiple_dex",
     dex_compression = "xzs",
     keystore = "//keystores:debug",
-    linear_alloc_hard_limit = 3600,
+    secondary_dex_weight_limit = 3600,
     manifest = "SimpleManifest.xml",
     primary_dex_patterns = [],
     use_split_dex = True,
@@ -66,7 +66,6 @@ android_binary(
     dex_compression = "jar",
     dex_group_lib_limit = 1,
     keystore = "//keystores:debug",
-    linear_alloc_hard_limit = 350,
     manifest = "SimpleManifest.xml",
     primary_dex_patterns = [],
     use_split_dex = True,
@@ -80,7 +79,7 @@ android_binary(
     dex_compression = "raw",
     dex_group_lib_limit = 1,
     keystore = "//keystores:debug",
-    linear_alloc_hard_limit = 350,
+    secondary_dex_weight_limit = 350,
     manifest = "SimpleManifest.xml",
     primary_dex_patterns = [],
     use_split_dex = True,
@@ -113,7 +112,6 @@ android_binary(
     name = "primary_dex_overflow",
     dex_group_lib_limit = 1,
     keystore = "//keystores:debug",
-    linear_alloc_hard_limit = 1,
     manifest = "SimpleManifest.xml",
     primary_dex_patterns = [
         "^gen/Class"
@@ -130,7 +128,6 @@ android_binary(
     name = "secondary_dex_overflow",
     dex_group_lib_limit = 1,
     keystore = "//keystores:debug",
-    linear_alloc_hard_limit = 1,
     manifest = "SimpleManifest.xml",
     primary_dex_patterns = [
         "/MyApplication^",
