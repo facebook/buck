@@ -1,4 +1,4 @@
-commit 100df6be512b3a241138464631b7dd39608e7e52
+commit 5a198a9b610f27a99119d546138eee5612a832c6
 Author: Stiopa Koltsov <stepan.koltsov@gmail.com>
 Date:   Sun Mar 29 19:44:12 2020 +0100
 
@@ -2517,34 +2517,3 @@ index 459247fad9..ced141aa62 100644
        StarlarkThread thread,
        FuncallExpression call,
        MethodDescriptor method,
-diff --git a/src/main/java/com/google/devtools/build/lib/syntax/Eval.java b/src/main/java/com/google/devtools/build/lib/syntax/Eval.java
-index 107524a9e2..1d83c92daf 100644
---- a/src/main/java/com/google/devtools/build/lib/syntax/Eval.java
-+++ b/src/main/java/com/google/devtools/build/lib/syntax/Eval.java
-@@ -30,7 +30,7 @@ import javax.annotation.Nullable;
- // Make all its methods static, and thread StarlarkThread (soon: StarlarkThread) explicitly.
- // The only actual state is the return value, which can be saved in the StarlarkThread's call frame.
- // Move remaining Expression.eval logic here, and simplify.
--final class Eval {
-+public final class Eval {
- 
-   private static final AtomicReference<Debugger> debugger = new AtomicReference<>();
- 
-@@ -61,7 +61,7 @@ final class Eval {
-     return eval.result;
-   }
- 
--  static void execToplevelStatement(StarlarkThread thread, Statement stmt)
-+  public static void execToplevelStatement(StarlarkThread thread, Statement stmt)
-       throws EvalException, InterruptedException {
-     // Ignore the returned BREAK/CONTINUE/RETURN/PASS token:
-     // the first three don't exist at top-level, and the last is a no-op.
-@@ -398,7 +398,7 @@ final class Eval {
-    * @throws EvalException if the expression could not be evaluated.
-    * @throws InterruptedException may be thrown in a sub class.
-    */
--  static Object eval(StarlarkThread thread, Expression expr)
-+  public static Object eval(StarlarkThread thread, Expression expr)
-       throws EvalException, InterruptedException {
-     // TODO(adonovan): don't push and pop all the time. We should only need the stack of function
-     // call frames, and we should recycle them.
