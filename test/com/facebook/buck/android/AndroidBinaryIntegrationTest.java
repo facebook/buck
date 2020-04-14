@@ -400,6 +400,15 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         "Dex weight warning should be logged.",
         result.getStderr(),
         containsRegex("Primary dex size exceeds 64k method ref limit"));
+
+    assertThat(
+        "Method counts should be logged.",
+        result.getStderr(),
+        containsRegex(
+            "The largest libraries in the dex, by number of methods:\n"
+                + "methods   dex file path\n"
+                + "5002      buck-out/.*generated_lib_method_overflow_[0-9]*#d8_dex.jar\n"
+                + "5002      buck-out/.*generated_lib_method_overflow_[0-9]*#d8_dex.jar"));
   }
 
   @Test
@@ -411,6 +420,15 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         "Dex weight warning should be logged.",
         result.getStderr(),
         containsRegex("Primary dex size exceeds 64k field ref limit"));
+
+    assertThat(
+        "Field counts should be logged.",
+        result.getStderr(),
+        containsRegex(
+            "The largest libraries in the dex, by number of fields:\n"
+                + "fields    dex file path\n"
+                + "5000      buck-out/.*generated_lib_field_overflow_[0-9]*#d8_dex.jar\n"
+                + "5000      buck-out/.*generated_lib_field_overflow_[0-9]*#d8_dex.jar"));
   }
 
   @Test
@@ -422,6 +440,15 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         "Dex weight warning should be logged.",
         result.getStderr(),
         containsRegex("Secondary dex size exceeds 64k method ref limit"));
+
+    assertThat(
+        "Method counts should be logged.",
+        result.getStderr(),
+        containsRegex(
+            "The largest libraries in the dex, by number of methods:\n"
+                + "methods   dex file path\n"
+                + "5002      buck-out/.*generated_lib_method_overflow_[0-9]*#d8/dex\\.jar\n"
+                + "5002      buck-out/.*generated_lib_method_overflow_[0-9]*#d8/dex\\.jar"));
   }
 
   @Test
@@ -433,6 +460,15 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         "Dex weight warning should be logged.",
         result.getStderr(),
         containsRegex("Secondary dex size exceeds 64k field ref limit"));
+
+    assertThat(
+        "Field counts should be logged.",
+        result.getStderr(),
+        containsRegex(
+            "The largest libraries in the dex, by number of fields:\n"
+                + "fields    dex file path\n"
+                + "5000      buck-out/.*generated_lib_field_overflow_[0-9]*#d8/dex\\.jar\n"
+                + "5000      buck-out/.*generated_lib_field_overflow_[0-9]*#d8/dex\\.jar"));
   }
 
   @Test

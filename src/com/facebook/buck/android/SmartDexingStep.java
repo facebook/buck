@@ -59,7 +59,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.EnumSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -82,8 +81,6 @@ import javax.annotation.Nullable;
 public class SmartDexingStep implements Step {
   public static final String SHORT_NAME = "smart_dex";
   private static final String SECONDARY_SOLID_DEX_EXTENSION = ".dex.jar.xzs";
-
-  private final Optional<Supplier<List<String>>> primaryDexWeightsSupplier;
 
   public interface DexInputHashesProvider {
     ImmutableMap<Path, Sha1HashCode> getDexInputHashes();
@@ -126,7 +123,6 @@ public class SmartDexingStep implements Step {
       ProjectFilesystem filesystem,
       Optional<Path> primaryOutputPath,
       Optional<Supplier<Set<Path>>> primaryInputsToDex,
-      Optional<Supplier<List<String>>> primaryDexWeightsSupplier,
       Optional<Path> secondaryOutputDir,
       Optional<Supplier<Multimap<Path, Path>>> secondaryInputsToDex,
       DexInputHashesProvider dexInputHashesProvider,
@@ -157,7 +153,6 @@ public class SmartDexingStep implements Step {
               }
               return map.build();
             });
-    this.primaryDexWeightsSupplier = primaryDexWeightsSupplier;
     this.secondaryOutputDir = secondaryOutputDir;
     this.dexInputHashesProvider = dexInputHashesProvider;
     this.successDir = successDir;
@@ -202,8 +197,7 @@ public class SmartDexingStep implements Step {
       Optional<DexOverflowError.OverflowType> overflowType = DexOverflowError.checkOverflow(e);
       if (overflowType.isPresent()) {
         DexOverflowError error =
-            new DexOverflowError(
-                primaryDexWeightsSupplier, overflowType.get(), (DxStep) e.getStep());
+            new DexOverflowError(filesystem, overflowType.get(), (DxStep) e.getStep());
         context.getConsole().printErrorText(error.getErrorMessage());
       } else {
         context.logError(e, "There was an error in smart dexing step.");

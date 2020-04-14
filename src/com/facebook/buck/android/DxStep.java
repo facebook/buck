@@ -549,4 +549,8 @@ public class DxStep extends ShellStep {
   public Path getOutputDexFile() {
     return outputDexFile;
   }
+
+  public Set<Path> getFilesToDex() {
+    return filesToDex;
+  }
 }

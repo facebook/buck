@@ -1,0 +1,9 @@
+prebuilt_jar(
+    name = "dex-method-counts",
+    binary_jar = "build/jar/dex-method-counts.jar",
+    licenses = [
+        "LICENSE",
+    ],
+    visibility = ["PUBLIC"],
+    deps = [],
+)

@@ -16,23 +16,31 @@
 
 package com.facebook.buck.android;
 
+import com.android.dexdeps.DexData;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.StepFailedException;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Ordering;
+import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
- * In the case of dex overflow while merging pre-dexed libraries, display dex weights for each
- * library
+ * In the case of dex overflow while merging pre-dexed libraries, count and display method refs or
+ * field refs for each library.
  */
 public class DexOverflowError {
   private static final Logger log = Logger.get(DexOverflowError.class);
 
   private static final String PRIMARY_DEX_OVERFLOW_MESSAGE =
       "Primary dex size exceeds 64k %s ref limit\n"
-          + "Use primary dex patterns to exclude classes from the primary dex.";
+          + "Use primary dex patterns and/or allow_r_dot_java_in_secondary_dex to exclude classes from the primary dex.";
 
   private static final String SECONDARY_DEX_OVERFLOW_MESSAGE =
       "Secondary dex size exceeds 64k %s ref limit.\n"
@@ -45,15 +53,12 @@ public class DexOverflowError {
     FIELD
   }
 
-  private final Optional<Supplier<List<String>>> primaryDexWeightsSupplier;
+  private final ProjectFilesystem filesystem;
   private final OverflowType type;
   private final DxStep dxStep;
 
-  public DexOverflowError(
-      Optional<Supplier<List<String>>> primaryDexWeightsSupplier,
-      OverflowType type,
-      DxStep dxStep) {
-    this.primaryDexWeightsSupplier = primaryDexWeightsSupplier;
+  public DexOverflowError(ProjectFilesystem filesystem, OverflowType type, DxStep dxStep) {
+    this.filesystem = filesystem;
     this.type = type;
     this.dxStep = dxStep;
   }
@@ -75,33 +80,80 @@ public class DexOverflowError {
 
   /** Return a detailed error message to show the user */
   public String getErrorMessage() {
+    StringBuilder builder = new StringBuilder();
     String overflowName = type.name().toLowerCase();
     if (dxStep.getOutputDexFile().endsWith("classes.dex")) {
-      String overflowMessage = String.format(PRIMARY_DEX_OVERFLOW_MESSAGE, overflowName);
-      if (primaryDexWeightsSupplier.isPresent()) {
-        List<String> dexWeights = primaryDexWeightsSupplier.get().get();
-        return formatDexOverflowMessage(overflowMessage, dexWeights);
-      } else {
-        return overflowMessage;
-      }
+      builder.append(String.format(PRIMARY_DEX_OVERFLOW_MESSAGE, overflowName));
     } else {
-      return String.format(SECONDARY_DEX_OVERFLOW_MESSAGE, overflowName);
+      builder.append(String.format(SECONDARY_DEX_OVERFLOW_MESSAGE, overflowName));
     }
-  }
+    builder.append(String.format("\nOutput dex file: %s\n", dxStep.getOutputDexFile()));
 
-  private String formatDexOverflowMessage(String overflowMessage, List<String> dexWeights) {
-    StringBuilder builder = new StringBuilder();
-    builder.append(
-        overflowMessage
-            + "The largest libraries in the primary dex, by number of bytes:\n"
-            + "Weight\tDex file path\n");
+    ImmutableMap<String, Integer> dexInputDetails = null;
+    try {
+      ImmutableMap.Builder<String, Integer> dexInputsBuilder = ImmutableMap.builder();
+      for (Path dexFile : dxStep.getFilesToDex()) {
+        String dexFileName = dexFile.toString();
+        if (dexFileName.endsWith(".jar") || dexFileName.endsWith(".dex")) {
+          dexInputsBuilder.put(dexFileName, countRefs(type, filesystem.resolve(dexFileName)));
+        }
+      }
+      dexInputsBuilder.orderEntriesByValue(Ordering.natural().reversed());
+      dexInputDetails = dexInputsBuilder.build();
+    } catch (NoSuchMethodException | IllegalAccessException | IOException e) {
+      e.printStackTrace();
+    }
 
-    builder.append(dexWeights.stream().limit(20).collect(Collectors.joining("\n")));
+    if (dexInputDetails != null && !dexInputDetails.isEmpty()) {
+      builder.append(
+          String.format(
+              "The largest libraries in the dex, by number of %ss:\n%-10sdex file path\n",
+              overflowName, overflowName + "s"));
 
-    if (dexWeights.size() > 20) {
-      builder.append("\n... See buck log for full list");
-      log.error(String.join("\n", dexWeights));
+      List<String> dexRows =
+          dexInputDetails.entrySet().stream()
+              .map(entry -> String.format("%-10s%s", entry.getValue(), entry.getKey()))
+              .collect(Collectors.toList());
+
+      builder.append(dexRows.stream().limit(20).collect(Collectors.joining("\n")));
+
+      if (dexRows.size() > 20) {
+        builder.append("\n... See buck log for full list");
+        log.debug(String.join("\n", dexRows));
+      }
     }
     return builder.toString();
+  }
+
+  @SuppressWarnings("unchecked")
+  private static int countRefs(OverflowType type, Path dexFile)
+      throws IOException, NoSuchMethodException, IllegalAccessException {
+    Method m = info.persistent.dex.Main.class.getDeclaredMethod("openInputFiles", String.class);
+    m.setAccessible(true);
+
+    List<RandomAccessFile> dexFiles = null;
+    try {
+      dexFiles =
+          (List<RandomAccessFile>) m.invoke(new info.persistent.dex.Main(), dexFile.toString());
+    } catch (InvocationTargetException e) {
+      log.debug("Failed to load dex file at " + dexFile);
+    }
+
+    int count = 0;
+    if (dexFiles != null) {
+      for (RandomAccessFile file : dexFiles) {
+        DexData dexData = new DexData(file);
+        dexData.load();
+        switch (type) {
+          case FIELD:
+            count += dexData.getFieldRefs().length;
+            break;
+          case METHOD:
+            count += dexData.getMethodRefs().length;
+            break;
+        }
+      }
+    }
+    return count;
   }
 }

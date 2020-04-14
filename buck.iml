@@ -161,5 +161,6 @@
     <orderEntry type="library" name="jackson-module-kotlin-2.9.9" level="project" />
     <orderEntry type="library" name="log4j2" level="project" />
     <orderEntry type="library" name="Bundled Protobuf Distribution" level="application" />
+    <orderEntry type="library" name="dex-method-counts" level="project" />
   </component>
 </module>
