@@ -1,4 +1,4 @@
-commit bf4c6e1765b8e2b42b580737538f39a308770930
+commit 24d01a0b03cd4a5338a8a318d6fde0b6efa4e452
 Author: Stiopa Koltsov <stepan.koltsov@gmail.com>
 Date:   Sun Mar 29 19:44:12 2020 +0100
 
@@ -2548,19 +2548,6 @@ index 107524a9e2..1d83c92daf 100644
        throws EvalException, InterruptedException {
      // TODO(adonovan): don't push and pop all the time. We should only need the stack of function
      // call frames, and we should recycle them.
-diff --git a/src/main/java/com/google/devtools/build/lib/syntax/Identifier.java b/src/main/java/com/google/devtools/build/lib/syntax/Identifier.java
-index 82cdec44e2..8292128f79 100644
---- a/src/main/java/com/google/devtools/build/lib/syntax/Identifier.java
-+++ b/src/main/java/com/google/devtools/build/lib/syntax/Identifier.java
-@@ -110,7 +110,7 @@ public final class Identifier extends Expression {
-    *   <li><{@code x[5] = ..} does not bind any names.
-    * </ul>
-    */
--  static ImmutableSet<Identifier> boundIdentifiers(Expression expr) {
-+  public static ImmutableSet<Identifier> boundIdentifiers(Expression expr) {
-     if (expr instanceof Identifier) {
-       // Common case/fast path - skip the builder.
-       return ImmutableSet.of((Identifier) expr);
 diff --git a/src/main/java/com/google/devtools/build/lib/syntax/StarlarkThread.java b/src/main/java/com/google/devtools/build/lib/syntax/StarlarkThread.java
 index e1a33ab07b..fab444c8af 100644
 --- a/src/main/java/com/google/devtools/build/lib/syntax/StarlarkThread.java
