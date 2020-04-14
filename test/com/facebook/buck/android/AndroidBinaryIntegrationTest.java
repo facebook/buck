@@ -392,9 +392,9 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testPrimaryDexOverflow() {
-    ProcessResult result = workspace.runBuckBuild("//apps/multidex:primary_dex_overflow");
-    result.assertFailure("Should fail with primary dex ref count overflow");
+  public void testPrimaryDexMethodOverflow() {
+    ProcessResult result = workspace.runBuckBuild("//apps/multidex:primary_dex_method_overflow");
+    result.assertFailure("Should fail with primary dex method count overflow");
 
     assertThat(
         "Dex weight warning should be logged.",
@@ -403,14 +403,36 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   }
 
   @Test
-  public void testSecondaryDexOverflow() {
-    ProcessResult result = workspace.runBuckBuild("//apps/multidex:secondary_dex_overflow");
-    result.assertFailure("Should fail with secondary dex ref count overflow");
+  public void testPrimaryDexFieldOverflow() {
+    ProcessResult result = workspace.runBuckBuild("//apps/multidex:primary_dex_field_overflow");
+    result.assertFailure("Should fail with primary dex field count overflow");
+
+    assertThat(
+        "Dex weight warning should be logged.",
+        result.getStderr(),
+        containsRegex("Primary dex size exceeds 64k field ref limit"));
+  }
+
+  @Test
+  public void testSecondaryDexMethodOverflow() {
+    ProcessResult result = workspace.runBuckBuild("//apps/multidex:secondary_dex_method_overflow");
+    result.assertFailure("Should fail with secondary dex method count overflow");
 
     assertThat(
         "Dex weight warning should be logged.",
         result.getStderr(),
         containsRegex("Secondary dex size exceeds 64k method ref limit"));
+  }
+
+  @Test
+  public void testSecondaryDexFieldOverflow() {
+    ProcessResult result = workspace.runBuckBuild("//apps/multidex:secondary_dex_field_overflow");
+    result.assertFailure("Should fail with secondary dex field count overflow");
+
+    assertThat(
+        "Dex weight warning should be logged.",
+        result.getStderr(),
+        containsRegex("Secondary dex size exceeds 64k field ref limit"));
   }
 
   @Test

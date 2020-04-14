@@ -88,57 +88,65 @@ android_binary(
     ],
 )
 
-def gen_src_with_refs(index, ref_count):
-    method_refs = " ".join(["void fun%d() {};\n" % i for i in range(1, ref_count)])
-    name = "generated_class_%d_%d_refs" % (index, ref_count)
-    genrule(
+def gen_src_with_refs(index, ref_count, type):
+    if type == "method":
+        refs = " ".join(["void fun%d() {};\n" % i for i in range(1, ref_count)])
+    elif type == "field":
+        refs = " ".join(["int field%d = 1;\n" % i for i in range(1, ref_count)])
+
+    name = "generated_class_%d_%d_%s_refs" % (index, ref_count, type)
+    native.genrule(
         name = name,
         out = "Class%d.java" % index,
-        # bash = "echo 'a' > $OUT"
-        bash = "echo -e 'package gen;\npublic class Class%d {\n%s}' > $OUT" % (index, method_refs)
+        bash = "echo -e 'package gen;\npublic class Class%d {\n%s}' > $OUT" % (index, refs)
     )
     return ":%s" % name
 
-android_library(
-    name = "generated_lib_ref_overflow",
-    srcs = [
-        gen_src_with_refs(1, 30000),
-        gen_src_with_refs(2, 36000),
-    ],
-    visibility = ["PUBLIC"],
-)
+def gen_overflow_lib(type):
+    native.android_library(
+        name = "generated_lib_%s_overflow" % type,
+        srcs = [gen_src_with_refs(i, 5000, type) for i in range(1, 15)],
+        visibility = ["PUBLIC"],
+    )
 
-android_binary(
-    name = "primary_dex_overflow",
-    dex_group_lib_limit = 1,
-    keystore = "//keystores:debug",
-    manifest = "SimpleManifest.xml",
-    primary_dex_patterns = [
-        "^gen/Class"
-    ],
-    use_split_dex = True,
-    deps = [
-        "//java/com/sample/app:app",
-        "//java/com/sample/lib:lib",
-        ":generated_lib_ref_overflow",
-    ],
-)
+def gen_primary_dex_overflow(type):
+    android_binary(
+        name = "primary_dex_%s_overflow" % type,
+        dex_group_lib_limit = 1,
+        keystore = "//keystores:debug",
+        manifest = "SimpleManifest.xml",
+        primary_dex_patterns = [
+            "^gen/Class"
+        ],
+        use_split_dex = True,
+        deps = [
+            "//java/com/sample/app:app",
+            "//java/com/sample/lib:lib",
+            ":generated_lib_%s_overflow" % type,
+        ],
+    )
 
-android_binary(
-    name = "secondary_dex_overflow",
-    dex_group_lib_limit = 1,
-    keystore = "//keystores:debug",
-    manifest = "SimpleManifest.xml",
-    primary_dex_patterns = [
-        "/MyApplication^",
-    ],
-    use_split_dex = True,
-    deps = [
-        "//java/com/sample/app:app",
-        "//java/com/sample/lib:lib",
-        ":generated_lib_ref_overflow",
-    ],
-)
+def gen_secondary_dex_overflow(type):
+    android_binary(
+        name = "secondary_dex_%s_overflow" % type,
+        dex_group_lib_limit = 1,
+        keystore = "//keystores:debug",
+        manifest = "SimpleManifest.xml",
+        primary_dex_patterns = [
+            "/MyApplication^",
+        ],
+        use_split_dex = True,
+        deps = [
+            "//java/com/sample/app:app",
+            "//java/com/sample/lib:lib",
+            ":generated_lib_%s_overflow" % type,
+        ],
+    )
+
+for type in ["method", "field"]:
+    gen_overflow_lib(type=type)
+    gen_primary_dex_overflow(type=type)
+    gen_secondary_dex_overflow(type=type)
 
 genrule(
     name = "disassemble_app_with_d8_for_canary",

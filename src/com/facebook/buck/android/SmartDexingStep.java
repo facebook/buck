@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -87,8 +88,28 @@ public class SmartDexingStep implements Step {
   public static final String SHORT_NAME = "smart_dex";
   private static final String SECONDARY_SOLID_DEX_EXTENSION = ".dex.jar.xzs";
   private final String PRIMARY_DEX_OVERFLOW_MESSAGE =
-      "Primary dex size exceeds 64k method ref limit\n"
+      "Primary dex size exceeds 64k %s ref limit\n"
           + "Use primary dex patterns to exclude classes from the primary dex.";
+
+  private final String SECONDARY_DEX_OVERFLOW_MESSAGE =
+      "Secondary dex size exceeds 64k %s ref limit.\n"
+          + "secondary_dex_weight_limit determines the maximum size in bytes of secondary dexes.\n"
+          + "Reduce secondary_dex_weight_limit until all secondary dexes are small enough.";
+
+  private enum DexOverflowType {
+    METHOD,
+    FIELD
+  }
+
+  private Optional<DexOverflowType> checkOverflow(OptionalInt exitCode) {
+    int code = exitCode.orElse(DxStep.FAILURE_EXIT_CODE);
+    if (code == DxStep.DEX_FIELD_REFERENCE_OVERFLOW_EXIT_CODE) {
+      return Optional.of(DexOverflowType.FIELD);
+    } else if (code == DxStep.DEX_METHOD_REFERENCE_OVERFLOW_EXIT_CODE) {
+      return Optional.of(DexOverflowType.METHOD);
+    }
+    return Optional.empty();
+  }
 
   private final Optional<Supplier<List<String>>> primaryDexWeightsSupplier;
 
@@ -206,23 +227,25 @@ public class SmartDexingStep implements Step {
       outputToInputs = outputToInputsSupplier.get();
       runDxCommands(context, outputToInputs);
     } catch (StepFailedException e) {
-      if (e.getStep() instanceof DxStep
-          && e.getExitCode().orElse(DxStep.SUCCESS_EXIT_CODE)
-              == DxStep.DEX_REFERENCE_OVERFLOW_EXIT_CODE) {
+
+      Optional<DexOverflowType> overflow = checkOverflow(e.getExitCode());
+      if (e.getStep() instanceof DxStep && overflow.isPresent()) {
+        String overflowName = overflow.get().name().toLowerCase();
         DxStep dxStep = (DxStep) e.getStep();
         if (dxStep.getOutputDexFile().endsWith("classes.dex")) {
+          String overflowMessage = String.format(PRIMARY_DEX_OVERFLOW_MESSAGE, overflowName);
           if (primaryDexWeightsSupplier.isPresent()) {
             List<String> dexWeights = primaryDexWeightsSupplier.get().get();
-            context.getConsole().printErrorText(formatDexOverflowMessage(dexWeights));
+            context
+                .getConsole()
+                .printErrorText(formatDexOverflowMessage(overflowMessage, dexWeights));
           } else {
-            context.logError(e, PRIMARY_DEX_OVERFLOW_MESSAGE);
+            context.getConsole().printErrorText(overflowMessage);
           }
         } else {
-          context.logError(
-              e,
-              "Secondary dex size exceeds 64k method ref limit.\n"
-                  + "secondary_dex_weight_limit determines the maximum size in bytes of secondary dexes.\n"
-                  + "Reduce secondary_dex_weight_limit until all secondary dexes are small enough.");
+          context
+              .getConsole()
+              .printErrorText(String.format(SECONDARY_DEX_OVERFLOW_MESSAGE, overflowName));
         }
       } else {
         context.logError(e, "There was an error in smart dexing step.");
@@ -248,10 +271,10 @@ public class SmartDexingStep implements Step {
     return StepExecutionResults.SUCCESS;
   }
 
-  private String formatDexOverflowMessage(List<String> dexWeights) {
+  private String formatDexOverflowMessage(String overflowMessage, List<String> dexWeights) {
     StringBuilder builder = new StringBuilder();
     builder.append(
-        PRIMARY_DEX_OVERFLOW_MESSAGE
+        overflowMessage
             + "\n"
             + "The largest libraries in the primary dex, by number of bytes:\n"
             + "Weight\tDex file path\n");

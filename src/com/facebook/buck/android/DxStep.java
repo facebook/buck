@@ -84,7 +84,8 @@ public class DxStep extends ShellStep {
 
   public static final int SUCCESS_EXIT_CODE = 0;
   public static final int FAILURE_EXIT_CODE = 1;
-  public static final int DEX_REFERENCE_OVERFLOW_EXIT_CODE = 2;
+  public static final int DEX_METHOD_REFERENCE_OVERFLOW_EXIT_CODE = 2;
+  public static final int DEX_FIELD_REFERENCE_OVERFLOW_EXIT_CODE = 3;
 
   /** Available tools to create dex files * */
   public static final String DX = "dx";
@@ -394,7 +395,12 @@ public class DxStep extends ShellStep {
       } catch (CompilationFailedException e) {
         if (isOverloadedDexException(e)) {
           context.getConsole().printErrorText(e.getMessage());
-          return DEX_REFERENCE_OVERFLOW_EXIT_CODE;
+          if (e.getCause().getMessage().contains("# methods")) {
+            return DEX_METHOD_REFERENCE_OVERFLOW_EXIT_CODE;
+          } else if (e.getCause().getMessage().contains("# fields")) {
+            return DEX_FIELD_REFERENCE_OVERFLOW_EXIT_CODE;
+          }
+          return FAILURE_EXIT_CODE;
         } else {
           postCompilationFailureToConsole(context, diagnosticsHandler);
           e.printStackTrace(context.getStdErr());
