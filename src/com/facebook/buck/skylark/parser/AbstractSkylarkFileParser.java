@@ -51,7 +51,6 @@ import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.packages.SkylarkExportable;
-import com.google.devtools.build.lib.syntax.Eval;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.LoadStatement;
@@ -61,7 +60,6 @@ import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.SkylarkUtils.Phase;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
-import com.google.devtools.build.lib.syntax.Statement;
 import com.google.devtools.build.lib.syntax.ValidationEnvironment;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
@@ -691,16 +689,14 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       StarlarkFile ast = load.getAST();
       buckGlobals.getKnownUserDefinedRuleTypes().invalidateExtension(load.getLabel());
-      for (Statement stmt : ast.getStatements()) {
-        try {
-          Eval.execToplevelStatement(extensionEnv, stmt);
-        } catch (EvalException e) {
-          // TODO(nga): what about stack trace
-          eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
-          throw BuildFileParseException.createForUnknownParseError(
-              "Cannot evaluate extension %s referenced from %s",
-              load.getLabel(), load.getParentLabel());
-        }
+      try {
+        EvalUtils.exec(ast, extensionEnv);
+      } catch (EvalException e) {
+        // TODO(nga): what about stack trace
+        eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
+        throw BuildFileParseException.createForUnknownParseError(
+            "Cannot evaluate extension %s referenced from %s",
+            load.getLabel(), load.getParentLabel());
       }
 
       for (Pair<String, Object> assign : assigns) {
