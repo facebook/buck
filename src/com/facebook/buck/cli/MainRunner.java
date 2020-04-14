@@ -776,7 +776,7 @@ public final class MainRunner {
       Verbosity verbosity = VerbosityParser.parse(args);
 
       // Setup the printConsole.
-      printConsole = makeCustomConsole(context, verbosity, buckConfig);
+      printConsole = makeCustomConsole(verbosity, buckConfig);
 
       ExecutionEnvironment executionEnvironment =
           new DefaultExecutionEnvironment(
@@ -1982,12 +1982,10 @@ public final class MainRunner {
         });
   }
 
-  private DuplicatingConsole makeCustomConsole(
-      Optional<NGContext> context, Verbosity verbosity, BuckConfig buckConfig) {
+  private DuplicatingConsole makeCustomConsole(Verbosity verbosity, BuckConfig buckConfig) {
     Optional<String> color;
-    if (context.isPresent() && (context.get().getEnv() != null)) {
-      String colorString = context.get().getEnv().getProperty(BUCKD_COLOR_DEFAULT_ENV_VAR);
-      color = Optional.ofNullable(colorString);
+    if (context.isPresent()) {
+      color = Optional.ofNullable(clientEnvironment.get(BUCKD_COLOR_DEFAULT_ENV_VAR));
     } else {
       color = Optional.empty();
     }
