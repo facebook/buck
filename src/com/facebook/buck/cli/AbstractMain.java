@@ -61,6 +61,7 @@ abstract class AbstractMain {
   protected final ImmutableMap<String, String> clientEnvironment;
   protected final Platform platform;
   private final Path projectRoot;
+  private final @Nullable String rawClientPwd;
 
   private final Optional<NGContext> optionalNGContext; // TODO(bobyf): remove this dependency.
   private final Console defaultConsole;
@@ -102,6 +103,7 @@ abstract class AbstractMain {
         clientEnvironment,
         platform,
         Paths.get("."),
+        clientEnvironment.get("BUCK_CLIENT_PWD"),
         CommandMode.RELEASE,
         ngContext);
   }
@@ -126,6 +128,7 @@ abstract class AbstractMain {
       ImmutableMap<String, String> clientEnvironment,
       Platform platform,
       Path projectRoot,
+      @Nullable String rawClientPwd,
       CommandMode commandMode,
       Optional<NGContext> ngContext) {
     this.stdIn = stdIn;
@@ -133,6 +136,7 @@ abstract class AbstractMain {
     this.clientEnvironment = clientEnvironment;
     this.platform = platform;
     this.projectRoot = projectRoot;
+    this.rawClientPwd = rawClientPwd;
     this.optionalNGContext = ngContext;
     this.commandMode = commandMode;
     this.defaultConsole = console;
@@ -152,11 +156,12 @@ abstract class AbstractMain {
         clientEnvironment,
         platform,
         projectRoot,
-        pluginManager,
+        rawClientPwd,
         moduleManager,
         bgTaskManager,
         commandMode,
-        optionalNGContext);
+        optionalNGContext,
+        pluginManager);
   }
 
   /** @return the {@link KnownRuleTypesFactoryFactory} for this command */

@@ -401,6 +401,7 @@ public final class MainRunner {
   private final ImmutableMap<String, String> clientEnvironment;
   private final Platform platform;
   private final Path projectRoot;
+  private final @Nullable String rawClientPwd;
 
   private final PluginManager pluginManager;
   private final BuckModuleManager moduleManager;
@@ -430,9 +431,10 @@ public final class MainRunner {
    * @param clientEnvironment the environment variable map for this command
    * @param platform the current running {@link Platform}
    * @param projectRoot the project root of the current command
-   * @param pluginManager the {@link PluginManager} for this command
+   * @param rawClientPwd the raw absolute path of where the current command is invoked
    * @param moduleManager the {@link BuckModuleManager} for this command
    * @param context the {@link NGContext} from nailgun for this command
+   * @param pluginManager the {@link PluginManager} for this command
    */
   @VisibleForTesting
   public MainRunner(
@@ -443,15 +445,17 @@ public final class MainRunner {
       ImmutableMap<String, String> clientEnvironment,
       Platform platform,
       Path projectRoot,
-      PluginManager pluginManager,
+      @Nullable String rawClientPwd,
       BuckModuleManager moduleManager,
       BackgroundTaskManager bgTaskManager,
       CommandMode commandMode,
-      Optional<NGContext> context) {
+      Optional<NGContext> context,
+      PluginManager pluginManager) {
     this.printConsole = new DuplicatingConsole(console);
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
     this.projectRoot = projectRoot;
+    this.rawClientPwd = rawClientPwd;
     this.pluginManager = pluginManager;
     this.moduleManager = moduleManager;
     this.bgTaskManager = bgTaskManager;
@@ -1395,7 +1399,7 @@ public final class MainRunner {
                   : filteredUnexpandedArgsForLogging.subList(
                       1, filteredUnexpandedArgsForLogging.size());
 
-          Path absoluteClientPwd = getClientPwd(cells.getRootCell(), clientEnvironment);
+          Path absoluteClientPwd = getClientPwd(cells.getRootCell(), rawClientPwd);
           CommandEvent.Started startedEvent =
               CommandEvent.started(
                   command.getDeclaredSubCommandName(),
@@ -1604,17 +1608,17 @@ public final class MainRunner {
     throw new IllegalStateException("Unexpected build file search method: " + searchMethod);
   }
 
-  private Path getClientPwd(Cell rootCell, ImmutableMap<String, String> clientEnvironment) {
-    String rawPwd = clientEnvironment.get("BUCK_CLIENT_PWD");
-    if (rawPwd == null) {
+  private Path getClientPwd(Cell rootCell, @Nullable String rawClientPwd) throws IOException {
+    Path root = projectRoot.toRealPath().normalize();
+    if (rawClientPwd == null) {
       throw new IllegalStateException("BUCK_CLIENT_PWD was not sent from the wrapper script");
     }
     Path pwd;
     try {
-      pwd = Paths.get(rawPwd);
+      pwd = Paths.get(rawClientPwd);
     } catch (Exception e) {
       throw new IllegalStateException(
-          String.format("Received non-path BUCK_CLIENT_PWD %s from wrapper", rawPwd));
+          String.format("Received non-path BUCK_CLIENT_PWD %s from wrapper", rawClientPwd));
     }
     if (!pwd.isAbsolute()) {
       throw new IllegalStateException(
@@ -1629,7 +1633,7 @@ public final class MainRunner {
       // Pass if we can't resolve the path, it'll blow up eventually
     }
 
-    if (!pwd.startsWith(rootCell.getRoot().getPath())) {
+    if (!pwd.startsWith(root)) {
       if (originalPwd.equals(pwd)) {
         throw new IllegalStateException(
             String.format(

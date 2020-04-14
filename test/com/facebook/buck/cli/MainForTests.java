@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Optional;
+import javax.annotation.Nullable;
 
 /**
  * The main entry point for running {@link MainRunner} in tests under the integration test
@@ -42,15 +43,17 @@ public class MainForTests extends AbstractMain {
    * @param stdIn the stdin stream for the test command
    * @param knownRuleTypesFactoryFactory the {@link KnownRuleTypesFactoryFactory} for this test
    *     command
-   * @param clientEnvironment the client environment being tested
    * @param projectRoot the root of the project for this test command
+   * @param rawClientPwd the raw path of where the client invoked this command
    * @param ngContext the nailgun context for this test command.
+   * @param clientEnvironment the client environment being tested
    */
   public MainForTests(
       Console console,
       InputStream stdIn,
       KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory,
       Path projectRoot,
+      @Nullable String rawClientPwd,
       ImmutableMap<String, String> clientEnvironment,
       Optional<NGContext> ngContext) {
     super(
@@ -59,6 +62,7 @@ public class MainForTests extends AbstractMain {
         clientEnvironment,
         Platform.detect(),
         projectRoot,
+        rawClientPwd,
         CommandMode.TEST,
         ngContext);
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
@@ -69,12 +73,14 @@ public class MainForTests extends AbstractMain {
    * @param stdIn the stdin stream for the test command
    * @param clientEnvironment the client environment being tested
    * @param projectRoot the root of the project for this test command
+   * @param rawClientPwd the raw path of where the client invoked this command
    * @param ngContext the nailgun context for this test command.
    */
   public MainForTests(
       Console console,
       InputStream stdIn,
       Path projectRoot,
+      @Nullable String rawClientPwd,
       ImmutableMap<String, String> clientEnvironment,
       Optional<NGContext> ngContext) {
     this(
@@ -82,6 +88,7 @@ public class MainForTests extends AbstractMain {
         stdIn,
         DefaultKnownNativeRuleTypesFactory::new,
         projectRoot,
+        rawClientPwd,
         clientEnvironment,
         ngContext);
   }

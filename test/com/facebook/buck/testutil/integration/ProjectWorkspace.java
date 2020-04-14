@@ -216,13 +216,14 @@ public class ProjectWorkspace extends AbstractWorkspace {
         ImmutableMap.of(
             // Enable the JUL build log.  This log is very verbose but rarely useful,
             // so it's disabled by default.
-            "log", ImmutableMap.of("jul_build_log", "true"),
+            "log",
+            ImmutableMap.of("jul_build_log", "true"),
             // Enable hashed buck-out paths in test until it is turned on by default for everyone
             "project",
-                ImmutableMap.of(
-                    "buck_out_include_target_config_hash",
-                    Boolean.toString(
-                        TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST))));
+            ImmutableMap.of(
+                "buck_out_include_target_config_hash",
+                Boolean.toString(
+                    TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST))));
 
     isSetUp = true;
     return this;
@@ -584,9 +585,6 @@ public class ProjectWorkspace extends AbstractWorkspace {
         }
       }
       envBuilder.putAll(environmentOverrides);
-      envBuilder.put(
-          "BUCK_CLIENT_PWD",
-          repoRoot.toAbsolutePath().resolve(relativeWorkingDir).normalize().toString());
       String python3Interpreter =
           new ExecutableFinder()
               .getExecutable(Paths.get("python3"), EnvVariablesProvider.getSystemEnv())
@@ -605,6 +603,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
                   ? DefaultKnownNativeRuleTypesFactory::new
                   : knownRuleTypesFactoryFactory,
               repoRoot,
+              repoRoot.toAbsolutePath().resolve(relativeWorkingDir).normalize().toString(),
               sanizitedEnv,
               context);
 
@@ -1024,29 +1023,5 @@ public class ProjectWorkspace extends AbstractWorkspace {
         "'verify(subdirectory)' takes a relative path, but received '%s'",
         subdirectory);
     assertPathsEqual(templatePath.resolve(subdirectory), destPath.resolve(subdirectory), s -> s);
-  }
-
-  /**
-   * Add the correct environment variable to emulate executing buck wrapper from a working directory
-   */
-  public static ImmutableMap<String, String> setAbsoluteClientWorkingDir(
-      Path workingDir, ImmutableMap<String, String> existingEnv) {
-    ImmutableMap.Builder<String, String> envBuilder = ImmutableMap.builder();
-    envBuilder.put("BUCK_CLIENT_PWD", workingDir.toAbsolutePath().toString());
-    existingEnv.forEach(
-        (k, v) -> {
-          if (!k.equals("BUCK_CLIENT_PWD")) {
-            envBuilder.put(k, v);
-          }
-        });
-    return envBuilder.build();
-  }
-
-  /**
-   * Add the correct environment variable to emulate executing buck wrapper from a working directory
-   */
-  public static ImmutableMap<String, String> setAbsoluteClientWorkingDir(
-      AbsPath workingDir, ImmutableMap<String, String> existingEnv) {
-    return setAbsoluteClientWorkingDir(workingDir.getPath(), existingEnv);
   }
 }
