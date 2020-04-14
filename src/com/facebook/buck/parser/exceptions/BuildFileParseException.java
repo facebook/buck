@@ -27,6 +27,10 @@ import javax.annotation.Nullable;
  */
 public class BuildFileParseException extends HumanReadableException {
 
+  public BuildFileParseException(@Nullable Throwable cause, String humanReadableErrorMessage) {
+    super(cause, humanReadableErrorMessage);
+  }
+
   protected BuildFileParseException(String message, Object... args) {
     super(message, args);
   }

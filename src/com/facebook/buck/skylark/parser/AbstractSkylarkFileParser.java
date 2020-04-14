@@ -30,6 +30,7 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -42,7 +43,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.UncheckedExecutionException;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
@@ -51,11 +51,9 @@ import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.packages.SkylarkExportable;
-import com.google.devtools.build.lib.syntax.AssignmentStatement;
 import com.google.devtools.build.lib.syntax.Eval;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Identifier;
 import com.google.devtools.build.lib.syntax.LoadStatement;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
@@ -73,7 +71,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -679,6 +679,14 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // Create this extension.
       StarlarkThread extensionEnv =
           envBuilder.setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS).build();
+
+      List<Pair<String, Object>> assigns = new ArrayList<>();
+
+      extensionEnv.setPostAssignHook(
+          (n, v) -> {
+            assigns.add(new Pair<>(n, v));
+          });
+
       SkylarkUtils.setPhase(extensionEnv, Phase.LOADING);
 
       StarlarkFile ast = load.getAST();
@@ -693,17 +701,18 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               "Cannot evaluate extension %s referenced from %s",
               load.getLabel(), load.getParentLabel());
         }
-        // TODO: rewrite using postAssignHook
-        if (stmt.kind() == Statement.Kind.ASSIGNMENT) {
-          try {
-            ensureExportedIfExportable(extensionEnv, (AssignmentStatement) stmt);
-          } catch (EvalException e) {
-            throw BuildFileParseException.createForUnknownParseError(
-                "Could evaluate extension %s referenced from %s: %s",
-                load.getLabel(), load.getParentLabel(), e.getMessage());
-          }
+      }
+
+      for (Pair<String, Object> assign : assigns) {
+        try {
+          ensureExportedIfExportable(extensionEnv, assign.getFirst(), assign.getSecond());
+        } catch (EvalException e) {
+          // TODO(nga): what about stack trace
+          eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
+          throw new BuildFileParseException(e, e.getMessage());
         }
       }
+
       loadedExtension = new StarlarkThread.Extension(extensionEnv);
     }
 
@@ -725,16 +734,12 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
    *
    * @param extensionEnv The environment where an exportable variable with the name in {@code stmt}
    *     is bound
-   * @param stmt The assignment statement used to lookup the variable in the environment
+   * @param identifier the name of the variable
+   * @param lookedUp exported value
    */
-  private void ensureExportedIfExportable(StarlarkThread extensionEnv, AssignmentStatement stmt)
+  private void ensureExportedIfExportable(
+      StarlarkThread extensionEnv, String identifier, Object lookedUp)
       throws BuildFileParseException, EvalException {
-    ImmutableSet<Identifier> identifiers = Identifier.boundIdentifiers(stmt.getLHS());
-    if (identifiers.size() != 1) {
-      return;
-    }
-    String identifier = Iterables.getOnlyElement(identifiers).getName();
-    Object lookedUp = extensionEnv.moduleLookup(identifier);
     if (lookedUp instanceof SkylarkExportable) {
       SkylarkExportable exportable = (SkylarkExportable) lookedUp;
       if (!exportable.isExported()) {
