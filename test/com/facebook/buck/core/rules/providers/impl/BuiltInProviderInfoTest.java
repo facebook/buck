@@ -467,7 +467,7 @@ public class BuiltInProviderInfoTest {
   }
 
   @Test
-  public void isImmutableWorks() throws EvalException, InterruptedException, SyntaxError {
+  public void isImmutableWorks() throws Exception {
 
     String buildFile =
         "SomeInfoWithMutableAndImmutable("
@@ -481,7 +481,7 @@ public class BuiltInProviderInfoTest {
                 "SomeInfoWithMutableAndImmutable", SomeInfoWithMutableAndImmutable.PROVIDER))) {
       SkylarkList.MutableList<Integer> mutableList =
           SkylarkList.MutableList.of(env.getEnv(), 1, 2, 3);
-      env.getEnv().updateAndExport("mutable_list", mutableList);
+      env.getEnv().update("mutable_list", mutableList);
 
       out = (SomeInfoWithMutableAndImmutable) TestStarlarkParser.eval(env.getEnv(), buildFile);
 

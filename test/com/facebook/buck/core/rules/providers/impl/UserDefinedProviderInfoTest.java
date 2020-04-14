@@ -162,7 +162,7 @@ public class UserDefinedProviderInfoTest {
 
       SkylarkList.MutableList<Integer> mutableList =
           SkylarkList.MutableList.of(env.getEnv(), 4, 5, 6);
-      env.getEnv().updateAndExport("mutable_list", mutableList);
+      env.getEnv().update("mutable_list", mutableList);
 
       assertFalse(mutableList.isImmutable());
 
