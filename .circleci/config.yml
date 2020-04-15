@@ -535,7 +535,7 @@ jobs:
           <<: *install_python
       - run:
           <<: *install_dlang
-       - restore_cache:
+      - restore_cache:
           key: v1.0-buck-ant-{{ .Branch }}
       - run:
           <<: *run_ant_build
@@ -586,11 +586,11 @@ jobs:
           <<: *install_python
       - run:
           <<: *install_dlang
-       - restore_cache:
+      - restore_cache:
           key: v1.0-buck-ant-{{ .Branch }}
       - run:
           <<: *run_ant_build
-       - restore_cache:
+      - restore_cache:
           key: v1.0-buck-build-{{ .Branch }}
       - run:
           <<: *run_buck_build
@@ -644,7 +644,7 @@ jobs:
           <<: *install_python
       - run:
           <<: *install_dlang
-       - restore_cache:
+      - restore_cache:
           key: v1.0-buck-ant-{{ .Branch }}
       - run:
           <<: *run_ant_build
