@@ -532,12 +532,6 @@ public class QueryCommand extends AbstractQueryCommand {
           attributes.put(snakeCaseKey, entry.getValue());
         }
       }
-
-      if (patternsMatcher.matches(InternalTargetAttributeNames.TARGET_CONFIGURATIONS)) {
-        attributes.put(
-            InternalTargetAttributeNames.TARGET_CONFIGURATIONS,
-            computedNodeAttributes.get(InternalTargetAttributeNames.TARGET_CONFIGURATIONS));
-      }
     }
     return Optional.of(attributes);
   }
