@@ -370,7 +370,8 @@ public class QueryCommand extends AbstractQueryCommand {
       PrintStream printStream,
       boolean compactMode)
       throws IOException, QueryException {
-    MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(targetUniverse.getTargetGraph());
+    MergedTargetGraph mergedTargetGraph =
+        MergedTargetGraph.merge(env.getTargetUniverse().getTargetGraph());
 
     ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
     ImmutableSet<UnflavoredBuildTarget> targetsFromQueryTargets =
@@ -422,7 +423,8 @@ public class QueryCommand extends AbstractQueryCommand {
     } else {
       Map<UnflavoredBuildTarget, Integer> ranks =
           computeRanksByTarget(
-              targetUniverse.getTargetGraph(), env.getNodesFromQueryTargets(queryResult)::contains);
+              env.getTargetUniverse().getTargetGraph(),
+              env.getNodesFromQueryTargets(queryResult)::contains);
 
       printRankOutputAsPlainText(ranks, printStream);
     }
@@ -450,7 +452,7 @@ public class QueryCommand extends AbstractQueryCommand {
       PrintStream printStream)
       throws IOException, QueryException {
 
-    DirectedAcyclicGraph<TargetNode<?>> targetGraph = targetUniverse.getTargetGraph();
+    DirectedAcyclicGraph<TargetNode<?>> targetGraph = env.getTargetUniverse().getTargetGraph();
     MergedTargetGraph mergedTargetGraph = MergedTargetGraph.merge(targetGraph);
 
     ImmutableSet<TargetNode<?>> nodesFromQueryTargets = env.getNodesFromQueryTargets(queryResult);
@@ -485,7 +487,7 @@ public class QueryCommand extends AbstractQueryCommand {
           throws QueryException {
     ImmutableSet<TargetNode<?>> nodes = env.getNodesFromQueryTargets(queryResult);
     Map<UnflavoredBuildTarget, Integer> rankEntries =
-        computeRanksByTarget(targetUniverse.getTargetGraph(), nodes::contains);
+        computeRanksByTarget(env.getTargetUniverse().getTargetGraph(), nodes::contains);
 
     ImmutableCollection<MergedTargetNode> mergedNodes = MergedTargetNode.group(nodes).values();
 

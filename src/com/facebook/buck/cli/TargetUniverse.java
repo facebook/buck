@@ -21,6 +21,7 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
@@ -32,6 +33,12 @@ import java.util.Set;
 
 /** Interface which describes the universe of targets accessible to queries */
 public interface TargetUniverse {
+
+  /**
+   * The target graph representing the contents of the universe. This state may be mutated during
+   * the execution of the query based on calls to {@link #buildTransitiveClosure(Set)}.
+   */
+  DirectedAcyclicGraph<TargetNode<?>> getTargetGraph();
 
   /**
    * Returns the {@code buildTarget}s in the universe that are referenced by {@code specs}. These

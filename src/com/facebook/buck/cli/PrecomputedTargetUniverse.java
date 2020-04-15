@@ -206,6 +206,11 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
   }
 
   @Override
+  public DirectedAcyclicGraph<TargetNode<?>> getTargetGraph() {
+    return graph;
+  }
+
+  @Override
   public ImmutableList<ImmutableSet<BuildTarget>> resolveTargetSpecs(
       Iterable<? extends TargetNodeSpec> specs,
       Optional<TargetConfiguration> targetConfiguration,

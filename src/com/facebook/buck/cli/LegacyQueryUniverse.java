@@ -95,12 +95,13 @@ public class LegacyQueryUniverse implements TargetUniverse {
                 .shouldBuckOutIncludeTargetConfigHash()));
   }
 
-  public DirectedAcyclicGraph<TargetNode<?>> getTargetGraph() {
-    return new DirectedAcyclicGraph<>(graph);
-  }
-
   public PerBuildState getParserState() {
     return parserState;
+  }
+
+  @Override
+  public DirectedAcyclicGraph<TargetNode<?>> getTargetGraph() {
+    return new DirectedAcyclicGraph<>(graph);
   }
 
   @Override
