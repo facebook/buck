@@ -16,6 +16,7 @@
 
 package com.facebook.buck.skylark.parser;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
@@ -183,17 +184,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               parseContext,
               implicitLoad.getExtensionData());
 
-      try {
-        EvalUtils.exec(buildFileAst, envData.getEnvironment());
-      } catch (EvalException e) {
-        eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
-        // buildFileAst.exec reports extended error information to console with eventHandler
-        // but this is not propagated to BuildFileParseException. So in case of resilient parsing
-        // when exceptions are stored in BuildFileManifest they do not have detailed information.
-        // TODO(sergeyb): propagate detailed error information from AST evaluation to exception
-        throw BuildFileParseException.createForUnknownParseError(
-            "Cannot evaluate file " + parseFile);
-      }
+      exec(buildFileAst, envData.getEnvironment(), "file %s", parseFile);
 
       ImmutableList.Builder<String> loadedPaths =
           ImmutableList.builderWithExpectedSize(envData.getLoadedPaths().size() + 1);
@@ -201,6 +192,24 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       loadedPaths.addAll(envData.getLoadedPaths());
 
       return getParseResult(parseFile.getPath(), parseContext, globber, loadedPaths.build());
+    }
+  }
+
+  private void exec(StarlarkFile file, StarlarkThread thread, String what, Object... whatArgs)
+      throws InterruptedException {
+    try {
+      EvalUtils.exec(file, thread);
+    } catch (EvalException e) {
+      eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
+      // buildFileAst.exec reports extended error information to console with eventHandler
+      // but this is not propagated to BuildFileParseException. So in case of resilient parsing
+      // when exceptions are stored in BuildFileManifest they do not have detailed information.
+      // TODO(sergeyb): propagate detailed error information from AST evaluation to exception
+      throw BuildFileParseException.createForUnknownParseError("Cannot evaluate " + what, whatArgs);
+    } catch (InterruptedException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new BuckUncheckedExecutionException(e, "When evaluating " + what, whatArgs);
     }
   }
 
@@ -689,15 +698,12 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
       StarlarkFile ast = load.getAST();
       buckGlobals.getKnownUserDefinedRuleTypes().invalidateExtension(load.getLabel());
-      try {
-        EvalUtils.exec(ast, extensionEnv);
-      } catch (EvalException e) {
-        // TODO(nga): what about stack trace
-        eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
-        throw BuildFileParseException.createForUnknownParseError(
-            "Cannot evaluate extension %s referenced from %s",
-            load.getLabel(), load.getParentLabel());
-      }
+      exec(
+          ast,
+          extensionEnv,
+          "extension %s referenced from %s",
+          load.getLabel(),
+          load.getParentLabel());
 
       for (Pair<String, Object> assign : assigns) {
         try {

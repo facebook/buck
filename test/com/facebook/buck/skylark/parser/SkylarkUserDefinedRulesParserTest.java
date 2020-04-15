@@ -871,7 +871,8 @@ public class SkylarkUserDefinedRulesParserTest {
 
     // TODO(T48080142): When we wrap up all of these validation errors into something human
     // friendly, this will become a build file error
-    thrown.expect(NullPointerException.class);
+    thrown.expect(Exception.class);
+    thrown.expectMessage("//not_assigned:defs.bzl referenced from //not_assigned:BUCK");
     parser.getManifest(AbsPath.of(buildFile));
   }
 
