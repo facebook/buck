@@ -674,12 +674,6 @@ jobs:
           key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
-      - save_cache:
-          paths:
-            - ~/buck/ant-out/classes
-            - ~/buck/ant-out/buck-modules-classes
-            - ~/buck/ant-out/buck-modules
-          key: v1.0-buck-macos-ant-{{ .Branch }}
       - restore_cache:
           key: v1.0-buck-macos-build-{{ .Branch }}
       - run:
