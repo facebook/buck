@@ -3,6 +3,16 @@ version: 2.1
 orbs:
   win: circleci/windows@2.2.0
 
+install_dlang: &install_dlang
+  name: Install Dlang
+  command: |
+    if [ "${PLATFORM}" == "macos" ]; then
+      brew install gpg
+    fi
+    curl https://dlang.org/install.sh | bash -s dmd-2.091.0
+    source ~/dlang/dmd-2.091.0/activate
+    dmd --version
+    
 install_lua: &install_lua
   name: Install Lua
   command: |
@@ -17,7 +27,7 @@ install_lua: &install_lua
       sudo make macosx install
     fi
     lua -v
-
+    
 install_ocaml: &install_ocaml
   name: Install Ocaml
   command: |
@@ -343,6 +353,8 @@ jobs:
       - run:
           <<: *install_groovy
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -353,6 +365,7 @@ jobs:
             export PATH="${HOME}/.cargo/bin:${PATH}"
             export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             export PATH="$(pyenv root)/shims:${PATH}"
+            source ~/dlang/dmd-2.091.0/activate
             export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
             set -eux
             # There is a bug in buck, see issue #2435 for details. skip the tests for now.
@@ -395,6 +408,8 @@ jobs:
       - run:
           <<: *install_python
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -403,6 +418,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
@@ -439,6 +455,8 @@ jobs:
       - run:
           <<: *install_python
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -447,6 +465,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
@@ -483,6 +502,8 @@ jobs:
       - run:
           <<: *install_python
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -491,6 +512,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
@@ -527,6 +549,8 @@ jobs:
       - run:
           <<: *install_python
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -541,6 +565,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
@@ -578,6 +603,8 @@ jobs:
       - run:
           <<: *install_python
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -586,6 +613,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
@@ -748,6 +776,8 @@ jobs:
       - run:
           <<: *install_groovy
       - run:
+          <<: *install_dlang
+      - run:
           # There is an issue with python in macos 10.14.x. this step is a work around and should be removed later.
           # https://stackoverflow.com/questions/59269208/errorrootcode-for-hash-md5-was-not-found-not-able-to-use-any-hg-mercurial-co
           name: Reinstall Python2
@@ -766,6 +796,7 @@ jobs:
             export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
             export JAVA_HOME=`/usr/libexec/java_home`
             export PATH="${JAVA_HOME}/bin:${PATH}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -ex
             # Should run this:
@@ -808,6 +839,8 @@ jobs:
       - run:
           <<: *install_python
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -818,6 +851,7 @@ jobs:
             export ANDROID_HOME="${ANDROID_SDK}"
             export JAVA_HOME=`/usr/libexec/java_home`
             export PATH="${JAVA_HOME}/bin:${PATH}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
@@ -854,6 +888,8 @@ jobs:
       - run:
           <<: *install_python
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -862,6 +898,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
@@ -898,6 +935,8 @@ jobs:
       - run:
           <<: *install_python
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -906,6 +945,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
@@ -942,6 +982,8 @@ jobs:
       - run:
           <<: *install_python
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -956,6 +998,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
@@ -997,6 +1040,8 @@ jobs:
       - run:
           <<: *install_python
       - run:
+          <<: *install_dlang
+      - run:
           <<: *run_ant_build
       - run:
           <<: *run_buck_build
@@ -1005,6 +1050,7 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
             export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
