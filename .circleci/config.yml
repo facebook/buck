@@ -3,6 +3,44 @@ version: 2.1
 orbs:
   win: circleci/windows@2.2.0
 
+install_dlang: &install_dlang
+  name: Install Dlang
+  command: |
+    if [ "${PLATFORM}" == "macos" ]; then
+      brew install gpg
+    fi
+    curl https://dlang.org/install.sh | bash -s dmd-2.091.0
+    source ~/dlang/dmd-2.091.0/activate
+    dmd --version
+    
+install_lua: &install_lua
+  name: Install Lua
+  command: |
+    cd
+    lua_version="5.3.5"
+    curl -R -O http://www.lua.org/ftp/lua-${lua_version}.tar.gz
+    tar zxf lua-${lua_version}.tar.gz
+    cd lua-${lua_version}
+    if [ "${PLATFORM}" == "linux" ]; then
+      sudo make linux install
+    elif [ "${PLATFORM}" == "macos" ]; then
+      sudo make macosx install
+    fi
+    lua -v
+    
+install_ocaml: &install_ocaml
+  name: Install Ocaml
+  command: |
+    if [ "${PLATFORM}" == "linux" ]; then
+      sudo apt install ocaml
+    elif [ "${PLATFORM}" == "macos" ]; then
+      brew install opam
+      opam init -y
+      opam switch create 4.07.1
+      eval `opam env`
+    fi
+    ocaml -version
+
 install_openjdk8: &install_openjdk8
   name: Install OpenJDK8
   command: |
@@ -17,21 +55,26 @@ install_openjdk8: &install_openjdk8
 install_android_sdk: &install_android_sdk
   name: Install Android SDK
   command: |
-    sdk_os="linux"
-    if [ "${PLATFORM}" == "macos" ]; then
-      sdk_os="darwin"
+    # skip if ${ANDROID_SDK} is restored from cache
+    if [ ! -d "${ANDROID_SDK}" ]; then
+      sdk_os="linux"
+      if [ "${PLATFORM}" == "macos" ]; then
+        sdk_os="darwin"
+      fi
+      sdk_zip_filename="sdk-tools-${sdk_os}-4333796.zip"
+      mkdir -p "${ANDROID_SDK}"
+      cd "${ANDROID_SDK}"
+      curl -O "https://dl.google.com/android/repository/${sdk_zip_filename}"
+      unzip "${sdk_zip_filename}"
+      export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
+      echo 'y' |sdkmanager --install tools
+      echo 'y' |sdkmanager --install platform-tools
+      echo 'y' |sdkmanager --install "build-tools;28.0.0"
+      echo 'y' |sdkmanager --install "platforms;android-23"
+      rm "${sdk_zip_filename}"
+    else
+      echo "Android SDK restored from cache, skip installation."
     fi
-    sdk_zip_filename="sdk-tools-${sdk_os}-4333796.zip"
-    mkdir -p "${ANDROID_SDK}"
-    cd "${ANDROID_SDK}"
-    curl -O "https://dl.google.com/android/repository/${sdk_zip_filename}"
-    unzip "${sdk_zip_filename}"
-    export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
-    echo 'y' |sdkmanager --install tools
-    echo 'y' |sdkmanager --install platform-tools
-    echo 'y' |sdkmanager --install "build-tools;28.0.0"
-    echo 'y' |sdkmanager --install "platforms;android-23"
-
     # Install 32 bit libraries
     # https://stackoverflow.com/questions/36911709/cannot-run-program-aapt
     # Needed to run Android build-tools
@@ -61,9 +104,16 @@ install_python: &install_python
     if [ "${PLATFORM}" == "macos" ]; then
       brew install pyenv
     fi
-    pyenv install -s 3.6.2
-    pyenv global 3.6.2 system
+    pyenv versions
     export PATH="$(pyenv root)/shims:${PATH}"
+    python_version=`python --version`
+    # Skip installation if Python 3.6.2 restored frm cache.
+    if [ "${python_version}" != "Python 3.6.2" ]; then
+      pyenv install -s 3.6.2
+      pyenv global 3.6.2 system
+    else
+      echo "Python3.6.2 restored from cache, skip installation."
+    fi
     python --version
 
 install_groovy: &install_groovy
@@ -86,6 +136,16 @@ install_ghc: &install_ghc
       sudo apt-get install -y ghc-haddock
     fi
     ghc --version
+
+install_rust: &install_rust
+  name: Install Rust
+  command: |
+    curl https://sh.rustup.rs -sSf -o install_rust.sh
+    chmod +x install_rust.sh
+    ./install_rust.sh -q -y
+    rm install_rust.sh
+    export PATH="${HOME}/.cargo/bin:${PATH}"
+    rustc -V
 
 run_ant_build: &run_ant_build
   name: Run Ant Build
@@ -148,12 +208,26 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.3-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
+      - save_cache:
+          paths:
+            - ~/android-sdk
+          key: v1.3-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
+      - save_cache:
+          paths:
+            - /opt/circleci/.pyenv
+          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
@@ -177,12 +251,22 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+      - run:
+          <<: *install_lua
+      - run:
+          <<: *install_ocaml
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_groovy
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -210,10 +294,16 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.3-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -240,16 +330,30 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+      - run:
+          <<: *install_lua
       - run:
           <<: *install_android_sdk
+      - run:
+          <<: *install_ocaml
       - run:
           <<: *install_ghc
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
       - run:
           <<: *install_groovy
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -258,11 +362,16 @@ jobs:
           name: Run Integration Tests
           command: |
             cd "${BUCKROOT}"
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             export PATH="$(pyenv root)/shims:${PATH}"
-            export GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current
+            source ~/dlang/dmd-2.091.0/activate
+            export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
             set -eux
-            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
+            # There is a bug in buck, see issue #2435 for details. skip the tests for now.
+            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.rust.RustBinaryIntegrationTest|com.facebook.buck.features.rust.RustLinkerIntegrationTest|com.facebook.buck.features.lua.LuaBinaryIntegrationTest)).*[Ii]ntegration.*'
+            # Run this after the bug has been fixed:
+            #${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
 
   linux_test_heavy_integration:
     environment:
@@ -274,6 +383,13 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.3-buck-andoid-sdk-{{ .Branch }}
+      - run:
+          <<: *install_lua
+      - run:
+          <<: *install_ocaml
       - run:
           <<: *install_android_sdk
       - run:
@@ -284,8 +400,15 @@ jobs:
             ./scripts/circleci_install_android_ndk.sh
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -295,6 +418,8 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/... --filter '.*[Ii]ntegration.*'
@@ -309,6 +434,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.3-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -319,8 +447,15 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r15c
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -330,6 +465,8 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -344,6 +481,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.3-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -354,8 +494,15 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r16b
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -365,6 +512,8 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -379,6 +528,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.3-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -389,8 +541,15 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r17b
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -406,6 +565,8 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -421,6 +582,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.3-buck-andoid-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -431,8 +595,15 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r18b
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -442,6 +613,8 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-linux"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -457,12 +630,26 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
+      - save_cache:
+          paths:
+            - ~/android-sdk
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
+      - save_cache:
+          paths:
+            - ~/.pyenv
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *run_ant_build
       - run:
@@ -486,12 +673,22 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+      - run:
+          <<: *install_lua
+      - run:
+          <<: *install_ocaml
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_groovy
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -518,10 +715,16 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
       - run:
           <<: *install_python
       - run:
@@ -550,23 +753,36 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+      - run:
+          <<: *install_lua
+      - run:
+          <<: *install_ocaml
       - run:
           <<: *install_android_sdk
       - run:
           <<: *install_ghc
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
       - run:
           <<: *install_groovy
       - run:
+          <<: *install_dlang
+      - run:
           # There is an issue with python in macos 10.14.x. this step is a work around and should be removed later.
           # https://stackoverflow.com/questions/59269208/errorrootcode-for-hash-md5-was-not-found-not-able-to-use-any-hg-mercurial-co
-          name: Uninstall Python2
-          # Python2 was EOL on 1/1/2020, it does not work with Xcode 10.3.0
+          name: Reinstall Python2
           command: |
-            brew uninstall python@2
+            brew reinstall https://raw.githubusercontent.com/Homebrew/homebrew-core/86a44a0a552c673a05f11018459c9f5faae3becc/Formula/python@2.rb
       - run:
           <<: *run_ant_build
       - run:
@@ -577,14 +793,16 @@ jobs:
             cd "${BUCKROOT}"
             export PATH="${ANDROID_SDK}/tools/bin:${PATH}"
             export PATH="$(pyenv root)/shims:${PATH}"
-            export "GROOVY_HOME=$HOME/.sdkman/candidates/groovy/current"
+            export GROOVY_HOME="$HOME/.sdkman/candidates/groovy/current"
             export JAVA_HOME=`/usr/libexec/java_home`
             export PATH="${JAVA_HOME}/bin:${PATH}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -ex
             # Should run this:
             #${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java)).*[Ii]ntegration.*'
             # But there are some test failures, exclude them for now and fix them later.
-            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest)).*[Ii]ntegration.*'
+            ${BUCK_PEX_LOCATION} test --num-threads=$BUCK_NUM_THREADS --all --filter '^(?!(com.facebook.buck.android|com.facebook.buck.jvm.java|com.facebook.buck.features.haskell.HaskellBinary|com.facebook.buck.swift.SwiftTestIO|com.facebook.buck.apple.AppleTest|com.facebook.buck.features.lua.LuaBinaryIntegrationTest)).*[Ii]ntegration.*'
 
   macos_test_heavy_integration:
     environment:
@@ -596,6 +814,13 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
+      - run:
+          <<: *install_lua
+      - run:
+          <<: *install_ocaml
       - run:
           <<: *install_android_sdk
       - run:
@@ -606,8 +831,15 @@ jobs:
             ./scripts/circleci_install_android_ndk.sh "${PLATFORM}"
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -619,6 +851,8 @@ jobs:
             export ANDROID_HOME="${ANDROID_SDK}"
             export JAVA_HOME=`/usr/libexec/java_home`
             export PATH="${JAVA_HOME}/bin:${PATH}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... //test/com/facebook/buck/jvm/java/... --filter '.*[Ii]ntegration.*'
@@ -633,6 +867,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -643,8 +880,15 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r15c "${PLATFORM}"
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -654,6 +898,8 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -668,6 +914,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -678,8 +927,15 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r16b "${PLATFORM}"
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -689,6 +945,8 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
@@ -703,6 +961,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -713,8 +974,15 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r17b "${PLATFORM}"
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -730,6 +998,8 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             # Exclude some long running tests, otherwise CircleCI will timeout after 5 hours.
@@ -749,6 +1019,9 @@ jobs:
       - checkout
       - run:
           <<: *install_openjdk8
+      - restore_cache:
+          # Change this key when upgrading sdk.
+          key: v1.0-buck-macos-android-sdk-{{ .Branch }}
       - run:
           <<: *install_android_sdk
       - run:
@@ -759,8 +1032,15 @@ jobs:
             ./scripts/circleci_unzip_android_ndk.sh android-ndk-r18b "${PLATFORM}"
       - run:
           <<: *install_golang
+      - restore_cache:
+          # Change this key when upgrading python.
+          key: v1.0-buck-macos-python3.6.2-{{ .Branch }}
+      - run:
+          <<: *install_rust
       - run:
           <<: *install_python
+      - run:
+          <<: *install_dlang
       - run:
           <<: *run_ant_build
       - run:
@@ -770,6 +1050,8 @@ jobs:
           command: |
             export NDK_HOME="${HOME}/android-ndk-${PLATFORM}"
             export ANDROID_HOME="${ANDROID_SDK}"
+            source ~/dlang/dmd-2.091.0/activate
+            export PATH="${HOME}/.cargo/bin:${PATH}"
             set -eux
             ${BUCK_PEX_LOCATION} build --num-threads=$BUCK_NUM_THREADS //test/com/facebook/buck/android/...
             ${BUCK_PEX_LOCATION} test --num-threads=1 //test/com/facebook/buck/android/... --filter '.*[Ii]ntegration.*'
