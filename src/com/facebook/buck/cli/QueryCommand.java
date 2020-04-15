@@ -84,7 +84,7 @@ import org.kohsuke.args4j.Option;
  */
 public class QueryCommand extends AbstractQueryCommand {
 
-  private LegacyQueryUniverse targetUniverse;
+  private PerBuildState perBuildState;
 
   public QueryCommand() {
     this(OutputFormat.LIST);
@@ -180,11 +180,11 @@ public class QueryCommand extends AbstractQueryCommand {
                     createParsingContext(params.getCells(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
-      targetUniverse = LegacyQueryUniverse.from(params, parserState);
+      perBuildState = parserState;
       BuckQueryEnvironment env =
           BuckQueryEnvironment.from(
               params,
-              targetUniverse,
+              LegacyQueryUniverse.from(params, parserState),
               createParsingContext(params.getCells(), pool.getListeningExecutorService()));
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
@@ -635,10 +635,7 @@ public class QueryCommand extends AbstractQueryCommand {
         params
             .getParser()
             .getTargetNodeRawAttributes(
-                targetUniverse.getParserState(),
-                params.getCells().getRootCell(),
-                node.getAnyNode(),
-                dependencyStack);
+                perBuildState, params.getCells().getRootCell(), node.getAnyNode(), dependencyStack);
     if (targetNodeAttributes == null) {
       params
           .getConsole()
