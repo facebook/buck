@@ -234,7 +234,7 @@ jobs:
           <<: *run_ant_build
       - save_cache:
           paths:
-            ~/buck/ant-out
+            - ~/buck/ant-out
           key: v1.0-buck-ant-{{ .Branch }}
       - restore_cache:
           key: v1.0-buck-build-{{ .Branch }}
@@ -242,7 +242,7 @@ jobs:
           <<: *run_buck_build
       - save_cache:
           paths:
-            ~/buck/buck-out
+            - ~/buck/buck-out
           key: v1.0-buck-build-{{ .Branch }}
       - run:
           name: Run Build Tests
@@ -700,7 +700,7 @@ jobs:
           <<: *run_ant_build
       - save_cache:
           paths:
-            ~/buck/ant-out
+            - ~/buck/ant-out
           key: v1.0-buck-macos-ant-{{ .Branch }}
       - restore_cache:
           key: v1.0-buck-macos-build-{{ .Branch }}
@@ -708,7 +708,7 @@ jobs:
           <<: *run_buck_build
       - save_cache:
           paths:
-            ~/buck/buck-out
+            - ~/buck/buck-out
           key: v1.0-buck-macos-build-{{ .Branch }}
       - run:
           name: Run Build Tests
