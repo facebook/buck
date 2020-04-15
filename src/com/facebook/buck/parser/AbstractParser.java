@@ -48,9 +48,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.SortedMap;
 import java.util.concurrent.atomic.AtomicLong;
-import javax.annotation.Nullable;
 
 /**
  * Evaluates build files using one of the supported interpreters and provides information about
@@ -124,23 +122,6 @@ abstract class AbstractParser implements Parser {
       PerBuildState perBuildState, BuildTarget target, DependencyStack dependencyStack)
       throws BuildTargetException {
     return perBuildState.getTargetNodeJobAssertCompatible(target, dependencyStack);
-  }
-
-  /**
-   * @deprecated Prefer {@link Parser#getTargetNodeRawAttributes(PerBuildState, Cell, TargetNode,
-   *     DependencyStack)} and reusing a PerBuildState instance, especially when calling in a loop.
-   */
-  @Nullable
-  @Deprecated
-  @Override
-  public SortedMap<String, Object> getTargetNodeRawAttributes(
-      ParsingContext parsingContext, TargetNode<?> targetNode, DependencyStack dependencyStack)
-      throws BuildFileParseException {
-
-    try (PerBuildState state = perBuildStateFactory.create(parsingContext, permState)) {
-      return getTargetNodeRawAttributes(
-          state, parsingContext.getCells().getRootCell(), targetNode, dependencyStack);
-    }
   }
 
   private RuntimeException propagateRuntimeCause(RuntimeException e)

@@ -1903,8 +1903,11 @@ public class ParserWithConfigurableAttributesTest {
         parser.getTargetNodeAssertCompatible(parsingContext, fooLibTarget, DependencyStack.root());
     assertThat(targetNode.getBuildTarget(), equalTo(fooLibTarget));
 
+    PerBuildState state =
+        parser.getPerBuildStateFactory().create(parsingContext, parser.getPermState());
     SortedMap<String, Object> targetNodeAttributes =
-        parser.getTargetNodeRawAttributes(parsingContext, targetNode, DependencyStack.root());
+        parser.getTargetNodeRawAttributes(
+            state, parsingContext.getCells().getRootCell(), targetNode, DependencyStack.root());
     assertThat(targetNodeAttributes, Matchers.hasKey("name"));
     assertThat(
         targetNodeAttributes.get("name"), equalTo(targetNode.getBuildTarget().getShortName()));

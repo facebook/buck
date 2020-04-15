@@ -719,14 +719,6 @@ public class BuildCommandTest {
       return parser.getTargetNodeRawAttributesJob(state, cell, targetNode, dependencyStack);
     }
 
-    @Nullable
-    @Override
-    public SortedMap<String, Object> getTargetNodeRawAttributes(
-        ParsingContext parsingContext, TargetNode<?> targetNode, DependencyStack dependencyStack)
-        throws BuildFileParseException {
-      return parser.getTargetNodeRawAttributes(parsingContext, targetNode, dependencyStack);
-    }
-
     @Override
     public TargetGraphCreationResult buildTargetGraph(
         ParsingContext parsingContext, ImmutableSet<BuildTarget> toExplore)

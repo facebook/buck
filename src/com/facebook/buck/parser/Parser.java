@@ -82,16 +82,6 @@ public interface Parser {
       PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException;
 
-  /**
-   * @deprecated Prefer {@link #getTargetNodeRawAttributes(PerBuildState, Cell, TargetNode,
-   *     DependencyStack)} and reusing a PerBuildState instance, especially when calling in a loop.
-   */
-  @Nullable
-  @Deprecated
-  SortedMap<String, Object> getTargetNodeRawAttributes(
-      ParsingContext parsingContext, TargetNode<?> targetNode, DependencyStack dependencyStack)
-      throws BuildFileParseException;
-
   TargetGraphCreationResult buildTargetGraph(
       ParsingContext parsingContext, ImmutableSet<BuildTarget> toExplore)
       throws IOException, InterruptedException, BuildFileParseException;
