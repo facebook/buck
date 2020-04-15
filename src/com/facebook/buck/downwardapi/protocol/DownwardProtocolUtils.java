@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.downwardapi;
+package com.facebook.buck.downwardapi.protocol;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 

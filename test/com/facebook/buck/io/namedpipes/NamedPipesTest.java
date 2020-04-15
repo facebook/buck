@@ -26,8 +26,9 @@ import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downward.model.EventTypeMessage.EventType;
 import com.facebook.buck.downward.model.LogEvent;
 import com.facebook.buck.downward.model.StepEvent;
-import com.facebook.buck.downwardapi.DownwardProtocol;
-import com.facebook.buck.downwardapi.DownwardProtocolType;
+import com.facebook.buck.downwardapi.protocol.DownwardProtocol;
+import com.facebook.buck.downwardapi.protocol.DownwardProtocolType;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.protobuf.AbstractMessage;
 import java.io.IOException;
@@ -41,7 +42,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nonnull;
 import junitparams.JUnitParamsRunner;
@@ -76,7 +76,7 @@ public class NamedPipesTest {
   @Test
   public void testNamedPipes(DownwardProtocolType protocolType) {
     NamedPipeFactory namedPipeFactory = NamedPipeFactory.getFactory();
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
+    ExecutorService executorService = MostExecutors.newSingleThreadExecutor("named_pipe_reader");
     List<ReceivedNamedPipeJsonMessage> receivedMessages = new ArrayList<>();
     String namedPipePath = null;
     try (NamedPipe namedPipe = namedPipeFactory.create()) {
@@ -98,10 +98,7 @@ public class NamedPipesTest {
       } catch (IOException e) {
         LOG.error(e, "Can't write into a named pipe: " + namedPipePath);
       } finally {
-        executorService.shutdown();
-        if (!executorService.awaitTermination(1, TimeUnit.SECONDS)) {
-          executorService.shutdownNow();
-        }
+        MostExecutors.shutdown(executorService, 1, TimeUnit.SECONDS);
       }
     } catch (Exception e) {
       LOG.error(e, "Can't create a named pipe.");

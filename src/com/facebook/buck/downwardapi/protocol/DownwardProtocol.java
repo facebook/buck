@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.downwardapi;
+package com.facebook.buck.downwardapi.protocol;
 
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.google.protobuf.AbstractMessage;

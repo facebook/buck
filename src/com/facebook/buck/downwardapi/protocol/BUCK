@@ -1,5 +1,5 @@
 java_library(
-    name = "downward_api",
+    name = "protocol",
     srcs = glob(["**/*.java"]),
     tests = [
         "//test/com/facebook/buck/io/namedpipes:unit",
