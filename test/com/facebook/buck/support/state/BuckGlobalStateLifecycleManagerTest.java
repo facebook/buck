@@ -20,6 +20,9 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -40,12 +43,14 @@ import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetVi
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.rules.knowntypes.provider.KnownRuleTypesProvider;
+import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.FakeWatchmanClient;
 import com.facebook.buck.io.watchman.FakeWatchmanFactory;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanClient;
+import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager.LifecycleStatus;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -60,11 +65,14 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
+import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.Map.Entry;
+import java.util.function.Supplier;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,6 +84,7 @@ public class BuckGlobalStateLifecycleManagerTest {
 
   private ProjectFilesystem filesystem;
   private BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager;
+  private Supplier<KnownRuleTypesProvider> knownRuleTypesProviderFactory;
   private KnownRuleTypesProvider knownRuleTypesProvider;
   private BuckConfig buckConfig;
   private Clock clock;
@@ -92,6 +101,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     buckGlobalStateLifecycleManager = new BuckGlobalStateLifecycleManager();
     pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
+    knownRuleTypesProviderFactory = () -> knownRuleTypesProvider;
     clock = FakeClock.doNotCare();
     watchmanClient = new FakeWatchmanClient(0, ImmutableMap.of());
     watchman =
@@ -120,7 +130,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                         .build())
                 .setFilesystem(filesystem)
                 .build(),
-            knownRuleTypesProvider,
+            knownRuleTypesProviderFactory,
             watchman,
             Console.createNullConsole(),
             clock,
@@ -138,7 +148,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                         .build())
                 .setFilesystem(filesystem)
                 .build(),
-            knownRuleTypesProvider,
+            knownRuleTypesProviderFactory,
             watchman,
             Console.createNullConsole(),
             clock,
@@ -156,7 +166,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                         .build())
                 .setFilesystem(filesystem)
                 .build(),
-            knownRuleTypesProvider,
+            knownRuleTypesProviderFactory,
             watchman,
             Console.createNullConsole(),
             clock,
@@ -194,7 +204,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalState =
         buckGlobalStateLifecycleManager.getBuckGlobalState(
             new TestCellBuilder().setBuckConfig(buckConfig1).setFilesystem(filesystem).build(),
-            knownRuleTypesProvider,
+            knownRuleTypesProviderFactory,
             watchman,
             Console.createNullConsole(),
             clock,
@@ -206,7 +216,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalState,
         buckGlobalStateLifecycleManager.getBuckGlobalState(
             new TestCellBuilder().setBuckConfig(buckConfig2).setFilesystem(filesystem).build(),
-            knownRuleTypesProvider,
+            knownRuleTypesProviderFactory,
             watchman,
             Console.createNullConsole(),
             clock,
@@ -225,7 +235,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -237,7 +247,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -261,7 +271,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                     .setBuckConfig(buckConfigWithDeveloperDirectory)
                     .setFilesystem(filesystem)
                     .build(),
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -277,7 +287,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                     .setBuckConfig(buckConfigWithDeveloperDirectory)
                     .setFilesystem(filesystem)
                     .build(),
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -319,7 +329,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -330,7 +340,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -348,7 +358,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -361,7 +371,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -405,7 +415,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -416,7 +426,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 new TestCellBuilder().setBuckConfig(buckConfig).setFilesystem(filesystem).build(),
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -437,7 +447,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -450,7 +460,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -489,7 +499,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -504,7 +514,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -533,7 +543,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -548,7 +558,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -577,7 +587,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -596,7 +606,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -626,7 +636,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -639,7 +649,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -667,7 +677,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalStateWithBrokenAndroidSdk1 =
         buckGlobalStateLifecycleManager.getBuckGlobalState(
             cell,
-            knownRuleTypesProvider,
+            knownRuleTypesProviderFactory,
             watchman,
             Console.createNullConsole(),
             clock,
@@ -678,7 +688,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     Object buckGlobalStateWithBrokenAndroidSdk2 =
         buckGlobalStateLifecycleManager.getBuckGlobalState(
             cell,
-            knownRuleTypesProvider,
+            knownRuleTypesProviderFactory,
             watchman,
             Console.createNullConsole(),
             clock,
@@ -696,7 +706,7 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckGlobalStateLifecycleManager
             .getBuckGlobalState(
                 cell,
-                knownRuleTypesProvider,
+                knownRuleTypesProviderFactory,
                 watchman,
                 Console.createNullConsole(),
                 clock,
@@ -724,7 +734,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                         .build())
                 .setFilesystem(filesystem)
                 .build(),
-            knownRuleTypesProvider,
+            knownRuleTypesProviderFactory,
             watchman,
             Console.createNullConsole(),
             clock,
@@ -744,7 +754,7 @@ public class BuckGlobalStateLifecycleManagerTest {
                         .build())
                 .setFilesystem(filesystem)
                 .build(),
-            knownRuleTypesProvider,
+            knownRuleTypesProviderFactory,
             watchman,
             Console.createNullConsole(),
             clock,
@@ -756,6 +766,115 @@ public class BuckGlobalStateLifecycleManagerTest {
         buckStateResultFirstRun.getFirst(),
         buckStateResultSecondRun.getFirst());
 
+    assertEquals(LifecycleStatus.NEW, buckStateResultFirstRun.getSecond());
+    assertEquals(LifecycleStatus.REUSED, buckStateResultSecondRun.getSecond());
+  }
+
+  @Test
+  public void whenConfigChangesKnownRuleTypesRecreated()
+      throws LabelSyntaxException, EvalException {
+
+    buckGlobalStateLifecycleManager.resetBuckGlobalState();
+
+    Cells cells1 =
+        new TestCellBuilder()
+            .setBuckConfig(FakeBuckConfig.builder().build())
+            .setFilesystem(filesystem)
+            .build();
+    Cells cells2 =
+        new TestCellBuilder()
+            .setBuckConfig(
+                FakeBuckConfig.builder()
+                    .setSections(ImmutableMap.of("foo", ImmutableMap.of("bar", "baz")))
+                    .build())
+            .setFilesystem(filesystem)
+            .build();
+    SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
+
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResultFirstRun =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
+            cells1,
+            () -> TestKnownRuleTypesProvider.create(pluginManager),
+            watchman,
+            Console.createNullConsole(),
+            clock,
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer);
+    KnownRuleTypesProvider firstRuleTypesProvider =
+        buckStateResultFirstRun.getFirst().getKnownRuleTypesProvider();
+    firstRuleTypesProvider.getUserDefinedRuleTypes(cells1.getRootCell()).addRule(rule);
+
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResultSecondRun =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
+            cells2,
+            () -> TestKnownRuleTypesProvider.create(pluginManager),
+            watchman,
+            Console.createNullConsole(),
+            clock,
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer);
+
+    KnownRuleTypesProvider secondRuleTypesProvider =
+        buckStateResultSecondRun.getFirst().getKnownRuleTypesProvider();
+
+    assertNotSame(firstRuleTypesProvider, secondRuleTypesProvider);
+    assertNull(
+        secondRuleTypesProvider
+            .getUserDefinedRuleTypes(cells1.getRootCell())
+            .getRule("//foo:bar.bzl:some_rule"));
+
+    assertNotEquals(buckStateResultFirstRun.getFirst(), buckStateResultSecondRun.getFirst());
+    assertEquals(LifecycleStatus.NEW, buckStateResultFirstRun.getSecond());
+    assertEquals(
+        LifecycleStatus.INVALIDATED_BUCK_CONFIG_CHANGED, buckStateResultSecondRun.getSecond());
+  }
+
+  @Test
+  public void whenNothingChangedOriginalKnownRuleTypesReturned()
+      throws LabelSyntaxException, EvalException {
+    buckGlobalStateLifecycleManager.resetBuckGlobalState();
+
+    Cells cells =
+        new TestCellBuilder()
+            .setBuckConfig(FakeBuckConfig.builder().build())
+            .setFilesystem(filesystem)
+            .build();
+    SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();
+
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResultFirstRun =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
+            cells,
+            knownRuleTypesProviderFactory,
+            watchman,
+            Console.createNullConsole(),
+            clock,
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer);
+    KnownRuleTypesProvider firstRuleTypesProvider =
+        buckStateResultFirstRun.getFirst().getKnownRuleTypesProvider();
+    firstRuleTypesProvider.getUserDefinedRuleTypes(cells.getRootCell()).addRule(rule);
+
+    Pair<BuckGlobalState, LifecycleStatus> buckStateResultSecondRun =
+        buckGlobalStateLifecycleManager.getBuckGlobalState(
+            cells,
+            knownRuleTypesProviderFactory,
+            watchman,
+            Console.createNullConsole(),
+            clock,
+            unconfiguredBuildTargetFactory,
+            targetConfigurationSerializer);
+
+    KnownRuleTypesProvider secondRuleTypesProvider =
+        buckStateResultSecondRun.getFirst().getKnownRuleTypesProvider();
+
+    assertSame(firstRuleTypesProvider, secondRuleTypesProvider);
+    assertSame(
+        rule,
+        secondRuleTypesProvider
+            .getUserDefinedRuleTypes(cells.getRootCell())
+            .getRule("//foo:bar.bzl:some_rule"));
+
+    assertEquals(buckStateResultFirstRun.getFirst(), buckStateResultSecondRun.getFirst());
     assertEquals(LifecycleStatus.NEW, buckStateResultFirstRun.getSecond());
     assertEquals(LifecycleStatus.REUSED, buckStateResultSecondRun.getSecond());
   }

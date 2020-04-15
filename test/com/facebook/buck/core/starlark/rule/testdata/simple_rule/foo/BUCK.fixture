@@ -1,0 +1,5 @@
+load("//:defs.bzl", "my_rule")
+
+my_rule(name = "rule_1")
+my_rule(name = "rule_2")
+my_rule(name = "rule_3")

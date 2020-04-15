@@ -35,6 +35,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 
@@ -115,7 +116,7 @@ public class BuckGlobalStateLifecycleManager {
   /** Get or create Daemon. */
   public synchronized Pair<BuckGlobalState, LifecycleStatus> getBuckGlobalState(
       Cells cells,
-      KnownRuleTypesProvider knownRuleTypesProvider,
+      Supplier<KnownRuleTypesProvider> knownRuleTypesProviderFactory,
       Watchman watchman,
       Console console,
       Clock clock,
@@ -215,7 +216,7 @@ public class BuckGlobalStateLifecycleManager {
       buckGlobalState =
           BuckGlobalStateFactory.create(
               cells,
-              knownRuleTypesProvider,
+              knownRuleTypesProviderFactory.get(),
               watchman,
               webServer,
               unconfiguredBuildTargetFactory,

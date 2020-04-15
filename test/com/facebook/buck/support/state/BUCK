@@ -14,6 +14,7 @@ java_test(
         "//test/com/facebook/buck/core/rules/knowntypes:testutil",
         "//test/com/facebook/buck/io/filesystem:testutil",
         "//test/com/facebook/buck/io/watchman:testutil",
+        "//test/com/facebook/buck/skylark/function:testutil",
         "//test/com/facebook/buck/support/bgtasks:testutil",
         "//test/com/facebook/buck/util:testutil",
         "//test/com/facebook/buck/util/timing:testutil",

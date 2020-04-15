@@ -867,16 +867,6 @@ public final class MainRunner {
       Optional<TargetConfiguration> hostConfiguration =
           createHostConfiguration(command, buckConfig, targetConfigurationFactory);
 
-      // NOTE: This new KnownUserDefinedRuleTypes is only used if BuckGlobals need to be invalidated
-      // Otherwise, everything should use the KnownUserDefinedRuleTypes object from BuckGlobals
-      KnownRuleTypesProvider knownRuleTypesProvider =
-          new KnownRuleTypesProvider(
-              knownRuleTypesFactoryFactory.create(
-                  processExecutor,
-                  pluginManager,
-                  sandboxExecutionStrategyFactory,
-                  knownConfigurationDescriptions));
-
       ExecutableFinder executableFinder = new ExecutableFinder();
 
       ToolchainProviderFactory toolchainProviderFactory =
@@ -905,7 +895,13 @@ public final class MainRunner {
       Pair<BuckGlobalState, LifecycleStatus> buckGlobalStateRequest =
           buckGlobalStateLifecycleManager.getBuckGlobalState(
               cells,
-              knownRuleTypesProvider,
+              () ->
+                  new KnownRuleTypesProvider(
+                      knownRuleTypesFactoryFactory.create(
+                          processExecutor,
+                          pluginManager,
+                          sandboxExecutionStrategyFactory,
+                          knownConfigurationDescriptions)),
               watchman,
               printConsole,
               clock,
@@ -1432,7 +1428,6 @@ public final class MainRunner {
                   filesystem,
                   buckConfig,
                   watchman,
-                  knownRuleTypesProvider,
                   cells.getRootCell(),
                   buckGlobalState,
                   buildEventBus,
@@ -1512,7 +1507,7 @@ public final class MainRunner {
                         scheduledExecutorPool.get(),
                         buildEnvironmentDescription,
                         parserAndCaches.getActionGraphProvider(),
-                        knownRuleTypesProvider,
+                        buckGlobalState.getKnownRuleTypesProvider(),
                         storeManager,
                         Optional.of(invocationInfo),
                         parserAndCaches.getDefaultRuleKeyFactoryCacheRecycler(),
@@ -1876,7 +1871,6 @@ public final class MainRunner {
       ProjectFilesystem filesystem,
       BuckConfig buckConfig,
       Watchman watchman,
-      KnownRuleTypesProvider knownRuleTypesProvider,
       Cell rootCell,
       BuckGlobalState buckGlobalState,
       BuckEventBus buildEventBus,
@@ -1935,7 +1929,7 @@ public final class MainRunner {
         ParserFactory.create(
             typeCoercerFactory,
             new DefaultConstructorArgMarshaller(),
-            knownRuleTypesProvider,
+            buckGlobalState.getKnownRuleTypesProvider(),
             new ParserPythonInterpreterProvider(parserConfig, executableFinder),
             buckGlobalState.getDaemonicParserState(),
             targetSpecResolver,

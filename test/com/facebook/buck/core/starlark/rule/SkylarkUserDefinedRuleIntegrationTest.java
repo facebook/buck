@@ -882,4 +882,15 @@ public class SkylarkUserDefinedRuleIntegrationTest {
 
     workspace.runBuckCommand("run", "//:default_run_test_info").assertSuccess();
   }
+
+  @Test
+  public void repeatedRunsWork() throws IOException {
+    ProjectWorkspace workspace = setupWorkspace("simple_rule");
+
+    // Ensure that we persist the known rule types cache across invocations of buckd.
+    // If we don't, then the rule_3 build will fail to find the UDR properly
+    workspace.runBuckBuild("//foo:rule_1").assertSuccess();
+    workspace.runBuckdCommand("build", "//foo:rule_2").assertSuccess();
+    workspace.runBuckdCommand("build", "//foo:rule_3").assertSuccess();
+  }
 }
