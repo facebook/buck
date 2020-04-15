@@ -93,16 +93,17 @@ public class GCTimeSpentListenerTest {
 
   @Test
   public void testWarning() {
-    assertEquals(7, fakeListener.getEvents().size());
+    assertEquals(6, fakeListener.getEvents().size());
     assertThat(fakeListener.getEvents().get(0), is(instanceOf(CommandEvent.Started.class)));
     assertThat(fakeListener.getEvents().get(1), is(instanceOf(GCCollectionEvent.class)));
     assertThat(fakeListener.getEvents().get(2), is(instanceOf(ConsoleEvent.class)));
-    assertThat(fakeListener.getEvents().get(3), is(instanceOf(ConsoleEvent.class)));
+    assertThat(
+        fakeListener.getEvents().get(3),
+        is(instanceOf(GCTimeSpentListener.GCTimeSpentWarningEvent.class)));
     assertThat(fakeListener.getEvents().get(4), is(instanceOf(CommandEvent.Finished.class)));
     assertThat(fakeListener.getEvents().get(5), is(instanceOf(ConsoleEvent.class)));
-    assertThat(fakeListener.getEvents().get(6), is(instanceOf(ConsoleEvent.class)));
-    ConsoleEvent consoleEventAtThreshold = (ConsoleEvent) fakeListener.getEvents().get(3);
-    ConsoleEvent consoleEventAtEnd = (ConsoleEvent) fakeListener.getEvents().get(6);
+    ConsoleEvent consoleEventAtThreshold = (ConsoleEvent) fakeListener.getEvents().get(2);
+    ConsoleEvent consoleEventAtEnd = (ConsoleEvent) fakeListener.getEvents().get(5);
     assertEquals(
         String.format(
             "threshold %s %s",

@@ -129,6 +129,8 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
 
   @Nullable protected volatile CommandEvent.Finished commandFinished;
 
+  @Nullable protected volatile GCTimeSpentListener.GCTimeSpentWarningEvent gcTimeSpentWarning;
+
   protected volatile OptionalInt ruleCount = OptionalInt.empty();
   protected Optional<String> publicAnnouncements = Optional.empty();
 
@@ -760,6 +762,12 @@ public abstract class AbstractConsoleEventBusListener implements BuckEventListen
   @Subscribe
   public void buildRuleStarted(BuildRuleEvent.Started started) {
     buildRuleThreadTracker.didStartBuildRule(started);
+  }
+
+  @Subscribe
+  public void onGCTimeSpentWarning(
+      GCTimeSpentListener.GCTimeSpentWarningEvent gcTimeSpentWarningEvent) {
+    gcTimeSpentWarning = gcTimeSpentWarningEvent;
   }
 
   @Subscribe

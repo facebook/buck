@@ -284,6 +284,10 @@ public class SuperConsoleEventBusListener extends AbstractConsoleEventBusListene
       lines.add(buildIdLine.get());
     }
 
+    if (gcTimeSpentWarning != null) {
+      lines.add(ansi.asWarningText(gcTimeSpentWarning.getDurationLine()));
+    }
+
     logEventInterval(
         "Processing filesystem changes",
         Optional.empty(),

@@ -16,15 +16,18 @@
 
 package com.facebook.buck.event.listener;
 
+import com.facebook.buck.event.AbstractBuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CommandEvent;
 import com.facebook.buck.event.ConsoleEvent;
+import com.facebook.buck.event.EventKey;
 import com.facebook.buck.support.jvm.GCCollectionEvent;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.eventbus.Subscribe;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import org.stringtemplate.v4.ST;
 
@@ -37,10 +40,10 @@ public class GCTimeSpentListener implements BuckEventListener {
   private long commandStartedTimestampMillis;
   private final ExecutionEnvironment executionEnvironment;
   private final GCTimeSpentListenerConfig config;
-  private boolean didPrintWarning;
   private long durationInMillis;
   private final int thresholdPercentage;
   private final long thresholdInMillis;
+  private Optional<GCTimeSpentWarningEvent> warningEvent;
 
   public GCTimeSpentListener(
       BuckEventBus buckEventBus,
@@ -49,7 +52,7 @@ public class GCTimeSpentListener implements BuckEventListener {
     durationInMillis = 0;
     this.buckEventBus = buckEventBus;
     this.config = config;
-    this.didPrintWarning = false;
+    this.warningEvent = Optional.empty();
     this.executionEnvironment = executionEnvironment;
     this.thresholdPercentage = config.getThresholdPercentage();
     this.thresholdInMillis = TimeUnit.SECONDS.toMillis(config.getThresholdInSec());
@@ -59,14 +62,9 @@ public class GCTimeSpentListener implements BuckEventListener {
     buckEventBus.post(
         ConsoleEvent.warning(
             String.format(
-                didPrintWarning ? "Total time spent in GC : %ds" : "Spent %ds in GC",
-                TimeUnit.MILLISECONDS.toSeconds(durationInMillis))));
-    buckEventBus.post(
-        ConsoleEvent.warning(
-            String.format(
                 "%s",
                 new ST(
-                        didPrintWarning
+                        warningEvent.isPresent()
                             ? config.getExcessTimeWarningAtEndTemplate()
                             : config.getExcessTimeWarningAtThresholdTemplate(),
                         '{',
@@ -96,13 +94,22 @@ public class GCTimeSpentListener implements BuckEventListener {
   @Subscribe
   public synchronized void onGCCollectionEvent(GCCollectionEvent gcCollectionEvent) {
     durationInMillis += gcCollectionEvent.getDurationInMillis();
-    if (!didPrintWarning
+
+    // Once total GC time has crossed the thresholds, update the console line for every 2 second
+    // increase in total GC time.
+    if (warningEvent.isPresent()
+        && (durationInMillis - warningEvent.get().getGcDurationInSec())
+            > TimeUnit.SECONDS.toMillis(2)) {
+      warningEvent = Optional.of(new GCTimeSpentWarningEvent(durationInMillis));
+      buckEventBus.post(warningEvent.get());
+    } else if (!warningEvent.isPresent()
         && durationInMillis > thresholdInMillis
         && (durationInMillis * 100f)
                 / (gcCollectionEvent.getTimestampMillis() - commandStartedTimestampMillis)
             > thresholdPercentage) {
       postWarnings();
-      didPrintWarning = true;
+      warningEvent = Optional.of(new GCTimeSpentWarningEvent(durationInMillis));
+      buckEventBus.post(warningEvent.get());
     }
   }
 
@@ -124,8 +131,39 @@ public class GCTimeSpentListener implements BuckEventListener {
    */
   @Subscribe
   public void onCommandFinished(CommandEvent.Finished finished) {
-    if (didPrintWarning) {
+    if (warningEvent.isPresent()) {
       postWarnings();
+    }
+  }
+
+  /**
+   * Event that is sent to {@link AbstractConsoleEventBusListener} containing information to add a
+   * line to the console with amount of time spent in GC.
+   */
+  public static class GCTimeSpentWarningEvent extends AbstractBuckEvent {
+    long gcDurationInSec;
+
+    public GCTimeSpentWarningEvent(long gcDurationInMillis) {
+      super(EventKey.unique());
+      this.gcDurationInSec = TimeUnit.MILLISECONDS.toSeconds(gcDurationInMillis);
+    }
+
+    public String getDurationLine() {
+      return String.format("%ds was spent in GC", gcDurationInSec);
+    }
+
+    public long getGcDurationInSec() {
+      return gcDurationInSec;
+    }
+
+    @Override
+    protected String getValueString() {
+      return Long.toString(gcDurationInSec);
+    }
+
+    @Override
+    public String getEventName() {
+      return "GCTimeSpentWarningEvent";
     }
   }
 }

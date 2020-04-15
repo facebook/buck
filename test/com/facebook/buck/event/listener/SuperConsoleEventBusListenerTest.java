@@ -758,6 +758,21 @@ public class SuperConsoleEventBusListenerTest {
             installingFinished,
             "HTTP CACHE UPLOAD... 2.10 Kbytes (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"));
 
+    eventBus.post(new GCTimeSpentListener.GCTimeSpentWarningEvent(1000));
+    validateBuildIdConsole(
+        listener,
+        renderingConsole,
+        7040,
+        ImmutableList.of(
+            "1s was spent in GC",
+            parsingLine,
+            actionGraphLine,
+            formatCacheStatsLine(false, 1, 23f, 0f),
+            buildingLine,
+            totalLine,
+            installingFinished,
+            "HTTP CACHE UPLOAD... 2.10 Kbytes (2 COMPLETE/1 FAILED/0 UPLOADING/0 PENDING)"));
+
     CommandEvent.Started commandStarted =
         CommandEvent.started(
             "build", ImmutableList.of(), Paths.get(""), OptionalLong.of(100), 1234);
@@ -768,6 +783,7 @@ public class SuperConsoleEventBusListenerTest {
           renderingConsole,
           7040,
           ImmutableList.of(
+              "1s was spent in GC",
               parsingLine,
               actionGraphLine,
               formatCacheStatsLine(false, 1, 23f, 0f),
