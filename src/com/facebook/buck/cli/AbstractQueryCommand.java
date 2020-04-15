@@ -92,30 +92,6 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   @Nullable
   private File outputFile;
 
-  /** Sort Output format. */
-  public enum SortOutputFormat {
-    LABEL,
-    /** Rank by the length of the shortest path from a root node. */
-    MINRANK,
-    /** Rank by the length of the longest path from a root node. */
-    MAXRANK;
-
-    boolean needToSortByRank() {
-      return this == MAXRANK || this == MINRANK;
-    }
-  }
-
-  @Option(
-      name = "--sort-output",
-      // leaving `output` for a backward compatibility with existing code console parameters
-      aliases = {"--output"},
-      usage =
-          "Sort output format (default: label). "
-              + "minrank/maxrank: Sort the output in rank order and output the ranks "
-              + "according to the length of the shortest or longest path from a root node, "
-              + "respectively. This does not apply to --output-format equals to dot, dot_bfs, json and thrift.")
-  protected QueryCommand.SortOutputFormat sortOutputFormat = QueryCommand.SortOutputFormat.LABEL;
-
   // Use the `outputAttributes()` function to access this data instead. See the comment on the top
   // of that function for the reason why.
   @Option(

@@ -75,8 +75,7 @@ public class QueryCommandIntegrationTest {
 
   /**
    * Asserts that the result succeeded and that the lines printed to stdout are the same as those in
-   * the specified file. Note that sort order is not guaranteed by {@code buck query} unless it is
-   * specified explicitly via {@code --sort-output}.
+   * the specified file. Note that sort order is not guaranteed by {@code buck query}
    */
   private void assertLinesMatch(
       String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
@@ -84,8 +83,7 @@ public class QueryCommandIntegrationTest {
     result.assertSuccess();
 
     // All lines in expected output files are sorted so sort the output from `buck query` before
-    // comparing. Although query/--sort-output claims to sort labels by default, this does not
-    // appear to be honored, in practice.
+    // comparing.
     assertEquals(
         normalizeNewlines(workspace.getFileContents(expectedOutputFile)),
         OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())));
@@ -813,104 +811,6 @@ public class QueryCommandIntegrationTest {
                 workspace.getFileContents("stdout-deps-one-with-attributes.dot"))));
   }
 
-  @Parameters(method = "getSortOutputParams")
-  @Test
-  public void testRankOutputForDeps(String sortOutputParam) throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand("query", sortOutputParam, "minrank", "deps(//example:one)");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-minrank-deps-one"))));
-
-    result = workspace.runBuckCommand("query", sortOutputParam, "maxrank", "deps(//example:one)");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(equalToIgnoringPlatformNewlines(workspace.getFileContents("stdout-maxrank-deps-one"))));
-  }
-
-  @Parameters(method = "getSortOutputParams")
-  @Test
-  public void testRankOutputWithAttributes(String sortOutputParam) throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "query",
-            "deps(//example:one)",
-            sortOutputParam,
-            "minrank",
-            "--output-attributes",
-            "name");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-minrank-deps-one-with-attributes.json"))));
-
-    result =
-        workspace.runBuckCommand(
-            "query",
-            "deps(//example:one)",
-            sortOutputParam,
-            "maxrank",
-            "--output-attributes",
-            "name");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-maxrank-deps-one-with-attributes.json"))));
-  }
-
-  @Parameters(method = "getSortOutputParams")
-  @Test
-  public void testRankOutputWithAttributesIgnoresFlavors(String sortOutputParam)
-      throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "query",
-            "deps(//example:one#doc)",
-            sortOutputParam,
-            "minrank",
-            "--output-attributes",
-            "name");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-minrank-deps-one-with-attributes.json"))));
-
-    result =
-        workspace.runBuckCommand(
-            "query",
-            "deps(//example:one#doc)",
-            sortOutputParam,
-            "maxrank",
-            "--output-attributes",
-            "name");
-    result.assertSuccess();
-    assertThat(
-        result.getStdout(),
-        is(
-            equalToIgnoringPlatformNewlines(
-                workspace.getFileContents("stdout-maxrank-deps-one-with-attributes.json"))));
-  }
-
   static class ParserProfileFinder extends SimpleFileVisitor<Path> {
 
     private Path profilerPath = null;
@@ -1625,10 +1525,6 @@ public class QueryCommandIntegrationTest {
 
   Object getDotParams() {
     return new Object[] {"--dot", "--output-format=dot"};
-  }
-
-  Object getSortOutputParams() {
-    return new Object[] {"--sort-output", "--output"};
   }
 
   @Test

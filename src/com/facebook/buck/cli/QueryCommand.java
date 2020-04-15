@@ -25,7 +25,6 @@ import com.facebook.buck.core.model.targetgraph.MergedTargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
-import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.parser.InternalTargetAttributeNames;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
@@ -55,7 +54,6 @@ import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
@@ -69,9 +67,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.kohsuke.args4j.Option;
 
 /**
@@ -200,11 +196,6 @@ public class QueryCommand extends AbstractQueryCommand {
       Set<QueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
-    if (sortOutputFormat.needToSortByRank()) {
-      printRankOutput(params, env, asQueryBuildTargets(queryResult), printStream);
-      return;
-    }
-
     switch (outputFormat) {
       case DOT:
       case DOT_COMPACT:
@@ -410,41 +401,6 @@ public class QueryCommand extends AbstractQueryCommand {
             .orElseGet(() -> ImmutableSortedMap.of());
   }
 
-  private void printRankOutput(
-      CommandRunnerParams params,
-      BuckQueryEnvironment env,
-      Set<QueryBuildTarget> queryResult,
-      PrintStream printStream)
-      throws QueryException, IOException {
-    if (shouldOutputAttributes()) {
-      ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> attributesWithRanks =
-          getAttributesWithRankMetadata(params, env, queryResult);
-      printAttributesAsJson(attributesWithRanks, printStream);
-    } else {
-      Map<UnflavoredBuildTarget, Integer> ranks =
-          computeRanksByTarget(
-              env.getTargetUniverse().getTargetGraph(),
-              env.getNodesFromQueryTargets(queryResult)::contains);
-
-      printRankOutputAsPlainText(ranks, printStream);
-    }
-  }
-
-  private void printRankOutputAsPlainText(
-      Map<UnflavoredBuildTarget, Integer> ranks, PrintStream printStream) {
-    ranks.entrySet().stream()
-        // sort by rank and target nodes to break ties in order to make output deterministic
-        .sorted(
-            Comparator.comparing(Map.Entry<UnflavoredBuildTarget, Integer>::getValue)
-                .thenComparing(Map.Entry::getKey))
-        .forEach(
-            entry -> {
-              int rank = entry.getValue();
-              String name = toPresentationForm(entry.getKey());
-              printStream.println(rank + " " + name);
-            });
-  }
-
   private void printThriftOutput(
       CommandRunnerParams params,
       BuckQueryEnvironment env,
@@ -475,86 +431,6 @@ public class QueryCommand extends AbstractQueryCommand {
 
     ThriftOutput<MergedTargetNode> thriftOutput = targetNodeBuilder.build();
     thriftOutput.writeOutput(printStream);
-  }
-
-  /**
-   * Returns {@code attributes} with included min/max rank metadata into keyed by the result of
-   * {@link #toPresentationForm(MergedTargetNode)}
-   */
-  private ImmutableSortedMap<String, ImmutableSortedMap<String, Object>>
-      getAttributesWithRankMetadata(
-          CommandRunnerParams params, BuckQueryEnvironment env, Set<QueryBuildTarget> queryResult)
-          throws QueryException {
-    ImmutableSet<TargetNode<?>> nodes = env.getNodesFromQueryTargets(queryResult);
-    Map<UnflavoredBuildTarget, Integer> rankEntries =
-        computeRanksByTarget(env.getTargetUniverse().getTargetGraph(), nodes::contains);
-
-    ImmutableCollection<MergedTargetNode> mergedNodes = MergedTargetNode.group(nodes).values();
-
-    PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
-    // since some nodes differ in their flavors but ultimately have the same attributes, immutable
-    // resulting map is created only after duplicates are merged by using regular HashMap
-    Map<String, Integer> rankIndex =
-        rankEntries.entrySet().stream()
-            .collect(
-                Collectors.toMap(entry -> toPresentationForm(entry.getKey()), Map.Entry::getValue));
-    return ImmutableSortedMap.copyOf(
-        mergedNodes.stream()
-            .collect(
-                Collectors.toMap(
-                    this::toPresentationForm,
-                    node -> {
-                      String label = toPresentationForm(node);
-                      // NOTE: for resiliency in case attributes cannot be resolved a map with only
-                      // minrank is returned, which means clients should be prepared to deal with
-                      // potentially missing fields. Consider not returning a node in such case,
-                      // since most likely an attempt to use that node would fail anyways.
-                      SortedMap<String, Object> attributes =
-                          getAttributes(
-                                  params,
-                                  patternsMatcher,
-                                  node,
-                                  DependencyStack.top(node.getBuildTarget()))
-                              .orElseGet(TreeMap::new);
-                      return ImmutableSortedMap.<String, Object>naturalOrder()
-                          .putAll(attributes)
-                          .put(sortOutputFormat.name().toLowerCase(), rankIndex.get(label))
-                          .build();
-                    })),
-        Comparator.<String>comparingInt(rankIndex::get).thenComparing(Comparator.naturalOrder()));
-  }
-
-  private Map<UnflavoredBuildTarget, Integer> computeRanksByTarget(
-      DirectedAcyclicGraph<TargetNode<?>> graph, Predicate<TargetNode<?>> shouldContainNode) {
-    HashMap<UnflavoredBuildTarget, Integer> ranks = new HashMap<>();
-    for (TargetNode<?> root : ImmutableSortedSet.copyOf(graph.getNodesWithNoIncomingEdges())) {
-      ranks.put(root.getBuildTarget().getUnflavoredBuildTarget(), 0);
-      new AbstractBreadthFirstTraversal<TargetNode<?>>(root) {
-
-        @Override
-        public Iterable<TargetNode<?>> visit(TargetNode<?> node) {
-          if (!shouldContainNode.test(node)) {
-            return ImmutableSet.of();
-          }
-
-          int nodeRank =
-              Objects.requireNonNull(ranks.get(node.getBuildTarget().getUnflavoredBuildTarget()));
-          ImmutableSortedSet<TargetNode<?>> sinks =
-              ImmutableSortedSet.copyOf(
-                  Sets.filter(graph.getOutgoingNodesFor(node), shouldContainNode::test));
-          for (TargetNode<?> sink : sinks) {
-            ranks.merge(
-                sink.getBuildTarget().getUnflavoredBuildTarget(),
-                nodeRank + 1,
-                // min rank is the length of the shortest path from a root node
-                // max rank is the length of the longest path from a root node
-                sortOutputFormat == SortOutputFormat.MINRANK ? Math::min : Math::max);
-          }
-          return sinks;
-        }
-      }.start();
-    }
-    return ranks;
   }
 
   private void collectAndPrintAttributesAsJson(
