@@ -48,6 +48,7 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -518,12 +519,11 @@ public class QueryCommand extends AbstractQueryCommand {
       return Optional.empty();
     }
 
-    SortedMap<String, Object> computedNodeAttributes =
-        updateWithComputedAttributes(targetNodeAttributes, node);
+    targetNodeAttributes.putAll(getMergedNodeComputedAttributes(node));
 
     SortedMap<String, Object> attributes = new TreeMap<>();
     if (!patternsMatcher.isMatchesNone()) {
-      for (Map.Entry<String, Object> entry : computedNodeAttributes.entrySet()) {
+      for (Map.Entry<String, Object> entry : targetNodeAttributes.entrySet()) {
         String snakeCaseKey =
             CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entry.getKey());
         if (patternsMatcher.matches(snakeCaseKey)) {
@@ -534,19 +534,17 @@ public class QueryCommand extends AbstractQueryCommand {
     return Optional.of(attributes);
   }
 
-  private SortedMap<String, Object> updateWithComputedAttributes(
-      SortedMap<String, Object> rawAttributes, MergedTargetNode node) {
-    SortedMap<String, Object> computedAttributes = new TreeMap<>(rawAttributes);
+  private ImmutableMap<String, Object> getMergedNodeComputedAttributes(MergedTargetNode node) {
+    ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
 
     ImmutableList<String> targetConfigurations =
         node.getTargetConfigurations().stream()
             .map(Object::toString)
             .sorted()
             .collect(ImmutableList.toImmutableList());
-    computedAttributes.put(
-        InternalTargetAttributeNames.TARGET_CONFIGURATIONS, targetConfigurations);
+    result.put(InternalTargetAttributeNames.TARGET_CONFIGURATIONS, targetConfigurations);
 
-    return computedAttributes;
+    return result.build();
   }
 
   private String toPresentationForm(MergedTargetNode node) {
