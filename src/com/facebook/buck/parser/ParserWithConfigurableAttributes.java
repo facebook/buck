@@ -56,6 +56,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
@@ -189,12 +190,26 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         targetNode.getBuildTarget().getBaseName().getPath().toString());
     convertedAttributes.put(
         InternalTargetAttributeNames.BUCK_TYPE, targetNode.getRuleType().getName());
-    if (!attributes.getVisibility().isEmpty()) {
-      convertedAttributes.put(VisibilityAttributes.VISIBILITY, attributes.getVisibility());
+
+    // NOTE: We are explicitly not using `attributes.getVisibility()` or
+    // `attributes.getWithinView()` here as they don't take into account things like `PACKAGE`
+    // files.
+    List<String> computedVisibility =
+        targetNode.getVisibilityPatterns().stream()
+            .map(visibilityPattern -> visibilityPattern.getRepresentation())
+            .collect(ImmutableList.toImmutableList());
+    if (!computedVisibility.isEmpty()) {
+      convertedAttributes.put(VisibilityAttributes.VISIBILITY, computedVisibility);
     }
-    if (!attributes.getWithinView().isEmpty()) {
-      convertedAttributes.put(VisibilityAttributes.WITHIN_VIEW, attributes.getWithinView());
+
+    List<String> computedWithinView =
+        targetNode.getWithinViewPatterns().stream()
+            .map(visibilityPattern -> visibilityPattern.getRepresentation())
+            .collect(ImmutableList.toImmutableList());
+    if (!computedWithinView.isEmpty()) {
+      convertedAttributes.put(VisibilityAttributes.WITHIN_VIEW, computedWithinView);
     }
+
     return convertedAttributes;
   }
 

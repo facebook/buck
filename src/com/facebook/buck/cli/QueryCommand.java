@@ -37,7 +37,6 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
-import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
@@ -59,7 +58,6 @@ import java.io.PrintStream;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -539,22 +537,6 @@ public class QueryCommand extends AbstractQueryCommand {
   private SortedMap<String, Object> updateWithComputedAttributes(
       SortedMap<String, Object> rawAttributes, MergedTargetNode node) {
     SortedMap<String, Object> computedAttributes = new TreeMap<>(rawAttributes);
-
-    List<String> computedVisibility =
-        node.getAnyNode().getVisibilityPatterns().stream()
-            .map(visibilityPattern -> visibilityPattern.getRepresentation())
-            .collect(ImmutableList.toImmutableList());
-    if (!computedVisibility.isEmpty()) {
-      computedAttributes.put(VisibilityAttributes.VISIBILITY, computedVisibility);
-    }
-
-    List<String> computedWithinView =
-        node.getAnyNode().getWithinViewPatterns().stream()
-            .map(visibilityPattern -> visibilityPattern.getRepresentation())
-            .collect(ImmutableList.toImmutableList());
-    if (!computedWithinView.isEmpty()) {
-      computedAttributes.put(VisibilityAttributes.WITHIN_VIEW, computedWithinView);
-    }
 
     ImmutableList<String> targetConfigurations =
         node.getTargetConfigurations().stream()
