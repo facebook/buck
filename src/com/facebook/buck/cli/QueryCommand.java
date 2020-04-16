@@ -44,7 +44,6 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultIndenter;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -64,7 +63,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.kohsuke.args4j.Option;
@@ -388,7 +386,8 @@ public class QueryCommand extends AbstractQueryCommand {
       CommandRunnerParams params) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     return node ->
-        getAttributes(params, patternsMatcher, node, DependencyStack.top(node.getBuildTarget()))
+        getAllAttributes(params, node, DependencyStack.top(node.getBuildTarget()))
+            .map(attrs -> getMatchingAttributes(patternsMatcher, attrs))
             .map(
                 attrs ->
                     attrs.entrySet().stream()
@@ -442,8 +441,10 @@ public class QueryCommand extends AbstractQueryCommand {
     printAttributesAsJson(collectAttributes(params, env, queryResult, attributes), printStream);
   }
 
-  private <T extends SortedMap<String, Object>> void printAttributesAsJson(
-      ImmutableSortedMap<String, T> result, PrintStream printStream) throws IOException {
+  private void printAttributesAsJson(
+      ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> result,
+      PrintStream printStream)
+      throws IOException {
     ObjectMappers.WRITER
         .with(
             new DefaultPrettyPrinter().withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))
@@ -456,26 +457,29 @@ public class QueryCommand extends AbstractQueryCommand {
     printStream.println();
   }
 
-  private ImmutableSortedMap<String, SortedMap<String, Object>> collectAttributes(
+  private ImmutableSortedMap<String, ImmutableSortedMap<String, Object>> collectAttributes(
       CommandRunnerParams params,
       ConfiguredQueryEnvironment env,
       Set<QueryTarget> queryResult,
-      ImmutableSet<String> attrs)
+      ImmutableSet<String> attributes)
       throws QueryException {
     ImmutableList<TargetNode<?>> nodes = queryResultToTargetNodes(env, queryResult);
 
     ImmutableCollection<MergedTargetNode> mergedNodes = MergedTargetNode.group(nodes).values();
 
-    PatternsMatcher patternsMatcher = new PatternsMatcher(attrs);
+    PatternsMatcher patternsMatcher = new PatternsMatcher(attributes);
     // use HashMap instead of ImmutableSortedMap.Builder to allow duplicates
     // TODO(buckteam): figure out if duplicates should actually be allowed. It seems like the only
     // reason why duplicates may occur is because TargetNode's unflavored name is used as a key,
     // which may or may not be a good idea
-    Map<String, SortedMap<String, Object>> attributesMap = new HashMap<>();
+    Map<String, ImmutableSortedMap<String, Object>> attributesMap = new HashMap<>();
     for (MergedTargetNode node : mergedNodes) {
       try {
-        getAttributes(params, patternsMatcher, node, DependencyStack.top(node.getBuildTarget()))
-            .ifPresent(attrMap -> attributesMap.put(toPresentationForm(node), attrMap));
+        getAllAttributes(params, node, DependencyStack.top(node.getBuildTarget()))
+            .map(attrs -> getMatchingAttributes(patternsMatcher, attrs))
+            .ifPresent(
+                attrs ->
+                    attributesMap.put(toPresentationForm(node), ImmutableSortedMap.copyOf(attrs)));
 
       } catch (BuildFileParseException e) {
         params
@@ -501,17 +505,15 @@ public class QueryCommand extends AbstractQueryCommand {
     return builder.build();
   }
 
-  private Optional<SortedMap<String, Object>> getAttributes(
-      CommandRunnerParams params,
-      PatternsMatcher patternsMatcher,
-      MergedTargetNode node,
-      DependencyStack dependencyStack) {
-    SortedMap<String, Object> targetNodeAttributes =
+  private Optional<ImmutableMap<String, Object>> getAllAttributes(
+      CommandRunnerParams params, MergedTargetNode node, DependencyStack dependencyStack) {
+    ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
+    SortedMap<String, Object> rawAttributes =
         params
             .getParser()
             .getTargetNodeRawAttributes(
                 perBuildState, params.getCells().getRootCell(), node.getAnyNode(), dependencyStack);
-    if (targetNodeAttributes == null) {
+    if (rawAttributes == null) {
       params
           .getConsole()
           .printErrorText(
@@ -519,19 +521,9 @@ public class QueryCommand extends AbstractQueryCommand {
       return Optional.empty();
     }
 
-    targetNodeAttributes.putAll(getMergedNodeComputedAttributes(node));
-
-    SortedMap<String, Object> attributes = new TreeMap<>();
-    if (!patternsMatcher.isMatchesNone()) {
-      for (Map.Entry<String, Object> entry : targetNodeAttributes.entrySet()) {
-        String snakeCaseKey =
-            CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entry.getKey());
-        if (patternsMatcher.matches(snakeCaseKey)) {
-          attributes.put(snakeCaseKey, entry.getValue());
-        }
-      }
-    }
-    return Optional.of(attributes);
+    result.putAll(rawAttributes);
+    result.putAll(getMergedNodeComputedAttributes(node));
+    return Optional.of(result.build());
   }
 
   private ImmutableMap<String, Object> getMergedNodeComputedAttributes(MergedTargetNode node) {

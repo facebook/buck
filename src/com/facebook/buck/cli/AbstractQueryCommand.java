@@ -23,8 +23,11 @@ import com.facebook.buck.query.QueryNormalizer;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
+import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -36,6 +39,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -227,6 +231,26 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
   public static String getJsonOutputParamDeclaration() {
     return " --output-format json";
+  }
+
+  /**
+   * Filters the entries in {@code attributes} based on whether the key matches a pattern from
+   * {@code matcher}. In the context of queries, this matcher normally represents the {@code
+   * --output-attributes} parameter. Returns a new map of only matching key/values.
+   */
+  protected ImmutableMap<String, Object> getMatchingAttributes(
+      PatternsMatcher matcher, ImmutableMap<String, Object> attributes) {
+    ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
+    if (!matcher.isMatchesNone()) {
+      for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+        String snakeCaseKey =
+            CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entry.getKey());
+        if (matcher.matches(snakeCaseKey)) {
+          result.put(snakeCaseKey, entry.getValue());
+        }
+      }
+    }
+    return result.build();
   }
 
   /**
