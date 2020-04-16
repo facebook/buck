@@ -1,0 +1,3 @@
+load("//valid_provider_used_after_defined:defs.bzl", "SomeInfo", "some_info")
+
+_check = (SomeInfo, some_info)

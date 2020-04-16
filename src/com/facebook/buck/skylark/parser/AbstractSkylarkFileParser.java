@@ -31,7 +31,6 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
-import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -70,9 +69,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -206,7 +203,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // when exceptions are stored in BuildFileManifest they do not have detailed information.
       // TODO(sergeyb): propagate detailed error information from AST evaluation to exception
       throw BuildFileParseException.createForUnknownParseError("Cannot evaluate " + what, whatArgs);
-    } catch (InterruptedException e) {
+    } catch (InterruptedException | BuildFileParseException e) {
       throw e;
     } catch (Exception e) {
       throw new BuckUncheckedExecutionException(e, "When evaluating " + what, whatArgs);
@@ -687,11 +684,15 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       StarlarkThread extensionEnv =
           envBuilder.setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS).build();
 
-      List<Pair<String, Object>> assigns = new ArrayList<>();
-
       extensionEnv.setPostAssignHook(
           (n, v) -> {
-            assigns.add(new Pair<>(n, v));
+            try {
+              ensureExportedIfExportable(extensionEnv, n, v);
+            } catch (EvalException e) {
+              // TODO(nga): what about stack trace
+              eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
+              throw new BuildFileParseException(e, e.getMessage());
+            }
           });
 
       SkylarkUtils.setPhase(extensionEnv, Phase.LOADING);
@@ -704,16 +705,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
           "extension %s referenced from %s",
           load.getLabel(),
           load.getParentLabel());
-
-      for (Pair<String, Object> assign : assigns) {
-        try {
-          ensureExportedIfExportable(extensionEnv, assign.getFirst(), assign.getSecond());
-        } catch (EvalException e) {
-          // TODO(nga): what about stack trace
-          eventHandler.handle(Event.error(e.getLocation(), e.getMessage()));
-          throw new BuildFileParseException(e, e.getMessage());
-        }
-      }
 
       loadedExtension = new StarlarkThread.Extension(extensionEnv);
     }

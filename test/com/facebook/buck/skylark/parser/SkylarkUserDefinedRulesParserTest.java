@@ -877,6 +877,17 @@ public class SkylarkUserDefinedRulesParserTest {
   }
 
   @Test
+  public void providerCanBeInstantiatedRightAfterDefined() throws Exception {
+    setupWorkspace("user_defined_providers");
+    Path buildFile = projectFilesystem.resolve("valid_provider_used_after_defined").resolve("BUCK");
+
+    EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
+    parser = createParser(collector);
+
+    parser.getManifest(AbsPath.of(buildFile));
+  }
+
+  @Test
   public void testRulesMustEndInTest() throws IOException, InterruptedException {
     setupWorkspace("basic_rule");
     Path buildFile = projectFilesystem.resolve("non_test_rule_name").resolve("BUCK");
