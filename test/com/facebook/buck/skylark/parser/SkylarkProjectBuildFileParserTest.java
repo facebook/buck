@@ -927,7 +927,8 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(extensionExtensionFile, Arrays.asList("def get_name():", "  return 'jar'"));
     Files.write(
         extensionFile,
-        Collections.singletonList("load('//src/test:extension_rules.bzl', 'get_name')"));
+        ImmutableList.of(
+            "load('//src/test:extension_rules.bzl', 'get_name')", "get_name = get_name"));
     RawTargetNode rule = getSingleRule(buildFile);
     assertThat(rule.get("binaryJar"), equalTo("jar"));
   }
@@ -980,7 +981,8 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name='foo', binary_jar=get_name())"));
     Files.write(extensionExtensionFile, Arrays.asList("def get_name():", "  return 'jar'"));
     Files.write(
-        extensionFile, Collections.singletonList("load(':extension_rules.bzl', 'get_name')"));
+        extensionFile,
+        ImmutableList.of("load(':extension_rules.bzl', 'get_name')", "get_name = get_name"));
     RawTargetNode rule = getSingleRule(buildFile);
     assertThat(rule.get("binaryJar"), equalTo("jar"));
   }
@@ -1314,7 +1316,8 @@ public class SkylarkProjectBuildFileParserTest {
         Arrays.asList("def get_name():", "  return str(native.rule_exists('does_not_exist'))"));
     Files.write(
         extensionFile,
-        Collections.singletonList("load('//src/test:extension_rules.bzl', 'get_name')"));
+        ImmutableList.of(
+            "load('//src/test:extension_rules.bzl', 'get_name')", "get_name = get_name"));
     RawTargetNode rule = getSingleRule(buildFile);
     assertThat(rule.get("binaryJar"), equalTo("False"));
   }
@@ -1351,7 +1354,8 @@ public class SkylarkProjectBuildFileParserTest {
         Arrays.asList("def get_name():", "  return str(native.rule_exists('exists'))"));
     Files.write(
         extensionFile,
-        Collections.singletonList("load('//src/test:extension_rules.bzl', 'get_name')"));
+        ImmutableList.of(
+            "load('//src/test:extension_rules.bzl', 'get_name')", "get_name = get_name"));
     BuildFileManifest buildFileManifest = parser.getManifest(AbsPath.of(buildFile));
     assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(2));
     RawTargetNode rule = Iterables.getFirst(buildFileManifest.getTargets().values(), null);
