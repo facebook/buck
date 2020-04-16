@@ -98,6 +98,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.Nonnull;
 
 /** Logs events to a json file formatted to be viewed in Chrome Trace View (chrome://tracing). */
 public class ChromeTraceBuildListener implements BuckEventListener {
@@ -108,7 +109,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
           .build(
               new CacheLoader<String, String>() {
                 @Override
-                public String load(String key) {
+                public String load(@Nonnull String key) {
                   return CaseFormat.UPPER_CAMEL
                       .converterTo(CaseFormat.LOWER_UNDERSCORE)
                       .convert(key)
@@ -182,14 +183,12 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     this.reStatsProvider = reStatsProvider;
     this.criticalPathEventListener = criticalPathEventListener;
     this.dateFormat =
-        new ThreadLocal<SimpleDateFormat>() {
-          @Override
-          protected SimpleDateFormat initialValue() {
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd.HH-mm-ss", locale);
-            dateFormat.setTimeZone(timeZone);
-            return dateFormat;
-          }
-        };
+        ThreadLocal.withInitial(
+            () -> {
+              SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd.HH-mm-ss", locale);
+              dateFormat.setTimeZone(timeZone);
+              return dateFormat;
+            });
     this.threadMXBean = threadMXBean;
     this.config = config;
     this.managerScope = managerScope;
@@ -491,20 +490,23 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   @Subscribe
   public void simplePerfEvent(SimplePerfEvent perfEvent) {
-    ChromeTraceEvent.Phase phase = null;
-    switch (perfEvent.getEventType()) {
+    ChromeTraceEvent.Phase phase;
+    SimplePerfEvent.Type eventType = perfEvent.getEventType();
+    switch (eventType) {
       case STARTED:
         phase = ChromeTraceEvent.Phase.BEGIN;
         break;
+
       case FINISHED:
         phase = ChromeTraceEvent.Phase.END;
         break;
+
       case UPDATED:
         phase = ChromeTraceEvent.Phase.IMMEDIATE;
         break;
-    }
-    if (phase == null) {
-      throw new IllegalStateException("Unsupported perf event type: " + perfEvent.getEventType());
+
+      default:
+        throw new IllegalStateException("Unsupported perf event type: " + eventType);
     }
 
     try {
@@ -661,11 +663,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
                 "artifact_size",
                 finished
                     .getCacheResult()
-                    .map(
-                        result ->
-                            result.getType() == CacheResultType.HIT
-                                ? Long.toString(result.getArtifactSizeBytes())
-                                : "unknown")
+                    .filter(result -> result.getType() == CacheResultType.HIT)
+                    .map(result -> Long.toString(result.getArtifactSizeBytes()))
                     .orElse("unknown"));
     Optionals.putIfPresent(
         finished.getCacheResult().map(Object::toString), "cache_result", argumentsBuilder);
@@ -964,10 +963,25 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       String category,
       String name,
       ChromeTraceEvent.Phase phase,
-      ImmutableMap<String, ? extends Object> arguments,
+      ImmutableMap<String, ?> arguments,
+      BuckEvent event) {
+    writeChromeTraceEvent(
+        category,
+        name,
+        phase,
+        arguments,
+        TimeUnit.NANOSECONDS.toMicros(event.getNanoTime()),
+        event);
+  }
+
+  void writeChromeTraceEvent(
+      String category,
+      String name,
+      ChromeTraceEvent.Phase phase,
+      ImmutableMap<String, ?> arguments,
+      long timestampInMicroseconds,
       BuckEvent event) {
     long threadId = event.getThreadId();
-    long timestampInMicroseconds = TimeUnit.NANOSECONDS.toMicros(event.getNanoTime());
     long threadTimestampInMicroseconds =
         TimeUnit.NANOSECONDS.toMicros(event.getThreadUserNanoTime());
 
@@ -990,7 +1004,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     long timestampInMicroseconds = triggeringEvent.getMicroTime();
     long threadTimestampInMicroseconds = triggeringEvent.getMicroThreadUserTime();
 
-    Long boxedThreadId = Long.valueOf(threadId);
+    Long boxedThreadId = threadId;
     if (!threadNamesRecorded.contains(boxedThreadId)) {
       ThreadInfo threadInfo = threadMXBean.getThreadInfo(threadId);
 
@@ -1025,8 +1039,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   @VisibleForTesting
-  void writeChromeTraceMetadataEvent(
-      String name, ImmutableMap<String, ? extends Object> arguments) {
+  void writeChromeTraceMetadataEvent(String name, ImmutableMap<String, ?> arguments) {
     long timestampInMicroseconds = TimeUnit.NANOSECONDS.toMicros(clock.nanoTime());
     long threadTimestampInMicroseconds =
         TimeUnit.NANOSECONDS.toMicros(clock.threadUserNanoTime(Thread.currentThread().getId()));
@@ -1059,6 +1072,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   }
 
   private static class TracePathAndStream {
+
     private final Path path;
     private final OutputStream stream;
 
