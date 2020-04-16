@@ -28,34 +28,25 @@ import java.util.Optional;
 
 final class CxxCollectAndLogInferDependenciesStep implements Step {
 
-  private Optional<CxxInferAnalyze> analysisRule;
-  private Optional<CxxInferCaptureTransitive> captureOnlyRule;
+  private Optional<CxxInferCaptureTransitive> captureTransitiveRule;
   private ProjectFilesystem projectFilesystem;
   private Path outputFile;
 
   private CxxCollectAndLogInferDependenciesStep(
-      Optional<CxxInferAnalyze> analysisRule,
-      Optional<CxxInferCaptureTransitive> captureOnlyRule,
+      Optional<CxxInferCaptureTransitive> captureTransitiveRule,
       ProjectFilesystem projectFilesystem,
       Path outputFile) {
-    this.analysisRule = analysisRule;
-    this.captureOnlyRule = captureOnlyRule;
+    this.captureTransitiveRule = captureTransitiveRule;
     this.projectFilesystem = projectFilesystem;
     this.outputFile = outputFile;
   }
 
-  public static CxxCollectAndLogInferDependenciesStep fromAnalyzeRule(
-      CxxInferAnalyze analyzeRule, ProjectFilesystem projectFilesystem, Path outputFile) {
-    return new CxxCollectAndLogInferDependenciesStep(
-        Optional.of(analyzeRule), Optional.empty(), projectFilesystem, outputFile);
-  }
-
-  public static CxxCollectAndLogInferDependenciesStep fromCaptureOnlyRule(
-      CxxInferCaptureTransitive captureOnlyRule,
+  public static CxxCollectAndLogInferDependenciesStep fromCaptureTransitiveRule(
+      CxxInferCaptureTransitive captureTransitiveRule,
       ProjectFilesystem projectFilesystem,
       Path outputFile) {
     return new CxxCollectAndLogInferDependenciesStep(
-        Optional.empty(), Optional.of(captureOnlyRule), projectFilesystem, outputFile);
+        Optional.of(captureTransitiveRule), projectFilesystem, outputFile);
   }
 
   private String processCaptureRule(CxxInferCapture captureRule) {
@@ -64,29 +55,11 @@ final class CxxCollectAndLogInferDependenciesStep implements Step {
         .toString();
   }
 
-  private ImmutableList<String> processCaptureOnlyRule(CxxInferCaptureTransitive captureOnlyRule) {
+  private ImmutableList<String> processCaptureTransitiveRule(
+      CxxInferCaptureTransitive captureTransitiveRule) {
     ImmutableList.Builder<String> outputBuilder = ImmutableList.builder();
-    for (CxxInferCapture captureRule : captureOnlyRule.getCaptureRules()) {
+    for (CxxInferCapture captureRule : captureTransitiveRule.getCaptureRules()) {
       outputBuilder.add(processCaptureRule(captureRule));
-    }
-    return outputBuilder.build();
-  }
-
-  private void processAnalysisRuleHelper(
-      CxxInferAnalyze analysisRule, ImmutableList.Builder<String> accumulator) {
-    accumulator.add(
-        InferLogLine.fromBuildTarget(
-                analysisRule.getBuildTarget(), analysisRule.getAbsolutePathToResultsDir())
-            .toString());
-    accumulator.addAll(
-        analysisRule.getCaptureRules().stream().map(this::processCaptureRule).iterator());
-  }
-
-  private ImmutableList<String> processAnalysisRule(CxxInferAnalyze analyzeRule) {
-    ImmutableList.Builder<String> outputBuilder = ImmutableList.builder();
-    processAnalysisRuleHelper(analyzeRule, outputBuilder);
-    for (CxxInferAnalyze analyzeDepRule : analyzeRule.getTransitiveAnalyzeRules()) {
-      processAnalysisRuleHelper(analyzeDepRule, outputBuilder);
     }
     return outputBuilder.build();
   }
@@ -94,10 +67,8 @@ final class CxxCollectAndLogInferDependenciesStep implements Step {
   @Override
   public StepExecutionResult execute(ExecutionContext context) throws IOException {
     ImmutableList<String> output;
-    if (analysisRule.isPresent()) {
-      output = processAnalysisRule(analysisRule.get());
-    } else if (captureOnlyRule.isPresent()) {
-      output = processCaptureOnlyRule(captureOnlyRule.get());
+    if (captureTransitiveRule.isPresent()) {
+      output = processCaptureTransitiveRule(captureTransitiveRule.get());
     } else {
       throw new IllegalStateException("Expected non-empty analysis or capture rules in input");
     }

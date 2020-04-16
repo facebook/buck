@@ -171,7 +171,7 @@ public class CxxLibraryIntegrationTest {
   public void runInferOnSimpleLibraryWithoutDeps() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
-    workspace.runBuckBuild("//foo:dep_one#infer").assertSuccess();
+    workspace.runBuckBuild("//foo:dep_one#infer-capture-all").assertSuccess();
   }
 
   @Test

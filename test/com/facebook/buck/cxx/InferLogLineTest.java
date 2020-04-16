@@ -39,7 +39,7 @@ public class InferLogLineTest {
     expectedException.expectMessage("Path must be absolute");
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance(
-            "//target", "short", CxxInferEnhancer.InferFlavors.INFER.getFlavor());
+            "//target", "short", CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
     InferLogLine.fromBuildTarget(testBuildTarget, Paths.get("buck-out/a/b/c/"));
   }
@@ -49,9 +49,11 @@ public class InferLogLineTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance("cellname//target:short")
-            .withFlavors(ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER.getFlavor()));
+            .withFlavors(
+                ImmutableSet.of(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor()));
 
-    String expectedOutput = "cellname//target:short#infer\t[infer]\t/User/user/src/buck-out/a/b/c";
+    String expectedOutput =
+        "cellname//target:short#infer-capture-all\t[infer-capture-all]\t/User/user/src/buck-out/a/b/c";
     assertEquals(
         expectedOutput,
         InferLogLine.fromBuildTarget(testBuildTarget, Paths.get("/User/user/src/buck-out/a/b/c/"))
@@ -63,9 +65,10 @@ public class InferLogLineTest {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance(
-            "//target", "short", CxxInferEnhancer.InferFlavors.INFER.getFlavor());
+            "//target", "short", CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
-    String expectedOutput = "//target:short#infer\t[infer]\t/User/user/src/buck-out/a/b/c";
+    String expectedOutput =
+        "//target:short#infer-capture-all\t[infer-capture-all]\t/User/user/src/buck-out/a/b/c";
     assertEquals(
         expectedOutput,
         InferLogLine.fromBuildTarget(testBuildTarget, Paths.get("/User/user/src/buck-out/a/b/c/"))

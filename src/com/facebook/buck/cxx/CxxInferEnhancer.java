@@ -47,15 +47,15 @@ import java.util.Optional;
 /** Handles infer flavors for {@link CxxLibraryGroup} and {@link CxxBinary}. */
 public final class CxxInferEnhancer {
 
-  /** Flavor adorning the individual inter capture rules. */
-  static final InternalFlavor INFER_CAPTURE_FLAVOR = InternalFlavor.of("infer-capture");
+  /** Basename of inter capture buildrules */
+  static final String INFER_CAPTURE_BUILDRULE = "infer-capture";
 
   /** Flavors affixed to a library or binary rule to run infer. */
   public enum InferFlavors implements FlavorConvertible {
-    INFER(InternalFlavor.of("infer")),
-    INFER_ANALYZE(InternalFlavor.of("infer-analyze")),
+    /* Main flavor used to capture target and all its deps */
     INFER_CAPTURE_ALL(InternalFlavor.of("infer-capture-all")),
-    INFER_CAPTURE_ONLY(InternalFlavor.of("infer-capture-only"));
+    /* Internal flavour added to transitive dependencies */
+    INFER_CAPTURE_NO_DEPS(InternalFlavor.of("infer-capture-no-deps"));
 
     private final InternalFlavor flavor;
 
@@ -127,15 +127,9 @@ public final class CxxInferEnhancer {
     Preconditions.checkArgument(
         inferFlavor.isPresent(), "Expected BuildRuleParams to contain infer flavor.");
     switch (inferFlavor.get()) {
-      case INFER:
-        return requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
-            buildTarget, cellRoots, filesystem, args);
-      case INFER_ANALYZE:
-        return requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-            buildTarget, cellRoots, filesystem, args);
       case INFER_CAPTURE_ALL:
         return requireAllTransitiveCaptureBuildRules(buildTarget, cellRoots, filesystem, args);
-      case INFER_CAPTURE_ONLY:
+      case INFER_CAPTURE_NO_DEPS:
         return requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
             buildTarget, cellRoots, filesystem, args);
     }
@@ -158,65 +152,19 @@ public final class CxxInferEnhancer {
     return graphBuilder.addToIndex(new CxxInferCaptureTransitive(target, filesystem, captureRules));
   }
 
-  private CxxInferComputeReport requireInferAnalyzeAndReportBuildRuleForCxxDescriptionArg(
-      BuildTarget target,
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      CxxConstructorArg args) {
-
-    BuildTarget cleanTarget = InferFlavors.targetWithoutAnyInferFlavor(target);
-
-    return (CxxInferComputeReport)
-        graphBuilder.computeIfAbsent(
-            cleanTarget.withAppendedFlavors(InferFlavors.INFER.getFlavor()),
-            targetWithInferFlavor ->
-                new CxxInferComputeReport(
-                    targetWithInferFlavor,
-                    filesystem,
-                    requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-                        cleanTarget, cellRoots, filesystem, args)));
-  }
-
-  private CxxInferAnalyze requireInferAnalyzeBuildRuleForCxxDescriptionArg(
-      BuildTarget target,
-      CellPathResolver cellRoots,
-      ProjectFilesystem filesystem,
-      CxxConstructorArg args) {
-
-    Flavor inferAnalyze = InferFlavors.INFER_ANALYZE.getFlavor();
-
-    BuildTarget cleanTarget = InferFlavors.targetWithoutAnyInferFlavor(target);
-
-    return (CxxInferAnalyze)
-        graphBuilder.computeIfAbsent(
-            cleanTarget.withAppendedFlavors(inferAnalyze),
-            targetWithInferAnalyzeFlavor -> {
-              ImmutableSet<BuildRule> deps = args.getCxxDeps().get(graphBuilder, cxxPlatform);
-              ImmutableSet<CxxInferAnalyze> transitiveDepsLibraryRules =
-                  requireTransitiveDependentLibraries(
-                      cxxPlatform, deps, inferAnalyze, CxxInferAnalyze.class);
-              return new CxxInferAnalyze(
-                  targetWithInferAnalyzeFlavor,
-                  filesystem,
-                  inferBuckConfig,
-                  requireInferCaptureBuildRules(
-                      cleanTarget, cellRoots, filesystem, collectSources(cleanTarget, args), args),
-                  transitiveDepsLibraryRules);
-            });
-  }
-
   private CxxInferCaptureRulesAggregator requireInferCaptureAggregatorBuildRuleForCxxDescriptionArg(
       BuildTarget target,
       CellPathResolver cellRoots,
       ProjectFilesystem filesystem,
       CxxConstructorArg args) {
 
-    Flavor inferCaptureOnly = InferFlavors.INFER_CAPTURE_ONLY.getFlavor();
+    Flavor inferCaptureNoDeps = InferFlavors.INFER_CAPTURE_NO_DEPS.getFlavor();
 
     return (CxxInferCaptureRulesAggregator)
         graphBuilder.computeIfAbsent(
-            InferFlavors.targetWithoutAnyInferFlavor(target).withAppendedFlavors(inferCaptureOnly),
-            targetWithInferCaptureOnlyFlavor -> {
+            InferFlavors.targetWithoutAnyInferFlavor(target)
+                .withAppendedFlavors(inferCaptureNoDeps),
+            targetWithInferCaptureNoDepsFlavor -> {
               BuildTarget cleanTarget = InferFlavors.targetWithoutAnyInferFlavor(target);
 
               ImmutableMap<String, CxxSource> sources = collectSources(cleanTarget, args);
@@ -225,10 +173,10 @@ public final class CxxInferEnhancer {
                   requireInferCaptureBuildRules(cleanTarget, cellRoots, filesystem, sources, args);
 
               ImmutableSet<CxxInferCaptureRulesAggregator> transitiveAggregatorRules =
-                  requireTransitiveCaptureAndAggregatingRules(args, inferCaptureOnly);
+                  requireTransitiveCaptureAndAggregatingRules(args, inferCaptureNoDeps);
 
               return new CxxInferCaptureRulesAggregator(
-                  targetWithInferCaptureOnlyFlavor,
+                  targetWithInferCaptureNoDepsFlavor,
                   filesystem,
                   captureRules,
                   transitiveAggregatorRules);

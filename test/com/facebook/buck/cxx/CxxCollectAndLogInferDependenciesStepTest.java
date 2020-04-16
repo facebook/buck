@@ -111,24 +111,25 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance("//target:short")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
-    CxxInferAnalyze analyzeRule =
-        new CxxInferAnalyze(
-            testBuildTarget, filesystem, inferBuckConfig, ImmutableSet.of(), ImmutableSet.of());
+    CxxInferCapture captureRule = createCaptureRule(testBuildTarget, filesystem, inferBuckConfig);
+    CxxInferCaptureTransitive captureTransRule =
+        new CxxInferCaptureTransitive(testBuildTarget, filesystem, ImmutableSet.of(captureRule));
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
-        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(analyzeRule, filesystem, outputFile);
+        CxxCollectAndLogInferDependenciesStep.fromCaptureTransitiveRule(
+            captureTransRule, filesystem, outputFile);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
-        InferLogLine.fromBuildTarget(testBuildTarget, analyzeRule.getAbsolutePathToResultsDir())
+        InferLogLine.fromBuildTarget(testBuildTarget, captureRule.getAbsolutePathToOutput())
             .toString();
 
     assertEquals(expectedOutput + "\n", filesystem.readFileIfItExists(outputFile).get());
@@ -144,24 +145,25 @@ public class CxxCollectAndLogInferDependenciesStepTest {
 
     BuildTarget testBuildTarget =
         BuildTargetFactory.newInstance("cellname//target:short")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
-    CxxInferAnalyze analyzeRule =
-        new CxxInferAnalyze(
-            testBuildTarget, filesystem, inferBuckConfig, ImmutableSet.of(), ImmutableSet.of());
+    CxxInferCapture captureRule = createCaptureRule(testBuildTarget, filesystem, inferBuckConfig);
+    CxxInferCaptureTransitive captureTransRule =
+        new CxxInferCaptureTransitive(testBuildTarget, filesystem, ImmutableSet.of(captureRule));
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
-        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(analyzeRule, filesystem, outputFile);
+        CxxCollectAndLogInferDependenciesStep.fromCaptureTransitiveRule(
+            captureTransRule, filesystem, outputFile);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
-        InferLogLine.fromBuildTarget(testBuildTarget, analyzeRule.getAbsolutePathToResultsDir())
+        InferLogLine.fromBuildTarget(testBuildTarget, captureRule.getAbsolutePathToOutput())
             .toString();
 
     assertEquals(expectedOutput + "\n", filesystem.readFileIfItExists(outputFile).get());
@@ -177,7 +179,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             CanonicalCellName.unsafeOf(Optional.of("cell1")), "/Users/user/cell_one");
     BuildTarget buildTarget1 =
         BuildTargetFactory.newInstance("cell1//target/in_cell_one:short")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
     ProjectFilesystem filesystem2 =
@@ -185,32 +187,30 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             CanonicalCellName.unsafeOf(Optional.of("cell2")), "/Users/user/cell_two");
     BuildTarget buildTarget2 =
         BuildTargetFactory.newInstance("cell2//target/in_cell_two:short2")
-            .withFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR);
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_NO_DEPS.getFlavor());
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
-    CxxInferCapture captureRule = createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
+    CxxInferCapture captureRule2 = createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
 
-    CxxInferAnalyze analyzeRule =
-        new CxxInferAnalyze(
-            buildTarget1,
-            filesystem1,
-            inferBuckConfig,
-            ImmutableSet.of(captureRule),
-            ImmutableSet.of());
+    CxxInferCapture captureRule1 = createCaptureRule(buildTarget1, filesystem1, inferBuckConfig);
+    CxxInferCaptureTransitive captureTransRule =
+        new CxxInferCaptureTransitive(
+            buildTarget1, filesystem1, ImmutableSet.of(captureRule1, captureRule2));
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
-        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(analyzeRule, filesystem1, outputFile);
+        CxxCollectAndLogInferDependenciesStep.fromCaptureTransitiveRule(
+            captureTransRule, filesystem1, outputFile);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
-        InferLogLine.fromBuildTarget(buildTarget1, analyzeRule.getAbsolutePathToResultsDir())
+        InferLogLine.fromBuildTarget(buildTarget1, captureRule1.getAbsolutePathToOutput())
             + "\n"
-            + InferLogLine.fromBuildTarget(buildTarget2, captureRule.getAbsolutePathToOutput());
+            + InferLogLine.fromBuildTarget(buildTarget2, captureRule2.getAbsolutePathToOutput());
 
     assertEquals(expectedOutput + "\n", filesystem1.readFileIfItExists(outputFile).get());
   }
@@ -224,7 +224,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         createFakeFilesystem(CanonicalCellName.rootCell(), "/Users/user/default_cell");
     BuildTarget buildTarget1 =
         BuildTargetFactory.newInstance("//target/in_default_cell:short")
-            .withFlavors(CxxInferEnhancer.InferFlavors.INFER.getFlavor());
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
     // filesystem, buildTarget and buildRuleParams for second cell (capture)
     ProjectFilesystem filesystem2 =
@@ -232,32 +232,30 @@ public class CxxCollectAndLogInferDependenciesStepTest {
             CanonicalCellName.unsafeOf(Optional.of("cell2")), "/Users/user/cell_two");
     BuildTarget buildTarget2 =
         BuildTargetFactory.newInstance("cell2//target/in_cell_two:short2")
-            .withFlavors(CxxInferEnhancer.INFER_CAPTURE_FLAVOR);
+            .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_NO_DEPS.getFlavor());
 
     InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
 
-    CxxInferCapture captureRule = createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
+    CxxInferCapture captureRule2 = createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
 
-    CxxInferAnalyze analyzeRule =
-        new CxxInferAnalyze(
-            buildTarget1,
-            filesystem1,
-            inferBuckConfig,
-            ImmutableSet.of(captureRule),
-            ImmutableSet.of());
+    CxxInferCapture captureRule1 = createCaptureRule(buildTarget1, filesystem1, inferBuckConfig);
+    CxxInferCaptureTransitive captureTransRule =
+        new CxxInferCaptureTransitive(
+            buildTarget1, filesystem1, ImmutableSet.of(captureRule1, captureRule2));
 
     Path outputFile = Paths.get("infer-deps.txt");
     CxxCollectAndLogInferDependenciesStep step =
-        CxxCollectAndLogInferDependenciesStep.fromAnalyzeRule(analyzeRule, filesystem1, outputFile);
+        CxxCollectAndLogInferDependenciesStep.fromCaptureTransitiveRule(
+            captureTransRule, filesystem1, outputFile);
 
     ExecutionContext executionContext = TestExecutionContext.newInstance();
     int exitCode = step.execute(executionContext).getExitCode();
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
-        InferLogLine.fromBuildTarget(buildTarget1, analyzeRule.getAbsolutePathToResultsDir())
+        InferLogLine.fromBuildTarget(buildTarget1, captureRule1.getAbsolutePathToOutput())
             + "\n"
-            + InferLogLine.fromBuildTarget(buildTarget2, captureRule.getAbsolutePathToOutput());
+            + InferLogLine.fromBuildTarget(buildTarget2, captureRule2.getAbsolutePathToOutput());
 
     assertEquals(expectedOutput + "\n", filesystem1.readFileIfItExists(outputFile).get());
   }

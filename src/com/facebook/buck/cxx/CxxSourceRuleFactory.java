@@ -285,8 +285,7 @@ public abstract class CxxSourceRuleFactory {
         .withAppendedFlavors(
             getCxxPlatform().getFlavor(),
             InternalFlavor.of(
-                String.format(
-                    "%s-%s", CxxInferEnhancer.INFER_CAPTURE_FLAVOR.toString(), outputName)));
+                String.format("%s-%s", CxxInferEnhancer.INFER_CAPTURE_BUILDRULE, outputName)));
   }
 
   // Use a "lazy" method here to memoize the sanitizer function.  This is necessary as it's used to

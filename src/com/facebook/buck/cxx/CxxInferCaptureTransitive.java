@@ -92,7 +92,7 @@ class CxxInferCaptureTransitive extends AbstractBuildRule
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), outputDirectory)))
         .add(
-            CxxCollectAndLogInferDependenciesStep.fromCaptureOnlyRule(
+            CxxCollectAndLogInferDependenciesStep.fromCaptureTransitiveRule(
                 this, getProjectFilesystem(), this.outputDirectory.resolve("infer-deps.txt")))
         .build();
   }

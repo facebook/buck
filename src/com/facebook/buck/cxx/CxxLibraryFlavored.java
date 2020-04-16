@@ -61,7 +61,6 @@ public class CxxLibraryFlavored implements Flavored {
         || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
         || flavors.contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)
         || CxxInferEnhancer.INFER_FLAVOR_DOMAIN.containsAnyOf(flavors)
-        || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_ANALYZE.getFlavor())
         || flavors.contains(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor())
         || flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)
         || LinkerMapMode.FLAVOR_DOMAIN.containsAnyOf(flavors)
