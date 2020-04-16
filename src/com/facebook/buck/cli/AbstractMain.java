@@ -23,15 +23,19 @@ import com.facebook.buck.core.module.impl.BuckModuleJarHashProvider;
 import com.facebook.buck.core.module.impl.DefaultBuckModuleManager;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownNativeRuleTypesFactory;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.nio.file.Path;
@@ -48,8 +52,12 @@ import org.pf4j.PluginManager;
 abstract class AbstractMain {
 
   private static final String BUCK_BUILD_ID_ENV_VAR = "BUCK_BUILD_ID";
+  private static final Logger LOG = Logger.get(AbstractMain.class);
   private static PluginManager pluginManager;
   private static BuckModuleManager moduleManager;
+
+  private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
+      new NonReentrantSystemExit();
 
   static {
     pluginManager = BuckPluginManagerFactory.createPluginManager();
@@ -148,6 +156,8 @@ abstract class AbstractMain {
    */
   protected MainRunner prepareMainRunner(BackgroundTaskManager bgTaskManager) {
 
+    installUncaughtExceptionHandler(optionalNGContext);
+
     return new MainRunner(
         defaultConsole,
         stdIn,
@@ -180,5 +190,36 @@ abstract class AbstractMain {
       specifiedBuildId = UUID.randomUUID().toString();
     }
     return new BuildId(specifiedBuildId);
+  }
+
+  private static void installUncaughtExceptionHandler(Optional<NGContext> context) {
+    // Override the default uncaught exception handler for background threads to log
+    // to java.util.logging then exit the JVM with an error code.
+    //
+    // (We do this because the default is to just print to stderr and not exit the JVM,
+    // which is not safe in a multithreaded environment if the thread held a lock or
+    // resource which other threads need.)
+    Thread.setDefaultUncaughtExceptionHandler(
+        (t, e) -> {
+          ExitCode exitCode = ExitCode.FATAL_GENERIC;
+          if (e instanceof OutOfMemoryError) {
+            exitCode = ExitCode.FATAL_OOM;
+          } else if (e instanceof IOException) {
+            exitCode =
+                e.getMessage().startsWith("No space left on device")
+                    ? ExitCode.FATAL_DISK_FULL
+                    : ExitCode.FATAL_IO;
+          }
+
+          // Do not log anything in case we do not have space on the disk
+          if (exitCode != ExitCode.FATAL_DISK_FULL) {
+            LOG.error(e, "Uncaught exception from thread %s", t);
+          }
+
+          // Shut down the Nailgun server and make sure it stops trapping System.exit().
+          context.ifPresent(ngContext -> ngContext.getNGServer().shutdown());
+
+          NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(exitCode.getCode());
+        });
   }
 }

@@ -221,7 +221,6 @@ import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
 import com.facebook.buck.util.perf.ProcessTracker;
 import com.facebook.buck.util.randomizedtrial.RandomizedTrial;
-import com.facebook.buck.util.shutdown.NonReentrantSystemExit;
 import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.NanosAdjustedClock;
@@ -391,9 +390,6 @@ public final class MainRunner {
                   "No recent activity, dumping thread stacks (`tr , '\\n'` to decode): %s", input),
           HANG_DETECTOR_TIMEOUT);
 
-  private static final NonReentrantSystemExit NON_REENTRANT_SYSTEM_EXIT =
-      new NonReentrantSystemExit();
-
   public interface KnownRuleTypesFactoryFactory {
 
     KnownNativeRuleTypesFactory create(
@@ -485,8 +481,6 @@ public final class MainRunner {
         new LogdProvider(BuckConstant.IS_LOGD_ENABLED, buildId.toString())) {
       LogStreamFactory logStreamFactory =
           LogStreamProvider.of(logdProvider.getLogdClient()).getLogStreamFactory();
-
-      installUncaughtExceptionHandler(context);
 
       // Only post an overflow event if Watchman indicates a fresh instance event
       // after our initial query.
@@ -2533,37 +2527,6 @@ public final class MainRunner {
         (Supplier<DepsAwareExecutor<? super ComputeResult, ?>>)
             () -> DepsAwareExecutorFactory.create(executorType, parallelism),
         DepsAwareExecutor::close);
-  }
-
-  private static void installUncaughtExceptionHandler(Optional<NGContext> context) {
-    // Override the default uncaught exception handler for background threads to log
-    // to java.util.logging then exit the JVM with an error code.
-    //
-    // (We do this because the default is to just print to stderr and not exit the JVM,
-    // which is not safe in a multithreaded environment if the thread held a lock or
-    // resource which other threads need.)
-    Thread.setDefaultUncaughtExceptionHandler(
-        (t, e) -> {
-          ExitCode exitCode = ExitCode.FATAL_GENERIC;
-          if (e instanceof OutOfMemoryError) {
-            exitCode = ExitCode.FATAL_OOM;
-          } else if (e instanceof IOException) {
-            exitCode =
-                e.getMessage().startsWith("No space left on device")
-                    ? ExitCode.FATAL_DISK_FULL
-                    : ExitCode.FATAL_IO;
-          }
-
-          // Do not log anything in case we do not have space on the disk
-          if (exitCode != ExitCode.FATAL_DISK_FULL) {
-            LOG.error(e, "Uncaught exception from thread %s", t);
-          }
-
-          // Shut down the Nailgun server and make sure it stops trapping System.exit().
-          context.ifPresent(ngContext -> ngContext.getNGServer().shutdown());
-
-          NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(exitCode.getCode());
-        });
   }
 
   /**
