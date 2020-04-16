@@ -130,14 +130,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     ImmutableList.Builder<Step> steps =
         ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1);
     steps.addAll(factoryBuildSteps);
-    unusedDependenciesFinderFactory.ifPresent(
-        factory ->
-            steps.add(
-                factory.create(
-                    buildTarget,
-                    filesystem,
-                    buildContext.getSourcePathResolver(),
-                    unusedDependenciesAction)));
+    maybeAddUnusedDependenciesStep(filesystem, buildContext, steps);
     addMakeMissingOutputsStep(filesystem, outputPathResolver, steps);
     return steps.build();
   }
@@ -149,7 +142,6 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
       JavacPipelineState state,
       OutputPathResolver outputPathResolver,
       BuildCellRelativePathFactory buildCellPathFactory) {
-    // TODO(cjhopman): unusedDependenciesFinder is broken.
     ImmutableList<Step> factoryBuildSteps =
         jarBuildStepsFactory.getPipelinedBuildStepsForLibraryJar(
             buildContext,
@@ -160,6 +152,7 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
     ImmutableList.Builder<Step> stepsBuilder =
         ImmutableList.builderWithExpectedSize(factoryBuildSteps.size() + 1);
     stepsBuilder.addAll(factoryBuildSteps);
+    maybeAddUnusedDependenciesStep(filesystem, buildContext, stepsBuilder);
     addMakeMissingOutputsStep(filesystem, outputPathResolver, stepsBuilder);
     return stepsBuilder.build();
   }
@@ -221,5 +214,19 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
   public boolean hasAnnotationProcessing() {
     return jarBuildStepsFactory.hasAnnotationProcessing();
+  }
+
+  public void maybeAddUnusedDependenciesStep(
+      ProjectFilesystem filesystem,
+      BuildContext buildContext,
+      ImmutableList.Builder<Step> stepsBuilder) {
+    unusedDependenciesFinderFactory.ifPresent(
+        factory ->
+            stepsBuilder.add(
+                factory.create(
+                    buildTarget,
+                    filesystem,
+                    buildContext.getSourcePathResolver(),
+                    unusedDependenciesAction)));
   }
 }
