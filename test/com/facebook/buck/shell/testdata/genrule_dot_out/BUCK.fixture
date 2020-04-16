@@ -4,3 +4,14 @@ genrule(
     bash = "mkdir -p ${OUT} && touch ${OUT}/hello",
     cmd_exe = "powershell -Command mkdir $env:OUT ; Out-File -FilePath \"${env:OUT}/hello\" -InputObject ''",
 )
+
+genrule(
+    name = "mkdir_outs",
+    outs = {
+        "folder": ["."],
+        "other_thing": ["hello"],
+    },
+    default_outs = ["."],
+    bash = "touch $OUT/hello",
+    cmd_exe = "powershell New-Item -Type file ${OUT}\\hello",
+)

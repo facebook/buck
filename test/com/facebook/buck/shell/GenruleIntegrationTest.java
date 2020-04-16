@@ -518,7 +518,7 @@ public class GenruleIntegrationTest {
 
   /**
    * Tests that we handle genrules whose $OUT is "." and wants to make $OUT a directory without
-   * crashing. This test is not applicable to outs because $OUT would already be a directory.
+   * crashing.
    */
   @Test
   public void testGenruleWithDotOutWorks() throws IOException {
@@ -526,7 +526,8 @@ public class GenruleIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "genrule_dot_out", temporaryFolder);
     workspace.setUp();
 
-    Path output = workspace.buildAndReturnOutput("//:mkdir");
+    Path output = workspace.buildAndReturnOutput(targetWithSuffix("//:mkdir"));
+    assertTrue(output.toFile().isDirectory());
     assertTrue(Files.exists(output.resolve("hello")));
   }
 
