@@ -161,7 +161,8 @@ abstract class AbstractMain {
         bgTaskManager,
         commandMode,
         optionalNGContext,
-        pluginManager);
+        pluginManager,
+        optionalNGContext.isPresent()? DaemonMode.DAEMON : DaemonMode.NON_DAEMON);
   }
 
   /** @return the {@link KnownRuleTypesFactoryFactory} for this command */

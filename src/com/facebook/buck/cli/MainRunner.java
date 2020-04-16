@@ -332,7 +332,11 @@ public final class MainRunner {
 
   private DuplicatingConsole printConsole;
 
+  // TODO: we should remove this field and initialize everything we want on it in MainWithNailgun.
+  // This has too many other variables and fields that can be accessed incorrectly.
   private Optional<NGContext> context;
+
+  private final DaemonMode daemonMode;
 
   // Ignore changes to generated Xcode project files and editors' backup files
   // so we don't dump buckd caches on every command.
@@ -437,6 +441,7 @@ public final class MainRunner {
    * @param moduleManager the {@link BuckModuleManager} for this command
    * @param context the {@link NGContext} from nailgun for this command
    * @param pluginManager the {@link PluginManager} for this command
+   * @param daemonMode whether this is ran as buck daemon or without daemon
    */
   @VisibleForTesting
   public MainRunner(
@@ -452,7 +457,8 @@ public final class MainRunner {
       BackgroundTaskManager bgTaskManager,
       CommandMode commandMode,
       Optional<NGContext> context,
-      PluginManager pluginManager) {
+      PluginManager pluginManager,
+      DaemonMode daemonMode) {
     this.printConsole = new DuplicatingConsole(console);
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
@@ -461,6 +467,7 @@ public final class MainRunner {
     this.pluginManager = pluginManager;
     this.moduleManager = moduleManager;
     this.bgTaskManager = bgTaskManager;
+    this.daemonMode = daemonMode;
     this.architecture = Architecture.detect();
     this.buildId = buildId;
     this.clientEnvironment = clientEnvironment;
@@ -851,7 +858,7 @@ public final class MainRunner {
       ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
       Watchman watchman =
           buildWatchman(
-              context, parserConfig, projectWatchList, clientEnvironment, printConsole, clock);
+              daemonMode, parserConfig, projectWatchList, clientEnvironment, printConsole, clock);
 
       ImmutableList<ConfigurationRuleDescription<?, ?>> knownConfigurationDescriptions =
           PluginBasedKnownConfigurationDescriptionsFactory.createFromPlugins(pluginManager);
@@ -911,7 +918,7 @@ public final class MainRunner {
       BuckGlobalState buckGlobalState = buckGlobalStateRequest.getFirst();
       LifecycleStatus stateLifecycleStatus = buckGlobalStateRequest.getSecond();
 
-      if (!context.isPresent()) {
+      if (!daemonMode.isDaemon()) {
         // Clean up the trash on a background thread if this was a
         // non-buckd read-write command. (We don't bother waiting
         // for it to complete; the thread is a daemon thread which
@@ -981,7 +988,7 @@ public final class MainRunner {
           InvocationInfo.of(
               buildId,
               superConsoleConfig.isEnabled(printConsole.getAnsi(), printConsole.getVerbosity()),
-              context.isPresent(),
+              daemonMode.isDaemon(),
               command.getSubCommandNameForLogging(),
               filteredArgsForLogging,
               filteredUnexpandedArgsForLogging,
@@ -1016,7 +1023,7 @@ public final class MainRunner {
       try (TaskManagerCommandScope managerScope =
               bgTaskManager.getNewScope(
                   buildId,
-                  !context.isPresent()
+                  !daemonMode.isDaemon()
                       || cells
                           .getRootCell()
                           .getBuckConfig()
@@ -1189,7 +1196,7 @@ public final class MainRunner {
                     ? new ProcessTracker(
                         buildEventBus,
                         invocationInfo,
-                        context.isPresent(),
+                        !daemonMode.isDaemon(),
                         logBuckConfig.isProcessTrackerDeepEnabled())
                     : null;
             ArtifactCaches artifactCacheFactory =
@@ -1403,7 +1410,7 @@ public final class MainRunner {
                   command.getDeclaredSubCommandName(),
                   remainingArgs,
                   cells.getRootCell().getRoot().getPath().relativize(absoluteClientPwd).normalize(),
-                  context.isPresent()
+                  daemonMode.isDaemon()
                       ? OptionalLong.of(buckGlobalState.getUptime())
                       : OptionalLong.empty(),
                   getBuckPID());
@@ -1551,7 +1558,7 @@ public final class MainRunner {
           // signal nailgun that we are not interested in client disconnect events anymore
           context.ifPresent(c -> c.removeAllClientListeners());
 
-          if (context.isPresent()) {
+          if (daemonMode.isDaemon()) {
             // Clean up the trash in the background if this was a buckd
             // read-write command. (We don't bother waiting for it to
             // complete; the cleaner will ensure subsequent cleans are
@@ -1566,7 +1573,7 @@ public final class MainRunner {
           // TODO(buck_team): refactor this as in case of exception exitCode is reported incorrectly
           // to the CommandEvent listener
           if (exitCode == ExitCode.SUCCESS
-              && context.isPresent()
+              && daemonMode.isDaemon()
               && !cliConfig.getFlushEventsBeforeExit()) {
             context.get().in.close(); // Avoid client exit triggering client disconnection handling.
             context.get().exit(exitCode.getCode());
@@ -1978,7 +1985,7 @@ public final class MainRunner {
 
   private DuplicatingConsole makeCustomConsole(Verbosity verbosity, BuckConfig buckConfig) {
     Optional<String> color;
-    if (context.isPresent()) {
+    if (daemonMode.isDaemon()) {
       color = Optional.ofNullable(clientEnvironment.get(BUCKD_COLOR_DEFAULT_ENV_VAR));
     } else {
       color = Optional.empty();
@@ -2047,7 +2054,7 @@ public final class MainRunner {
   }
 
   private static Watchman buildWatchman(
-      Optional<NGContext> context,
+      DaemonMode daemonMode,
       ParserConfig parserConfig,
       ImmutableSet<AbsPath> projectWatchList,
       ImmutableMap<String, String> clientEnvironment,
@@ -2055,7 +2062,8 @@ public final class MainRunner {
       Clock clock)
       throws InterruptedException {
     Watchman watchman;
-    if (context.isPresent() || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
+    if (daemonMode.isDaemon()
+        || parserConfig.getGlobHandler() == ParserConfig.GlobHandler.WATCHMAN) {
       WatchmanFactory watchmanFactory = new WatchmanFactory();
       watchman =
           watchmanFactory.build(
@@ -2076,8 +2084,8 @@ public final class MainRunner {
     } else {
       watchman = WatchmanFactory.NULL_WATCHMAN;
       LOG.debug(
-          "Not using Watchman, context present: %s, glob handler: %s",
-          context.isPresent(), parserConfig.getGlobHandler());
+          "Not using Watchman, daemon mode: %s, glob handler: %s",
+          daemonMode.isDaemon(), parserConfig.getGlobHandler());
     }
     return watchman;
   }
