@@ -66,7 +66,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -163,15 +162,16 @@ public class CxxLibraryFactory {
               .concat(RichStream.from(delegateNativeLinkableGroups))
               .map(g -> g.getNativeLinkable(platform.get(), graphBuilder))
               .toImmutableList();
-      Collection<BuildTarget> targets =
-          Collections2.transform(
-              CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
-                  graphBuilder,
-                  linkableDepType.orElse(Linker.LinkableDepType.STATIC),
-                  makeLinkableListFilter(args, targetGraph),
-                  allNativeLinkables,
-                  blacklist),
-              linkable -> linkable.getBuildTarget());
+      ImmutableList<BuildTarget> targets =
+          ImmutableList.copyOf(
+              Collections2.transform(
+                  CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
+                      graphBuilder,
+                      linkableDepType.orElse(Linker.LinkableDepType.STATIC),
+                      makeLinkableListFilter(args, targetGraph),
+                      allNativeLinkables,
+                      blacklist),
+                  linkable -> linkable.getBuildTarget()));
       return new CxxLinkGroupMapDatabase(buildTarget, projectFilesystem, graphBuilder, targets);
     } else if (buildTarget
         .getFlavors()

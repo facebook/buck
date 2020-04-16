@@ -70,7 +70,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
 import org.immutables.value.Value;
@@ -211,15 +210,16 @@ public class CxxTestDescription
               .filter(NativeLinkableGroup.class)
               .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
               .toImmutableList();
-      Collection<BuildTarget> targets =
-          Collections2.transform(
-              CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
-                  graphBuilder,
-                  Linker.LinkableDepType.SHARED,
-                  LinkableListFilterFactory.from(cxxBuckConfig, args, context.getTargetGraph()),
-                  allNativeLinkables,
-                  ImmutableSet.of()),
-              linkable -> linkable.getBuildTarget());
+      ImmutableList<BuildTarget> targets =
+          ImmutableList.copyOf(
+              Collections2.transform(
+                  CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
+                      graphBuilder,
+                      Linker.LinkableDepType.SHARED,
+                      LinkableListFilterFactory.from(cxxBuckConfig, args, context.getTargetGraph()),
+                      allNativeLinkables,
+                      ImmutableSet.of()),
+                  linkable -> linkable.getBuildTarget()));
       return new CxxLinkGroupMapDatabase(
           targetWithPlatform, projectFilesystem, graphBuilder, targets);
     }

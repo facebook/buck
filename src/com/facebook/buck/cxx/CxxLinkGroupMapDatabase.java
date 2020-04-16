@@ -42,7 +42,6 @@ import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Path;
-import java.util.Collection;
 
 /** Exposes which build targets are included in a link group via flavor. */
 public class CxxLinkGroupMapDatabase extends ModernBuildRule<CxxLinkGroupMapDatabase.Impl> {
@@ -54,9 +53,9 @@ public class CxxLinkGroupMapDatabase extends ModernBuildRule<CxxLinkGroupMapData
   /** Internal buildable implementation */
   static class Impl implements Buildable {
     @AddToRuleKey private final OutputPath output;
-    private final Collection<BuildTarget> targets;
+    @AddToRuleKey private final ImmutableList<BuildTarget> targets;
 
-    Impl(Collection<BuildTarget> targets) {
+    Impl(ImmutableList<BuildTarget> targets) {
       this.output = new OutputPath(OUTPUT_FILENAME);
       this.targets = targets;
     }
@@ -82,7 +81,7 @@ public class CxxLinkGroupMapDatabase extends ModernBuildRule<CxxLinkGroupMapData
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
-      Collection<BuildTarget> targets) {
+      ImmutableList<BuildTarget> targets) {
     super(buildTarget, projectFilesystem, ruleFinder, new Impl(targets));
 
     LOG.debug("Creating link group map database %s", buildTarget);
@@ -97,10 +96,10 @@ public class CxxLinkGroupMapDatabase extends ModernBuildRule<CxxLinkGroupMapData
   static class GenerateLinkGroupMapJson extends AbstractExecutionStep {
     private final Path outputRelativePath;
     private final ProjectFilesystem filesystem;
-    private final Collection<BuildTarget> targets;
+    private final ImmutableList<BuildTarget> targets;
 
     public GenerateLinkGroupMapJson(
-        ProjectFilesystem fs, Path outputRelativePath, Collection<BuildTarget> targets) {
+        ProjectFilesystem fs, Path outputRelativePath, ImmutableList<BuildTarget> targets) {
       super("generate " + OUTPUT_FILENAME);
       this.filesystem = fs;
       this.outputRelativePath = outputRelativePath;

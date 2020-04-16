@@ -46,7 +46,6 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Collection;
 import java.util.Optional;
 
 public class CxxBinaryFactory {
@@ -106,15 +105,16 @@ public class CxxBinaryFactory {
               .filter(NativeLinkableGroup.class)
               .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
               .toImmutableList();
-      Collection<BuildTarget> targets =
-          Collections2.transform(
-              CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
-                  graphBuilder,
-                  args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
-                  LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph),
-                  allNativeLinkables,
-                  ImmutableSet.of()),
-              linkable -> linkable.getBuildTarget());
+      ImmutableList<BuildTarget> targets =
+          ImmutableList.copyOf(
+              Collections2.transform(
+                  CxxLinkableEnhancer.getTransitiveNativeLinkablesForLinkableDeps(
+                      graphBuilder,
+                      args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
+                      LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph),
+                      allNativeLinkables,
+                      ImmutableSet.of()),
+                  linkable -> linkable.getBuildTarget()));
       return new CxxLinkGroupMapDatabase(target, projectFilesystem, graphBuilder, targets);
     }
 
