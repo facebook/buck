@@ -48,6 +48,7 @@ import java.util.function.Function;
 import javax.annotation.Nullable;
 
 public abstract class ShellStep implements Step {
+
   private static final Logger LOG = Logger.get(ShellStep.class);
   private static final OperatingSystemMXBean OS_JMX = ManagementFactory.getOperatingSystemMXBean();
 
@@ -102,14 +103,14 @@ public abstract class ShellStep implements Step {
     builder.setCommand(command);
     Map<String, String> environment = new HashMap<>();
     setProcessEnvironment(context, environment, workingDirectory.toString());
+
     if (LOG.isDebugEnabled()) {
       LOG.debug("Environment: %s", Joiner.on(" ").withKeyValueSeparator('=').join(environment));
     }
     builder.setEnvironment(ImmutableMap.copyOf(environment));
     builder.setDirectory(context.getBuildCellRootPath().resolve(workingDirectory));
 
-    Optional<String> stdin = getStdin(context);
-    if (stdin.isPresent()) {
+    if (getStdin(context).isPresent()) {
       builder.setRedirectInput(ProcessBuilder.Redirect.PIPE);
     }
 
@@ -227,8 +228,7 @@ public abstract class ShellStep implements Step {
   }
 
   @SuppressWarnings("unused")
-  protected Optional<String> getStdin(ExecutionContext context)
-      throws InterruptedException, IOException {
+  protected Optional<String> getStdin(ExecutionContext context) throws IOException {
     return Optional.empty();
   }
 
