@@ -1094,11 +1094,11 @@ workflows:
       - linux_build_openjdk8:
           filters:
             branches:
-              only: master
+              ignore: master
       - linux_unit_groovy:
           filters:
             branches:
-              only: dev
+              ignore: dev
       - linux_build_ant
       - linux_test_integration
       - linux_test_heavy_integration
