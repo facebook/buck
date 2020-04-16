@@ -76,7 +76,7 @@ public class QueryCommandTest {
   private int callsCount = 0;
   private final Set<String> expectedExpressions = new HashSet<>();
 
-  private BuckQueryEnvironment env;
+  private ConfiguredQueryEnvironment env;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
@@ -138,7 +138,7 @@ public class QueryCommandTest {
         new TargetConfigurationFactory(
             buildTargetViewFactory, cell.getRootCell().getCellPathResolver());
     env =
-        new FakeBuckQueryEnvironment(
+        new FakeConfiguredQueryEnvironment(
             targetUniverse,
             cell.getRootCell(),
             OwnersReport.builder(
@@ -158,8 +158,8 @@ public class QueryCommandTest {
             typeCoercerFactory);
   }
 
-  private class FakeBuckQueryEnvironment extends BuckQueryEnvironment {
-    protected FakeBuckQueryEnvironment(
+  private class FakeConfiguredQueryEnvironment extends ConfiguredQueryEnvironment {
+    protected FakeConfiguredQueryEnvironment(
         LegacyQueryUniverse targetUniverse,
         Cell rootCell,
         Builder ownersReportBuilder,

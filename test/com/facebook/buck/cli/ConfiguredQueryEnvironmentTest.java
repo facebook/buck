@@ -78,7 +78,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.pf4j.PluginManager;
 
-public class BuckQueryEnvironmentTest {
+public class ConfiguredQueryEnvironmentTest {
 
   private static final TypeCoercerFactory TYPE_COERCER_FACTORY = new DefaultTypeCoercerFactory();
 
@@ -88,7 +88,7 @@ public class BuckQueryEnvironmentTest {
   public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> depsAwareExecutor =
       CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
 
-  private BuckQueryEnvironment buckQueryEnvironment;
+  private ConfiguredQueryEnvironment buckQueryEnvironment;
   private Path cellRoot;
   private ListeningExecutorService executor;
   private PerBuildState parserState;
@@ -163,7 +163,7 @@ public class BuckQueryEnvironmentTest {
             cells.getRootCell().getRoot().getPath(),
             Optional.empty());
     buckQueryEnvironment =
-        BuckQueryEnvironment.from(
+        ConfiguredQueryEnvironment.from(
             targetUniverse,
             cells.getRootCell(),
             ownersReportBuilder,

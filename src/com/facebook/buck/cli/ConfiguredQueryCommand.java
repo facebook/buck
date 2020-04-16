@@ -94,7 +94,8 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       PrecomputedTargetUniverse targetUniverse =
           PrecomputedTargetUniverse.createFromRootTargets(
               rootTargetsForUniverse(), params, parserState, parsingContext);
-      BuckQueryEnvironment env = BuckQueryEnvironment.from(params, targetUniverse, parsingContext);
+      ConfiguredQueryEnvironment env =
+          ConfiguredQueryEnvironment.from(params, targetUniverse, parsingContext);
       formatAndRunQuery(params, env);
     } catch (QueryException e) {
       throw new HumanReadableException(e);
@@ -105,7 +106,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
   @Override
   protected void printSingleQueryOutput(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Set<QueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
@@ -133,7 +134,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
   @Override
   protected void printMultipleQueryOutput(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Multimap<String, QueryTarget> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException {
@@ -165,7 +166,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
     QueryExpression<String> expression =
         QueryExpression.parse(
             arguments.get(0),
-            QueryParserEnv.of(BuckQueryEnvironment.defaultFunctions(), evaluator));
+            QueryParserEnv.of(ConfiguredQueryEnvironment.defaultFunctions(), evaluator));
     // TODO: Right now we use `expression.getTargets`, which gets all target literals referenced in
     // the query. We don't want all literals, for example with `rdeps(//my:binary, //some:library)`
     // we only want to include `//my:binary` in the universe, not both. We should provide a way for

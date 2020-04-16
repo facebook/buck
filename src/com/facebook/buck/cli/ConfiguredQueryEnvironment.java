@@ -81,11 +81,11 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
- * The environment of a Buck query that can evaluate queries to produce a result.
+ * QueryEnvironment implementation that operates over the configured target graph.
  *
  * <p>The query language is documented at docs/command/query.soy
  */
-public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
+public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget> {
 
   private final TargetUniverse targetUniverse;
   private final Cell rootCell;
@@ -100,7 +100,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
   private final Map<BuildTarget, QueryBuildTarget> buildTargetToQueryTarget = new HashMap<>();
 
   @VisibleForTesting
-  protected BuckQueryEnvironment(
+  protected ConfiguredQueryEnvironment(
       TargetUniverse targetUniverse,
       Cell rootCell,
       Builder ownersReportBuilder,
@@ -127,7 +127,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
     this.typeCoercerFactory = typeCoercerFactory;
   }
 
-  public static BuckQueryEnvironment from(
+  public static ConfiguredQueryEnvironment from(
       TargetUniverse targetUniverse,
       Cell rootCell,
       OwnersReport.Builder ownersReportBuilder,
@@ -135,7 +135,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
       TargetPatternEvaluator targetPatternEvaluator,
       BuckEventBus eventBus,
       TypeCoercerFactory typeCoercerFactory) {
-    return new BuckQueryEnvironment(
+    return new ConfiguredQueryEnvironment(
         targetUniverse,
         rootCell,
         ownersReportBuilder,
@@ -145,7 +145,7 @@ public class BuckQueryEnvironment implements QueryEnvironment<QueryTarget> {
         typeCoercerFactory);
   }
 
-  public static BuckQueryEnvironment from(
+  public static ConfiguredQueryEnvironment from(
       CommandRunnerParams params, TargetUniverse targetUniverse, ParsingContext parsingContext) {
     return from(
         targetUniverse,

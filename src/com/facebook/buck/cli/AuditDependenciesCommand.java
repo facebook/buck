@@ -126,8 +126,8 @@ public class AuditDependenciesCommand extends AbstractCommand {
                         .withExcludeUnsupportedTargets(false),
                     params.getParser().getPermState())) {
       LegacyQueryUniverse targetUniverse = LegacyQueryUniverse.from(params, parserState);
-      BuckQueryEnvironment env =
-          BuckQueryEnvironment.from(
+      ConfiguredQueryEnvironment env =
+          ConfiguredQueryEnvironment.from(
               params,
               targetUniverse,
               createParsingContext(params.getCells(), pool.getListeningExecutorService()));

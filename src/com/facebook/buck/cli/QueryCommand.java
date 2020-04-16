@@ -177,8 +177,8 @@ public class QueryCommand extends AbstractQueryCommand {
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
       perBuildState = parserState;
-      BuckQueryEnvironment env =
-          BuckQueryEnvironment.from(
+      ConfiguredQueryEnvironment env =
+          ConfiguredQueryEnvironment.from(
               params,
               LegacyQueryUniverse.from(params, parserState),
               createParsingContext(params.getCells(), pool.getListeningExecutorService()));
@@ -192,7 +192,7 @@ public class QueryCommand extends AbstractQueryCommand {
   @Override
   protected void printSingleQueryOutput(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Set<QueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
@@ -239,7 +239,7 @@ public class QueryCommand extends AbstractQueryCommand {
   @Override
   protected void printMultipleQueryOutput(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Multimap<String, QueryTarget> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException {
@@ -274,7 +274,7 @@ public class QueryCommand extends AbstractQueryCommand {
 
   private void printJsonOutput(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Set<QueryTarget> queryResult,
       PrintStream printStream)
       throws IOException, QueryException {
@@ -287,7 +287,7 @@ public class QueryCommand extends AbstractQueryCommand {
 
   private void printListOutput(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Set<QueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
@@ -355,7 +355,7 @@ public class QueryCommand extends AbstractQueryCommand {
 
   private void printDotOutput(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Set<QueryBuildTarget> queryResult,
       Dot.OutputOrder outputOrder,
       PrintStream printStream,
@@ -403,7 +403,7 @@ public class QueryCommand extends AbstractQueryCommand {
 
   private void printThriftOutput(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Set<QueryBuildTarget> queryResult,
       PrintStream printStream)
       throws IOException, QueryException {
@@ -435,7 +435,7 @@ public class QueryCommand extends AbstractQueryCommand {
 
   private void collectAndPrintAttributesAsJson(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Set<QueryTarget> queryResult,
       ImmutableSet<String> attributes,
       PrintStream printStream)
@@ -459,7 +459,7 @@ public class QueryCommand extends AbstractQueryCommand {
 
   private ImmutableSortedMap<String, SortedMap<String, Object>> collectAttributes(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Set<QueryTarget> queryResult,
       ImmutableSet<String> attrs)
       throws QueryException {
@@ -489,7 +489,7 @@ public class QueryCommand extends AbstractQueryCommand {
   }
 
   private ImmutableList<TargetNode<?>> queryResultToTargetNodes(
-      BuckQueryEnvironment env, Collection<QueryTarget> queryResult) throws QueryException {
+      ConfiguredQueryEnvironment env, Collection<QueryTarget> queryResult) throws QueryException {
     ImmutableList.Builder<TargetNode<?>> builder = ImmutableList.builder();
     for (QueryTarget target : queryResult) {
       if (!(target instanceof QueryBuildTarget)) {

@@ -126,20 +126,20 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
 
   protected abstract void printSingleQueryOutput(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Set<QueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException;
 
   protected abstract void printMultipleQueryOutput(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       Multimap<String, QueryTarget> queryResultMap,
       PrintStream printStream)
       throws QueryException, IOException;
 
   @VisibleForTesting
-  void formatAndRunQuery(CommandRunnerParams params, BuckQueryEnvironment env)
+  void formatAndRunQuery(CommandRunnerParams params, ConfiguredQueryEnvironment env)
       throws IOException, InterruptedException, QueryException {
 
     String queryFormat = arguments.get(0);
@@ -168,7 +168,7 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
    */
   void runMultipleQuery(
       CommandRunnerParams params,
-      BuckQueryEnvironment env,
+      ConfiguredQueryEnvironment env,
       String queryFormat,
       List<String> inputsFormattedAsBuildTargets)
       throws IOException, InterruptedException, QueryException {
@@ -204,7 +204,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     }
   }
 
-  private void runSingleQuery(CommandRunnerParams params, BuckQueryEnvironment env, String query)
+  private void runSingleQuery(
+      CommandRunnerParams params, ConfiguredQueryEnvironment env, String query)
       throws IOException, InterruptedException, QueryException {
     Set<QueryTarget> queryResult = env.evaluateQuery(query);
     LOG.debug("Printing out %d targets", queryResult.size());
