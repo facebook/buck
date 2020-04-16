@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="dex-method-counts">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/third-party/java/dex-method-counts/build/jar/dex-method-counts.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
