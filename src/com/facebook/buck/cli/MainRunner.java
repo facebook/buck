@@ -216,6 +216,7 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.NetworkInfo;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.function.ThrowingBiConsumer;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
@@ -418,6 +419,8 @@ public final class MainRunner {
 
   private Optional<StackedFileHashCache> stackedFileHashCache = Optional.empty();
 
+  private final ThrowingBiConsumer<ExitCode, Boolean, IOException> commandFinishedHandler;
+
   static {
     MacIpv6BugWorkaround.apply();
   }
@@ -438,6 +441,8 @@ public final class MainRunner {
    * @param context the {@link NGContext} from nailgun for this command
    * @param pluginManager the {@link PluginManager} for this command
    * @param daemonMode whether this is ran as buck daemon or without daemon
+   * @param commandFinishedHandler a handler to be ran on completion of the command before events
+   *     are flushed
    */
   @VisibleForTesting
   public MainRunner(
@@ -454,7 +459,8 @@ public final class MainRunner {
       CommandMode commandMode,
       Optional<NGContext> context,
       PluginManager pluginManager,
-      DaemonMode daemonMode) {
+      DaemonMode daemonMode,
+      ThrowingBiConsumer<ExitCode, Boolean, IOException> commandFinishedHandler) {
     this.printConsole = new DuplicatingConsole(console);
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
@@ -464,6 +470,7 @@ public final class MainRunner {
     this.moduleManager = moduleManager;
     this.bgTaskManager = bgTaskManager;
     this.daemonMode = daemonMode;
+    this.commandFinishedHandler = commandFinishedHandler;
     this.architecture = Architecture.detect();
     this.buildId = buildId;
     this.clientEnvironment = clientEnvironment;
@@ -1549,8 +1556,7 @@ public final class MainRunner {
                 invocationInfo);
           }
 
-          // signal nailgun that we are not interested in client disconnect events anymore
-          context.ifPresent(c -> c.removeAllClientListeners());
+          commandFinishedHandler.accept(exitCode, cliConfig.getFlushEventsBeforeExit());
 
           if (daemonMode.isDaemon()) {
             // Clean up the trash in the background if this was a buckd
@@ -1558,19 +1564,6 @@ public final class MainRunner {
             // complete; the cleaner will ensure subsequent cleans are
             // serialized with this one.)
             TRASH_CLEANER.startCleaningDirectory(filesystem.getBuckPaths().getTrashDir());
-          }
-
-          // Exit Nailgun earlier if command succeeded to now block the client while performing
-          // telemetry upload in background
-          // For failures, always do it synchronously because exitCode in fact may be overridden up
-          // the stack
-          // TODO(buck_team): refactor this as in case of exception exitCode is reported incorrectly
-          // to the CommandEvent listener
-          if (exitCode == ExitCode.SUCCESS
-              && daemonMode.isDaemon()
-              && !cliConfig.getFlushEventsBeforeExit()) {
-            context.get().in.close(); // Avoid client exit triggering client disconnection handling.
-            context.get().exit(exitCode.getCode());
           }
 
           // TODO(buck_team): refactor eventListeners for RAII

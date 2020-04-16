@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -71,4 +72,7 @@ public class MainWithoutNailgun extends AbstractMain {
         .forEach(builder::put);
     return builder.build();
   }
+
+  @Override
+  protected void commandFinishedHandler(ExitCode exitCode, boolean shouldWaitForEvents) {}
 }

@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownNativeRuleTypesFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.util.Console;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.nailgun.NGContext;
@@ -107,4 +108,7 @@ public class MainForTests extends AbstractMain {
   protected BuildId getBuildId() {
     return new BuildId();
   }
+
+  @Override
+  protected void commandFinishedHandler(ExitCode exitCode, boolean shouldWaitForEvents) {}
 }

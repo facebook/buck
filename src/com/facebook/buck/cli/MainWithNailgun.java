@@ -20,6 +20,7 @@ import com.facebook.buck.cli.BuckDaemon.DaemonCommandExecutionScope;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
@@ -38,7 +39,6 @@ import javax.annotation.Nullable;
  *
  * <p>This class maintains the state for statically storing daemon fields
  */
-@SuppressWarnings("unused")
 public class MainWithNailgun extends AbstractMain {
 
   private static final Logger LOG = Logger.get(MainWithNailgun.class);
@@ -111,5 +111,23 @@ public class MainWithNailgun extends AbstractMain {
   @SuppressWarnings({"unchecked", "rawtypes"})
   private static ImmutableMap<String, String> getClientEnvironment(NGContext context) {
     return ImmutableMap.copyOf((Map) context.getEnv());
+  }
+
+  @Override
+  protected void commandFinishedHandler(ExitCode exitCode, boolean shouldWaitForEvents)
+      throws IOException {
+    // signal nailgun that we are not interested in client disconnect events anymore
+    ngContext.removeAllClientListeners();
+
+    // Exit Nailgun earlier if command succeeded to now block the client while performing
+    // telemetry upload in background
+    // For failures, always do it synchronously because exitCode in fact may be overridden up
+    // the stack
+    // TODO(buck_team): refactor this as in case of exception exitCode is reported incorrectly
+    // to the CommandEvent listener
+    if (exitCode == ExitCode.SUCCESS && !shouldWaitForEvents) {
+      ngContext.in.close(); // Avoid client exit triggering client disconnection handling.
+      ngContext.exit(exitCode.getCode());
+    }
   }
 }
