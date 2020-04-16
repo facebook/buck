@@ -1100,9 +1100,11 @@ workflows:
       - linux_test_android_ndk_16
       - linux_test_android_ndk_17
       - linux_test_android_ndk_18
-    filters:
-      branches:
-        only: dev
+    triggers:
+      - schedule:
+          filters:
+            branches:
+              only: dev
 
   macos_jobs:
     jobs:
@@ -1115,9 +1117,11 @@ workflows:
       - macos_test_android_ndk_16
       - macos_test_android_ndk_17
       - macos_test_android_ndk_18
-    filters:
-      branches:
-        only: master
+    triggers:
+      - schedule:
+          filters:
+            branches:
+              only: master
 
   windows_jobs:
     jobs:
