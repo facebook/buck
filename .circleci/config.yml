@@ -1091,8 +1091,14 @@ workflows:
   linux_jobs:
     # jobs run in parallel
     jobs:
-      - linux_build_openjdk8
-      - linux_unit_groovy
+      - linux_build_openjdk8:
+          filters:
+            branches:
+              only: master
+      - linux_unit_groovy:
+          filters:
+            branches:
+              only: dev
       - linux_build_ant
       - linux_test_integration
       - linux_test_heavy_integration
@@ -1100,10 +1106,6 @@ workflows:
       - linux_test_android_ndk_16
       - linux_test_android_ndk_17
       - linux_test_android_ndk_18
-    triggers:
-      filters:
-        branches:
-          only: dev
 
   macos_jobs:
     jobs:
@@ -1116,10 +1118,6 @@ workflows:
       - macos_test_android_ndk_16
       - macos_test_android_ndk_17
       - macos_test_android_ndk_18
-    triggers:
-      filters:
-        branches:
-          only: master
 
   windows_jobs:
     jobs:
