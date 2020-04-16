@@ -1,0 +1,14 @@
+{
+  "//lib:bar (//config/platform:macos)": {
+    "buck.type": "apple_library",
+    "srcs": ["bar-all.m"]
+  },
+  "//lib:foo (//config/platform:macos)": {
+    "buck.type": "apple_library",
+    "srcs": ["foo-macos.m"]
+  },
+  "//lib:maconly (//config/platform:macos)": {
+    "buck.type": "apple_library",
+    "srcs": ["maconly.m"]
+  }
+}

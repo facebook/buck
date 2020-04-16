@@ -16,9 +16,11 @@
 
 package com.facebook.buck.cli;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
@@ -34,22 +36,30 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.SortedMap;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.Option;
 
 /** Buck subcommand which facilitates querying information about the configured target graph. */
 public class ConfiguredQueryCommand extends AbstractQueryCommand {
+
+  private PerBuildState perBuildState;
 
   @Option(
       name = "--target-universe",
@@ -89,6 +99,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
                     createParsingContext(params.getCells(), pool.getListeningExecutorService())
                         .withSpeculativeParsing(SpeculativeParsing.ENABLED),
                     params.getParser().getPermState())) {
+      perBuildState = parserState;
       ParsingContext parsingContext =
           createParsingContext(params.getCells(), pool.getListeningExecutorService());
       PrecomputedTargetUniverse targetUniverse =
@@ -111,13 +122,15 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       PrintStream printStream)
       throws QueryException, IOException {
     OutputFormat trueOutputFormat = checkSupportedOutputFormat(outputFormat);
+    Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>> attributesByResult =
+        collectAttributes(params, env, queryResult);
     switch (trueOutputFormat) {
       case JSON:
-        printJsonOutput(queryResult, printStream);
+        printJsonOutput(queryResult, attributesByResult, printStream);
         break;
 
       case LIST:
-        printListOutput(queryResult, printStream);
+        printListOutput(queryResult, attributesByResult, printStream);
         break;
 
       case DOT:
@@ -192,7 +205,14 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
     }
   }
 
-  private void printListOutput(Set<QueryTarget> queryResult, PrintStream printStream) {
+  private void printListOutput(
+      Set<QueryTarget> queryResult,
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream) {
+    Preconditions.checkState(
+        !attributesByResultOptional.isPresent(), "We should be printing with JSON instead");
+
     queryResult.stream().map(this::toPresentationForm).forEach(printStream::println);
   }
 
@@ -201,16 +221,30 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
     queryResultMap.values().stream().map(this::toPresentationForm).forEach(printStream::println);
   }
 
-  private void printJsonOutput(Set<QueryTarget> queryResult, PrintStream printStream)
+  private void printJsonOutput(
+      Set<QueryTarget> queryResult,
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
       throws IOException {
 
-    Set<String> targetsNames =
-        queryResult.stream()
-            .peek(Objects::requireNonNull)
-            .map(this::toPresentationForm)
-            .collect(ImmutableSet.toImmutableSet());
+    Object printableObject;
+    if (attributesByResultOptional.isPresent()) {
+      ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>> attributesByResult =
+          attributesByResultOptional.get();
+      printableObject =
+          queryResult.stream()
+              .collect(
+                  ImmutableMap.toImmutableMap(this::toPresentationForm, attributesByResult::get));
+    } else {
+      printableObject =
+          queryResult.stream()
+              .peek(Objects::requireNonNull)
+              .map(this::toPresentationForm)
+              .collect(ImmutableSet.toImmutableSet());
+    }
 
-    ObjectMappers.WRITER.writeValue(printStream, targetsNames);
+    ObjectMappers.WRITER.writeValue(printStream, printableObject);
   }
 
   private void printJsonOutput(
@@ -219,6 +253,61 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
         Multimaps.transformValues(
             queryResultMap, input -> toPresentationForm(Objects.requireNonNull(input)));
     ObjectMappers.WRITER.writeValue(printStream, targetsAndResultsNames.asMap());
+  }
+
+  private Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>> collectAttributes(
+      CommandRunnerParams params, ConfiguredQueryEnvironment env, Set<QueryTarget> queryResult) {
+    if (!shouldOutputAttributes()) {
+      return Optional.empty();
+    }
+
+    PatternsMatcher matcher = new PatternsMatcher(outputAttributes());
+    ImmutableMap.Builder<QueryTarget, ImmutableSortedMap<String, Object>> result =
+        ImmutableMap.builder();
+
+    for (QueryTarget target : queryResult) {
+      nodeForQueryTarget(env, target)
+          .flatMap(node -> getAllAttributes(params, node))
+          .map(attrs -> getMatchingAttributes(matcher, attrs))
+          .ifPresent(attrs -> result.put(target, ImmutableSortedMap.copyOf(attrs)));
+    }
+
+    return Optional.of(result.build());
+  }
+
+  private Optional<TargetNode<?>> nodeForQueryTarget(
+      ConfiguredQueryEnvironment env, QueryTarget target) {
+    if (target instanceof QueryFileTarget) {
+      return Optional.empty();
+    }
+    QueryBuildTarget queryBuildTarget = (QueryBuildTarget) target;
+    try {
+      TargetNode<?> node = env.getTargetUniverse().getNode(queryBuildTarget.getBuildTarget());
+      return Optional.of(node);
+    } catch (QueryException e) {
+      throw new IllegalStateException("Unable to find TargetNode for query result", e);
+    }
+  }
+
+  private Optional<ImmutableMap<String, Object>> getAllAttributes(
+      CommandRunnerParams params, TargetNode<?> node) {
+    SortedMap<String, Object> rawAttributes =
+        params
+            .getParser()
+            .getTargetNodeRawAttributes(
+                perBuildState,
+                params.getCells().getRootCell(),
+                node,
+                DependencyStack.top(node.getBuildTarget()));
+    if (rawAttributes == null) {
+      params
+          .getConsole()
+          .printErrorText(
+              "unable to find rule for target " + node.getBuildTarget().getFullyQualifiedName());
+      return Optional.empty();
+    }
+
+    return Optional.of(ImmutableMap.copyOf(rawAttributes));
   }
 
   private String toPresentationForm(QueryTarget target) {

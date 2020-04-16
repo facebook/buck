@@ -100,6 +100,25 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void basicAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:mac-bin",
+            "--output-attribute",
+            "buck.type",
+            "--output-attribute",
+            "srcs");
+    assertJSONOutputMatchesFileContents("stdout-basic-attribute-printing.json", result, workspace);
+  }
+
+  @Test
   public void basicMultiQueryPrinting() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
