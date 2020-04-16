@@ -1094,31 +1094,82 @@ workflows:
       - linux_build_openjdk8:
           filters:
             branches:
-              ignore: master
+              ignore: dev
       - linux_unit_groovy:
           filters:
             branches:
               ignore: dev
       - linux_build_ant
+          filters:
+            branches:
+              ignore: dev
       - linux_test_integration
+          filters:
+            branches:
+              ignore: dev
       - linux_test_heavy_integration
+          filters:
+            branches:
+              ignore: dev
       - linux_test_android_ndk_15
+          filters:
+            branches:
+              ignore: dev
       - linux_test_android_ndk_16
+          filters:
+            branches:
+              ignore: dev
       - linux_test_android_ndk_17
+          filters:
+            branches:
+              ignore: dev
       - linux_test_android_ndk_18
+          filters:
+            branches:
+              ignore: dev
 
   macos_jobs:
     jobs:
       - mac_build_openjdk8
+          filters:
+            branches:
+              ignore: dev
       - macos_unit_groovy
+          filters:
+            branches:
+              ignore: dev
       - macos_build_ant
+          filters:
+            branches:
+              ignore: dev
       - macos_test_integration
+          filters:
+            branches:
+              ignore: dev
       - macos_test_heavy_integration
+          filters:
+            branches:
+              ignore: dev
       - macos_test_android_ndk_15
+          filters:
+            branches:
+              ignore: dev
       - macos_test_android_ndk_16
+          filters:
+            branches:
+              ignore: dev
       - macos_test_android_ndk_17
+          filters:
+            branches:
+              ignore: dev
       - macos_test_android_ndk_18
+          filters:
+            branches:
+              ignore: dev
 
   windows_jobs:
     jobs:
       - windows_build_test
+          filters:
+            branches:
+              ignore: dev
