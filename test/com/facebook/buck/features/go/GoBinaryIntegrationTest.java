@@ -480,7 +480,7 @@ public class GoBinaryIntegrationTest {
    * (which would otherwise require bash quoting).
    */
   @Test
-  public void binaryWithCustomCxxLdTool() throws IOException, InterruptedException {
+  public void binaryWithCustomCxxLdTool() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "binary_with_custom_ld_tool", tmp);
     workspace.setUp();

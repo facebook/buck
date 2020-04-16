@@ -629,7 +629,7 @@ public class TargetsCommandIntegrationTest {
     return hashes.build();
   }
 
-  private ImmutableList<String> parseAndVerifyTargetsAndHashesWithEmptyHashes(
+  private void parseAndVerifyTargetsAndHashesWithEmptyHashes(
       String outputLine, Set<String> targetsWithEmptyHashes, String... targets) {
     List<String> lines =
         Splitter.on(System.lineSeparator())
@@ -645,7 +645,7 @@ public class TargetsCommandIntegrationTest {
         hashes.add(parseAndVerifyTargetAndHash(line, target));
       }
     }
-    return hashes.build();
+    hashes.build();
   }
 
   private String parseAndVerifyTargetAndEmptyHash(String outputLine, String target) {
@@ -1340,7 +1340,7 @@ public class TargetsCommandIntegrationTest {
     result.assertSuccess();
     String output = result.getStdout().trim();
 
-    Pattern pattern = Pattern.compile("digraph .* \\{(?<lines>.+)\\}", Pattern.DOTALL);
+    Pattern pattern = Pattern.compile("digraph .* \\{(?<lines>.+)}", Pattern.DOTALL);
     Matcher matcher = pattern.matcher(output);
 
     assertTrue(matcher.find());
@@ -1573,7 +1573,7 @@ public class TargetsCommandIntegrationTest {
 
     JsonNode result = ObjectMappers.READER.readTree(resultAll.getStdout());
 
-    assertNotNull("should be a list of packages at top level", result.isArray());
+    assertTrue("should be a list of packages at top level", result.isArray());
     assertEquals("should parse exactly one package", 1, result.size());
 
     JsonNode buildPackage = result.get(0);

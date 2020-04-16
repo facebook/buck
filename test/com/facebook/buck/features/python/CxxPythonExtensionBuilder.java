@@ -81,9 +81,8 @@ public class CxxPythonExtensionBuilder
     return this;
   }
 
-  public CxxPythonExtensionBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
+  public void setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
     getArgForPopulating().setSrcs(srcs);
-    return this;
   }
 
   public CxxPythonExtensionBuilder setHeaders(ImmutableSortedSet<SourcePath> headers) {
@@ -101,9 +100,8 @@ public class CxxPythonExtensionBuilder
     return this;
   }
 
-  public CxxPythonExtensionBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+  public void setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
     getArgForPopulating().setLinkerFlags(linkerFlags);
-    return this;
   }
 
   public CxxPythonExtensionBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {

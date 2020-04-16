@@ -83,7 +83,7 @@ public class IjProjectSourcePathResolverTest {
   private FakeProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     filesystem = new FakeProjectFilesystem();
   }
 

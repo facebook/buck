@@ -110,7 +110,7 @@ public class InputsMapBuilderTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void outputLabel() throws Exception {
+  public void outputLabel() {
     apply(new WithOutputLabel());
   }
 

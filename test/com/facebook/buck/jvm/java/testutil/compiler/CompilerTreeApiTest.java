@@ -90,9 +90,8 @@ public abstract class CompilerTreeApiTest {
     testCompiler.setProcessors(Collections.emptyList());
   }
 
-  protected final Iterable<? extends CompilationUnitTree> compile(String source)
-      throws IOException {
-    return compile(ImmutableMap.of("Foo.java", source));
+  protected final void compile(String source) throws IOException {
+    compile(ImmutableMap.of("Foo.java", source));
   }
 
   protected final Iterable<? extends CompilationUnitTree> compile(Map<String, String> sources)

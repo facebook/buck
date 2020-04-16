@@ -426,8 +426,7 @@ public class OutputsMaterializerTest {
     @Override
     public ListenableFuture<Unit> batchFetchBlobs(
         ImmutableMultimap<Digest, Callable<WritableByteChannel>> requests,
-        ImmutableMultimap<Digest, SettableFuture<Unit>> futures)
-        throws IOException {
+        ImmutableMultimap<Digest, SettableFuture<Unit>> futures) {
       for (Digest digest : requests.keySet()) {
         try {
           ByteBuffer b = fetch(digest).get();

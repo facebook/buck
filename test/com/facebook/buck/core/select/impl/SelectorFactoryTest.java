@@ -28,7 +28,6 @@ import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -111,7 +110,7 @@ public class SelectorFactoryTest {
   }
 
   @Test
-  public void testCanCreateSelectorWithNoneValues() throws CoerceFailedException {
+  public void testCanCreateSelectorWithNoneValues() {
     Selector<Object> selector =
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),

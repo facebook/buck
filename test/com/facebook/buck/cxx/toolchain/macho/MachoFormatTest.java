@@ -46,7 +46,7 @@ public class MachoFormatTest {
   private Path testDataDir;
 
   @Before
-  public void setUp() throws IOException {
+  public void setUp() {
     testDataDir = TestDataHelper.getTestDataDirectory(this);
   }
 

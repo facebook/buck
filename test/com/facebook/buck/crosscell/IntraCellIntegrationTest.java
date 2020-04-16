@@ -52,7 +52,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.concurrent.Executors;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -63,10 +62,6 @@ public class IntraCellIntegrationTest {
   @Rule
   public CloseableResource<DepsAwareExecutor<? super ComputeResult, ?>> executor =
       CloseableResource.of(() -> DefaultDepsAwareExecutor.of(4));
-
-  @Test
-  @Ignore
-  public void shouldTreatACellBoundaryAsAHardBuckPackageBoundary() {}
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   @Test
@@ -100,10 +95,6 @@ public class IntraCellIntegrationTest {
       // This is expected
     }
   }
-
-  @Test
-  @Ignore
-  public void allOutputsShouldBePlacedInTheSameRootOutputDirectory() {}
 
   @Test
   public void testEmbeddedBuckOut() throws IOException {

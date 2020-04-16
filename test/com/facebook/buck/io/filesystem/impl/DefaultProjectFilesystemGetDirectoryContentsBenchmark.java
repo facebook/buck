@@ -38,7 +38,6 @@ import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.infra.Blackhole;
-import org.openjdk.jmh.runner.RunnerException;
 
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.MICROSECONDS)
@@ -103,7 +102,7 @@ public class DefaultProjectFilesystemGetDirectoryContentsBenchmark {
     temporaryPaths.after();
   }
 
-  public static void main(String[] args) throws IOException, RunnerException {
+  public static void main(String[] args) throws IOException {
     Main.main(args);
   }
 }

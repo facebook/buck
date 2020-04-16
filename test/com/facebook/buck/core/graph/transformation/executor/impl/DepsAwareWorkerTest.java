@@ -468,7 +468,7 @@ public class DepsAwareWorkerTest<TaskType extends AbstractDepsAwareTask<?, TaskT
             () -> {
               try {
                 worker.loopForever();
-              } catch (InterruptedException e) {
+              } catch (InterruptedException ignored) {
               }
             });
     workerThreads.add(thread);

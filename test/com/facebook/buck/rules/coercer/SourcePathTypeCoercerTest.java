@@ -59,9 +59,6 @@ public class SourcePathTypeCoercerTest {
     cellRoots = TestCellPathResolver.get(projectFilesystem).getCellNameResolver();
   }
 
-  @Before
-  public void setUpCellRoots() {}
-
   @Rule public ExpectedException exception = ExpectedException.none();
 
   @Test

@@ -90,8 +90,7 @@ public class ListTypeCoercerTest {
         CellNameResolver cellRoots,
         ProjectFilesystem filesystem,
         ForwardRelativePath pathRelativeToProjectRoot,
-        Object object)
-        throws CoerceFailedException {
+        Object object) {
       throw new AssertionError();
     }
 
@@ -102,8 +101,7 @@ public class ListTypeCoercerTest {
         ForwardRelativePath pathRelativeToProjectRoot,
         TargetConfiguration targetConfiguration,
         TargetConfiguration hostConfiguration,
-        String object)
-        throws CoerceFailedException {
+        String object) {
       return object;
     }
 

@@ -1048,9 +1048,8 @@ public class AppleLibraryIntegrationTest {
     testModularScenarioWithFlavor("target_sdk_version", "Test", Optional.empty());
   }
 
-  private ProjectWorkspace testModularScenario(String scenario, String targetName)
-      throws Exception {
-    return testModularScenarioWithFlavor(
+  private void testModularScenario(String scenario, String targetName) throws Exception {
+    testModularScenarioWithFlavor(
         scenario, targetName, Optional.of(CxxDescriptionEnhancer.SHARED_FLAVOR));
   }
 

@@ -57,59 +57,57 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testAndroidLibraryProject() throws InterruptedException, IOException {
+  public void testAndroidLibraryProject() throws IOException {
     runBuckProjectAndVerify("android_library");
   }
 
   @Test
-  public void testAndroidBinaryProject() throws InterruptedException, IOException {
+  public void testAndroidBinaryProject() throws IOException {
     runBuckProjectAndVerify("android_binary");
   }
 
   @Test
-  public void testVersion2BuckProject() throws InterruptedException, IOException {
+  public void testVersion2BuckProject() throws IOException {
     runBuckProjectAndVerify("project1");
   }
 
   @Test
-  public void testVersion2BuckProjectWithoutAutogeneratingSources()
-      throws InterruptedException, IOException {
+  public void testVersion2BuckProjectWithoutAutogeneratingSources() throws IOException {
     runBuckProjectAndVerify("project_without_autogeneration");
   }
 
   @Test
-  public void testVersion2BuckProjectSlice() throws InterruptedException, IOException {
+  public void testVersion2BuckProjectSlice() throws IOException {
     runBuckProjectAndVerify("project_slice", "--without-tests", "modules/dep1:dep1");
   }
 
   @Test
-  public void testVersion2BuckProjectSourceMerging() throws InterruptedException, IOException {
+  public void testVersion2BuckProjectSourceMerging() throws IOException {
     runBuckProjectAndVerify("aggregation");
   }
 
   @Test
-  public void testBuckProjectWithCustomAndroidSdks() throws InterruptedException, IOException {
+  public void testBuckProjectWithCustomAndroidSdks() throws IOException {
     runBuckProjectAndVerify("project_with_custom_android_sdks");
   }
 
   @Test
-  public void testBuckProjectWithCustomJavaSdks() throws InterruptedException, IOException {
+  public void testBuckProjectWithCustomJavaSdks() throws IOException {
     runBuckProjectAndVerify("project_with_custom_java_sdks");
   }
 
   @Test
-  public void testBuckProjectWithIntellijSdk() throws InterruptedException, IOException {
+  public void testBuckProjectWithIntellijSdk() throws IOException {
     runBuckProjectAndVerify("project_with_intellij_sdk");
   }
 
   @Test
-  public void testVersion2BuckProjectWithProjectSettings()
-      throws InterruptedException, IOException {
+  public void testVersion2BuckProjectWithProjectSettings() throws IOException {
     runBuckProjectAndVerify("project_with_project_settings");
   }
 
   @Test
-  public void testVersion2BuckProjectWithScripts() throws InterruptedException, IOException {
+  public void testVersion2BuckProjectWithScripts() throws IOException {
     runBuckProjectAndVerify("project_with_scripts", "//modules/dep1:dep1");
   }
 
@@ -127,112 +125,107 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testVersion2BuckProjectWithExcludedResources()
-      throws InterruptedException, IOException {
+  public void testVersion2BuckProjectWithExcludedResources() throws IOException {
     runBuckProjectAndVerify("project_with_excluded_resources");
   }
 
   @Test
-  public void testVersion2BuckProjectWithAssets() throws InterruptedException, IOException {
+  public void testVersion2BuckProjectWithAssets() throws IOException {
     runBuckProjectAndVerify("project_with_assets");
   }
 
   @Test
-  public void testVersion2BuckProjectWithLanguageLevel() throws InterruptedException, IOException {
+  public void testVersion2BuckProjectWithLanguageLevel() throws IOException {
     runBuckProjectAndVerify("project_with_language_level");
   }
 
   @Test
-  public void testVersion2BuckProjectWithOutputUrl() throws InterruptedException, IOException {
+  public void testVersion2BuckProjectWithOutputUrl() throws IOException {
     runBuckProjectAndVerify("project_with_output_url");
   }
 
   @Test
-  public void testVersion2BuckProjectWithJavaResources() throws InterruptedException, IOException {
+  public void testVersion2BuckProjectWithJavaResources() throws IOException {
     runBuckProjectAndVerify("project_with_java_resources");
   }
 
   @Test
-  public void testVersion2BuckProjectWithExtraOutputModules()
-      throws InterruptedException, IOException {
+  public void testVersion2BuckProjectWithExtraOutputModules() throws IOException {
     runBuckProjectAndVerify("project_with_extra_output_modules");
   }
 
   @Test
-  public void testVersion2BuckProjectWithGeneratedSources()
-      throws InterruptedException, IOException {
+  public void testVersion2BuckProjectWithGeneratedSources() throws IOException {
     runBuckProjectAndVerify("project_with_generated_sources");
   }
 
   @Test
-  public void testBuckProjectWithSubdirGlobResources() throws InterruptedException, IOException {
+  public void testBuckProjectWithSubdirGlobResources() throws IOException {
     runBuckProjectAndVerify("project_with_subdir_glob_resources");
   }
 
   @Test
-  public void testRobolectricTestRule() throws InterruptedException, IOException {
+  public void testRobolectricTestRule() throws IOException {
     runBuckProjectAndVerify("robolectric_test");
   }
 
   @Test
-  public void testJavaTestRule() throws InterruptedException, IOException {
+  public void testJavaTestRule() throws IOException {
     runBuckProjectAndVerify("java_test");
   }
 
   @Test
-  public void testAndroidBuildConfigInDependencies() throws InterruptedException, IOException {
+  public void testAndroidBuildConfigInDependencies() throws IOException {
     runBuckProjectAndVerify("project_with_android_build_config");
   }
 
   @Test
-  public void testAndroidResourcesInDependencies() throws InterruptedException, IOException {
+  public void testAndroidResourcesInDependencies() throws IOException {
     runBuckProjectAndVerify("project_with_android_resources");
   }
 
   @Test
-  public void testPrebuiltJarWithJavadoc() throws InterruptedException, IOException {
+  public void testPrebuiltJarWithJavadoc() throws IOException {
     runBuckProjectAndVerify("project_with_prebuilt_jar");
   }
 
   @Test
-  public void testZipFile() throws InterruptedException, IOException {
+  public void testZipFile() throws IOException {
     runBuckProjectAndVerify("project_with_zipfile");
   }
 
   @Test
-  public void testAndroidResourcesAndLibraryInTheSameFolder()
-      throws InterruptedException, IOException {
+  public void testAndroidResourcesAndLibraryInTheSameFolder() throws IOException {
     runBuckProjectAndVerify("android_resources_in_the_same_folder");
   }
 
   @Test
-  public void testAndroidResourcesWithPackagesAtTheSameLocation()
-      throws InterruptedException, IOException {
+  public void testAndroidResourcesWithPackagesAtTheSameLocation() throws IOException {
     runBuckProjectAndVerify("project_with_multiple_resources_with_package_names");
   }
 
   @Test
-  public void testCxxLibrary() throws InterruptedException, IOException {
+  public void testCxxLibrary() throws IOException {
     runBuckProjectAndVerify("project_with_cxx_library");
   }
 
   @Test
-  public void testAggregatingCxxLibrary() throws InterruptedException, IOException {
+  public void testAggregatingCxxLibrary() throws IOException {
     runBuckProjectAndVerify("aggregation_with_cxx_library");
   }
 
   @Test
-  public void testCxxTest() throws InterruptedException, IOException {
+  public void testCxxTest() throws IOException {
     runBuckProjectAndVerify("project_with_cxx_test");
   }
 
   @Test
-  public void testAggregatingCxxTest() throws InterruptedException, IOException {
+  public void testAggregatingCxxTest() throws IOException {
     runBuckProjectAndVerify("aggregation_with_cxx_test");
   }
 
   @Test
-  public void testSavingGeneratedFilesList() throws InterruptedException, IOException {
+  public void testSavingGeneratedFilesList() throws IOException {
     runBuckProjectAndVerify(
         "save_generated_files_list",
         "--file-with-list-of-generated-files",
@@ -240,88 +233,88 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testMultipleLibraries() throws InterruptedException, IOException {
+  public void testMultipleLibraries() throws IOException {
     runBuckProjectAndVerify("project_with_multiple_libraries");
   }
 
   @Test
-  public void testProjectWithIgnoredTargets() throws InterruptedException, IOException {
+  public void testProjectWithIgnoredTargets() throws IOException {
     runBuckProjectAndVerify("project_with_ignored_targets");
   }
 
   @Test
-  public void testProjectWithCustomPackages() throws InterruptedException, IOException {
+  public void testProjectWithCustomPackages() throws IOException {
     runBuckProjectAndVerify("aggregation_with_custom_packages");
   }
 
   @Test
-  public void testAndroidResourceAggregation() throws InterruptedException, IOException {
+  public void testAndroidResourceAggregation() throws IOException {
     runBuckProjectAndVerify("android_resource_aggregation");
   }
 
   @Test
-  public void testAndroidResourceAggregationWithLimit() throws InterruptedException, IOException {
+  public void testAndroidResourceAggregationWithLimit() throws IOException {
     runBuckProjectAndVerify("android_resource_aggregation_with_limit");
   }
 
   @Test
-  public void testProjectIncludesTestsByDefault() throws InterruptedException, IOException {
+  public void testProjectIncludesTestsByDefault() throws IOException {
     runBuckProjectAndVerify("project_with_tests_by_default", "//modules/lib:lib");
   }
 
   @Test
-  public void testProjectExcludesTestsWhenRequested() throws InterruptedException, IOException {
+  public void testProjectExcludesTestsWhenRequested() throws IOException {
     runBuckProjectAndVerify("project_without_tests", "--without-tests", "//modules/lib:lib");
   }
 
   @Test
-  public void testProjectExcludesDepTestsWhenRequested() throws InterruptedException, IOException {
+  public void testProjectExcludesDepTestsWhenRequested() throws IOException {
     runBuckProjectAndVerify(
         "project_without_dep_tests", "--without-dependencies-tests", "//modules/lib:lib");
   }
 
   @Test
-  public void testUpdatingExistingWorkspace() throws InterruptedException, IOException {
+  public void testUpdatingExistingWorkspace() throws IOException {
     runBuckProjectAndVerify("update_existing_workspace");
   }
 
   @Test
-  public void testCreateNewWorkspace() throws InterruptedException, IOException {
+  public void testCreateNewWorkspace() throws IOException {
     runBuckProjectAndVerify("create_new_workspace");
   }
 
   @Test
-  public void testUpdateMalformedWorkspace() throws InterruptedException, IOException {
+  public void testUpdateMalformedWorkspace() throws IOException {
     runBuckProjectAndVerify("update_malformed_workspace");
   }
 
   @Test
-  public void testUpdateWorkspaceWithoutIgnoredNodes() throws InterruptedException, IOException {
+  public void testUpdateWorkspaceWithoutIgnoredNodes() throws IOException {
     runBuckProjectAndVerify("update_workspace_without_ignored_nodes");
   }
 
   @Test
-  public void testUpdateWorkspaceWithoutManagerNode() throws InterruptedException, IOException {
+  public void testUpdateWorkspaceWithoutManagerNode() throws IOException {
     runBuckProjectAndVerify("update_workspace_without_manager_node");
   }
 
   @Test
-  public void testUpdateWorkspaceWithoutProjectNode() throws InterruptedException, IOException {
+  public void testUpdateWorkspaceWithoutProjectNode() throws IOException {
     runBuckProjectAndVerify("update_workspace_without_project_node");
   }
 
   @Test
-  public void testProjectWthPackageBoundaryException() throws InterruptedException, IOException {
+  public void testProjectWthPackageBoundaryException() throws IOException {
     runBuckProjectAndVerify("project_with_package_boundary_exception", "//project2:lib");
   }
 
   @Test
-  public void testProjectWithPrebuiltJarExportedDeps() throws InterruptedException, IOException {
+  public void testProjectWithPrebuiltJarExportedDeps() throws IOException {
     runBuckProjectAndVerify("project_with_prebuilt_exported_deps", "//a:a");
   }
 
   @Test
-  public void testProjectWithProjectRoot() throws InterruptedException, IOException {
+  public void testProjectWithProjectRoot() throws IOException {
     runBuckProjectAndVerify(
         "project_with_project_root",
         "--intellij-project-root",
@@ -333,74 +326,70 @@ public class ProjectIntegrationTest {
   }
 
   @Test
-  public void testProjectWithBinaryInputs() throws InterruptedException, IOException {
+  public void testProjectWithBinaryInputs() throws IOException {
     runBuckProjectAndVerify("project_with_binary_inputs");
   }
 
   @Test
-  public void testGeneratingAndroidManifest() throws InterruptedException, IOException {
+  public void testGeneratingAndroidManifest() throws IOException {
     runBuckProjectAndVerify("generate_android_manifest");
   }
 
   @Test
   public void testGeneratingAndroidManifestWithMinSdkWithDifferentVersionsFromManifest()
-      throws InterruptedException, IOException {
+      throws IOException {
     runBuckProjectAndVerify("min_sdk_version_different_from_manifests");
   }
 
   @Test
-  public void testGeneratingAndroidManifestWithMinSdkParameterized()
-      throws InterruptedException, IOException {
+  public void testGeneratingAndroidManifestWithMinSdkParameterized() throws IOException {
     runBuckProjectAndVerify("min_sdk_parameterized");
   }
 
   @Test
-  public void testGeneratingAndroidManifestWithMinSdkFromBinaryManifest()
-      throws InterruptedException, IOException {
+  public void testGeneratingAndroidManifestWithMinSdkFromBinaryManifest() throws IOException {
     runBuckProjectAndVerify("min_sdk_version_from_binary_manifest");
   }
 
   @Test
-  public void testGeneratingAndroidManifestWithMinSdkFromBuckConfig()
-      throws InterruptedException, IOException {
+  public void testGeneratingAndroidManifestWithMinSdkFromBuckConfig() throws IOException {
     runBuckProjectAndVerify("min_sdk_version_from_buck_config");
   }
 
   @Test
-  public void testGeneratingAndroidManifestWithNoMinSdkConfig()
-      throws InterruptedException, IOException {
+  public void testGeneratingAndroidManifestWithNoMinSdkConfig() throws IOException {
     runBuckProjectAndVerify("min_sdk_version_with_no_config");
   }
 
   @Test
-  public void testPreprocessScript() throws InterruptedException, IOException {
+  public void testPreprocessScript() throws IOException {
     ProcessResult result = runBuckProjectAndVerify("preprocess_script_test");
 
     assertEquals("intellij", result.getStdout().trim());
   }
 
   @Test
-  public void testScalaProject() throws InterruptedException, IOException {
+  public void testScalaProject() throws IOException {
     runBuckProjectAndVerify("scala_project");
   }
 
   @Test
-  public void testIgnoredPathAddedToExcludedFolders() throws InterruptedException, IOException {
+  public void testIgnoredPathAddedToExcludedFolders() throws IOException {
     runBuckProjectAndVerify("ignored_excluded");
   }
 
   @Test
-  public void testImlsInIdea() throws InterruptedException, IOException {
+  public void testImlsInIdea() throws IOException {
     runBuckProjectAndVerify("imls_in_idea");
   }
 
   @Test
-  public void testPythonLibrary() throws InterruptedException, IOException {
+  public void testPythonLibrary() throws IOException {
     runBuckProjectAndVerify("python_library");
   }
 
   @Test
-  public void testTwoConfigurations() throws InterruptedException, IOException {
+  public void testTwoConfigurations() throws IOException {
     runBuckProjectAndVerify("two_configurations");
   }
 

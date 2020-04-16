@@ -54,7 +54,6 @@ import java.util.concurrent.ExecutionException;
 import org.easymock.Capture;
 import org.easymock.CaptureType;
 import org.easymock.EasyMock;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -79,9 +78,6 @@ public class LocalFallbackStrategyTest {
     ruleContext = new RemoteRuleContext(eventBus, buildRule(RULE_NAME));
     executionContext = TestExecutionContext.newInstance();
   }
-
-  @After
-  public void tearDown() {}
 
   @Test
   public void testRemoteSuccess() throws ExecutionException, InterruptedException {
@@ -302,8 +298,7 @@ public class LocalFallbackStrategyTest {
   }
 
   @Test
-  public void testRemoteActionExceptionFallbackDisabled()
-      throws ExecutionException, InterruptedException {
+  public void testRemoteActionExceptionFallbackDisabled() throws InterruptedException {
     Exception exception = new Exception("local failed miserably.");
     EasyMock.expect(strategyBuildResult.getBuildResult())
         .andReturn(Futures.immediateFailedFuture(exception))
@@ -420,7 +415,7 @@ public class LocalFallbackStrategyTest {
   }
 
   @Test
-  public void testEventBusLogForFallbackDisabled() throws ExecutionException, InterruptedException {
+  public void testEventBusLogForFallbackDisabled() throws InterruptedException {
     Capture<AbstractBuckEvent> eventCapture = Capture.newInstance(CaptureType.ALL);
     eventBus.post(EasyMock.capture(eventCapture));
     EasyMock.expectLastCall().times(3);

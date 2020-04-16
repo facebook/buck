@@ -40,7 +40,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -49,9 +48,6 @@ public class PythonBuckConfigTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
   @Rule public TemporaryPaths temporaryFolder2 = new TemporaryPaths();
-
-  @Before
-  public void setUp() {}
 
   @Test
   public void testPathToPexExecuterUsesConfigSetting() throws IOException {

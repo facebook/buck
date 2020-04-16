@@ -252,9 +252,8 @@ public class BuildRulePipelinesRunnerTest {
       return this;
     }
 
-    public PipelineTester waitForRuleToStart(int ruleNum) throws InterruptedException {
+    public void waitForRuleToStart(int ruleNum) throws InterruptedException {
       rules.get(ruleNum).waitForStart();
-      return this;
     }
 
     public PipelineTester startPipelineAtRule(int ruleNum) {

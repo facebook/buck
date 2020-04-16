@@ -75,9 +75,8 @@ public class FakeDepFileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraD
     return this;
   }
 
-  public FakeDepFileBuildRule setExistenceOfInterestPredicate(
-      ImmutableSet<SourcePath> interestingPaths) {
-    return setExistenceOfInterestPredicate(interestingPaths::contains);
+  public void setExistenceOfInterestPredicate(ImmutableSet<SourcePath> interestingPaths) {
+    setExistenceOfInterestPredicate(interestingPaths::contains);
   }
 
   public FakeDepFileBuildRule setExistenceOfInterestPredicate(

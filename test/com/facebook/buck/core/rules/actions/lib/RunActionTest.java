@@ -58,7 +58,7 @@ public class RunActionTest {
   private Path scriptPath;
 
   @Before
-  public void setUp() throws IOException, EvalException {
+  public void setUp() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "run_scripts", tmp);
     workspace.setUp();

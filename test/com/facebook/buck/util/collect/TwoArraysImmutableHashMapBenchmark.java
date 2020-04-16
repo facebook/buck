@@ -33,7 +33,6 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
-import org.openjdk.jmh.runner.RunnerException;
 
 @State(Scope.Benchmark)
 @Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS)
@@ -91,7 +90,7 @@ public class TwoArraysImmutableHashMapBenchmark {
     runLookup(bh, twoArraysMap10);
   }
 
-  public static void main(String[] args) throws IOException, RunnerException {
+  public static void main(String[] args) throws IOException {
     Main.main(new String[] {TwoArraysImmutableHashMapBenchmark.class.getName()});
   }
 }

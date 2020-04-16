@@ -106,7 +106,7 @@ public class DepsFunctionTest {
         .andReturn(
             new QueryEnvironment.TargetEvaluator() {
               @Override
-              public Set evaluateTarget(String target) throws QueryException {
+              public Set evaluateTarget(String target) {
                 return ImmutableSet.of(QueryBuildTarget.of(BuildTargetFactory.newInstance(target)));
               }
 

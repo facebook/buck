@@ -386,7 +386,7 @@ public class ZipStepTest {
   }
 
   @Test
-  public void zipMaintainsExecutablePermissions() throws InterruptedException, IOException {
+  public void zipMaintainsExecutablePermissions() throws IOException {
     assumeTrue(Platform.detect() != Platform.WINDOWS);
 
     AbsPath parent = tmp.newFolder("zipstep");

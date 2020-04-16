@@ -56,7 +56,7 @@ public class ActionGraphProviderIntegrationTest {
 
   @Test
   public void specifyingSkipActionGraphCacheDoesNotInvalidateTheActionGraphCache()
-      throws InterruptedException, IOException {
+      throws IOException {
     try (TestContext context = new TestContext()) {
       workspace
           .runBuckdCommand(context, "build", "//:pretend_this_is_an_expensive_rule")

@@ -541,7 +541,7 @@ public class InnerClassesTableTest {
       return this;
     }
 
-    public Tester expectInnerClassesTable(String className, String... innerClassesEntries)
+    public void expectInnerClassesTable(String className, String... innerClassesEntries)
         throws IOException {
       compiler.addClasspathFileContents(
           "TopLevel.java",
@@ -589,7 +589,6 @@ public class InnerClassesTableTest {
           classNode.innerClasses.stream()
               .map(innerClass -> innerClass.name)
               .collect(Collectors.toList()));
-      return this;
     }
 
     @Override

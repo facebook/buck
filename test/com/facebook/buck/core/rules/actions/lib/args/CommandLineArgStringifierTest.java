@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.syntax.EvalException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.junit.Test;
@@ -89,7 +88,7 @@ public class CommandLineArgStringifierTest {
   }
 
   @Test
-  public void convertsOutputArtifactToString() throws EvalException {
+  public void convertsOutputArtifactToString() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildTarget target = BuildTargetFactory.newInstance("//:some_rule");
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);

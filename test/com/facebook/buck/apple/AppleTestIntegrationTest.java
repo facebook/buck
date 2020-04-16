@@ -116,7 +116,7 @@ public class AppleTestIntegrationTest {
     assertEquals(0, processResult.getExitCode());
 
     String stdout = processResult.getStdout().get();
-    String[] parts = stdout.split("\\\n");
+    String[] parts = stdout.split("\n");
 
     assertThat(
         Iterables.getOnlyElement(Files.readAllLines(Paths.get(parts[0]))),

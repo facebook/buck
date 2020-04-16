@@ -60,7 +60,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -139,7 +138,7 @@ public class TargetSpecResolverTest {
 
   @Test
   public void whenAllRulesRequestedWithTrueFilterThenMultipleRulesReturned()
-      throws BuildFileParseException, IOException, InterruptedException {
+      throws BuildFileParseException, InterruptedException {
 
     ImmutableList<ImmutableSet<BuildTarget>> targets =
         resolve(

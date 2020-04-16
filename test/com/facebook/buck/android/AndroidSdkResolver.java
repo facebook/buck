@@ -45,7 +45,7 @@ final class AndroidSdkResolver {
   private final AndroidPlatformTarget platformTarget;
   private final AndroidBuildToolsLocation buildToolsLocation;
 
-  private AndroidSdkResolver(ProjectFilesystem fileSystem) throws IOException {
+  private AndroidSdkResolver(ProjectFilesystem fileSystem) {
     sdkLocation = TestAndroidSdkLocationFactory.create(fileSystem);
     toolsResolver = new AndroidBuildToolsResolver(AndroidNdkHelper.DEFAULT_CONFIG, sdkLocation);
     buildToolsLocation = AndroidBuildToolsLocation.of(toolsResolver.getBuildToolsPath());

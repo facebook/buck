@@ -86,9 +86,8 @@ public class CxxLuaExtensionBuilder
     return this;
   }
 
-  public CxxLuaExtensionBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+  public void setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
     getArgForPopulating().setLinkerFlags(linkerFlags);
-    return this;
   }
 
   public CxxLuaExtensionBuilder setFrameworks(ImmutableSortedSet<FrameworkPath> frameworks) {

@@ -30,7 +30,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.facebook.buck.testutil.TemporaryPaths;
-import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -53,7 +52,7 @@ public class CopyActionTest {
   }
 
   @Test
-  public void copiesContentsToFile() throws ActionCreationException, IOException, EvalException {
+  public void copiesContentsToFile() throws ActionCreationException, IOException {
 
     PathSourcePath inputPath = PathSourcePath.of(projectFilesystem, Paths.get("input"));
     projectFilesystem.writeContentsToPath("contents", inputPath.getRelativePath());

@@ -85,9 +85,8 @@ public class LuaBinaryBuilder
     return this;
   }
 
-  public LuaBinaryBuilder setNativeStarterLibrary(BuildTarget target) {
+  public void setNativeStarterLibrary(BuildTarget target) {
     getArgForPopulating().setNativeStarterLibrary(Optional.of(target));
-    return this;
   }
 
   public LuaBinaryBuilder setPlatformDeps(

@@ -45,12 +45,12 @@ public class AssumptionViolationsTest {
   }
 
   @Test
-  public void shouldPassWithASimplePassingTestTestNG() throws IOException {
+  public void shouldPassWithASimplePassingTestTestNG() {
     shouldPassWithASimplePassingTest("TestNG");
   }
 
   @Test
-  public void shouldPassWithASimplePassingTestJunit() throws IOException {
+  public void shouldPassWithASimplePassingTestJunit() {
     shouldPassWithASimplePassingTest("Junit");
   }
 
@@ -67,12 +67,12 @@ public class AssumptionViolationsTest {
   }
 
   @Test
-  public void shouldFailIfOneTestFailsJunit() throws IOException {
+  public void shouldFailIfOneTestFailsJunit() {
     shouldFailIfOneTestFails("Junit", 1);
   }
 
   @Test
-  public void shouldFailIfOneTestFailsTestNG() throws IOException {
+  public void shouldFailIfOneTestFailsTestNG() {
     shouldFailIfOneTestFails("TestNG", 0);
   }
 

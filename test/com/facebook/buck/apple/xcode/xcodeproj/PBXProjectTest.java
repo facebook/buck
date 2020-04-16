@@ -18,6 +18,7 @@ package com.facebook.buck.apple.xcode.xcodeproj;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -69,7 +70,7 @@ public class PBXProjectTest {
     PBXGroup appGroup = project.getMainGroup().getOrCreateChildGroupByName("app");
     appGroup.getOrCreateDescendantGroupByPath(ImmutableList.of("src", "files"));
 
-    assertEquals(project.getMainGroup().getPath(), null);
+    assertNull(project.getMainGroup().getPath());
     assertEquals(project.getMainGroup().getSourceTree(), PBXReference.SourceTree.GROUP);
 
     List<PBXReference> children = project.getMainGroup().getChildren();
@@ -77,7 +78,7 @@ public class PBXProjectTest {
 
     while (!children.isEmpty()) {
       PBXGroup group = (PBXGroup) children.remove(0);
-      assertEquals(group.getPath(), null);
+      assertNull(group.getPath());
       assertEquals(group.getSourceTree(), PBXReference.SourceTree.GROUP);
       children.addAll(group.getChildren());
     }

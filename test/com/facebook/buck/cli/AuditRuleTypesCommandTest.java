@@ -33,7 +33,6 @@ import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.junit.Before;
 import org.junit.Test;
 
 public class AuditRuleTypesCommandTest {
@@ -63,9 +62,6 @@ public class AuditRuleTypesCommandTest {
 
   private static final ImmutableList<Description<?>> DESCRIPTIONS =
       ImmutableList.of(new SomeBuildRuleDescription(), new AnotherBuildRuleDescription());
-
-  @Before
-  public void setUp() {}
 
   @Test
   public void testBuildInfoPrintedInJsonFormat() throws Exception {

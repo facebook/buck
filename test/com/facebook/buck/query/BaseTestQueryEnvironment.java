@@ -33,47 +33,47 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
   }
 
   @Override
-  public Set<NODE_TYPE> getFwdDeps(Iterable<NODE_TYPE> targets) throws QueryException {
+  public Set<NODE_TYPE> getFwdDeps(Iterable<NODE_TYPE> targets) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Set<NODE_TYPE> getReverseDeps(Iterable<NODE_TYPE> targets) throws QueryException {
+  public Set<NODE_TYPE> getReverseDeps(Iterable<NODE_TYPE> targets) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Set<NODE_TYPE> getInputs(NODE_TYPE target) throws QueryException {
+  public Set<NODE_TYPE> getInputs(NODE_TYPE target) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Set<NODE_TYPE> getTransitiveClosure(Set<NODE_TYPE> targets) throws QueryException {
+  public Set<NODE_TYPE> getTransitiveClosure(Set<NODE_TYPE> targets) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void buildTransitiveClosure(Set<NODE_TYPE> targetNodes) throws QueryException {
+  public void buildTransitiveClosure(Set<NODE_TYPE> targetNodes) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public String getTargetKind(NODE_TYPE target) throws QueryException {
+  public String getTargetKind(NODE_TYPE target) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Set<NODE_TYPE> getTestsForTarget(NODE_TYPE target) throws QueryException {
+  public Set<NODE_TYPE> getTestsForTarget(NODE_TYPE target) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Set<NODE_TYPE> getBuildFiles(Set<NODE_TYPE> targets) throws QueryException {
+  public Set<NODE_TYPE> getBuildFiles(Set<NODE_TYPE> targets) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public Set<NODE_TYPE> getFileOwners(ImmutableList<String> files) throws QueryException {
+  public Set<NODE_TYPE> getFileOwners(ImmutableList<String> files) {
     throw new UnsupportedOperationException();
   }
 
@@ -84,14 +84,13 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
   }
 
   @Override
-  public Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, String attribute)
-      throws QueryException {
+  public Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, String attribute) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Set<Object> filterAttributeContents(
-      NODE_TYPE target, String attribute, Predicate<Object> predicate) throws QueryException {
+      NODE_TYPE target, String attribute, Predicate<Object> predicate) {
     throw new UnsupportedOperationException();
   }
 

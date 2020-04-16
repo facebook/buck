@@ -486,7 +486,7 @@ public class GenruleTest {
     return newEmptyExecutionContext(Platform.detect());
   }
 
-  private BuildRule createSampleJavaBinaryRule(ActionGraphBuilder graphBuilder)
+  private void createSampleJavaBinaryRule(ActionGraphBuilder graphBuilder)
       throws NoSuchBuildTargetException {
     // Create a java_binary that depends on a java_library so it is possible to create a
     // java_binary rule with a classpath entry and a main class.
@@ -498,7 +498,7 @@ public class GenruleTest {
 
     BuildTarget buildTarget =
         BuildTargetFactory.newInstance("//java/com/facebook/util:ManifestGenerator");
-    return new JavaBinaryRuleBuilder(buildTarget)
+    new JavaBinaryRuleBuilder(buildTarget)
         .setDeps(ImmutableSortedSet.of(javaLibrary.getBuildTarget()))
         .setMainClass("com.facebook.util.ManifestGenerator")
         .build(graphBuilder);

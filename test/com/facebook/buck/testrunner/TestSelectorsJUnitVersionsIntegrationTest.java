@@ -48,7 +48,7 @@ public class TestSelectorsJUnitVersionsIntegrationTest {
   }
 
   @Test
-  public void shouldRunEveryTest() throws IOException {
+  public void shouldRunEveryTest() {
     Set<String> expectedPassingTests =
         ImmutableSet.of(
             "com.example.TestA", "com.example.TestB", "com.example.TestC", "com.example.TestD");
@@ -56,14 +56,14 @@ public class TestSelectorsJUnitVersionsIntegrationTest {
   }
 
   @Test
-  public void shouldOnlyRunOneTestFromTheNewerJUnit() throws IOException {
+  public void shouldOnlyRunOneTestFromTheNewerJUnit() {
     assertPassingTests(
         ImmutableSet.of("com.example.TestA"),
         ImmutableList.of("test", "--all", "--filter", "com.example.TestA"));
   }
 
   @Test
-  public void shouldOnlyRunOneTestFromTheOlderJUnit() throws IOException {
+  public void shouldOnlyRunOneTestFromTheOlderJUnit() {
     assertPassingTests(
         ImmutableSet.of("com.example.TestC"),
         ImmutableList.of("test", "--all", "--filter", "com.example.TestC"));

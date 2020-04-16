@@ -79,7 +79,7 @@ public class TestCommandIntegrationTest {
    */
 
   @Test
-  public void testCsvCodeCoverage() throws Exception {
+  public void testCsvCodeCoverage() {
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
       ProcessResult result =
           workspace.runBuckCommand(
@@ -133,7 +133,7 @@ public class TestCommandIntegrationTest {
   }
 
   @Test
-  public void testXmlCodeCoverage() throws Exception {
+  public void testXmlCodeCoverage() {
     try (PropertySaver saver = new PropertySaver(getCodeCoverageProperties())) {
       ProcessResult result =
           workspace.runBuckCommand(
@@ -175,7 +175,7 @@ public class TestCommandIntegrationTest {
   }
 
   @Test
-  public void testFailsIfNoTestsProvided() throws IOException {
+  public void testFailsIfNoTestsProvided() {
     ProcessResult result = workspace.runBuckCommand("test");
     result.assertExitCode(null, ExitCode.COMMANDLINE_ERROR);
     assertThat(

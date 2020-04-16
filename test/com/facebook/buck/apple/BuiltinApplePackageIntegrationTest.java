@@ -170,8 +170,7 @@ public class BuiltinApplePackageIntegrationTest {
   }
 
   private void packageHasProperStructureForWatchHelper(
-      ProjectWorkspace workspace, boolean shouldHaveStubInsideBundle)
-      throws IOException, InterruptedException {
+      ProjectWorkspace workspace, boolean shouldHaveStubInsideBundle) throws IOException {
     BuildTarget packageTarget = BuildTargetFactory.newInstance("//:DemoAppPackage");
     workspace.runBuckCommand("build", packageTarget.getFullyQualifiedName()).assertSuccess();
 

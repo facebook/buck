@@ -91,8 +91,7 @@ public class HaskellLibraryBuilder
     return this;
   }
 
-  public HaskellLibraryBuilder setPlatform(Flavor platform) {
+  public void setPlatform(Flavor platform) {
     getArgForPopulating().setPlatform(platform);
-    return this;
   }
 }

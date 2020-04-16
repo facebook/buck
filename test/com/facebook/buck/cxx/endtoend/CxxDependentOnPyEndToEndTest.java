@@ -64,13 +64,12 @@ public class CxxDependentOnPyEndToEndTest {
         .addLocalConfigSet(configSetBuilder.addShlibConfigSet().build());
   }
 
-  private ProcessResult checkSuccessfulBuildAndRun(
+  private void checkSuccessfulBuildAndRun(
       String message, EndToEndTestDescriptor test, EndToEndWorkspace workspace) throws Exception {
     ProcessResult result = workspace.runBuckCommand(test);
     result.assertSuccess(String.format(message, "build"));
     ProcessResult targetResult = workspace.runBuiltResult(mainTarget);
     targetResult.assertSuccess(String.format(message, "run"));
-    return targetResult;
   }
 
   /** Determines that buck successfully outputs proper programs */

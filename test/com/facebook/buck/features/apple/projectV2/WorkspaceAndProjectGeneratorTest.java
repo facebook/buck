@@ -96,7 +96,6 @@ import java.nio.file.Paths;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
@@ -126,7 +125,7 @@ public class WorkspaceAndProjectGeneratorTest {
   @Rule public ExpectedException thrown = ExpectedException.none();
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS);
     xcodeDescriptions =
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
@@ -245,7 +244,7 @@ public class WorkspaceAndProjectGeneratorTest {
 
   @Test
   public void workspaceAndProjectsShouldDiscoverDependenciesAndTests()
-      throws IOException, InterruptedException, ExecutionException {
+      throws IOException, InterruptedException {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
@@ -282,8 +281,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void workspaceAndProjectsWithoutTests()
-      throws IOException, InterruptedException, ExecutionException {
+  public void workspaceAndProjectsWithoutTests() throws IOException, InterruptedException {
     WorkspaceAndProjectGenerator generator =
         new WorkspaceAndProjectGenerator(
             xcodeDescriptions,
@@ -378,7 +376,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void requiredBuildTargets() throws IOException, InterruptedException, ExecutionException {
+  public void requiredBuildTargets() throws IOException, InterruptedException {
     BuildTarget genruleTarget = BuildTargetFactory.newInstance("//foo", "gen");
     TargetNode<GenruleDescriptionArg> genrule =
         GenruleBuilder.newGenruleBuilder(genruleTarget).setOut("source.m").build();
@@ -848,8 +846,7 @@ public class WorkspaceAndProjectGeneratorTest {
   }
 
   @Test
-  public void enablingParallelizeBuild()
-      throws IOException, InterruptedException, ExecutionException {
+  public void enablingParallelizeBuild() throws IOException, InterruptedException {
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo", "FooLib");
     TargetNode<AppleLibraryDescriptionArg> fooLib =
         AppleLibraryBuilder.createBuilder(fooLibTarget).build();

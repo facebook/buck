@@ -55,7 +55,7 @@ public class AppleDeviceControllerTest {
   }
 
   @Test
-  public void canStartSimulatorWhenNoSimulatorBooted() throws IOException, InterruptedException {
+  public void canStartSimulatorWhenNoSimulatorBooted() {
     ImmutableList.Builder<Map.Entry<ProcessExecutorParams, FakeProcess>> fakeProcessesBuilder =
         ImmutableList.builder();
     fakeProcessesBuilder.add(
@@ -76,8 +76,7 @@ public class AppleDeviceControllerTest {
   }
 
   @Test
-  public void canStartSimulatorWhenSimulatorAlreadyBooted()
-      throws IOException, InterruptedException {
+  public void canStartSimulatorWhenSimulatorAlreadyBooted() {
     ImmutableList.Builder<Map.Entry<ProcessExecutorParams, FakeProcess>> fakeProcessesBuilder =
         ImmutableList.builder();
     fakeProcessesBuilder.add(
@@ -98,8 +97,7 @@ public class AppleDeviceControllerTest {
   }
 
   @Test
-  public void canStartSimulatorWhenSimulatorWithDifferentUdidExists()
-      throws IOException, InterruptedException {
+  public void canStartSimulatorWhenSimulatorWithDifferentUdidExists() {
     ImmutableList.Builder<Map.Entry<ProcessExecutorParams, FakeProcess>> fakeProcessesBuilder =
         ImmutableList.builder();
     fakeProcessesBuilder.add(

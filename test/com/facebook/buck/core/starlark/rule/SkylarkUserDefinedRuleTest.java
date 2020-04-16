@@ -49,7 +49,6 @@ import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.PathFragment;
-import java.io.IOException;
 import java.util.Set;
 import java.util.stream.IntStream;
 import javax.annotation.Nullable;
@@ -89,8 +88,7 @@ public class SkylarkUserDefinedRuleTest {
     }
 
     @Override
-    public Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env)
-        throws EvalException, InterruptedException {
+    public Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env) {
       throw new UnsupportedOperationException();
     }
   }
@@ -425,7 +423,7 @@ public class SkylarkUserDefinedRuleTest {
 
   @Test
   public void createsCorrectCallable()
-      throws EvalException, IOException, InterruptedException, LabelSyntaxException {
+      throws EvalException, InterruptedException, LabelSyntaxException {
     ImmutableMap<String, AttributeHolder> params =
         ImmutableMap.of(
             "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),

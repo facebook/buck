@@ -103,9 +103,8 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setVersionedStaticLib(VersionMatchedCollection<SourcePath> lib) {
+  public void setVersionedStaticLib(VersionMatchedCollection<SourcePath> lib) {
     getArgForPopulating().setVersionedStaticLib(lib);
-    return this;
   }
 
   public PrebuiltCxxLibraryBuilder setStaticPicLib(SourcePath lib) {
@@ -210,10 +209,9 @@ public class PrebuiltCxxLibraryBuilder
     return this;
   }
 
-  public PrebuiltCxxLibraryBuilder setVersionedExportedPreprocessorFlags(
+  public void setVersionedExportedPreprocessorFlags(
       VersionMatchedCollection<ImmutableList<StringWithMacros>>
           versionedExportedPreprocessorFlags) {
     getArgForPopulating().setVersionedExportedPreprocessorFlags(versionedExportedPreprocessorFlags);
-    return this;
   }
 }

@@ -40,22 +40,22 @@ public class LabelsIntegrationTest {
   }
 
   @Test
-  public void shouldFailWithDashDashAll() throws IOException {
+  public void shouldFailWithDashDashAll() {
     assertTestsFail("test", "--all");
   }
 
   @Test
-  public void shouldFailWithExplicitTargetsThatReferToFailingTests() throws IOException {
+  public void shouldFailWithExplicitTargetsThatReferToFailingTests() {
     assertTestsFail("test", "//test:geometry", "//test:orientation");
   }
 
   @Test
-  public void shouldPassWithDashDashAllWhenExcludingUnscientificTests() throws IOException {
+  public void shouldPassWithDashDashAllWhenExcludingUnscientificTests() {
     assertTestsPass("test", "--all", "--exclude", "unscientific");
   }
 
   @Test
-  public void shouldPassWithDashDashAllWhenIncludingOnlyScientificTests() throws IOException {
+  public void shouldPassWithDashDashAllWhenIncludingOnlyScientificTests() {
     assertTestsPass("test", "--all", "--include", "scientific");
   }
 
@@ -64,8 +64,7 @@ public class LabelsIntegrationTest {
    * are given on the command line. Always. Unless we don't want to."
    */
   @Test
-  public void shouldFailBecauseWeExplicitlyAskedForAFailingTestToRunEvenThoughWeTriedToExcludeIt()
-      throws IOException {
+  public void shouldFailBecauseWeExplicitlyAskedForAFailingTestToRunEvenThoughWeTriedToExcludeIt() {
     assertTestsFail("test", "//test:geometry", "//test:orientation", "--exclude", "unscientific");
   }
 
@@ -74,8 +73,7 @@ public class LabelsIntegrationTest {
    * given on the command line. Always. Unless we don't want to."
    */
   @Test
-  public void shouldPassWhenFailingTestIncludedAndExcludedWithAlwaysExcludeFlag()
-      throws IOException {
+  public void shouldPassWhenFailingTestIncludedAndExcludedWithAlwaysExcludeFlag() {
     assertTestsPass(
         "test",
         "//test:geometry",
@@ -86,7 +84,7 @@ public class LabelsIntegrationTest {
   }
 
   @Test
-  public void shouldIgnoreFailingTestWithTheCorrectLabelConjunction() throws IOException {
+  public void shouldIgnoreFailingTestWithTheCorrectLabelConjunction() {
     // Both the passing test (PhotonsTest) and the failing test (EarthIsFlatTest) are labelled
     // testy, so asking for all tests that match "testy OR lighty" will fail.
     //

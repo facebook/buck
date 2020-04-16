@@ -41,7 +41,7 @@ public class CopyToZipStepTest {
   private Path outputPath;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
     outputPath = filesystem.resolve("output.zip").toAbsolutePath();
   }

@@ -44,7 +44,7 @@ public class BuckBuildLog {
 
   private static final Pattern BUILD_LOG_FINISHED_RULE_REGEX =
       Pattern.compile(
-          ".*BuildRuleFinished\\((?<BuildTarget>[^\\)]+)\\): (?<Status>\\S+) "
+          ".*BuildRuleFinished\\((?<BuildTarget>[^)]+)\\): (?<Status>\\S+) "
               + "(?<CacheResult>\\S+) (?<SuccessType>\\S+) (?<RuleKey>\\S+)"
               + "(?: I(?<InputRuleKey>\\S+))?");
 

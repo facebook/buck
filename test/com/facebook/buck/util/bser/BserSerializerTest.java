@@ -113,7 +113,7 @@ public class BserSerializerTest {
     buffer = ByteBuffer.allocate(512).order(ByteOrder.nativeOrder());
   }
 
-  private ByteBuffer assertEncodingMatches(Object object, String base16) throws IOException {
+  private void assertEncodingMatches(Object object, String base16) throws IOException {
     BserSerializer serializer = new BserSerializer();
     ByteBuffer result = serializer.serializeToBuffer(object, buffer);
     result.flip();
@@ -125,7 +125,6 @@ public class BserSerializerTest {
             BaseEncoding.base16().encode(result.array(), result.position(), result.limit())),
         result,
         equalTo(ByteBuffer.wrap(base16Array)));
-    return result;
   }
 
   @Test

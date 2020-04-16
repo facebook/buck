@@ -68,7 +68,7 @@ public class ProvisioningProfileStoreTest {
   }
 
   @Test
-  public void testExpiredProfilesAreIgnored() throws Exception {
+  public void testExpiredProfilesAreIgnored() {
     ProvisioningProfileStore profiles =
         createStorefromProvisioningProfiles(
             ImmutableList.of(
@@ -87,7 +87,7 @@ public class ProvisioningProfileStoreTest {
   }
 
   @Test
-  public void testPrefixOverride() throws Exception {
+  public void testPrefixOverride() {
     ProvisioningProfileMetadata expected =
         makeTestMetadata(
             "AAAAAAAAAA.*", new Date(Long.MAX_VALUE), "00000000-0000-0000-0000-000000000000");
@@ -264,7 +264,7 @@ public class ProvisioningProfileStoreTest {
   }
 
   @Test
-  public void testGetByUUID() throws Exception {
+  public void testGetByUUID() {
     ProvisioningProfileMetadata expected =
         makeTestMetadata(
             "BBBBBBBBBB.*", new Date(Long.MAX_VALUE), "11111111-1111-1111-1111-111111111111");
@@ -285,7 +285,7 @@ public class ProvisioningProfileStoreTest {
   }
 
   @Test
-  public void testMatchesSpecificApp() throws Exception {
+  public void testMatchesSpecificApp() {
     ProvisioningProfileMetadata expected =
         makeTestMetadata(
             "BBBBBBBBBB.com.facebook.test",
@@ -313,7 +313,7 @@ public class ProvisioningProfileStoreTest {
   }
 
   @Test
-  public void testMatchesWildcard() throws Exception {
+  public void testMatchesWildcard() {
     ProvisioningProfileMetadata expected =
         makeTestMetadata(
             "BBBBBBBBBB.*", new Date(Long.MAX_VALUE), "00000000-0000-0000-0000-000000000000");

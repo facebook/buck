@@ -773,9 +773,8 @@ public class InterfaceValidatorTest extends CompilerTreeApiTest {
     assertNoErrors();
   }
 
-  protected Iterable<? extends CompilationUnitTree> compileWithValidation(String source)
-      throws IOException {
-    return compileWithValidation(ImmutableMap.of("Foo.java", source));
+  protected void compileWithValidation(String source) throws IOException {
+    compileWithValidation(ImmutableMap.of("Foo.java", source));
   }
 
   protected Iterable<? extends CompilationUnitTree> compileWithValidation(

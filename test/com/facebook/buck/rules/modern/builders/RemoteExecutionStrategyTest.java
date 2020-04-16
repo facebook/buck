@@ -64,7 +64,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.SettableFuture;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -494,6 +493,6 @@ public class RemoteExecutionStrategyTest {
     }
 
     @Override
-    public void close() throws IOException {}
+    public void close() {}
   }
 }

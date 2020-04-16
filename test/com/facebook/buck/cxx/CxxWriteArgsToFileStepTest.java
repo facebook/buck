@@ -42,8 +42,7 @@ import org.junit.Test;
 public class CxxWriteArgsToFileStepTest {
 
   @Test
-  public void cxxWriteArgsToFilePassesLinkerOptionsViaArgFile()
-      throws IOException, InterruptedException {
+  public void cxxWriteArgsToFilePassesLinkerOptionsViaArgFile() throws IOException {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     AbsPath fileListPath =
         projectFilesystem
@@ -59,8 +58,7 @@ public class CxxWriteArgsToFileStepTest {
   }
 
   @Test
-  public void cxxWriteArgsToFileCreatesDirectoriesIfNeeded()
-      throws IOException, InterruptedException {
+  public void cxxWriteArgsToFileCreatesDirectoriesIfNeeded() throws IOException {
     ProjectFilesystem projectFilesystem = FakeProjectFilesystem.createRealTempFilesystem();
     AbsPath fileListPath =
         projectFilesystem.getRootPath().resolve("unexisting_parent_folder/filelist.txt");

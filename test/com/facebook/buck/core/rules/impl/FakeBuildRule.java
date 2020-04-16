@@ -83,9 +83,8 @@ public class FakeBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this(BuildTargetFactory.newInstance(target), filesystem, deps);
   }
 
-  public FakeBuildRule setRuntimeDeps(BuildRule... deps) {
+  public void setRuntimeDeps(BuildRule... deps) {
     runtimeDeps = ImmutableSortedSet.copyOf(deps);
-    return this;
   }
 
   public BuildRuleResolver getRuleResolver() {

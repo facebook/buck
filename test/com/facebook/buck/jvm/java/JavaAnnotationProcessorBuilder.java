@@ -42,20 +42,16 @@ public class JavaAnnotationProcessorBuilder
     return this;
   }
 
-  public JavaAnnotationProcessorBuilder setIsolateClassloader(boolean isolateClassloader) {
+  public void setIsolateClassloader(boolean isolateClassloader) {
     getArgForPopulating().setIsolateClassLoader(isolateClassloader);
-    return this;
   }
 
-  public JavaAnnotationProcessorBuilder setSupportsAbiGenerationFromSource(
-      boolean supportsAbiGenerationFromSource) {
+  public void setSupportsAbiGenerationFromSource(boolean supportsAbiGenerationFromSource) {
     getArgForPopulating().setSupportsAbiGenerationFromSource(supportsAbiGenerationFromSource);
-    return this;
   }
 
-  public JavaAnnotationProcessorBuilder setDoesNotAffectAbi(boolean doesNotAffectAbi) {
+  public void setDoesNotAffectAbi(boolean doesNotAffectAbi) {
     getArgForPopulating().setDoesNotAffectAbi(doesNotAffectAbi);
-    return this;
   }
 
   public JavaAnnotationProcessorBuilder addProcessorClass(String processorClass) {

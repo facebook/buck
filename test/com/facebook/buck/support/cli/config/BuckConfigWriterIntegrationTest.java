@@ -42,7 +42,7 @@ public class BuckConfigWriterIntegrationTest {
 
   @Test
   @Parameters({"query", "build"})
-  public void writesConfigToDiskOnCommand(String command) throws IOException, InterruptedException {
+  public void writesConfigToDiskOnCommand(String command) throws IOException {
 
     ProjectWorkspace workspace = TestDataHelper.createProjectWorkspaceForScenario(this, "log", tmp);
     workspace.setUp();

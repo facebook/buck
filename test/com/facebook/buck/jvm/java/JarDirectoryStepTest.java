@@ -321,7 +321,7 @@ public class JarDirectoryStepTest {
   }
 
   @Test
-  public void shouldSortManifestAttributesAndEntries() throws InterruptedException, IOException {
+  public void shouldSortManifestAttributesAndEntries() throws IOException {
     Manifest fromJar =
         createManifestWithExampleSection(ImmutableMap.of("foo", "bar", "baz", "waz"));
     Manifest fromUser =
@@ -540,8 +540,7 @@ public class JarDirectoryStepTest {
   }
 
   private Manifest jarDirectoryAndReadManifest(
-      Manifest fromJar, Manifest fromUser, boolean mergeEntries)
-      throws InterruptedException, IOException {
+      Manifest fromJar, Manifest fromUser, boolean mergeEntries) throws IOException {
     byte[] contents = jarDirectoryAndReadManifestContents(fromJar, fromUser, mergeEntries);
     return new Manifest(new ByteArrayInputStream(contents));
   }

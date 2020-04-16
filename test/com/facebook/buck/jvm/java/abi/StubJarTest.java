@@ -6039,8 +6039,7 @@ public class StubJarTest {
   }
 
   @Test
-  public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles()
-      throws InterruptedException, IOException {
+  public void stubJarIsEquallyAtHomeWalkingADirectoryOfClassFiles() throws IOException {
     Path fullJarPath =
         compileToJar(
             EMPTY_CLASSPATH,

@@ -1352,11 +1352,10 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     return ImmutableList.copyOf(allFiles);
   }
 
-  private ProjectWorkspace setUpProjectWorkspaceForScenario(String scenario) throws IOException {
+  private void setUpProjectWorkspaceForScenario(String scenario) throws IOException {
     workspace = TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmp);
     workspace.setUp();
     setWorkspaceCompilationMode(workspace);
-    return workspace;
   }
 
   private Path setUpACrossCell(String cellName, Path crossCellContents) throws IOException {

@@ -95,7 +95,7 @@ public class ResourceTableTest {
       Path resourcesOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources"));
 
       // We don't care about dumping the correct config string.
-      Pattern re = Pattern.compile("      config.*:");
+      Pattern re = Pattern.compile(" {6}config.*:");
       String expected =
           Joiner.on("\n")
               .join(
@@ -125,7 +125,7 @@ public class ResourceTableTest {
           filesystem.resolve(filesystem.getPath(APK_NAME + ".resources.reversed"));
 
       // We don't care about dumping the correct config string.
-      Pattern re = Pattern.compile("      config.*:");
+      Pattern re = Pattern.compile(" {6}config.*:");
       String expected =
           Joiner.on("\n")
               .join(
@@ -155,7 +155,7 @@ public class ResourceTableTest {
       Path resourcesOutput = filesystem.resolve(filesystem.getPath(APK_NAME + ".resources"));
 
       // We don't care about dumping the correct config string.
-      Pattern re = Pattern.compile("      config.*:");
+      Pattern re = Pattern.compile(" {6}config.*:");
       String expected =
           Joiner.on("\n")
               .join(

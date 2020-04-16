@@ -320,7 +320,7 @@ public class AndroidBinaryRDotJavaIntegrationTest {
     workspace.runBuckBuild("//apps/sample:app_with_aapt2").assertFailure();
   }
 
-  private Path buildApk(String target) throws IOException {
+  private Path buildApk(String target) {
     ImmutableMap<String, Path> outputs = workspace.buildMultipleAndReturnOutputs(target);
     return outputs.get(target);
   }

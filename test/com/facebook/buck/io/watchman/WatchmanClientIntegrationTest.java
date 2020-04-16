@@ -16,6 +16,8 @@
 
 package com.facebook.buck.io.watchman;
 
+import static org.junit.Assert.assertTrue;
+
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -92,14 +94,14 @@ public class WatchmanClientIntegrationTest {
                 WatchmanFactory.REQUIRED_CAPABILITIES,
                 "optional",
                 WatchmanFactory.ALL_CAPABILITIES.keySet()));
-    Assert.assertTrue(versionResponse.isPresent());
+    assertTrue(versionResponse.isPresent());
 
     Path rootPath = workspace.getDestPath();
 
     Optional<? extends Map<String, ?>> watch =
         client.queryWithTimeout(timeoutNanos, "watch-project", rootPath.toString());
 
-    Assert.assertNotNull(watch.isPresent());
+    assertTrue(watch.isPresent());
 
     Map<String, ?> map = watch.get();
     String watchRoot = (String) map.get("watch");
@@ -113,7 +115,7 @@ public class WatchmanClientIntegrationTest {
                 "glob", ImmutableList.of("**/X"),
                 "fields", ImmutableList.of("name")));
 
-    Assert.assertTrue(queryResponse.isPresent());
+    assertTrue(queryResponse.isPresent());
 
     Set<?> actualFileSet = ImmutableSet.copyOf((List<?>) queryResponse.get().get("files"));
     Set<?> expectedFileSet = ImmutableSet.of("X", "f1/X", "f2/X");

@@ -122,7 +122,7 @@ public class DepsComputingVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void outputLabel() throws Exception {
+  public void outputLabel() {
     apply(new WithOutputLabel());
   }
 

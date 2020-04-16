@@ -131,8 +131,8 @@ public class CommandAliasBuilder
     return this;
   }
 
-  public CommandAliasBuilder addTarget(BuildTarget target) {
-    return addTarget(
+  public void addTarget(BuildTarget target) {
+    addTarget(
         GenruleBuilder.newGenruleBuilder(target, filesystem).setOut("arbitrary-file").build());
   }
 
@@ -153,9 +153,8 @@ public class CommandAliasBuilder
         cellRoots);
   }
 
-  public BuildTarget addBuildRule(BuildTarget target) {
+  public void addBuildRule(BuildTarget target) {
     nodes.add(GenruleBuilder.newGenruleBuilder(target, filesystem).setOut("out").build());
-    return target;
   }
 
   public static class BuildResult {

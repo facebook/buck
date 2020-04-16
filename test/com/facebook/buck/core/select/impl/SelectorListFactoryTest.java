@@ -29,7 +29,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
-import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
@@ -53,8 +52,7 @@ public class SelectorListFactoryTest {
   }
 
   @Test
-  public void testCreateThrowsWhenConcatenationNotSupportedWithMultipleElements()
-      throws CoerceFailedException {
+  public void testCreateThrowsWhenConcatenationNotSupportedWithMultipleElements() {
     try {
       selectorListFactory.create(
           TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
@@ -69,8 +67,7 @@ public class SelectorListFactoryTest {
   }
 
   @Test
-  public void testCreateUsesSingleElementWhenConcatenationNotSupported()
-      throws CoerceFailedException {
+  public void testCreateUsesSingleElementWhenConcatenationNotSupported() {
     String flavorName = "test";
     SelectorList<Object> selectors =
         selectorListFactory.create(
@@ -82,7 +79,7 @@ public class SelectorListFactoryTest {
   }
 
   @Test
-  public void testCreateAcceptsEmptyList() throws CoerceFailedException {
+  public void testCreateAcceptsEmptyList() {
     SelectorList<Object> selectors =
         selectorListFactory.create(
             TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
@@ -93,7 +90,7 @@ public class SelectorListFactoryTest {
   }
 
   @Test
-  public void testCreateAcceptsMultipleElements() throws CoerceFailedException {
+  public void testCreateAcceptsMultipleElements() {
     String flavorName1 = "test1";
     String flavorName2 = "test2";
     SelectorList<Object> selectors =
@@ -113,8 +110,7 @@ public class SelectorListFactoryTest {
   }
 
   @Test
-  public void testCreateAcceptsMultipleElementsIncludingSelectorValue()
-      throws CoerceFailedException {
+  public void testCreateAcceptsMultipleElementsIncludingSelectorValue() {
     String flavorName1 = "test1";
     String flavorName2 = "test2";
     String message = "message about incorrect conditions";

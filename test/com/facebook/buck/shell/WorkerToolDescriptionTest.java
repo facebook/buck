@@ -154,8 +154,8 @@ public class WorkerToolDescriptionTest {
         .getBuildTarget();
   }
 
-  private static WorkerTool createWorkerTool(Consumer<WorkerToolDescriptionArg.Builder> setArgs) {
-    return createWorkerTool(setArgs, getShBinaryBuildTarget);
+  private static void createWorkerTool(Consumer<Builder> setArgs) {
+    createWorkerTool(setArgs, getShBinaryBuildTarget);
   }
 
   private static WorkerTool createWorkerTool(

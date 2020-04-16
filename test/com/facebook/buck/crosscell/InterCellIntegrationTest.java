@@ -83,7 +83,6 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -414,10 +413,6 @@ public class InterCellIntegrationTest {
             .build(),
         ImmutableSet.of(namedTarget));
   }
-
-  @Test
-  @Ignore
-  public void allOutputsShouldBePlacedInTheSameRootOutputFolder() {}
 
   @Test
   public void circularCellReferencesAreAllowed() throws IOException {

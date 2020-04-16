@@ -49,7 +49,6 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -107,7 +106,7 @@ public class ListCommandLineArgsTest {
   }
 
   @Test
-  public void formatsStrings() throws EvalException {
+  public void formatsStrings() {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
 
     Artifact path1 = SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("some_bin")));
@@ -158,7 +157,7 @@ public class ListCommandLineArgsTest {
   }
 
   @Test
-  public void ruleKeyChangesOnChanges() throws IOException, EvalException {
+  public void ruleKeyChangesOnChanges() {
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();

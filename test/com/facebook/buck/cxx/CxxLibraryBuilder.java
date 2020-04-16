@@ -183,9 +183,8 @@ public class CxxLibraryBuilder
     return this;
   }
 
-  public CxxLibraryBuilder setSupportedPlatformsRegex(Pattern regex) {
+  public void setSupportedPlatformsRegex(Pattern regex) {
     getArgForPopulating().setSupportedPlatformsRegex(Optional.of(regex));
-    return this;
   }
 
   public CxxLibraryBuilder setExportedDeps(ImmutableSortedSet<BuildTarget> exportedDeps) {

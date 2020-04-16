@@ -42,7 +42,7 @@ public class CxxLinkGroupMapDatabaseIntegrationTest {
   private ProjectWorkspace workspace;
 
   @Before
-  public void setupWorkspace() throws IOException {
+  public void setupWorkspace() {
     Platform platform = Platform.detect();
     Assume.assumeTrue(platform == Platform.MACOS);
   }

@@ -29,7 +29,6 @@ import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
-import org.openjdk.jmh.runner.RunnerException;
 
 @State(Scope.Benchmark)
 @Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
@@ -54,7 +53,7 @@ public class FasterPatternBenchmark {
     return fasterPattern.matches(fileName);
   }
 
-  public static void main(String[] args) throws IOException, RunnerException {
+  public static void main(String[] args) throws IOException {
     Main.main(new String[] {FasterPatternBenchmark.class.getName()});
   }
 }

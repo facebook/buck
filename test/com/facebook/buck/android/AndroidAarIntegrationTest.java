@@ -57,7 +57,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testBuildAndroidAar() throws InterruptedException, IOException {
+  public void testBuildAndroidAar() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_aar_build/caseA", tmp);
     workspace.setUp();
@@ -92,7 +92,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testBuildAndroidAarWithDerivedDeps() throws InterruptedException, IOException {
+  public void testBuildAndroidAarWithDerivedDeps() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_aar_build/caseC", tmp);
     workspace.setUp();
@@ -127,7 +127,7 @@ public class AndroidAarIntegrationTest {
   }
 
   @Test
-  public void testBuildConfigNotIncludedInAarByDefault() throws InterruptedException, IOException {
+  public void testBuildConfigNotIncludedInAarByDefault() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();
@@ -159,8 +159,7 @@ public class AndroidAarIntegrationTest {
 
   @Test
   public void testBuildConfigValuesTakenFromAarRule()
-      throws ClassNotFoundException, IllegalAccessException, InterruptedException, IOException,
-          NoSuchFieldException {
+      throws ClassNotFoundException, IllegalAccessException, IOException, NoSuchFieldException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "android_project", tmp);
     workspace.setUp();

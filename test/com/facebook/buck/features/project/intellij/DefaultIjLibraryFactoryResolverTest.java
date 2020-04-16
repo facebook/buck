@@ -44,7 +44,7 @@ public class DefaultIjLibraryFactoryResolverTest {
   private FakeProjectFilesystem filesystem;
 
   @Before
-  public void setUp() throws Exception {
+  public void setUp() {
     filesystem = new FakeProjectFilesystem();
     noSrc = JavaLibraryBuilder.createBuilder("//java:foo").build(filesystem);
     withSrc =

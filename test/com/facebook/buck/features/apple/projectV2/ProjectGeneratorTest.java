@@ -178,7 +178,7 @@ public class ProjectGeneratorTest {
   private AbsPath rootPath;
 
   @Before
-  public void setUp() throws IOException, InterruptedException {
+  public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     clock = SettableFakeClock.DO_NOT_CARE;
     projectFilesystem = new FakeProjectFilesystem(clock);
@@ -1630,7 +1630,7 @@ public class ProjectGeneratorTest {
   }
 
   private void assertThatHeaderSymlinkTreeContains(Path root, ImmutableMap<String, String> content)
-      throws IOException, InterruptedException {
+      throws IOException {
     // Read the tree's header map.
     byte[] headerMapBytes;
     try (InputStream headerMapInputStream =
@@ -1655,7 +1655,7 @@ public class ProjectGeneratorTest {
     }
   }
 
-  private HeaderMap getHeaderMapInDir(Path root) throws IOException, InterruptedException {
+  private HeaderMap getHeaderMapInDir(Path root) throws IOException {
     // Read the tree's header map.
     byte[] headerMapBytes;
     try (InputStream headerMapInputStream =

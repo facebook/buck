@@ -371,7 +371,7 @@ public class HybridLocalStrategyTest {
     // hybrid local has a race, it's difficult to write a test that identifies it with no flakiness
     // (though this test was failing in 100/100 tests on a particular race).
     ResourceAmounts resourceAmounts = ResourceAmounts.of(8, 1, 0, 0);
-    ListeningExecutorService service =
+    WeightedListeningExecutorService service =
         new WeightedListeningExecutorService(
             new ListeningMultiSemaphore(resourceAmounts, ResourceAllocationFairness.FAST),
             ResourceAmounts.zero(),
@@ -430,8 +430,7 @@ public class HybridLocalStrategyTest {
 
                 @Override
                 public ListeningExecutorService getExecutorService() {
-                  return ((WeightedListeningExecutorService) service)
-                      .withDefaultAmounts(ResourceAmounts.of(0, 1, 0, 0));
+                  return service.withDefaultAmounts(ResourceAmounts.of(0, 1, 0, 0));
                 }
               };
           if (delegateScheduled.get() >= 80 && i >= 200) {

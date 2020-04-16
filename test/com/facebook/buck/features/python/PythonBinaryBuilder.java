@@ -184,9 +184,8 @@ public class PythonBinaryBuilder
     return this;
   }
 
-  public PythonBinaryBuilder setPreloadDeps(ImmutableSet<BuildTarget> deps) {
+  public void setPreloadDeps(ImmutableSet<BuildTarget> deps) {
     getArgForPopulating().setPreloadDeps(deps);
-    return this;
   }
 
   public PythonBinaryBuilder setPlatform(String platform) {
@@ -204,8 +203,7 @@ public class PythonBinaryBuilder
     return this;
   }
 
-  public PythonBinaryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
+  public void setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {
     getArgForPopulating().setLinkerFlags(linkerFlags);
-    return this;
   }
 }

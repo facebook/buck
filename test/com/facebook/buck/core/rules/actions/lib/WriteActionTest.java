@@ -32,7 +32,6 @@ import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -56,7 +55,7 @@ public class WriteActionTest {
   }
 
   @Test
-  public void writesContentsToFile() throws ActionCreationException, IOException, EvalException {
+  public void writesContentsToFile() throws ActionCreationException, IOException {
 
     Artifact output1 = runner.declareArtifact(Paths.get("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("bar2"));
@@ -89,7 +88,7 @@ public class WriteActionTest {
   }
 
   @Test
-  public void writesCommandLineArgumentsToFile() throws IOException, EvalException {
+  public void writesCommandLineArgumentsToFile() throws IOException {
     Artifact output1 = runner.declareArtifact(Paths.get("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("bar2"));
     Artifact input = runner.declareArtifact(Paths.get("bar3"));
@@ -141,8 +140,7 @@ public class WriteActionTest {
   }
 
   @Test
-  public void writesContentsToNestedFile()
-      throws ActionCreationException, IOException, EvalException {
+  public void writesContentsToNestedFile() throws ActionCreationException, IOException {
     Artifact output1 = runner.declareArtifact(Paths.get("foo").resolve("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("foo").resolve("bar2"));
     ImmutableSortedSet<OutputArtifact> outputs =
@@ -174,7 +172,7 @@ public class WriteActionTest {
   }
 
   @Test
-  public void setsFileExecutable() throws ActionCreationException, IOException, EvalException {
+  public void setsFileExecutable() throws ActionCreationException, IOException {
     Artifact output1 = runner.declareArtifact(Paths.get("foo").resolve("bar1"));
     Artifact output2 = runner.declareArtifact(Paths.get("foo").resolve("bar2"));
     ImmutableSortedSet<OutputArtifact> outputs =

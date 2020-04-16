@@ -439,7 +439,7 @@ public class PythonBinaryIntegrationTest {
   }
 
   @Test
-  public void inplaceFailsWhenPrebuiltLibraryConflictsWithOtherInitPy() throws IOException {
+  public void inplaceFailsWhenPrebuiltLibraryConflictsWithOtherInitPy() {
     assumeThat(packageStyle, is(PackageStyle.INPLACE));
 
     assertThat(
@@ -454,7 +454,7 @@ public class PythonBinaryIntegrationTest {
   }
 
   @Test
-  public void inplaceFailsWhenTwoPrebuiltLibrariesConflictWithInitPy() throws IOException {
+  public void inplaceFailsWhenTwoPrebuiltLibrariesConflictWithInitPy() {
     assumeThat(packageStyle, is(PackageStyle.INPLACE));
 
     // Iteration order on whls not guaranteed, but we want to make sure it's the whls conflicting

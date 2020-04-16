@@ -125,19 +125,16 @@ public class HalideLibraryBuilder
             .build());
   }
 
-  public HalideLibraryBuilder setSupportedPlatformsRegex(Pattern supportedPlatformsRegex) {
+  public void setSupportedPlatformsRegex(Pattern supportedPlatformsRegex) {
     getArgForPopulating().setSupportedPlatformsRegex(Optional.of(supportedPlatformsRegex));
-    return this;
   }
 
-  public HalideLibraryBuilder setCompilerInvocationFlags(ImmutableList<String> flags) {
+  public void setCompilerInvocationFlags(ImmutableList<String> flags) {
     getArgForPopulating().setCompilerInvocationFlags(flags);
-    return this;
   }
 
-  public HalideLibraryBuilder setFunctionNameOverride(String functionName) {
+  public void setFunctionNameOverride(String functionName) {
     getArgForPopulating().setFunctionName(Optional.of(functionName));
-    return this;
   }
 
   public HalideLibraryBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {

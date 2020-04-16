@@ -103,9 +103,8 @@ public class CxxBinaryBuilder
     return this;
   }
 
-  public CxxBinaryBuilder setDefaultPlatform(Flavor flavor) {
+  public void setDefaultPlatform(Flavor flavor) {
     getArgForPopulating().setDefaultPlatform(Optional.of(flavor));
-    return this;
   }
 
   public CxxBinaryBuilder setSrcs(ImmutableSortedSet<SourceWithFlags> srcs) {
@@ -128,9 +127,8 @@ public class CxxBinaryBuilder
     return this;
   }
 
-  public CxxBinaryBuilder setExecutableName(Optional<String> execName) {
+  public void setExecutableName(Optional<String> execName) {
     getArgForPopulating().setExecutableName(execName);
-    return this;
   }
 
   public CxxBinaryBuilder setLinkerFlags(ImmutableList<StringWithMacros> linkerFlags) {

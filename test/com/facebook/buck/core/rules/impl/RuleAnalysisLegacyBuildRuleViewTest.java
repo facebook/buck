@@ -322,11 +322,11 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
             OutputLabel.of("setOne"), OutputLabel.of("setTwo"), OutputLabel.defaultLabel()));
   }
 
-  private static FakeAction createFakeAction(
+  private static void createFakeAction(
       ActionRegistry actionRegistry,
       ImmutableSortedSet<Artifact> deps,
       ImmutableSortedSet<Artifact> outputs) {
-    return createFakeAction(
+    createFakeAction(
         actionRegistry,
         deps,
         outputs,

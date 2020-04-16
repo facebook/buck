@@ -687,7 +687,7 @@ public class PythonBinaryDescriptionTest {
   }
 
   @Test
-  public void linkerFlagsUsingMergedNativeLinkStrategy() throws IOException {
+  public void linkerFlagsUsingMergedNativeLinkStrategy() {
     CxxLibraryBuilder cxxDepBuilder =
         new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep"))
             .setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("dep.c"))));

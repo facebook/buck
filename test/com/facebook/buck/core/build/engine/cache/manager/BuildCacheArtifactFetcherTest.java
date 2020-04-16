@@ -42,7 +42,7 @@ public class BuildCacheArtifactFetcherTest {
           null);
 
   @Test
-  public void testConvertErrorToSoftErrorListenableFutureCacheResultError() throws Exception {
+  public void testConvertErrorToSoftErrorListenableFutureCacheResultError() {
     CacheResult expected = CacheResult.error("test", ArtifactCacheMode.unknown, "Cache poisoning");
     ListenableFuture<CacheResult> cacheResultListenableFuture =
         FAKE_FETCHER.convertErrorToSoftError(Futures.immediateFuture(expected), RULE_KEY);
@@ -51,7 +51,7 @@ public class BuildCacheArtifactFetcherTest {
   }
 
   @Test
-  public void testConvertErrorToSoftErrorListenableFutureHasIOException() throws Exception {
+  public void testConvertErrorToSoftErrorListenableFutureHasIOException() {
     ListenableFuture<CacheResult> cacheResultListenableFuture =
         FAKE_FETCHER.convertErrorToSoftError(
             Futures.immediateFailedFuture(new IOException()), RULE_KEY);
@@ -60,7 +60,7 @@ public class BuildCacheArtifactFetcherTest {
   }
 
   @Test
-  public void testConvertErrorToSoftErrorListenableFutureCacheHit() throws Exception {
+  public void testConvertErrorToSoftErrorListenableFutureCacheHit() {
     CacheResult expected = CacheResult.hit("test", ArtifactCacheMode.unknown);
     ListenableFuture<CacheResult> cacheResultListenableFuture =
         FAKE_FETCHER.convertErrorToSoftError(Futures.immediateFuture(expected), RULE_KEY);

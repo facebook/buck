@@ -73,16 +73,16 @@ public class ProcessResult {
     return assertExitCode(null, ExitCode.BUILD_ERROR);
   }
 
-  public ProcessResult assertTestFailure() {
-    return assertExitCode(null, ExitCode.TEST_ERROR);
+  public void assertTestFailure() {
+    assertExitCode(null, ExitCode.TEST_ERROR);
   }
 
-  public ProcessResult assertTestFailure(String message) {
-    return assertExitCode(message, ExitCode.TEST_ERROR);
+  public void assertTestFailure(String message) {
+    assertExitCode(message, ExitCode.TEST_ERROR);
   }
 
-  public ProcessResult assertFailure(String message) {
-    return assertExitCode(message, ExitCode.BUILD_ERROR);
+  public void assertFailure(String message) {
+    assertExitCode(message, ExitCode.BUILD_ERROR);
   }
 
   public ProcessResult assertExitCode(ExitCode exitCode) {
@@ -115,7 +115,7 @@ public class ProcessResult {
     return this;
   }
 
-  public ProcessResult assertSpecialExitCode(String message, ExitCode exitCode) {
-    return assertExitCode(message, exitCode);
+  public void assertSpecialExitCode(String message, ExitCode exitCode) {
+    assertExitCode(message, exitCode);
   }
 }

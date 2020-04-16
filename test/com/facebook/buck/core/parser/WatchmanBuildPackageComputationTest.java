@@ -249,7 +249,6 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
   @FunctionalInterface
   interface QueryWithTimeoutFunction {
-    Optional<? extends Map<String, ?>> apply(long timeoutNanos, Object... query)
-        throws IOException, InterruptedException;
+    Optional<? extends Map<String, ?>> apply(long timeoutNanos, Object... query);
   }
 }

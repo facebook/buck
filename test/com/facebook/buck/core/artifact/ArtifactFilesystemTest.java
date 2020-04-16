@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.syntax.EvalException;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -146,7 +145,7 @@ public class ArtifactFilesystemTest {
   }
 
   @Test
-  public void createsPackagePathsForOutputs() throws IOException, EvalException {
+  public void createsPackagePathsForOutputs() throws IOException {
     ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     BuildArtifactFactory factory = new BuildArtifactFactory(buildTarget, filesystem);
@@ -168,7 +167,7 @@ public class ArtifactFilesystemTest {
   }
 
   @Test
-  public void deletesBuildArtifactsForOutputs() throws IOException, EvalException {
+  public void deletesBuildArtifactsForOutputs() throws IOException {
     ArtifactFilesystem artifactFilesystem = new ArtifactFilesystem(filesystem);
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar");
 

@@ -319,8 +319,7 @@ public class UnconfiguredSelectorListResolverTest {
   }
 
   @Test
-  public void testResolvingListWithNoMatchesThrowsExceptionWithCustomMessage()
-      throws CoerceFailedException {
+  public void testResolvingListWithNoMatchesThrowsExceptionWithCustomMessage() {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     ListTypeCoercer<Flavor, Flavor> flavorListTypeCoercer = flavorListTypeCoercer();

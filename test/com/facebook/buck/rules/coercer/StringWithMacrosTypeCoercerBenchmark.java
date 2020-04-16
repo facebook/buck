@@ -31,7 +31,6 @@ import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
-import org.openjdk.jmh.runner.RunnerException;
 
 @State(Scope.Benchmark)
 @OutputTimeUnit(TimeUnit.NANOSECONDS)
@@ -50,7 +49,7 @@ public class StringWithMacrosTypeCoercerBenchmark {
     return coercer.coerceToUnconfigured(cellNameResolver, filesystem, basePath, "foo/bar/baz");
   }
 
-  public static void main(String[] args) throws IOException, RunnerException {
+  public static void main(String[] args) throws IOException {
     Main.main(new String[] {StringWithMacrosTypeCoercerBenchmark.class.getName()});
   }
 }

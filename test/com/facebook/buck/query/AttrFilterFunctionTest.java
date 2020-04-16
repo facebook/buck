@@ -92,7 +92,7 @@ public class AttrFilterFunctionTest {
     public TargetEvaluator getTargetEvaluator() {
       return new TargetEvaluator() {
         @Override
-        public Set<QueryTarget> evaluateTarget(String target) throws QueryException {
+        public Set<QueryTarget> evaluateTarget(String target) {
           if (target.equals(onlyTarget.toString())) {
             return Collections.singleton(onlyTarget);
           }
@@ -108,7 +108,7 @@ public class AttrFilterFunctionTest {
 
     @Override
     public Set<Object> filterAttributeContents(
-        QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException {
+        QueryTarget target, String attribute, Predicate<Object> predicate) {
 
       if (target == onlyTarget && attribute.equals(this.attributeName)) {
         if (predicate.test(attributeValue)) {

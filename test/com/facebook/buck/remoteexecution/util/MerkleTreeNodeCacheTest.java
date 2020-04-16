@@ -169,7 +169,7 @@ public class MerkleTreeNodeCacheTest {
     node.forAllFiles((path, n) -> filePaths.add(path));
 
     Set<Path> expectedPaths = new HashSet<>();
-    filesSupplier.get().keySet().forEach(expectedPaths::add);
+    expectedPaths.addAll(filesSupplier.get().keySet());
     assertEquals(expectedPaths, filePaths);
 
     Map<Digest, NodeData> dataMap = new HashMap<>();

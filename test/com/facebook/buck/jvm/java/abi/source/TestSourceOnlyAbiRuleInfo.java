@@ -36,14 +36,12 @@ public class TestSourceOnlyAbiRuleInfo implements SourceOnlyAbiRuleInfo {
     this.ruleName = ruleName;
   }
 
-  public TestSourceOnlyAbiRuleInfo addElementOwner(String qualifiedName, String owningRule) {
+  public void addElementOwner(String qualifiedName, String owningRule) {
     owningRules.put(qualifiedName, owningRule);
-    return this;
   }
 
-  public TestSourceOnlyAbiRuleInfo addAvailableRule(String ruleName) {
+  public void addAvailableRule(String ruleName) {
     rulesAvailableForSourceOnlyAbi.add(ruleName);
-    return this;
   }
 
   @Override

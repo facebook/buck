@@ -87,7 +87,7 @@ public class OutputPathVisitorTest extends AbstractValueVisitorTest {
 
   @Override
   @Test
-  public void outputLabel() throws Exception {
+  public void outputLabel() {
     MoreAsserts.assertIterablesEquals(ImmutableList.of(), getOutputs(new WithOutputLabel()));
   }
 

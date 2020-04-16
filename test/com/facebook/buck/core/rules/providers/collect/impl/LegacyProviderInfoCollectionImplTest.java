@@ -67,7 +67,7 @@ public class LegacyProviderInfoCollectionImplTest {
   }
 
   @Test
-  public void getDefaultInfoThrows() throws Exception {
+  public void getDefaultInfoThrows() {
     expectedException.expect(IllegalStateException.class);
 
     ProviderInfoCollection providerInfoCollection = LegacyProviderInfoCollectionImpl.of();
