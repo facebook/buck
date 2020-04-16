@@ -201,6 +201,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
 
   @Option(
       name = GlobalCliOptions.ONCALL_ARG,
+      aliases = {"-O"},
       usage = "Oncall(s) responsible for this particular invocation of Buck",
       handler = StringSetOptionHandler.class)
   private Supplier<ImmutableSet<String>> oncalls = Suppliers.ofInstance(ImmutableSet.of());
