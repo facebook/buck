@@ -156,6 +156,28 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void basicMultiQueryAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "%s",
+            "--target-universe",
+            "//bin:mac-bin",
+            "--output-attribute",
+            "buck.type",
+            "--output-attribute",
+            "srcs",
+            "//bin/...",
+            "//lib/...");
+    assertJSONOutputMatchesFileContents(
+        "stdout-basic-multi-query-attribute-printing.json", result, workspace);
+  }
+
+  @Test
   public void configFunctionConfiguresTargetForSpecificPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);

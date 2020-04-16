@@ -152,8 +152,12 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       PrintStream printStream)
       throws QueryException, IOException {
     if (shouldOutputAttributes()) {
-      // TODO(srice) Change this
-      throw new QueryException("cquery does not yet support printing attributes");
+      // NOTE: This is what the old `buck query` did. If you provide a multiquery and ask Buck to
+      // output attributes we just combine all the query results together and print it like it was
+      // all one query. Does it make sense? Maybe.
+      ImmutableSet<QueryTarget> combinedResults = ImmutableSet.copyOf(queryResultMap.values());
+      printJsonOutput(
+          combinedResults, collectAttributes(params, env, combinedResults), printStream);
     } else if (outputFormat == OutputFormat.LIST) {
       printListOutput(queryResultMap, printStream);
     } else if (outputFormat == OutputFormat.JSON) {
