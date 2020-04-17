@@ -429,13 +429,11 @@ public class ParserIntegrationTest {
   }
 
   @Test
-  public void testDisablingImplicitNativeRules() throws Exception {
+  public void testDisablingImplicitNativeRulesPythonDsl() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "disable_implicit_native_rules", temporaryFolder);
     workspace.setUp();
-
-    // Python interpreter, true / false / default for disabling implicit native rules
 
     assertParseFailedWithSubstrings(
         workspace.runBuckBuild(
@@ -488,8 +486,15 @@ public class ParserIntegrationTest {
     workspace.runBuckBuild("//python/implicit_in_build_file:main").assertSuccess();
     workspace.runBuckBuild("//python/implicit_in_extension_bzl:main").assertSuccess();
     workspace.runBuckBuild("//python/native_in_extension_bzl:main").assertSuccess();
+  }
 
-    // Skylark interpreter, true / false / default for disabling implicit native rules
+  @Test
+  public void testDisablingImplicitNativeRulesStarlark() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "disable_implicit_native_rules", temporaryFolder);
+    workspace.setUp();
+
     // TODO: Specific error messages are disabled until we hook up the skylark parser to the
     // general buck event bus, since that's how we get messages in integration tests (and how
     // the python parser is hooked up)
