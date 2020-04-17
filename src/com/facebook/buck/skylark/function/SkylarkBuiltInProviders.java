@@ -30,7 +30,7 @@ public class SkylarkBuiltInProviders {
   private SkylarkBuiltInProviders() {}
 
   /** Mapping of Skylark names -> provider methods to use */
-  public static ImmutableMap<String, Provider<?>> PROVIDERS = getProviders();
+  public static final ImmutableMap<String, Provider<?>> PROVIDERS = getProviders();
 
   private static ImmutableMap<String, Provider<?>> getProviders() {
     return Stream.of(DefaultInfo.PROVIDER, RunInfo.PROVIDER, TestInfo.PROVIDER)
