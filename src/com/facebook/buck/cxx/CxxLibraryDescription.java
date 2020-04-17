@@ -49,6 +49,7 @@ import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.util.stream.RichStream;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.Version;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.collect.ImmutableCollection;
@@ -547,7 +548,7 @@ public class CxxLibraryDescription
   }
 
   @RuleArg
-  interface AbstractCxxLibraryDescriptionArg extends CommonArg {
+  interface AbstractCxxLibraryDescriptionArg extends CommonArg, HasVersionUniverse {
     /** Whether the library should be included in merge map codegen. */
     @Value.Default
     default boolean getIncludeInAndroidMergeMapOutput() {

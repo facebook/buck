@@ -64,6 +64,7 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.base.Throwables;
 import com.google.common.cache.Cache;
@@ -413,7 +414,7 @@ public class CxxLuaExtensionDescription
   }
 
   @RuleArg
-  interface AbstractCxxLuaExtensionDescriptionArg extends CxxConstructorArg {
+  interface AbstractCxxLuaExtensionDescriptionArg extends CxxConstructorArg, HasVersionUniverse {
     Optional<String> getBaseModule();
   }
 }
