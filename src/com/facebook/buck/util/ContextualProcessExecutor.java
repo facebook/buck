@@ -23,45 +23,37 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
-public class ContextualProcessExecutor implements ProcessExecutor {
+/** ProcessExecutor with an additional context */
+public class ContextualProcessExecutor extends DelegateProcessExecutor {
 
-  private final ProcessExecutor delegate;
   private final ImmutableMap<String, String> context;
 
   public ContextualProcessExecutor(ProcessExecutor delegate, ImmutableMap<String, String> context) {
-    this.delegate = delegate;
+    super(delegate);
     this.context = context;
-  }
-
-  public ImmutableMap<String, String> getContext() {
-    return context;
-  }
-
-  public ProcessExecutor getDelegate() {
-    return delegate;
   }
 
   @Override
   public LaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException {
-    return delegate.launchProcess(params, context);
+    return getDelegate().launchProcess(params, context);
   }
 
   @Override
   public LaunchedProcess launchProcess(
       ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
-    return delegate.launchProcess(params, MoreMaps.merge(this.context, context));
+    return getDelegate().launchProcess(params, MoreMaps.merge(this.context, context));
   }
 
   @Override
   public Result launchAndExecute(ProcessExecutorParams params)
       throws InterruptedException, IOException {
-    return delegate.launchAndExecute(params, context);
+    return getDelegate().launchAndExecute(params, context);
   }
 
   @Override
   public Result launchAndExecute(ProcessExecutorParams params, ImmutableMap<String, String> context)
       throws InterruptedException, IOException {
-    return delegate.launchAndExecute(params, MoreMaps.merge(this.context, context));
+    return getDelegate().launchAndExecute(params, MoreMaps.merge(this.context, context));
   }
 
   @Override
@@ -72,7 +64,8 @@ public class ContextualProcessExecutor implements ProcessExecutor {
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException, IOException {
-    return delegate.launchAndExecute(params, context, options, stdin, timeOutMs, timeOutHandler);
+    return getDelegate()
+        .launchAndExecute(params, context, options, stdin, timeOutMs, timeOutHandler);
   }
 
   @Override
@@ -84,43 +77,20 @@ public class ContextualProcessExecutor implements ProcessExecutor {
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException, IOException {
-    return delegate.launchAndExecute(
-        params, MoreMaps.merge(this.context, context), options, stdin, timeOutMs, timeOutHandler);
-  }
-
-  @Override
-  public Result waitForLaunchedProcess(LaunchedProcess launchedProcess)
-      throws InterruptedException {
-    return delegate.waitForLaunchedProcess(launchedProcess);
-  }
-
-  @Override
-  public Result waitForLaunchedProcessWithTimeout(
-      LaunchedProcess launchedProcess, long millis, Optional<Consumer<Process>> timeOutHandler)
-      throws InterruptedException {
-    return delegate.waitForLaunchedProcessWithTimeout(launchedProcess, millis, timeOutHandler);
-  }
-
-  @Override
-  public Result execute(
-      LaunchedProcess launchedProcess,
-      Set<Option> options,
-      Optional<String> stdin,
-      Optional<Long> timeOutMs,
-      Optional<Consumer<Process>> timeOutHandler)
-      throws InterruptedException {
-    return delegate.execute(launchedProcess, options, stdin, timeOutMs, timeOutHandler);
-  }
-
-  @Override
-  public void destroyLaunchedProcess(LaunchedProcess launchedProcess) {
-    delegate.destroyLaunchedProcess(launchedProcess);
+    return getDelegate()
+        .launchAndExecute(
+            params,
+            MoreMaps.merge(this.context, context),
+            options,
+            stdin,
+            timeOutMs,
+            timeOutHandler);
   }
 
   @Override
   public ProcessExecutor cloneWithOutputStreams(
       PrintStream newStdOutStream, PrintStream newStdErrStream) {
     return new ContextualProcessExecutor(
-        delegate.cloneWithOutputStreams(newStdOutStream, newStdErrStream), context);
+        getDelegate().cloneWithOutputStreams(newStdOutStream, newStdErrStream), context);
   }
 }

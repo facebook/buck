@@ -56,6 +56,8 @@ PROCESS_EXECUTOR_SRCS = [
     "ConsoleParams.java",
     "ContextualProcessExecutor.java",
     "DefaultProcessExecutor.java",
+    "DelegateLaunchedProcess.java",
+    "DelegateProcessExecutor.java",
     "DirtyPrintStreamDecorator.java",
     "DuplicatingConsole.java",
     "ForwardingProcessListener.java",
