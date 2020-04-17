@@ -25,7 +25,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
-import com.facebook.buck.util.ProcessExecutor.LaunchedProcessImpl;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.ProcessHelper;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
@@ -373,8 +372,8 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
   }
 
   private int getLaunchedPid(LaunchedProcess launchedProcess) {
-    Preconditions.checkState(launchedProcess instanceof LaunchedProcessImpl);
-    Process p = ((LaunchedProcessImpl) launchedProcess).process;
+    Preconditions.checkState(launchedProcess instanceof DefaultProcessExecutor.LaunchedProcessImpl);
+    Process p = ((DefaultProcessExecutor.LaunchedProcessImpl) launchedProcess).process;
     return Math.toIntExact(processHelper.getPid(p));
   }
 

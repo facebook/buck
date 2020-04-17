@@ -17,25 +17,25 @@
 package com.facebook.buck.util;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.common.base.Predicates.not;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.core.util.log.Logger;
-import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Unit;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintStream;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -43,14 +43,6 @@ import java.util.function.Consumer;
 public class DefaultProcessExecutor implements ProcessExecutor {
 
   private static final Logger LOG = Logger.get(ProcessExecutor.class);
-  private static final ThreadPoolExecutor THREAD_POOL =
-      new ThreadPoolExecutor(
-          0,
-          Integer.MAX_VALUE,
-          1,
-          TimeUnit.SECONDS,
-          new SynchronousQueue<>(),
-          new MostExecutors.NamedThreadFactory("ProcessExecutor"));
 
   private final PrintStream stdOutStream;
   private final PrintStream stdErrStream;
@@ -71,6 +63,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
         ProcessRegistry.getInstance());
   }
 
+  @VisibleForTesting
   protected DefaultProcessExecutor(
       PrintStream stdOutStream,
       PrintStream stdErrStream,
@@ -92,52 +85,6 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   }
 
   @Override
-  public Result launchAndExecute(ProcessExecutorParams params)
-      throws InterruptedException, IOException {
-    return launchAndExecute(params, ImmutableMap.of());
-  }
-
-  @Override
-  public Result launchAndExecute(ProcessExecutorParams params, ImmutableMap<String, String> context)
-      throws InterruptedException, IOException {
-    return launchAndExecute(
-        params,
-        context,
-        ImmutableSet.of(),
-        /* stdin */ Optional.empty(),
-        /* timeOutMs */ Optional.empty(),
-        /* timeOutHandler */ Optional.empty());
-  }
-
-  @Override
-  public Result launchAndExecute(
-      ProcessExecutorParams params,
-      Set<Option> options,
-      Optional<String> stdin,
-      Optional<Long> timeOutMs,
-      Optional<Consumer<Process>> timeOutHandler)
-      throws InterruptedException, IOException {
-    return launchAndExecute(params, ImmutableMap.of(), options, stdin, timeOutMs, timeOutHandler);
-  }
-
-  @Override
-  public Result launchAndExecute(
-      ProcessExecutorParams params,
-      ImmutableMap<String, String> context,
-      Set<Option> options,
-      Optional<String> stdin,
-      Optional<Long> timeOutMs,
-      Optional<Consumer<Process>> timeOutHandler)
-      throws InterruptedException, IOException {
-    return execute(launchProcess(params, context), options, stdin, timeOutMs, timeOutHandler);
-  }
-
-  @Override
-  public LaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException {
-    return launchProcess(params, ImmutableMap.of());
-  }
-
-  @Override
   public LaunchedProcess launchProcess(
       ProcessExecutorParams params, ImmutableMap<String, String> context) throws IOException {
     ImmutableList<String> command = params.getCommand();
@@ -147,7 +94,9 @@ public class DefaultProcessExecutor implements ProcessExecutor {
      */
     if (Platform.detect() == Platform.WINDOWS) {
       command =
-          ImmutableList.copyOf(Iterables.transform(command, Escaper.CREATE_PROCESS_ESCAPER::apply));
+          command.stream()
+              .map(Escaper.CREATE_PROCESS_ESCAPER::apply)
+              .collect(ImmutableList.toImmutableList());
     }
     ProcessBuilder pb = new ProcessBuilder(command);
     if (params.getDirectory().isPresent()) {
@@ -241,6 +190,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
    *
    * @param timeOutHandler If present, this method will be called before the process is killed.
    */
+  @Override
   public Result execute(
       LaunchedProcess launchedProcess,
       Set<Option> options,
@@ -278,7 +228,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     Future<Unit> stdOutTerminationFuture = THREAD_POOL.submit(stdOut);
     Future<Unit> stdErrTerminationFuture = THREAD_POOL.submit(stdErr);
 
-    boolean timedOut = false;
+    boolean timedOut;
 
     // Block until the Process completes.
     try {
@@ -320,13 +270,24 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     // If the command has failed and we're not being explicitly quiet, ensure everything gets
     // printed.
     if (exitCode != 0 && !options.contains(Option.IS_SILENT)) {
-      if (!shouldPrintStdOut && !stdoutText.get().isEmpty()) {
-        LOG.verbose("Writing captured stdout text to stream: [%s]", stdoutText.get());
-        stdOutStream.print(stdoutText.get());
+      if (!shouldPrintStdOut) {
+        stdoutText
+            .filter(not(String::isEmpty))
+            .ifPresent(
+                text -> {
+                  LOG.verbose("Writing captured stdout text to stream: [%s]", text);
+                  stdOutStream.print(text);
+                });
       }
-      if (!shouldPrintStdErr && !stderrText.get().isEmpty()) {
-        LOG.verbose("Writing captured stderr text to stream: [%s]", stderrText.get());
-        stdErrStream.print(stderrText.get());
+
+      if (!shouldPrintStdErr) {
+        stderrText
+            .filter(not(String::isEmpty))
+            .ifPresent(
+                text -> {
+                  LOG.verbose("Writing captured stderr text to stream: [%s]", text);
+                  stdErrStream.print(text);
+                });
       }
     }
 
@@ -340,6 +301,47 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       return Optional.of(capturingPrintStream.getContentsAsString(UTF_8));
     } else {
       return Optional.empty();
+    }
+  }
+
+  /**
+   * Wraps a {@link Process} and exposes only its I/O streams, so callers have to pass it back to
+   * this class.
+   */
+  @VisibleForTesting
+  public class LaunchedProcessImpl implements LaunchedProcess {
+
+    public final Process process;
+    public final ImmutableList<String> command;
+
+    public LaunchedProcessImpl(Process process, List<String> command) {
+      this.process = process;
+      this.command = ImmutableList.copyOf(command);
+    }
+
+    @Override
+    public boolean isAlive() {
+      return process.isAlive();
+    }
+
+    @Override
+    public ImmutableList<String> getCommand() {
+      return command;
+    }
+
+    @Override
+    public OutputStream getStdin() {
+      return process.getOutputStream();
+    }
+
+    @Override
+    public InputStream getStdout() {
+      return process.getInputStream();
+    }
+
+    @Override
+    public InputStream getStderr() {
+      return process.getErrorStream();
     }
   }
 }

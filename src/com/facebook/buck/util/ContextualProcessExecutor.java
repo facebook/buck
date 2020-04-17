@@ -102,6 +102,17 @@ public class ContextualProcessExecutor implements ProcessExecutor {
   }
 
   @Override
+  public Result execute(
+      LaunchedProcess launchedProcess,
+      Set<Option> options,
+      Optional<String> stdin,
+      Optional<Long> timeOutMs,
+      Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException {
+    return delegate.execute(launchedProcess, options, stdin, timeOutMs, timeOutHandler);
+  }
+
+  @Override
   public void destroyLaunchedProcess(LaunchedProcess launchedProcess) {
     delegate.destroyLaunchedProcess(launchedProcess);
   }

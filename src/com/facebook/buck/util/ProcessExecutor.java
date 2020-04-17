@@ -16,28 +16,57 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.string.MoreStrings;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public interface ProcessExecutor {
+
+  ThreadPoolExecutor THREAD_POOL =
+      new ThreadPoolExecutor(
+          0,
+          Integer.MAX_VALUE,
+          1,
+          TimeUnit.SECONDS,
+          new SynchronousQueue<>(),
+          new MostExecutors.NamedThreadFactory("ProcessExecutor"));
+
   /**
    * Convenience method for {@link #launchAndExecute(ProcessExecutorParams, Set, Optional, Optional,
-   * Optional)} with boolean values set to {@code false} and optional values set to absent.
+   * Optional)} with context map set to empty map and optional values set to absent.
    */
-  Result launchAndExecute(ProcessExecutorParams params) throws InterruptedException, IOException;
+  default Result launchAndExecute(ProcessExecutorParams params)
+      throws InterruptedException, IOException {
+    return launchAndExecute(params, ImmutableMap.of());
+  }
 
-  Result launchAndExecute(ProcessExecutorParams params, ImmutableMap<String, String> context)
-      throws InterruptedException, IOException;
+  /**
+   * Convenience method for {@link #launchAndExecute(ProcessExecutorParams, ImmutableMap, Set,
+   * Optional, Optional, Optional)} with options set to empty set and optional values set to absent.
+   */
+  default Result launchAndExecute(
+      ProcessExecutorParams params, ImmutableMap<String, String> context)
+      throws InterruptedException, IOException {
+    return launchAndExecute(
+        params,
+        context,
+        ImmutableSet.of(),
+        /* stdin */ Optional.empty(),
+        /* timeOutMs */ Optional.empty(),
+        /* timeOutHandler */ Optional.empty());
+  }
 
   /**
    * Launches then executes a process with the specified {@code params}.
@@ -50,25 +79,31 @@ public interface ProcessExecutor {
    * will be written directly to the stderr passed to the constructor of this executor. Otherwise,
    * the stderr of the process will be made available via {@link Result#getStderr()}.
    */
-  Result launchAndExecute(
+  default Result launchAndExecute(
       ProcessExecutorParams params,
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
-      throws InterruptedException, IOException;
+      throws InterruptedException, IOException {
+    return launchAndExecute(params, ImmutableMap.of(), options, stdin, timeOutMs, timeOutHandler);
+  }
 
-  Result launchAndExecute(
+  default Result launchAndExecute(
       ProcessExecutorParams params,
       ImmutableMap<String, String> context,
       Set<Option> options,
       Optional<String> stdin,
       Optional<Long> timeOutMs,
       Optional<Consumer<Process>> timeOutHandler)
-      throws InterruptedException, IOException;
+      throws InterruptedException, IOException {
+    return execute(launchProcess(params, context), options, stdin, timeOutMs, timeOutHandler);
+  }
 
   /** Launches a {@link Process} given {@link ProcessExecutorParams}. */
-  LaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException;
+  default LaunchedProcess launchProcess(ProcessExecutorParams params) throws IOException {
+    return launchProcess(params, ImmutableMap.of());
+  }
 
   LaunchedProcess launchProcess(ProcessExecutorParams params, ImmutableMap<String, String> context)
       throws IOException;
@@ -89,6 +124,18 @@ public interface ProcessExecutor {
   Result waitForLaunchedProcessWithTimeout(
       LaunchedProcess launchedProcess, long millis, Optional<Consumer<Process>> timeOutHandler)
       throws InterruptedException;
+
+  /** Executes launched process */
+  Result execute(
+      LaunchedProcess launchedProcess,
+      Set<Option> options,
+      Optional<String> stdin,
+      Optional<Long> timeOutMs,
+      Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException;
+
+  /** Makes a clone of this process executor with the stdout and stderr streams overridden. */
+  ProcessExecutor cloneWithOutputStreams(PrintStream stdOutStream, PrintStream stdErrStream);
 
   /**
    * Options for {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set, Optional,
@@ -112,6 +159,7 @@ public interface ProcessExecutor {
 
   /** Represents a running process returned by {@link #launchProcess(ProcessExecutorParams)}. */
   interface LaunchedProcess {
+
     /** @return false if process is killed, or true if it is alive. */
     boolean isAlive();
 
@@ -127,46 +175,6 @@ public interface ProcessExecutor {
 
     /** Input stream that maps into stderr of the process. You'd read process' stderr from it. */
     InputStream getStderr();
-  }
-
-  /**
-   * Wraps a {@link Process} and exposes only its I/O streams, so callers have to pass it back to
-   * this class.
-   */
-  @VisibleForTesting
-  class LaunchedProcessImpl implements LaunchedProcess {
-    public final Process process;
-    public final ImmutableList<String> command;
-
-    public LaunchedProcessImpl(Process process, List<String> command) {
-      this.process = process;
-      this.command = ImmutableList.copyOf(command);
-    }
-
-    @Override
-    public boolean isAlive() {
-      return process.isAlive();
-    }
-
-    @Override
-    public ImmutableList<String> getCommand() {
-      return command;
-    }
-
-    @Override
-    public OutputStream getStdin() {
-      return process.getOutputStream();
-    }
-
-    @Override
-    public InputStream getStdout() {
-      return process.getInputStream();
-    }
-
-    @Override
-    public InputStream getStderr() {
-      return process.getErrorStream();
-    }
   }
 
   /**
@@ -244,7 +252,4 @@ public interface ProcessExecutor {
           MoreStrings.truncatePretty(getStderr().orElse("")));
     }
   }
-
-  /** Makes a clone of this process executor with the stdout and stderr streams overridden. */
-  ProcessExecutor cloneWithOutputStreams(PrintStream stdOutStream, PrintStream stdErrStream);
 }
