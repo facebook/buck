@@ -51,6 +51,8 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.macros.ExecutableMacro;
+import com.facebook.buck.rules.macros.ExecutableMacroExpander;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.OutputMacroExpander;
@@ -836,7 +838,10 @@ public class RustCompileUtils {
       BuildTarget buildTarget,
       CxxPlatform cxxPlatform) {
     ImmutableList<MacroExpander<? extends Macro, ?>> expanders =
-        ImmutableList.of(new CxxLocationMacroExpander(cxxPlatform), new OutputMacroExpander());
+        ImmutableList.of(
+            new CxxLocationMacroExpander(cxxPlatform),
+            new OutputMacroExpander(),
+            new ExecutableMacroExpander<>(ExecutableMacro.class));
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(

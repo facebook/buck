@@ -12,6 +12,7 @@ rust_binary(
     env = {
         "FOO": "something else",
         "HELLO": "$(location :gen)",
+        "HELLO_EXE": "$(exe :gen)",
     },
     deps = [":env-library"],
 )
@@ -21,6 +22,7 @@ rust_test(
     srcs = ["main.rs"],
     env = {
         "HELLO": "$(location :gen-test)",
+        "HELLO_EXE": "$(exe :gen)",
         "TEST_FOO": "some test",
     },
     deps = [":env-library"],
@@ -30,6 +32,7 @@ genrule(
     name = "gen",
     out = "foo.txt",
     cmd = "echo Hello, world > $OUT",
+    executable = True,
 )
 
 genrule(
