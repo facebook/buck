@@ -109,6 +109,7 @@ public class UserDefinedProvider extends BaseFunction
 
   @Override
   public void export(Label extensionLabel, String exportedName) throws EvalException {
+    Preconditions.checkState(!isExported);
     name = exportedName;
     isExported = true;
   }

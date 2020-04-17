@@ -310,6 +310,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
 
   @Override
   public void export(Label extensionLabel, String exportedName) throws EvalException {
+    Preconditions.checkState(!isExported);
     if (exportedName.endsWith(TEST_RULE_SUFFIX) && !shouldBeTestRule()) {
       throw new EvalException(
           location,
