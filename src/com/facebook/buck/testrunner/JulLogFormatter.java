@@ -19,10 +19,10 @@ package com.facebook.buck.testrunner;
 import com.facebook.buck.core.util.log.appendablelogrecord.AppendableLogRecord;
 import java.io.PrintWriter; // NOPMD can't depend on Guava
 import java.io.StringWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.TimeZone;
 import java.util.logging.Formatter;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -33,25 +33,25 @@ public class JulLogFormatter extends Formatter {
   private static final int INFO_LEVEL = Level.INFO.intValue();
   private static final int DEBUG_LEVEL = Level.FINE.intValue();
   private static final int VERBOSE_LEVEL = Level.FINER.intValue();
-  private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT =
-      new ThreadLocal<SimpleDateFormat>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-          SimpleDateFormat format = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", Locale.US);
-          format.setTimeZone(TimeZone.getDefault());
-          return format;
-        }
-      };
+  private static final DateTimeFormatter DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
+          .withZone(ZoneId.systemDefault());
 
   @Override
   public String format(LogRecord record) {
-    String timestamp = DATE_FORMAT.get().format(new Date(record.getMillis()));
+    long timeMillis = record.getMillis();
+    Instant instant = Instant.ofEpochMilli(timeMillis);
+    String timestamp = DATE_FORMAT.format(instant);
 
     // We explicitly don't use String.format here because this code is very
     // performance-critical: http://stackoverflow.com/a/1281651
     long tid = record.getThreadID();
     StringBuilder sb =
-        new StringBuilder(timestamp).append(formatRecordLevel(record.getLevel())).append("[tid:");
+        new StringBuilder("[")
+            .append(timestamp)
+            .append("]")
+            .append(formatRecordLevel(record.getLevel()))
+            .append("[tid:");
     // Zero-pad on the left. We're currently assuming we have less than 100 threads.
     if (tid < 10) {
       sb.append("0").append(tid);

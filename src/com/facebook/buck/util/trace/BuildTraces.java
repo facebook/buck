@@ -30,12 +30,11 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileTime;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,13 +65,9 @@ public class BuildTraces {
   }
 
   public static class TraceAttributes {
-    private static final ThreadLocal<DateFormat> DATE_FORMAT =
-        new ThreadLocal<DateFormat>() {
-          @Override
-          protected DateFormat initialValue() {
-            return new SimpleDateFormat("EEE, MMM d h:mm a");
-          }
-        };
+
+    private static final DateTimeFormatter DATE_FORMAT =
+        DateTimeFormatter.ofPattern("EEE, MMM d h:mm a").withZone(ZoneId.systemDefault());
 
     private final Optional<String> command;
     private final FileTime lastModifiedTime;
@@ -92,7 +87,7 @@ public class BuildTraces {
 
     public String getFormattedDateTime() {
       if (lastModifiedTime.toMillis() != 0) {
-        return DATE_FORMAT.get().format(Date.from(lastModifiedTime.toInstant()));
+        return DATE_FORMAT.format(lastModifiedTime.toInstant());
       } else {
         return "";
       }

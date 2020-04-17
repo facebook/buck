@@ -19,8 +19,8 @@ package com.facebook.buck.log;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.util.concurrent.ThreadIdToCommandIdMapper;
+import java.time.ZoneId;
 import java.util.Locale;
-import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -41,7 +41,7 @@ public class LogFormatterTest {
   @Test
   public void logFormatIncludesMessageAndTimestamp() {
     LogFormatter logFormatter =
-        new LogFormatter(mapper, Locale.US, TimeZone.getTimeZone("America/Los_Angeles"));
+        new LogFormatter(mapper, Locale.US, ZoneId.of("America/Los_Angeles"));
     threadIdToCommandId.put(64738L, "testCommandId");
     LogRecord record = logRecord(Level.INFO, "Test", "testLogger", 64738, 1409072580000L);
     assertEquals(

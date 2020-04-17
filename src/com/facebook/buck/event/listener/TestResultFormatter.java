@@ -38,12 +38,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.TimeZone;
 
 public class TestResultFormatter {
 
@@ -55,7 +55,7 @@ public class TestResultFormatter {
   private final TestResultSummaryVerbosity summaryVerbosity;
   private final Locale locale;
   private final Optional<Path> testLogsPath;
-  private final TimeZone timeZone;
+  private final ZoneId timeZone;
 
   public enum FormatMode {
     BEFORE_TEST_RUN,
@@ -68,7 +68,7 @@ public class TestResultFormatter {
       TestResultSummaryVerbosity summaryVerbosity,
       Locale locale,
       Optional<Path> testLogsPath) {
-    this(ansi, verbosity, summaryVerbosity, locale, testLogsPath, TimeZone.getDefault());
+    this(ansi, verbosity, summaryVerbosity, locale, testLogsPath, ZoneId.systemDefault());
   }
 
   @VisibleForTesting
@@ -78,7 +78,7 @@ public class TestResultFormatter {
       TestResultSummaryVerbosity summaryVerbosity,
       Locale locale,
       Optional<Path> testLogsPath,
-      TimeZone timeZone) {
+      ZoneId timeZone) {
     this.ansi = ansi;
     this.verbosity = verbosity;
     this.summaryVerbosity = summaryVerbosity;
@@ -306,16 +306,17 @@ public class TestResultFormatter {
     // When something fails...
     if (!testStatusMessages.isEmpty()) {
       addTo.add("====TEST STATUS MESSAGES====");
-      SimpleDateFormat timestampFormat =
-          new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", Locale.US);
-      timestampFormat.setTimeZone(timeZone);
+      DateTimeFormatter dateTimeFormatter =
+          DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS", Locale.US).withZone(timeZone);
 
       for (TestStatusMessage testStatusMessage : testStatusMessages) {
+
         addTo.add(
             String.format(
                 locale,
-                "%s[%s] %s",
-                timestampFormat.format(new Date(testStatusMessage.getTimestampMillis())),
+                "[%s][%s] %s",
+                dateTimeFormatter.format(
+                    Instant.ofEpochMilli(testStatusMessage.getTimestampMillis())),
                 testStatusMessage.getLevel(),
                 testStatusMessage.getMessage()));
       }

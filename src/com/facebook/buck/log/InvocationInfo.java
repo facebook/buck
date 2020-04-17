@@ -25,22 +25,17 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.TimeZone;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.regex.Pattern;
 
 @BuckStyleValue
 @JsonDeserialize(as = ImmutableInvocationInfo.class)
 public abstract class InvocationInfo {
-  private static final ThreadLocal<SimpleDateFormat> DIR_DATE_FORMAT =
-      new ThreadLocal<SimpleDateFormat>() {
-        @Override
-        protected SimpleDateFormat initialValue() {
-          SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH'h'mm'm'ss's'");
-          simpleDateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
-          return simpleDateFormat;
-        }
-      };
+
+  private static final DateTimeFormatter DIR_DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd_HH'h'mm'm'ss's'").withZone(ZoneOffset.UTC);
 
   private static final String DIR_NAME_TEMPLATE = "%s_%s_%s";
 
@@ -106,11 +101,10 @@ public abstract class InvocationInfo {
   }
 
   private String getLogDirectoryName() {
+    long timeMillis = getTimestampMillis();
+    Instant instant = Instant.ofEpochMilli(timeMillis);
     return String.format(
-        DIR_NAME_TEMPLATE,
-        DIR_DATE_FORMAT.get().format(getTimestampMillis()),
-        getSubCommand(),
-        getBuildId());
+        DIR_NAME_TEMPLATE, DIR_DATE_FORMAT.format(instant), getSubCommand(), getBuildId());
   }
 
   static boolean isLogDirectory(Path directory) {

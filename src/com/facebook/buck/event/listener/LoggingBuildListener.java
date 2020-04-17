@@ -25,8 +25,9 @@ import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.StepEvent;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.Subscribe;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.function.Consumer;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -54,8 +55,8 @@ public class LoggingBuildListener implements BuckEventListener {
               .add(StepEvent.Finished.class)
               .build();
 
-  private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT =
-      ThreadLocal.withInitial(() -> new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS"));
+  private static final DateTimeFormatter DATE_FORMAT =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneId.systemDefault());
 
   @Subscribe
   public void handleConsoleEvent(ConsoleEvent logEvent) {
@@ -104,6 +105,6 @@ public class LoggingBuildListener implements BuckEventListener {
   }
 
   private String formatTimestamp(long millis) {
-    return DATE_FORMAT.get().format(new Date(millis));
+    return DATE_FORMAT.format(Instant.ofEpochMilli(millis));
   }
 }

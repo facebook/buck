@@ -42,10 +42,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.ZoneId;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.TimeZone;
 import java.util.logging.Level;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,7 +65,7 @@ public class TestResultFormatterTest {
         TestResultSummaryVerbosity.of(false, false),
         Locale.US,
         Optional.of(logPath),
-        TimeZone.getTimeZone("America/Los_Angeles"));
+        ZoneId.of("America/Los_Angeles"));
   }
 
   private TestResultFormatter createNoisyFormatter() {
@@ -75,7 +75,7 @@ public class TestResultFormatterTest {
         TestResultSummaryVerbosity.of(true, true),
         Locale.US,
         Optional.of(logPath),
-        TimeZone.getTimeZone("America/Los_Angeles"));
+        ZoneId.of("America/Los_Angeles"));
   }
 
   private TestResultFormatter createFormatterWithMaxLogLines(int logLines) {
@@ -85,7 +85,7 @@ public class TestResultFormatterTest {
         TestResultSummaryVerbosity.of(false, false, OptionalInt.of(logLines)),
         Locale.US,
         Optional.of(logPath),
-        TimeZone.getTimeZone("America/Los_Angeles"));
+        ZoneId.of("America/Los_Angeles"));
   }
 
   @Before
@@ -411,7 +411,7 @@ public class TestResultFormatterTest {
             TestResultSummaryVerbosity.of(false, false),
             Locale.GERMAN,
             Optional.of(logPath),
-            TimeZone.getTimeZone("America/Los_Angeles"));
+            ZoneId.of("America/Los_Angeles"));
 
     TestCaseSummary summary =
         new TestCaseSummary(

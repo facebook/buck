@@ -86,13 +86,13 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.nio.file.Path;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -121,7 +121,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
   private final ProjectFilesystem projectFilesystem;
   private final Clock clock;
-  private final ThreadLocal<SimpleDateFormat> dateFormat;
+  private final DateTimeFormatter dateTimeFormatter;
   private final Path tracePath;
   private final OutputStream traceStream;
   private final ChromeTraceWriter chromeTraceWriter;
@@ -153,7 +153,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
         invocationInfo,
         clock,
         Locale.US,
-        TimeZone.getDefault(),
+        ZoneId.systemDefault(),
         ManagementFactory.getThreadMXBean(),
         config,
         managerScope,
@@ -168,7 +168,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       InvocationInfo invocationInfo,
       Clock clock,
       Locale locale,
-      TimeZone timeZone,
+      ZoneId timeZoneId,
       ThreadMXBean threadMXBean,
       ChromeTraceBuckConfig config,
       TaskManagerCommandScope managerScope,
@@ -182,13 +182,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     this.buildId = invocationInfo.getBuildId();
     this.reStatsProvider = reStatsProvider;
     this.criticalPathEventListener = criticalPathEventListener;
-    this.dateFormat =
-        ThreadLocal.withInitial(
-            () -> {
-              SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd.HH-mm-ss", locale);
-              dateFormat.setTimeZone(timeZone);
-              return dateFormat;
-            });
+    this.dateTimeFormatter =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd.HH-mm-ss", locale).withZone(timeZoneId);
     this.threadMXBean = threadMXBean;
     this.config = config;
     this.managerScope = managerScope;
@@ -245,7 +240,8 @@ public class ChromeTraceBuildListener implements BuckEventListener {
    */
   private TracePathAndStream createPathAndStream(
       BuildId buildId, LogStreamFactory logStreamFactory) {
-    String filenameTime = dateFormat.get().format(new Date(clock.currentTimeMillis()));
+    long timeMillis = clock.currentTimeMillis();
+    String filenameTime = dateTimeFormatter.format(Instant.ofEpochMilli(timeMillis));
     String traceName = String.format("build.%s.%s.trace", filenameTime, buildId);
     if (config.getCompressTraces()) {
       traceName = traceName + ".gz";

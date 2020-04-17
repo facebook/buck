@@ -20,47 +20,43 @@ import com.facebook.buck.core.util.log.appendablelogrecord.AppendableLogRecord;
 import com.facebook.buck.util.concurrent.ThreadIdToCommandIdMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
-import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import javax.annotation.Nullable;
 
 public class LogFormatter extends java.util.logging.Formatter {
+
   private static final int ERROR_LEVEL = Level.SEVERE.intValue();
   private static final int WARN_LEVEL = Level.WARNING.intValue();
   private static final int INFO_LEVEL = Level.INFO.intValue();
   private static final int DEBUG_LEVEL = Level.FINE.intValue();
   private static final int VERBOSE_LEVEL = Level.FINER.intValue();
   private final ThreadIdToCommandIdMapper mapper;
-  private final ThreadLocal<SimpleDateFormat> simpleDateFormat;
+  private final DateTimeFormatter dateTimeFormatter;
 
   public LogFormatter() {
     this(
         GlobalStateManager.singleton().getThreadIdToCommandIdMapper(),
         Locale.US,
-        TimeZone.getDefault());
+        ZoneId.systemDefault());
   }
 
   @VisibleForTesting
-  LogFormatter(ThreadIdToCommandIdMapper mapper, Locale locale, TimeZone timeZone) {
+  LogFormatter(ThreadIdToCommandIdMapper mapper, Locale locale, ZoneId zoneId) {
     this.mapper = mapper;
-    simpleDateFormat =
-        new ThreadLocal<SimpleDateFormat>() {
-          @Override
-          protected SimpleDateFormat initialValue() {
-            SimpleDateFormat format = new SimpleDateFormat("[yyyy-MM-dd HH:mm:ss.SSS]", locale);
-            format.setTimeZone(timeZone);
-            return format;
-          }
-        };
+    this.dateTimeFormatter =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS", locale).withZone(zoneId);
   }
 
   @Override
   public String format(LogRecord record) {
-    String timestamp = simpleDateFormat.get().format(new Date(record.getMillis()));
+    long timeMillis = record.getMillis();
+    Instant instant = Instant.ofEpochMilli(timeMillis);
+    String timestamp = dateTimeFormatter.format(instant);
 
     // We explicitly don't use String.format here because this code is very
     // performance-critical: http://stackoverflow.com/a/1281651
@@ -68,7 +64,9 @@ public class LogFormatter extends java.util.logging.Formatter {
     @Nullable String command = mapper.threadIdToCommandId(tid);
     StringBuilder sb =
         new StringBuilder(255)
+            .append("[")
             .append(timestamp)
+            .append("]")
             .append(formatRecordLevel(record.getLevel()))
             .append("[command:")
             .append(command)

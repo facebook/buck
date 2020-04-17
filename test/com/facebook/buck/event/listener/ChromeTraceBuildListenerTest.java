@@ -88,12 +88,12 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.OptionalLong;
-import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -106,6 +106,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 
 public class ChromeTraceBuildListenerTest {
+
   private static final BuildId BUILD_ID = new BuildId("BUILD_ID");
   private static final long CURRENT_TIME_MILLIS = 1409702151000L;
   private static final long NANO_TIME = TimeUnit.SECONDS.toNanos(300);
@@ -234,7 +235,7 @@ public class ChromeTraceBuildListenerTest {
             invocationInfo,
             FAKE_CLOCK,
             Locale.US,
-            TimeZone.getTimeZone("America/Los_Angeles"),
+            ZoneId.of("America/Los_Angeles"),
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(42, false),
             managerScope,
@@ -269,7 +270,7 @@ public class ChromeTraceBuildListenerTest {
             invocationInfo,
             FAKE_CLOCK,
             Locale.US,
-            TimeZone.getTimeZone("America/Los_Angeles"),
+            ZoneId.of("America/Los_Angeles"),
             threadMXBean,
             chromeTraceConfig(3, false),
             managerScope,
@@ -326,7 +327,7 @@ public class ChromeTraceBuildListenerTest {
             invocationInfo,
             FAKE_CLOCK,
             Locale.US,
-            TimeZone.getTimeZone("America/Los_Angeles"),
+            ZoneId.of("America/Los_Angeles"),
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(3, false),
             managerScope,
@@ -366,7 +367,7 @@ public class ChromeTraceBuildListenerTest {
             invocationInfo,
             FAKE_CLOCK,
             Locale.US,
-            TimeZone.getTimeZone("America/Los_Angeles"),
+            ZoneId.of("America/Los_Angeles"),
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(42, false),
             managerScope,
@@ -444,7 +445,7 @@ public class ChromeTraceBuildListenerTest {
             invocationInfo,
             FAKE_CLOCK,
             Locale.US,
-            TimeZone.getTimeZone("America/Los_Angeles"),
+            ZoneId.of("America/Los_Angeles"),
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(42, false),
             managerScope,
@@ -839,7 +840,7 @@ public class ChromeTraceBuildListenerTest {
             invocationInfo,
             FAKE_CLOCK,
             Locale.US,
-            TimeZone.getTimeZone("America/Los_Angeles"),
+            ZoneId.of("America/Los_Angeles"),
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(3, false),
             managerScope,
@@ -866,7 +867,7 @@ public class ChromeTraceBuildListenerTest {
             invocationInfo,
             FAKE_CLOCK,
             Locale.US,
-            TimeZone.getTimeZone("America/Los_Angeles"),
+            ZoneId.of("America/Los_Angeles"),
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(1, false),
             managerScope,
@@ -891,7 +892,7 @@ public class ChromeTraceBuildListenerTest {
             invocationInfo,
             FAKE_CLOCK,
             Locale.US,
-            TimeZone.getTimeZone("America/Los_Angeles"),
+            ZoneId.of("America/Los_Angeles"),
             ManagementFactory.getThreadMXBean(),
             chromeTraceConfig(1, true),
             managerScope,
@@ -930,6 +931,7 @@ public class ChromeTraceBuildListenerTest {
   }
 
   private static class FakeBuckEvent extends AbstractBuckEvent {
+
     protected FakeBuckEvent() {
       super(EventKey.of(42));
     }

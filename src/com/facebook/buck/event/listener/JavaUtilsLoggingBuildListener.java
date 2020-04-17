@@ -23,20 +23,20 @@ import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.eventbus.Subscribe;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.TimeZone;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.logging.FileHandler;
 import java.util.logging.Formatter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger; // NOPMD
 
 /** Logs build events to java.util.logging. */
 public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
-  private static final Logger LOG = Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
+  private static final java.util.logging.Logger LOG =
+      java.util.logging.Logger.getLogger(JavaUtilsLoggingBuildListener.class.getName());
   private static final Level LEVEL = Level.INFO;
 
   public JavaUtilsLoggingBuildListener(ProjectFilesystem filesystem) {
@@ -122,24 +122,16 @@ public class JavaUtilsLoggingBuildListener implements BuckEventListener {
 
   private static class BuildEventFormatter extends Formatter {
 
-    private final ThreadLocal<SimpleDateFormat> dateFormat =
-        new ThreadLocal<SimpleDateFormat>() {
-          @Override
-          protected SimpleDateFormat initialValue() {
-            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
-            // Normalize all the times.
-            format.setTimeZone(TimeZone.getTimeZone("UTC"));
-            return format;
-          }
-        };
+    private final DateTimeFormatter dateTimeFormatter =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS").withZone(ZoneOffset.UTC);
 
     @Override
     public String format(LogRecord logRecord) {
+      Instant instant = Instant.ofEpochMilli(logRecord.getMillis());
+      String formattedTime = dateTimeFormatter.format(instant);
+
       StringBuilder builder = new StringBuilder();
-
-      SimpleDateFormat format = dateFormat.get();
-      builder.append(format.format(new Date(logRecord.getMillis())));
-
+      builder.append(formattedTime);
       builder.append("\t").append(logRecord.getLevel()).append("\t");
       builder.append(formatMessage(logRecord));
       builder.append("\n");

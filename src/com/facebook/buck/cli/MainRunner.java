@@ -261,9 +261,10 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.text.SimpleDateFormat;
 import java.time.Duration;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -289,6 +290,7 @@ import org.pf4j.PluginManager;
  * <p>One instance of {@link MainRunner} exists per command run.
  */
 public final class MainRunner {
+
   /**
    * Force JNA to be initialized early to avoid deadlock race condition.
    *
@@ -588,9 +590,11 @@ public final class MainRunner {
         if (gitCommitTimestamp == null) {
           buildDateStr = "(unknown)";
         } else {
+          long millis = TimeUnit.SECONDS.toMillis(gitCommitTimestamp);
           buildDateStr =
-              new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z", Locale.US)
-                  .format(new Date(TimeUnit.SECONDS.toMillis(gitCommitTimestamp)));
+              DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss Z", Locale.US)
+                  .withZone(ZoneId.systemDefault())
+                  .format(Instant.ofEpochMilli(millis));
         }
         String buildRev = System.getProperty("buck.git_commit", "(unknown)");
         LOG.debug("Starting up (build date %s, rev %s), args: %s", buildDateStr, buildRev, args);
