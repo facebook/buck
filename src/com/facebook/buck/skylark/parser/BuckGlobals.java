@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
@@ -29,6 +30,7 @@ import com.facebook.buck.skylark.function.SkylarkProviderFunction;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.facebook.buck.skylark.function.attr.AttrModule;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.cmdline.Label;
@@ -37,6 +39,7 @@ import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.CallUtils;
 import com.google.devtools.build.lib.syntax.ClassObject;
+import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.MethodLibrary;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -142,18 +145,26 @@ public abstract class BuckGlobals {
         .collect(ImmutableMap.toImmutableMap(BuiltInProvider::getName, Function.identity()));
   }
 
-  /**
-   * Returns a native module with built-in functions and Buck rules.
-   *
-   * <p>It's the module that handles method calls like {@code native.glob} or {@code
-   * native.cxx_library}.
-   */
-  @Lazy
-  public ClassObject getNativeModule() {
+  private ClassObject getNativeModule() {
     ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
     builder.putAll(getBuckRuleFunctions());
     addNativeModuleFunctions(builder);
     return StructProvider.STRUCT.create(builder.build(), "no native function or rule '%s'");
+  }
+
+  /**
+   * Returns a native module field names to be used in error suggestions.
+   *
+   * <p>"native" is the module that handles method calls like {@code native.glob} or {@code
+   * native.cxx_library}.
+   */
+  @Lazy
+  public ImmutableCollection<String> getNativeModuleFieldNames() {
+    try {
+      return getNativeModule().getFieldNames();
+    } catch (EvalException e) {
+      throw new BuckUncheckedExecutionException(e);
+    }
   }
 
   /** Puts all native module functions into provided {@code builder}. */
