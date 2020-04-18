@@ -41,7 +41,6 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.NotDirectoryException;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutionException;
-import javax.annotation.Nonnull;
 import junitparams.Parameters;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsInstanceOf;
@@ -492,7 +491,6 @@ public abstract class AbstractBuildPackageComputationTest {
     assertEquals(ImmutableSortedSet.of(Paths.get("bracket-[dir]")), paths.getPackageRoots());
   }
 
-  @Nonnull
   public static BuildTargetPatternToBuildPackagePathKey key(
       CanonicalCellName cell, Kind kind, String basePath, String targetName) {
     return ImmutableBuildTargetPatternToBuildPackagePathKey.of(

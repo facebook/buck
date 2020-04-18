@@ -54,7 +54,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import javax.annotation.Nonnull;
 
 public class ManifestRuleKeyManager {
 
@@ -212,7 +211,7 @@ public class ManifestRuleKeyManager {
 
     return Futures.transformAsync(
         manifestRuleKeyService.fetchManifest(key, tempPath),
-        (@Nonnull CacheResult fetchResult) -> {
+        (CacheResult fetchResult) -> {
           if (!fetchResult.getType().isSuccess()) {
             LOG.verbose("%s: cache miss on manifest %s", rule.getBuildTarget(), key);
             return Futures.immediateFuture(fetchResult);
@@ -284,7 +283,7 @@ public class ManifestRuleKeyManager {
     // Fetch the manifest from the cache.
     return Futures.transformAsync(
         fetchManifest(manifestRuleKey),
-        (@Nonnull CacheResult manifestCacheResult) -> {
+        (CacheResult manifestCacheResult) -> {
           ManifestFetchResult.Builder manifestFetchResult = ManifestFetchResult.builder();
           manifestFetchResult.setManifestCacheResult(manifestCacheResult);
           if (!manifestCacheResult.getType().isSuccess()) {
@@ -325,7 +324,7 @@ public class ManifestRuleKeyManager {
               buildCacheArtifactFetcher
                   .tryToFetchArtifactFromBuildCacheAndOverlayOnTopOfProjectFilesystem(
                       depFileRuleKey.get(), artifactCache, rule.getProjectFilesystem()),
-              (@Nonnull CacheResult ruleCacheResult) -> {
+              (CacheResult ruleCacheResult) -> {
                 manifestFetchResult.setRuleCacheResult(ruleCacheResult);
                 return manifestFetchResult.build();
               },

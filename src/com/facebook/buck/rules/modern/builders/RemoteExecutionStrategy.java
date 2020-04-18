@@ -77,7 +77,6 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -277,7 +276,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
           }
 
           @Override
-          public void onFailure(@Nonnull Throwable t) {
+          public void onFailure(Throwable t) {
             OptionalInt exitCode =
                 t instanceof StepFailedException
                     ? ((StepFailedException) t).getExitCode()
@@ -485,7 +484,7 @@ public class RemoteExecutionStrategy extends AbstractModernBuildRuleStrategy {
                     }
 
                     @Override
-                    public void onFailure(@Nonnull Throwable t) {}
+                    public void onFailure(Throwable t) {}
                   },
                   MoreExecutors.directExecutor());
               executionHandle

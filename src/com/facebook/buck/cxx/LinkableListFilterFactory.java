@@ -29,7 +29,6 @@ import com.facebook.buck.cxx.toolchain.nativelink.LinkableListFilter;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
 import com.facebook.buck.shell.GenruleDescriptionArg;
-import com.google.common.base.Predicates;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -41,7 +40,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
 
 /**
  * Factory for the creation of {@link LinkableListFilter} which can be used to filter the libraries
@@ -64,17 +62,14 @@ public class LinkableListFilterFactory {
               .maximumSize(1)
               .build(
                   CacheLoader.from(
-                      graph -> {
-                        return CacheBuilder.newBuilder()
-                            // Cache all mapping for a particular graph. Usually, there would be
-                            // a single mapping re-used across all targets, so the perf savings
-                            // are significant.
-                            .build(
-                                CacheLoader.from(
-                                    mapping -> {
-                                      return makeBuildTargetToLinkGroupMap(mapping, graph);
-                                    }));
-                      }));
+                      graph ->
+                          CacheBuilder.newBuilder()
+                              // Cache all mapping for a particular graph. Usually, there would be
+                              // a single mapping re-used across all targets, so the perf savings
+                              // are significant.
+                              .build(
+                                  CacheLoader.from(
+                                      mapping -> makeBuildTargetToLinkGroupMap(mapping, graph)))));
   private static String MATCH_ALL_LINK_GROUP_NAME = "MATCH_ALL";
 
   /** Convenience method that unpacks a {@link LinkableCxxConstructorArg} and forwards the call. */
@@ -120,56 +115,52 @@ public class LinkableListFilterFactory {
         getCachedBuildTargetToLinkGroupMap(mapping, targetGraph);
 
     LinkableListFilter filter =
-        (ImmutableList<? extends NativeLinkable> allLinkables,
-            Linker.LinkableDepType linkStyle) -> {
-          return FluentIterable.from(allLinkables)
-              .filter(
-                  linkable -> {
-                    Linker.LinkableDepType linkableType =
-                        NativeLinkables.getLinkStyle(linkable.getPreferredLinkage(), linkStyle);
-                    switch (linkableType) {
-                      case STATIC:
-                      case STATIC_PIC:
-                        BuildTarget linkableBuildTarget = linkable.getBuildTarget();
-                        if (!buildTargetToLinkGroupMap.containsKey(linkableBuildTarget)) {
-                          // Ungrouped linkables belong to the unlabelled executable (by
-                          // definition).
-                          return !linkGroup.isPresent();
-                        }
+        (ImmutableList<? extends NativeLinkable> allLinkables, Linker.LinkableDepType linkStyle) ->
+            FluentIterable.from(allLinkables)
+                .filter(
+                    linkable -> {
+                      Linker.LinkableDepType linkableType =
+                          NativeLinkables.getLinkStyle(linkable.getPreferredLinkage(), linkStyle);
+                      switch (linkableType) {
+                        case STATIC:
+                        case STATIC_PIC:
+                          BuildTarget linkableBuildTarget = linkable.getBuildTarget();
+                          if (!buildTargetToLinkGroupMap.containsKey(linkableBuildTarget)) {
+                            // Ungrouped linkables belong to the unlabelled executable (by
+                            // definition).
+                            return !linkGroup.isPresent();
+                          }
 
-                        String linkableLinkGroup =
-                            buildTargetToLinkGroupMap.get(linkableBuildTarget);
-                        if (linkableLinkGroup.equals(MATCH_ALL_LINK_GROUP_NAME)) {
+                          String linkableLinkGroup =
+                              buildTargetToLinkGroupMap.get(linkableBuildTarget);
+                          if (linkableLinkGroup.equals(MATCH_ALL_LINK_GROUP_NAME)) {
+                            return true;
+                          }
+
+                          return linkGroup
+                              .map(group -> group.equals(linkableLinkGroup))
+                              .orElse(false);
+
+                        case SHARED:
+                          // Shared libraries always get linked, by definition.
                           return true;
-                        }
+                      }
 
-                        return (linkGroup
-                                .map(group -> group.equals(linkableLinkGroup))
-                                .orElse(false))
-                            .booleanValue();
-
-                      case SHARED:
-                        // Shared libraries always get linked, by definition.
-                        return true;
-                    }
-
-                    return false;
-                  })
-              .toList();
-        };
+                      return false;
+                    })
+                .toList();
 
     return Optional.of(filter);
   }
 
   /** Creates a predicate to filter resources that will be included in an apple_bundle. */
-  @Nonnull
   public static Predicate<BuildTarget> resourcePredicateFrom(
       CxxBuckConfig cxxBuckConfig,
       Optional<String> resourceGroup,
       Optional<ImmutableList<CxxLinkGroupMapping>> mapping,
       TargetGraph graph) {
     if (!cxxBuckConfig.getLinkGroupsEnabled() || !mapping.isPresent()) {
-      return Predicates.alwaysTrue();
+      return buildTarget -> true;
     }
 
     Map<BuildTarget, String> targetToGroupMap =
@@ -186,11 +177,10 @@ public class LinkableListFilterFactory {
         return true;
       }
 
-      return (resourceGroup.map(group -> group.equals(targetGroup)).orElse(false)).booleanValue();
+      return resourceGroup.map(group -> group.equals(targetGroup)).orElse(false);
     };
   }
 
-  @Nonnull
   private static Map<BuildTarget, String> getCachedBuildTargetToLinkGroupMap(
       ImmutableList<CxxLinkGroupMapping> mapping, TargetGraph targetGraph) {
     LoadingCache<ImmutableList<CxxLinkGroupMapping>, Map<BuildTarget, String>> groupingCache =
@@ -202,7 +192,6 @@ public class LinkableListFilterFactory {
    * Precomputes link group membership based on the target graph, so that we can quickly check
    * whether a build target belongs to a link group.
    */
-  @Nonnull
   private static Map<BuildTarget, String> makeBuildTargetToLinkGroupMap(
       ImmutableList<CxxLinkGroupMapping> mapping, TargetGraph targetGraph) {
     Map<BuildTarget, String> buildTargetToLinkGroupMap = new HashMap<>();
@@ -225,7 +214,6 @@ public class LinkableListFilterFactory {
     return buildTargetToLinkGroupMap;
   }
 
-  @Nonnull
   private static ImmutableList<BuildTarget> getBuildTargetsForMapping(
       TargetGraph targetGraph, CxxLinkGroupMappingTarget mappingTarget) {
 
@@ -237,7 +225,6 @@ public class LinkableListFilterFactory {
     return findBuildTargetsMatchingLabelPattern(targetGraph, mappingTarget, labelPattern.get());
   }
 
-  @Nonnull
   private static ImmutableList<BuildTarget> findBuildTargetsMatchingLabelPattern(
       TargetGraph targetGraph, CxxLinkGroupMappingTarget mappingTarget, Pattern regex) {
     ImmutableList.Builder<BuildTarget> allTargets = ImmutableList.builder();

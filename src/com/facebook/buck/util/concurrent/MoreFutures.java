@@ -34,7 +34,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class MoreFutures {
@@ -159,7 +158,7 @@ public class MoreFutures {
           }
 
           @Override
-          public void onFailure(@Nonnull Throwable throwable) {
+          public void onFailure(Throwable throwable) {
             try {
               callback.onFailure(throwable);
             } catch (Throwable thrown) {
@@ -220,7 +219,7 @@ public class MoreFutures {
       }
 
       @Override
-      public void onFailure(@Nonnull Throwable t) {
+      public void onFailure(Throwable t) {
         callable.accept(Futures.immediateFailedFuture(t));
       }
     };

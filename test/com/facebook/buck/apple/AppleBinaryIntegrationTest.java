@@ -56,7 +56,6 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Rule;
@@ -548,7 +547,6 @@ public class AppleBinaryIntegrationTest {
         containsString("U _swift_bridgeObjectRetain"));
   }
 
-  @Nonnull
   private String getMacDylibSymbolTable(
       String dylibTargetName, String dylibName, ProjectWorkspace workspace) throws Exception {
     BuildTarget dylibTarget =
@@ -567,7 +565,6 @@ public class AppleBinaryIntegrationTest {
     return workspace.runCommand("nm", dylibOutputPath.toString()).getStdout().get();
   }
 
-  @Nonnull
   private String buildAndGetMacBinarySymbolTable(String appTargetName, ProjectWorkspace workspace)
       throws Exception {
     BuildTarget binaryTarget =

@@ -49,7 +49,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nonnull;
 import junitparams.JUnitParamsRunner;
 import org.hamcrest.core.IsInstanceOf;
 import org.junit.After;
@@ -191,7 +190,6 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     return getComputationStages(buildFileName, filesystemView, watchman);
   }
 
-  @Nonnull
   private ImmutableList<GraphComputationStage<?, ?>> getComputationStages(
       String buildFileName, ProjectFilesystemView filesystemView, Watchman watchman) {
     return ImmutableList.of(
@@ -212,7 +210,6 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
         endTimeNanos);
   }
 
-  @Nonnull
   private WatchmanClient createWatchmanClient() throws IOException {
     return WatchmanFactory.createWatchmanClient(watchmanDaemon.getTransportPath(), console, clock);
   }
@@ -227,7 +224,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
           @Override
           public Optional<? extends Map<String, ?>> queryWithTimeout(
-              long timeoutNanos, Object... query) throws IOException, InterruptedException {
+              long timeoutNanos, Object... query) {
             return mockQueryWithTimeout.apply(timeoutNanos, query);
           }
         };

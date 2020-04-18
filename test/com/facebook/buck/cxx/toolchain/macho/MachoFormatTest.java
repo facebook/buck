@@ -38,7 +38,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -111,7 +110,6 @@ public class MachoFormatTest {
     assertThat(dyldInfoCommand.getExportInfoSize(), equalTo(40));
   }
 
-  @Nonnull
   protected Optional<MachoExportTrieNode> readExportTrieFromHelloLib() throws IOException {
     return readExportTrieFromBuffer(helloLibDylibByteBufferReadOnly());
   }

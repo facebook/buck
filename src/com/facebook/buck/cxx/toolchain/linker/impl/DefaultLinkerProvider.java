@@ -27,7 +27,6 @@ import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import javax.annotation.Nonnull;
 
 public class DefaultLinkerProvider implements LinkerProvider {
 
@@ -45,7 +44,7 @@ public class DefaultLinkerProvider implements LinkerProvider {
                       BuildRuleResolver, BuildRuleResolverCacheByTargetConfiguration<Linker>>() {
                     @Override
                     public BuildRuleResolverCacheByTargetConfiguration<Linker> load(
-                        @Nonnull BuildRuleResolver buildRuleResolver) {
+                        BuildRuleResolver buildRuleResolver) {
                       return new BuildRuleResolverCacheByTargetConfiguration<>(
                           buildRuleResolver,
                           toolProvider,

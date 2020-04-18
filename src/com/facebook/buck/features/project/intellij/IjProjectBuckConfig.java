@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class IjProjectBuckConfig {
@@ -41,7 +40,7 @@ public class IjProjectBuckConfig {
       BuckConfig buckConfig,
       @Nullable AggregationMode aggregationMode,
       @Nullable String generatedFilesListFilename,
-      @Nonnull String projectRoot,
+      String projectRoot,
       String moduleGroupName,
       boolean isCleanerEnabled,
       boolean removeUnusedLibraries,

@@ -216,7 +216,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -238,6 +237,7 @@ import org.junit.runner.RunWith;
 @SuppressWarnings("PMD.TestClassWithoutTestCases")
 @RunWith(Enclosed.class)
 public class CachingBuildEngineTest {
+
   private static final boolean DEBUG = false;
   private static final BuildTarget BUILD_TARGET =
       BuildTargetFactory.newInstance("//src/com/facebook/orca:orca");
@@ -255,6 +255,7 @@ public class CachingBuildEngineTest {
           FIELD_LOADER, new DummyFileHashCache(), DEFAULT_RULE_FINDER);
 
   public abstract static class CommonFixture extends EasyMockSupport {
+
     @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
     protected final InMemoryArtifactCache cache = new InMemoryArtifactCache();
@@ -1317,6 +1318,7 @@ public class CachingBuildEngineTest {
     @Test
     public void testCancelledRulesHaveRuleContextFromFailingRule() throws Exception {
       class SimpleBuildRule extends AbstractBuildRule {
+
         final ImmutableSortedSet<BuildRule> deps;
         final Supplier<ImmutableList<Step>> stepsSupplier;
 
@@ -2154,17 +2156,20 @@ public class CachingBuildEngineTest {
     }
 
     public static class CustomStrategyTests extends CommonFixture {
+
       private BuildTarget target;
       private ThrowingSupplier<StepExecutionResult, InterruptedException> resultSupplier;
       private BuildRule rule;
       private FakeStrategy strategy;
 
       interface Builder {
+
         ListenableFuture<Optional<BuildResult>> build(
             ListeningExecutorService service, BuildRule rule, BuildStrategyContext executorRunner);
       }
 
       private static class FakeStrategy implements BuildRuleStrategy {
+
         boolean closed = false;
         Predicate<BuildRule> canBuild = rule -> false;
         Optional<Builder> builder = Optional.empty();
@@ -2447,6 +2452,7 @@ public class CachingBuildEngineTest {
     }
 
     private static class FailingInputRuleKeyBuildRule extends InputRuleKeyBuildRule {
+
       public FailingInputRuleKeyBuildRule(
           BuildTarget buildTarget,
           ProjectFilesystem projectFilesystem,
@@ -3018,6 +3024,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class ManifestTests extends CommonFixture {
+
     private static Optional<RuleKey> getManifestRuleKeyForTest(
         CachingBuildEngine engine, SupportsDependencyFileRuleKey rule, BuckEventBus eventBus)
         throws IOException {
@@ -3632,6 +3639,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class UncachableRuleTests extends CommonFixture {
+
     @Test
     public void uncachableRulesDoNotTouchTheCache() throws Exception {
       BuildTarget target = BuildTargetFactory.newInstance("//:rule");
@@ -3661,6 +3669,7 @@ public class CachingBuildEngineTest {
 
     private static class UncachableRule extends RuleWithSteps
         implements SupportsDependencyFileRuleKey {
+
       public UncachableRule(
           BuildTarget buildTarget,
           ProjectFilesystem projectFilesystem,
@@ -3701,6 +3710,7 @@ public class CachingBuildEngineTest {
   }
 
   public static class ScheduleOverrideTests extends CommonFixture {
+
     @Test
     public void customWeights() throws Exception {
       BuildTarget target1 = BuildTargetFactory.newInstance("//:rule1");
@@ -4111,7 +4121,6 @@ public class CachingBuildEngineTest {
       @Override
       public void shutdown() {}
 
-      @Nonnull
       @Override
       public List<Runnable> shutdownNow() {
         return ImmutableList.of();
@@ -4128,13 +4137,13 @@ public class CachingBuildEngineTest {
       }
 
       @Override
-      public boolean awaitTermination(long timeout, @Nonnull TimeUnit unit) {
+      public boolean awaitTermination(long timeout, TimeUnit unit) {
         return false;
       }
 
       /** Spawn a new thread for every command. */
       @Override
-      public void execute(@Nonnull Runnable command) {
+      public void execute(Runnable command) {
         new Thread(command).start();
       }
     }
@@ -4295,6 +4304,7 @@ public class CachingBuildEngineTest {
 
   public static class AbstractCachingBuildRuleWithInputs extends BuildableAbstractCachingBuildRule
       implements SupportsInputBasedRuleKey, SupportsDependencyFileRuleKey {
+
     @AddToRuleKey private final ImmutableSortedSet<SourcePath> inputs;
     private final ImmutableSortedSet<SourcePath> depfileInputs;
 
@@ -4419,6 +4429,7 @@ public class CachingBuildEngineTest {
 
   private abstract static class InputRuleKeyBuildRule
       extends AbstractBuildRuleWithDeclaredAndExtraDeps implements SupportsInputBasedRuleKey {
+
     public InputRuleKeyBuildRule(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
@@ -4429,6 +4440,7 @@ public class CachingBuildEngineTest {
 
   private abstract static class DepFileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       implements SupportsDependencyFileRuleKey {
+
     public DepFileBuildRule(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,

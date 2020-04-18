@@ -20,7 +20,6 @@ import com.google.common.hash.Hasher;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import javax.annotation.Nonnull;
 
 /**
  * An {@link OutputStream} which appends the hash of the data written to it to a {@link Hasher}. As
@@ -43,7 +42,7 @@ public class HasherOutputStream extends FilterOutputStream {
   }
 
   @Override
-  public void write(@Nonnull byte[] bytes, int off, int len) throws IOException {
+  public void write(byte[] bytes, int off, int len) throws IOException {
     hasher.putBytes(bytes, off, len);
     out.write(bytes, off, len);
   }

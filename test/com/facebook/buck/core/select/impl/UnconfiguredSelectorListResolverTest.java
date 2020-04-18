@@ -45,7 +45,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -363,7 +362,6 @@ public class UnconfiguredSelectorListResolverTest {
     return TestSelectorListFactory.createSelectorListForCoercer(flavorListTypeCoercer(), selectors);
   }
 
-  @Nonnull
   private static ListTypeCoercer<Flavor, Flavor> flavorListTypeCoercer() {
     return new ListTypeCoercer<>(new FlavorTypeCoercer());
   }

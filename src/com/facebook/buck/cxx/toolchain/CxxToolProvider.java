@@ -26,7 +26,6 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 
 /** A provide for the {@link Preprocessor} and {@link Compiler} C/C++ drivers. */
 public abstract class CxxToolProvider<T> {
@@ -45,7 +44,7 @@ public abstract class CxxToolProvider<T> {
                       BuildRuleResolver, BuildRuleResolverCacheByTargetConfiguration<T>>() {
                     @Override
                     public BuildRuleResolverCacheByTargetConfiguration<T> load(
-                        @Nonnull BuildRuleResolver buildRuleResolver) {
+                        BuildRuleResolver buildRuleResolver) {
                       return new BuildRuleResolverCacheByTargetConfiguration<T>(
                           buildRuleResolver, toolProvider, tool -> build(type.get(), tool));
                     }

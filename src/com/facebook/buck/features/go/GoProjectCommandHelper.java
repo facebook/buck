@@ -73,7 +73,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 
 public class GoProjectCommandHelper {
 
@@ -294,7 +293,6 @@ public class GoProjectCommandHelper {
     return generatedPackages;
   }
 
-  @Nonnull
   private Map<BuildTargetSourcePath, Path> getSrcsMap(
       Stream<BuildTargetSourcePath> targetPaths, Path pkgName) {
     return targetPaths.collect(Collectors.toMap(src -> src, src -> pkgName));
@@ -330,7 +328,6 @@ public class GoProjectCommandHelper {
     return targets.stream();
   }
 
-  @Nonnull
   private Stream<BuildTargetSourcePath> filterBuildTargets(Set<SourcePath> paths) {
     return paths.stream()
         .filter(srcPath -> srcPath instanceof BuildTargetSourcePath)

@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nonnull;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.BeforeClass;
@@ -211,7 +210,6 @@ public class NamedPipesTest {
     outputStream.flush();
   }
 
-  @Nonnull
   private static AbstractMessage createEvent(
       EventType eventType, String namedPipeJsonMessageString) {
     switch (eventType) {

@@ -35,7 +35,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.IOException;
 import java.util.List;
 import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
@@ -96,13 +95,11 @@ public class IjProjectSubCommand extends ProjectSubCommand {
       usage =
           "Generate an Intellij project at specified folder.  Buck targets under this folder "
               + "are considered modules, and targets outside this folder are considered libraries.")
-  @Nonnull
   private String projectRoot = "";
 
   @Option(
       name = "--intellij-include-transitive-dependencies",
       usage = "Include transitive dependencies as RUNTIME library for Intellij project.")
-  @Nonnull
   private boolean includeTransitiveDependencies = false;
 
   @Option(

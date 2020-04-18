@@ -37,7 +37,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
-import javax.annotation.Nonnull;
 
 public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
   private final BuckEventBus eventBus;
@@ -46,7 +45,7 @@ public class JavacEventSinkToBuckEventBusBridge implements JavacEventSink {
           .build(
               new CacheLoader<BuildTarget, BuckTracingEventBusBridge>() {
                 @Override
-                public BuckTracingEventBusBridge load(@Nonnull BuildTarget target) {
+                public BuckTracingEventBusBridge load(BuildTarget target) {
                   return new BuckTracingEventBusBridge(eventBus, target);
                 }
               });

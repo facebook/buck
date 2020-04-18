@@ -63,7 +63,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -281,7 +280,6 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
     return listBuilder.build();
   }
 
-  @Nonnull
   private TestResultSummary reportNotExecutedTest(String testCaseName, String testName) {
     return new TestResultSummary(
         testCaseName, testName, ResultType.FAILURE, 0, "Test wasn't run", "", "", "");

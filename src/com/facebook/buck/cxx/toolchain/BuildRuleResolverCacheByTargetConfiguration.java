@@ -26,7 +26,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import java.lang.ref.WeakReference;
 import java.util.function.Function;
-import javax.annotation.Nonnull;
 
 /**
  * Custom cache to use with {@link CxxToolProvider} and similar classes that need to cache build
@@ -41,7 +40,7 @@ public class BuildRuleResolverCacheByTargetConfiguration<T> {
           .build(
               new CacheLoader<TargetConfiguration, T>() {
                 @Override
-                public T load(@Nonnull TargetConfiguration targetConfiguration) {
+                public T load(TargetConfiguration targetConfiguration) {
                   return delegateBuilder.apply(
                       toolProvider.resolve(
                           Preconditions.checkNotNull(buildRuleResolver.get()),

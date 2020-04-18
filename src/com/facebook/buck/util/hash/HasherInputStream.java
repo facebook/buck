@@ -20,7 +20,6 @@ import com.google.common.hash.Hasher;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import javax.annotation.Nonnull;
 
 /**
  * An {@link InputStream} which appends the hash of the data read from it to a {@link Hasher}. As
@@ -46,7 +45,7 @@ public class HasherInputStream extends FilterInputStream {
   }
 
   @Override
-  public int read(@Nonnull byte[] bytes, int off, int len) throws IOException {
+  public int read(byte[] bytes, int off, int len) throws IOException {
     int numOfBytesRead = in.read(bytes, off, len);
     if (numOfBytesRead != -1) {
       hasher.putBytes(bytes, off, numOfBytesRead);

@@ -34,7 +34,6 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
-import javax.annotation.Nonnull;
 
 /** This implements out of process rule execution. */
 public class OutOfProcessIsolatedBuilder {
@@ -74,7 +73,6 @@ public class OutOfProcessIsolatedBuilder {
         Joiner.on(",").join(args));
   }
 
-  @Nonnull
   private static Console createConsole(String[] args) {
     boolean isAnsiEscapeSequencesEnabled = Boolean.parseBoolean(args[4]);
     Verbosity verbosity = Verbosity.valueOf(args[5]);

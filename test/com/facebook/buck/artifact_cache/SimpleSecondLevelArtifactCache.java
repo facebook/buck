@@ -25,7 +25,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -71,7 +70,6 @@ public class SimpleSecondLevelArtifactCache implements SecondLevelArtifactCache 
         MoreExecutors.directExecutor());
   }
 
-  @Nonnull
   private String computeSha1(BorrowablePath output) throws IOException {
     return projectFilesystem.computeSha1(output.getPath()) + "2c00";
   }

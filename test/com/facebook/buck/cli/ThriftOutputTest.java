@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nonnull;
 import org.junit.Test;
 
 public class ThriftOutputTest {
@@ -159,7 +158,6 @@ public class ThriftOutputTest {
     assertThat(edgesToStringList(thriftDag.getEdges()), containsInAnyOrder("A->B"));
   }
 
-  @Nonnull
   private DirectedAcyclicGraphNode getNodeByName(
       List<DirectedAcyclicGraphNode> nodes, String nodeName) {
     return nodes.stream().filter(node -> node.getName().equals(nodeName)).findFirst().get();

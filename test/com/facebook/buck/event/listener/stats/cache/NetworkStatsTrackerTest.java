@@ -44,7 +44,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.hash.HashCode;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.annotation.Nonnull;
 import org.junit.Test;
 
 public class NetworkStatsTrackerTest {
@@ -155,12 +154,10 @@ public class NetworkStatsTrackerTest {
         tracker.getCacheRateStats().getValueString());
   }
 
-  @Nonnull
   public BuildRuleEvent.Started ruleStarted(String target) {
     return BuildRuleEvent.started(new FakeBuildRule(target), new BuildRuleDurationTracker());
   }
 
-  @Nonnull
   public Finished ruleFinished(BuildRuleEvent.Started started, CacheResult cacheResult) {
     return BuildRuleEvent.finished(
         started,

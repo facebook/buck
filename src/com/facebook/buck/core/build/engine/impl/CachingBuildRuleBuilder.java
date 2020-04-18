@@ -122,7 +122,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 class CachingBuildRuleBuilder {
@@ -430,7 +429,7 @@ class CachingBuildRuleBuilder {
               }
 
               @Override
-              public void onFailure(@Nonnull Throwable thrown) {
+              public void onFailure(Throwable thrown) {
                 throw new AssertionError("Dead code", thrown);
               }
             },
@@ -928,7 +927,7 @@ class CachingBuildRuleBuilder {
       long start = System.currentTimeMillis();
       return Futures.transform(
           manifestRuleKeyManager.performManifestBasedCacheFetch(manifestKeyAndInputs.get()),
-          (@Nonnull ManifestFetchResult result) -> {
+          (ManifestFetchResult result) -> {
             buildRuleScopeManager.setManifestFetchResult(result);
             manifestRuleKeyCacheCheckTimestampsMillis =
                 new Pair<>(start, System.currentTimeMillis());

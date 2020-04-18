@@ -28,7 +28,6 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 
 /**
  * Windows name pipe that operates over passed {@code WinNT.HANDLE} and removes a physical file
@@ -95,7 +94,7 @@ class WindowsNamedPipe extends BaseNamedPipe {
     }
 
     @Override
-    public void write(@Nonnull byte[] b) throws IOException {
+    public void write(byte[] b) throws IOException {
       IntByReference lpNumberOfBytesWritten = new IntByReference(0);
       if (!INSTANCE.WriteFile(pipeHandler, b, b.length, lpNumberOfBytesWritten, null)) {
         throw new IOException(
@@ -153,7 +152,7 @@ class WindowsNamedPipe extends BaseNamedPipe {
     }
 
     @Override
-    public int read(@Nonnull byte[] b) throws IOException {
+    public int read(byte[] b) throws IOException {
       IntByReference lpNumberOfBytesRead = new IntByReference(0);
       if (!INSTANCE.ReadFile(pipeHandler, b, b.length, lpNumberOfBytesRead, null)) {
         int lastError = INSTANCE.GetLastError();

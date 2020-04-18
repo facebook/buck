@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import javax.annotation.Nonnull;
 
 /** Transitive C++ preprocessor input cache */
 public class TransitiveCxxPreprocessorInputCache {
@@ -58,7 +57,7 @@ public class TransitiveCxxPreprocessorInputCache {
 
   public static ImmutableMap<BuildTarget, CxxPreprocessorInput>
       computeTransitiveCxxToPreprocessorInputMap(
-          @Nonnull CxxPlatform key,
+          CxxPlatform key,
           CxxPreprocessorDep preprocessorDep,
           boolean includeDep,
           ActionGraphBuilder graphBuilder) {
@@ -68,7 +67,7 @@ public class TransitiveCxxPreprocessorInputCache {
 
   private static ImmutableSortedMap<BuildTarget, CxxPreprocessorInput>
       computeTransitiveCxxToPreprocessorInputMap(
-          @Nonnull CxxPlatform key,
+          CxxPlatform key,
           CxxPreprocessorDep preprocessorDep,
           boolean includeDep,
           ActionGraphBuilder graphBuilder,

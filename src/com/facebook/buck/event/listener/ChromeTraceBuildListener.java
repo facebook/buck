@@ -98,7 +98,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 
 /** Logs events to a json file formatted to be viewed in Chrome Trace View (chrome://tracing). */
 public class ChromeTraceBuildListener implements BuckEventListener {
@@ -109,7 +108,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
           .build(
               new CacheLoader<String, String>() {
                 @Override
-                public String load(@Nonnull String key) {
+                public String load(String key) {
                   return CaseFormat.UPPER_CAMEL
                       .converterTo(CaseFormat.LOWER_UNDERSCORE)
                       .convert(key)

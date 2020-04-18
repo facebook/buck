@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
-import javax.annotation.Nonnull;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.WebSocketAdapter;
 import org.eclipse.jetty.websocket.servlet.WebSocketCreator;
@@ -92,7 +91,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
 
   /** This is the httpserver component of a WebSocket that maintains a session with one client. */
   public class MyWebSocket extends WebSocketAdapter {
-    private @Nonnull ImmutableSet<String> subscribedEvents = ImmutableSet.of();
+    private ImmutableSet<String> subscribedEvents = ImmutableSet.of();
 
     @Override
     public void onWebSocketConnect(Session session) {
@@ -129,7 +128,7 @@ public class StreamingWebSocketServlet extends WebSocketServlet {
     }
   }
 
-  private static @Nonnull ImmutableSet<String> parseSubscribedEvents(Session session) {
+  private static ImmutableSet<String> parseSubscribedEvents(Session session) {
     Map<String, List<String>> params = session.getUpgradeRequest().getParameterMap();
     List<String> events = params.get("event");
     if (events == null || events.isEmpty()) {

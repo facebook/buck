@@ -23,7 +23,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -87,7 +86,6 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
     return submit(task, null, amounts);
   }
 
-  @Nonnull
   @Override
   public ListenableFuture<?> submit(Runnable task) {
     return submit(task, defaultValues);
@@ -103,9 +101,8 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
         amounts);
   }
 
-  @Nonnull
   @Override
-  public <T> ListenableFuture<T> submit(Runnable task, @Nullable T result) {
+  public <T> ListenableFuture<T> submit(Runnable task, T result) {
     return submit(task, result, defaultValues);
   }
 
@@ -113,15 +110,13 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
     return submitWithSemaphore(task, amounts);
   }
 
-  @Nonnull
   @Override
   public <T> ListenableFuture<T> submit(Callable<T> task) {
     return submit(task, defaultValues);
   }
 
   @Override
-  public final boolean awaitTermination(long timeout, @Nonnull TimeUnit unit)
-      throws InterruptedException {
+  public final boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
     return delegate.awaitTermination(timeout, unit);
   }
 
@@ -146,7 +141,7 @@ public class WeightedListeningExecutorService extends AbstractListeningExecutorS
   }
 
   @Override
-  public final void execute(@Nonnull Runnable command) {
+  public final void execute(Runnable command) {
     submit(command);
   }
 }

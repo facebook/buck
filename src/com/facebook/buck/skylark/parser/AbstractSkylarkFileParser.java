@@ -74,7 +74,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 
@@ -241,7 +240,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
         env, toLoadedPaths(buildFilePath, dependencies, implicitLoadExtensionData));
   }
 
-  @Nonnull
   private PackageContext createPackageContext(
       ForwardRelativePath basePath,
       Globber globber,

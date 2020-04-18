@@ -84,7 +84,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
 
 public class AndroidBinaryGraphEnhancer {
 
@@ -517,7 +516,6 @@ public class AndroidBinaryGraphEnhancer {
     return androidBinaryResourcesGraphEnhancer;
   }
 
-  @Nonnull
   private ImmutableList<DexProducedFromJavaLibrary> createUberRDotJavaDexes(
       AndroidBinaryResourcesGraphEnhancer.AndroidBinaryResourcesGraphEnhancementResult
           resourcesEnhancementResult,
@@ -597,7 +595,6 @@ public class AndroidBinaryGraphEnhancer {
     return compileUberRDotJava;
   }
 
-  @Nonnull
   private ImmutableList<DexProducedFromJavaLibrary> createSplitAndDexUberRDotJava(
       JavaLibrary compileUberRDotJava) {
     // Create rule to split the compiled R.java into multiple smaller jars.

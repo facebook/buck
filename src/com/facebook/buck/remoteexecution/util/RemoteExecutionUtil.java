@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nonnull;
 
 /** Auxiliary utils to be used for starting/configuring/annotating etc. RE builds. */
 public class RemoteExecutionUtil {
@@ -89,7 +88,6 @@ public class RemoteExecutionUtil {
     return Optional.empty();
   }
 
-  @Nonnull
   private static ImmutableSet<String> getBuildTargets(
       List<String> commandArgs, BuckConfig buckConfig) {
     ImmutableSet.Builder<String> buildTargets = new ImmutableSet.Builder<>();
