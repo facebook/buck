@@ -1,0 +1,11 @@
+platform(
+    name = "p",
+    constraint_values = [],
+)
+
+prebuilt_cxx_library(
+    name = "ccc",
+    import_lib = select({
+        "DEFAULT": None,
+    }),
+)

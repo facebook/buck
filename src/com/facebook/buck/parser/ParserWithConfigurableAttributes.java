@@ -230,8 +230,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     for (Map.Entry<String, Object> attribute : attributes.getAttrs().entrySet()) {
       String attributeName = attribute.getKey();
       try {
-        convertedAttributes.put(
-            attributeName,
+        Object resolvedAttribute =
             resolveConfigurableAttributes(
                 state.getSelectorListResolver(),
                 configurationContext,
@@ -240,7 +239,13 @@ class ParserWithConfigurableAttributes extends AbstractParser {
                 state.getSelectorListFactory(),
                 attributeName,
                 attribute.getValue(),
-                dependencyStack));
+                dependencyStack);
+
+        // non-null attribute can be resolved to null
+        if (resolvedAttribute == null) {
+          continue;
+        }
+        convertedAttributes.put(attributeName, resolvedAttribute);
       } catch (CoerceFailedException e) {
         throw new HumanReadableException(e, dependencyStack, e.getMessage());
       }

@@ -35,6 +35,7 @@ import static org.junit.Assert.fail;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.pathformat.PathFormatter;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
 import com.facebook.buck.slb.ThriftProtocol;
 import com.facebook.buck.slb.ThriftUtil;
@@ -1644,5 +1645,29 @@ public class QueryCommandIntegrationTest {
     assertThat(
         parseJSON(result.getStdout()),
         is(equalTo(parseJSON(workspace.getFileContents("example/three-query-out.json")))));
+  }
+
+  private Syntax[] getSyntax() {
+    return Syntax.values();
+  }
+
+  @Parameters(method = "getSyntax")
+  @Test
+  public void nullValueInSelect(Syntax syntax) throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(
+            this, "query_command_null_value_in_select", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "query",
+            "--target-platforms=//:p",
+            "-c",
+            "parser.default_build_file_syntax=" + syntax,
+            "//:ccc",
+            "--output-attributes",
+            ".*");
+    result.assertSuccess();
   }
 }
