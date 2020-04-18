@@ -18,6 +18,7 @@ package com.facebook.buck.cli.query;
 
 import static com.facebook.buck.cli.ThriftOutputUtils.edgesToStringList;
 import static com.facebook.buck.cli.ThriftOutputUtils.nodesToStringList;
+import static com.facebook.buck.cli.ThriftOutputUtils.parseThriftDag;
 import static com.facebook.buck.testutil.OutputHelper.parseJSON;
 import static com.facebook.buck.util.MoreStringsForTests.containsIgnoringPlatformNewlines;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
@@ -37,8 +38,6 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
-import com.facebook.buck.slb.ThriftProtocol;
-import com.facebook.buck.slb.ThriftUtil;
 import com.facebook.buck.testutil.JsonMatcher;
 import com.facebook.buck.testutil.OutputHelper;
 import com.facebook.buck.testutil.ProcessResult;
@@ -53,7 +52,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1487,8 +1485,7 @@ public class QueryCommandIntegrationTest {
         workspace.runBuckCommand("query", "deps(//example:one)", "--output-format", "thrift");
     result.assertSuccess();
 
-    String stdout = result.getStdout();
-    DirectedAcyclicGraph thriftDag = parseThrift(stdout.getBytes(StandardCharsets.UTF_8));
+    DirectedAcyclicGraph thriftDag = parseThriftDag(result.getStdout());
     assertEquals(6, thriftDag.getNodesSize());
     assertThat(
         nodesToStringList(thriftDag.getNodes()),
@@ -1512,12 +1509,6 @@ public class QueryCommandIntegrationTest {
             "//example:three->//example:six",
             "//example:four->//example:six",
             "//example:five->//example:six"));
-  }
-
-  private static DirectedAcyclicGraph parseThrift(byte[] bytes) throws IOException {
-    DirectedAcyclicGraph thriftDag = new DirectedAcyclicGraph();
-    ThriftUtil.deserialize(ThriftProtocol.BINARY, bytes, thriftDag);
-    return thriftDag;
   }
 
   Object getJsonParams() {

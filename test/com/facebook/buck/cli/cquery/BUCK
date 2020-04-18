@@ -8,6 +8,8 @@ java_test(
         ["testdata/**"],
     ),
     deps = [
+        "//src-gen:thrift",
+        "//test/com/facebook/buck/cli:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//test/com/facebook/buck/util:testutil",

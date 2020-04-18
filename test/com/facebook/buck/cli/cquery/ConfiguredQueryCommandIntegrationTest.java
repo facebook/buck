@@ -19,12 +19,17 @@ package com.facebook.buck.cli.cquery;
 import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.cli.ThriftOutputUtils;
+import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
+import com.facebook.buck.query.thrift.DirectedAcyclicGraphNode;
 import com.facebook.buck.testutil.OutputHelper;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
+import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
+import java.util.Map;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -276,6 +281,67 @@ public class ConfiguredQueryCommandIntegrationTest {
             "srcs");
     assertOutputMatchesFileContentsExactly(
         "stdout-basic-dot-bfs-compact-attribute-printing", result, workspace);
+  }
+
+  @Test
+  public void basicThriftPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:ios-bin,//bin:mac-bin",
+            "--output-format",
+            "thrift");
+
+    result.assertSuccess();
+    DirectedAcyclicGraph thriftDag = ThriftOutputUtils.parseThriftDag(result.getStdout());
+    assertEquals(
+        ImmutableSet.copyOf(ThriftOutputUtils.nodesToStringList(thriftDag)),
+        ImmutableSet.of(
+            "//lib:bar (//config/platform:ios)",
+            "//lib:bar (//config/platform:macos)",
+            "//lib:foo (//config/platform:ios)",
+            "//lib:foo (//config/platform:macos)",
+            "//lib:maconly (//config/platform:macos)"));
+    assertEquals(
+        ImmutableSet.copyOf(ThriftOutputUtils.edgesToStringList(thriftDag)),
+        ImmutableSet.of(
+            "//lib:foo (//config/platform:ios)->//lib:bar (//config/platform:ios)",
+            "//lib:foo (//config/platform:macos)->//lib:bar (//config/platform:macos)",
+            "//lib:foo (//config/platform:macos)->//lib:maconly (//config/platform:macos)"));
+  }
+
+  @Test
+  public void basicThriftAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:ios-bin,//bin:mac-bin",
+            "--output-format",
+            "thrift",
+            "--output-attribute",
+            "srcs");
+
+    result.assertSuccess();
+    DirectedAcyclicGraph thriftDag = ThriftOutputUtils.parseThriftDag(result.getStdout());
+    // Since this is the same query as `basicThriftPrinting` (plus the additional CLI param) we're
+    // relying on the previous test to validate the structure of the output.
+    DirectedAcyclicGraphNode node =
+        ThriftOutputUtils.findNodeByName(thriftDag, "//lib:foo (//config/platform:macos)").get();
+    Map<String, String> attributes = node.getNodeAttributes();
+    assertEquals(1, attributes.size());
+    assertEquals("[foo-macos.m]", attributes.get("srcs"));
   }
 
   @Test

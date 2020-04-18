@@ -151,6 +151,9 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
         break;
 
       case THRIFT:
+        printThriftOutput(queryResult, attributesByResult, printStream);
+        break;
+
       default:
         throw new IllegalStateException(
             "checkSupportedOutputFormat should never give an unsupported format");
@@ -215,10 +218,10 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       case DOT_BFS:
       case DOT_COMPACT:
       case DOT_BFS_COMPACT:
-        return requestedOutputFormat;
       case THRIFT:
+        return requestedOutputFormat;
       default:
-        throw new QueryException("cquery does not currently support that output format");
+        throw new QueryException("Unknown output format: " + requestedOutputFormat);
     }
   }
 
@@ -308,6 +311,30 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       PrintStream printStream)
       throws IOException {
     printDotGraph(queryResult, attributesByResultOptional, Dot.OutputOrder.BFS, true, printStream);
+  }
+
+  private void printThriftOutput(
+      Set<QueryTarget> queryResult,
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+    ImmutableMap<BuildTarget, QueryTarget> resultByBuildTarget =
+        queryResult.stream()
+            .filter(t -> t instanceof QueryBuildTarget)
+            .collect(
+                ImmutableMap.toImmutableMap(t -> ((QueryBuildTarget) t).getBuildTarget(), t -> t));
+
+    ThriftOutput.Builder<TargetNode<?>> thriftBuilder =
+        ThriftOutput.builder(targetUniverse.getTargetGraph())
+            .filter(n -> resultByBuildTarget.containsKey(n.getBuildTarget()))
+            .nodeToNameMappingFunction(n -> n.getBuildTarget().toStringWithConfiguration());
+
+    attributesByResultOptional.ifPresent(
+        attrs ->
+            thriftBuilder.nodeToAttributesFunction(
+                node -> attrs.get(resultByBuildTarget.get(node.getBuildTarget()))));
+    thriftBuilder.build().writeOutput(printStream);
   }
 
   private void printDotGraph(
