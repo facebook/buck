@@ -829,7 +829,7 @@ public class TargetsCommand extends AbstractCommand {
       TargetResult targetResult = entry.getValue();
       targetResult.getRuleKey().ifPresent(builder::add);
       if (isShowCellPath) {
-        Path cellPath =
+        AbsPath cellPath =
             params
                 .getCells()
                 .getRootCell()
@@ -1035,7 +1035,7 @@ public class TargetsCommand extends AbstractCommand {
         targetNodeAttributes.put(
             "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
         if (isShowCellPath) {
-          Path cellPath =
+          AbsPath cellPath =
               params
                   .getCells()
                   .getRootCell()

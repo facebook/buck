@@ -49,12 +49,12 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
 
   @Override
   public Path getCellPathOrThrow(CanonicalCellName cellName) {
-    return getNewCellPathResolver().getCellPath(cellName);
+    return getNewCellPathResolver().getCellPath(cellName).getPath();
   }
 
   @Override
   public Path resolveCellRelativePath(CellRelativePath cellRelativePath) {
-    Path cellPath = getNewCellPathResolver().getCellPath(cellRelativePath.getCellName());
-    return cellPath.resolve(cellRelativePath.getPath().toPath(cellPath.getFileSystem()));
+    AbsPath cellPath = getNewCellPathResolver().getCellPath(cellRelativePath.getCellName());
+    return cellPath.resolve(cellRelativePath.getPath().toPath(cellPath.getFileSystem())).getPath();
   }
 }

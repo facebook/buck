@@ -17,6 +17,7 @@
 package com.facebook.buck.core.cell;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import java.nio.file.Path;
 import java.util.Optional;
 
@@ -36,7 +37,7 @@ public interface NewCellPathResolver {
    * @param cellName Canonical name of the cell.
    * @return Absolute path to the physical root of the cell.
    */
-  Path getCellPath(CanonicalCellName cellName);
+  AbsPath getCellPath(CanonicalCellName cellName);
 
   /**
    * @param path Absolute path to the physical root of the cell.

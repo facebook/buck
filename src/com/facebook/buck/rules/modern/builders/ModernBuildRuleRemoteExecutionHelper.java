@@ -22,6 +22,8 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.WrapsException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -122,14 +124,15 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   private final ImmutableSet<PathMatcher> ignorePaths;
 
   /** Gets the shared path prefix of all the cells. */
-  private static Path getCellPathPrefix(
+  private static AbsPath getCellPathPrefix(
       CellPathResolver cellResolver, ImmutableSet<CanonicalCellName> cellNames) {
-    return MorePaths.splitOnCommonPrefix(
-            cellNames.stream()
-                .map(name -> cellResolver.getNewCellPathResolver().getCellPath(name))
-                .collect(ImmutableList.toImmutableList()))
-        .get()
-        .getFirst();
+    return AbsPath.of(
+        MorePaths.splitOnCommonPrefix(
+                cellNames.stream()
+                    .map(name -> cellResolver.getNewCellPathResolver().getCellPath(name).getPath())
+                    .collect(ImmutableList.toImmutableList()))
+            .get()
+            .getFirst());
   }
 
   /** Gets all the canonical cell names. */
@@ -151,6 +154,12 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
     RequiredFile(Path path, FileNode fileNode, UploadDataSupplier dataSupplier) {
       this.path = path;
+      this.fileNode = fileNode;
+      this.dataSupplier = dataSupplier;
+    }
+
+    RequiredFile(RelPath path, FileNode fileNode, UploadDataSupplier dataSupplier) {
+      this.path = path.getPath();
       this.fileNode = fileNode;
       this.dataSupplier = dataSupplier;
     }
@@ -189,8 +198,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   private final Serializer serializer;
   private final Map<Class<?>, Map<String, Boolean>> loggedMessagesByClass =
       new ConcurrentHashMap<>();
-  private final Path cellPathPrefix;
-  private final Path projectRoot;
+  private final AbsPath cellPathPrefix;
+  private final RelPath projectRoot;
   private final Map<HashCode, Node> nodeMap = new ConcurrentHashMap<>();
   private final HashFunction hasher;
 
@@ -285,7 +294,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
             () -> {
               ImmutableList.Builder<RequiredFile> filesBuilder = ImmutableList.builder();
               for (CanonicalCellName cellName : cellNames) {
-                Path configPath = getPrefixRelativeCellPath(cellName).resolve(".buckconfig");
+                RelPath configPath = getPrefixRelativeCellPath(cellName).resolveRel(".buckconfig");
                 BuckConfig buckConfig =
                     rootCell
                         .getCellProvider()
@@ -296,7 +305,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                 filesBuilder.add(
                     new RequiredFile(
                         configPath,
-                        protocol.newFileNode(digest, configPath.getFileName().toString(), false),
+                        protocol.newFileNode(
+                            digest, configPath.getPath().getFileName().toString(), false),
                         new UploadDataSupplier() {
                           @Override
                           public Digest getDigest() {
@@ -348,7 +358,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
 
   @Override
   public Path getCellPathPrefix() {
-    return cellPathPrefix;
+    return cellPathPrefix.getPath();
   }
 
   @Override
@@ -414,12 +424,14 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
       outputs = new HashSet<>();
       rule.recordOutputs(
           path ->
-              outputs.add(cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(path))));
+              outputs.add(
+                  cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(path)).getPath()));
 
       // The Buck client expects the METADATA_PATH to be written at the root of the cell of the rule
       // being built. METADATA_PATH is a relative path within the root of the cell; here we must
       // explicitly relativize it with the root of the cell.
-      outputs.add(cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(METADATA_PATH)));
+      outputs.add(
+          cellPathPrefix.relativize(rule.getProjectFilesystem().resolve(METADATA_PATH)).getPath());
     }
 
     try (Scope ignored = LeafEvents.scope(eventBus, "constructing_action_info")) {
@@ -497,22 +509,22 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                           String.format(
                               "File (path:%s size:%s). Expected hash: [%s], Calculated hash: [%s]. Cached hash: [%s].",
                               path,
-                              Files.size(cellPathPrefix.resolve(path)),
+                              Files.size(cellPathPrefix.resolve(path).getPath()),
                               getDigest().getHash(),
                               hash.toString(),
                               fileHasher.get(cellPathPrefix.resolve(path)).toString());
                       if (cellPathPrefix.resolve(path).getParent() != null) {
-                        Path metaInfo =
+                        AbsPath metaInfo =
                             cellPathPrefix
                                 .resolve(path)
                                 .getParent()
                                 .resolve(
                                     path.getFileName().toString() + "." + FILE_HASH_VERIFICATION);
-                        if (Files.exists(metaInfo)) {
+                        if (Files.exists(metaInfo.getPath())) {
                           description +=
                               String.format(
                                   " Meta Data Found: [%s]",
-                                  String.join(",", Files.readAllLines(metaInfo)));
+                                  String.join(",", Files.readAllLines(metaInfo.getPath())));
                         }
                       }
                       return description;
@@ -569,7 +581,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                           }
                         }
                         files.put(
-                            cellPathPrefix.relativize(path),
+                            cellPathPrefix.relativize(path).getPath(),
                             protocol.newFileNode(
                                 protocol.newDigest(
                                     fileHasher.get(path).toString(), (int) Files.size(path)),
@@ -582,13 +594,14 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
                         DirectoryNode directoryNode =
                             protocol.newDirectoryNode(
                                 path.getFileName().toString(), getEmptyDirectoryDigest());
-                        emptyDirectories.put(cellPathPrefix.relativize(path), directoryNode);
+                        emptyDirectories.put(
+                            cellPathPrefix.relativize(path).getPath(), directoryNode);
                       }
 
                       @Override
                       public void addSymlink(Path path, Path fixedTarget) {
                         symlinks.put(
-                            cellPathPrefix.relativize(path),
+                            cellPathPrefix.relativize(path).getPath(),
                             protocol.newSymlinkNode(path.getFileName().toString(), fixedTarget));
                       }
                     },
@@ -629,7 +642,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     return pathsBuilder.build();
   }
 
-  private Path getPrefixRelativeCellPath(CanonicalCellName name) {
+  private RelPath getPrefixRelativeCellPath(CanonicalCellName name) {
     return cellPathPrefix.relativize(cellResolver.getNewCellPathResolver().getCellPath(name));
   }
 
@@ -647,7 +660,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
     return builder.toString().getBytes(StandardCharsets.UTF_8);
   }
 
-  private String relativizePathString(Path prefixRoot, String s) {
+  private String relativizePathString(AbsPath prefixRoot, String s) {
     if (s == null || s.length() == 0) {
       return "";
     }
@@ -657,7 +670,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   }
 
   private ImmutableSortedMap<String, String> getBuilderEnvironmentOverrides(
-      ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath, Path cellPrefixRoot) {
+      ImmutableList<Path> bootstrapClasspath, Iterable<Path> classpath, AbsPath cellPrefixRoot) {
 
     // TODO(shivanker): Pass all user environment overrides to remote workers.
     String relativePluginRoot = relativizePathString(cellPrefixRoot, pluginRoot);
@@ -675,7 +688,7 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
   }
 
   private static ImmutableList<String> getBuilderCommand(
-      Path projectRoot, String hash, ConsoleParams consoleParams) {
+      RelPath projectRoot, String hash, ConsoleParams consoleParams) {
     String rootString = projectRoot.toString();
     if (rootString.isEmpty()) {
       rootString = "./";
@@ -807,9 +820,9 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
           ImmutableList.Builder<RequiredFile> filesBuilder = ImmutableList.builder();
 
           for (Path path : classpath.get()) {
-            if (path.startsWith(cellPathPrefix)) {
-              Path relative = cellPathPrefix.relativize(path);
-              pathsBuilder.add(relative);
+            if (path.startsWith(cellPathPrefix.getPath())) {
+              RelPath relative = cellPathPrefix.relativize(path);
+              pathsBuilder.add(relative.getPath());
               byte[] data = Files.readAllBytes(path);
               Digest digest = protocol.computeDigest(data);
               filesBuilder.add(

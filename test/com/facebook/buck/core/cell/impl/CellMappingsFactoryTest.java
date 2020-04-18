@@ -80,12 +80,12 @@ public class CellMappingsFactoryTest {
     NewCellPathResolver newCellPathResolver =
         CellMappingsFactory.create(root, rootConfig.getConfig());
 
-    assertEquals(root.getPath(), newCellPathResolver.getCellPath(CanonicalCellName.rootCell()));
+    assertEquals(root, newCellPathResolver.getCellPath(CanonicalCellName.rootCell()));
     assertEquals(
-        root.resolve("repo1").getPath(),
+        root.resolve("repo1"),
         newCellPathResolver.getCellPath(CanonicalCellName.of(Optional.of("cell1"))));
     assertEquals(
-        root.resolve("repo2").getPath(),
+        root.resolve("repo2"),
         newCellPathResolver.getCellPath(CanonicalCellName.of(Optional.of("cell2"))));
   }
 

@@ -48,7 +48,7 @@ public abstract class DefaultNewCellPathResolver implements NewCellPathResolver 
   }
 
   @Override
-  public Path getCellPath(CanonicalCellName cellName) {
+  public AbsPath getCellPath(CanonicalCellName cellName) {
     AbsPath path = getCellToPathMap().get(cellName);
     if (path == null) {
       throw new RuntimeException(
@@ -56,7 +56,7 @@ public abstract class DefaultNewCellPathResolver implements NewCellPathResolver 
               "Cell '%s' does not have a mapping to a path. Known cells are {%s}",
               cellName, formatKnownCells()));
     }
-    return path.getPath();
+    return path;
   }
 
   @Override

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern.builders;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
@@ -67,6 +68,11 @@ class FileInputsAdder {
   FileInputsAdder(Delegate delegate, Path cellPathPrefix) {
     this.delegate = delegate;
     this.cellPathPrefix = cellPathPrefix;
+  }
+
+  FileInputsAdder(Delegate delegate, AbsPath cellPathPrefix) {
+    this.delegate = delegate;
+    this.cellPathPrefix = cellPathPrefix.getPath();
   }
 
   /**

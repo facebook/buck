@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -107,9 +108,11 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
   private static ImmutableSortedSet<Path> computeCellRoots(
       CellPathResolver cellResolver, CanonicalCellName cell) {
     ImmutableSortedSet.Builder<Path> builder = ImmutableSortedSet.naturalOrder();
-    Path cellPath = cellResolver.getNewCellPathResolver().getCellPath(cell);
-    builder.add(cellPath.relativize(cellPath));
-    cellResolver.getKnownRoots().forEach(path -> builder.add(cellPath.relativize(path.getPath())));
+    AbsPath cellPath = cellResolver.getNewCellPathResolver().getCellPath(cell);
+    builder.add(cellPath.relativize(cellPath).getPath());
+    cellResolver
+        .getKnownRoots()
+        .forEach(path -> builder.add(cellPath.relativize(path.getPath()).getPath()));
     return builder.build();
   }
 

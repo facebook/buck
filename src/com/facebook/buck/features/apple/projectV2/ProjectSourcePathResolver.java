@@ -18,6 +18,7 @@ package com.facebook.buck.features.apple.projectV2;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -99,7 +100,7 @@ public class ProjectSourcePathResolver {
 
     Optional<SourcePath> src = exportFileNode.get().getConstructorArg().getSrc();
     if (!src.isPresent()) {
-      Path output =
+      AbsPath output =
           getCellPathForTarget(buildTarget)
               .resolve(
                   buildTarget
@@ -113,7 +114,7 @@ public class ProjectSourcePathResolver {
     return resolveSourcePath(src.get());
   }
 
-  private Path getCellPathForTarget(BuildTarget buildTarget) {
+  private AbsPath getCellPathForTarget(BuildTarget buildTarget) {
     return projectCell.getNewCellPathResolver().getCellPath(buildTarget.getCell());
   }
 }

@@ -2993,20 +2993,20 @@ public class ProjectGenerator {
         arg.getXcodePublicHeadersSymlinks().orElse(cxxBuckConfig.getPublicHeadersSymlinksEnabled());
     Path headerSymlinkTreeRoot = getPathToHeaderSymlinkTree(targetNode, HeaderVisibility.PUBLIC);
 
-    Path basePath;
+    AbsPath basePath;
     if (shouldCreateHeadersSymlinks) {
       basePath = getCellPathForTarget(targetNode.getBuildTarget()).resolve(headerSymlinkTreeRoot);
     } else {
-      basePath = projectFilesystem.getRootPath().getPath();
+      basePath = projectFilesystem.getRootPath();
     }
     for (Map.Entry<Path, SourcePath> entry : getPublicCxxHeaders(targetNode).entrySet()) {
-      Path path;
+      AbsPath path;
       if (shouldCreateHeadersSymlinks) {
         path = basePath.resolve(entry.getKey());
       } else {
         path = basePath.resolve(resolveSourcePath(entry.getValue()).getPath());
       }
-      headerMapBuilder.add(entry.getKey().toString(), path);
+      headerMapBuilder.add(entry.getKey().toString(), path.getPath());
     }
 
     ImmutableMap<Path, Path> swiftHeaderMapEntries =
@@ -3016,7 +3016,7 @@ public class ProjectGenerator {
     }
   }
 
-  private Path getCellPathForTarget(BuildTarget buildTarget) {
+  private AbsPath getCellPathForTarget(BuildTarget buildTarget) {
     return projectCell.getNewCellPathResolver().getCellPath(buildTarget.getCell());
   }
 
@@ -4722,7 +4722,7 @@ public class ProjectGenerator {
 
     Optional<SourcePath> src = exportFileNode.get().getConstructorArg().getSrc();
     if (!src.isPresent()) {
-      Path output =
+      AbsPath output =
           getCellPathForTarget(buildTarget)
               .resolve(
                   buildTarget

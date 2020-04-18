@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableMap;
@@ -69,13 +70,14 @@ public class AuditCellCommand extends AbstractCommand {
               .filter(e -> e.getKey().isPresent())
               .collect(
                   ImmutableMap.toImmutableMap(
-                      e -> e.getKey().get(), e -> pathResolver.getCellPath(e.getValue())));
+                      e -> e.getKey().get(),
+                      e -> pathResolver.getCellPath(e.getValue()).getPath()));
     } else {
       ImmutableMap.Builder<String, Path> outputBuilder = ImmutableMap.builder();
       for (String arg : getArguments()) {
         CanonicalCellName cellName = rootCellNameResolver.getName(Optional.of(arg));
-        Path cellPath = pathResolver.getCellPath(cellName);
-        outputBuilder.put(arg, cellPath);
+        AbsPath cellPath = pathResolver.getCellPath(cellName);
+        outputBuilder.put(arg, cellPath.getPath());
       }
       cellMap = outputBuilder.build();
     }

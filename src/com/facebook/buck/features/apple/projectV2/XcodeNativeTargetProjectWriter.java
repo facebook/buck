@@ -43,6 +43,8 @@ import com.facebook.buck.apple.xcode.xcodeproj.XCBuildConfiguration;
 import com.facebook.buck.apple.xcode.xcodeproj.XCVersionGroup;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -524,12 +526,12 @@ class XcodeNativeTargetProjectWriter {
     buckBuildPhase.setShellPath(shell.toString());
 
     // Form relative paths to the cell root and build script
-    Path targetCellPath = newCellPathResolver.getCellPath(target.getCell());
-    Path targetPath =
+    AbsPath targetCellPath = newCellPathResolver.getCellPath(target.getCell());
+    AbsPath targetPath =
         targetCellPath.resolve(
             target.getCellRelativeBasePath().getPath().toPath(targetCellPath.getFileSystem()));
-    Path targetRelativeCellRoot = targetPath.relativize(targetCellPath);
-    Path cellRootRelativeBuildScript = targetCellPath.relativize(buildScriptPath);
+    RelPath targetRelativeCellRoot = targetPath.relativize(targetCellPath);
+    RelPath cellRootRelativeBuildScript = targetCellPath.relativize(buildScriptPath);
 
     String shellCommand =
         String.format(

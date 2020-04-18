@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
@@ -128,7 +129,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     // TODO(cjhopman): Is this supposed to be to the root cell?
     // Create symlink to our own cell.
     CanonicalCellName thisCellCanonicalName = cellNameResolver.getName(Optional.empty());
-    Path rootPath = cellPathResolver.getCellPath(thisCellCanonicalName);
+    AbsPath rootPath = cellPathResolver.getCellPath(thisCellCanonicalName);
     RelPath relativePath = projectFilesystem.getRootPath().relativize(rootPath);
     cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
     cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(ROOT_CELL_LINK_NAME));
@@ -139,7 +140,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       if (!alias.getKey().isPresent()) {
         continue;
       }
-      Path cellPath = cellPathResolver.getCellPath(alias.getValue());
+      AbsPath cellPath = cellPathResolver.getCellPath(alias.getValue());
       relativePath = projectFilesystem.getRootPath().relativize(cellPath);
       cellsPathsStringsBuilder.add(Escaper.BASH_ESCAPER.apply(relativePath.toString()));
       cellsNamesBuilder.add(Escaper.BASH_ESCAPER.apply(alias.getKey().get()));
@@ -159,10 +160,10 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       // alias?
 
       // Get the path relative to its cell.
-      Path relativeResourcePath =
+      RelPath relativeResourcePath =
           cellPathResolver.getCellPath(getBuildTarget().getCell()).relativize(resourcePath);
       // Get the path when referenced in the symlink created for the cell in the output folder.
-      Path linkedResourcePath = Paths.get(ROOT_CELL_LINK_NAME).resolve(relativeResourcePath);
+      RelPath linkedResourcePath = RelPath.get(ROOT_CELL_LINK_NAME).resolve(relativeResourcePath);
       resourceStringsBuilder.add(Escaper.BASH_ESCAPER.apply(linkedResourcePath.toString()));
     }
 
