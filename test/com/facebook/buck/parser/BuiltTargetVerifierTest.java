@@ -19,13 +19,8 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
-import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.FlavorDomain;
-import com.facebook.buck.core.model.Flavored;
-import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.BuildRule;
@@ -37,9 +32,7 @@ import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import java.nio.file.Paths;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,55 +50,6 @@ public class BuiltTargetVerifierTest {
   }
 
   @Test
-  public void testVerificationThrowsWhenUnknownFlavorsArePresent() {
-    BuiltTargetVerifier builtTargetVerifier = new BuiltTargetVerifier();
-
-    thrown.expect(UnexpectedFlavorException.class);
-    thrown.expectMessage(
-        "The following flavor(s) are not supported on target //a/b:c#d:\nd\n\n"
-            + "Available flavors are:\n\n\n\n"
-            + "- Please check the spelling of the flavor(s).\n"
-            + "- If the spelling is correct, please check that the related SDK has been installed.");
-
-    builtTargetVerifier.verifyBuildTarget(
-        cell.getRootCell(),
-        RuleType.of("build_rule", RuleType.Kind.BUILD),
-        Paths.get("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
-        new FlavoredDescription(
-            new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("a"), "b"))),
-        RawTargetNode.of(
-            ForwardRelativePath.EMPTY,
-            "java_library",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of())));
-  }
-
-  @Test
-  public void testVerificationThrowsWhenDescriptionNotFlavored() {
-    BuiltTargetVerifier builtTargetVerifier = new BuiltTargetVerifier();
-
-    thrown.expect(HumanReadableException.class);
-    thrown.expectMessage(
-        "The following flavor(s) are not supported on target //a/b:c:\nd.\n\n"
-            + "Please try to remove them when referencing this target.");
-
-    builtTargetVerifier.verifyBuildTarget(
-        cell.getRootCell(),
-        RuleType.of("build_rule", RuleType.Kind.BUILD),
-        Paths.get("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
-        new NonFlavoredDescription(),
-        RawTargetNode.of(
-            ForwardRelativePath.EMPTY,
-            "java_library",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of())));
-  }
-
-  @Test
   public void testVerificationThrowsWhenDataIsMalformed() {
     BuiltTargetVerifier builtTargetVerifier = new BuiltTargetVerifier();
 
@@ -120,7 +64,7 @@ public class BuiltTargetVerifierTest {
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         Paths.get("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
-        new NonFlavoredDescription(),
+        new SomeDescription(),
         RawTargetNode.of(
             ForwardRelativePath.EMPTY,
             "java_library",
@@ -144,7 +88,7 @@ public class BuiltTargetVerifierTest {
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
-        new NonFlavoredDescription(),
+        new SomeDescription(),
         RawTargetNode.of(
             ForwardRelativePath.of("z/y/z"),
             "java_library",
@@ -167,7 +111,7 @@ public class BuiltTargetVerifierTest {
         RuleType.of("build_rule", RuleType.Kind.BUILD),
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
-        new NonFlavoredDescription(),
+        new SomeDescription(),
         RawTargetNode.of(
             ForwardRelativePath.of("a/b"),
             "java_library",
@@ -176,74 +120,7 @@ public class BuiltTargetVerifierTest {
             TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("name", "target_name"))));
   }
 
-  @Test
-  public void testVerificationDoesNotFailWithValidFlavoredTargets() {
-    BuiltTargetVerifier builtTargetVerifier = new BuiltTargetVerifier();
-
-    builtTargetVerifier.verifyBuildTarget(
-        cell.getRootCell(),
-        RuleType.of("build_rule", RuleType.Kind.BUILD),
-        cell.getRootCell().getRoot().resolve("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c#d"),
-        new FlavoredDescription(
-            new FlavorDomain<>("flavors", ImmutableMap.of(InternalFlavor.of("d"), "b"))),
-        RawTargetNode.of(
-            ForwardRelativePath.of("a/b"),
-            "java_library",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("name", "c"))));
-  }
-
-  @Test
-  public void testVerificationDoesNotFailWithValidUnflavoredTargets() {
-    BuiltTargetVerifier builtTargetVerifier = new BuiltTargetVerifier();
-
-    builtTargetVerifier.verifyBuildTarget(
-        cell.getRootCell(),
-        RuleType.of("build_rule", RuleType.Kind.BUILD),
-        cell.getRootCell().getRoot().resolve("a/b/BUCK"),
-        UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
-        new NonFlavoredDescription(),
-        RawTargetNode.of(
-            ForwardRelativePath.of("a/b"),
-            "java_library",
-            ImmutableList.of(),
-            ImmutableList.of(),
-            TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("name", "c"))));
-  }
-
-  private static class FlavoredDescription
-      implements DescriptionWithTargetGraph<BuildRuleArg>, Flavored {
-
-    private final ImmutableSet<FlavorDomain<?>> flavorDomains;
-
-    private FlavoredDescription(FlavorDomain<?>... flavorDomains) {
-      this.flavorDomains = ImmutableSet.copyOf(flavorDomains);
-    }
-
-    @Override
-    public BuildRule createBuildRule(
-        BuildRuleCreationContextWithTargetGraph context,
-        BuildTarget buildTarget,
-        BuildRuleParams params,
-        BuildRuleArg args) {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Class<BuildRuleArg> getConstructorArgType() {
-      throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
-        TargetConfiguration toolchainTargetConfiguration) {
-      return Optional.of(flavorDomains);
-    }
-  }
-
-  private static class NonFlavoredDescription implements DescriptionWithTargetGraph<BuildRuleArg> {
+  private static class SomeDescription implements DescriptionWithTargetGraph<BuildRuleArg> {
 
     @Override
     public BuildRule createBuildRule(

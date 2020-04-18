@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.parser;
+package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.Flavor;
@@ -27,6 +27,10 @@ import com.google.common.collect.ImmutableSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Exception thrown by {@link com.facebook.buck.core.model.targetgraph.impl.FlavoredVerifier} when
+ * not allowed flavor was used.
+ */
 public class UnexpectedFlavorException extends HumanReadableException {
 
   private static final ImmutableSet<PatternAndMessage> suggestedMessagesForFlavors =
@@ -61,6 +65,7 @@ public class UnexpectedFlavorException extends HumanReadableException {
     super(message);
   }
 
+  /** Create an exception providing a suggestion for misspelled flavor. */
   public static UnexpectedFlavorException createWithSuggestions(
       Flavored flavored, UnconfiguredBuildTarget target) {
     ImmutableSet<Flavor> invalidFlavors = getInvalidFlavors(flavored, target);
