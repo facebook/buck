@@ -56,7 +56,6 @@ import com.google.common.collect.Multimaps;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -375,27 +374,18 @@ public class QueryCommand extends AbstractQueryCommand {
             .setOutputOrder(outputOrder)
             .setCompactMode(compactMode);
     if (shouldOutputAttributes()) {
-      Function<MergedTargetNode, ImmutableSortedMap<String, String>> nodeToAttributes =
-          getNodeToAttributeFunction(params);
-      dotBuilder.setNodeToAttributes(nodeToAttributes);
+      dotBuilder.setNodeToAttributes(getNodeToAttributeFunction(params));
     }
     dotBuilder.build().writeOutput(printStream);
   }
 
-  private Function<MergedTargetNode, ImmutableSortedMap<String, String>> getNodeToAttributeFunction(
+  private Function<MergedTargetNode, ImmutableSortedMap<String, Object>> getNodeToAttributeFunction(
       CommandRunnerParams params) {
     PatternsMatcher patternsMatcher = new PatternsMatcher(outputAttributes());
     return node ->
         getAllAttributes(params, node, DependencyStack.top(node.getBuildTarget()))
             .map(attrs -> getMatchingAttributes(patternsMatcher, attrs))
-            .map(
-                attrs ->
-                    attrs.entrySet().stream()
-                        .collect(
-                            ImmutableSortedMap.toImmutableSortedMap(
-                                Comparator.naturalOrder(),
-                                e -> e.getKey(),
-                                e -> String.valueOf(e.getValue()))))
+            .map(ImmutableSortedMap::copyOf)
             .orElseGet(() -> ImmutableSortedMap.of());
   }
 
@@ -422,9 +412,7 @@ public class QueryCommand extends AbstractQueryCommand {
                 targetNode -> targetNode.getBuildTarget().getFullyQualifiedName());
 
     if (shouldOutputAttributes()) {
-      Function<MergedTargetNode, ImmutableSortedMap<String, String>> nodeToAttributes =
-          getNodeToAttributeFunction(params);
-      targetNodeBuilder.nodeToAttributesFunction(nodeToAttributes);
+      targetNodeBuilder.nodeToAttributesFunction(getNodeToAttributeFunction(params));
     }
 
     ThriftOutput<MergedTargetNode> thriftOutput = targetNodeBuilder.build();

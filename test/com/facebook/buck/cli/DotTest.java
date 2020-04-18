@@ -210,7 +210,7 @@ public class DotTest {
     DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
 
     StringBuilder output = new StringBuilder();
-    ImmutableMap<String, ImmutableSortedMap<String, String>> nodeToAttributeProvider =
+    ImmutableMap<String, ImmutableSortedMap<String, Object>> nodeToAttributeProvider =
         ImmutableMap.of("A", ImmutableSortedMap.of("x", "foo", "y", "b.r"));
     Dot.builder(graph, "the_graph")
         .setNodeToName(Functions.identity())

@@ -39,7 +39,7 @@ public class Dot<T> {
   private final String graphName;
   private final Function<T, String> nodeToName;
   private final Function<T, String> nodeToTypeName;
-  private final Function<T, ImmutableSortedMap<String, String>> nodeToAttributes;
+  private final Function<T, ImmutableSortedMap<String, Object>> nodeToAttributes;
   private final OutputOrder outputOrder;
   private final Predicate<T> shouldContainNode;
   private final boolean compactMode;
@@ -76,7 +76,7 @@ public class Dot<T> {
     private boolean compactMode;
     private Function<T, String> nodeToName;
     private Function<T, String> nodeToTypeName;
-    private Function<T, ImmutableSortedMap<String, String>> nodeToAttributes;
+    private Function<T, ImmutableSortedMap<String, Object>> nodeToAttributes;
     private OutputOrder outputOrder;
     private Predicate<T> shouldContainNode;
 
@@ -123,7 +123,7 @@ public class Dot<T> {
      * are also escaped in order to be compatible with the <a
      * href="https://graphviz.gitlab.io/_pages/doc/info/lang.html">Dot format</a>.
      */
-    public Builder<T> setNodeToAttributes(Function<T, ImmutableSortedMap<String, String>> func) {
+    public Builder<T> setNodeToAttributes(Function<T, ImmutableSortedMap<String, Object>> func) {
       nodeToAttributes = func;
       return this;
     }
@@ -242,12 +242,12 @@ public class Dot<T> {
       Function<T, String> nodeToId,
       Function<T, String> nodeToName,
       Function<T, String> nodeToTypeName,
-      Function<T, ImmutableSortedMap<String, String>> nodeToAttributes,
+      Function<T, ImmutableSortedMap<String, Object>> nodeToAttributes,
       boolean compactMode) {
     String source = nodeToName.apply(node);
     String sourceType = nodeToTypeName.apply(node);
     String extraAttributes = "";
-    ImmutableSortedMap<String, String> nodeAttributes = nodeToAttributes.apply(node);
+    ImmutableSortedMap<String, Object> nodeAttributes = nodeToAttributes.apply(node);
 
     String labelAttribute = "";
     if (compactMode) {
@@ -261,7 +261,11 @@ public class Dot<T> {
       extraAttributes =
           ","
               + nodeAttributes.entrySet().stream()
-                  .map(entry -> escape("buck_" + entry.getKey()) + "=" + escape(entry.getValue()))
+                  .map(
+                      entry ->
+                          escape("buck_" + entry.getKey())
+                              + "="
+                              + escape(String.valueOf(entry.getValue())))
                   .collect(Collectors.joining(","));
     }
     return String.format(

@@ -36,7 +36,7 @@ public class ThriftOutput<T> {
   private final DirectedAcyclicGraph<T> graph;
   private final Predicate<T> filterPredicate;
   private Function<T, String> nodeToNameMappingFunction;
-  private final Function<T, ImmutableSortedMap<String, String>> nodeToAttributesFunction;
+  private final Function<T, ImmutableSortedMap<String, Object>> nodeToAttributesFunction;
 
   public static <T> ThriftOutput.Builder<T> builder(DirectedAcyclicGraph<T> graph) {
     return new ThriftOutput.Builder<>(graph);
@@ -52,7 +52,7 @@ public class ThriftOutput<T> {
     private final DirectedAcyclicGraph<T> graph;
     private Predicate<T> filterPredicate;
     private Function<T, String> nodeToNameMappingFunction;
-    private Function<T, ImmutableSortedMap<String, String>> nodeToAttributesFunction;
+    private Function<T, ImmutableSortedMap<String, Object>> nodeToAttributesFunction;
 
     private Builder(DirectedAcyclicGraph<T> graph) {
       this.graph = graph;
@@ -73,7 +73,7 @@ public class ThriftOutput<T> {
     }
 
     public ThriftOutput.Builder<T> nodeToAttributesFunction(
-        Function<T, ImmutableSortedMap<String, String>> nodeToAttributesFunction) {
+        Function<T, ImmutableSortedMap<String, Object>> nodeToAttributesFunction) {
       this.nodeToAttributesFunction = nodeToAttributesFunction;
       return this;
     }
@@ -118,7 +118,11 @@ public class ThriftOutput<T> {
 
       DirectedAcyclicGraphNode fromNode = new DirectedAcyclicGraphNode();
       fromNode.setName(nodeToNameMappingFunction.apply(node));
-      nodeToAttributesFunction.apply(node).forEach(fromNode::putToNodeAttributes);
+      nodeToAttributesFunction
+          .apply(node)
+          .forEach(
+              (attrName, attrValue) ->
+                  fromNode.putToNodeAttributes(attrName, String.valueOf(attrValue)));
       thriftDag.addToNodes(fromNode);
 
       ImmutableSet<T> outgoingNodes =

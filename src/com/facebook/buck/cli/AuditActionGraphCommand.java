@@ -206,10 +206,10 @@ public class AuditActionGraphCommand extends AbstractCommand {
       }
     }
     if (nodeView == NodeView.Extended) {
-      ImmutableSortedMap<String, String> attrs = getNodeAttributes(node);
-      for (ImmutableSortedMap.Entry<String, String> attr : attrs.entrySet()) {
+      ImmutableSortedMap<String, Object> attrs = getNodeAttributes(node);
+      for (ImmutableSortedMap.Entry<String, Object> attr : attrs.entrySet()) {
         // add 'buck_' prefix to avoid name collisions and make it compatible with DOT output
-        json.writeStringField("buck_" + attr.getKey(), attr.getValue());
+        json.writeStringField("buck_" + attr.getKey(), String.valueOf(attr.getValue()));
       }
     }
     json.writeEndObject();
@@ -244,8 +244,8 @@ public class AuditActionGraphCommand extends AbstractCommand {
     builder.build().writeOutput(out);
   }
 
-  private static ImmutableSortedMap<String, String> getNodeAttributes(BuildRule rule) {
-    ImmutableSortedMap.Builder<String, String> attrs = ImmutableSortedMap.naturalOrder();
+  private static ImmutableSortedMap<String, Object> getNodeAttributes(BuildRule rule) {
+    ImmutableSortedMap.Builder<String, Object> attrs = ImmutableSortedMap.naturalOrder();
     attrs.put("short_name", rule.getBuildTarget().getShortName());
     attrs.put("type", rule.getType());
     attrs.put(

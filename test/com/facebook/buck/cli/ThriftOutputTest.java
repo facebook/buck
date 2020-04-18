@@ -121,7 +121,7 @@ public class ThriftOutputTest {
     mutableGraph.addEdge("A", "B");
     DirectedAcyclicGraph<String> graph = new DirectedAcyclicGraph<>(mutableGraph);
 
-    ImmutableMap<String, ImmutableSortedMap<String, String>> nodeToAttributeProvider =
+    ImmutableMap<String, ImmutableSortedMap<String, Object>> nodeToAttributeProvider =
         ImmutableMap.of("A", ImmutableSortedMap.of("x", "foo", "y", "b.r"));
 
     byte[] byteArray;
