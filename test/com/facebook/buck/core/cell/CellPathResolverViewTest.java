@@ -45,10 +45,12 @@ public class CellPathResolverViewTest {
             getTestDelegate(),
             getTestCellNameResolver("c", Optional.empty(), "b", "c"),
             ImmutableSet.of("b", "c"),
-            filesystem.resolve("foo/c"));
+            AbsPath.of(filesystem.resolve("foo/c")));
 
-    Assert.assertEquals(filesystem.resolve("foo/b"), view.getCellPath(Optional.of("b")).get());
-    Assert.assertEquals(filesystem.resolve("foo/c"), view.getCellPath(Optional.of("c")).get());
+    Assert.assertEquals(
+        filesystem.resolve("foo/b"), view.getCellPath(Optional.of("b")).get().getPath());
+    Assert.assertEquals(
+        filesystem.resolve("foo/c"), view.getCellPath(Optional.of("c")).get().getPath());
 
     Assert.assertEquals(
         "Looking up undeclared cell should return empty",
@@ -69,8 +71,9 @@ public class CellPathResolverViewTest {
             getTestDelegate(),
             getTestCellNameResolver("c", Optional.empty(), "b", "c"),
             ImmutableSet.of("b", "c"),
-            filesystem.resolve("foo/c"));
-    Assert.assertEquals(filesystem.resolve("foo/c"), view.getCellPathOrThrow(Optional.empty()));
+            AbsPath.of(filesystem.resolve("foo/c")));
+    Assert.assertEquals(
+        filesystem.resolve("foo/c"), view.getCellPathOrThrow(Optional.empty()).getPath());
   }
 
   @Test
@@ -80,7 +83,7 @@ public class CellPathResolverViewTest {
             getTestDelegate(),
             getTestCellNameResolver("c", Optional.empty(), "b", "c"),
             ImmutableSet.of("b", "c"),
-            filesystem.resolve("foo/c"));
+            AbsPath.of(filesystem.resolve("foo/c")));
     Assert.assertEquals(
         "root cell resolves to no prefix.",
         Optional.empty(),
@@ -98,7 +101,7 @@ public class CellPathResolverViewTest {
             getTestDelegate(),
             getTestCellNameResolver("c", Optional.empty(), "b"),
             ImmutableSet.of("b"),
-            filesystem.resolve("foo/c"));
+            AbsPath.of(filesystem.resolve("foo/c")));
 
     ImmutableSortedSet<AbsPath> knownRoots = view.getKnownRoots();
 
@@ -116,14 +119,14 @@ public class CellPathResolverViewTest {
             getTestDelegate(),
             getTestCellNameResolver("c", Optional.empty(), "b"),
             ImmutableSet.of("b"),
-            filesystem.resolve("foo/c"));
+            AbsPath.of(filesystem.resolve("foo/c")));
 
     CellPathResolverView view2 =
         new CellPathResolverView(
             getTestDelegate(),
             getTestCellNameResolver("c", Optional.empty(), "b"),
             ImmutableSet.of("b"),
-            filesystem.resolve("foo/c"));
+            AbsPath.of(filesystem.resolve("foo/c")));
 
     Assert.assertEquals(view1, view2);
     Assert.assertEquals(view1.hashCode(), view2.hashCode());

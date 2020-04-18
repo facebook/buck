@@ -49,23 +49,23 @@ public interface CellPathResolver {
    * @return Absolute path to the physical location of the cell, or {@code Optional.empty()} if the
    *     cell name cannot be resolved.
    */
-  Optional<Path> getCellPath(Optional<String> cellName);
+  Optional<AbsPath> getCellPath(Optional<String> cellName);
 
   /**
    * @param cellName name of cell, Optional.empty() for root cell.
    * @return Absolute path to the physical location of the cell
    * @throws AssertionError if cell is not known
    */
-  Path getCellPathOrThrow(Optional<String> cellName);
+  AbsPath getCellPathOrThrow(Optional<String> cellName);
 
   /**
    * @return Absolute path to the physical location of the cell that contains the provided target
    * @throws AssertionError if cell is not known
    */
-  Path getCellPathOrThrow(CanonicalCellName cellName);
+  AbsPath getCellPathOrThrow(CanonicalCellName cellName);
 
   /** Resolve a cell-relative path to an absolute path. */
-  Path resolveCellRelativePath(CellRelativePath cellRelativePath);
+  AbsPath resolveCellRelativePath(CellRelativePath cellRelativePath);
 
   /**
    * @return absolute paths to all cells this resolver knows about. The key is the name of the cell

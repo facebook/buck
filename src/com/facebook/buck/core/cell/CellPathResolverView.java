@@ -35,14 +35,14 @@ import java.util.Optional;
 public final class CellPathResolverView extends AbstractCellPathResolver {
   private final CellPathResolver delegate;
   private final ImmutableSet<String> declaredCellNames;
-  private final Path cellPath;
+  private final AbsPath cellPath;
   private final CellNameResolver cellNameResolver;
 
   public CellPathResolverView(
       CellPathResolver delegate,
       CellNameResolver cellNameResolver,
       ImmutableSet<String> declaredCellNames,
-      Path cellPath) {
+      AbsPath cellPath) {
     this.delegate = delegate;
     this.cellNameResolver = cellNameResolver;
     Optional<String> thisName = delegate.getCanonicalCellName(cellPath);
@@ -67,7 +67,7 @@ public final class CellPathResolverView extends AbstractCellPathResolver {
   }
 
   @Override
-  public Optional<Path> getCellPath(Optional<String> cellName) {
+  public Optional<AbsPath> getCellPath(Optional<String> cellName) {
     if (cellName.isPresent()) {
       if (declaredCellNames.contains(cellName.get())) {
         return delegate.getCellPath(cellName);

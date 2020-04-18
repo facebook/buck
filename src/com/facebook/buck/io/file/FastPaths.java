@@ -17,6 +17,7 @@
 package com.facebook.buck.io.file;
 
 import com.facebook.buck.core.filesystems.BuckUnixPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.google.common.hash.Hasher;
 import java.nio.file.Path;
 
@@ -36,6 +37,13 @@ public class FastPaths {
       return BuckUnixPath.InternalsForFastPaths.getNameString((BuckUnixPath) path, index);
     }
     return path.getName(index).toString();
+  }
+
+  /**
+   * Gets a Path segment as a String. Roughly equivalent to {@code path.getName(index).toString()}.
+   */
+  public static String getNameString(RelPath path, int index) {
+    return getNameString(path.getPath(), index);
   }
 
   /**

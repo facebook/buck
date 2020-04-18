@@ -77,7 +77,7 @@ public class IsolationChecker {
   private final SourcePathResolverAdapter pathResolver;
   private final ImmutableMap<AbsPath, Optional<String>> cellMap;
   private final FailureReporter reporter;
-  private final Path rootCellPath;
+  private final AbsPath rootCellPath;
 
   /** IsolationChecker reports diagnostics through a FailureReporter. */
   public interface FailureReporter {
@@ -139,13 +139,13 @@ public class IsolationChecker {
   }
 
   private boolean isInRepo(Path path) {
-    Path cellPath = rootCellPath;
+    AbsPath cellPath = rootCellPath;
     for (Entry<AbsPath, Optional<String>> candidate : cellMap.entrySet()) {
       if (path.startsWith(candidate.getKey().getPath())) {
-        cellPath = candidate.getKey().getPath();
+        cellPath = candidate.getKey();
       }
     }
-    return path.startsWith(cellPath);
+    return path.startsWith(cellPath.getPath());
   }
 
   private interface VisitorDelegate {

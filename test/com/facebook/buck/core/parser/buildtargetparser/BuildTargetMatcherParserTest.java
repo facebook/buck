@@ -27,6 +27,7 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.OutputLabel;
@@ -152,7 +153,7 @@ public class BuildTargetMatcherParserTest {
             rootCellPathResolver,
             TestCellNameResolver.forSecondary("other", Optional.of("root")),
             ImmutableSet.of("root"),
-            filesystem.resolve("other").normalize());
+            AbsPath.of(filesystem.resolve("other").normalize()));
     UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory =
         new ParsingUnconfiguredBuildTargetViewFactory();
 

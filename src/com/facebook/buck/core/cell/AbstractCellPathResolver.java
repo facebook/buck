@@ -22,7 +22,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /** Contains base logic for {@link CellPathResolver}. */
@@ -35,12 +34,12 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
         .addAll(
             getCellPathsByRootCellExternalName().values().stream()
                 .collect(ImmutableList.toImmutableList()))
-        .add(AbsPath.of(getCellPathOrThrow(Optional.empty())))
+        .add(getCellPathOrThrow(Optional.empty()))
         .build();
   }
 
   @Override
-  public Path getCellPathOrThrow(Optional<String> cellName) {
+  public AbsPath getCellPathOrThrow(Optional<String> cellName) {
     return getCellPath(cellName)
         .orElseThrow(
             () ->
@@ -48,13 +47,13 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
   }
 
   @Override
-  public Path getCellPathOrThrow(CanonicalCellName cellName) {
-    return getNewCellPathResolver().getCellPath(cellName).getPath();
+  public AbsPath getCellPathOrThrow(CanonicalCellName cellName) {
+    return getNewCellPathResolver().getCellPath(cellName);
   }
 
   @Override
-  public Path resolveCellRelativePath(CellRelativePath cellRelativePath) {
+  public AbsPath resolveCellRelativePath(CellRelativePath cellRelativePath) {
     AbsPath cellPath = getNewCellPathResolver().getCellPath(cellRelativePath.getCellName());
-    return cellPath.resolve(cellRelativePath.getPath().toPath(cellPath.getFileSystem())).getPath();
+    return cellPath.resolve(cellRelativePath.getPath().toPath(cellPath.getFileSystem()));
   }
 }

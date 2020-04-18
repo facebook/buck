@@ -312,11 +312,10 @@ public class DaemonicParserState {
     Preconditions.checkState(matcher.matches());
     Optional<String> cellName = Optional.ofNullable(matcher.group(1));
     String includePath = matcher.group(2);
-    return AbsPath.of(
-        cellPathResolver
-            .getCellPath(cellName)
-            .map(cellPath -> cellPath.resolve(includePath))
-            .orElseGet(() -> cell.getFilesystem().resolve(includePath)));
+    return cellPathResolver
+        .getCellPath(cellName)
+        .map(cellPath -> cellPath.resolve(includePath))
+        .orElseGet(() -> AbsPath.of(cell.getFilesystem().resolve(includePath)));
   }
 
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;

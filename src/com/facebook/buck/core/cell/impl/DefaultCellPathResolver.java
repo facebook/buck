@@ -162,12 +162,11 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
   }
 
   @Override
-  public Optional<Path> getCellPath(Optional<String> cellName) {
+  public Optional<AbsPath> getCellPath(Optional<String> cellName) {
     if (cellName.isPresent()) {
-      return Optional.ofNullable(getCellPathsByRootCellExternalName().get(cellName.get()))
-          .map(AbsPath::getPath);
+      return Optional.ofNullable(getCellPathsByRootCellExternalName().get(cellName.get()));
     } else {
-      return Optional.of(getRoot().getPath());
+      return Optional.of(getRoot());
     }
   }
 

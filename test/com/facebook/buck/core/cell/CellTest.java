@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -117,10 +118,10 @@ public class CellTest {
             .build();
 
     Cells cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
-    Path path =
+    AbsPath path =
         cell1.getRootCell().getCellPathResolver().getCellPathOrThrow(Optional.of("example"));
 
-    assertEquals(path, cell2Root);
+    assertEquals(path.getPath(), cell2Root);
   }
 
   @Test

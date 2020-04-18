@@ -16,7 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
-import com.google.common.base.Preconditions;
+import com.facebook.buck.core.filesystems.RelPath;
 import java.nio.file.Path;
 
 /**
@@ -34,8 +34,10 @@ import java.nio.file.Path;
  */
 public class PublicOutputPath extends OutputPath {
   public PublicOutputPath(Path path) {
-    super(path);
-    Preconditions.checkState(
-        !path.isAbsolute(), "Expected relative path, got %s.", path.toString());
+    this(RelPath.of(path));
+  }
+
+  public PublicOutputPath(RelPath path) {
+    super(path.getPath());
   }
 }

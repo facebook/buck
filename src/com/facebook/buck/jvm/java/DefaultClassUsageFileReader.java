@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -62,10 +63,10 @@ class DefaultClassUsageFileReader {
           loadClassUsageMap(classUsageFilePath);
       for (Map.Entry<String, ImmutableMap<String, Integer>> jarUsedClassesEntry :
           classUsageEntries.entrySet()) {
-        Path jarAbsolutePath =
+        AbsPath jarAbsolutePath =
             convertRecordedJarPathToAbsolute(
                 projectFilesystem, cellPathResolver, jarUsedClassesEntry.getKey());
-        SourcePath sourcePath = jarPathToSourcePath.get(jarAbsolutePath);
+        SourcePath sourcePath = jarPathToSourcePath.get(jarAbsolutePath.getPath());
         if (sourcePath == null) {
           // This indicates a dependency that wasn't among the deps of the rule; i.e.,
           // it came from the build environment (JDK, Android SDK, etc.)
@@ -100,9 +101,9 @@ class DefaultClassUsageFileReader {
       }
 
       String jarPath = entry.getKey();
-      Path jarAbsolutePath =
+      AbsPath jarAbsolutePath =
           convertRecordedJarPathToAbsolute(projectFilesystem, cellPathResolver, jarPath);
-      builder.add(jarAbsolutePath);
+      builder.add(jarAbsolutePath.getPath());
     }
     return builder.build();
   }
@@ -122,13 +123,13 @@ class DefaultClassUsageFileReader {
         && jarUsedClassesEntry.entrySet().stream().allMatch(entry -> entry.getValue().equals(1));
   }
 
-  private static Path convertRecordedJarPathToAbsolute(
+  private static AbsPath convertRecordedJarPathToAbsolute(
       ProjectFilesystem projectFilesystem, CellPathResolver cellPathResolver, String jarPath) {
     Path recordedPath = Paths.get(jarPath);
-    Path jarAbsolutePath =
+    AbsPath jarAbsolutePath =
         recordedPath.isAbsolute()
             ? getAbsolutePathForCellRootedPath(recordedPath, cellPathResolver)
-            : projectFilesystem.resolve(recordedPath);
+            : AbsPath.of(projectFilesystem.resolve(recordedPath));
     return jarAbsolutePath;
   }
 
@@ -140,7 +141,7 @@ class DefaultClassUsageFileReader {
    * @param cellPathResolver the CellPathResolver capable of mapping cell_name to absolute root path
    * @return an absolute path: 'path/to/cell/root/' + 'relative/path/in/cell'
    */
-  private static Path getAbsolutePathForCellRootedPath(
+  private static AbsPath getAbsolutePathForCellRootedPath(
       Path cellRootedPath, CellPathResolver cellPathResolver) {
     Preconditions.checkArgument(cellRootedPath.isAbsolute(), "Path must begin with /<cell_name>");
     Iterator<Path> pathIterator = cellRootedPath.iterator();

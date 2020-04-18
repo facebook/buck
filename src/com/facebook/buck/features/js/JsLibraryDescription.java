@@ -24,6 +24,7 @@ import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -396,21 +397,21 @@ public class JsLibraryDescription
       SourcePathResolverAdapter sourcePathResolverAdapter,
       CellPathResolver cellPathResolver,
       UnflavoredBuildTarget target) {
-    Path directoryOfBuildFile =
+    AbsPath directoryOfBuildFile =
         cellPathResolver.resolveCellRelativePath(target.getCellRelativeBasePath());
-    Path transplantTo = MorePaths.normalize(directoryOfBuildFile.resolve(basePath));
-    Path absolutePath =
+    AbsPath transplantTo = MorePaths.normalize(directoryOfBuildFile.resolve(basePath));
+    AbsPath absolutePath =
         PathSourcePath.from(sourcePath)
             .map(
                 pathSourcePath -> // for sub paths, replace the leading directory with the base path
                 transplantTo.resolve(
                         MorePaths.relativize(
-                            directoryOfBuildFile,
+                            directoryOfBuildFile.getPath(),
                             sourcePathResolverAdapter.getAbsolutePath(sourcePath))))
             .orElse(transplantTo); // build target output paths are replaced completely
 
     return projectFilesystem
-        .getPathRelativeToProjectRoot(absolutePath)
+        .getPathRelativeToProjectRoot(absolutePath.getPath())
         .orElseThrow(
             () ->
                 new HumanReadableException(

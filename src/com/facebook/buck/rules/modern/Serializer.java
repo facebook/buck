@@ -19,6 +19,7 @@ package com.facebook.buck.rules.modern;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.OutputLabel;
@@ -93,7 +94,7 @@ public class Serializer {
   private final SourcePathRuleFinder ruleFinder;
   private final ImmutableMap<AbsPath, Optional<String>> cellMap;
   private final Delegate delegate;
-  private final Path rootCellPath;
+  private final AbsPath rootCellPath;
 
   /**
    * The first time a "dynamic" object is encountered (including Buildables themselves),
@@ -221,7 +222,7 @@ public class Serializer {
     @Override
     public void visitOutputPath(OutputPath value) throws IOException {
       stream.writeBoolean(value instanceof PublicOutputPath);
-      writeRelativePath(value.getPath());
+      writeRelativePath(RelPath.of(value.getPath()));
     }
 
     private void writeString(String value) throws IOException {
@@ -250,7 +251,7 @@ public class Serializer {
         stream.writeBoolean(true);
         ExplicitBuildTargetSourcePath buildTargetSourcePath = (ExplicitBuildTargetSourcePath) value;
         writeValue(buildTargetSourcePath.getTarget(), new TypeToken<BuildTarget>() {});
-        writeRelativePath(buildTargetSourcePath.getResolvedPath());
+        writeRelativePath(RelPath.of(buildTargetSourcePath.getResolvedPath()));
       } else if (value instanceof ForwardingBuildTargetSourcePath) {
         visitSourcePath(((ForwardingBuildTargetSourcePath) value).getDelegate());
       } else if (value instanceof PathSourcePath) {
@@ -258,7 +259,7 @@ public class Serializer {
         stream.writeBoolean(false);
         writeValue(
             getCellName(pathSourcePath.getFilesystem()), new TypeToken<Optional<String>>() {});
-        writeRelativePath(pathSourcePath.getRelativePath());
+        writeRelativePath(RelPath.of(pathSourcePath.getRelativePath()));
       } else {
         throw new IllegalStateException(
             String.format("Cannot serialize SourcePath of type %s.", value.getClass().getName()));
@@ -332,11 +333,11 @@ public class Serializer {
     public void visitPath(Path path) throws IOException {
       if (path.isAbsolute()) {
         stream.writeBoolean(true);
-        Path cellPath = rootCellPath;
+        AbsPath cellPath = rootCellPath;
         Optional<String> cellName = Optional.empty();
         for (Map.Entry<AbsPath, Optional<String>> candidate : cellMap.entrySet()) {
           if (path.startsWith(candidate.getKey().getPath())) {
-            cellPath = candidate.getKey().getPath();
+            cellPath = candidate.getKey();
             cellName = candidate.getValue();
           }
         }
@@ -345,12 +346,11 @@ public class Serializer {
         writeRelativePath(cellPath.relativize(path));
       } else {
         stream.writeBoolean(false);
-        writeRelativePath(path);
+        writeRelativePath(RelPath.of(path));
       }
     }
 
-    private void writeRelativePath(Path path) throws IOException {
-      Verify.verify(!path.isAbsolute());
+    private void writeRelativePath(RelPath path) throws IOException {
       int nameCount = path.getNameCount();
       stream.writeInt(nameCount);
       if (nameCount == 0) {

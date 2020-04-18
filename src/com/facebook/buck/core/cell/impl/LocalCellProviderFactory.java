@@ -130,10 +130,7 @@ public class LocalCellProviderFactory {
 
                 CellPathResolver cellPathResolver =
                     new CellPathResolverView(
-                        rootCellCellPathResolver,
-                        cellNameResolver,
-                        cellMapping.keySet(),
-                        cellPath.getPath());
+                        rootCellCellPathResolver, cellNameResolver, cellMapping.keySet(), cellPath);
 
                 Optional<EmbeddedCellBuckOutInfo> embeddedCellBuckOutInfo = Optional.empty();
                 CanonicalCellName canonicalCellName =
