@@ -1,0 +1,10 @@
+digraph result_graph {
+  "//lib:bar (//config/platform:ios)" [style=filled,color="#D6D3F5",buck_srcs="[bar-ios.m, bar-all.m]"];
+  "//lib:bar (//config/platform:macos)" [style=filled,color="#D6D3F5",buck_srcs="[bar-all.m]"];
+  "//lib:foo (//config/platform:ios)" [style=filled,color="#D6D3F5",buck_srcs="[foo-ios.m]"];
+  "//lib:foo (//config/platform:ios)" -> "//lib:bar (//config/platform:ios)";
+  "//lib:foo (//config/platform:macos)" [style=filled,color="#D6D3F5",buck_srcs="[foo-macos.m]"];
+  "//lib:foo (//config/platform:macos)" -> "//lib:bar (//config/platform:macos)";
+  "//lib:foo (//config/platform:macos)" -> "//lib:maconly (//config/platform:macos)";
+  "//lib:maconly (//config/platform:macos)" [style=filled,color="#D6D3F5",buck_srcs="[maconly.m]"];
+}

@@ -60,6 +60,7 @@ import org.kohsuke.args4j.Option;
 public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private PerBuildState perBuildState;
+  private TargetUniverse targetUniverse;
 
   @Option(
       name = "--target-universe",
@@ -102,7 +103,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       perBuildState = parserState;
       ParsingContext parsingContext =
           createParsingContext(params.getCells(), pool.getListeningExecutorService());
-      PrecomputedTargetUniverse targetUniverse =
+      targetUniverse =
           PrecomputedTargetUniverse.createFromRootTargets(
               rootTargetsForUniverse(), params, parserState, parsingContext);
       ConfiguredQueryEnvironment env =
@@ -134,9 +135,21 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
         break;
 
       case DOT:
-      case DOT_BFS:
+        printDotOutput(queryResult, attributesByResult, printStream);
+        break;
+
       case DOT_COMPACT:
+        printDotCompactOutput(queryResult, attributesByResult, printStream);
+        break;
+
+      case DOT_BFS:
+        printDotBfsOutput(queryResult, attributesByResult, printStream);
+        break;
+
       case DOT_BFS_COMPACT:
+        printDotBfsCompactOutput(queryResult, attributesByResult, printStream);
+        break;
+
       case THRIFT:
       default:
         throw new IllegalStateException(
@@ -195,14 +208,14 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
   private OutputFormat checkSupportedOutputFormat(OutputFormat requestedOutputFormat)
       throws QueryException {
     switch (requestedOutputFormat) {
-      case JSON:
-        return OutputFormat.JSON;
       case LIST:
         return shouldOutputAttributes() ? OutputFormat.JSON : OutputFormat.LIST;
+      case JSON:
       case DOT:
       case DOT_BFS:
       case DOT_COMPACT:
       case DOT_BFS_COMPACT:
+        return requestedOutputFormat;
       case THRIFT:
       default:
         throw new QueryException("cquery does not currently support that output format");
@@ -257,6 +270,73 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
         Multimaps.transformValues(
             queryResultMap, input -> toPresentationForm(Objects.requireNonNull(input)));
     ObjectMappers.WRITER.writeValue(printStream, targetsAndResultsNames.asMap());
+  }
+
+  private void printDotOutput(
+      Set<QueryTarget> queryResult,
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+    printDotGraph(
+        queryResult, attributesByResultOptional, Dot.OutputOrder.SORTED, false, printStream);
+  }
+
+  private void printDotCompactOutput(
+      Set<QueryTarget> queryResult,
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+    printDotGraph(
+        queryResult, attributesByResultOptional, Dot.OutputOrder.SORTED, true, printStream);
+  }
+
+  private void printDotBfsOutput(
+      Set<QueryTarget> queryResult,
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+    printDotGraph(queryResult, attributesByResultOptional, Dot.OutputOrder.BFS, false, printStream);
+  }
+
+  private void printDotBfsCompactOutput(
+      Set<QueryTarget> queryResult,
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+          attributesByResultOptional,
+      PrintStream printStream)
+      throws IOException {
+    printDotGraph(queryResult, attributesByResultOptional, Dot.OutputOrder.BFS, true, printStream);
+  }
+
+  private void printDotGraph(
+      Set<QueryTarget> queryResult,
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+          attributesByResultOptional,
+      Dot.OutputOrder outputOrder,
+      boolean compactMode,
+      PrintStream printStream)
+      throws IOException {
+    ImmutableMap<BuildTarget, QueryTarget> resultByBuildTarget =
+        queryResult.stream()
+            .filter(t -> t instanceof QueryBuildTarget)
+            .collect(
+                ImmutableMap.toImmutableMap(t -> ((QueryBuildTarget) t).getBuildTarget(), t -> t));
+
+    Dot.Builder<TargetNode<?>> dotBuilder =
+        Dot.builder(targetUniverse.getTargetGraph(), "result_graph")
+            .setNodesToFilter(n -> resultByBuildTarget.containsKey(n.getBuildTarget()))
+            .setNodeToName(node -> node.getBuildTarget().toStringWithConfiguration())
+            .setNodeToTypeName(node -> node.getRuleType().getName())
+            .setOutputOrder(outputOrder)
+            .setCompactMode(compactMode);
+
+    attributesByResultOptional.ifPresent(
+        attrs ->
+            dotBuilder.setNodeToAttributes(
+                node -> attrs.get(resultByBuildTarget.get(node.getBuildTarget()))));
+    dotBuilder.build().writeOutput(printStream);
   }
 
   private Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>> collectAttributes(

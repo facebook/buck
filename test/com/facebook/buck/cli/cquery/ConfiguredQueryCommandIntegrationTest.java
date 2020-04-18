@@ -50,6 +50,17 @@ public class ConfiguredQueryCommandIntegrationTest {
         OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())));
   }
 
+  /** Same as {@link #assertOutputMatchesFileContents} but doesn't attempt to sort output */
+  private void assertOutputMatchesFileContentsExactly(
+      String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
+      throws IOException {
+    result.assertSuccess();
+
+    assertEquals(
+        normalizeNewlines(workspace.getFileContents(expectedOutputFile)),
+        normalizeNewlines(result.getStdout()));
+  }
+
   private void assertJSONOutputMatchesFileContents(
       String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
       throws IOException {
@@ -116,6 +127,155 @@ public class ConfiguredQueryCommandIntegrationTest {
             "--output-attribute",
             "srcs");
     assertJSONOutputMatchesFileContents("stdout-basic-attribute-printing.json", result, workspace);
+  }
+
+  @Test
+  public void basicDotPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:ios-bin,//bin:mac-bin",
+            "--output-format",
+            "dot");
+    assertOutputMatchesFileContentsExactly("stdout-basic-dot-printing", result, workspace);
+  }
+
+  @Test
+  public void basicDotAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:ios-bin,//bin:mac-bin",
+            "--output-format",
+            "dot",
+            "--output-attribute",
+            "srcs");
+    assertOutputMatchesFileContentsExactly(
+        "stdout-basic-dot-attribute-printing", result, workspace);
+  }
+
+  @Test
+  public void basicDotCompactPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:ios-bin,//bin:mac-bin",
+            "--output-format",
+            "dot_compact");
+    assertOutputMatchesFileContentsExactly("stdout-basic-dot-compact-printing", result, workspace);
+  }
+
+  @Test
+  public void basicDotCompactAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:ios-bin,//bin:mac-bin",
+            "--output-format",
+            "dot_compact",
+            "--output-attribute",
+            "srcs");
+    assertOutputMatchesFileContentsExactly(
+        "stdout-basic-dot-compact-attribute-printing", result, workspace);
+  }
+
+  @Test
+  public void basicDotBfsPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:mac-bin",
+            "--output-format",
+            "dot_bfs");
+    assertOutputMatchesFileContentsExactly("stdout-basic-dot-bfs-printing", result, workspace);
+  }
+
+  @Test
+  public void basicDotBfsAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:mac-bin",
+            "--output-format",
+            "dot_bfs",
+            "--output-attribute",
+            "srcs");
+    assertOutputMatchesFileContentsExactly(
+        "stdout-basic-dot-bfs-attribute-printing", result, workspace);
+  }
+
+  @Test
+  public void basicDotBfsCompactPrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:mac-bin",
+            "--output-format",
+            "dot_bfs_compact");
+    assertOutputMatchesFileContentsExactly(
+        "stdout-basic-dot-bfs-compact-printing", result, workspace);
+  }
+
+  @Test
+  public void basicDotBfsCompactAttributePrinting() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib/...",
+            "--target-universe",
+            "//bin:mac-bin",
+            "--output-format",
+            "dot_bfs_compact",
+            "--output-attribute",
+            "srcs");
+    assertOutputMatchesFileContentsExactly(
+        "stdout-basic-dot-bfs-compact-attribute-printing", result, workspace);
   }
 
   @Test

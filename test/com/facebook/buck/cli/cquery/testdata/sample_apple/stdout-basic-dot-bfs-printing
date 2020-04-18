@@ -1,0 +1,7 @@
+digraph result_graph {
+  "//lib:foo (//config/platform:macos)" [style=filled,color="#D6D3F5"];
+  "//lib:foo (//config/platform:macos)" -> "//lib:bar (//config/platform:macos)";
+  "//lib:foo (//config/platform:macos)" -> "//lib:maconly (//config/platform:macos)";
+  "//lib:bar (//config/platform:macos)" [style=filled,color="#D6D3F5"];
+  "//lib:maconly (//config/platform:macos)" [style=filled,color="#D6D3F5"];
+}
