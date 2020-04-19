@@ -96,8 +96,6 @@ public class ConfiguredQueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("cquery", "//lib:foo");
-
-    result.assertSuccess();
     // TODO(srice): We shouldn't expect it to print a readable name, but until we know what the hash
     // is going to be it doesn't matter what we put here.
     assertOutputMatches("//lib:foo (//config/platform:ios)", result);

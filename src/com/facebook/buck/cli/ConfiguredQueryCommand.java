@@ -122,16 +122,23 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       Set<QueryTarget> queryResult,
       PrintStream printStream)
       throws QueryException, IOException {
-    OutputFormat trueOutputFormat = checkSupportedOutputFormat(outputFormat);
+    // For the most part we print in exactly the format the user asks for, BUT we don't support
+    // printing attributes in list format so if they asked for both just print in JSON instead.
+    OutputFormat trueOutputFormat =
+        (outputFormat == OutputFormat.LIST && shouldOutputAttributes())
+            ? OutputFormat.JSON
+            : outputFormat;
+
     Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>> attributesByResult =
         collectAttributes(params, env, queryResult);
-    switch (trueOutputFormat) {
-      case JSON:
-        printJsonOutput(queryResult, attributesByResult, printStream);
-        break;
 
+    switch (trueOutputFormat) {
       case LIST:
         printListOutput(queryResult, attributesByResult, printStream);
+        break;
+
+      case JSON:
+        printJsonOutput(queryResult, attributesByResult, printStream);
         break;
 
       case DOT:
@@ -153,10 +160,6 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
       case THRIFT:
         printThriftOutput(queryResult, attributesByResult, printStream);
         break;
-
-      default:
-        throw new IllegalStateException(
-            "checkSupportedOutputFormat should never give an unsupported format");
     }
   }
 
@@ -205,24 +208,6 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
     // we only want to include `//my:binary` in the universe, not both. We should provide a way for
     // functions to specify which of their parameters should be used for the universe calculation.
     return ImmutableList.copyOf(expression.getTargets(evaluator));
-  }
-
-  // Returns the output format that we should actually use based on what the user asked for.
-  private OutputFormat checkSupportedOutputFormat(OutputFormat requestedOutputFormat)
-      throws QueryException {
-    switch (requestedOutputFormat) {
-      case LIST:
-        return shouldOutputAttributes() ? OutputFormat.JSON : OutputFormat.LIST;
-      case JSON:
-      case DOT:
-      case DOT_BFS:
-      case DOT_COMPACT:
-      case DOT_BFS_COMPACT:
-      case THRIFT:
-        return requestedOutputFormat;
-      default:
-        throw new QueryException("Unknown output format: " + requestedOutputFormat);
-    }
   }
 
   private void printListOutput(
