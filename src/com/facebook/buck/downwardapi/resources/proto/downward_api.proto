@@ -42,7 +42,7 @@
 //        protoc \
 //        --java_out=src-gen/ \
 //        --java_opt=annotate_code \
-//        src/com/facebook/buck/downward/resources/proto/downward_api.proto \
+//        src/com/facebook/buck/downwardapi/resources/proto/downward_api.proto \
 //        --plugin=protoc-gen-grpc-java=third-party/java/grpc/protoc-gen-grpc-java-1.10.1-osx-x86_64.exe \
 //        --grpc-java_out=src/ \
 //        && yes | rm src-gen/com/facebook/buck/downward/model/*.meta
