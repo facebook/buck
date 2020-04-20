@@ -81,6 +81,10 @@ public class BuildLogHelper {
         Optional.of(logFile.resolveSibling(BuckConstant.BUCK_MACHINE_LOG_FILE_NAME))
             .filter(path -> projectFilesystem.isFile(path));
 
+    Optional<Path> simpleConsoleLogFile =
+        Optional.of(logFile.resolveSibling(BuckConstant.BUCK_SIMPLE_CONSOLE_LOG_FILE_NAME))
+            .filter(path -> projectFilesystem.isFile(path));
+
     Optional<Integer> exitCode =
         machineReadableLogFile.flatMap(
             machineFile -> readObjectFieldFromLog(machineFile, PREFIX_EXIT_CODE, "exitCode"));
@@ -155,6 +159,7 @@ public class BuildLogHelper {
         traceFile,
         configJsonFile,
         fixSpecFile,
+        simpleConsoleLogFile,
         projectFilesystem.getFileSize(logFile),
         Date.from(projectFilesystem.getLastModifiedTime(logFile).toInstant()));
   }

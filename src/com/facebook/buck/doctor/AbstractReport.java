@@ -150,6 +150,7 @@ public abstract class AbstractReport {
                   Optionals.addIfPresent(input.getRuleKeyDiagKeysFile(), result);
                   Optionals.addIfPresent(input.getRuleKeyDiagGraphFile(), result);
                   Optionals.addIfPresent(input.getConfigJsonFile(), result);
+                  Optionals.addIfPresent(input.getSimpleConsoleLogFile(), result);
                   result.add(input.getRelativePath());
                   return result.build();
                 })

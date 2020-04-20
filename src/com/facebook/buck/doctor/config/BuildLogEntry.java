@@ -55,6 +55,8 @@ public interface BuildLogEntry {
 
   Optional<Path> getBuckFixSpecFile();
 
+  Optional<Path> getSimpleConsoleLogFile();
+
   long getSize();
 
   Date getLastModifiedTime();
@@ -84,6 +86,7 @@ public interface BuildLogEntry {
       Optional<? extends Path> traceFile,
       Optional<? extends Path> configJsonFile,
       Optional<? extends Path> buckFixSpecFile,
+      Optional<? extends Path> simpleConsoleLogFile,
       long size,
       Date lastModifiedTime) {
     return ImmutableBuildLogEntry.ofImpl(
@@ -100,6 +103,7 @@ public interface BuildLogEntry {
         traceFile,
         configJsonFile,
         buckFixSpecFile,
+        simpleConsoleLogFile,
         size,
         lastModifiedTime);
   }

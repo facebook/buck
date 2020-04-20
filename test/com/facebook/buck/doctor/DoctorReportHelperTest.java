@@ -154,6 +154,7 @@ public class DoctorReportHelperTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
+            Optional.empty(),
             10,
             new Date());
 
