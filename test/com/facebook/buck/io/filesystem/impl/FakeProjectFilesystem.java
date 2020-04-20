@@ -259,7 +259,7 @@ public class FakeProjectFilesystem extends DefaultProjectFilesystem {
       @Override
       public Path resolve(Path path) {
         // Avoid resolving paths from different Java FileSystems.
-        return resolve(path.toString());
+        return resolve(path.toString()).getPath();
       }
     };
   }

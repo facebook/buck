@@ -78,7 +78,7 @@ public class RunInfoLegacyToolTest {
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     BuildTarget target = BuildTargetFactory.newInstance("//:test");
     HashMap<Path, HashCode> hashes = new HashMap<>();
-    hashes.put(filesystem.resolve("some_file"), HashCode.fromString("aaaa"));
+    hashes.put(filesystem.resolve("some_file").getPath(), HashCode.fromString("aaaa"));
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes);
 
     TestDefaultRuleKeyFactory ruleKeyFactory = new TestDefaultRuleKeyFactory(hashCache, ruleFinder);

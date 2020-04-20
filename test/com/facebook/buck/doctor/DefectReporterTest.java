@@ -19,6 +19,7 @@ package com.facebook.buck.doctor;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.SourceControlInfo;
 import com.facebook.buck.doctor.config.UserLocalConfiguration;
@@ -104,7 +105,7 @@ public class DefectReporterTest {
     DefectReporter.DefectSubmitResult defectSubmitResult =
         reporter.submitReport(defectReportBuilder.setIncludedPaths(fileToBeIncluded).build());
 
-    Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
+    AbsPath reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     ZipInspector inspector = new ZipInspector(reportPath);
     inspector.assertFileContents(fileToBeIncluded, fileToBeIncludedContent);
   }
@@ -114,7 +115,7 @@ public class DefectReporterTest {
     DefectReporter.DefectSubmitResult defectSubmitResult =
         reporter.submitReport(defectReportBuilder.build());
 
-    Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
+    AbsPath reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     try (ZipFile zipFile = new ZipFile(reportPath.toFile())) {
       ZipEntry entry = zipFile.getEntry("report.json");
       JsonNode reportNode = ObjectMappers.READER.readTree(zipFile.getInputStream(entry));
@@ -167,7 +168,7 @@ public class DefectReporterTest {
                         ImmutableSet.of("dirty_file")))
                 .build());
 
-    Path reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
+    AbsPath reportPath = filesystem.resolve(defectSubmitResult.getReportSubmitLocation().get());
     try (ZipFile zipFile = new ZipFile(reportPath.toFile())) {
       ZipEntry entry = zipFile.getEntry("report.json");
       JsonNode reportNode = ObjectMappers.READER.readTree(zipFile.getInputStream(entry));

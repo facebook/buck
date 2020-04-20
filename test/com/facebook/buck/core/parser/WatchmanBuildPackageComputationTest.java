@@ -102,8 +102,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
     }
     ProjectFilesystemView projectFilesystemView =
         filesystem.asView().withView(Paths.get("project"), ImmutableSet.of());
-    ImmutableSet<AbsPath> watchedProjects =
-        ImmutableSet.of(AbsPath.of(filesystem.resolve("project")));
+    ImmutableSet<AbsPath> watchedProjects = ImmutableSet.of(filesystem.resolve("project"));
     BuildPackagePaths paths =
         transform(
             key(CanonicalCellName.rootCell(), BuildTargetPattern.Kind.PACKAGE, "dir", ""),

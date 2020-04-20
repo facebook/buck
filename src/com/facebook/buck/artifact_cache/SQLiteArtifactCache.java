@@ -180,9 +180,9 @@ public class SQLiteArtifactCache implements ArtifactCache {
         if (Objects.nonNull(artifact)) {
           // artifact was inlined into the database as a blob
           filesystem.writeBytesToPath(artifact, output.get());
-        } else if (filesystem.exists(filesystem.resolve(filepath))) {
+        } else if (Files.exists(filesystem.resolve(filepath).getPath())) {
           // artifact stored on disk with path in database
-          filesystem.copyFile(filesystem.resolve(filepath), output.get());
+          filesystem.copyFile(filesystem.resolve(filepath).getPath(), output.get());
         } else {
           // artifact stored on disk was removed by another cache, remove database entry
           db.deleteContent(contentHash);
@@ -325,7 +325,7 @@ public class SQLiteArtifactCache implements ArtifactCache {
         byte[] inlined = existingArtifact.get().artifact;
         String artifactPath = existingArtifact.get().filepath;
 
-        if (Objects.nonNull(inlined) || filesystem.exists(filesystem.resolve(artifactPath))) {
+        if (Objects.nonNull(inlined) || Files.exists(filesystem.resolve(artifactPath).getPath())) {
           db.accessContent(contentHash);
           continue;
         }

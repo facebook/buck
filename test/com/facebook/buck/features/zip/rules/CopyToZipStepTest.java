@@ -18,6 +18,7 @@ package com.facebook.buck.features.zip.rules;
 
 import static org.junit.Assert.assertEquals;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.TestExecutionContext;
@@ -43,20 +44,20 @@ public class CopyToZipStepTest {
   @Before
   public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    outputPath = filesystem.resolve("output.zip").toAbsolutePath();
+    outputPath = filesystem.resolve("output.zip").getPath();
   }
 
   @Test
   public void descriptionWithAllInformation() {
-    Path sourceFile1 = filesystem.resolve("sourceFile1").toAbsolutePath();
-    Path sourceFile2 = filesystem.resolve("sourceFile2").toAbsolutePath();
+    AbsPath sourceFile1 = filesystem.resolve("sourceFile1");
+    AbsPath sourceFile2 = filesystem.resolve("sourceFile2");
     ImmutableMap<Path, Path> sources =
         ImmutableMap.of(
-            Paths.get("entry1"), sourceFile1,
-            Paths.get("entry2"), sourceFile2);
-    Path zipFile1 = filesystem.resolve("zipFile1");
-    Path zipFile2 = filesystem.resolve("zipFile2");
-    ImmutableList<Path> zipSources = ImmutableList.of(zipFile1, zipFile2);
+            Paths.get("entry1"), sourceFile1.getPath(),
+            Paths.get("entry2"), sourceFile2.getPath());
+    AbsPath zipFile1 = filesystem.resolve("zipFile1");
+    AbsPath zipFile2 = filesystem.resolve("zipFile2");
+    ImmutableList<Path> zipSources = ImmutableList.of(zipFile1.getPath(), zipFile2.getPath());
     ImmutableSet<Pattern> entriesToExclude =
         ImmutableSet.of(Pattern.compile("e.*"), Pattern.compile("META-INF"));
     CopyToZipStep step =
@@ -79,12 +80,12 @@ public class CopyToZipStepTest {
 
   @Test
   public void descriptionWithSourcesOnly() {
-    Path sourceFile1 = filesystem.resolve("sourceFile1").toAbsolutePath();
-    Path sourceFile2 = filesystem.resolve("sourceFile2").toAbsolutePath();
+    AbsPath sourceFile1 = filesystem.resolve("sourceFile1");
+    AbsPath sourceFile2 = filesystem.resolve("sourceFile2");
     ImmutableMap<Path, Path> sources =
         ImmutableMap.of(
-            Paths.get("entry1"), sourceFile1,
-            Paths.get("entry2"), sourceFile2);
+            Paths.get("entry1"), sourceFile1.getPath(),
+            Paths.get("entry2"), sourceFile2.getPath());
     CopyToZipStep step =
         new CopyToZipStep(
             filesystem,
@@ -104,9 +105,9 @@ public class CopyToZipStepTest {
 
   @Test
   public void descriptionWithZipSourcesOnly() {
-    Path zipFile1 = filesystem.resolve("zipFile1");
-    Path zipFile2 = filesystem.resolve("zipFile2");
-    ImmutableList<Path> zipSources = ImmutableList.of(zipFile1, zipFile2);
+    AbsPath zipFile1 = filesystem.resolve("zipFile1");
+    AbsPath zipFile2 = filesystem.resolve("zipFile2");
+    ImmutableList<Path> zipSources = ImmutableList.of(zipFile1.getPath(), zipFile2.getPath());
     CopyToZipStep step =
         new CopyToZipStep(
             filesystem,

@@ -48,7 +48,7 @@ public class SkylarkFilesystem extends JavaIoFileSystem {
 
   @Override
   protected java.nio.file.Path getNioPath(Path path) {
-    return filesystem.resolve(path.toString());
+    return filesystem.resolve(path.toString()).getPath();
   }
 
   /** @return The {@link SkylarkFilesystem} which methods */

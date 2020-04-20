@@ -84,7 +84,7 @@ public class PerBuildStateCacheTest {
 
   @Test
   public void putPackageIfNotPresent() {
-    AbsPath packageFile = AbsPath.of(filesystem.resolve("Foo"));
+    AbsPath packageFile = filesystem.resolve("Foo");
 
     Package pkg = createPackage(cells.getRootCell(), packageFile);
 
@@ -97,7 +97,7 @@ public class PerBuildStateCacheTest {
 
   @Test
   public void lookupPackage() {
-    AbsPath packageFile = AbsPath.of(filesystem.resolve("Foo"));
+    AbsPath packageFile = filesystem.resolve("Foo");
 
     Optional<Package> lookupPackage =
         packageCache.lookupComputedNode(cells.getRootCell(), packageFile, eventBus);
@@ -114,7 +114,7 @@ public class PerBuildStateCacheTest {
 
   @Test
   public void packageInRootCellIsNotInChildCell() {
-    AbsPath packageFile = AbsPath.of(filesystem.resolve("Foo"));
+    AbsPath packageFile = filesystem.resolve("Foo");
 
     // Make sure to create two different packages
     Package pkg1 =

@@ -57,7 +57,7 @@ public class AaptPackageResourcesTest {
   private FakeFileHashCache hashCache;
 
   SourcePath createPathSourcePath(String path, String contentForHash) {
-    hashCache.set(filesystem.resolve(path), HashCode.fromInt(contentForHash.hashCode()));
+    hashCache.set(filesystem.resolve(path).getPath(), HashCode.fromInt(contentForHash.hashCode()));
     return FakeSourcePath.of(filesystem, path);
   }
 

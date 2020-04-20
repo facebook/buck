@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
@@ -28,7 +29,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import java.nio.file.Path;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,7 +52,7 @@ public class UnflavoredBuildTargetFactoryTest {
 
   @Test
   public void createSucceeds() {
-    Path buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
+    AbsPath buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
     RelPath relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
     String base_path = MorePaths.getParentOrEmpty(relativeBuildFilePath).toString();
 
@@ -67,12 +67,12 @@ public class UnflavoredBuildTargetFactoryTest {
             ImmutableList.of(),
             ImmutableList.of(),
             TwoArraysImmutableHashMap.copyOf(malformedMap)),
-        buildFilePath);
+        buildFilePath.getPath());
   }
 
   @Test
   public void exceptionOnMalformedRawNode() {
-    Path buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
+    AbsPath buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
 
     // Missing base_path
     Map<String, Object> malformedMap = ImmutableMap.of("bar", ImmutableMap.of("name", "bar"));
@@ -88,12 +88,12 @@ public class UnflavoredBuildTargetFactoryTest {
             ImmutableList.of(),
             ImmutableList.of(),
             TwoArraysImmutableHashMap.copyOf(malformedMap)),
-        buildFilePath);
+        buildFilePath.getPath());
   }
 
   @Test
   public void exceptionOnSwappedRawNode() {
-    Path buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
+    AbsPath buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
     RelPath relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
     String base_path = MorePaths.getParentOrEmpty(relativeBuildFilePath).toString();
 
@@ -112,6 +112,6 @@ public class UnflavoredBuildTargetFactoryTest {
             ImmutableList.of(),
             ImmutableList.of(),
             TwoArraysImmutableHashMap.copyOf(malformedMap)),
-        buildFilePath);
+        buildFilePath.getPath());
   }
 }

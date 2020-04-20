@@ -94,8 +94,8 @@ public class PythonMappedComponentsTest {
         Matchers.equalTo(
             ImmutableMap.of(
                 filesystem.getPath("key1"),
-                filesystem.resolve("src1"),
+                filesystem.resolve("src1").getPath(),
                 filesystem.getPath("key2"),
-                filesystem.resolve("src2"))));
+                filesystem.resolve("src2").getPath())));
   }
 }

@@ -21,6 +21,7 @@ import static org.hamcrest.Matchers.hasEntry;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -60,7 +61,7 @@ public class JUnitStepTest {
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
     Path testRunnerClasspath = Paths.get("ant-out/classes/junit");
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    Path classpathFile = filesystem.resolve("foo");
+    AbsPath classpathFile = filesystem.resolve("foo");
 
     int javaVersion = 8;
     JUnitJvmArgs args =
@@ -68,7 +69,7 @@ public class JUnitStepTest {
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)
             .setTargetJavaVersion(javaVersion)
-            .setClasspathFile(classpathFile)
+            .setClasspathFile(classpathFile.getPath())
             .setTestRunnerClasspath(testRunnerClasspath)
             .setExtraJvmArgs(vmArgs)
             .setTestType(TestType.JUNIT)
@@ -138,7 +139,7 @@ public class JUnitStepTest {
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
     Path testRunnerClasspath = Paths.get("ant-out/classes/junit");
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    Path classpathFile = filesystem.resolve("foo");
+    AbsPath classpathFile = filesystem.resolve("foo");
 
     int javaVersion = 11;
     JUnitJvmArgs args =
@@ -146,7 +147,7 @@ public class JUnitStepTest {
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)
             .setTargetJavaVersion(javaVersion)
-            .setClasspathFile(classpathFile)
+            .setClasspathFile(classpathFile.getPath())
             .setTestRunnerClasspath(testRunnerClasspath)
             .setExtraJvmArgs(vmArgs)
             .setTestType(TestType.JUNIT)
@@ -204,14 +205,14 @@ public class JUnitStepTest {
     Path directoryForTestResults = Paths.get("buck-out/gen/theresults/");
     Path testRunnerClasspath = Paths.get("ant-out/classes/junit");
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    Path classpathFile = filesystem.resolve("foo");
+    AbsPath classpathFile = filesystem.resolve("foo");
 
     JUnitJvmArgs args =
         ImmutableJUnitJvmArgs.builder()
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)
             .setTargetJavaVersion(8)
-            .setClasspathFile(classpathFile)
+            .setClasspathFile(classpathFile.getPath())
             .setTestRunnerClasspath(testRunnerClasspath)
             .setExtraJvmArgs(ImmutableList.of())
             .setTestType(TestType.JUNIT)
@@ -254,12 +255,12 @@ public class JUnitStepTest {
     Path testRunnerClasspath = Paths.get("ant-out/classes/junit");
 
     ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    Path classpathFile = filesystem.resolve("foo");
+    AbsPath classpathFile = filesystem.resolve("foo");
 
     int javaVersion = 8;
     JUnitJvmArgs args =
         ImmutableJUnitJvmArgs.builder()
-            .setClasspathFile(classpathFile)
+            .setClasspathFile(classpathFile.getPath())
             .setBuildId(pretendBuildId)
             .setBuckModuleBaseSourceCodePath(modulePath)
             .setTargetJavaVersion(javaVersion)

@@ -78,7 +78,6 @@ import com.google.common.collect.Streams;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -155,9 +154,7 @@ public class ParsePipelineTest {
         fixture
             .getTargetNodeParsePipeline()
             .getAllRequestedTargetNodes(
-                cell,
-                AbsPath.of(fixture.getCells().getFilesystem().resolve("BUCK")),
-                Optional.empty());
+                cell, fixture.getCells().getFilesystem().resolve("BUCK"), Optional.empty());
     FluentIterable<BuildTarget> allDeps =
         FluentIterable.from(libTargetNodes)
             .transformAndConcat(
@@ -189,9 +186,7 @@ public class ParsePipelineTest {
       fixture
           .getTargetNodeParsePipeline()
           .getAllRequestedTargetNodes(
-              cell,
-              AbsPath.of(cell.getFilesystem().resolve("no/such/file/BUCK")),
-              Optional.empty());
+              cell, cell.getFilesystem().resolve("no/such/file/BUCK"), Optional.empty());
     }
   }
 
@@ -204,7 +199,7 @@ public class ParsePipelineTest {
           stringContainsInOrder("Buck wasn't able to parse", "No such file or directory"));
       fixture
           .getBuildFileRawNodeParsePipeline()
-          .getFile(cell, AbsPath.of(cell.getFilesystem().resolve("no/such/file/BUCK")));
+          .getFile(cell, cell.getFilesystem().resolve("no/such/file/BUCK"));
     }
   }
 
@@ -244,7 +239,7 @@ public class ParsePipelineTest {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
 
-    AbsPath rootBuildFile = AbsPath.of(cell.getFilesystem().resolve("BUCK"));
+    AbsPath rootBuildFile = cell.getFilesystem().resolve("BUCK");
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
@@ -263,12 +258,12 @@ public class ParsePipelineTest {
     assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
-    AbsPath aBuildFile = AbsPath.of(cell.getFilesystem().resolve("a/BUCK"));
+    AbsPath aBuildFile = cell.getFilesystem().resolve("a/BUCK");
     assertTrue(fixture.buildFileExistsInCache(aBuildFile));
     BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
     assertTrue(fixture.targetExistsInCache(aTarget));
 
-    AbsPath bBuildFile = AbsPath.of(cell.getFilesystem().resolve("b/BUCK"));
+    AbsPath bBuildFile = cell.getFilesystem().resolve("b/BUCK");
     assertTrue(fixture.buildFileExistsInCache(bBuildFile));
     BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
     assertTrue(fixture.targetExistsInCache(bTarget));
@@ -291,7 +286,7 @@ public class ParsePipelineTest {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
 
-    AbsPath rootBuildFile = AbsPath.of(cell.getFilesystem().resolve("BUCK"));
+    AbsPath rootBuildFile = cell.getFilesystem().resolve("BUCK");
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
@@ -310,18 +305,18 @@ public class ParsePipelineTest {
     assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
-    AbsPath aBuildFile = AbsPath.of(cell.getFilesystem().resolve("a/BUCK"));
+    AbsPath aBuildFile = cell.getFilesystem().resolve("a/BUCK");
     assertTrue(fixture.buildFileExistsInCache(aBuildFile));
     BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
     assertTrue(fixture.targetExistsInCache(aTarget));
 
-    AbsPath bBuildFile = AbsPath.of(cell.getFilesystem().resolve("b/BUCK"));
+    AbsPath bBuildFile = cell.getFilesystem().resolve("b/BUCK");
     assertTrue(fixture.buildFileExistsInCache(bBuildFile));
     BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
     assertTrue(fixture.targetExistsInCache(bTarget));
 
     // Invalidation of an include file only invalidates build files that depend on it
-    fixture.invalidatePath(AbsPath.of(cell.getFilesystem().resolve("a/test.bzl")));
+    fixture.invalidatePath(cell.getFilesystem().resolve("a/test.bzl"));
 
     assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
@@ -338,7 +333,7 @@ public class ParsePipelineTest {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
 
-    AbsPath rootBuildFile = AbsPath.of(cell.getFilesystem().resolve("BUCK"));
+    AbsPath rootBuildFile = cell.getFilesystem().resolve("BUCK");
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
@@ -357,26 +352,26 @@ public class ParsePipelineTest {
     assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
-    Path aBuildFile = cell.getFilesystem().resolve("a/BUCK");
-    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(aBuildFile)));
+    AbsPath aBuildFile = cell.getFilesystem().resolve("a/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
     BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
     assertTrue(fixture.targetExistsInCache(aTarget));
 
-    Path bBuildFile = cell.getFilesystem().resolve("b/BUCK");
-    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(bBuildFile)));
+    AbsPath bBuildFile = cell.getFilesystem().resolve("b/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
     BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
     assertTrue(fixture.targetExistsInCache(bTarget));
 
     // Invalidation of a source file does not invalidate any nodes/manifests
-    fixture.invalidatePath(AbsPath.of(cell.getFilesystem().resolve("b/B.java")));
+    fixture.invalidatePath(cell.getFilesystem().resolve("b/B.java"));
 
     assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
-    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(aBuildFile)));
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
     assertTrue(fixture.targetExistsInCache(aTarget));
 
-    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(bBuildFile)));
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
     assertTrue(fixture.targetExistsInCache(bTarget));
   }
 
@@ -389,7 +384,7 @@ public class ParsePipelineTest {
 
     fixture.getTargetNodeParsePipeline().getNode(cell, aTarget, DependencyStack.root());
 
-    AbsPath nonExistentPackageFile = AbsPath.of(cell.getFilesystem().resolve("a/PACKAGE"));
+    AbsPath nonExistentPackageFile = cell.getFilesystem().resolve("a/PACKAGE");
     assertFalse(cell.getFilesystem().isFile(nonExistentPackageFile));
 
     assertTrue(fixture.packageFileExistsInCache(nonExistentPackageFile));
@@ -408,7 +403,7 @@ public class ParsePipelineTest {
     Fixture fixture = createMultiThreadedFixture("pipeline_test");
     Cell cell = fixture.getCells();
 
-    Path rootBuildFile = cell.getFilesystem().resolve("BUCK");
+    AbsPath rootBuildFile = cell.getFilesystem().resolve("BUCK");
 
     BuildTarget libTarget = BuildTargetFactory.newInstance("//:lib");
 
@@ -424,32 +419,32 @@ public class ParsePipelineTest {
     }
 
     // Validate expected state
-    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(rootBuildFile)));
+    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
-    Path aBuildFile = cell.getFilesystem().resolve("a/BUCK");
-    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(aBuildFile)));
+    AbsPath aBuildFile = cell.getFilesystem().resolve("a/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
     BuildTarget aTarget = BuildTargetFactory.newInstance("//a:a");
     assertTrue(fixture.targetExistsInCache(aTarget));
 
-    Path bBuildFile = cell.getFilesystem().resolve("b/BUCK");
-    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(bBuildFile)));
+    AbsPath bBuildFile = cell.getFilesystem().resolve("b/BUCK");
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
     BuildTarget bTarget = BuildTargetFactory.newInstance("//b:b");
     assertTrue(fixture.targetExistsInCache(bTarget));
 
-    AbsPath packageFile = AbsPath.of(cell.getFilesystem().resolve("b/PACKAGE"));
+    AbsPath packageFile = cell.getFilesystem().resolve("b/PACKAGE");
     assertTrue(fixture.packageFileExistsInCache(packageFile));
 
     // Invalidation of a package only invalidates the nodes of the dependent build file
     fixture.invalidatePath(packageFile);
 
-    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(rootBuildFile)));
+    assertTrue(fixture.buildFileExistsInCache(rootBuildFile));
     assertTrue(fixture.targetExistsInCache(libTarget));
 
-    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(aBuildFile)));
+    assertTrue(fixture.buildFileExistsInCache(aBuildFile));
     assertTrue(fixture.targetExistsInCache(aTarget));
 
-    assertTrue(fixture.buildFileExistsInCache(AbsPath.of(bBuildFile)));
+    assertTrue(fixture.buildFileExistsInCache(bBuildFile));
     assertFalse(fixture.targetExistsInCache(bTarget));
 
     assertFalse(fixture.packageFileExistsInCache(packageFile));
@@ -459,7 +454,7 @@ public class ParsePipelineTest {
   public void packageFileInvalidationInvalidatesAllChildNodes() throws Exception {
     try (Fixture fixture = createMultiThreadedFixture("package_inheritance")) {
       Cell cell = fixture.getCells();
-      AbsPath barBuildFilePath = AbsPath.of(cell.getFilesystem().resolve("bar/BUCK"));
+      AbsPath barBuildFilePath = cell.getFilesystem().resolve("bar/BUCK");
       List<TargetNodeMaybeIncompatible> nodes =
           fixture
               .getTargetNodeParsePipeline()
@@ -471,7 +466,7 @@ public class ParsePipelineTest {
       assertTrue(fixture.targetExistsInCache(nodes.get(0).getBuildTarget()));
       assertTrue(fixture.targetExistsInCache(nodes.get(1).getBuildTarget()));
 
-      AbsPath parentPackageFile = AbsPath.of(cell.getFilesystem().resolve("PACKAGE"));
+      AbsPath parentPackageFile = cell.getFilesystem().resolve("PACKAGE");
       assertTrue(fixture.packageFileExistsInCache(parentPackageFile));
 
       // Invalidate the package file
@@ -495,8 +490,8 @@ public class ParsePipelineTest {
     fixture.getTargetNodeParsePipeline().getNode(cell, aTarget, DependencyStack.root());
 
     // Verify that a cached package file manifest exists for a non-existent file
-    AbsPath nonExistentPackageFile = AbsPath.of(cell.getFilesystem().resolve("a/PACKAGE"));
-    AbsPath parentNonExistentPackafeFile = AbsPath.of(cell.getFilesystem().resolve("PACKAGE"));
+    AbsPath nonExistentPackageFile = cell.getFilesystem().resolve("a/PACKAGE");
+    AbsPath parentNonExistentPackafeFile = cell.getFilesystem().resolve("PACKAGE");
     assertFalse(cell.getFilesystem().isFile(nonExistentPackageFile));
     assertFalse(cell.getFilesystem().isFile(parentNonExistentPackafeFile));
 

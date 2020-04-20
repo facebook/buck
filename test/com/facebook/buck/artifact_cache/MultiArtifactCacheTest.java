@@ -22,6 +22,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.RuleKey;
 import com.facebook.buck.io.file.BorrowablePath;
@@ -36,7 +37,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
@@ -257,7 +257,7 @@ public class MultiArtifactCacheTest {
   @Test
   public void testCacheStoreWithBorrowablePathConsumingCache() {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    Path fetchFile = filesystem.resolve("fetch_file");
+    AbsPath fetchFile = filesystem.resolve("fetch_file");
 
     SimpleArtifactCache fakeDirCache = new SimpleArtifactCache(filesystem);
     SimpleArtifactCache fakeReadOnlyCache =
@@ -277,7 +277,7 @@ public class MultiArtifactCacheTest {
 
     assertThat(
         "The .get() call should not delete the path it's fetching.",
-        filesystem.exists(fetchFile),
+        filesystem.exists(fetchFile.getPath()),
         Matchers.is(true));
 
     multiArtifactCache.close();

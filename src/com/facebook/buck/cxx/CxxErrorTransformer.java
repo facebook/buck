@@ -93,7 +93,7 @@ class CxxErrorTransformer {
   }
 
   private String transformPath(SourcePathResolverAdapter pathResolver, String original) {
-    Path path = MorePaths.normalize(filesystem.resolve(original));
+    Path path = MorePaths.normalize(filesystem.resolve(original)).getPath();
 
     // And, of course, we need to fixup any replacement paths.
     Optional<Path> normalizedPath =

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.doctor.config.DoctorEndpointRequest;
@@ -184,9 +185,9 @@ public class DoctorCommandIntegrationTest {
   @Test
   public void testReportSuccessfulUpload() throws Exception {
     // Set the last-modified time of the build command first so our user input will select it
-    Path buildCommandLogDir = filesystem.resolve(LOG_PATH).getParent();
+    AbsPath buildCommandLogDir = filesystem.resolve(LOG_PATH).getParent();
     filesystem.setLastModifiedTime(buildCommandLogDir, FileTime.from(Instant.now()));
-    for (Path path : filesystem.getDirectoryContents(buildCommandLogDir)) {
+    for (Path path : filesystem.getDirectoryContents(buildCommandLogDir.getPath())) {
       filesystem.setLastModifiedTime(path, FileTime.from(Instant.now()));
     }
 
@@ -454,12 +455,13 @@ public class DoctorCommandIntegrationTest {
         createDoctorHelper(workspace, userInputFixture.getUserInput(), doctorConfig);
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
 
-    Path machineLog =
+    AbsPath machineLog =
         filesystem.resolve(BUILD_COMMAND_DIR_PATH + BuckConstant.BUCK_MACHINE_LOG_FILE_NAME);
-    Path logDir = machineLog.getParent();
+    AbsPath logDir = machineLog.getParent();
 
-    filesystem.deleteFileAtPathIfExists(machineLog);
-    filesystem.move(logDir.resolve("buck-machine-log_duplicate_cmd_args"), machineLog);
+    filesystem.deleteFileAtPathIfExists(machineLog.getPath());
+    filesystem.move(
+        logDir.resolve("buck-machine-log_duplicate_cmd_args").getPath(), machineLog.getPath());
 
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));

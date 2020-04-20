@@ -18,6 +18,7 @@ package com.facebook.buck.doctor;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.doctor.config.BuildLogEntry;
 import com.facebook.buck.doctor.config.DoctorConfig;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -25,7 +26,6 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.testutil.integration.ZipInspector;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -69,7 +69,7 @@ public class InteractiveReportIntegrationTest {
             ImmutableSet.of(entry.get()),
             userInputFixture.getUserInput(),
             doctorConfig);
-    Path reportFile =
+    AbsPath reportFile =
         traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
@@ -98,7 +98,7 @@ public class InteractiveReportIntegrationTest {
             ImmutableSet.of(entry.get()),
             userInputFixture.getUserInput(),
             doctorConfig);
-    Path reportFile =
+    AbsPath reportFile =
         traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
@@ -122,7 +122,7 @@ public class InteractiveReportIntegrationTest {
             ImmutableSet.of(entry.get()),
             userInputFixture.getUserInput(),
             doctorConfig);
-    Path reportFile =
+    AbsPath reportFile =
         traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
@@ -147,7 +147,7 @@ public class InteractiveReportIntegrationTest {
             ImmutableSet.of(entry.get()),
             userInputFixture.getUserInput(),
             doctorConfig);
-    Path reportFile =
+    AbsPath reportFile =
         traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);
@@ -173,7 +173,7 @@ public class InteractiveReportIntegrationTest {
             ImmutableSet.of(entry.get()),
             userInputFixture.getUserInput(),
             doctorConfig);
-    Path reportFile =
+    AbsPath reportFile =
         traceWorkspace.asCell().getFilesystem().resolve(report.getReportSubmitLocation().get());
 
     ZipInspector zipInspector = new ZipInspector(reportFile);

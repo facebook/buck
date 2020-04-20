@@ -88,7 +88,7 @@ class UntrackedHeaderReporterWithShowIncludes implements UntrackedHeaderReporter
       while (currentDeepLevel < active_parents.size()) {
         active_parents.pop();
       }
-      Path currentHeader = filesystem.resolve(line.trim()).normalize();
+      Path currentHeader = filesystem.resolve(line.trim()).normalize().getPath();
       currentHeader =
           headerPathNormalizer
               .getAbsolutePathForUnnormalizedPath(pathResolver, currentHeader)

@@ -385,7 +385,8 @@ public class AndroidBinaryNativeIntegrationTest extends AbiCompilationModeTest {
       Assert.fail("Couldn't find path to our x86 library.");
     }
 
-    Symbols unstrippedSyms = syms.getNormalSymbolsFromFile(filesystem.resolve(unstrippedPath));
+    Symbols unstrippedSyms =
+        syms.getNormalSymbolsFromFile(filesystem.resolve(unstrippedPath).getPath());
     assertThat(unstrippedSyms.global, hasItem("get_value"));
     if (AssumeAndroidPlatform.get(workspace).isGnuStlAvailable()) {
       assertThat(unstrippedSyms.all, hasItem("supply_value"));

@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.step.StepExecutionResult;
@@ -52,7 +53,7 @@ public class SymlinkTreeMergeStepTest {
   @Before
   public void setUp() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tempDir.getRoot());
-    linkPath = filesystem.resolve("dest");
+    linkPath = filesystem.resolve("dest").getPath();
 
     filesystem.mkdirs(linkPath);
 
@@ -148,7 +149,7 @@ public class SymlinkTreeMergeStepTest {
   @Test
   public void throwsIfDestinationAlreadyExists() throws IOException {
     Path examplePyDest = linkPath.resolve("example_py.py");
-    Path examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
+    AbsPath examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
 
     thrown.expectMessage("Tried to link");
     thrown.expectMessage(examplePySource.toString());
@@ -170,8 +171,8 @@ public class SymlinkTreeMergeStepTest {
   public void throwsWithBetterMessageIfDestinationAlreadyExistsAndIsASymlink() throws IOException {
     Assume.assumeThat(Platform.detect(), Matchers.is(Matchers.not(Platform.WINDOWS)));
     Path examplePyDest = linkPath.resolve("example_py.py");
-    Path examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
-    Path otherPySource = filesystem.resolve("example_2_py").resolve("example_py.py");
+    AbsPath examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
+    AbsPath otherPySource = filesystem.resolve("example_2_py").resolve("example_py.py");
     filesystem.writeContentsToPath("print(\"conflict!\")", otherPySource);
     String expectedMessage =
         String.format(
@@ -197,8 +198,8 @@ public class SymlinkTreeMergeStepTest {
   public void linksIfFileAlreadyExistsAndIsASymlinkAndPredicateReturnsTrue() throws IOException {
     Assume.assumeThat(Platform.detect(), Matchers.is(Matchers.not(Platform.WINDOWS)));
     Path examplePyDest = linkPath.resolve("example_py.py");
-    Path examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
-    Path otherPySource = filesystem.resolve("example_2_py").resolve("example_py.py");
+    AbsPath examplePySource = filesystem.resolve("example_py").resolve("example_py.py");
+    AbsPath otherPySource = filesystem.resolve("example_2_py").resolve("example_py.py");
     filesystem.writeContentsToPath("print(\"conflict!\")", otherPySource);
 
     SymlinkTreeMergeStep step =
@@ -213,6 +214,7 @@ public class SymlinkTreeMergeStepTest {
     step.execute(TestExecutionContext.newInstance());
 
     assertThat(
-        filesystem.readSymLink(examplePyDest), Matchers.oneOf(examplePySource, otherPySource));
+        filesystem.readSymLink(examplePyDest),
+        Matchers.oneOf(examplePySource.getPath(), otherPySource.getPath()));
   }
 }

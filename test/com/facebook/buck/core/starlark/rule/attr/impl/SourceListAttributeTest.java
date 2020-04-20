@@ -145,7 +145,7 @@ public class SourceListAttributeTest {
     thrown.expect(CoerceFailedException.class);
     thrown.expectMessage("cannot contain an absolute path");
 
-    String absolutePathString = filesystem.resolve("foo").toAbsolutePath().toString();
+    String absolutePathString = filesystem.resolve("foo").toString();
 
     attr.getValue(
         cellRoots,

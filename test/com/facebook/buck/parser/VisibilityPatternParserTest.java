@@ -37,7 +37,7 @@ public class VisibilityPatternParserTest {
   @Before
   public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    definingPath = filesystem.resolve("BUCK");
+    definingPath = filesystem.resolve("BUCK").getPath();
   }
 
   @Test

@@ -45,7 +45,6 @@ import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventKind;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -111,33 +110,33 @@ public class SkylarkPackageFileParserTest {
 
   @Test
   public void canParsePackage() throws Exception {
-    Path packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
-    Files.createDirectories(packageFile.getParent());
-    Files.write(packageFile, Collections.singletonList("package(visibility=['//:foo'])"));
+    AbsPath packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
+    Files.createDirectories(packageFile.getParent().getPath());
+    Files.write(packageFile.getPath(), Collections.singletonList("package(visibility=['//:foo'])"));
 
-    PackageFileManifest packageFileManifest = parser.getManifest(AbsPath.of(packageFile));
+    PackageFileManifest packageFileManifest = parser.getManifest(packageFile);
     PackageMetadata pkg = packageFileManifest.getPackage();
     Assert.assertEquals("//:foo", pkg.getVisibility().get(0));
   }
 
   @Test
   public void missingPackageCreatesDefault() throws Exception {
-    Path packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
-    Files.createDirectories(packageFile.getParent());
-    Files.write(packageFile, Collections.emptyList());
+    AbsPath packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
+    Files.createDirectories(packageFile.getParent().getPath());
+    Files.write(packageFile.getPath(), Collections.emptyList());
 
-    PackageFileManifest packageFileManifest = parser.getManifest(AbsPath.of(packageFile));
+    PackageFileManifest packageFileManifest = parser.getManifest(packageFile);
     assertNotNull(packageFileManifest.getPackage());
   }
 
   @Test
   public void onlyOnePackageAllowed() throws Exception {
-    Path packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
-    Files.createDirectories(packageFile.getParent());
-    Files.write(packageFile, Arrays.asList("package()", "package()"));
+    AbsPath packageFile = projectFilesystem.resolve("src").resolve("PACKAGE");
+    Files.createDirectories(packageFile.getParent().getPath());
+    Files.write(packageFile.getPath(), Arrays.asList("package()", "package()"));
 
     thrown.expectMessage("Cannot evaluate file");
-    parser.getManifest(AbsPath.of(packageFile));
+    parser.getManifest(packageFile);
 
     Event event = Iterables.getOnlyElement(eventCollector);
     assertThat(event.getKind(), is(EventKind.ERROR));
@@ -146,54 +145,53 @@ public class SkylarkPackageFileParserTest {
 
   @Test
   public void canUseBuiltInListFunctionInExtension() throws Exception {
-    Path directory = projectFilesystem.resolve("src").resolve("test");
-    Files.createDirectories(directory);
-    Path packageFile = directory.resolve("PACKAGE");
-    Path extensionFile = directory.resolve("helper_rules.bzl");
+    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory.getPath());
+    AbsPath packageFile = directory.resolve("PACKAGE");
+    AbsPath extensionFile = directory.resolve("helper_rules.bzl");
     Files.write(
-        packageFile,
+        packageFile.getPath(),
         Arrays.asList("load('//src/test:helper_rules.bzl', 'custom_package')", "custom_package()"));
     Files.write(
-        extensionFile,
+        extensionFile.getPath(),
         Arrays.asList("def custom_package():", "  native.package(visibility=['PUBLIC'])"));
-    parser
-        .getManifest(AbsPath.of(packageFile))
-        .getPackage()
-        .getVisibility()
-        .iterator()
-        .next()
-        .equals("PUBLIC");
+    parser.getManifest(packageFile).getPackage().getVisibility().iterator().next().equals("PUBLIC");
   }
 
   @Test
   public void parseIncludesIsReturned() throws Exception {
-    Path directory = projectFilesystem.resolve("src").resolve("test");
-    Files.createDirectories(directory);
-    Path packageFile = directory.resolve("PACKAGE");
-    Path extensionFile = directory.resolve("helper_rules.bzl");
+    AbsPath directory = projectFilesystem.resolve("src").resolve("test");
+    Files.createDirectories(directory.getPath());
+    AbsPath packageFile = directory.resolve("PACKAGE");
+    AbsPath extensionFile = directory.resolve("helper_rules.bzl");
     Files.write(
-        packageFile,
+        packageFile.getPath(),
         Arrays.asList("load('//src/test:helper_rules.bzl', 'custom_package')", "custom_package()"));
-    Files.write(extensionFile, Arrays.asList("def custom_package():", "  native.package()"));
-    ImmutableSortedSet<String> includes = parser.getIncludedFiles(AbsPath.of(packageFile));
+    Files.write(
+        extensionFile.getPath(), Arrays.asList("def custom_package():", "  native.package()"));
+    ImmutableSortedSet<String> includes = parser.getIncludedFiles(packageFile);
     assertThat(includes, Matchers.hasSize(2));
     assertThat(
         includes.stream()
             .map(projectFilesystem::resolve)
-            .map(Path::getFileName) // simplify matching by stripping temporary path prefixes
-            .map(Object::toString)
+            .map(
+                p ->
+                    p.getPath()
+                        .getFileName()
+                        .toString()) // simplify matching by stripping temporary path prefixes
             .collect(ImmutableList.toImmutableList()),
         Matchers.containsInAnyOrder("PACKAGE", "helper_rules.bzl"));
   }
 
   @Test
   public void cannotParseNonPackageRule() throws Exception {
-    Path buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
-    Files.createDirectories(buildFile.getParent());
-    Files.write(buildFile, Collections.singletonList("prebuilt_jar(" + "name='guava'," + ")"));
+    AbsPath buildFile = projectFilesystem.resolve("src").resolve("test").resolve("BUCK");
+    Files.createDirectories(buildFile.getParent().getPath());
+    Files.write(
+        buildFile.getPath(), Collections.singletonList("prebuilt_jar(" + "name='guava'," + ")"));
 
     thrown.expectMessage("Cannot evaluate");
-    parser.getManifest(AbsPath.of(buildFile));
+    parser.getManifest(buildFile);
 
     Event event = Iterables.getOnlyElement(eventCollector);
     assertThat(event.getKind(), is(EventKind.ERROR));

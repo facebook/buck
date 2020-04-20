@@ -76,7 +76,7 @@ public interface ProjectFilesystem {
    */
   Path resolve(Path path);
 
-  Path resolve(String path);
+  AbsPath resolve(String path);
 
   /**
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.

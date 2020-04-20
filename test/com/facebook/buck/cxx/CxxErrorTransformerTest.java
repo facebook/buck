@@ -20,6 +20,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.oneOf;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -48,12 +49,12 @@ public class CxxErrorTransformerTest {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
 
-    Path original = filesystem.resolve("buck-out/foo#bar/world.h");
-    Path replacement = filesystem.resolve("hello/world.h");
+    AbsPath original = filesystem.resolve("buck-out/foo#bar/world.h");
+    AbsPath replacement = filesystem.resolve("hello/world.h");
 
     HeaderPathNormalizer.Builder normalizerBuilder =
         new HeaderPathNormalizer.Builder(ruleResolver.getSourcePathResolver());
-    normalizerBuilder.addHeader(FakeSourcePath.of(replacement.toString()), original);
+    normalizerBuilder.addHeader(FakeSourcePath.of(replacement.toString()), original.getPath());
     HeaderPathNormalizer normalizer = normalizerBuilder.build();
 
     return ImmutableList.copyOf(
@@ -62,13 +63,13 @@ public class CxxErrorTransformerTest {
             "relative paths",
             new CxxErrorTransformer(filesystem, false, normalizer),
             filesystem.relativize(replacement).getPath(),
-            original
+            original.getPath()
           },
           {
             "absolute paths",
             new CxxErrorTransformer(filesystem, true, normalizer),
-            replacement.toAbsolutePath(),
-            original
+            replacement.getPath(),
+            original.getPath()
           }
         });
   }

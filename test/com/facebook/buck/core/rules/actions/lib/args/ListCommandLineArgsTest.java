@@ -87,7 +87,7 @@ public class ListCommandLineArgsTest {
 
     assertEquals(
         ImmutableList.of(
-            filesystem.resolve("some_bin").toAbsolutePath().toString(),
+            filesystem.resolve("some_bin").toString(),
             "1",
             "foo",
             "other_file",
@@ -130,7 +130,7 @@ public class ListCommandLineArgsTest {
 
     assertEquals(
         ImmutableList.of(
-            "--prefix=" + filesystem.resolve("some_bin").toAbsolutePath().toString(),
+            "--prefix=" + filesystem.resolve("some_bin").toString(),
             "--prefix=1",
             "--prefix=foo",
             "--prefix=other_file",
@@ -162,8 +162,8 @@ public class ListCommandLineArgsTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     HashMap<Path, HashCode> hashes = new HashMap<>();
-    hashes.put(filesystem.resolve("some_bin"), HashCode.fromString("aaaa"));
-    hashes.put(filesystem.resolve("other_file"), HashCode.fromString("bbbb"));
+    hashes.put(filesystem.resolve("some_bin").getPath(), HashCode.fromString("aaaa"));
+    hashes.put(filesystem.resolve("other_file").getPath(), HashCode.fromString("bbbb"));
 
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes);
 
@@ -203,7 +203,7 @@ public class ListCommandLineArgsTest {
             .setReflectively("field", listArgs2)
             .build();
 
-    hashCache.set(filesystem.resolve("some_bin"), HashCode.fromString("cccc"));
+    hashCache.set(filesystem.resolve("some_bin").getPath(), HashCode.fromString("cccc"));
     HashCode ruleKey3 =
         new TestDefaultRuleKeyFactory(hashCache, ruleFinder)
             .newBuilderForTesting(new FakeBuildRule(target))

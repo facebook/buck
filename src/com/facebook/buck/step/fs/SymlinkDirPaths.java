@@ -15,6 +15,7 @@
  */
 package com.facebook.buck.step.fs;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -32,6 +33,10 @@ public class SymlinkDirPaths implements SymlinkPaths {
 
   public SymlinkDirPaths(Path directory) {
     this.directory = directory;
+  }
+
+  public SymlinkDirPaths(AbsPath directory) {
+    this(directory.getPath());
   }
 
   @Override

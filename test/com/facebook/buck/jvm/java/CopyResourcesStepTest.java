@@ -94,14 +94,14 @@ public class CopyResourcesStepTest {
                     buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
             SymlinkFileStep.of(
                 filesystem,
-                filesystem.resolve("android/java/src/com/facebook/base/data.json"),
+                filesystem.resolve("android/java/src/com/facebook/base/data.json").getPath(),
                 target1),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
             SymlinkFileStep.of(
                 filesystem,
-                filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
+                filesystem.resolve("android/java/src/com/facebook/common/util/data.json").getPath(),
                 target));
     assertEquals(expected, step.buildSteps());
   }
@@ -158,14 +158,14 @@ public class CopyResourcesStepTest {
                     buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
             SymlinkFileStep.of(
                 filesystem,
-                filesystem.resolve("android/java/src/com/facebook/base/data.json"),
+                filesystem.resolve("android/java/src/com/facebook/base/data.json").getPath(),
                 target1),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
             SymlinkFileStep.of(
                 filesystem,
-                filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
+                filesystem.resolve("android/java/src/com/facebook/common/util/data.json").getPath(),
                 target));
     assertEquals(expected, step.buildSteps());
   }
@@ -228,14 +228,14 @@ public class CopyResourcesStepTest {
                     buildContext.getBuildCellRootPath(), filesystem, target1.getParent())),
             SymlinkFileStep.of(
                 filesystem,
-                filesystem.resolve("android/java/src/com/facebook/base/data.json"),
+                filesystem.resolve("android/java/src/com/facebook/base/data.json").getPath(),
                 target1),
             MkdirStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     buildContext.getBuildCellRootPath(), filesystem, target.getParent())),
             SymlinkFileStep.of(
                 filesystem,
-                filesystem.resolve("android/java/src/com/facebook/common/util/data.json"),
+                filesystem.resolve("android/java/src/com/facebook/common/util/data.json").getPath(),
                 target));
     assertEquals(expected, step.buildSteps());
   }

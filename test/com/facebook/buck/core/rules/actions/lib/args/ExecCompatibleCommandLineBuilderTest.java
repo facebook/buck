@@ -55,11 +55,7 @@ public class ExecCompatibleCommandLineBuilderTest {
 
     assertEquals(
         ImmutableList.of(
-            filesystem.resolve("some_bin").toAbsolutePath().toString(),
-            "other_file",
-            "1",
-            "foo",
-            "bar"),
+            filesystem.resolve("some_bin").toString(), "other_file", "1", "foo", "bar"),
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(filesystem))
             .build(args1)
             .getCommandLineArgs());

@@ -140,7 +140,10 @@ public class AndroidBinaryInstallIntegrationTest {
             abi);
     this.installLimiter =
         new InstallLimitingAndroidDevice(
-            testDevice, INSTALL_ROOT, filesystem.resolve(apkPath), filesystem.resolve(""));
+            testDevice,
+            INSTALL_ROOT,
+            filesystem.resolve(apkPath),
+            filesystem.resolve("").getPath());
   }
 
   @Test

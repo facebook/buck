@@ -99,7 +99,7 @@ public class AggregateCommandLineArgsTest {
 
     assertEquals(
         ImmutableList.of(
-            filesystem.resolve("some_bin").toAbsolutePath().toString(),
+            filesystem.resolve("some_bin").toString(),
             "other_file",
             "1",
             "foo",
@@ -160,8 +160,8 @@ public class AggregateCommandLineArgsTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     HashMap<Path, HashCode> hashes = new HashMap<>();
-    hashes.put(filesystem.resolve("some_bin"), HashCode.fromString("aaaa"));
-    hashes.put(filesystem.resolve("other_file"), HashCode.fromString("bbbb"));
+    hashes.put(filesystem.resolve("some_bin").getPath(), HashCode.fromString("aaaa"));
+    hashes.put(filesystem.resolve("other_file").getPath(), HashCode.fromString("bbbb"));
 
     FakeFileHashCache hashCache = new FakeFileHashCache(hashes);
 
@@ -238,7 +238,7 @@ public class AggregateCommandLineArgsTest {
     HashCode aggKey1 =
         compute.apply(new AggregateCommandLineArgs(ImmutableList.of(envArgs1, listArgs1)));
 
-    hashCache.set(filesystem.resolve("some_bin"), HashCode.fromString("cccc"));
+    hashCache.set(filesystem.resolve("some_bin").getPath(), HashCode.fromString("cccc"));
 
     assertNotEquals(listKey1, compute.apply(listArgs1));
     assertNotEquals(envKey1, compute.apply(envArgs1));

@@ -22,6 +22,7 @@ import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPattern;
 import com.facebook.buck.core.parser.buildtargetpattern.BuildTargetPatternParser;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -78,21 +79,22 @@ public class TargetNodeSpecTest {
     ProjectFilesystem rootFileSystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
-    Path defaultCellPath = rootFileSystem.resolve("defaultcell-dir");
+    AbsPath defaultCellPath = rootFileSystem.resolve("defaultcell-dir");
     rootFileSystem.mkdirs(defaultCellPath);
     ProjectFilesystem currentCellFileSystem =
         TestProjectFilesystems.createProjectFilesystem(defaultCellPath);
 
-    Path myCellPath = rootFileSystem.resolve("mycell-dir");
+    AbsPath myCellPath = rootFileSystem.resolve("mycell-dir");
     rootFileSystem.mkdirs(myCellPath);
 
-    Path nestedCellPath = defaultCellPath.resolve("nestedcell-dir");
+    AbsPath nestedCellPath = defaultCellPath.resolve("nestedcell-dir");
     rootFileSystem.mkdirs(nestedCellPath);
 
     Cells defaultCell =
         getDefaultCell(
             currentCellFileSystem,
-            ImmutableMap.of("mycell", myCellPath, "nestedcell", nestedCellPath));
+            ImmutableMap.of(
+                "mycell", myCellPath.getPath(), "nestedcell", nestedCellPath.getPath()));
 
     TargetNodeSpec spec = parseTargetNodeSpec(defaultCell.getRootCell(), pattern);
     Assert.assertEquals(
@@ -118,14 +120,16 @@ public class TargetNodeSpecTest {
     ProjectFilesystem rootFileSystem =
         TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
 
-    Path cellAPath = rootFileSystem.resolve("cell-a-dir");
+    AbsPath cellAPath = rootFileSystem.resolve("cell-a-dir");
     rootFileSystem.mkdirs(cellAPath);
 
-    Path cellBPath = rootFileSystem.resolve("cell-b-dir");
+    AbsPath cellBPath = rootFileSystem.resolve("cell-b-dir");
     rootFileSystem.mkdirs(cellBPath);
 
     Cells defaultCell =
-        getDefaultCell(rootFileSystem, ImmutableMap.of("cell-a", cellAPath, "cell-b", cellBPath));
+        getDefaultCell(
+            rootFileSystem,
+            ImmutableMap.of("cell-a", cellAPath.getPath(), "cell-b", cellBPath.getPath()));
     Cell cellB = defaultCell.getCell(CanonicalCellName.of(Optional.of("cell-b")));
 
     TargetNodeSpec spec = parseTargetNodeSpec(defaultCell.getRootCell(), pattern);

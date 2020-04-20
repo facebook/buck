@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -616,14 +617,14 @@ public class CxxPreprocessAndCompileTest {
 
   @Test
   public void testGetGcnoFile() {
-    Path input =
+    AbsPath input =
         projectFilesystem.resolve(
             PathNormalizer.toWindowsPathIfNeeded(Paths.get("foo/bar.m.o")).toString());
-    Path output = CxxPreprocessAndCompile.getGcnoPath(input);
+    AbsPath output = CxxPreprocessAndCompile.getGcnoPath(input);
     assertEquals(
         projectFilesystem.resolve(
             PathNormalizer.toWindowsPathIfNeeded(Paths.get("foo/bar.m.gcno"))),
-        output);
+        output.getPath());
   }
 
   @Test

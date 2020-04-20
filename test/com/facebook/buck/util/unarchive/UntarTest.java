@@ -588,7 +588,7 @@ public class UntarTest {
    */
   @Test
   public void cleanDirectoriesExactly() throws Exception {
-    Path archive = filesystem.resolve("archive.tar");
+    AbsPath archive = filesystem.resolve("archive.tar");
     AbsPath outDir = filesystem.getRootPath();
 
     List<String> toLeave =
@@ -600,15 +600,15 @@ public class UntarTest {
             "buck-out/gen/pkg2/rule#foo/lib.so");
     List<String> toDelete = ImmutableList.of("buck-out/gen/pkg1/rule2#foo/lib.so");
     for (String s : concat(toDelete, toLeave)) {
-      Path path = filesystem.resolve(s);
-      filesystem.createParentDirs(path);
+      AbsPath path = filesystem.resolve(s);
+      filesystem.createParentDirs(path.getPath());
       filesystem.writeContentsToPath("", path);
     }
 
     // Write test archive.
     try (TarArchiveOutputStream stream =
         new TarArchiveOutputStream(
-            new BufferedOutputStream(filesystem.newFileOutputStream(archive)))) {
+            new BufferedOutputStream(filesystem.newFileOutputStream(archive.getPath())))) {
       stream.putArchiveEntry(new TarArchiveEntry("buck-out/gen/pkg1/rule2#foo/"));
       stream.putArchiveEntry(new TarArchiveEntry("buck-out/gen/pkg1/rule2.jar"));
       stream.closeArchiveEntry();
@@ -617,7 +617,7 @@ public class UntarTest {
     // Untar test archive.
     Untar.tarUnarchiver()
         .extractArchive(
-            archive,
+            archive.getPath(),
             filesystem,
             outDir.getPath(),
             Optional.empty(),
@@ -627,12 +627,12 @@ public class UntarTest {
     for (String s : toDelete) {
       Assert.assertFalse(
           String.format("Expected file %s to be deleted, but it wasn't", s),
-          filesystem.exists(filesystem.resolve(s)));
+          Files.exists(filesystem.resolve(s).getPath()));
     }
     for (String s : toLeave) {
       Assert.assertTrue(
           String.format("Expected file %s to not be deleted, but it was", s),
-          filesystem.exists(filesystem.resolve(s)));
+          Files.exists(filesystem.resolve(s).getPath()));
     }
   }
 

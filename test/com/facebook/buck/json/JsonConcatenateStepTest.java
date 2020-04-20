@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -43,9 +44,9 @@ public class JsonConcatenateStepTest {
   public void setUp() throws IOException {
     filesystem = new FakeProjectFilesystem();
 
-    Path report1 = filesystem.resolve("report1");
-    Path report2 = filesystem.resolve("report2");
-    Path report3 = filesystem.resolve("report3");
+    AbsPath report1 = filesystem.resolve("report1");
+    AbsPath report2 = filesystem.resolve("report2");
+    AbsPath report3 = filesystem.resolve("report3");
 
     String content1 = "[{\"field_one\":1, \"field_two\":\"value\"}]";
     String content2 = "[]";
@@ -58,8 +59,7 @@ public class JsonConcatenateStepTest {
     filesystem.writeContentsToPath(content3, report3);
 
     ImmutableSortedSet<Path> reportsToMerge =
-        ImmutableSortedSet.of(
-            filesystem.resolve(report1), filesystem.resolve(report2), filesystem.resolve(report3));
+        ImmutableSortedSet.of(report1.getPath(), report2.getPath(), report3.getPath());
     mergedReport = filesystem.resolve(Paths.get("finalReport"));
     jsonConcatenator = new JsonConcatenator(reportsToMerge, mergedReport, filesystem);
   }

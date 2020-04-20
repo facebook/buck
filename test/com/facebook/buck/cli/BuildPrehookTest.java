@@ -152,9 +152,7 @@ public class BuildPrehookTest {
       assertThat(argumentsJson, Matchers.equalTo("[ \"target\" ]"));
       assertEquals(
           ImmutableList.of(
-              "python3",
-              "-B",
-              cell.getRootCell().getFilesystem().resolve(pathToScript).toAbsolutePath().toString()),
+              "python3", "-B", cell.getRootCell().getFilesystem().resolve(pathToScript).toString()),
           params.getCommand());
     }
   }

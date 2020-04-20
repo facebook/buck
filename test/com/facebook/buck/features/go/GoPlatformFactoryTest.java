@@ -19,6 +19,7 @@ package com.facebook.buck.features.go;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.io.AlwaysFoundExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -26,7 +27,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
@@ -35,7 +35,7 @@ public class GoPlatformFactoryTest {
   @Test
   public void getPlatform() throws IOException {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path root = filesystem.resolve("root");
+    AbsPath root = filesystem.resolve("root");
     filesystem.mkdirs(root);
     GoPlatformFactory factory =
         ImmutableGoPlatformFactory.ofImpl(

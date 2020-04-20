@@ -159,12 +159,14 @@ public class TargetGraphHashingTest {
     FileHashLoader baseCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef")));
+                projectFilesystem.resolve("foo/FooLib.java").getPath(),
+                HashCode.fromString("abcdef")));
 
     FileHashLoader modifiedCache =
         new FakeFileHashCache(
             ImmutableMap.of(
-                projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abc1ef")));
+                projectFilesystem.resolve("foo/FooLib.java").getPath(),
+                HashCode.fromString("abc1ef")));
 
     Map<BuildTarget, HashCode> baseResult =
         new TargetGraphHashing(
@@ -216,8 +218,10 @@ public class TargetGraphHashingTest {
     FileHashLoader fileHashLoader =
         new FakeFileHashCache(
             ImmutableMap.of(
-                projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
-                projectFilesystem.resolve("bar/BarLib.java"), HashCode.fromString("123456")));
+                projectFilesystem.resolve("foo/FooLib.java").getPath(),
+                    HashCode.fromString("abcdef"),
+                projectFilesystem.resolve("bar/BarLib.java").getPath(),
+                    HashCode.fromString("123456")));
 
     Map<BuildTarget, HashCode> resultsA =
         new TargetGraphHashing(
@@ -291,9 +295,12 @@ public class TargetGraphHashingTest {
     FileHashLoader fileHashLoader =
         new FakeFileHashCache(
             ImmutableMap.of(
-                projectFilesystem.resolve("foo/FooLib.java"), HashCode.fromString("abcdef"),
-                projectFilesystem.resolve("dep/DepLib1.java"), HashCode.fromString("123456"),
-                projectFilesystem.resolve("dep/DepLib2.java"), HashCode.fromString("123457")));
+                projectFilesystem.resolve("foo/FooLib.java").getPath(),
+                    HashCode.fromString("abcdef"),
+                projectFilesystem.resolve("dep/DepLib1.java").getPath(),
+                    HashCode.fromString("123456"),
+                projectFilesystem.resolve("dep/DepLib2.java").getPath(),
+                    HashCode.fromString("123457")));
 
     Map<BuildTarget, HashCode> resultA =
         new TargetGraphHashing(

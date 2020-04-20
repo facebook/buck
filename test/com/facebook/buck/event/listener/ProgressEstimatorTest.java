@@ -18,6 +18,7 @@ package com.facebook.buck.event.listener;
 
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.DefaultBuckEventBus;
@@ -52,8 +53,8 @@ public class ProgressEstimatorTest {
   @Test
   public void testByDefaultProvidesNoProcessingBuckFilesProgress() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path p = filesystem.resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
-    ProgressEstimator e = new ProgressEstimator(Optional.of(p), getBuckEventBus());
+    AbsPath p = filesystem.resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
+    ProgressEstimator e = new ProgressEstimator(Optional.of(p.getPath()), getBuckEventBus());
     assertThat(
         e.getEstimatedProgressOfParsingBuckFiles().getProgress().isPresent(),
         Matchers.equalTo(false));
@@ -265,16 +266,16 @@ public class ProgressEstimatorTest {
   @Test
   public void testByDefaultProvidesNoBuildProgress() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path p = filesystem.resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
-    ProgressEstimator e = new ProgressEstimator(Optional.of(p), getBuckEventBus());
+    AbsPath p = filesystem.resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
+    ProgressEstimator e = new ProgressEstimator(Optional.of(p.getPath()), getBuckEventBus());
     assertThat(e.getApproximateBuildProgress().isPresent(), Matchers.equalTo(false));
   }
 
   @Test
   public void testByProvidesCompleteBuildProgressAfterGettingBuildEvents() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path p = filesystem.resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
-    ProgressEstimator e = new ProgressEstimator(Optional.of(p), getBuckEventBus());
+    AbsPath p = filesystem.resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
+    ProgressEstimator e = new ProgressEstimator(Optional.of(p.getPath()), getBuckEventBus());
 
     e.didStartBuild();
     e.setNumberOfRules(10);
@@ -287,8 +288,8 @@ public class ProgressEstimatorTest {
   @Test
   public void testByProvidesPartialBuildProgressAfterGettingBuildEvents() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
-    Path p = filesystem.resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
-    ProgressEstimator e = new ProgressEstimator(Optional.of(p), getBuckEventBus());
+    AbsPath p = filesystem.resolve(ProgressEstimator.PROGRESS_ESTIMATIONS_JSON);
+    ProgressEstimator e = new ProgressEstimator(Optional.of(p.getPath()), getBuckEventBus());
 
     e.didStartBuild();
     e.setNumberOfRules(10);

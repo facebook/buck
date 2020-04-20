@@ -46,8 +46,8 @@ public class CompileToJarStepFactoryTest {
         filesystem.getBuckPaths().getScratchDir().resolve("android/java/lib__java__classes");
     ImmutableSortedSet<Path> classpathEntries =
         ImmutableSortedSet.<Path>naturalOrder()
-            .add(filesystem.resolve("rt.jar"))
-            .add(filesystem.resolve("dep.jar"))
+            .add(filesystem.resolve("rt.jar").getPath())
+            .add(filesystem.resolve("dep.jar").getPath())
             .build();
     ExecutionContext executionContext = TestExecutionContext.newInstance();
 

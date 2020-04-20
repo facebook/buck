@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -336,10 +337,10 @@ class Depfiles {
             dependencyTrackingMode, filesystem, headerPathNormalizer, sourceDepFile, inputPath);
     List<String> errors = new ArrayList<String>();
     for (String rawHeader : headers) {
-      Path header = filesystem.resolve(rawHeader).normalize();
+      AbsPath header = filesystem.resolve(rawHeader).normalize();
       Optional<Path> absolutePath =
-          headerPathNormalizer.getAbsolutePathForUnnormalizedPath(pathResolver, header);
-      Optional<Path> repoRelativePath = filesystem.getPathRelativeToProjectRoot(header);
+          headerPathNormalizer.getAbsolutePathForUnnormalizedPath(pathResolver, header.getPath());
+      Optional<Path> repoRelativePath = filesystem.getPathRelativeToProjectRoot(header.getPath());
       if (absolutePath.isPresent()) {
         Preconditions.checkState(absolutePath.get().isAbsolute());
         resultBuilder.add(absolutePath.get());
@@ -351,7 +352,8 @@ class Depfiles {
         // Check again with the real path with all symbolic links resolved.
         header = header.toRealPath();
         if (!(headerVerification.isWhitelisted(header.toString()))) {
-          String errorMessage = untrackedHeaderReporter.getErrorReport(pathResolver, header);
+          String errorMessage =
+              untrackedHeaderReporter.getErrorReport(pathResolver, header.getPath());
           errors.add(errorMessage);
         }
       }

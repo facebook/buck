@@ -69,7 +69,7 @@ public class IJProjectCleaner {
 
   public void writeFilesToKeepToFile(String filename) throws IOException {
     Files.write(
-        projectFilesystem.resolve(filename),
+        projectFilesystem.resolve(filename).getPath(),
         filesToKeep.stream()
             .map(File::getAbsolutePath)
             .map(Paths::get)
@@ -130,7 +130,7 @@ public class IJProjectCleaner {
               if (runPostGenerationCleaner) {
                 topLevelTasks.add(
                     new CandidateFinderWithExclusions(
-                        convertPathToFile(projectFilesystem.resolve("")),
+                        convertPathToFile(projectFilesystem.resolve("").getPath()),
                         IML_FILENAME_FILTER,
                         buckDirectories));
                 topLevelTasks.add(

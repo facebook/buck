@@ -32,6 +32,7 @@ import com.facebook.buck.android.aapt.RDotTxtEntry.RType;
 import com.facebook.buck.android.aapt.RDotTxtEntryUtil;
 import com.facebook.buck.android.aapt.RDotTxtEntryUtil.FakeEntry;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -367,8 +368,8 @@ public class MergeAndroidResourcesStepTest {
 
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
-    Path uberRDotTxt = filesystem.resolve("R.txt").toAbsolutePath();
-    filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
+    AbsPath uberRDotTxt = filesystem.resolve("R.txt");
+    filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt.getPath());
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
@@ -386,7 +387,7 @@ public class MergeAndroidResourcesStepTest {
             filesystem,
             graphBuilder.getSourcePathResolver(),
             ImmutableList.of(resource),
-            ImmutableList.of(uberRDotTxt),
+            ImmutableList.of(uberRDotTxt.getPath()),
             Paths.get("output"),
             /* forceFinalResourceIds */ true,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -450,8 +451,8 @@ public class MergeAndroidResourcesStepTest {
 
     FakeProjectFilesystem filesystem = entriesBuilder.getProjectFilesystem();
 
-    Path uberRDotTxt = filesystem.resolve("R.txt").toAbsolutePath();
-    filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt);
+    AbsPath uberRDotTxt = filesystem.resolve("R.txt");
+    filesystem.writeLinesToPath(outputTextSymbols, uberRDotTxt.getPath());
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
@@ -469,7 +470,7 @@ public class MergeAndroidResourcesStepTest {
             filesystem,
             graphBuilder.getSourcePathResolver(),
             ImmutableList.of(resource),
-            ImmutableList.of(uberRDotTxt),
+            ImmutableList.of(uberRDotTxt.getPath()),
             Paths.get("output"),
             /* forceFinalResourceIds */ true,
             /* bannedDuplicateResourceTypes */ EnumSet.noneOf(RType.class),
@@ -927,9 +928,9 @@ public class MergeAndroidResourcesStepTest {
     Optional<Path> duplicateWhitelistPath =
         duplicateWhitelist.map(
             whitelist -> {
-              Path whitelistPath = filesystem.resolve("duplicate-whitelist.txt");
-              filesystem.writeLinesToPath(whitelist, whitelistPath);
-              return whitelistPath;
+              AbsPath whitelistPath = filesystem.resolve("duplicate-whitelist.txt");
+              filesystem.writeLinesToPath(whitelist, whitelistPath.getPath());
+              return whitelistPath.getPath();
             });
 
     MergeAndroidResourcesStep mergeStep =

@@ -303,8 +303,8 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   }
 
   @Override
-  public Path resolve(String path) {
-    return MorePaths.normalize(getRootPath().resolve(path)).getPath();
+  public AbsPath resolve(String path) {
+    return MorePaths.normalize(getRootPath().resolve(path));
   }
 
   /** Construct a relative path between the project root and a given path. */

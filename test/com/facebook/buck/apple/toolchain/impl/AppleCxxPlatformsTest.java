@@ -873,7 +873,7 @@ public class AppleCxxPlatformsTest {
         new TestDefaultRuleKeyFactory(
             new FakeFileHashCache(
                 ImmutableMap.<Path, HashCode>builder()
-                    .put(projectFilesystem.resolve("source.cpp"), HashCode.fromInt(0))
+                    .put(projectFilesystem.resolve("source.cpp").getPath(), HashCode.fromInt(0))
                     .build()),
             graphBuilder);
     BuildTarget target = BuildTargetFactory.newInstance("//:target");

@@ -140,8 +140,7 @@ public class ArtifactFilesystemTest {
         filesystem.resolve(Paths.get("bar", "baz")).toAbsolutePath().toString(),
         artifactFilesystem.stringifyAbsolute(sourceArtifact));
     assertEquals(
-        filesystem.resolve("foo").toAbsolutePath().toString(),
-        artifactFilesystem.stringifyAbsolute(shortArtifact));
+        filesystem.resolve("foo").toString(), artifactFilesystem.stringifyAbsolute(shortArtifact));
   }
 
   @Test

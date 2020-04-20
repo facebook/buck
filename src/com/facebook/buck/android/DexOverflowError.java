@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.android.dexdeps.DexData;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.StepFailedException;
@@ -126,7 +127,7 @@ public class DexOverflowError {
   }
 
   @SuppressWarnings("unchecked")
-  private static int countRefs(OverflowType type, Path dexFile)
+  private static int countRefs(OverflowType type, AbsPath dexFile)
       throws IOException, NoSuchMethodException, IllegalAccessException {
     Method m = info.persistent.dex.Main.class.getDeclaredMethod("openInputFiles", String.class);
     m.setAccessible(true);

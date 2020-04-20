@@ -99,8 +99,8 @@ public class DaemonicCellStateTest {
   @Before
   public void setUp() throws IOException {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
-    Files.createDirectories(filesystem.resolve("../xplat"));
-    Files.createFile(filesystem.resolve("../xplat/.buckconfig"));
+    Files.createDirectories(filesystem.resolve("../xplat").getPath());
+    Files.createFile(filesystem.resolve("../xplat/.buckconfig").getPath());
     BuckConfig config =
         FakeBuckConfig.builder()
             .setFilesystem(filesystem)
@@ -124,7 +124,7 @@ public class DaemonicCellStateTest {
   }
 
   private AbsPath dummyPackageFile() {
-    return AbsPath.of(filesystem.resolve("path/to/PACKAGE"));
+    return filesystem.resolve("path/to/PACKAGE");
   }
 
   @Test
@@ -241,7 +241,7 @@ public class DaemonicCellStateTest {
     Optional<PackageFileManifest> lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
 
-    state.invalidatePath(AbsPath.of(filesystem.resolve("path/to/random.bzl")), true);
+    state.invalidatePath(filesystem.resolve("path/to/random.bzl"), true);
 
     lookupManifest = state.lookupPackageFileManifest(packageFile);
     assertTrue(lookupManifest.isPresent());
@@ -257,7 +257,7 @@ public class DaemonicCellStateTest {
     AbsPath packageFile = dummyPackageFile();
     PackageFileManifest manifest = PackageFileManifest.EMPTY_SINGLETON;
 
-    AbsPath dependentFile = AbsPath.of(filesystem.resolve("path/to/pkg_dependent.bzl"));
+    AbsPath dependentFile = filesystem.resolve("path/to/pkg_dependent.bzl");
 
     state.putPackageFileManifestIfNotPresent(
         packageFile,

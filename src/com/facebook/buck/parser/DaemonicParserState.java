@@ -286,7 +286,7 @@ public class DaemonicParserState {
       ImmutableSortedSet<String> manifestIncludes,
       Cell cell) {
     manifestIncludes.forEach(
-        includedPath -> dependents.add(AbsPath.of(cell.getFilesystem().resolve(includedPath))));
+        includedPath -> dependents.add(cell.getFilesystem().resolve(includedPath)));
 
     // We also know that the all manifests depend on the default includes for the cell.
     // Note: This is a bad assumption. While both the project build file and package parsers set
@@ -315,7 +315,7 @@ public class DaemonicParserState {
     return cellPathResolver
         .getCellPath(cellName)
         .map(cellPath -> cellPath.resolve(includePath))
-        .orElseGet(() -> AbsPath.of(cell.getFilesystem().resolve(includePath)));
+        .orElseGet(() -> cell.getFilesystem().resolve(includePath));
   }
 
   private final TagSetCounter cacheInvalidatedByEnvironmentVariableChangeCounter;

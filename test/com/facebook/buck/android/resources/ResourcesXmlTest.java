@@ -156,7 +156,7 @@ public class ResourcesXmlTest {
   @Test
   public void testRewrittenAttrsAreSorted() throws Exception {
     try (InputStream inputStream =
-        Files.newInputStream(filesystem.resolve("row_with_button.xml"))) {
+        Files.newInputStream(filesystem.resolve("row_with_button.xml").getPath())) {
       ByteBuffer buf = ResChunk.wrap(ByteStreams.toByteArray(inputStream));
       ResourcesXml xml = ResourcesXml.get(buf);
       Map<Integer, Integer> mapping =

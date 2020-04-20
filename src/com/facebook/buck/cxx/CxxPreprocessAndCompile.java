@@ -188,6 +188,11 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
   }
 
   @VisibleForTesting
+  static AbsPath getGcnoPath(AbsPath output) {
+    return AbsPath.of(getGcnoPath(output.getPath()));
+  }
+
+  @VisibleForTesting
   Optional<PreprocessorDelegate> getPreprocessorDelegate() {
     return getBuildable().preprocessDelegate;
   }
