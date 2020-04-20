@@ -698,8 +698,8 @@ public class ModernBuildRuleRemoteExecutionHelper implements RemoteExecutionHelp
         rootString,
         hash,
         METADATA_PATH.toString(),
-        Boolean.toString(consoleParams.isAnsiEscapeSequencesEnabled()),
-        consoleParams.getVerbosity().toString());
+        consoleParams.isAnsiEscapeSequencesEnabled(),
+        consoleParams.getVerbosity());
   }
 
   private static class Node implements Comparable<Node> {

@@ -22,9 +22,17 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 @BuckStyleValue
 public abstract class ConsoleParams {
 
-  public abstract boolean isAnsiEscapeSequencesEnabled();
+  abstract boolean ansiEscapeSequencesEnabled();
 
-  public abstract Verbosity getVerbosity();
+  abstract Verbosity verbosity();
+
+  public String isAnsiEscapeSequencesEnabled() {
+    return Boolean.toString(ansiEscapeSequencesEnabled());
+  }
+
+  public String getVerbosity() {
+    return verbosity().toString();
+  }
 
   public static ConsoleParams of(boolean ansiEscapeSequencesEnabled, Verbosity verbosity) {
     return ImmutableConsoleParams.ofImpl(ansiEscapeSequencesEnabled, verbosity);
