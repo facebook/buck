@@ -115,14 +115,14 @@ final class OwnersReport {
   @VisibleForTesting
   static OwnersReport generateOwnersReport(
       Cell rootCell, TargetNode<?> targetNode, String filePath) {
-    Path file = rootCell.getFilesystem().getPathForRelativePath(filePath);
-    if (!Files.exists(file)) {
+    AbsPath file = rootCell.getFilesystem().getPathForRelativePath(filePath);
+    if (!Files.exists(file.getPath())) {
       return new OwnersReport(
           ImmutableSetMultimap.of(),
           ImmutableSet.of(),
           ImmutableSet.of(filePath),
           ImmutableSet.of());
-    } else if (!Files.isRegularFile(file)) {
+    } else if (!Files.isRegularFile(file.getPath())) {
       return new OwnersReport(
           ImmutableSetMultimap.of(),
           ImmutableSet.of(),

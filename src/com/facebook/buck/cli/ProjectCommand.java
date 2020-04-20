@@ -188,7 +188,6 @@ public class ProjectCommand extends AbstractCommand implements PluginBasedComman
               .getRootCell()
               .getFilesystem()
               .getPathForRelativePath(pathToScript)
-              .toAbsolutePath()
               .toString();
     }
 

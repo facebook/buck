@@ -16,6 +16,7 @@
 
 package com.facebook.buck.io.file;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import java.nio.file.Path;
 
 /**
@@ -40,6 +41,10 @@ public class BorrowablePath {
 
   public static BorrowablePath notBorrowablePath(Path path) {
     return new BorrowablePath(path, Behaviour.NOT_BORROWABLE);
+  }
+
+  public static BorrowablePath notBorrowablePath(AbsPath path) {
+    return notBorrowablePath(path.getPath());
   }
 
   private BorrowablePath(Path path, Behaviour behaviour) {

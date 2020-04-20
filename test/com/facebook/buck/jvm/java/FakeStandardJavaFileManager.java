@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import java.io.File;
@@ -64,6 +65,10 @@ class FakeStandardJavaFileManager implements StandardJavaFileManager {
 
   public void addFile(Path jarPath, String fileName, JavaFileObject.Kind kind) {
     files.add(new FakeJavaFileObject(jarPath, fileName, kind));
+  }
+
+  public void addFile(AbsPath jarPath, String fileName, JavaFileObject.Kind kind) {
+    addFile(jarPath.getPath(), fileName, kind);
   }
 
   private JavaFileObject getFile(String fileName) {

@@ -330,8 +330,8 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
   }
 
   @Override
-  public Path getPathForRelativePath(String pathRelativeToProjectRoot) {
-    return projectRoot.resolve(pathRelativeToProjectRoot).getPath();
+  public AbsPath getPathForRelativePath(String pathRelativeToProjectRoot) {
+    return projectRoot.resolve(pathRelativeToProjectRoot);
   }
 
   /**
@@ -702,7 +702,7 @@ public class DefaultProjectFilesystem implements Cloneable, ProjectFilesystem {
    */
   @Override
   public void createParentDirs(String pathRelativeToProjectRoot) throws IOException {
-    Path file = getPathForRelativePath(pathRelativeToProjectRoot);
+    AbsPath file = getPathForRelativePath(pathRelativeToProjectRoot);
     mkdirs(file.getParent());
   }
 

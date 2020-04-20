@@ -18,6 +18,7 @@ package com.facebook.buck.io.filesystem.skylark;
 
 import static org.junit.Assert.*;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.devtools.build.lib.vfs.Path;
@@ -39,14 +40,14 @@ public class SkylarkFilesystemTest {
     return skylarkFilesystem.getPath(projectFilesystem.resolve(path).toString());
   }
 
-  private Path toSkylarkPath(java.nio.file.Path path) {
+  private Path toSkylarkPath(AbsPath path) {
     return toSkylarkPath(path.toString());
   }
 
   @Test
   public void fileCreatedUsingProjectFileSystemIsVisibleToSkylark() throws Exception {
-    java.nio.file.Path file = projectFilesystem.getPathForRelativePath("file");
-    projectFilesystem.createNewFile(file);
+    AbsPath file = projectFilesystem.getPathForRelativePath("file");
+    projectFilesystem.createNewFile(file.getPath());
     assertTrue(toSkylarkPath(file).exists());
   }
 }

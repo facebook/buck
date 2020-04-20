@@ -111,7 +111,7 @@ public interface ProjectFilesystem {
     return getPathForRelativePath(pathRelativeToProjectRoot.getPath());
   }
 
-  Path getPathForRelativePath(String pathRelativeToProjectRoot);
+  AbsPath getPathForRelativePath(String pathRelativeToProjectRoot);
 
   /**
    * @param path Absolute path or path relative to the project root.
@@ -320,6 +320,14 @@ public interface ProjectFilesystem {
    *     no way to assert this because the path is not expected to exist yet.)
    */
   void createParentDirs(Path pathRelativeToProjectRoot) throws IOException;
+
+  /**
+   * @param pathRelativeToProjectRoot Must identify a file, not a directory. (Unfortunately, we have
+   *     no way to assert this because the path is not expected to exist yet.)
+   */
+  default void createParentDirs(PathWrapper pathRelativeToProjectRoot) throws IOException {
+    createParentDirs(pathRelativeToProjectRoot.getPath());
+  }
 
   /**
    * Writes each line in {@code lines} with a trailing newline to a file at the specified path.

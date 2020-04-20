@@ -20,6 +20,7 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode;
 import com.facebook.buck.artifact_cache.config.CacheReadMode;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfigurationSerializerForTests;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
@@ -131,8 +132,8 @@ public class AbstractNetworkCacheTest {
         };
 
     for (int bytes : artifactBytes) {
-      Path path = filesystem.getPathForRelativePath("topspin_" + this.getClass().getName());
-      filesystem.writeBytesToPath(new byte[bytes], path);
+      AbsPath path = filesystem.getPathForRelativePath("topspin_" + this.getClass().getName());
+      filesystem.writeBytesToPath(new byte[bytes], path.getPath());
       ListenableFuture<Unit> future =
           cache.store(ArtifactInfo.builder().build(), BorrowablePath.notBorrowablePath(path));
       future.get();

@@ -78,8 +78,7 @@ class BuildPrehook implements AutoCloseable {
 
     String pathToScript = pathToPrehookScript.get();
     if (!Paths.get(pathToScript).isAbsolute()) {
-      pathToScript =
-          cell.getFilesystem().getPathForRelativePath(pathToScript).toAbsolutePath().toString();
+      pathToScript = cell.getFilesystem().getPathForRelativePath(pathToScript).toString();
     }
 
     ImmutableMap.Builder<String, String> environmentBuilder =

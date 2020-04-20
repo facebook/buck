@@ -62,11 +62,7 @@ public class BuildPrehookTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     cell = new TestCellBuilder().setFilesystem(filesystem).build();
     String pathToScript =
-        cell.getRootCell()
-            .getFilesystem()
-            .getPathForRelativePath("script.sh")
-            .toAbsolutePath()
-            .toString();
+        cell.getRootCell().getFilesystem().getPathForRelativePath("script.sh").toString();
     buckConfig =
         FakeBuckConfig.builder()
             .setSections(ImmutableMap.of("build", ImmutableMap.of("prehook_script", pathToScript)))

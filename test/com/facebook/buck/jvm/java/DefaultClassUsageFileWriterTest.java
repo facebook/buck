@@ -31,7 +31,6 @@ import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import javax.tools.JavaFileObject;
 import org.junit.Test;
 
@@ -48,11 +47,11 @@ public class DefaultClassUsageFileWriterTest {
   public void fileReadOrderDoesntAffectClassesUsedOutput() throws IOException {
     ProjectFilesystem filesystem = FakeProjectFilesystem.createRealTempFilesystem();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
-    Path testJarPath = filesystem.getPathForRelativePath("test.jar");
-    Path testTwoJarPath = filesystem.getPathForRelativePath("test2.jar");
+    AbsPath testJarPath = filesystem.getPathForRelativePath("test.jar");
+    AbsPath testTwoJarPath = filesystem.getPathForRelativePath("test2.jar");
 
-    Path outputOne = filesystem.getPathForRelativePath("used-classes-one.json");
-    Path outputTwo = filesystem.getPathForRelativePath("used-classes-two.json");
+    AbsPath outputOne = filesystem.getPathForRelativePath("used-classes-one.json");
+    AbsPath outputTwo = filesystem.getPathForRelativePath("used-classes-two.json");
 
     FakeStandardJavaFileManager fakeFileManager = new FakeStandardJavaFileManager();
     fakeFileManager.addFile(testJarPath, OTHER_FILE_NAME, JavaFileObject.Kind.OTHER);
@@ -76,7 +75,7 @@ public class DefaultClassUsageFileWriterTest {
       }
     }
     filesystem.createParentDirs(outputOne);
-    writerOne.writeFile(trackerOne, outputOne, filesystem, cellPathResolver);
+    writerOne.writeFile(trackerOne, outputOne.getPath(), filesystem, cellPathResolver);
 
     DefaultClassUsageFileWriter writerTwo = new DefaultClassUsageFileWriter();
     ClassUsageTracker trackerTwo = new ClassUsageTracker();
@@ -89,10 +88,11 @@ public class DefaultClassUsageFileWriterTest {
       }
     }
     filesystem.createParentDirs(outputTwo);
-    writerTwo.writeFile(trackerTwo, outputTwo, filesystem, cellPathResolver);
+    writerTwo.writeFile(trackerTwo, outputTwo.getPath(), filesystem, cellPathResolver);
 
     assertEquals(
-        new String(Files.readAllBytes(outputOne)), new String(Files.readAllBytes(outputTwo)));
+        new String(Files.readAllBytes(outputOne.getPath())),
+        new String(Files.readAllBytes(outputTwo.getPath())));
   }
 
   @Test
@@ -104,11 +104,11 @@ public class DefaultClassUsageFileWriterTest {
     CellPathResolver cellPathResolver =
         TestCellPathResolver.create(
             homeFs.getRootPath(), ImmutableMap.of("AwayCell", awayFs.getRootPath().getPath()));
-    Path testJarPath = homeFs.getPathForRelativePath("home.jar");
-    Path testTwoJarPath = awayFs.getPathForRelativePath("away.jar");
-    Path externalJarPath = externalFs.getPathForRelativePath("external.jar");
+    AbsPath testJarPath = homeFs.getPathForRelativePath("home.jar");
+    AbsPath testTwoJarPath = awayFs.getPathForRelativePath("away.jar");
+    AbsPath externalJarPath = externalFs.getPathForRelativePath("external.jar");
 
-    Path outputOne = homeFs.getPathForRelativePath("used-classes-one.json");
+    AbsPath outputOne = homeFs.getPathForRelativePath("used-classes-one.json");
 
     FakeStandardJavaFileManager fakeFileManager = new FakeStandardJavaFileManager();
     fakeFileManager.addFile(testJarPath, "HomeCellClass", JavaFileObject.Kind.CLASS);
@@ -125,7 +125,7 @@ public class DefaultClassUsageFileWriterTest {
       }
     }
     homeFs.createParentDirs(outputOne);
-    writer.writeFile(trackerOne, outputOne, homeFs, cellPathResolver);
+    writer.writeFile(trackerOne, outputOne.getPath(), homeFs, cellPathResolver);
 
     // The xcell file should appear relative to the "home" filesystem, and the external class
     // which is not under any cell in the project should not appear at all.
@@ -141,7 +141,7 @@ public class DefaultClassUsageFileWriterTest {
             : Escaper.Quoter.DOUBLE;
     String escapedExpectedAwayCellPath = quoter.quote(expectedAwayCellPath.toString());
     assertThat(
-        new String(Files.readAllBytes(outputOne)),
+        new String(Files.readAllBytes(outputOne.getPath())),
         new JsonMatcher(
             String.format(
                 "{%s: {\"AwayCellClass\":1},\"home.jar\":{\"HomeCellClass\":1}}",
