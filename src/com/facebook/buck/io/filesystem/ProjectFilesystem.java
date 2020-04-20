@@ -81,8 +81,8 @@ public interface ProjectFilesystem {
   /**
    * @return the specified {@code path} resolved against {@link #getRootPath()} to an absolute path.
    */
-  default Path resolve(ForwardRelativePath path) {
-    return resolve(path.toPath(getFileSystem()));
+  default AbsPath resolve(ForwardRelativePath path) {
+    return AbsPath.of(resolve(path.toPath(getFileSystem())));
   }
 
   /**

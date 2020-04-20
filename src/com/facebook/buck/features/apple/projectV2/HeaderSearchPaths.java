@@ -27,6 +27,7 @@ import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -130,16 +131,25 @@ class HeaderSearchPaths {
     ImmutableSortedMap<Path, SourcePath> privateCxxHeaders = getPrivateCxxHeaders(targetNode);
     builder.setPrivateCxxHeaders(privateCxxHeaders);
 
-    Set<Path> recursivePublicSystemIncludeDirectories =
+    ImmutableSet<AbsPath> recursivePublicSystemIncludeDirectories =
         collectRecursivePublicSystemIncludeDirectories(targetNode);
-    builder.setRecursivePublicSystemIncludeDirectories(recursivePublicSystemIncludeDirectories);
+    builder.setRecursivePublicSystemIncludeDirectories(
+        recursivePublicSystemIncludeDirectories.stream()
+            .map(PathWrapper::getPath)
+            .collect(ImmutableSet.toImmutableSet()));
 
-    Set<Path> recursivePublicIncludeDirectories =
+    ImmutableSet<AbsPath> recursivePublicIncludeDirectories =
         collectRecursivePublicIncludeDirectories(targetNode);
-    builder.setRecursivePublicIncludeDirectories(recursivePublicIncludeDirectories);
+    builder.setRecursivePublicIncludeDirectories(
+        recursivePublicIncludeDirectories.stream()
+            .map(PathWrapper::getPath)
+            .collect(ImmutableSet.toImmutableSet()));
 
-    Set<Path> includeDirectories = extractIncludeDirectories(targetNode);
-    builder.setIncludeDirectories(includeDirectories);
+    ImmutableSet<AbsPath> includeDirectories = extractIncludeDirectories(targetNode);
+    builder.setIncludeDirectories(
+        includeDirectories.stream()
+            .map(PathWrapper::getPath)
+            .collect(ImmutableSet.toImmutableSet()));
 
     ImmutableSet<Path> recursiveHeaderSearchPaths = collectRecursiveHeaderSearchPaths(targetNode);
     builder.setRecursiveHeaderSearchPaths(recursiveHeaderSearchPaths);
@@ -518,7 +528,8 @@ class HeaderSearchPaths {
     return true;
   }
 
-  private Set<Path> collectRecursivePublicSystemIncludeDirectories(TargetNode<?> targetNode) {
+  private ImmutableSet<AbsPath> collectRecursivePublicSystemIncludeDirectories(
+      TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
@@ -532,7 +543,7 @@ class HeaderSearchPaths {
         .toSet();
   }
 
-  private Set<Path> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
+  private ImmutableSet<AbsPath> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
@@ -546,8 +557,8 @@ class HeaderSearchPaths {
         .toSet();
   }
 
-  private Set<Path> extractIncludeDirectories(TargetNode<?> targetNode) {
-    Path basePath =
+  private ImmutableSet<AbsPath> extractIncludeDirectories(TargetNode<?> targetNode) {
+    AbsPath basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getCellRelativeBasePath().getPath());
     ImmutableSortedSet<String> includeDirectories =
@@ -755,8 +766,8 @@ class HeaderSearchPaths {
     return isSourceUnderTest;
   }
 
-  private Set<Path> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
-    Path basePath =
+  private ImmutableSet<AbsPath> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
+    AbsPath basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getCellRelativeBasePath().getPath());
     ImmutableSortedSet<String> includeDirectories =
@@ -768,8 +779,8 @@ class HeaderSearchPaths {
         .toSet();
   }
 
-  private Set<Path> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
-    Path basePath =
+  private ImmutableSet<AbsPath> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
+    AbsPath basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getCellRelativeBasePath().getPath());
     ImmutableSortedSet<String> includeDirectories =

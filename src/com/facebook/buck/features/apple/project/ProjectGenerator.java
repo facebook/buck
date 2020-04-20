@@ -1796,11 +1796,11 @@ public class ProjectGenerator {
     }
 
     if (isFocusedOnTarget) {
-      Set<Path> recursivePublicSystemIncludeDirectories =
+      ImmutableSet<AbsPath> recursivePublicSystemIncludeDirectories =
           collectRecursivePublicSystemIncludeDirectories(targetNode);
-      Set<Path> recursivePublicIncludeDirectories =
+      ImmutableSet<AbsPath> recursivePublicIncludeDirectories =
           collectRecursivePublicIncludeDirectories(targetNode);
-      Set<Path> includeDirectories = extractIncludeDirectories(targetNode);
+      ImmutableSet<AbsPath> includeDirectories = extractIncludeDirectories(targetNode);
 
       // Explicitly add system include directories to compile flags to mute warnings,
       // XCode seems to not support system include directories directly.
@@ -4035,7 +4035,7 @@ public class ProjectGenerator {
             });
   }
 
-  private Set<Path> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
+  private ImmutableSet<AbsPath> collectRecursivePublicIncludeDirectories(TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
@@ -4049,7 +4049,8 @@ public class ProjectGenerator {
         .toSet();
   }
 
-  private Set<Path> collectRecursivePublicSystemIncludeDirectories(TargetNode<?> targetNode) {
+  private ImmutableSet<AbsPath> collectRecursivePublicSystemIncludeDirectories(
+      TargetNode<?> targetNode) {
     return FluentIterable.from(
             AppleBuildRules.getRecursiveTargetNodeDependenciesOfTypes(
                 xcodeDescriptions,
@@ -4063,8 +4064,8 @@ public class ProjectGenerator {
         .toSet();
   }
 
-  private Set<Path> extractIncludeDirectories(TargetNode<?> targetNode) {
-    Path basePath =
+  private ImmutableSet<AbsPath> extractIncludeDirectories(TargetNode<?> targetNode) {
+    AbsPath basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getCellRelativeBasePath().getPath());
     ImmutableSortedSet<String> includeDirectories =
@@ -4076,8 +4077,8 @@ public class ProjectGenerator {
         .toSet();
   }
 
-  private Set<Path> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
-    Path basePath =
+  private ImmutableSet<AbsPath> extractPublicIncludeDirectories(TargetNode<?> targetNode) {
+    AbsPath basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getCellRelativeBasePath().getPath());
     ImmutableSortedSet<String> includeDirectories =
@@ -4089,8 +4090,8 @@ public class ProjectGenerator {
         .toSet();
   }
 
-  private Set<Path> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
-    Path basePath =
+  private ImmutableSet<AbsPath> extractPublicSystemIncludeDirectories(TargetNode<?> targetNode) {
+    AbsPath basePath =
         getFilesystemForTarget(Optional.of(targetNode.getBuildTarget()))
             .resolve(targetNode.getBuildTarget().getCellRelativeBasePath().getPath());
     ImmutableSortedSet<String> includeDirectories =

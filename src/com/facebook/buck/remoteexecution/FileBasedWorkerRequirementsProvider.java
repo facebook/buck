@@ -16,6 +16,7 @@
 
 package com.facebook.buck.remoteexecution;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
@@ -32,7 +33,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.RemovalListener;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -69,7 +69,7 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
   private final ProjectFilesystem projectFilesystem;
   private final String workerRequirementsFilename;
   private final boolean tryLargerWorkerOnOom;
-  private final Cache<Path, Map<ImmutableActionTags, WorkerRequirements>> cache;
+  private final Cache<AbsPath, Map<ImmutableActionTags, WorkerRequirements>> cache;
 
   public FileBasedWorkerRequirementsProvider(
       ProjectFilesystem projectFilesystem,
@@ -84,7 +84,7 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
             .maximumSize(cacheSize)
             .expireAfterAccess(1, TimeUnit.MINUTES)
             .removalListener(
-                (RemovalListener<Path, Map<ImmutableActionTags, WorkerRequirements>>)
+                (RemovalListener<AbsPath, Map<ImmutableActionTags, WorkerRequirements>>)
                     notification ->
                         LOG.debug(
                             "Requirements for file=%s are being evicted, reason=%s",
@@ -108,11 +108,11 @@ public final class FileBasedWorkerRequirementsProvider implements WorkerRequirem
   @Override
   public WorkerRequirements resolveRequirements(BuildTarget target, String auxiliaryBuildTag) {
     // TODO(nga): must not ignore cell path
-    Path filepath =
+    AbsPath filepath =
         projectFilesystem
             .resolve(target.getCellRelativeBasePath().getPath())
             .resolve(workerRequirementsFilename);
-    if (!Files.exists(filepath)) {
+    if (!Files.exists(filepath.getPath())) {
       return resolveDefault();
     }
 

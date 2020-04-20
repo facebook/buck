@@ -270,7 +270,7 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
                     cell.getFilesystem(),
                     MorePaths.relativize(
                         rootCell.getFilesystem().getRootPath(),
-                        AbsPath.of(cell.getFilesystem().resolve(path)))))
+                        cell.getFilesystem().resolve(path))))
         .map(QueryFileTarget::of)
         .collect(ImmutableSet.toImmutableSet());
   }
@@ -338,7 +338,8 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
       RelPath buildFilePath =
           MorePaths.relativize(
               rootPath,
-              AbsPath.of(cell.getFilesystem().resolve(path.get()))
+              cell.getFilesystem()
+                  .resolve(path.get())
                   .resolve(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
       Preconditions.checkState(cellFilesystem.exists(buildFilePath));
       SourcePath sourcePath = PathSourcePath.of(cell.getFilesystem(), buildFilePath);

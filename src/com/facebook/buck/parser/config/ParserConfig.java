@@ -361,10 +361,9 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
   public AbsPath getAbsolutePathToBuildFileUnsafe(Cell cell, UnconfiguredBuildTarget target) {
     Cell targetCell = cell.getCell(target.getCell());
     ProjectFilesystem targetFilesystem = targetCell.getFilesystem();
-    return AbsPath.of(
-        targetFilesystem
-            .resolve(target.getCellRelativeBasePath().getPath())
-            .resolve(targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
+    return targetFilesystem
+        .resolve(target.getCellRelativeBasePath().getPath())
+        .resolve(targetCell.getBuckConfigView(ParserConfig.class).getBuildFileName());
   }
 
   /**
