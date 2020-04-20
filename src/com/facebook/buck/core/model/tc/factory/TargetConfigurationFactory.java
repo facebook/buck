@@ -28,9 +28,6 @@ import java.util.Optional;
 /** Parse a string into {@link TargetConfiguration}. */
 public class TargetConfigurationFactory {
 
-  private static final String UNCONFIGURED_TARGET_CONFIGURATION_NAME =
-      "builtin//platform:unconfigured";
-
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetViewFactory;
   private final CellPathResolver cellPathResolver;
 
@@ -42,7 +39,7 @@ public class TargetConfigurationFactory {
   }
 
   private Optional<TargetConfiguration> tryNonBuildTarget(String targetConfiguration) {
-    if (targetConfiguration.equals(UNCONFIGURED_TARGET_CONFIGURATION_NAME)) {
+    if (targetConfiguration.equals(UnconfiguredTargetConfiguration.NAME)) {
       return Optional.of(UnconfiguredTargetConfiguration.INSTANCE);
     }
     return Optional.empty();

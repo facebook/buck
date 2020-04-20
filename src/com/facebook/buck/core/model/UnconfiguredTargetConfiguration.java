@@ -28,6 +28,8 @@ public class UnconfiguredTargetConfiguration extends TargetConfiguration {
   public static final UnconfiguredTargetConfiguration INSTANCE =
       new UnconfiguredTargetConfiguration();
 
+  public static final String NAME = "builtin//platform:unconfigured";
+
   private final int hashCode = Objects.hash(UnconfiguredTargetConfiguration.class.getName());
 
   private UnconfiguredTargetConfiguration() {}
@@ -48,10 +50,8 @@ public class UnconfiguredTargetConfiguration extends TargetConfiguration {
     return Optional.empty();
   }
 
-  private static final String TO_STRING = UnconfiguredTargetConfiguration.class.getSimpleName();
-
   @Override
   public String toString() {
-    return TO_STRING;
+    return NAME;
   }
 }
