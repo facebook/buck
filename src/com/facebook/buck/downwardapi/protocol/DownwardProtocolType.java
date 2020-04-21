@@ -47,7 +47,8 @@ public enum DownwardProtocolType {
                 Arrays.stream(values())
                     .filter(p -> p.protocolId.equals(protocolId))
                     .findFirst()
-                    .orElseThrow(IllegalStateException::new))
+                    .orElseThrow(
+                        () -> new IllegalStateException("Not valid protocol type: " + protocolId)))
         .getDownwardProtocol();
   }
 
