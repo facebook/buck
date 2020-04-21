@@ -56,7 +56,7 @@ public class UnflavoredBuildTargetFactoryTest {
     RelPath relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
     String base_path = MorePaths.getParentOrEmpty(relativeBuildFilePath).toString();
 
-    Map<String, Object> malformedMap = ImmutableMap.of("buck.base_path", base_path, "name", "bar");
+    Map<String, Object> malformedMap = ImmutableMap.of("name", "bar");
 
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
@@ -93,16 +93,12 @@ public class UnflavoredBuildTargetFactoryTest {
 
   @Test
   public void exceptionOnSwappedRawNode() {
-    AbsPath buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
-    RelPath relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
-    String base_path = MorePaths.getParentOrEmpty(relativeBuildFilePath).toString();
-
-    Map<String, Object> malformedMap = ImmutableMap.of("buck.base_path", base_path, "name", "bar");
+    Map<String, Object> malformedMap = ImmutableMap.of("name", "bar");
 
     expectedException.expectMessage(
         "Raw data claims to come from [], but we tried rooting it at [a].");
 
-    buildFilePath = cell.getRootCell().getFilesystem().resolve("a/BUCK");
+    AbsPath buildFilePath = cell.getRootCell().getFilesystem().resolve("a/BUCK");
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
         cell.getRootCell().getCanonicalName(),
