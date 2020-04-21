@@ -23,7 +23,6 @@ import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
-import java.util.Optional;
 
 /**
  * This is the main entry point for running buck without buckd.
@@ -41,7 +40,7 @@ public class MainWithoutNailgun extends AbstractMain {
         System.in,
         getClientEnvironment(),
         Platform.detect(),
-        Optional.empty());
+        DaemonMode.NON_DAEMON);
   }
 
   /**
@@ -54,6 +53,7 @@ public class MainWithoutNailgun extends AbstractMain {
 
     BackgroundTaskManager backgroundTaskManager = AsyncBackgroundTaskManager.of();
     MainWithoutNailgun mainWithoutNailgun = new MainWithoutNailgun();
+    installUncaughtExceptionHandler();
     MainRunner mainRunner =
         mainWithoutNailgun.prepareMainRunner(
             backgroundTaskManager,
@@ -75,5 +75,18 @@ public class MainWithoutNailgun extends AbstractMain {
                     && !AnsiEnvironmentChecking.NAILGUN_STDERR_ISTTY_ENV.equals(e.getKey()))
         .forEach(builder::put);
     return builder.build();
+  }
+
+  private static void installUncaughtExceptionHandler() {
+    // Override the default uncaught exception handler for background threads to log
+    // to java.util.logging then exit the JVM with an error code.
+    //
+    // (We do this because the default is to just print to stderr and not exit the JVM,
+    // which is not safe in a multithreaded environment if the thread held a lock or
+    // resource which other threads need.)
+    Thread.setDefaultUncaughtExceptionHandler(
+        (t, e) -> {
+          exitWithCode(t, e);
+        });
   }
 }

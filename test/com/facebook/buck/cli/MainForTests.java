@@ -65,7 +65,7 @@ public class MainForTests extends AbstractMain {
         projectRoot,
         rawClientPwd,
         CommandMode.TEST,
-        ngContext);
+        ngContext.map(ignored -> DaemonMode.DAEMON).orElse(DaemonMode.NON_DAEMON));
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
   }
 

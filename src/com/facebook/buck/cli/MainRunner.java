@@ -231,7 +231,6 @@ import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
-import com.facebook.nailgun.NGContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -322,11 +321,6 @@ public final class MainRunner {
   private DuplicatingConsole printConsole;
 
   private final DaemonMode daemonMode;
-
-  // TODO: we should remove this field and initialize everything we want on it in MainWithNailgun.
-  // This has too many other variables and fields that can be accessed incorrectly.
-  @SuppressWarnings("unused")
-  private Optional<NGContext> context;
 
   // Ignore changes to generated Xcode project files and editors' backup files
   // so we don't dump buckd caches on every command.
@@ -430,7 +424,6 @@ public final class MainRunner {
    * @param projectRoot the project root of the current command
    * @param rawClientPwd the raw absolute path of where the current command is invoked
    * @param moduleManager the {@link BuckModuleManager} for this command
-   * @param context the {@link NGContext} from nailgun for this command
    * @param pluginManager the {@link PluginManager} for this command
    * @param daemonMode whether this is ran as buck daemon or without daemon
    * @param buckGlobalStateLifecycleManager the caching management of the buck global state
@@ -450,7 +443,6 @@ public final class MainRunner {
       BuckModuleManager moduleManager,
       BackgroundTaskManager bgTaskManager,
       CommandMode commandMode,
-      Optional<NGContext> context,
       PluginManager pluginManager,
       DaemonMode daemonMode,
       BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager,
@@ -470,7 +462,6 @@ public final class MainRunner {
     this.buildId = buildId;
     this.clientEnvironment = clientEnvironment;
     this.platform = platform;
-    this.context = context;
     this.commandMode = commandMode;
   }
 

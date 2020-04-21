@@ -69,6 +69,8 @@ public class MainWithNailgun extends AbstractMain {
 
   private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.empty();
 
+  private final NGContext ngContext;
+
   public MainWithNailgun(NGContext ngContext) {
     super(
         ngContext.out,
@@ -76,7 +78,8 @@ public class MainWithNailgun extends AbstractMain {
         ngContext.in,
         getClientEnvironment(ngContext),
         running_platform,
-        Optional.of(ngContext));
+        DaemonMode.DAEMON);
+    this.ngContext = ngContext;
   }
 
   /**
@@ -90,6 +93,8 @@ public class MainWithNailgun extends AbstractMain {
         BuckDaemon.getInstance().getDaemonCommandExecutionScope()) {
 
       MainWithNailgun mainWithNailgun = new MainWithNailgun(context);
+      mainWithNailgun.installUncaughtExceptionHandler();
+
       MainRunner mainRunner =
           mainWithNailgun.prepareMainRunner(
               bgTaskMananger, buckGlobalStateLifecycleManager, new DaemonCommandManager(context));
@@ -125,6 +130,23 @@ public class MainWithNailgun extends AbstractMain {
     } catch (IOException | OverlappingFileLockException e) {
       LOG.warn(e, "Error when attempting to acquire resources file lock.");
     }
+  }
+
+  private void installUncaughtExceptionHandler() {
+    // Override the default uncaught exception handler for background threads to log
+    // to java.util.logging then exit the JVM with an error code.
+    //
+    // (We do this because the default is to just print to stderr and not exit the JVM,
+    // which is not safe in a multithreaded environment if the thread held a lock or
+    // resource which other threads need.)
+    Thread.setDefaultUncaughtExceptionHandler(
+        (t, e) -> {
+
+          // Shut down the Nailgun server and make sure it stops trapping System.exit().
+          ngContext.getNGServer().shutdown();
+
+          exitWithCode(t, e);
+        });
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
