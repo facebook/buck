@@ -61,11 +61,15 @@ public abstract class BuckRunSpec {
   @JsonProperty
   public abstract boolean getIsFixScript();
 
+  @JsonProperty
+  public abstract boolean getPrintCommand();
+
   public static BuckRunSpec of(
       ImmutableList<String> argv,
       ImmutableMap<String, String> envp,
       Path cwd,
-      boolean isFixScript) {
-    return ImmutableBuckRunSpec.ofImpl(argv, envp, cwd, isFixScript);
+      boolean isFixScript,
+      boolean printCommand) {
+    return ImmutableBuckRunSpec.ofImpl(argv, envp, cwd, isFixScript, printCommand);
   }
 }

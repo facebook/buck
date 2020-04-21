@@ -137,7 +137,8 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     // Ensure that we make it look like we're not running from within buck. This is fine since
     // we're running in a completely different directory. Also make sure that NO_BUCKD is only
     // set if buckdEnabled is false
-    ImmutableSet<String> keysToRemove = ImmutableSet.of("BUCK_ROOT_BUILD_ID", "NO_BUCKD");
+    ImmutableSet<String> keysToRemove =
+        ImmutableSet.of("BUCK_ROOT_BUILD_ID", "NO_BUCKD", "BUCK_BUILD_ID");
     for (Map.Entry<String, String> entry : EnvVariablesProvider.getSystemEnv().entrySet()) {
       if (keysToRemove.contains(entry.getKey())) {
         continue;
@@ -327,6 +328,16 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
     return runCommandAndReturnOutputs("build", targetPatterns);
   }
 
+  public ImmutableMap<String, Path> buildAndReturnOutputs(
+      boolean buckdEnabled,
+      ImmutableMap<String, String> environmentOverrides,
+      String[] templates,
+      String... args)
+      throws Exception {
+    return runCommandAndReturnOutputs(
+        buckdEnabled, environmentOverrides, Optional.empty(), templates, "build", args);
+  }
+
   public ImmutableMap<String, Path> runCommandAndReturnOutputs(
       String command, String... targetPatterns) throws Exception {
 
@@ -339,6 +350,31 @@ public class EndToEndWorkspace extends AbstractWorkspace implements TestRule {
             .toArray(new String[0]);
 
     return MoreStrings.lines(runBuckCommand(cmd).assertSuccess().getStdout()).stream()
+        .map(line -> line.trim().split("\\s+"))
+        .collect(ImmutableMap.toImmutableMap(pieces -> pieces[0], pieces -> Paths.get(pieces[1])));
+  }
+
+  public ImmutableMap<String, Path> runCommandAndReturnOutputs(
+      boolean buckdEnabled,
+      ImmutableMap<String, String> environmentOverrides,
+      Optional<String> stdin,
+      String[] templates,
+      String command,
+      String... args)
+      throws Exception {
+    String[] cmd =
+        ImmutableList.builder()
+            .add(command)
+            .add("--show-output")
+            .addAll(Arrays.asList(args))
+            .build()
+            .toArray(new String[0]);
+
+    return MoreStrings.lines(
+            runBuckCommand(buckdEnabled, environmentOverrides, stdin, templates, cmd)
+                .assertSuccess()
+                .getStdout())
+        .stream()
         .map(line -> line.trim().split("\\s+"))
         .collect(ImmutableMap.toImmutableMap(pieces -> pieces[0], pieces -> Paths.get(pieces[1])));
   }

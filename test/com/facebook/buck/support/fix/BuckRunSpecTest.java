@@ -42,6 +42,7 @@ public class BuckRunSpecTest {
             ImmutableList.of("foo", "bar"),
             ImmutableMap.of("FOO", "BAR"),
             Paths.get("cwd/goes/here"),
+            true,
             true);
 
     String jsonString = ObjectMappers.WRITER.writeValueAsString(spec);
@@ -56,5 +57,6 @@ public class BuckRunSpecTest {
     assertEquals("BAR", readData.get("envp").get("FOO").asText());
     assertEquals(expectedCwd, readData.get("cwd").asText());
     assertTrue(readData.get("is_fix_script").asBoolean());
+    assertTrue(readData.get("print_command").asBoolean());
   }
 }

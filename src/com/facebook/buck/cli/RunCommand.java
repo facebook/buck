@@ -61,6 +61,13 @@ public final class RunCommand extends AbstractCommand {
    */
   @Argument private List<String> noDashArguments = new ArrayList<>();
 
+  @Option(
+      name = "--print-command",
+      usage =
+          "Build the artifact, but do not run it. Instead, print json details about how to "
+              + "run the command like Buck would.")
+  private boolean printCommand = false;
+
   @Option(name = "--", handler = ConsumeAllOptionsHandler.class)
   private List<String> withDashArguments = new ArrayList<>();
 
@@ -183,7 +190,8 @@ public final class RunCommand extends AbstractCommand {
               argv,
               envp,
               params.getCells().getRootCell().getFilesystem().getRootPath().getPath(),
-              false);
+              false,
+              printCommand);
       Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(cmd));
       return ExitCode.SUCCESS;
     }

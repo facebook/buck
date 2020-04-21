@@ -306,6 +306,21 @@ class ExecuteFixScript(ExitCodeCallable):
         return exit_code
 
 
+class PrintExecution(ExitCodeCallable):
+    """ Callable that prints how to execute a given target after the build finishes """
+
+    def __init__(self, exit_code, path, argv, envp, cwd):
+        super(PrintExecution, self).__init__(exit_code)
+        self._details = {"args": [path] + argv[1:], "env": envp, "cwd": cwd}
+
+    def __call__(self):
+        if self.exit_code != ExitCode.SUCCESS:
+            return self.exit_code
+
+        print(json.dumps(self._details, indent=4))
+        return ExitCode.SUCCESS
+
+
 class BuckStatusReporter(object):
 
     """ Add custom logic to log Buck completion statuses or errors including
@@ -677,7 +692,11 @@ class BuckTool(object):
                     k.encode("utf8"): v.encode("utf8") for k, v in cmd["envp"].items()
                 }
                 cwd = cmd["cwd"].encode("utf8")
-                if cmd["is_fix_script"]:
+                if cmd["print_command"]:
+                    return PrintExecution(
+                        exit_code, cmd["path"], cmd["argv"], cmd["envp"], cmd["cwd"]
+                    )
+                elif cmd["is_fix_script"]:
                     return ExecuteFixScript(exit_code, path, argv, envp, cwd)
                 else:
                     return ExecuteTarget(exit_code, path, argv, envp, cwd)
