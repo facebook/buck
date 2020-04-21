@@ -209,7 +209,17 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
 
     Optional<UnconfiguredBuildTarget> defaultTargetPlatform = Optional.empty();
     Object rawDefaultTargetPlatform = rawAttributes.get("defaultTargetPlatform");
-    if (rawDefaultTargetPlatform != null && !rawDefaultTargetPlatform.equals("")) {
+    if (rawDefaultTargetPlatform == null) {
+      // TODO(nga): old rules vs UDR rules mess
+      rawDefaultTargetPlatform = rawAttributes.get("default_target_platform");
+    }
+    if (rawDefaultTargetPlatform != null
+        && !rawDefaultTargetPlatform.equals("")
+        && !rawDefaultTargetPlatform.equals(Optional.empty())
+        && !rawDefaultTargetPlatform.equals(Optional.of(""))) {
+      if (rawDefaultTargetPlatform instanceof Optional<?>) {
+        rawDefaultTargetPlatform = ((Optional<?>) rawDefaultTargetPlatform).get();
+      }
       try {
         defaultTargetPlatform =
             Optional.of(
