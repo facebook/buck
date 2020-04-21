@@ -67,10 +67,11 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.packages.BazelLibrary;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -351,12 +352,12 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     try (Mutability mutability = Mutability.create("test")) {
       StarlarkThread env =
           StarlarkThread.builder(mutability)
-              .setGlobals(BazelLibrary.GLOBALS)
+              .setGlobals(Module.createForBuiltins(Starlark.UNIVERSE))
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .build();
       dict = SkylarkDict.of(env);
       for (Map.Entry<String, ImmutableSet<Artifact>> entry : namedOutputs.entrySet()) {
-        dict.put(entry.getKey(), entry.getValue(), Location.BUILTIN, mutability);
+        dict.put(entry.getKey(), entry.getValue(), Location.BUILTIN);
       }
     }
     return TestProviderInfoCollectionImpl.builder()

@@ -34,13 +34,13 @@ import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.packages.BazelLibrary;
-import com.google.devtools.build.lib.syntax.CallUtils;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
@@ -103,9 +103,14 @@ public class SkylarkPackageModuleTest {
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
     StarlarkFile buildFileAst =
         StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+
+    ImmutableMap.Builder<String, Object> module = ImmutableMap.builder();
+    module.putAll(Starlark.UNIVERSE);
+    Starlark.addMethods(module, SkylarkPackageModule.PACKAGE_MODULE);
+
     StarlarkThread env =
         StarlarkThread.builder(mutability)
-            .setGlobals(BazelLibrary.GLOBALS)
+            .setGlobals(Module.createForBuiltins(module.build()))
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
     SkylarkUtils.setPhase(env, SkylarkUtils.Phase.LOADING);
@@ -118,8 +123,6 @@ public class SkylarkPackageModuleTest {
                 eventHandler,
                 ImmutableMap.of()));
     parseContext.setup(env);
-    env.setup(
-        "package", CallUtils.getBuiltinCallable(SkylarkPackageModule.PACKAGE_MODULE, "package"));
     try {
       EvalUtils.exec(buildFileAst, env);
       assertTrue(expectSuccess);

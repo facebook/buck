@@ -53,7 +53,6 @@ import com.facebook.buck.util.DefaultProcessExecutor;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.syntax.Runtime;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Optional;
@@ -327,26 +326,14 @@ public class DefaultProjectBuildFileParserFactory implements ProjectBuildFilePar
             EventKind.ALL_EVENTS,
             ImmutableSet.copyOf(buckGlobals.getNativeModuleFieldNames()),
             augmentor);
-    SkylarkProjectBuildFileParser skylarkParser =
-        SkylarkProjectBuildFileParser.using(
-            buildFileParserOptions,
-            eventBus,
-            SkylarkFilesystem.using(cell.getFilesystem()),
-            buckGlobals,
-            eventHandler,
-            globberFactory);
 
-    // All built-ins should have already been discovered. Freezing improves performance by
-    // avoiding synchronization during query operations. This operation is idempotent, so it's
-    // fine to call this multiple times.
-    // Note, that this method should be called after parser is created, to give a chance for all
-    // static initializers that register SkylarkSignature to run.
-    // See {@link AbstractBuckGlobals} where we force some initializers to run, as they are buried
-    // behind a few layers of abstraction, and it's hard to ensure that we actually have loaded
-    // the class first.
-    Runtime.getBuiltinRegistry().freeze();
-
-    return skylarkParser;
+    return SkylarkProjectBuildFileParser.using(
+        buildFileParserOptions,
+        eventBus,
+        SkylarkFilesystem.using(cell.getFilesystem()),
+        buckGlobals,
+        eventHandler,
+        globberFactory);
   }
 
   private static GlobberFactory getSkylarkGlobberFactory(

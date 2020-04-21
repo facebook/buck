@@ -71,7 +71,7 @@ public class RuleFunctionFactory {
    */
   BuiltinFunction create(BaseDescription<?> ruleClass) {
     String name = DescriptionCache.getRuleType(ruleClass).getName();
-    return new BuiltinFunction(name, FunctionSignature.KWARGS, BuiltinFunction.USE_AST_ENV) {
+    return new BuiltinFunction(name, FunctionSignature.KWARGS) {
 
       @SuppressWarnings({"unused"})
       public Runtime.NoneType invoke(

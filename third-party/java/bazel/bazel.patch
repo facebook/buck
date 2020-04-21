@@ -1,14 +1,14 @@
-commit 5a198a9b610f27a99119d546138eee5612a832c6
+commit dadac5a3119bbaa0108dfa4d5d1b4fd392c817f3
 Author: Stiopa Koltsov <stepan.koltsov@gmail.com>
 Date:   Sun Mar 29 19:44:12 2020 +0100
 
     bazel import patch
 
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index 1dc5a8bdca..7ff433f36e 100644
+index d56e0862f0..293b077474 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -1527,3 +1527,64 @@ java_library(
+@@ -1543,3 +1543,63 @@ java_library(
          "analysis/BuildInfo.java",
      ],
  )
@@ -22,7 +22,6 @@ index 1dc5a8bdca..7ff433f36e 100644
 +        "skylarkinterface/*.java",
 +    ]) + [
 +        "packages/Attribute.java",
-+        "packages/BazelLibrary.java",
 +        "packages/BuiltinProvider.java",
 +        "packages/Globber.java",
 +        "packages/Info.java",
@@ -107,7 +106,7 @@ index a58f47adc7..2a4b7888a9 100644
  
    /**
 diff --git a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
-index 893b83f9f3..8a0678a6fc 100644
+index c8d05a2fcc..51eb7b556f 100644
 --- a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
 +++ b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
 @@ -47,8 +47,6 @@ import javax.annotation.Nullable;
@@ -119,7 +118,7 @@ index 893b83f9f3..8a0678a6fc 100644
    /**
     * Order and size of set packed into one int.
     *
-@@ -391,7 +389,6 @@ public final class NestedSet<E> implements Iterable<E> {
+@@ -392,7 +390,6 @@ public final class NestedSet<E> implements Iterable<E> {
          try {
            return Arrays.toString(Futures.getDone(future));
          } catch (ExecutionException e) {
@@ -128,7 +127,7 @@ index 893b83f9f3..8a0678a6fc 100644
            return "Future " + future + " with error: " + e.getCause().getMessage();
          }
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index 79a5ec5a15..321c106326 100644
+index 89201b35a0..321c106326 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 @@ -14,2273 +14,13 @@
@@ -2325,7 +2324,7 @@ index 79a5ec5a15..321c106326 100644
 -   */
 -  public ImmutableList<Aspect> getAspects(Rule rule) {
 -    ImmutableList.Builder<Aspect> builder = null;
--    for (RuleAspect aspect : aspects) {
+-    for (RuleAspect<?> aspect : aspects) {
 -      Aspect a = aspect.getAspect(rule);
 -      if (a != null) {
 -        if (builder == null) {
@@ -2505,10 +2504,10 @@ index 79a5ec5a15..321c106326 100644
 -  }
  }
 diff --git a/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java b/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java
-index 459247fad9..ced141aa62 100644
+index 6cd29b925d..e4a2729327 100644
 --- a/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java
 +++ b/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java
-@@ -409,7 +409,7 @@ public final class CallUtils {
+@@ -287,7 +287,7 @@ public final class CallUtils {
     *     example, if any arguments are of unexpected type, or not all mandatory parameters are
     *     specified by the user
     */

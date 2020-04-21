@@ -32,6 +32,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Tuple;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.util.Objects;
 import org.junit.Rule;
@@ -72,7 +73,7 @@ public class BuckSkylarkTypesTest {
 
   @Test
   public void toJavaListFailsOnWrongType() throws EvalException {
-    SkylarkList<?> skylarkList = SkylarkList.Tuple.of(1, 2, 3);
+    SkylarkList<?> skylarkList = Tuple.of(1, 2, 3);
 
     thrown.expect(EvalException.class);
     BuckSkylarkTypes.toJavaList(skylarkList, FakeClass.class, null);
@@ -80,9 +81,8 @@ public class BuckSkylarkTypesTest {
 
   @Test
   public void toJavaListCastsGenericsProperly() throws EvalException {
-    SkylarkList.Tuple<?> skylarkList =
-        SkylarkList.Tuple.<FakeClass<?>>of(
-            new FakeClass<>("foo"), new FakeClass<>(1), new FakeClass<>(false));
+    Tuple<?> skylarkList =
+        Tuple.<FakeClass<?>>of(new FakeClass<>("foo"), new FakeClass<>(1), new FakeClass<>(false));
 
     ImmutableList<FakeClass<?>> list =
         BuckSkylarkTypes.toJavaList(skylarkList, FakeClass.class, null);
@@ -92,7 +92,7 @@ public class BuckSkylarkTypesTest {
 
   @Test
   public void toJavaListNonGenericsProperly() throws EvalException {
-    SkylarkList<?> skylarkList = SkylarkList.Tuple.of(1, 2, 3);
+    SkylarkList<?> skylarkList = Tuple.of(1, 2, 3);
     ImmutableList<Integer> list = BuckSkylarkTypes.toJavaList(skylarkList, Integer.class, null);
 
     assertEquals(ImmutableList.of(1, 2, 3), list);

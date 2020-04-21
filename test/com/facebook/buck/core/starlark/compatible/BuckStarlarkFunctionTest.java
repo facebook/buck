@@ -24,6 +24,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParamDescriptor;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -109,7 +110,7 @@ public class BuckStarlarkFunctionTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
@@ -132,7 +133,7 @@ public class BuckStarlarkFunctionTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
@@ -158,7 +159,7 @@ public class BuckStarlarkFunctionTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(function.getMethodDescriptor().getName(), function)))
               .build();
 
@@ -215,7 +216,7 @@ public class BuckStarlarkFunctionTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(
                           function.getMethodDescriptor().getName(),
                           function,

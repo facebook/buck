@@ -54,6 +54,7 @@ import com.google.devtools.build.lib.packages.SkylarkExportable;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.LoadStatement;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
@@ -312,7 +313,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
   private static final boolean ENABLE_PROPER_VALIDATION = false;
 
-  private StarlarkThread.GlobalFrame getGlobals(FileKind fileKind) {
+  private Module getGlobals(FileKind fileKind) {
     return fileKind == FileKind.BZL
         ? buckGlobals.getBuckLoadContextGlobals()
         : buckGlobals.getBuckBuildFileContextGlobals();

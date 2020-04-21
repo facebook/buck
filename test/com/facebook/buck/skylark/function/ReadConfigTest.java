@@ -31,13 +31,13 @@ import com.google.devtools.build.lib.cmdline.PackageIdentifier;
 import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
-import com.google.devtools.build.lib.packages.BazelLibrary;
-import com.google.devtools.build.lib.syntax.CallUtils;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
@@ -100,9 +100,14 @@ public class ReadConfigTest {
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
     StarlarkFile buildFileAst =
         StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+
+    ImmutableMap.Builder<String, Object> module = ImmutableMap.builder();
+    module.putAll(Starlark.UNIVERSE);
+    Starlark.addMethods(module, SkylarkBuildModule.BUILD_MODULE);
+
     StarlarkThread env =
         StarlarkThread.builder(mutability)
-            .setGlobals(BazelLibrary.GLOBALS)
+            .setGlobals(Module.createForBuiltins(module.build()))
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
     ParseContext parseContext =
@@ -114,9 +119,6 @@ public class ReadConfigTest {
                 eventHandler,
                 ImmutableMap.of()));
     parseContext.setup(env);
-    env.setup(
-        "read_config",
-        CallUtils.getBuiltinCallable(SkylarkBuildModule.BUILD_MODULE, "read_config"));
     try {
       EvalUtils.exec(buildFileAst, env);
     } catch (EvalException e) {

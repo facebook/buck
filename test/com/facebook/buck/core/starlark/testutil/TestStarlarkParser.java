@@ -38,6 +38,7 @@ public class TestStarlarkParser {
 
   public static Object eval(StarlarkThread env, String expr)
       throws EvalException, InterruptedException, SyntaxError {
-    return EvalUtils.execOrEval(ParserInput.create(expr, PathFragment.EMPTY_FRAGMENT), env);
+    return EvalUtils.execAndEvalOptionalFinalExpression(
+        ParserInput.create(expr, PathFragment.EMPTY_FRAGMENT), env);
   }
 }

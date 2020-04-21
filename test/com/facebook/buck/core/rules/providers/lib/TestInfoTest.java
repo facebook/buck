@@ -28,6 +28,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
@@ -98,7 +99,7 @@ public class TestInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER)))
               .build();
 
@@ -129,7 +130,7 @@ public class TestInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(
                           TestInfo.PROVIDER.getName(),
                           TestInfo.PROVIDER,
@@ -175,7 +176,7 @@ public class TestInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(TestInfo.PROVIDER.getName(), TestInfo.PROVIDER)))
               .build();
 

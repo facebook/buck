@@ -92,6 +92,7 @@ public class ConsoleEventHandler implements EventHandler {
       case FAIL:
       case TIMEOUT:
       case DEPCHECKER:
+      case CANCELLED:
         eventBus.post(ConsoleEvent.severe(getConsoleMessage(event)));
         break;
       case ERROR:

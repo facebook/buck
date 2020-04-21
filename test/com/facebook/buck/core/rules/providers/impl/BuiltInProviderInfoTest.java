@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.Runtime;
@@ -221,7 +222,7 @@ public class BuiltInProviderInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(SomeInfo.PROVIDER.getName(), SomeInfo.PROVIDER)))
               .build();
 
@@ -285,7 +286,7 @@ public class BuiltInProviderInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(
                           ImmutableSomeInfo.PROVIDER.getName(), ImmutableSomeInfo.PROVIDER)))
               .build();
@@ -305,7 +306,7 @@ public class BuiltInProviderInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(
                           InfoWithNoDefaultValOnAnnotation.PROVIDER.getName(),
                           InfoWithNoDefaultValOnAnnotation.PROVIDER)))
@@ -327,7 +328,7 @@ public class BuiltInProviderInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(
                           SomeInfoWithInstantiate.PROVIDER.getName(),
                           SomeInfoWithInstantiate.PROVIDER)))
@@ -353,7 +354,7 @@ public class BuiltInProviderInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(
                           SomeInfoWithInstantiate.PROVIDER.getName(),
                           SomeInfoWithInstantiate.PROVIDER)))
@@ -376,7 +377,7 @@ public class BuiltInProviderInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(
                           SomeInfoWithInstantiate.PROVIDER.getName(),
                           SomeInfoWithInstantiate.PROVIDER)))
@@ -402,14 +403,14 @@ public class BuiltInProviderInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(
                           SomeInfoWithInstantiateAndLocation.PROVIDER.getName(),
                           SomeInfoWithInstantiateAndLocation.PROVIDER)))
               .build();
 
       o =
-          EvalUtils.execOrEval(
+          EvalUtils.execAndEvalOptionalFinalExpression(
               ParserInput.create(
                   "SomeInfoWithInstantiateAndLocation(my_info=1)",
                   PathFragment.create("foo/bar.bzl")),
@@ -433,7 +434,7 @@ public class BuiltInProviderInfoTest {
           StarlarkThread.builder(mutability)
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .setGlobals(
-                  StarlarkThread.GlobalFrame.createForBuiltins(
+                  Module.createForBuiltins(
                       ImmutableMap.of(
                           SomeInfoWithNoneable.PROVIDER.getName(),
                           SomeInfoWithNoneable.PROVIDER,

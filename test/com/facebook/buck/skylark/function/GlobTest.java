@@ -36,13 +36,13 @@ import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.packages.BazelLibrary;
-import com.google.devtools.build.lib.syntax.CallUtils;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
@@ -167,11 +167,18 @@ public class GlobTest {
         FileSystemUtils.readWithKnownFileSize(buildFile, buildFile.getFileSize());
     StarlarkFile buildFileAst =
         StarlarkFile.parse(ParserInput.create(buildFileContent, buildFile.asFragment()));
+
+    ImmutableMap.Builder<String, Object> module = ImmutableMap.builder();
+    module.putAll(Starlark.UNIVERSE);
+    // only "glob" function is neede from the module
+    Starlark.addMethods(module, SkylarkBuildModule.BUILD_MODULE);
+
     StarlarkThread env =
         StarlarkThread.builder(mutability)
-            .setGlobals(BazelLibrary.GLOBALS)
+            .setGlobals(Module.createForBuiltins(module.build()))
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
+
     new ParseContext(
             PackageContext.of(
                 NativeGlobber.create(root),
@@ -180,7 +187,6 @@ public class GlobTest {
                 eventHandler,
                 ImmutableMap.of()))
         .setup(env);
-    env.setup("glob", CallUtils.getBuiltinCallable(SkylarkBuildModule.BUILD_MODULE, "glob"));
 
     EvalUtils.exec(buildFileAst, env);
 

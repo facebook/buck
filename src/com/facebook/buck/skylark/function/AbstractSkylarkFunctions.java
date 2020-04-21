@@ -30,8 +30,8 @@ import javax.annotation.Nullable;
  * SkylarkPackageModule}.
  *
  * <p>Note: @SkylarkModule does not support having the same name for multiple classes in {@link
- * com.google.devtools.build.lib.syntax.Runtime#setupSkylarkLibrary} and since we want the shared
- * functions to also be under "native", we must subclass.
+ * com.google.devtools.build.lib.syntax.Starlark#addModule(ImmutableMap.Builder, Object)} and since
+ * we want the shared functions to also be under "native", we must subclass.
  */
 public abstract class AbstractSkylarkFunctions {
 

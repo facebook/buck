@@ -43,10 +43,11 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.packages.BazelLibrary;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -175,7 +176,7 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
     try (Mutability mutability = Mutability.create("test")) {
       StarlarkThread env =
           StarlarkThread.builder(mutability)
-              .setGlobals(BazelLibrary.GLOBALS)
+              .setGlobals(Module.createForBuiltins(Starlark.UNIVERSE))
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .build();
       dict = SkylarkDict.of(env);
@@ -185,8 +186,7 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
           dict.put(
               labelsToNamedOutnames.getKey(),
               declareArtifacts(actionRegistry, labelsToNamedOutnames.getValue()),
-              Location.BUILTIN,
-              mutability);
+              Location.BUILTIN);
         } catch (EvalException e) {
           throw new HumanReadableException("Invalid name %s", labelsToNamedOutnames.getKey());
         }

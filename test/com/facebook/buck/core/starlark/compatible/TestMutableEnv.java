@@ -17,9 +17,9 @@
 package com.facebook.buck.core.starlark.compatible;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.MethodLibrary;
+import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 
 /** Simple try-with-resources class that creates and cleans up a mutable environment */
@@ -34,12 +34,11 @@ public class TestMutableEnv implements AutoCloseable {
   public TestMutableEnv(ImmutableMap<String, Object> globals) {
     ImmutableMap.Builder<String, Object> builder = ImmutableMap.builder();
     builder.putAll(globals);
-    Runtime.addConstantsToBuilder(builder);
-    MethodLibrary.addBindingsToBuilder(builder);
+    builder.putAll(Starlark.UNIVERSE);
     mutability = Mutability.create("testing");
     env =
         StarlarkThread.builder(mutability)
-            .setGlobals(StarlarkThread.GlobalFrame.createForBuiltins(builder.build()))
+            .setGlobals(Module.createForBuiltins(builder.build()))
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
   }

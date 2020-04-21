@@ -41,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.EventKind;
-import com.google.devtools.build.lib.syntax.Runtime;
 import java.util.Optional;
 
 /** Factory for creating instances of {@link PackageFileParser}. */
@@ -129,24 +128,11 @@ public class PackageFileParserFactory implements FileParserFactory<PackageFileMa
             ImmutableSet.copyOf(buckGlobals.getNativeModuleFieldNames()),
             augmentor);
 
-    PackageFileParser parser =
-        SkylarkPackageFileParser.using(
-            buildFileParserOptions,
-            eventBus,
-            SkylarkFilesystem.using(cell.getFilesystem()),
-            buckGlobals,
-            eventHandler);
-
-    // All built-ins should have already been discovered. Freezing improves performance by
-    // avoiding synchronization during query operations. This operation is idempotent, so it's
-    // fine to call this multiple times.
-    // Note, that this method should be called after parser is created, to give a chance for all
-    // static initializers that register SkylarkSignature to run.
-    // See {@link AbstractBuckGlobals} where we force some initializers to run, as they are buried
-    // behind a few layers of abstraction, and it's hard to ensure that we actually have loaded
-    // the class first.
-    Runtime.getBuiltinRegistry().freeze();
-
-    return parser;
+    return SkylarkPackageFileParser.using(
+        buildFileParserOptions,
+        eventBus,
+        SkylarkFilesystem.using(cell.getFilesystem()),
+        buckGlobals,
+        eventHandler);
   }
 }
