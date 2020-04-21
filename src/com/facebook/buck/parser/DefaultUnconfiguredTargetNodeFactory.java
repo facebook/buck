@@ -177,7 +177,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     ImmutableSet<VisibilityPattern> visibilityPatterns =
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            VisibilityAttributes.VISIBILITY,
+            VisibilityAttributes.VISIBILITY.getSnakeCase(),
             rawAttributes.getVisibility(),
             buildFile,
             target::getFullyQualifiedName);
@@ -189,7 +189,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     ImmutableSet<VisibilityPattern> withinViewPatterns =
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            VisibilityAttributes.WITHIN_VIEW,
+            VisibilityAttributes.WITHIN_VIEW.getSnakeCase(),
             rawAttributes.getWithinView(),
             buildFile,
             target::getFullyQualifiedName);

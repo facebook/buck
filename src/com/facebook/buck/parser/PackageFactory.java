@@ -53,7 +53,7 @@ public class PackageFactory {
     visibilityBuilder.addAll(
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            VisibilityAttributes.VISIBILITY,
+            VisibilityAttributes.VISIBILITY.getSnakeCase(),
             rawPackage.getVisibility(),
             packageFile,
             () -> visibilityDefinerDescription));
@@ -61,7 +61,7 @@ public class PackageFactory {
     withinViewBuilder.addAll(
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            VisibilityAttributes.WITHIN_VIEW,
+            VisibilityAttributes.WITHIN_VIEW.getSnakeCase(),
             rawPackage.getWithinView(),
             packageFile,
             () -> visibilityDefinerDescription));

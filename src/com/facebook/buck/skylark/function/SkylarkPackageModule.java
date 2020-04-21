@@ -61,7 +61,7 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
             named = true,
             doc = "whether to inherit properties from the parent package."),
         @Param(
-            name = VisibilityAttributes.VISIBILITY,
+            name = VisibilityAttributes.VISIBILITY_NAME,
             type = SkylarkList.class,
             generic1 = String.class,
             defaultValue = "[]",
@@ -69,7 +69,7 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
             positional = false,
             doc = "a list of build patterns to make targets visible to."),
         @Param(
-            name = VisibilityAttributes.WITHIN_VIEW,
+            name = VisibilityAttributes.WITHIN_VIEW_NAME,
             type = SkylarkList.class,
             generic1 = String.class,
             defaultValue = "[]",

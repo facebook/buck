@@ -199,7 +199,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             .map(visibilityPattern -> visibilityPattern.getRepresentation())
             .collect(ImmutableList.toImmutableList());
     if (!computedVisibility.isEmpty()) {
-      convertedAttributes.put(VisibilityAttributes.VISIBILITY, computedVisibility);
+      convertedAttributes.put(VisibilityAttributes.VISIBILITY.getSnakeCase(), computedVisibility);
     }
 
     List<String> computedWithinView =
@@ -207,7 +207,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             .map(visibilityPattern -> visibilityPattern.getRepresentation())
             .collect(ImmutableList.toImmutableList());
     if (!computedWithinView.isEmpty()) {
-      convertedAttributes.put(VisibilityAttributes.WITHIN_VIEW, computedWithinView);
+      convertedAttributes.put(VisibilityAttributes.WITHIN_VIEW.getSnakeCase(), computedWithinView);
     }
 
     return convertedAttributes;

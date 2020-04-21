@@ -162,11 +162,11 @@ public class RuleFunctionFactory {
     for (Map.Entry<String, Object> kwargEntry : kwargs.entrySet()) {
       String paramName =
           CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, kwargEntry.getKey());
-      if (kwargEntry.getKey().equals(VisibilityAttributes.VISIBILITY)) {
+      if (kwargEntry.getKey().equals(VisibilityAttributes.VISIBILITY.getSnakeCase())) {
         visibility = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
         continue;
       }
-      if (kwargEntry.getKey().equals(VisibilityAttributes.WITHIN_VIEW)) {
+      if (kwargEntry.getKey().equals(VisibilityAttributes.WITHIN_VIEW.getSnakeCase())) {
         withinView = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
         continue;
       }

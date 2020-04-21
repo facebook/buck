@@ -124,9 +124,9 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
      */
     int i = 0;
     for (String name : names) {
-      if (name.equals(VisibilityAttributes.VISIBILITY)) {
+      if (name.equals(VisibilityAttributes.VISIBILITY.getSnakeCase())) {
         visibility = (ImmutableList<String>) args[i];
-      } else if (name.equals(VisibilityAttributes.WITHIN_VIEW)) {
+      } else if (name.equals(VisibilityAttributes.WITHIN_VIEW.getSnakeCase())) {
         withinView = (ImmutableList<String>) args[i];
       } else {
         builder.put(name, args[i]);

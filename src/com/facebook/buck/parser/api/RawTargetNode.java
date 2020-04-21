@@ -43,10 +43,10 @@ public abstract class RawTargetNode {
     TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
     builder.putAll(getAttrs());
     if (!getVisibility().isEmpty()) {
-      builder.put(VisibilityAttributes.VISIBILITY, getVisibility());
+      builder.put(VisibilityAttributes.VISIBILITY.getSnakeCase(), getVisibility());
     }
     if (!getWithinView().isEmpty()) {
-      builder.put(VisibilityAttributes.WITHIN_VIEW, getWithinView());
+      builder.put(VisibilityAttributes.WITHIN_VIEW.getSnakeCase(), getWithinView());
     }
     return builder.build();
   }

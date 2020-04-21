@@ -557,10 +557,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         case InternalTargetAttributeNames.BUCK_TYPE:
           type = (String) entry.getValue();
           break;
-        case VisibilityAttributes.VISIBILITY:
+        case VisibilityAttributes.VISIBILITY_NAME:
           visibility = (ImmutableList<String>) entry.getValue();
           break;
-        case VisibilityAttributes.WITHIN_VIEW:
+        case VisibilityAttributes.WITHIN_VIEW_NAME:
           withinView = (ImmutableList<String>) entry.getValue();
           break;
         default:
