@@ -321,11 +321,12 @@ public final class MainRunner {
 
   private DuplicatingConsole printConsole;
 
+  private final DaemonMode daemonMode;
+
   // TODO: we should remove this field and initialize everything we want on it in MainWithNailgun.
   // This has too many other variables and fields that can be accessed incorrectly.
+  @SuppressWarnings("unused")
   private Optional<NGContext> context;
-
-  private final DaemonMode daemonMode;
 
   // Ignore changes to generated Xcode project files and editors' backup files
   // so we don't dump buckd caches on every command.
@@ -1430,7 +1431,7 @@ public final class MainRunner {
           // TODO (buck_team): extract invalidation from getParserAndCaches()
           ParserAndCaches parserAndCaches =
               getParserAndCaches(
-                  context,
+                  daemonMode,
                   watchmanFreshInstanceAction,
                   filesystem,
                   buckConfig,
@@ -1859,7 +1860,7 @@ public final class MainRunner {
   }
 
   private static ParserAndCaches getParserAndCaches(
-      Optional<NGContext> context,
+      DaemonMode daemonMode,
       FreshInstanceAction watchmanFreshInstanceAction,
       ProjectFilesystem filesystem,
       BuckConfig buckConfig,
@@ -1901,20 +1902,22 @@ public final class MainRunner {
     TypeCoercerFactory typeCoercerFactory = buckGlobalState.getTypeCoercerFactory();
     Optional<RuleKeyCacheRecycler<RuleKey>> defaultRuleKeyFactoryCacheRecycler = Optional.empty();
 
+    // Note that watchmanWatcher is non-null only when in daemon mode.
+    if (watchmanWatcher.isPresent()) {
+      buckGlobalState.watchFileSystem(
+          buildEventBus, watchmanWatcher.get(), watchmanFreshInstanceAction);
+    }
+
     // Create or get Parser and invalidate cached command parameters.
-    if (context.isPresent()) {
-      // Note that watchmanWatcher is non-null only when context.isPresent().
-      if (watchmanWatcher.isPresent()) {
-        buckGlobalState.watchFileSystem(
-            buildEventBus, watchmanWatcher.get(), watchmanFreshInstanceAction);
-      }
-      if (buckConfig.getView(BuildBuckConfig.class).getRuleKeyCaching()) {
-        LOG.debug("Using rule key calculation caching");
-        defaultRuleKeyFactoryCacheRecycler =
-            Optional.of(buckGlobalState.getDefaultRuleKeyFactoryCacheRecycler());
-      } else {
-        defaultRuleKeyFactoryCacheRecycler = Optional.empty();
-      }
+    // TODO we can probably just always use the rulekey recylcer even when no daemon. It would just
+    // be empty
+    if (daemonMode == DaemonMode.DAEMON
+        && buckConfig.getView(BuildBuckConfig.class).getRuleKeyCaching()) {
+      LOG.debug("Using rule key calculation caching");
+      defaultRuleKeyFactoryCacheRecycler =
+          Optional.of(buckGlobalState.getDefaultRuleKeyFactoryCacheRecycler());
+    } else {
+      defaultRuleKeyFactoryCacheRecycler = Optional.empty();
     }
 
     return ImmutableParserAndCaches.ofImpl(
