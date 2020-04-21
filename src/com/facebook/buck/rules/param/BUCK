@@ -1,0 +1,11 @@
+java_library(
+    name = "param",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "//src/com/facebook/buck/...",
+        "//test/com/facebook/buck/...",
+    ],
+    deps = [
+        "//third-party/java/guava:guava",
+    ],
+)
