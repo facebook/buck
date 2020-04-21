@@ -168,6 +168,7 @@ public class DaemonIntegrationTest {
       try {
         ImmutableMap<String, String> env = EnvVariablesProvider.getSystemEnv();
         BackgroundTaskManager manager = TestBackgroundTaskManager.of();
+        TestContext context = new TestContext();
         MainForTests main =
             new MainForTests(
                 new TestConsole(),
@@ -175,9 +176,13 @@ public class DaemonIntegrationTest {
                 tmp.getRoot().getPath(),
                 tmp.getRoot().getPath().toAbsolutePath().toString(),
                 env,
-                Optional.of(new TestContext()));
+                Optional.of(context));
 
-        MainRunner mainRunner = main.prepareMainRunner(manager, testWithBuckd.getGlobalState());
+        MainRunner mainRunner =
+            main.prepareMainRunner(
+                manager,
+                testWithBuckd.getGlobalState(),
+                new MainWithNailgun.DaemonCommandManager(context));
         ExitCode exitCode =
             mainRunner.runMainWithExitCode(
                 new FileOutputStreamFactory(),

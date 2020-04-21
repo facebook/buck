@@ -98,8 +98,10 @@ public class MainForTests extends AbstractMain {
   @Override
   public MainRunner prepareMainRunner(
       BackgroundTaskManager backgroundTaskManager,
-      BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager) {
-    return super.prepareMainRunner(backgroundTaskManager, buckGlobalStateLifecycleManager);
+      BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager,
+      CommandManager commandManager) {
+    return super.prepareMainRunner(
+        backgroundTaskManager, buckGlobalStateLifecycleManager, commandManager);
   }
 
   @Override
@@ -114,4 +116,6 @@ public class MainForTests extends AbstractMain {
 
   @Override
   protected void commandFinishedHandler(ExitCode exitCode, boolean shouldWaitForEvents) {}
+
+  public static class TestCommandManager extends CommandManager.DefaultCommandManager {}
 }

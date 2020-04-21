@@ -180,7 +180,6 @@ import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager.Lifecycle
 import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.test.config.TestResultSummaryVerbosity;
 import com.facebook.buck.util.AbstractCloseableWrapper;
-import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.BuckConstant;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
 import com.facebook.buck.util.CloseableWrapper;
@@ -226,13 +225,13 @@ import com.facebook.buck.util.timing.Clock;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.NanosAdjustedClock;
 import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.util.versioncontrol.DelegatingVersionControlCmdLineInterface;
 import com.facebook.buck.util.versioncontrol.FullVersionControlStats;
 import com.facebook.buck.util.versioncontrol.VersionControlBuckConfig;
 import com.facebook.buck.util.versioncontrol.VersionControlStatsGenerator;
 import com.facebook.buck.versions.InstrumentedVersionedTargetGraphCache;
 import com.facebook.buck.worker.WorkerProcessPool;
-import com.facebook.nailgun.NGClientDisconnectReason;
 import com.facebook.nailgun.NGContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -275,9 +274,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.kohsuke.args4j.CmdLineException;
@@ -317,12 +314,6 @@ public final class MainRunner {
   private final InputStream stdIn;
 
   private final Architecture architecture;
-
-  private static final Semaphore commandSemaphore = new Semaphore(1);
-  private static final AtomicReference<ImmutableList<String>> activeCommandArgs =
-      new AtomicReference<>();
-
-  private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.empty();
 
   // Ensure we only have one instance of this, so multiple trash cleaning
   // operations are serialized on one queue.
@@ -422,6 +413,8 @@ public final class MainRunner {
 
   private final BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager;
 
+  private final CommandManager commandManager;
+
   static {
     MacIpv6BugWorkaround.apply();
   }
@@ -444,6 +437,8 @@ public final class MainRunner {
    * @param daemonMode whether this is ran as buck daemon or without daemon
    * @param commandFinishedHandler a handler to be ran on completion of the command before events
    * @param buckGlobalStateLifecycleManager the caching management of the buck global state
+   * @param commandManager manages the concurrency and termination of the command based, attaching
+   *     state and disconnecting clients as appropriate.
    */
   @VisibleForTesting
   public MainRunner(
@@ -462,7 +457,8 @@ public final class MainRunner {
       PluginManager pluginManager,
       DaemonMode daemonMode,
       ThrowingBiConsumer<ExitCode, Boolean, IOException> commandFinishedHandler,
-      BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager) {
+      BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager,
+      CommandManager commandManager) {
     this.printConsole = new DuplicatingConsole(console);
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
@@ -474,6 +470,7 @@ public final class MainRunner {
     this.daemonMode = daemonMode;
     this.commandFinishedHandler = commandFinishedHandler;
     this.buckGlobalStateLifecycleManager = buckGlobalStateLifecycleManager;
+    this.commandManager = commandManager;
     this.architecture = Architecture.detect();
     this.buildId = buildId;
     this.clientEnvironment = clientEnvironment;
@@ -703,8 +700,9 @@ public final class MainRunner {
     // read/write command. Early out will also help to not rotate log on each BUSY status which
     // happens in setupLogging().
     ImmutableList.Builder<String> previousCommandArgsBuilder = new ImmutableList.Builder<>();
-    try (CloseableWrapper<Semaphore> semaphore =
-        getSemaphoreWrapper(command, unexpandedCommandLineArgs, previousCommandArgsBuilder)) {
+    try (CloseableWrapper<Unit> semaphore =
+        commandManager.getSemaphoreWrapper(
+            command, unexpandedCommandLineArgs, previousCommandArgsBuilder)) {
       if (!command.isReadOnly() && semaphore == null) {
         // buck_tool will set BUCK_BUSY_DISPLAYED if it already displayed the busy error
         if (!clientEnvironment.containsKey("BUCK_BUSY_DISPLAYED")) {
@@ -923,6 +921,8 @@ public final class MainRunner {
 
       BuckGlobalState buckGlobalState = buckGlobalStateRequest.getFirst();
       LifecycleStatus stateLifecycleStatus = buckGlobalStateRequest.getSecond();
+
+      commandManager.registerGlobalState(buckGlobalState);
 
       if (!daemonMode.isDaemon()) {
         // Clean up the trash on a background thread if this was a
@@ -1227,7 +1227,7 @@ public final class MainRunner {
             // command faster if user terminated with Ctrl+C.
             // Ideally, we should come up with a better lifecycle management strategy for the
             // semaphore object
-            CloseableWrapper<Optional<CloseableWrapper<Semaphore>>> semaphoreCloser =
+            CloseableWrapper<Optional<CloseableWrapper<Unit>>> semaphoreCloser =
                 CloseableWrapper.of(
                     Optional.ofNullable(semaphore),
                     s -> {
@@ -1910,7 +1910,6 @@ public final class MainRunner {
     // Create or get Parser and invalidate cached command parameters.
     if (context.isPresent()) {
       // Note that watchmanWatcher is non-null only when context.isPresent().
-      registerClientDisconnectedListener(context.get(), buckGlobalState);
       if (watchmanWatcher.isPresent()) {
         buckGlobalState.watchFileSystem(
             buildEventBus, watchmanWatcher.get(), watchmanFreshInstanceAction);
@@ -1952,27 +1951,6 @@ public final class MainRunner {
             ruleKeyConfiguration,
             buckConfig),
         defaultRuleKeyFactoryCacheRecycler);
-  }
-
-  private static void registerClientDisconnectedListener(
-      NGContext context, BuckGlobalState buckGlobalState) {
-    Thread mainThread = Thread.currentThread();
-    context.addClientListener(
-        reason -> {
-          LOG.info("Nailgun client disconnected with " + reason);
-          if (commandSemaphoreNgClient.orElse(null) == context) {
-            // Process no longer wants work done on its behalf.
-            LOG.debug("Killing background processes on client disconnect");
-            BgProcessKiller.interruptBgProcesses();
-          }
-
-          if (reason != NGClientDisconnectReason.SESSION_SHUTDOWN) {
-            LOG.debug("Killing all Buck jobs on client disconnect by interrupting the main thread");
-            // signal daemon to complete required tasks and interrupt main thread
-            // this will hopefully trigger InterruptedException and program shutdown
-            buckGlobalState.interruptOnClientExit(mainThread);
-          }
-        });
   }
 
   private DuplicatingConsole makeCustomConsole(Verbosity verbosity, BuckConfig buckConfig) {
@@ -2162,56 +2140,6 @@ public final class MainRunner {
         // Intentional no-op.
       }
     };
-  }
-
-  /**
-   * Try to acquire global semaphore if needed to do so. Attach closer to acquired semaphore in a
-   * form of a wrapper object so it can be used with try-with-resources.
-   *
-   * @return (semaphore, previous args) If we successfully acquire the semaphore, return (semaphore,
-   *     null). If there is already a command running but the command to run is readonly, return
-   *     (null, null) and allow the execution. Otherwise, return (null, previously running command
-   *     args) and block this command.
-   */
-  private @Nullable CloseableWrapper<Semaphore> getSemaphoreWrapper(
-      BuckCommand command,
-      ImmutableList<String> currentArgs,
-      ImmutableList.Builder<String> previousArgs) {
-    // we can execute read-only commands (query, targets, etc) in parallel
-    if (command.isReadOnly()) {
-      // using nullable instead of Optional<> to use the object with try-with-resources
-      return null;
-    }
-
-    while (!commandSemaphore.tryAcquire()) {
-      ImmutableList<String> activeCommandArgsCopy = activeCommandArgs.get();
-      if (activeCommandArgsCopy != null) {
-        // Keep retrying until we either 1) successfully acquire the semaphore or 2) failed to
-        // acquire the semaphore and obtain a valid list of args for on going command.
-        // In theory, this can stuck in a loop if it never observes such state if other commands
-        // winning the race, but I consider this to be a rare corner case.
-        previousArgs.addAll(activeCommandArgsCopy);
-        return null;
-      }
-
-      // Avoid hogging CPU
-      Thread.yield();
-    }
-
-    commandSemaphoreNgClient = context;
-
-    // Keep track of command that is in progress
-    activeCommandArgs.set(currentArgs);
-
-    return CloseableWrapper.of(
-        commandSemaphore,
-        commandSemaphore -> {
-          activeCommandArgs.set(null);
-          commandSemaphoreNgClient = Optional.empty();
-          // TODO(buck_team): have background process killer have its own lifetime management
-          BgProcessKiller.disarm();
-          commandSemaphore.release();
-        });
   }
 
 

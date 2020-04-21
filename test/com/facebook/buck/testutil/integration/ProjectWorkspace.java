@@ -572,7 +572,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
               sanizitedEnv,
               context);
 
-      MainRunner mainRunner = main.prepareMainRunner(manager, buckDaemonState);
+      MainRunner mainRunner =
+          main.prepareMainRunner(manager, buckDaemonState, new MainForTests.TestCommandManager());
       ExitCode exitCode;
 
       // TODO (buck_team): this code repeats the one in Main and thus wants generalization

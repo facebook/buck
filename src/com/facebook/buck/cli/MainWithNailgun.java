@@ -20,10 +20,16 @@ import com.facebook.buck.cli.BuckDaemon.DaemonCommandExecutionScope;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.state.BuckGlobalState;
 import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
+import com.facebook.buck.util.BgProcessKiller;
+import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.types.Unit;
+import com.facebook.nailgun.NGClientDisconnectReason;
 import com.facebook.nailgun.NGContext;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
@@ -33,6 +39,8 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 /**
@@ -52,6 +60,13 @@ public class MainWithNailgun extends AbstractMain {
 
   private static final BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager =
       new BuckGlobalStateLifecycleManager();
+
+  private static final Semaphore commandSemaphore = new Semaphore(1);
+
+  private static final AtomicReference<ImmutableList<String>> activeCommandArgs =
+      new AtomicReference<>();
+
+  private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.empty();
 
   private final NGContext ngContext;
 
@@ -78,7 +93,8 @@ public class MainWithNailgun extends AbstractMain {
 
       MainWithNailgun mainWithNailgun = new MainWithNailgun(context);
       MainRunner mainRunner =
-          mainWithNailgun.prepareMainRunner(bgTaskMananger, buckGlobalStateLifecycleManager);
+          mainWithNailgun.prepareMainRunner(
+              bgTaskMananger, buckGlobalStateLifecycleManager, new DaemonCommandManager(context));
       mainRunner.runMainThenExit(context.getArgs(), System.nanoTime());
     }
   }
@@ -133,6 +149,81 @@ public class MainWithNailgun extends AbstractMain {
     if (exitCode == ExitCode.SUCCESS && !shouldWaitForEvents) {
       ngContext.in.close(); // Avoid client exit triggering client disconnection handling.
       ngContext.exit(exitCode.getCode());
+    }
+  }
+
+  static class DaemonCommandManager implements CommandManager {
+
+    private final NGContext context;
+
+    DaemonCommandManager(NGContext context) {
+      this.context = context;
+    }
+
+    @Nullable
+    @Override
+    public CloseableWrapper<Unit> getSemaphoreWrapper(
+        BuckCommand command,
+        ImmutableList<String> currentArgs,
+        ImmutableList.Builder<String> previousArgs) {
+
+      // we can execute read-only commands (query, targets, etc) in parallel
+      if (command.isReadOnly()) {
+        // using nullable instead of Optional<> to use the object with try-with-resources
+        return null;
+      }
+
+      while (!commandSemaphore.tryAcquire()) {
+        ImmutableList<String> activeCommandArgsCopy = activeCommandArgs.get();
+        if (activeCommandArgsCopy != null) {
+          // Keep retrying until we either 1) successfully acquire the semaphore or 2) failed to
+          // acquire the semaphore and obtain a valid list of args for on going command.
+          // In theory, this can stuck in a loop if it never observes such state if other commands
+          // winning the race, but I consider this to be a rare corner case.
+          previousArgs.addAll(activeCommandArgsCopy);
+          return null;
+        }
+
+        // Avoid hogging CPU
+        Thread.yield();
+      }
+
+      commandSemaphoreNgClient = Optional.of(context);
+
+      // Keep track of command that is in progress
+      activeCommandArgs.set(currentArgs);
+
+      return CloseableWrapper.of(
+          Unit.UNIT,
+          unit -> {
+            activeCommandArgs.set(null);
+            commandSemaphoreNgClient = Optional.empty();
+            // TODO(buck_team): have background process killer have its own lifetime management
+            BgProcessKiller.disarm();
+            commandSemaphore.release();
+          });
+    }
+
+    @Override
+    public void registerGlobalState(BuckGlobalState buckGlobalState) {
+      Thread mainThread = Thread.currentThread();
+      context.addClientListener(
+          reason -> {
+            LOG.info("Nailgun client disconnected with " + reason);
+            if (commandSemaphoreNgClient.orElse(null) == context) {
+              // Process no longer wants work done on its behalf.
+              LOG.debug("Killing background processes on client disconnect");
+              BgProcessKiller.interruptBgProcesses();
+            }
+
+            if (reason != NGClientDisconnectReason.SESSION_SHUTDOWN) {
+              LOG.debug(
+                  "Killing all Buck jobs on client disconnect by interrupting the main thread");
+              // signal daemon to complete required tasks and interrupt main thread
+              // this will hopefully trigger InterruptedException and program shutdown
+              buckGlobalState.interruptOnClientExit(mainThread);
+            }
+          });
     }
   }
 }

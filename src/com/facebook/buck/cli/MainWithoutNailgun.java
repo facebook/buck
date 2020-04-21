@@ -57,7 +57,9 @@ public class MainWithoutNailgun extends AbstractMain {
     MainWithoutNailgun mainWithoutNailgun = new MainWithoutNailgun();
     MainRunner mainRunner =
         mainWithoutNailgun.prepareMainRunner(
-            backgroundTaskManager, new BuckGlobalStateLifecycleManager());
+            backgroundTaskManager,
+            new BuckGlobalStateLifecycleManager(),
+            new CommandManager.DefaultCommandManager());
     mainRunner.runMainThenExit(args, System.nanoTime());
     backgroundTaskManager.shutdownNow();
   }

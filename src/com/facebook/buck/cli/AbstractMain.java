@@ -157,7 +157,8 @@ abstract class AbstractMain {
    */
   protected MainRunner prepareMainRunner(
       BackgroundTaskManager bgTaskManager,
-      BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager) {
+      BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager,
+      CommandManager commandManager) {
 
     installUncaughtExceptionHandler(optionalNGContext);
 
@@ -177,7 +178,8 @@ abstract class AbstractMain {
         pluginManager,
         optionalNGContext.isPresent() ? DaemonMode.DAEMON : DaemonMode.NON_DAEMON,
         this::commandFinishedHandler,
-        buckGlobalStateLifecycleManager);
+        buckGlobalStateLifecycleManager,
+        commandManager);
   }
 
   /** @return the {@link KnownRuleTypesFactoryFactory} for this command */
