@@ -20,6 +20,7 @@ import com.facebook.buck.cli.BuckDaemon.DaemonCommandExecutionScope;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.nailgun.NGContext;
@@ -49,6 +50,9 @@ public class MainWithNailgun extends AbstractMain {
 
   private static final BackgroundTaskManager bgTaskMananger = AsyncBackgroundTaskManager.of();
 
+  private static final BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager =
+      new BuckGlobalStateLifecycleManager();
+
   private final NGContext ngContext;
 
   public MainWithNailgun(NGContext ngContext) {
@@ -73,7 +77,8 @@ public class MainWithNailgun extends AbstractMain {
         BuckDaemon.getInstance().getDaemonCommandExecutionScope()) {
 
       MainWithNailgun mainWithNailgun = new MainWithNailgun(context);
-      MainRunner mainRunner = mainWithNailgun.prepareMainRunner(bgTaskMananger);
+      MainRunner mainRunner =
+          mainWithNailgun.prepareMainRunner(bgTaskMananger, buckGlobalStateLifecycleManager);
       mainRunner.runMainThenExit(context.getArgs(), System.nanoTime());
     }
   }

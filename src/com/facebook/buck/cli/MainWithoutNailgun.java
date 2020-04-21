@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
@@ -54,7 +55,9 @@ public class MainWithoutNailgun extends AbstractMain {
 
     BackgroundTaskManager backgroundTaskManager = AsyncBackgroundTaskManager.of();
     MainWithoutNailgun mainWithoutNailgun = new MainWithoutNailgun();
-    MainRunner mainRunner = mainWithoutNailgun.prepareMainRunner(backgroundTaskManager);
+    MainRunner mainRunner =
+        mainWithoutNailgun.prepareMainRunner(
+            backgroundTaskManager, new BuckGlobalStateLifecycleManager());
     mainRunner.runMainThenExit(args, System.nanoTime());
     backgroundTaskManager.shutdownNow();
   }

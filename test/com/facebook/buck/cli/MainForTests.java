@@ -20,6 +20,7 @@ import com.facebook.buck.cli.MainRunner.KnownRuleTypesFactoryFactory;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownNativeRuleTypesFactory;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.environment.CommandMode;
@@ -95,8 +96,10 @@ public class MainForTests extends AbstractMain {
   }
 
   @Override
-  public MainRunner prepareMainRunner(BackgroundTaskManager backgroundTaskManager) {
-    return super.prepareMainRunner(backgroundTaskManager);
+  public MainRunner prepareMainRunner(
+      BackgroundTaskManager backgroundTaskManager,
+      BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager) {
+    return super.prepareMainRunner(backgroundTaskManager, buckGlobalStateLifecycleManager);
   }
 
   @Override

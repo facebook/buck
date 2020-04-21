@@ -65,6 +65,7 @@ import com.facebook.buck.support.bgtasks.AsyncBackgroundTaskManager;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandler;
 import com.facebook.buck.support.exceptions.handler.ExceptionHandlerRegistryFactory;
+import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
 import com.facebook.buck.testutil.AbstractWorkspace;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TestConsole;
@@ -153,6 +154,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
   private final ProcessExecutor processExecutor;
   @Nullable private ProjectFilesystemAndConfig projectFilesystemAndConfig;
   @Nullable private MainRunner.KnownRuleTypesFactoryFactory knownRuleTypesFactoryFactory;
+  @Nullable private BuckGlobalStateLifecycleManager buckDaemonState;
 
   private static class ProjectFilesystemAndConfig {
 
@@ -224,6 +226,8 @@ public class ProjectWorkspace extends AbstractWorkspace {
                 "buck_out_include_target_config_hash",
                 Boolean.toString(
                     TestProjectFilesystems.BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH_FOR_TEST))));
+
+    buckDaemonState = new BuckGlobalStateLifecycleManager();
 
     isSetUp = true;
     return this;
@@ -568,7 +572,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
               sanizitedEnv,
               context);
 
-      MainRunner mainRunner = main.prepareMainRunner(manager);
+      MainRunner mainRunner = main.prepareMainRunner(manager, buckDaemonState);
       ExitCode exitCode;
 
       // TODO (buck_team): this code repeats the one in Main and thus wants generalization

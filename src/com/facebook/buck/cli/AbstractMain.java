@@ -25,6 +25,7 @@ import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.knowntypes.DefaultKnownNativeRuleTypesFactory;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.support.bgtasks.BackgroundTaskManager;
+import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
 import com.facebook.buck.util.Ansi;
 import com.facebook.buck.util.AnsiEnvironmentChecking;
 import com.facebook.buck.util.Console;
@@ -154,7 +155,9 @@ abstract class AbstractMain {
    * @return an initialized {@link MainRunner} for running the buck command, with all the base state
    *     setup.
    */
-  protected MainRunner prepareMainRunner(BackgroundTaskManager bgTaskManager) {
+  protected MainRunner prepareMainRunner(
+      BackgroundTaskManager bgTaskManager,
+      BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager) {
 
     installUncaughtExceptionHandler(optionalNGContext);
 
@@ -173,7 +176,8 @@ abstract class AbstractMain {
         optionalNGContext,
         pluginManager,
         optionalNGContext.isPresent() ? DaemonMode.DAEMON : DaemonMode.NON_DAEMON,
-        this::commandFinishedHandler);
+        this::commandFinishedHandler,
+        buckGlobalStateLifecycleManager);
   }
 
   /** @return the {@link KnownRuleTypesFactoryFactory} for this command */

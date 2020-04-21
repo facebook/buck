@@ -177,7 +177,7 @@ public class DaemonIntegrationTest {
                 env,
                 Optional.of(new TestContext()));
 
-        MainRunner mainRunner = main.prepareMainRunner(manager);
+        MainRunner mainRunner = main.prepareMainRunner(manager, testWithBuckd.getGlobalState());
         ExitCode exitCode =
             mainRunner.runMainWithExitCode(
                 new FileOutputStreamFactory(),

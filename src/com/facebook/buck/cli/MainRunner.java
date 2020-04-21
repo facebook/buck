@@ -324,9 +324,6 @@ public final class MainRunner {
 
   private static volatile Optional<NGContext> commandSemaphoreNgClient = Optional.empty();
 
-  private static final BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager =
-      new BuckGlobalStateLifecycleManager();
-
   // Ensure we only have one instance of this, so multiple trash cleaning
   // operations are serialized on one queue.
   private static final AsynchronousDirectoryContentsCleaner TRASH_CLEANER =
@@ -423,6 +420,8 @@ public final class MainRunner {
 
   private final ThrowingBiConsumer<ExitCode, Boolean, IOException> commandFinishedHandler;
 
+  private final BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager;
+
   static {
     MacIpv6BugWorkaround.apply();
   }
@@ -444,7 +443,7 @@ public final class MainRunner {
    * @param pluginManager the {@link PluginManager} for this command
    * @param daemonMode whether this is ran as buck daemon or without daemon
    * @param commandFinishedHandler a handler to be ran on completion of the command before events
-   *     are flushed
+   * @param buckGlobalStateLifecycleManager the caching management of the buck global state
    */
   @VisibleForTesting
   public MainRunner(
@@ -462,7 +461,8 @@ public final class MainRunner {
       Optional<NGContext> context,
       PluginManager pluginManager,
       DaemonMode daemonMode,
-      ThrowingBiConsumer<ExitCode, Boolean, IOException> commandFinishedHandler) {
+      ThrowingBiConsumer<ExitCode, Boolean, IOException> commandFinishedHandler,
+      BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager) {
     this.printConsole = new DuplicatingConsole(console);
     this.stdIn = stdIn;
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
@@ -473,6 +473,7 @@ public final class MainRunner {
     this.bgTaskManager = bgTaskManager;
     this.daemonMode = daemonMode;
     this.commandFinishedHandler = commandFinishedHandler;
+    this.buckGlobalStateLifecycleManager = buckGlobalStateLifecycleManager;
     this.architecture = Architecture.detect();
     this.buildId = buildId;
     this.clientEnvironment = clientEnvironment;
@@ -2524,13 +2525,5 @@ public final class MainRunner {
         (Supplier<DepsAwareExecutor<? super ComputeResult, ?>>)
             () -> DepsAwareExecutorFactory.create(executorType, parallelism),
         DepsAwareExecutor::close);
-  }
-
-  /**
-   * Used to clean up the {@link BuckGlobalState} after running integration tests that exercise it.
-   */
-  @VisibleForTesting
-  static void resetBuckGlobalState() {
-    buckGlobalStateLifecycleManager.resetBuckGlobalState();
   }
 }

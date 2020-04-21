@@ -20,6 +20,7 @@ import static org.junit.Assume.assumeFalse;
 
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.io.watchman.WatchmanFactory;
+import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
@@ -36,6 +37,7 @@ import org.junit.rules.ExternalResource;
 public class TestWithBuckd extends ExternalResource {
 
   private final TemporaryPaths temporaryPaths;
+  private BuckGlobalStateLifecycleManager globalState;
 
   public TestWithBuckd(TemporaryPaths temporaryPaths) {
     this.temporaryPaths = temporaryPaths;
@@ -60,6 +62,8 @@ public class TestWithBuckd extends ExternalResource {
             FakeClock.doNotCare(),
             Optional.empty());
 
+    globalState = new BuckGlobalStateLifecycleManager();
+
     // We assume watchman has been installed and configured properly on the system, and that setting
     // up the watch is successful.
     assumeFalse(watchman == WatchmanFactory.NULL_WATCHMAN);
@@ -74,8 +78,7 @@ public class TestWithBuckd extends ExternalResource {
     return envBuilder.build();
   }
 
-  @Override
-  protected void after() {
-    MainRunner.resetBuckGlobalState();
+  public BuckGlobalStateLifecycleManager getGlobalState() {
+    return globalState;
   }
 }

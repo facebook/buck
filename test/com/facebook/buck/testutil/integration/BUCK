@@ -202,6 +202,7 @@ java_library(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/support/bgtasks:bgtasks",
         "//src/com/facebook/buck/support/exceptions/handler:handler",
+        "//src/com/facebook/buck/support/state:state",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/result/type:type",

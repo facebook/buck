@@ -17,6 +17,7 @@ java_library(
     deps = [
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
         "//src/com/facebook/buck/core/rules/knowntypes/provider:provider",
+        "//src/com/facebook/buck/support/state:state",
         "//src/com/facebook/buck/util/environment:environment",
         "//third-party/java/nailgun:nailgun",
     ],
@@ -419,6 +420,7 @@ java_test(
         "//src/com/facebook/buck/step:step",
         "//src/com/facebook/buck/support/cli/args:args",
         "//src/com/facebook/buck/support/cli/config:config",
+        "//src/com/facebook/buck/support/state:state",
         "//src/com/facebook/buck/swift:swift",
         "//src/com/facebook/buck/test:test",
         "//src/com/facebook/buck/test/config:config",
