@@ -177,7 +177,6 @@ abstract class AbstractMain {
         optionalNGContext,
         pluginManager,
         optionalNGContext.isPresent() ? DaemonMode.DAEMON : DaemonMode.NON_DAEMON,
-        this::commandFinishedHandler,
         buckGlobalStateLifecycleManager,
         commandManager);
   }
@@ -229,7 +228,4 @@ abstract class AbstractMain {
           NON_REENTRANT_SYSTEM_EXIT.shutdownSoon(exitCode.getCode());
         });
   }
-
-  protected abstract void commandFinishedHandler(ExitCode exitCode, boolean shouldWaitForEvents)
-      throws IOException;
 }

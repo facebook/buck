@@ -19,8 +19,10 @@ package com.facebook.buck.cli;
 import com.facebook.buck.support.state.BuckGlobalState;
 import com.facebook.buck.util.BgProcessKiller;
 import com.facebook.buck.util.CloseableWrapper;
+import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
+import java.io.IOException;
 import javax.annotation.Nullable;
 
 /** The semaphor around commands so that we don't execute multiple conflicting commands */
@@ -45,6 +47,9 @@ interface CommandManager {
    * management of attaching listeners, etc.
    */
   void registerGlobalState(BuckGlobalState buckGlobalState);
+
+  /** perform some final handling of the exitcode before event listeners are flushed */
+  void handleCommandFinished(ExitCode exitCode) throws IOException;
 
   /**
    * Non-blocking implementation of command manager for when there's no daemon, which means that
@@ -76,5 +81,8 @@ interface CommandManager {
     public void registerGlobalState(BuckGlobalState buckGlobalState) {
       // nothing to do for non-daemon case
     }
+
+    @Override
+    public void handleCommandFinished(ExitCode exitCode) {}
   }
 }

@@ -122,7 +122,7 @@ public final class BuckGlobalState implements Closeable {
     this.startTime = clock.currentTimeMillis();
   }
 
-  Cell getRootCell() {
+  public Cell getRootCell() {
     return rootCell;
   }
 

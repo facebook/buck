@@ -215,7 +215,6 @@ import com.facebook.buck.util.environment.DefaultExecutionEnvironment;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.environment.NetworkInfo;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.buck.util.function.ThrowingBiConsumer;
 import com.facebook.buck.util.network.MacIpv6BugWorkaround;
 import com.facebook.buck.util.network.RemoteLogBuckConfig;
 import com.facebook.buck.util.perf.PerfStatsTracking;
@@ -409,8 +408,6 @@ public final class MainRunner {
 
   private Optional<StackedFileHashCache> stackedFileHashCache = Optional.empty();
 
-  private final ThrowingBiConsumer<ExitCode, Boolean, IOException> commandFinishedHandler;
-
   private final BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager;
 
   private final CommandManager commandManager;
@@ -435,7 +432,6 @@ public final class MainRunner {
    * @param context the {@link NGContext} from nailgun for this command
    * @param pluginManager the {@link PluginManager} for this command
    * @param daemonMode whether this is ran as buck daemon or without daemon
-   * @param commandFinishedHandler a handler to be ran on completion of the command before events
    * @param buckGlobalStateLifecycleManager the caching management of the buck global state
    * @param commandManager manages the concurrency and termination of the command based, attaching
    *     state and disconnecting clients as appropriate.
@@ -456,7 +452,6 @@ public final class MainRunner {
       Optional<NGContext> context,
       PluginManager pluginManager,
       DaemonMode daemonMode,
-      ThrowingBiConsumer<ExitCode, Boolean, IOException> commandFinishedHandler,
       BuckGlobalStateLifecycleManager buckGlobalStateLifecycleManager,
       CommandManager commandManager) {
     this.printConsole = new DuplicatingConsole(console);
@@ -468,7 +463,6 @@ public final class MainRunner {
     this.moduleManager = moduleManager;
     this.bgTaskManager = bgTaskManager;
     this.daemonMode = daemonMode;
-    this.commandFinishedHandler = commandFinishedHandler;
     this.buckGlobalStateLifecycleManager = buckGlobalStateLifecycleManager;
     this.commandManager = commandManager;
     this.architecture = Architecture.detect();
@@ -1561,7 +1555,7 @@ public final class MainRunner {
                 invocationInfo);
           }
 
-          commandFinishedHandler.accept(exitCode, cliConfig.getFlushEventsBeforeExit());
+          commandManager.handleCommandFinished(exitCode);
 
           if (daemonMode.isDaemon()) {
             // Clean up the trash in the background if this was a buckd
