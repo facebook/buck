@@ -60,6 +60,7 @@ import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -128,6 +129,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
   private final BuildRuleResolver resolver;
   private final TargetConfigurationSerializer targetConfigurationSerializer;
   private final Optional<Long> artifactCacheSizeLimit;
+  private final Optional<Long> defaultOutputHashSizeLimit;
+  private final ImmutableMap<String, Long> ruleTypeOutputHashSizeLimit;
   private final FileHashCache fileHashCache;
   @VisibleForTesting final RuleKeyFactories ruleKeyFactories;
   private final ResourceAwareSchedulingInfo resourceAwareSchedulingInfo;
@@ -153,6 +156,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
+      Optional<Long> defaultOutputHashSizeLimit,
+      ImmutableMap<String, Long> ruleTypeOutputHashSizeLimit,
       BuildRuleResolver resolver,
       BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
       TargetConfigurationSerializer targetConfigurationSerializer,
@@ -168,6 +173,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         depFiles,
         maxDepFileCacheEntries,
         artifactCacheSizeLimit,
+        defaultOutputHashSizeLimit,
+        ruleTypeOutputHashSizeLimit,
         resolver,
         buildInfoStoreManager,
         actionToBuildRuleResolver,
@@ -196,6 +203,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
       DepFiles depFiles,
       long maxDepFileCacheEntries,
       Optional<Long> artifactCacheSizeLimit,
+      Optional<Long> defaultOutputHashSizeLimit,
+      ImmutableMap<String, Long> ruleTypeOutputHashSizeLimit,
       BuildRuleResolver resolver,
       BuildInfoStoreManager buildInfoStoreManager,
       BuildEngineActionToBuildRuleResolver actionToBuildRuleResolver,
@@ -212,6 +221,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
     this.depFiles = depFiles;
     this.maxDepFileCacheEntries = maxDepFileCacheEntries;
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
+    this.defaultOutputHashSizeLimit = defaultOutputHashSizeLimit;
+    this.ruleTypeOutputHashSizeLimit = ruleTypeOutputHashSizeLimit;
     this.resolver = resolver;
     this.targetConfigurationSerializer = targetConfigurationSerializer;
 
@@ -497,6 +508,8 @@ public class CachingBuildEngine implements BuildEngine, Closeable {
         new CachingBuildRuleBuilder(
             new DefaultBuildRuleBuilderDelegate(this, buildContext),
             artifactCacheSizeLimit,
+            defaultOutputHashSizeLimit,
+            ruleTypeOutputHashSizeLimit,
             buildInfoStoreManager,
             buildMode,
             buildRuleDurationTracker,

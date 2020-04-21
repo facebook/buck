@@ -127,6 +127,7 @@ import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.FakeRuleKeyFactory;
 import com.facebook.buck.rules.keys.InputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
+import com.facebook.buck.rules.keys.RuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
 import com.facebook.buck.rules.keys.TestInputBasedRuleKeyFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
@@ -317,7 +318,162 @@ public class CachingBuildEngineTest {
     }
   }
 
-  public static class OtherTests extends CommonFixture {
+  public static class OutputHashSizeLimitTests extends CommonFixture {
+    private BuildTarget target;
+    private BuildRule rule;
+    private RuleKey inputRuleKey;
+    private RuleKeyFactory<RuleKey> ruleKeyFactory;
+    private CachingBuildEngineFactory cachingBuildEngineFactory;
+
+    @Override
+    @Before
+    public void setUp() throws Exception {
+      super.setUp();
+      // Create a simple rule which just writes a file.
+      target = BuildTargetFactory.newInstance("//:rule");
+      BuildRuleParams params = TestBuildRuleParams.create();
+      inputRuleKey = new RuleKey("aaaa");
+      Path output = Paths.get("output");
+      rule =
+          new InputRuleKeyBuildRule(target, filesystem, params) {
+            @Override
+            public ImmutableList<Step> getBuildSteps(
+                BuildContext context, BuildableContext buildableContext) {
+              buildableContext.recordArtifact(output);
+              return ImmutableList.of(
+                  new WriteFileStep(filesystem, "12345", output, /* executable */ false));
+            }
+
+            @Override
+            public SourcePath getSourcePathToOutput() {
+              return ExplicitBuildTargetSourcePath.of(getBuildTarget(), output);
+            }
+
+            @Override
+            public String getType() {
+              return "custom_rule_type";
+            }
+          };
+
+      ruleKeyFactory =
+          new FakeRuleKeyFactory(
+              ImmutableMap.of(rule.getBuildTarget(), inputRuleKey),
+              ImmutableSet.of(rule.getBuildTarget())) {
+            @Override
+            public Optional<Long> getInputSizeLimit() {
+              return Optional.of(1024L * 1024L);
+            }
+          };
+
+      cachingBuildEngineFactory = cachingBuildEngineFactory();
+    }
+
+    private void buildRule() throws Exception {
+      // Create the build engine.
+      CachingBuildEngine cachingBuildEngine =
+          cachingBuildEngineFactory
+              .setRuleKeyFactories(
+                  RuleKeyFactories.of(
+                      NOOP_RULE_KEY_FACTORY, ruleKeyFactory, NOOP_DEP_FILE_RULE_KEY_FACTORY))
+              .build();
+
+      // Run the build.
+      BuildResult result =
+          cachingBuildEngine
+              .build(buildContext, TestExecutionContext.newInstance(), rule)
+              .getResult()
+              .get();
+      assertEquals(BuildRuleSuccessType.BUILT_LOCALLY, result.getSuccess());
+    }
+
+    @Test
+    public void testOutputHashWritten() throws Exception {
+      buildRule();
+
+      // Verify that the artifact was indexed in the cache.
+      assertFalse(cache.hasArtifact(inputRuleKey));
+
+      // Verify the input rule key was written to disk.
+      OnDiskBuildInfo onDiskBuildInfo =
+          buildContext.createOnDiskBuildInfoFor(target, filesystem, buildInfoStore);
+      Either<String, Exception> outputHash =
+          onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH);
+
+      // Verify output hash is written.
+      boolean hasOutputHash = outputHash.isLeft();
+      assertTrue(hasOutputHash);
+    }
+
+    @Test
+    public void testOutputHashNotWrittenUsingDefaultRuleType() throws Exception {
+      // Setting the default hash size limit to 0 means that every rule will exceed it,
+      // so no output hashes are expected to be generated.
+      cachingBuildEngineFactory.setDefaultOutputHashSizeLimit(Optional.of(0L));
+
+      buildRule();
+
+      // Verify that the artifact was indexed in the cache.
+      assertFalse(cache.hasArtifact(inputRuleKey));
+
+      // Retrieve the output hash.
+      OnDiskBuildInfo onDiskBuildInfo =
+          buildContext.createOnDiskBuildInfoFor(target, filesystem, buildInfoStore);
+      Either<String, Exception> outputHash =
+          onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH);
+
+      // Verify no output hash is written.
+      boolean hasOutputHash = outputHash.isLeft();
+      assertFalse(hasOutputHash);
+    }
+
+    @Test
+    public void testOutputHashNotWrittenUsingMatchingRuleType() throws Exception {
+      // Setting a rule-specific output size to 0 means that rules of this type
+      // should not write any output hashes.
+      cachingBuildEngineFactory.setRuleTypeOutputHashSizeLimit(
+          ImmutableMap.of("custom_rule_type", 0L));
+
+      buildRule();
+
+      // Verify that the artifact was indexed in the cache.
+      assertFalse(cache.hasArtifact(inputRuleKey));
+
+      // Retrieve the output hash.
+      OnDiskBuildInfo onDiskBuildInfo =
+          buildContext.createOnDiskBuildInfoFor(target, filesystem, buildInfoStore);
+      Either<String, Exception> outputHash =
+          onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH);
+
+      // Verify no output hash is written.
+      boolean hasOutputHash = outputHash.isLeft();
+      assertFalse(hasOutputHash);
+    }
+
+    @Test
+    public void testOutputHashWrittenUsingNonMatchingRuleType() throws Exception {
+      // Setting a rule-specific output size which does _not_ match the rule we build,
+      // so we expect output hash to be written as usual.
+      cachingBuildEngineFactory.setRuleTypeOutputHashSizeLimit(
+          ImmutableMap.of("another_rule_type", 0L));
+
+      buildRule();
+
+      // Verify that the artifact was indexed in the cache.
+      assertFalse(cache.hasArtifact(inputRuleKey));
+
+      // Retrieve the output hash.
+      OnDiskBuildInfo onDiskBuildInfo =
+          buildContext.createOnDiskBuildInfoFor(target, filesystem, buildInfoStore);
+      Either<String, Exception> outputHash =
+          onDiskBuildInfo.getValue(BuildInfo.MetadataKey.OUTPUT_HASH);
+
+      // Verify output hash written because of non-matching rule type.
+      boolean hasOutputHash = outputHash.isLeft();
+      assertTrue(hasOutputHash);
+    }
+  }
+
+  public static class OtherTests extends CachingBuildEngineTest.CommonFixture {
 
     /**
      * Tests what should happen when a rule is built for the first time: it should have no cached

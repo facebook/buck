@@ -22,10 +22,16 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.util.config.RawConfig;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import java.util.Optional;
 
 @BuckStyleValue
 public abstract class CachingBuildEngineBuckConfig implements ConfigView<BuckConfig> {
+
+  private static final String OUTPUT_HASH_SIZE_LIMIT_SECTION = "output_hash_size_limits";
+  private static final String OUTPUT_HASH_SIZE_LIMIT_DEFAULT_KEY = "DEFAULT";
 
   public static CachingBuildEngineBuckConfig of(BuckConfig delegate) {
     return ImmutableCachingBuildEngineBuckConfig.ofImpl(delegate);
@@ -69,5 +75,29 @@ public abstract class CachingBuildEngineBuckConfig implements ConfigView<BuckCon
         resourcesConfig.isResourceAwareSchedulingEnabled(),
         resourcesConfig.getDefaultResourceAmounts(),
         resourcesConfig.getResourceAmountsPerRuleType());
+  }
+
+  /**
+   * Returns the default output hash size limit, any artifacts equal or bigger than the limit will
+   * not be hashed after a rule is built. If this return an empty value, then the input rulekey size
+   * limit is used instead.
+   */
+  public Optional<Long> getDefaultOutputHashSizeLimit() {
+    return getDelegate()
+        .getLong(OUTPUT_HASH_SIZE_LIMIT_SECTION, OUTPUT_HASH_SIZE_LIMIT_DEFAULT_KEY);
+  }
+
+  /**
+   * Returns a map of rule type (e.g., "apple_bundle") to a output hash size limit. This specifies
+   * the limit for rules of that type. For more, see {@link #getDefaultOutputHashSizeLimit()}.
+   */
+  public ImmutableMap<String, Long> getRuleTypeOutputHashSizeLimit() {
+    RawConfig rawConfig = getDelegate().getConfig().getRawConfig();
+    ImmutableMap<String, String> sectionMap = rawConfig.getSection(OUTPUT_HASH_SIZE_LIMIT_SECTION);
+
+    return ImmutableMap.copyOf(
+        Maps.transformValues(
+            Maps.filterKeys(sectionMap, key -> !key.equals(OUTPUT_HASH_SIZE_LIMIT_DEFAULT_KEY)),
+            Long::parseLong));
   }
 }

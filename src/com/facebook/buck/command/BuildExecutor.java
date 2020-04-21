@@ -170,6 +170,8 @@ public class BuildExecutor {
         engineConfig.getBuildDepFiles(),
         engineConfig.getBuildMaxDepFileCacheEntries(),
         engineConfig.getBuildArtifactCacheSizeLimit(),
+        engineConfig.getDefaultOutputHashSizeLimit(),
+        engineConfig.getRuleTypeOutputHashSizeLimit(),
         actionGraphAndBuilder.getActionGraphBuilder(),
         actionGraphAndBuilder.getBuildEngineActionToBuildRuleResolver(),
         targetConfigurationSerializer,

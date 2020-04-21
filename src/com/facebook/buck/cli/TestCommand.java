@@ -632,6 +632,8 @@ public class TestCommand extends BuildCommand {
                     cachingBuildEngineBuckConfig.getBuildDepFiles(),
                     cachingBuildEngineBuckConfig.getBuildMaxDepFileCacheEntries(),
                     cachingBuildEngineBuckConfig.getBuildArtifactCacheSizeLimit(),
+                    cachingBuildEngineBuckConfig.getDefaultOutputHashSizeLimit(),
+                    cachingBuildEngineBuckConfig.getRuleTypeOutputHashSizeLimit(),
                     actionGraphAndBuilder.getActionGraphBuilder(),
                     actionGraphAndBuilder.getBuildEngineActionToBuildRuleResolver(),
                     params.getTargetConfigurationSerializer(),

@@ -146,6 +146,8 @@ class CachingBuildRuleBuilder {
   private final ArtifactCache artifactCache;
   private final BuildId buildId;
   private final Set<String> depsWithCacheMiss = Collections.synchronizedSet(new HashSet<>());
+  private final Optional<Long> defaultOutputHashSizeLimit;
+  private final ImmutableMap<String, Long> ruleTypeOutputHashSizeLimit;
 
   private final BuildRuleScopeManager buildRuleScopeManager;
 
@@ -191,6 +193,8 @@ class CachingBuildRuleBuilder {
   public CachingBuildRuleBuilder(
       BuildRuleBuilderDelegate buildRuleBuilderDelegate,
       Optional<Long> artifactCacheSizeLimit,
+      Optional<Long> defaultOutputHashSizeLimit,
+      ImmutableMap<String, Long> ruleTypeOutputHashSizeLimit,
       BuildInfoStoreManager buildInfoStoreManager,
       BuildType buildMode,
       BuildRuleDurationTracker buildRuleDurationTracker,
@@ -214,6 +218,8 @@ class CachingBuildRuleBuilder {
       BuildRulePipelinesRunner pipelinesRunner,
       Optional<BuildRuleStrategy> customBuildRuleStrategy) {
     this.buildRuleBuilderDelegate = buildRuleBuilderDelegate;
+    this.defaultOutputHashSizeLimit = defaultOutputHashSizeLimit;
+    this.ruleTypeOutputHashSizeLimit = ruleTypeOutputHashSizeLimit;
     this.buildMode = buildMode;
     this.consoleLogBuildFailuresInline = consoleLogBuildFailuresInline;
     this.fileHashCache = fileHashCache;
@@ -748,7 +754,26 @@ class CachingBuildRuleBuilder {
   }
 
   private boolean shouldWriteOutputHashes(long outputSize) {
-    Optional<Long> sizeLimit = ruleKeyFactories.getInputBasedRuleKeyFactory().getInputSizeLimit();
+    Optional<Long> sizeLimit = Optional.empty();
+
+    // By definition, the threshold for rules is defined by, in order of priority:
+    // 1. Rule-specific output size threshold
+    // 2. Default rule output size threshold
+    // 3. Input-based rulekey size limit
+
+    Long ruleSizeLimit;
+    if ((ruleSizeLimit = ruleTypeOutputHashSizeLimit.get(rule.getType())) != null) {
+      sizeLimit = Optional.of(ruleSizeLimit);
+    }
+
+    if (!sizeLimit.isPresent()) {
+      sizeLimit = defaultOutputHashSizeLimit;
+    }
+
+    if (!sizeLimit.isPresent()) {
+      sizeLimit = ruleKeyFactories.getInputBasedRuleKeyFactory().getInputSizeLimit();
+    }
+
     return !sizeLimit.isPresent() || (outputSize <= sizeLimit.get());
   }
 

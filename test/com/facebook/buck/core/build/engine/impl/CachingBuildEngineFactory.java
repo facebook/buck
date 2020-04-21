@@ -38,6 +38,7 @@ import com.facebook.buck.testutil.DummyFileHashCache;
 import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
 import com.facebook.buck.util.concurrent.FakeWeightedListeningExecutorService;
 import com.facebook.buck.util.concurrent.WeightedListeningExecutorService;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import java.util.Optional;
@@ -49,6 +50,8 @@ public class CachingBuildEngineFactory {
   private DepFiles depFiles = DepFiles.ENABLED;
   private long maxDepFileCacheEntries = 256L;
   private Optional<Long> artifactCacheSizeLimit = Optional.empty();
+  private Optional<Long> defaultOutputHashSizeLimit = Optional.empty();
+  private ImmutableMap<String, Long> ruleTypeOutputHashSizeLimit = ImmutableMap.of();
   private final long inputFileSizeLimit = Long.MAX_VALUE;
   private Optional<RuleKeyFactories> ruleKeyFactories = Optional.empty();
   private CachingBuildEngineDelegate cachingBuildEngineDelegate;
@@ -90,6 +93,18 @@ public class CachingBuildEngineFactory {
   public CachingBuildEngineFactory setArtifactCacheSizeLimit(
       Optional<Long> artifactCacheSizeLimit) {
     this.artifactCacheSizeLimit = artifactCacheSizeLimit;
+    return this;
+  }
+
+  public CachingBuildEngineFactory setDefaultOutputHashSizeLimit(
+      Optional<Long> defaultOutputHashSizeLimit) {
+    this.defaultOutputHashSizeLimit = defaultOutputHashSizeLimit;
+    return this;
+  }
+
+  public CachingBuildEngineFactory setRuleTypeOutputHashSizeLimit(
+      ImmutableMap<String, Long> ruleTypeOutputHashSizeLimit) {
+    this.ruleTypeOutputHashSizeLimit = ruleTypeOutputHashSizeLimit;
     return this;
   }
 
@@ -147,6 +162,8 @@ public class CachingBuildEngineFactory {
                     depFiles,
                     maxDepFileCacheEntries,
                     artifactCacheSizeLimit,
+                    defaultOutputHashSizeLimit,
+                    ruleTypeOutputHashSizeLimit,
                     buildRuleResolver,
                     buildInfoStoreManager,
                     actionToBuildRuleResolver,
@@ -165,6 +182,8 @@ public class CachingBuildEngineFactory {
                     depFiles,
                     maxDepFileCacheEntries,
                     artifactCacheSizeLimit,
+                    defaultOutputHashSizeLimit,
+                    ruleTypeOutputHashSizeLimit,
                     buildRuleResolver,
                     actionToBuildRuleResolver,
                     targetConfigurationSerializer,
