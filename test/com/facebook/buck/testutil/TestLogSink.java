@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Handler;
 import java.util.logging.LogRecord;
-import java.util.logging.Logger; // NOPMD
 import org.hamcrest.FeatureMatcher;
 import org.hamcrest.Matcher;
 import org.junit.rules.TestRule;
@@ -36,13 +35,14 @@ import org.junit.runners.model.Statement;
  * <p>Usage:
  *
  * <pre>
- *   @Rule
+ *   {@code @Rule}
  *   public final logSink = new TestLogSink(ClassUnderTest.class);
  * </pre>
  */
 public final class TestLogSink extends Handler implements TestRule {
+
   private final List<LogRecord> records = new ArrayList<>();
-  private final Class<?> classUnderTest;
+  private final String loggerNameUnderTest;
 
   /**
    * Construct a log sink that listens to log message from a particular class's logger.
@@ -50,7 +50,16 @@ public final class TestLogSink extends Handler implements TestRule {
    * @param classUnderTest Class whose logger should be listened to
    */
   public TestLogSink(Class<?> classUnderTest) {
-    this.classUnderTest = classUnderTest;
+    this.loggerNameUnderTest = classUnderTest.getName();
+  }
+
+  /**
+   * Construct a log sink that listens to log message from a particular logger.
+   *
+   * @param loggerNameUnderTest Logger that should be listened to
+   */
+  public TestLogSink(String loggerNameUnderTest) {
+    this.loggerNameUnderTest = loggerNameUnderTest;
   }
 
   /** Retrieve the log records that were published. */
@@ -78,11 +87,12 @@ public final class TestLogSink extends Handler implements TestRule {
     return new Statement() {
       @Override
       public void evaluate() throws Throwable {
-        Logger.getLogger(classUnderTest.getName()).addHandler(TestLogSink.this);
+        java.util.logging.Logger logger = java.util.logging.Logger.getLogger(loggerNameUnderTest);
+        logger.addHandler(TestLogSink.this);
         try {
           base.evaluate();
         } finally {
-          Logger.getLogger(classUnderTest.getName()).removeHandler(TestLogSink.this);
+          logger.removeHandler(TestLogSink.this);
         }
       }
     };
