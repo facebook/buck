@@ -231,9 +231,25 @@ class ExecuteTarget(ExitCodeCallable):
             signal.signal(signal.SIGPIPE, signal.SIG_DFL)
             os.execvpe(self._path, self._argv, self._envp)
         else:
-            args = [self._path]
-            args.extend(self._argv[1:])
-            child = subprocess.Popen(args, env=self._envp, cwd=self._cwd)
+
+            def stringify(s):
+                return (
+                    s.decode("utf-8")
+                    if sys.version_info.major >= 3 and isinstance(s, bytes)
+                    else s
+                )
+
+            def stringify_dict(h):
+                new_h = {}
+                for key, val in h.items():
+                    new_h[stringify(key)] = stringify(val)
+                return new_h
+
+            args = [stringify(self._path)]
+            args.extend(stringify(arg) for arg in self._argv[1:])
+            child = subprocess.Popen(
+                args, env=stringify_dict(self._envp), cwd=stringify(self._cwd)
+            )
             child.wait()
             sys.exit(child.returncode)
 
