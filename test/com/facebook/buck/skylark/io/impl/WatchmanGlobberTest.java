@@ -46,7 +46,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import org.apache.commons.lang.NotImplementedException;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -323,7 +322,7 @@ public class WatchmanGlobberTest {
                           query[1], query[1])));
 
             } else {
-              throw new NotImplementedException("Watchman query not implemented");
+              throw new RuntimeException("Watchman query not implemented");
             }
           }
 

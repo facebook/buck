@@ -20,7 +20,6 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.OutputArtifact;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.actions.CommandLineItem;
-import org.apache.commons.lang.StringUtils;
 
 /**
  * Factory class that returns more efficient implementations of {@link CommandLineArgs} depending on
@@ -37,7 +36,8 @@ public class CommandLineArgsFactory {
     if (formatString.equals(CommandLineArgs.DEFAULT_FORMAT_STRING)) {
       return CommandLineArgs.DEFAULT_FORMAT_STRING;
     }
-    if (StringUtils.countMatches(formatString, "%s") == 0) {
+
+    if (!formatString.contains("%s")) {
       throw new CommandLineArgException(
           "format string '%s' must be a format string with one or more occurrences of %%%%s",
           formatString.replace("%s", "%%s"));

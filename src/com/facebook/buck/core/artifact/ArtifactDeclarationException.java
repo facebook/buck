@@ -19,7 +19,6 @@ package com.facebook.buck.core.artifact;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import java.nio.file.Path;
-import org.apache.commons.lang.StringEscapeUtils;
 
 /** Represents a failure to declare an {@link Artifact} */
 public class ArtifactDeclarationException extends HumanReadableException {
@@ -49,6 +48,18 @@ public class ArtifactDeclarationException extends HumanReadableException {
   public ArtifactDeclarationException(Reason reason, BuildTarget buildTarget, String path) {
     // Escape the name so that if there are unprintable characters, whitespace, etc, it will
     // be easy to see that
-    super(reason.getMessage(StringEscapeUtils.escapeJava(path), buildTarget));
+    super(reason.getMessage(escapeJava(path), buildTarget));
+  }
+
+  private static String escapeJava(String s) {
+    StringBuilder sb = new StringBuilder();
+    for (char c : s.toCharArray()) {
+      if (c >= 0x20 && c <= 0xfe) {
+        sb.append(c);
+      } else {
+        sb.append(String.format("\\u%04x", (int) c));
+      }
+    }
+    return sb.toString();
   }
 }
