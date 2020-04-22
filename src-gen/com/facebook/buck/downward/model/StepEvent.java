@@ -69,6 +69,19 @@ private static final long serialVersionUID = 0L;
             description_ = s;
             break;
           }
+          case 42: {
+            com.google.protobuf.Duration.Builder subBuilder = null;
+            if (duration_ != null) {
+              subBuilder = duration_.toBuilder();
+            }
+            duration_ = input.readMessage(com.google.protobuf.Duration.parser(), extensionRegistry);
+            if (subBuilder != null) {
+              subBuilder.mergeFrom(duration_);
+              duration_ = subBuilder.buildPartial();
+            }
+
+            break;
+          }
           default: {
             if (!parseUnknownField(
                 input, unknownFields, extensionRegistry, tag)) {
@@ -306,6 +319,39 @@ private static final long serialVersionUID = 0L;
     }
   }
 
+  public static final int DURATION_FIELD_NUMBER = 5;
+  private com.google.protobuf.Duration duration_;
+  /**
+   * <pre>
+   * relative time duration from the beginning of the tool invocation
+   * </pre>
+   *
+   * <code>.google.protobuf.Duration duration = 5;</code>
+   */
+  public boolean hasDuration() {
+    return duration_ != null;
+  }
+  /**
+   * <pre>
+   * relative time duration from the beginning of the tool invocation
+   * </pre>
+   *
+   * <code>.google.protobuf.Duration duration = 5;</code>
+   */
+  public com.google.protobuf.Duration getDuration() {
+    return duration_ == null ? com.google.protobuf.Duration.getDefaultInstance() : duration_;
+  }
+  /**
+   * <pre>
+   * relative time duration from the beginning of the tool invocation
+   * </pre>
+   *
+   * <code>.google.protobuf.Duration duration = 5;</code>
+   */
+  public com.google.protobuf.DurationOrBuilder getDurationOrBuilder() {
+    return getDuration();
+  }
+
   private byte memoizedIsInitialized = -1;
   @java.lang.Override
   public final boolean isInitialized() {
@@ -332,6 +378,9 @@ private static final long serialVersionUID = 0L;
     if (!getDescriptionBytes().isEmpty()) {
       com.google.protobuf.GeneratedMessageV3.writeString(output, 4, description_);
     }
+    if (duration_ != null) {
+      output.writeMessage(5, getDuration());
+    }
     unknownFields.writeTo(output);
   }
 
@@ -355,6 +404,10 @@ private static final long serialVersionUID = 0L;
     if (!getDescriptionBytes().isEmpty()) {
       size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, description_);
     }
+    if (duration_ != null) {
+      size += com.google.protobuf.CodedOutputStream
+        .computeMessageSize(5, getDuration());
+    }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
     return size;
@@ -377,6 +430,11 @@ private static final long serialVersionUID = 0L;
         .equals(other.getStepType())) return false;
     if (!getDescription()
         .equals(other.getDescription())) return false;
+    if (hasDuration() != other.hasDuration()) return false;
+    if (hasDuration()) {
+      if (!getDuration()
+          .equals(other.getDuration())) return false;
+    }
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
   }
@@ -396,6 +454,10 @@ private static final long serialVersionUID = 0L;
     hash = (53 * hash) + getStepType().hashCode();
     hash = (37 * hash) + DESCRIPTION_FIELD_NUMBER;
     hash = (53 * hash) + getDescription().hashCode();
+    if (hasDuration()) {
+      hash = (37 * hash) + DURATION_FIELD_NUMBER;
+      hash = (53 * hash) + getDuration().hashCode();
+    }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
     return hash;
@@ -537,6 +599,12 @@ private static final long serialVersionUID = 0L;
 
       description_ = "";
 
+      if (durationBuilder_ == null) {
+        duration_ = null;
+      } else {
+        duration_ = null;
+        durationBuilder_ = null;
+      }
       return this;
     }
 
@@ -567,6 +635,11 @@ private static final long serialVersionUID = 0L;
       result.stepStatus_ = stepStatus_;
       result.stepType_ = stepType_;
       result.description_ = description_;
+      if (durationBuilder_ == null) {
+        result.duration_ = duration_;
+      } else {
+        result.duration_ = durationBuilder_.build();
+      }
       onBuilt();
       return result;
     }
@@ -628,6 +701,9 @@ private static final long serialVersionUID = 0L;
       if (!other.getDescription().isEmpty()) {
         description_ = other.description_;
         onChanged();
+      }
+      if (other.hasDuration()) {
+        mergeDuration(other.getDuration());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -877,6 +953,159 @@ private static final long serialVersionUID = 0L;
       description_ = value;
       onChanged();
       return this;
+    }
+
+    private com.google.protobuf.Duration duration_;
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.google.protobuf.Duration, com.google.protobuf.Duration.Builder, com.google.protobuf.DurationOrBuilder> durationBuilder_;
+    /**
+     * <pre>
+     * relative time duration from the beginning of the tool invocation
+     * </pre>
+     *
+     * <code>.google.protobuf.Duration duration = 5;</code>
+     */
+    public boolean hasDuration() {
+      return durationBuilder_ != null || duration_ != null;
+    }
+    /**
+     * <pre>
+     * relative time duration from the beginning of the tool invocation
+     * </pre>
+     *
+     * <code>.google.protobuf.Duration duration = 5;</code>
+     */
+    public com.google.protobuf.Duration getDuration() {
+      if (durationBuilder_ == null) {
+        return duration_ == null ? com.google.protobuf.Duration.getDefaultInstance() : duration_;
+      } else {
+        return durationBuilder_.getMessage();
+      }
+    }
+    /**
+     * <pre>
+     * relative time duration from the beginning of the tool invocation
+     * </pre>
+     *
+     * <code>.google.protobuf.Duration duration = 5;</code>
+     */
+    public Builder setDuration(com.google.protobuf.Duration value) {
+      if (durationBuilder_ == null) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        duration_ = value;
+        onChanged();
+      } else {
+        durationBuilder_.setMessage(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * relative time duration from the beginning of the tool invocation
+     * </pre>
+     *
+     * <code>.google.protobuf.Duration duration = 5;</code>
+     */
+    public Builder setDuration(
+        com.google.protobuf.Duration.Builder builderForValue) {
+      if (durationBuilder_ == null) {
+        duration_ = builderForValue.build();
+        onChanged();
+      } else {
+        durationBuilder_.setMessage(builderForValue.build());
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * relative time duration from the beginning of the tool invocation
+     * </pre>
+     *
+     * <code>.google.protobuf.Duration duration = 5;</code>
+     */
+    public Builder mergeDuration(com.google.protobuf.Duration value) {
+      if (durationBuilder_ == null) {
+        if (duration_ != null) {
+          duration_ =
+            com.google.protobuf.Duration.newBuilder(duration_).mergeFrom(value).buildPartial();
+        } else {
+          duration_ = value;
+        }
+        onChanged();
+      } else {
+        durationBuilder_.mergeFrom(value);
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * relative time duration from the beginning of the tool invocation
+     * </pre>
+     *
+     * <code>.google.protobuf.Duration duration = 5;</code>
+     */
+    public Builder clearDuration() {
+      if (durationBuilder_ == null) {
+        duration_ = null;
+        onChanged();
+      } else {
+        duration_ = null;
+        durationBuilder_ = null;
+      }
+
+      return this;
+    }
+    /**
+     * <pre>
+     * relative time duration from the beginning of the tool invocation
+     * </pre>
+     *
+     * <code>.google.protobuf.Duration duration = 5;</code>
+     */
+    public com.google.protobuf.Duration.Builder getDurationBuilder() {
+      
+      onChanged();
+      return getDurationFieldBuilder().getBuilder();
+    }
+    /**
+     * <pre>
+     * relative time duration from the beginning of the tool invocation
+     * </pre>
+     *
+     * <code>.google.protobuf.Duration duration = 5;</code>
+     */
+    public com.google.protobuf.DurationOrBuilder getDurationOrBuilder() {
+      if (durationBuilder_ != null) {
+        return durationBuilder_.getMessageOrBuilder();
+      } else {
+        return duration_ == null ?
+            com.google.protobuf.Duration.getDefaultInstance() : duration_;
+      }
+    }
+    /**
+     * <pre>
+     * relative time duration from the beginning of the tool invocation
+     * </pre>
+     *
+     * <code>.google.protobuf.Duration duration = 5;</code>
+     */
+    private com.google.protobuf.SingleFieldBuilderV3<
+        com.google.protobuf.Duration, com.google.protobuf.Duration.Builder, com.google.protobuf.DurationOrBuilder> 
+        getDurationFieldBuilder() {
+      if (durationBuilder_ == null) {
+        durationBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.google.protobuf.Duration, com.google.protobuf.Duration.Builder, com.google.protobuf.DurationOrBuilder>(
+                getDuration(),
+                getParentForChildren(),
+                isClean());
+        duration_ = null;
+      }
+      return durationBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

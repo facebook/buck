@@ -10,56 +10,64 @@ package com.facebook.buck.downward.model;
 public enum LogLevel
     implements com.google.protobuf.ProtocolMessageEnum {
   /**
-   * <code>FATAL = 0;</code>
+   * <code>UNKNOWN = 0;</code>
    */
-  FATAL(0),
+  UNKNOWN(0),
   /**
-   * <code>ERROR = 1;</code>
+   * <code>FATAL = 1;</code>
    */
-  ERROR(1),
+  FATAL(1),
   /**
-   * <code>WARN = 2;</code>
+   * <code>ERROR = 2;</code>
    */
-  WARN(2),
+  ERROR(2),
   /**
-   * <code>INFO = 3;</code>
+   * <code>WARN = 3;</code>
    */
-  INFO(3),
+  WARN(3),
   /**
-   * <code>DEBUG = 4;</code>
+   * <code>INFO = 4;</code>
    */
-  DEBUG(4),
+  INFO(4),
   /**
-   * <code>TRACE = 5;</code>
+   * <code>DEBUG = 5;</code>
    */
-  TRACE(5),
+  DEBUG(5),
+  /**
+   * <code>TRACE = 6;</code>
+   */
+  TRACE(6),
   UNRECOGNIZED(-1),
   ;
 
   /**
-   * <code>FATAL = 0;</code>
+   * <code>UNKNOWN = 0;</code>
    */
-  public static final int FATAL_VALUE = 0;
+  public static final int UNKNOWN_VALUE = 0;
   /**
-   * <code>ERROR = 1;</code>
+   * <code>FATAL = 1;</code>
    */
-  public static final int ERROR_VALUE = 1;
+  public static final int FATAL_VALUE = 1;
   /**
-   * <code>WARN = 2;</code>
+   * <code>ERROR = 2;</code>
    */
-  public static final int WARN_VALUE = 2;
+  public static final int ERROR_VALUE = 2;
   /**
-   * <code>INFO = 3;</code>
+   * <code>WARN = 3;</code>
    */
-  public static final int INFO_VALUE = 3;
+  public static final int WARN_VALUE = 3;
   /**
-   * <code>DEBUG = 4;</code>
+   * <code>INFO = 4;</code>
    */
-  public static final int DEBUG_VALUE = 4;
+  public static final int INFO_VALUE = 4;
   /**
-   * <code>TRACE = 5;</code>
+   * <code>DEBUG = 5;</code>
    */
-  public static final int TRACE_VALUE = 5;
+  public static final int DEBUG_VALUE = 5;
+  /**
+   * <code>TRACE = 6;</code>
+   */
+  public static final int TRACE_VALUE = 6;
 
 
   public final int getNumber() {
@@ -80,12 +88,13 @@ public enum LogLevel
 
   public static LogLevel forNumber(int value) {
     switch (value) {
-      case 0: return FATAL;
-      case 1: return ERROR;
-      case 2: return WARN;
-      case 3: return INFO;
-      case 4: return DEBUG;
-      case 5: return TRACE;
+      case 0: return UNKNOWN;
+      case 1: return FATAL;
+      case 2: return ERROR;
+      case 3: return WARN;
+      case 4: return INFO;
+      case 5: return DEBUG;
+      case 6: return TRACE;
       default: return null;
     }
   }

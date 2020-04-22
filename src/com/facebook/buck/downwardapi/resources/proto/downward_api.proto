@@ -59,7 +59,7 @@ option java_outer_classname = "DownwardAPIProto";
 // best practices to include version number in package
 package downward.api.v1;
 
-import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
 
 message EventTypeMessage {
     EventType event_type = 1;
@@ -74,12 +74,13 @@ message EventTypeMessage {
 }
 
 enum LogLevel {
-    FATAL = 0;
-    ERROR = 1;
-    WARN = 2;
-    INFO = 3;
-    DEBUG = 4;
-    TRACE = 5;
+    UNKNOWN = 0;
+    FATAL = 1;
+    ERROR = 2;
+    WARN = 3;
+    INFO = 4;
+    DEBUG = 5;
+    TRACE = 6;
 }
 
 message ConsoleEvent {
@@ -99,6 +100,8 @@ message StepEvent {
     StepStatus step_status = 2;
     string step_type = 3;
     string description = 4;
+    // relative time duration from the beginning of the tool invocation
+    google.protobuf.Duration duration = 5;
 
     enum StepStatus {
         UNKNOWN = 0;
@@ -114,9 +117,8 @@ message ChromeTraceEvent {
     ChromeTraceEventStatus status = 3;
     // just included into chrome trace
     map<string, string> data = 4;
-
-    // relative timestamp from the beginning of the tool invocation
-    google.protobuf.Timestamp relative_timestamp = 5;
+    // relative time duration from the beginning of the tool invocation
+    google.protobuf.Duration duration = 5;
 
     enum ChromeTraceEventStatus {
         UNKNOWN = 0;

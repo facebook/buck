@@ -76,14 +76,14 @@ private static final long serialVersionUID = 0L;
             break;
           }
           case 42: {
-            com.google.protobuf.Timestamp.Builder subBuilder = null;
-            if (relativeTimestamp_ != null) {
-              subBuilder = relativeTimestamp_.toBuilder();
+            com.google.protobuf.Duration.Builder subBuilder = null;
+            if (duration_ != null) {
+              subBuilder = duration_.toBuilder();
             }
-            relativeTimestamp_ = input.readMessage(com.google.protobuf.Timestamp.parser(), extensionRegistry);
+            duration_ = input.readMessage(com.google.protobuf.Duration.parser(), extensionRegistry);
             if (subBuilder != null) {
-              subBuilder.mergeFrom(relativeTimestamp_);
-              relativeTimestamp_ = subBuilder.buildPartial();
+              subBuilder.mergeFrom(duration_);
+              duration_ = subBuilder.buildPartial();
             }
 
             break;
@@ -396,37 +396,37 @@ private static final long serialVersionUID = 0L;
     return map.get(key);
   }
 
-  public static final int RELATIVE_TIMESTAMP_FIELD_NUMBER = 5;
-  private com.google.protobuf.Timestamp relativeTimestamp_;
+  public static final int DURATION_FIELD_NUMBER = 5;
+  private com.google.protobuf.Duration duration_;
   /**
    * <pre>
-   * relative timestamp from the beginning of the tool invocation
+   * relative time duration from the beginning of the tool invocation
    * </pre>
    *
-   * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+   * <code>.google.protobuf.Duration duration = 5;</code>
    */
-  public boolean hasRelativeTimestamp() {
-    return relativeTimestamp_ != null;
+  public boolean hasDuration() {
+    return duration_ != null;
   }
   /**
    * <pre>
-   * relative timestamp from the beginning of the tool invocation
+   * relative time duration from the beginning of the tool invocation
    * </pre>
    *
-   * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+   * <code>.google.protobuf.Duration duration = 5;</code>
    */
-  public com.google.protobuf.Timestamp getRelativeTimestamp() {
-    return relativeTimestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : relativeTimestamp_;
+  public com.google.protobuf.Duration getDuration() {
+    return duration_ == null ? com.google.protobuf.Duration.getDefaultInstance() : duration_;
   }
   /**
    * <pre>
-   * relative timestamp from the beginning of the tool invocation
+   * relative time duration from the beginning of the tool invocation
    * </pre>
    *
-   * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+   * <code>.google.protobuf.Duration duration = 5;</code>
    */
-  public com.google.protobuf.TimestampOrBuilder getRelativeTimestampOrBuilder() {
-    return getRelativeTimestamp();
+  public com.google.protobuf.DurationOrBuilder getDurationOrBuilder() {
+    return getDuration();
   }
 
   private byte memoizedIsInitialized = -1;
@@ -458,8 +458,8 @@ private static final long serialVersionUID = 0L;
         internalGetData(),
         DataDefaultEntryHolder.defaultEntry,
         4);
-    if (relativeTimestamp_ != null) {
-      output.writeMessage(5, getRelativeTimestamp());
+    if (duration_ != null) {
+      output.writeMessage(5, getDuration());
     }
     unknownFields.writeTo(output);
   }
@@ -491,9 +491,9 @@ private static final long serialVersionUID = 0L;
       size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, data__);
     }
-    if (relativeTimestamp_ != null) {
+    if (duration_ != null) {
       size += com.google.protobuf.CodedOutputStream
-        .computeMessageSize(5, getRelativeTimestamp());
+        .computeMessageSize(5, getDuration());
     }
     size += unknownFields.getSerializedSize();
     memoizedSize = size;
@@ -517,10 +517,10 @@ private static final long serialVersionUID = 0L;
     if (status_ != other.status_) return false;
     if (!internalGetData().equals(
         other.internalGetData())) return false;
-    if (hasRelativeTimestamp() != other.hasRelativeTimestamp()) return false;
-    if (hasRelativeTimestamp()) {
-      if (!getRelativeTimestamp()
-          .equals(other.getRelativeTimestamp())) return false;
+    if (hasDuration() != other.hasDuration()) return false;
+    if (hasDuration()) {
+      if (!getDuration()
+          .equals(other.getDuration())) return false;
     }
     if (!unknownFields.equals(other.unknownFields)) return false;
     return true;
@@ -543,9 +543,9 @@ private static final long serialVersionUID = 0L;
       hash = (37 * hash) + DATA_FIELD_NUMBER;
       hash = (53 * hash) + internalGetData().hashCode();
     }
-    if (hasRelativeTimestamp()) {
-      hash = (37 * hash) + RELATIVE_TIMESTAMP_FIELD_NUMBER;
-      hash = (53 * hash) + getRelativeTimestamp().hashCode();
+    if (hasDuration()) {
+      hash = (37 * hash) + DURATION_FIELD_NUMBER;
+      hash = (53 * hash) + getDuration().hashCode();
     }
     hash = (29 * hash) + unknownFields.hashCode();
     memoizedHashCode = hash;
@@ -709,11 +709,11 @@ private static final long serialVersionUID = 0L;
       status_ = 0;
 
       internalGetMutableData().clear();
-      if (relativeTimestampBuilder_ == null) {
-        relativeTimestamp_ = null;
+      if (durationBuilder_ == null) {
+        duration_ = null;
       } else {
-        relativeTimestamp_ = null;
-        relativeTimestampBuilder_ = null;
+        duration_ = null;
+        durationBuilder_ = null;
       }
       return this;
     }
@@ -748,10 +748,10 @@ private static final long serialVersionUID = 0L;
       result.status_ = status_;
       result.data_ = internalGetData();
       result.data_.makeImmutable();
-      if (relativeTimestampBuilder_ == null) {
-        result.relativeTimestamp_ = relativeTimestamp_;
+      if (durationBuilder_ == null) {
+        result.duration_ = duration_;
       } else {
-        result.relativeTimestamp_ = relativeTimestampBuilder_.build();
+        result.duration_ = durationBuilder_.build();
       }
       result.bitField0_ = to_bitField0_;
       onBuilt();
@@ -814,8 +814,8 @@ private static final long serialVersionUID = 0L;
       }
       internalGetMutableData().mergeFrom(
           other.internalGetData());
-      if (other.hasRelativeTimestamp()) {
-        mergeRelativeTimestamp(other.getRelativeTimestamp());
+      if (other.hasDuration()) {
+        mergeDuration(other.getDuration());
       }
       this.mergeUnknownFields(other.unknownFields);
       onChanged();
@@ -1150,157 +1150,157 @@ private static final long serialVersionUID = 0L;
       return this;
     }
 
-    private com.google.protobuf.Timestamp relativeTimestamp_;
+    private com.google.protobuf.Duration duration_;
     private com.google.protobuf.SingleFieldBuilderV3<
-        com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> relativeTimestampBuilder_;
+        com.google.protobuf.Duration, com.google.protobuf.Duration.Builder, com.google.protobuf.DurationOrBuilder> durationBuilder_;
     /**
      * <pre>
-     * relative timestamp from the beginning of the tool invocation
+     * relative time duration from the beginning of the tool invocation
      * </pre>
      *
-     * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+     * <code>.google.protobuf.Duration duration = 5;</code>
      */
-    public boolean hasRelativeTimestamp() {
-      return relativeTimestampBuilder_ != null || relativeTimestamp_ != null;
+    public boolean hasDuration() {
+      return durationBuilder_ != null || duration_ != null;
     }
     /**
      * <pre>
-     * relative timestamp from the beginning of the tool invocation
+     * relative time duration from the beginning of the tool invocation
      * </pre>
      *
-     * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+     * <code>.google.protobuf.Duration duration = 5;</code>
      */
-    public com.google.protobuf.Timestamp getRelativeTimestamp() {
-      if (relativeTimestampBuilder_ == null) {
-        return relativeTimestamp_ == null ? com.google.protobuf.Timestamp.getDefaultInstance() : relativeTimestamp_;
+    public com.google.protobuf.Duration getDuration() {
+      if (durationBuilder_ == null) {
+        return duration_ == null ? com.google.protobuf.Duration.getDefaultInstance() : duration_;
       } else {
-        return relativeTimestampBuilder_.getMessage();
+        return durationBuilder_.getMessage();
       }
     }
     /**
      * <pre>
-     * relative timestamp from the beginning of the tool invocation
+     * relative time duration from the beginning of the tool invocation
      * </pre>
      *
-     * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+     * <code>.google.protobuf.Duration duration = 5;</code>
      */
-    public Builder setRelativeTimestamp(com.google.protobuf.Timestamp value) {
-      if (relativeTimestampBuilder_ == null) {
+    public Builder setDuration(com.google.protobuf.Duration value) {
+      if (durationBuilder_ == null) {
         if (value == null) {
           throw new NullPointerException();
         }
-        relativeTimestamp_ = value;
+        duration_ = value;
         onChanged();
       } else {
-        relativeTimestampBuilder_.setMessage(value);
+        durationBuilder_.setMessage(value);
       }
 
       return this;
     }
     /**
      * <pre>
-     * relative timestamp from the beginning of the tool invocation
+     * relative time duration from the beginning of the tool invocation
      * </pre>
      *
-     * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+     * <code>.google.protobuf.Duration duration = 5;</code>
      */
-    public Builder setRelativeTimestamp(
-        com.google.protobuf.Timestamp.Builder builderForValue) {
-      if (relativeTimestampBuilder_ == null) {
-        relativeTimestamp_ = builderForValue.build();
+    public Builder setDuration(
+        com.google.protobuf.Duration.Builder builderForValue) {
+      if (durationBuilder_ == null) {
+        duration_ = builderForValue.build();
         onChanged();
       } else {
-        relativeTimestampBuilder_.setMessage(builderForValue.build());
+        durationBuilder_.setMessage(builderForValue.build());
       }
 
       return this;
     }
     /**
      * <pre>
-     * relative timestamp from the beginning of the tool invocation
+     * relative time duration from the beginning of the tool invocation
      * </pre>
      *
-     * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+     * <code>.google.protobuf.Duration duration = 5;</code>
      */
-    public Builder mergeRelativeTimestamp(com.google.protobuf.Timestamp value) {
-      if (relativeTimestampBuilder_ == null) {
-        if (relativeTimestamp_ != null) {
-          relativeTimestamp_ =
-            com.google.protobuf.Timestamp.newBuilder(relativeTimestamp_).mergeFrom(value).buildPartial();
+    public Builder mergeDuration(com.google.protobuf.Duration value) {
+      if (durationBuilder_ == null) {
+        if (duration_ != null) {
+          duration_ =
+            com.google.protobuf.Duration.newBuilder(duration_).mergeFrom(value).buildPartial();
         } else {
-          relativeTimestamp_ = value;
+          duration_ = value;
         }
         onChanged();
       } else {
-        relativeTimestampBuilder_.mergeFrom(value);
+        durationBuilder_.mergeFrom(value);
       }
 
       return this;
     }
     /**
      * <pre>
-     * relative timestamp from the beginning of the tool invocation
+     * relative time duration from the beginning of the tool invocation
      * </pre>
      *
-     * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+     * <code>.google.protobuf.Duration duration = 5;</code>
      */
-    public Builder clearRelativeTimestamp() {
-      if (relativeTimestampBuilder_ == null) {
-        relativeTimestamp_ = null;
+    public Builder clearDuration() {
+      if (durationBuilder_ == null) {
+        duration_ = null;
         onChanged();
       } else {
-        relativeTimestamp_ = null;
-        relativeTimestampBuilder_ = null;
+        duration_ = null;
+        durationBuilder_ = null;
       }
 
       return this;
     }
     /**
      * <pre>
-     * relative timestamp from the beginning of the tool invocation
+     * relative time duration from the beginning of the tool invocation
      * </pre>
      *
-     * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+     * <code>.google.protobuf.Duration duration = 5;</code>
      */
-    public com.google.protobuf.Timestamp.Builder getRelativeTimestampBuilder() {
+    public com.google.protobuf.Duration.Builder getDurationBuilder() {
       
       onChanged();
-      return getRelativeTimestampFieldBuilder().getBuilder();
+      return getDurationFieldBuilder().getBuilder();
     }
     /**
      * <pre>
-     * relative timestamp from the beginning of the tool invocation
+     * relative time duration from the beginning of the tool invocation
      * </pre>
      *
-     * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+     * <code>.google.protobuf.Duration duration = 5;</code>
      */
-    public com.google.protobuf.TimestampOrBuilder getRelativeTimestampOrBuilder() {
-      if (relativeTimestampBuilder_ != null) {
-        return relativeTimestampBuilder_.getMessageOrBuilder();
+    public com.google.protobuf.DurationOrBuilder getDurationOrBuilder() {
+      if (durationBuilder_ != null) {
+        return durationBuilder_.getMessageOrBuilder();
       } else {
-        return relativeTimestamp_ == null ?
-            com.google.protobuf.Timestamp.getDefaultInstance() : relativeTimestamp_;
+        return duration_ == null ?
+            com.google.protobuf.Duration.getDefaultInstance() : duration_;
       }
     }
     /**
      * <pre>
-     * relative timestamp from the beginning of the tool invocation
+     * relative time duration from the beginning of the tool invocation
      * </pre>
      *
-     * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+     * <code>.google.protobuf.Duration duration = 5;</code>
      */
     private com.google.protobuf.SingleFieldBuilderV3<
-        com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder> 
-        getRelativeTimestampFieldBuilder() {
-      if (relativeTimestampBuilder_ == null) {
-        relativeTimestampBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-            com.google.protobuf.Timestamp, com.google.protobuf.Timestamp.Builder, com.google.protobuf.TimestampOrBuilder>(
-                getRelativeTimestamp(),
+        com.google.protobuf.Duration, com.google.protobuf.Duration.Builder, com.google.protobuf.DurationOrBuilder> 
+        getDurationFieldBuilder() {
+      if (durationBuilder_ == null) {
+        durationBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+            com.google.protobuf.Duration, com.google.protobuf.Duration.Builder, com.google.protobuf.DurationOrBuilder>(
+                getDuration(),
                 getParentForChildren(),
                 isClean());
-        relativeTimestamp_ = null;
+        duration_ = null;
       }
-      return relativeTimestampBuilder_;
+      return durationBuilder_;
     }
     @java.lang.Override
     public final Builder setUnknownFields(

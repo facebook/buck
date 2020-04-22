@@ -92,26 +92,26 @@ public interface ChromeTraceEventOrBuilder extends
 
   /**
    * <pre>
-   * relative timestamp from the beginning of the tool invocation
+   * relative time duration from the beginning of the tool invocation
    * </pre>
    *
-   * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+   * <code>.google.protobuf.Duration duration = 5;</code>
    */
-  boolean hasRelativeTimestamp();
+  boolean hasDuration();
   /**
    * <pre>
-   * relative timestamp from the beginning of the tool invocation
+   * relative time duration from the beginning of the tool invocation
    * </pre>
    *
-   * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+   * <code>.google.protobuf.Duration duration = 5;</code>
    */
-  com.google.protobuf.Timestamp getRelativeTimestamp();
+  com.google.protobuf.Duration getDuration();
   /**
    * <pre>
-   * relative timestamp from the beginning of the tool invocation
+   * relative time duration from the beginning of the tool invocation
    * </pre>
    *
-   * <code>.google.protobuf.Timestamp relative_timestamp = 5;</code>
+   * <code>.google.protobuf.Duration duration = 5;</code>
    */
-  com.google.protobuf.TimestampOrBuilder getRelativeTimestampOrBuilder();
+  com.google.protobuf.DurationOrBuilder getDurationOrBuilder();
 }

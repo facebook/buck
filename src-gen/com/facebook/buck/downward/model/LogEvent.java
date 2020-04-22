@@ -195,7 +195,7 @@ private static final long serialVersionUID = 0L;
   @java.lang.Override
   public void writeTo(com.google.protobuf.CodedOutputStream output)
                       throws java.io.IOException {
-    if (logLevel_ != com.facebook.buck.downward.model.LogLevel.FATAL.getNumber()) {
+    if (logLevel_ != com.facebook.buck.downward.model.LogLevel.UNKNOWN.getNumber()) {
       output.writeEnum(1, logLevel_);
     }
     if (!getMessageBytes().isEmpty()) {
@@ -213,7 +213,7 @@ private static final long serialVersionUID = 0L;
     if (size != -1) return size;
 
     size = 0;
-    if (logLevel_ != com.facebook.buck.downward.model.LogLevel.FATAL.getNumber()) {
+    if (logLevel_ != com.facebook.buck.downward.model.LogLevel.UNKNOWN.getNumber()) {
       size += com.google.protobuf.CodedOutputStream
         .computeEnumSize(1, logLevel_);
     }

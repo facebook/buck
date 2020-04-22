@@ -45,4 +45,29 @@ public interface StepEventOrBuilder extends
    */
   com.google.protobuf.ByteString
       getDescriptionBytes();
+
+  /**
+   * <pre>
+   * relative time duration from the beginning of the tool invocation
+   * </pre>
+   *
+   * <code>.google.protobuf.Duration duration = 5;</code>
+   */
+  boolean hasDuration();
+  /**
+   * <pre>
+   * relative time duration from the beginning of the tool invocation
+   * </pre>
+   *
+   * <code>.google.protobuf.Duration duration = 5;</code>
+   */
+  com.google.protobuf.Duration getDuration();
+  /**
+   * <pre>
+   * relative time duration from the beginning of the tool invocation
+   * </pre>
+   *
+   * <code>.google.protobuf.Duration duration = 5;</code>
+   */
+  com.google.protobuf.DurationOrBuilder getDurationOrBuilder();
 }
