@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Comparator;
@@ -31,13 +32,19 @@ public abstract class ParamsInfo {
   @Value.Derived
   public ImmutableMap<String, ParamInfo<?>> getParamInfosByCamelCaseName() {
     return getParamInfosSorted().stream()
-        .collect(ImmutableMap.toImmutableMap(ParamInfo::getName, p -> p));
+        .collect(ImmutableMap.toImmutableMap(p -> p.getName().getCamelCase(), p -> p));
   }
 
   @Value.Derived
   public ImmutableMap<String, ParamInfo<?>> getParamInfosByStarlarkName() {
     return getParamInfosSorted().stream()
-        .collect(ImmutableMap.toImmutableMap(ParamInfo::getPythonName, p -> p));
+        .collect(ImmutableMap.toImmutableMap(p -> p.getName().getSnakeCase(), p -> p));
+  }
+
+  @Value.Derived
+  public ImmutableMap<ParamName, ParamInfo<?>> getParamInfosByName() {
+    return getParamInfosSorted().stream()
+        .collect(ImmutableMap.toImmutableMap(ParamInfo::getName, p -> p));
   }
 
   @Value.Derived
@@ -57,11 +64,17 @@ public abstract class ParamsInfo {
     return getParamInfosByStarlarkName().get(name);
   }
 
+  @Nullable
+  public ParamInfo<?> getByName(ParamName name) {
+    return getParamInfosByName().get(name);
+  }
+
   /** Construct a new immutable {@code ParamInfos} instance. */
   public static ParamsInfo of(ImmutableList<ParamInfo<?>> paramInfos) {
     return ImmutableParamsInfo.ofImpl(
         paramInfos.stream()
-            .sorted(Comparator.comparing(ParamInfo::getPythonName, ParamInfo.NAME_COMPARATOR))
+            .sorted(
+                Comparator.comparing(p -> p.getName().getSnakeCase(), ParamInfo.NAME_COMPARATOR))
             .collect(ImmutableList.toImmutableList()));
   }
 }

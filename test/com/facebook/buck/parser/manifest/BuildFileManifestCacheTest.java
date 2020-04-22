@@ -107,14 +107,14 @@ public class BuildFileManifestCacheTest {
     ImmutableMap<String, RawTargetNode> targets =
         ImmutableMap.of(
             "target1",
-            RawTargetNode.of(
+            RawTargetNode.copyOf(
                 ForwardRelativePath.EMPTY,
                 "java_library",
                 ImmutableList.of(),
                 ImmutableList.of(),
                 TwoArraysImmutableHashMap.copyOf(ImmutableMap.of("key1", "val1"))),
             "target2",
-            RawTargetNode.of(
+            RawTargetNode.copyOf(
                 ForwardRelativePath.EMPTY,
                 "java_library",
                 ImmutableList.of(),

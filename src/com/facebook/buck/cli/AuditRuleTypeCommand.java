@@ -79,6 +79,6 @@ public class AuditRuleTypeCommand extends AbstractCommand {
   private static Consumer<ParamInfo<?>> formatPythonFunction(PrintStream printStream) {
     return param ->
         printStream.println(
-            INDENT + param.getPythonName() + (param.isOptional() ? " = None" : "") + ",");
+            INDENT + param.getName().getSnakeCase() + (param.isOptional() ? " = None" : "") + ",");
   }
 }

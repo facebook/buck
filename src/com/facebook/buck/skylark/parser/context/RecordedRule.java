@@ -18,6 +18,7 @@ package com.facebook.buck.skylark.parser.context;
 
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -33,14 +34,14 @@ public abstract class RecordedRule {
 
   public abstract ImmutableList<String> getWithinView();
 
-  public abstract TwoArraysImmutableHashMap<String, Object> getRawRule();
+  public abstract TwoArraysImmutableHashMap<ParamName, Object> getRawRule();
 
   public static RecordedRule of(
       ForwardRelativePath basePath,
       String buckType,
       ImmutableList<String> visibility,
       ImmutableList<String> withinView,
-      TwoArraysImmutableHashMap<String, Object> args) {
+      TwoArraysImmutableHashMap<ParamName, Object> args) {
     Preconditions.checkArgument(!buckType.isEmpty());
     return ImmutableRecordedRule.ofImpl(basePath, buckType, visibility, withinView, args);
   }

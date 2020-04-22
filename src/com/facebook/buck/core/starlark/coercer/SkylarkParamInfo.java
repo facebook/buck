@@ -19,6 +19,7 @@ package com.facebook.buck.core.starlark.coercer;
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.rules.coercer.AbstractParamInfo;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -39,7 +40,7 @@ public class SkylarkParamInfo<T> extends AbstractParamInfo<T> {
    * @param attr the attribute used to get coercion information, constraints, etc for this param
    */
   public SkylarkParamInfo(String name, Attribute<T> attr) {
-    super(name, attr.getTypeCoercer());
+    super(ParamName.bySnakeCase(name), attr.getTypeCoercer());
     this.attr = attr;
   }
 
@@ -68,12 +69,12 @@ public class SkylarkParamInfo<T> extends AbstractParamInfo<T> {
   @SuppressWarnings("unchecked")
   public T get(Object dto) {
     Preconditions.checkArgument(dto instanceof SkylarkDescriptionArgBuilder);
-    return (T) ((SkylarkDescriptionArgBuilder) dto).getPostCoercionValue(getName());
+    return (T) ((SkylarkDescriptionArgBuilder) dto).getPostCoercionValue(getName().getSnakeCase());
   }
 
   @Override
   public void setCoercedValue(Object dto, Object value) {
     Preconditions.checkArgument(dto instanceof SkylarkDescriptionArgBuilder);
-    ((SkylarkDescriptionArgBuilder) dto).setPostCoercionValue(getName(), value);
+    ((SkylarkDescriptionArgBuilder) dto).setPostCoercionValue(getName().getSnakeCase(), value);
   }
 }

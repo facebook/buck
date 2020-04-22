@@ -66,6 +66,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.DefaultSelectableConfigurationContext;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -104,8 +105,11 @@ public class ConstructorArgMarshallerImmutableTest {
       Map<String, ?> attributes,
       ImmutableSet.Builder<BuildTarget> declaredDeps)
       throws CoerceFailedException {
-    HashMap<String, Object> attributesWithName = new HashMap<>(attributes);
-    attributesWithName.putIfAbsent("name", "the name");
+    HashMap<ParamName, Object> attributesWithName = new HashMap<>();
+    for (Map.Entry<String, ?> entry : attributes.entrySet()) {
+      attributesWithName.put(ParamName.bySnakeCase(entry.getKey()), entry.getValue());
+    }
+    attributesWithName.putIfAbsent(ParamName.bySnakeCase("name"), "the name");
 
     ImmutableSet.Builder<BuildTarget> configurationDeps = ImmutableSet.builder();
     T result =
@@ -153,8 +157,8 @@ public class ConstructorArgMarshallerImmutableTest {
         invokePopulate(
             DtoWithBoolean.class,
             ImmutableMap.<String, Object>of(
-                "booleanOne", true,
-                "booleanTwo", true));
+                "boolean_one", true,
+                "boolean_two", true));
 
     assertTrue(built.getBooleanOne());
     assertTrue(built.isBooleanTwo());
@@ -189,10 +193,10 @@ public class ConstructorArgMarshallerImmutableTest {
         invokePopulate(
             DtoWithSourcePaths.class,
             ImmutableMap.<String, Object>of(
-                "filePath",
+                "file_path",
                 UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
                     "example/path/cheese.txt"),
-                "targetPath",
+                "target_path",
                 UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
                     "//example/path:peas")));
 
@@ -321,7 +325,8 @@ public class ConstructorArgMarshallerImmutableTest {
             DtoWithBuildTargetList.class,
             ImmutableMap.of(
                 "single", UnconfiguredBuildTargetParser.parse("//com/example:cheese"),
-                "sameBuildFileTarget", UnconfiguredBuildTargetParser.parse("//example/path:cake"),
+                "same_build_file_target",
+                    UnconfiguredBuildTargetParser.parse("//example/path:cake"),
                 "targets",
                     ImmutableList.of(
                         UnconfiguredBuildTargetParser.parse("//example/path:cake"),
@@ -342,17 +347,17 @@ public class ConstructorArgMarshallerImmutableTest {
     ImmutableMap<String, Object> args =
         ImmutableMap.<String, Object>builder()
             .put("required", "cheese")
-            .put("notRequired", Optional.of("cake"))
+            .put("not_required", Optional.of("cake"))
             // Long because that's what comes from python.
             .put("num", 42)
-            .put("optionalLong", Optional.of(88L))
+            .put("optional_long", Optional.of(88L))
             .put("needed", true)
             // Skipping optional boolean.
             .put(
-                "aSrcPath",
+                "a_src_path",
                 UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//example/path:path"))
-            .put("aPath", Paths.get("./File.java"))
-            .put("notAPath", Optional.of(Paths.get("example/path/NotFile.java")))
+            .put("a_path", Paths.get("./File.java"))
+            .put("not_a_path", Optional.of(Paths.get("example/path/NotFile.java")))
             .build();
     DtoWithVariousTypes built = invokePopulate(DtoWithVariousTypes.class, args);
 
@@ -371,8 +376,8 @@ public class ConstructorArgMarshallerImmutableTest {
   public void shouldNotPopulateDefaultValues() throws Exception {
     // This is not an ImmutableMap so we can test null values.
     Map<String, Object> args = new HashMap<>();
-    args.put("defaultString", null);
-    args.put("defaultSourcePath", null);
+    args.put("default_string", null);
+    args.put("default_source_path", null);
     DtoWithOptionalValues built = invokePopulate(DtoWithOptionalValues.class, args);
 
     assertEquals(Optional.empty(), built.getNoString());
@@ -402,7 +407,7 @@ public class ConstructorArgMarshallerImmutableTest {
     args.put("something", "bar");
     args.put("things", ImmutableList.of("qux", "quz"));
     args.put("more", 1234);
-    args.put("beGood", false);
+    args.put("be_good", false);
     DtoWithDefaultValues built = invokePopulate(DtoWithDefaultValues.class, args);
 
     assertEquals("bar", built.getSomething());
@@ -530,7 +535,11 @@ public class ConstructorArgMarshallerImmutableTest {
             builder(DtoWithString.class),
             declaredDeps,
             configurationDeps,
-            ImmutableMap.of("string", selectorList, "name", "unused"));
+            ImmutableMap.of(
+                ParamName.bySnakeCase("string"),
+                selectorList,
+                ParamName.bySnakeCase("name"),
+                "unused"));
 
     assertEquals("string2string4", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());
@@ -558,7 +567,8 @@ public class ConstructorArgMarshallerImmutableTest {
             builder(DtoWithString.class),
             declaredDeps,
             ImmutableSet.builder(),
-            ImmutableMap.<String, Object>of("string", "value", "name", "zzz"));
+            ImmutableMap.<ParamName, Object>of(
+                ParamName.bySnakeCase("string"), "value", ParamName.bySnakeCase("name"), "zzz"));
     assertEquals("value", dto.getString());
     assertTrue(declaredDeps.build().isEmpty());
   }
@@ -584,8 +594,11 @@ public class ConstructorArgMarshallerImmutableTest {
         builder(DtoWithDepsAndNotDeps.class),
         declaredDeps,
         ImmutableSet.builder(),
-        ImmutableMap.<String, Object>of(
-            "deps", ImmutableList.of(dep.getUnconfiguredBuildTarget()), "name", "myname"));
+        ImmutableMap.<ParamName, Object>of(
+            ParamName.bySnakeCase("deps"),
+            ImmutableList.of(dep.getUnconfiguredBuildTarget()),
+            ParamName.bySnakeCase("name"),
+            "myname"));
     assertEquals(ImmutableSet.of(dep), declaredDeps.build());
   }
 
@@ -609,7 +622,7 @@ public class ConstructorArgMarshallerImmutableTest {
             builder(DtoWithOptionalSetOfStrings.class),
             ImmutableSet.builder(),
             ImmutableSet.builder(),
-            ImmutableMap.of("name", "something"));
+            ImmutableMap.of(ParamName.bySnakeCase("name"), "something"));
     assertFalse(dto.getStrings().isPresent());
   }
 
@@ -657,9 +670,9 @@ public class ConstructorArgMarshallerImmutableTest {
             ImmutableSet.builder(),
             ImmutableSet.builder(),
             ImmutableMap.of(
-                "deps",
+                ParamName.bySnakeCase("deps"),
                 ImmutableList.of(UnconfiguredBuildTargetParser.parse("//a/b:c")),
-                "name",
+                ParamName.bySnakeCase("name"),
                 "testtesttest"));
 
     assertEquals(3, dto.getDeps().size());
@@ -696,9 +709,9 @@ public class ConstructorArgMarshallerImmutableTest {
             ImmutableSet.builder(),
             ImmutableSet.builder(),
             ImmutableMap.of(
-                "name",
+                ParamName.bySnakeCase("name"),
                 TARGET.getShortName(),
-                "compiler",
+                ParamName.bySnakeCase("compiler"),
                 UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//tools:compiler")));
     BuildTargetSourcePath compiler = (BuildTargetSourcePath) d.getCompiler();
     assertEquals(execConfiguration, compiler.getTarget().getTargetConfiguration());

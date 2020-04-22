@@ -94,15 +94,8 @@ public class BuckPyFunction {
       }
     }
 
-    // TODO(nga): should use camel case for camel case param
-    optional.add(
-        StParamInfo.ofOptionalValue(
-            VisibilityAttributes.VISIBILITY.getSnakeCase(),
-            VisibilityAttributes.VISIBILITY.getSnakeCase()));
-    optional.add(
-        StParamInfo.ofOptionalValue(
-            VisibilityAttributes.WITHIN_VIEW.getSnakeCase(),
-            VisibilityAttributes.WITHIN_VIEW.getSnakeCase()));
+    optional.add(StParamInfo.ofOptionalValue(VisibilityAttributes.VISIBILITY));
+    optional.add(StParamInfo.ofOptionalValue(VisibilityAttributes.WITHIN_VIEW));
 
     STGroup group = buckPyFunctionTemplate.get();
     ST st;
@@ -172,19 +165,19 @@ public class BuckPyFunction {
   }
 
   private boolean isSkippable(ParamInfo<?> param) {
-    if ("name".equals(param.getName())) {
+    if ("name".equals(param.getName().getSnakeCase())) {
       if (!String.class.equals(param.getResultClass())) {
         throw new HumanReadableException("'name' parameter must be a java.lang.String");
       }
       return true;
     }
 
-    if (VisibilityAttributes.VISIBILITY.getSnakeCase().equals(param.getName())) {
+    if (VisibilityAttributes.VISIBILITY.equals(param.getName())) {
       throw new HumanReadableException(
           "'visibility' parameter must be omitted. It will be passed to the rule at run time.");
     }
 
-    if (VisibilityAttributes.WITHIN_VIEW.getSnakeCase().equals(param.getName())) {
+    if (VisibilityAttributes.WITHIN_VIEW.equals(param.getName())) {
       throw new HumanReadableException(
           "'within_view' parameter must be omitted. It will be passed to the rule at run time.");
     }
@@ -199,17 +192,13 @@ public class BuckPyFunction {
     public final boolean optional;
 
     public StParamInfo(ParamInfo<?> info) {
-      this.name = info.getName();
-      this.pythonName = info.getPythonName();
+      this.name = info.getName().getSnakeCase();
+      this.pythonName = info.getName().getSnakeCase();
       this.optional = info.isOptional();
     }
 
     public static StParamInfo ofOptionalValue(ParamName paramName) {
-      return ofOptionalValue(paramName.getCamelCase(), paramName.getSnakeCase());
-    }
-
-    public static StParamInfo ofOptionalValue(String name, String pythonName) {
-      return new StParamInfo(name, pythonName, true);
+      return new StParamInfo(paramName.getSnakeCase(), paramName.getSnakeCase(), true);
     }
 
     private StParamInfo(String name, String pythonName, boolean optional) {

@@ -63,6 +63,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.UnconfiguredMacroContainer;
 import com.facebook.buck.rules.macros.UnconfiguredQueryOutputsMacro;
 import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.query.UnconfiguredQuery;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
@@ -313,6 +314,13 @@ public class TargetNodeTest {
         knownRuleTypes
             .getDescriptorByNameChecked("example", ExampleDescriptionArg.class)
             .dataTransferObjectDescriptor(coercerFactory);
+
+    ImmutableMap<ParamName, Object> instanceByParamName =
+        instance.entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    e -> ParamName.byCamelCase(e.getKey()), Map.Entry::getValue));
+
     try {
       return marshaller.populate(
           createCellRoots(projectFilesystem).getCellNameResolver(),
@@ -326,7 +334,7 @@ public class TargetNodeTest {
           builder,
           ImmutableSet.builder(),
           ImmutableSet.builder(),
-          instance);
+          instanceByParamName);
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

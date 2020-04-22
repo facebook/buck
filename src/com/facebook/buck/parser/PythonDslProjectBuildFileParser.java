@@ -46,6 +46,7 @@ import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.InputStreamConsumer;
@@ -542,7 +543,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
   @SuppressWarnings("unchecked")
   private static RawTargetNode convertSelectableAttributes(
       TwoArraysImmutableHashMap<String, Object> values) {
-    TwoArraysImmutableHashMap.Builder<String, Object> attrs =
+    TwoArraysImmutableHashMap.Builder<ParamName, Object> attrs =
         TwoArraysImmutableHashMap.builderWithExpectedSize(values.size());
 
     ForwardRelativePath basePath = null;
@@ -565,7 +566,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
           break;
         default:
           attrs.put(
-              entry.getKey(),
+              ParamName.bySnakeCase(entry.getKey()),
               PythonDslProjectBuildFileParser.convertToSelectableAttributeIfNeeded(
                   entry.getValue()));
           break;

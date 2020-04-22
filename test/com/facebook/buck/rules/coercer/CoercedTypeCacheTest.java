@@ -100,7 +100,7 @@ public class CoercedTypeCacheTest {
             "required"),
         coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).getParamInfosSorted()
             .stream()
-            .map(ParamInfo::getPythonName)
+            .map(p -> p.getName().getSnakeCase())
             .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
   }
 

@@ -85,7 +85,7 @@ public class DaemonicCellStateTest {
         BuildFileManifestFactory.create(
             ImmutableMap.of(
                 target.getShortName(),
-                RawTargetNode.of(
+                RawTargetNode.copyOf(
                     ForwardRelativePath.of(target.getCellRelativeBasePath().getPath().toString()),
                     "java_library",
                     ImmutableList.of(),
@@ -174,7 +174,7 @@ public class DaemonicCellStateTest {
             ImmutableMap.of(
                 "target",
                 // Forms the target "//path/to:target"
-                RawTargetNode.of(
+                RawTargetNode.copyOf(
                     ForwardRelativePath.of("path/to"),
                     "java_library",
                     ImmutableList.of(),

@@ -128,14 +128,14 @@ public class BuildPackagePathToUnconfiguredTargetNodePackageComputationTest {
         BuildFileManifest.of(
             TwoArraysImmutableHashMap.of(
                 "target1",
-                RawTargetNode.of(
+                RawTargetNode.copyOf(
                     ForwardRelativePath.EMPTY,
                     "java_library",
                     ImmutableList.of(),
                     ImmutableList.of(),
                     TwoArraysImmutableHashMap.copyOf(rawAttributes1)),
                 "target2",
-                RawTargetNode.of(
+                RawTargetNode.copyOf(
                     ForwardRelativePath.EMPTY,
                     "java_library",
                     ImmutableList.of(),

@@ -18,6 +18,7 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.util.Types;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -54,7 +55,7 @@ public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
 
   @SuppressWarnings("PMD.EmptyCatchBlock")
   private ReflectionParamInfo(
-      String name,
+      ParamName name,
       TypeCoercer<?, T> typeCoercer,
       Method setter,
       Method closestGetterOnAbstractClassOrInterface,
@@ -68,14 +69,14 @@ public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
   }
 
   private static class StaticInfo {
-    private final String name;
+    private final ParamName name;
     private final Method closestGetterOnAbstractClassOrInterface;
     private final Type setterParameterType;
     private final boolean isOptional;
     private final Method concreteGetter;
 
     public StaticInfo(
-        String name,
+        ParamName name,
         Method closestGetterOnAbstractClassOrInterface,
         Type setterParameterType,
         boolean isOptional,
@@ -112,7 +113,7 @@ public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
           e,
           "When getting ParamInfo for %s.%s.",
           setter.getDeclaringClass().getName(),
-          staticInfo.name);
+          staticInfo.name.getCamelCase());
     }
   }
 
@@ -170,12 +171,7 @@ public class ReflectionParamInfo<T> extends AbstractParamInfo<T> {
       isOptional = !Modifier.isAbstract(closestGetterOnAbstractClassOrInterface.getModifiers());
     }
 
-    StringBuilder builder = new StringBuilder();
-    builder.append(setter.getName().substring(3, 4).toLowerCase());
-    if (setter.getName().length() > 4) {
-      builder.append(setter.getName().substring(4));
-    }
-    String name = builder.toString();
+    ParamName name = ParamName.byUpperCamelCase(setter.getName().substring(3));
 
     return new StaticInfo(
         name,

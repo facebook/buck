@@ -39,6 +39,7 @@ import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
@@ -86,7 +87,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             .checkUnconfiguredAssignableTo(TypeToken.of(UnconfiguredBuildTarget.class));
   }
 
-  private TwoArraysImmutableHashMap<String, Object> convertSelects(
+  private TwoArraysImmutableHashMap<ParamName, Object> convertSelects(
       Cell cell,
       UnconfiguredBuildTarget target,
       RuleDescriptor<?> descriptor,
@@ -100,11 +101,17 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
         .getAttrs()
         .mapValues(
             (k, v) -> {
-              ParamInfo<?> paramInfo = constructorDescriptor.getParamsInfo().getByCamelCaseName(k);
+              ParamInfo<?> paramInfo = constructorDescriptor.getParamsInfo().getByName(k);
               Preconditions.checkNotNull(
                   paramInfo, "cannot find param info for arg %s of target %s", k, target);
               return (convertSelectorListInAttrValue(
-                  cell, target, paramInfo, k, v, pathRelativeToProjectRoot, dependencyStack));
+                  cell,
+                  target,
+                  paramInfo,
+                  k.getCamelCase(),
+                  v,
+                  pathRelativeToProjectRoot,
+                  dependencyStack));
             });
   }
 
@@ -198,7 +205,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       withinViewPatterns = pkg.getWithinViewPatterns();
     }
 
-    TwoArraysImmutableHashMap<String, Object> withSelects =
+    TwoArraysImmutableHashMap<ParamName, Object> withSelects =
         convertSelects(
             cell,
             target,
@@ -208,11 +215,9 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             dependencyStack);
 
     Optional<UnconfiguredBuildTarget> defaultTargetPlatform = Optional.empty();
-    Object rawDefaultTargetPlatform = rawAttributes.get("defaultTargetPlatform");
-    if (rawDefaultTargetPlatform == null) {
-      // TODO(nga): old rules vs UDR rules mess
-      rawDefaultTargetPlatform = rawAttributes.get("default_target_platform");
-    }
+    Object rawDefaultTargetPlatform =
+        rawAttributes.get(ParamName.bySnakeCase("default_target_platform"));
+    // TODO(nga): old rules vs UDR rules mess
     if (rawDefaultTargetPlatform != null
         && !rawDefaultTargetPlatform.equals("")
         && !rawDefaultTargetPlatform.equals(Optional.empty())
@@ -235,11 +240,8 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
 
     ImmutableList<UnconfiguredBuildTarget> compatibleWith = ImmutableList.of();
 
-    // TODO(nga): UDR populate `compatible_with` while native rules populate `compatibleWith`
     Object rawCompatibleWith =
-        rawAttributes
-            .getAttrs()
-            .getOrDefault("compatible_with", rawAttributes.get("compatibleWith"));
+        rawAttributes.getAttrs().get(ParamName.bySnakeCase("compatible_with"));
     if (rawCompatibleWith != null) {
       try {
         compatibleWith =

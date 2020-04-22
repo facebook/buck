@@ -27,6 +27,7 @@ import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.List;
@@ -64,8 +65,6 @@ public interface ConstructorArgMarshaller {
    * if none is set. This is typically {@link Optional#empty()}, but in the case of collections is
    * an empty collection.
    *
-   * @param cellNameResolver
-   * @param hostConfiguration
    * @param declaredDeps A builder to be populated with the declared dependencies.
    * @param attributes configured attributes that cannot contain selectable values (instances of
    *     {@link SelectorList})
@@ -83,6 +82,6 @@ public interface ConstructorArgMarshaller {
       DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      Map<String, ?> attributes)
+      Map<ParamName, ?> attributes)
       throws CoerceFailedException;
 }

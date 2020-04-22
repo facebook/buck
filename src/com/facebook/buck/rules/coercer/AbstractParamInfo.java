@@ -21,7 +21,7 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.base.CaseFormat;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import javax.annotation.Nullable;
 
@@ -31,28 +31,23 @@ import javax.annotation.Nullable;
  */
 public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
 
-  private final String name;
+  private final ParamName name;
   private final TypeCoercer<?, T> typeCoercer;
 
   /** Create an instance of {@link AbstractParamInfo} */
-  public AbstractParamInfo(String name, TypeCoercer<?, T> typeCoercer) {
+  public AbstractParamInfo(ParamName name, TypeCoercer<?, T> typeCoercer) {
     this.name = name;
     this.typeCoercer = typeCoercer;
   }
 
   @Override
-  public String getName() {
+  public ParamName getName() {
     return name;
   }
 
   @Override
   public TypeCoercer<?, T> getTypeCoercer() {
     return typeCoercer;
-  }
-
-  @Override
-  public String getPythonName() {
-    return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, getName());
   }
 
   @Override
@@ -164,7 +159,8 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
               hostConfiguration,
               value));
     } catch (CoerceFailedException e) {
-      throw new ParamInfoException(name, e.getMessage(), e);
+      // TODO(nga): snake case
+      throw new ParamInfoException(name.getCamelCase(), e.getMessage(), e);
     }
   }
 

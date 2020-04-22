@@ -65,7 +65,7 @@ public class BuiltTargetVerifierTest {
         Paths.get("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new SomeDescription(),
-        RawTargetNode.of(
+        RawTargetNode.copyOf(
             ForwardRelativePath.EMPTY,
             "java_library",
             ImmutableList.of(),
@@ -89,7 +89,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new SomeDescription(),
-        RawTargetNode.of(
+        RawTargetNode.copyOf(
             ForwardRelativePath.of("z/y/z"),
             "java_library",
             ImmutableList.of(),
@@ -112,7 +112,7 @@ public class BuiltTargetVerifierTest {
         cell.getRootCell().getRoot().resolve("a/b/BUCK"),
         UnconfiguredBuildTargetFactoryForTests.newInstance("//a/b:c"),
         new SomeDescription(),
-        RawTargetNode.of(
+        RawTargetNode.copyOf(
             ForwardRelativePath.of("a/b"),
             "java_library",
             ImmutableList.of(),

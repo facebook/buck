@@ -171,7 +171,7 @@ public class TargetNodeFactory implements NodeCopier {
       if (info.isDep()
           && info.isInput()
           && info.hasElementTypes(BuildTarget.class, SourcePath.class, Path.class)
-          && !info.getName().equals("deps")) {
+          && !info.getName().getSnakeCase().equals("deps")) {
         detectBuildTargetsAndPathsForConstructorArg(
             buildTarget,
             cellNameResolver,

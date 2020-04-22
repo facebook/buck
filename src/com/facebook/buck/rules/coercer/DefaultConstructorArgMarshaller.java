@@ -30,6 +30,7 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -70,7 +71,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
       DataTransferObjectDescriptor<T> constructorArgDescriptor,
       ImmutableSet.Builder<BuildTarget> declaredDeps,
       ImmutableSet.Builder<BuildTarget> configurationDeps,
-      Map<String, ?> attributes)
+      Map<ParamName, ?> attributes)
       throws CoerceFailedException {
 
     ParamsInfo allParamInfo = constructorArgDescriptor.getParamsInfo();
@@ -312,7 +313,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
         selectorListResolver.resolveList(
             configurationContext,
             buildTarget,
-            paramInfo.getName(),
+            paramInfo.getName().getSnakeCase(),
             selectorList,
             paramInfo.getTypeCoercer(),
             dependencyStack);

@@ -18,6 +18,7 @@ package com.facebook.buck.parser.api;
 
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
@@ -36,12 +37,14 @@ public abstract class RawTargetNode {
 
   public abstract ImmutableList<String> getWithinView();
 
-  public abstract TwoArraysImmutableHashMap<String, Object> getAttrs();
+  public abstract TwoArraysImmutableHashMap<ParamName, Object> getAttrs();
 
   /** Get attributes including special attributes not present in {@link #getAttrs()}. */
   public TwoArraysImmutableHashMap<String, Object> getAttrsIncludingSpecial() {
     TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
-    builder.putAll(getAttrs());
+    for (Map.Entry<ParamName, Object> attr : getAttrs().entrySet()) {
+      builder.put(attr.getKey().getCamelCase(), attr.getValue());
+    }
     if (!getVisibility().isEmpty()) {
       builder.put(VisibilityAttributes.VISIBILITY.getSnakeCase(), getVisibility());
     }
@@ -52,8 +55,13 @@ public abstract class RawTargetNode {
   }
 
   @Nullable
-  public Object get(String name) {
+  public Object get(ParamName name) {
     return getAttrs().get(name);
+  }
+
+  @Nullable
+  public Object get(String name) {
+    return get(ParamName.byCamelCase(name));
   }
 
   public static RawTargetNode of(
@@ -61,7 +69,7 @@ public abstract class RawTargetNode {
       String buckType,
       ImmutableList<String> visibility,
       ImmutableList<String> withinView,
-      TwoArraysImmutableHashMap<String, Object> attrs) {
+      TwoArraysImmutableHashMap<ParamName, Object> attrs) {
     Preconditions.checkArgument(!buckType.isEmpty());
     return ImmutableRawTargetNode.ofImpl(basePath, buckType, visibility, withinView, attrs);
   }
@@ -72,6 +80,14 @@ public abstract class RawTargetNode {
       ImmutableList<String> visibility,
       ImmutableList<String> withinView,
       Map<String, Object> attrs) {
-    return of(basePath, buckType, visibility, withinView, TwoArraysImmutableHashMap.copyOf(attrs));
+    return of(
+        basePath,
+        buckType,
+        visibility,
+        withinView,
+        attrs.entrySet().stream()
+            .collect(
+                TwoArraysImmutableHashMap.toMap(
+                    e -> ParamName.bySnakeCase(e.getKey()), Map.Entry::getValue)));
   }
 }

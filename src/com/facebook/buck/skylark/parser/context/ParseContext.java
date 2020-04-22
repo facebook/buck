@@ -17,6 +17,7 @@
 package com.facebook.buck.skylark.parser.context;
 
 import com.facebook.buck.parser.api.PackageMetadata;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
@@ -67,7 +68,9 @@ public class ParseContext {
   public void recordRule(RecordedRule rawRule, FuncallExpression ast) throws EvalException {
     Preconditions.checkState(pkg == null, "Build files cannot contain package definitions.");
     Object nameObject =
-        Objects.requireNonNull(rawRule.getRawRule().get("name"), "Every target must have a name.");
+        Objects.requireNonNull(
+            rawRule.getRawRule().get(ParamName.bySnakeCase("name")),
+            "Every target must have a name.");
     if (!(nameObject instanceof String)) {
       throw new IllegalArgumentException(
           "Target name must be string, it is "

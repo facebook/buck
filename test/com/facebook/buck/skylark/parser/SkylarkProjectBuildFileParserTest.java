@@ -166,7 +166,7 @@ public class SkylarkProjectBuildFileParserTest {
       assertThat(
           event.getMessage(),
           is(
-              "Cannot register rule src:guava of type prebuilt_jar with content {name=guava, binaryJar=guava.jar} again."));
+              "Cannot register rule src:guava of type prebuilt_jar with content {name=guava, binary_jar=guava.jar} again."));
     }
   }
 

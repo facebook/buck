@@ -42,6 +42,7 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -151,8 +152,11 @@ public class SkylarkDescriptionArgTest {
             .getDtoDescriptor()
             .apply(new DefaultTypeCoercerFactory());
 
-    ImmutableMap<String, Object> attributes = ImmutableMap.of("name", "bar");
-    ImmutableMap<String, Object> attributes2 = ImmutableMap.of("name", "bar", "defaulted", 1);
+    ImmutableMap<ParamName, Object> attributes =
+        ImmutableMap.of(ParamName.bySnakeCase("name"), "bar");
+    ImmutableMap<ParamName, Object> attributes2 =
+        ImmutableMap.of(
+            ParamName.bySnakeCase("name"), "bar", ParamName.bySnakeCase("defaulted"), 1);
 
     SkylarkDescriptionArg populated1 =
         marshaller.populate(

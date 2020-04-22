@@ -23,11 +23,11 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
-import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
@@ -116,7 +116,8 @@ public class RuleFunctionFactory {
       throws EvalException {
     ImmutableList<ParamInfo<?>> missingAttributes =
         allParamInfo.values().stream()
-            .filter(param -> !param.isOptional() && !kwargs.containsKey(param.getPythonName()))
+            .filter(
+                param -> !param.isOptional() && !kwargs.containsKey(param.getName().getSnakeCase()))
             .collect(ImmutableList.toImmutableList());
     if (!missingAttributes.isEmpty()) {
       throw new EvalException(
@@ -124,7 +125,7 @@ public class RuleFunctionFactory {
           name
               + " requires "
               + missingAttributes.stream()
-                  .map(ParamInfo::getPythonName)
+                  .map(p -> p.getName().getSnakeCase())
                   .sorted(ParamInfo.NAME_COMPARATOR)
                   .collect(Collectors.joining(" and "))
               + " but they are not provided.\n"
@@ -148,7 +149,8 @@ public class RuleFunctionFactory {
       FuncallExpression ast)
       throws EvalException {
 
-    TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
+    TwoArraysImmutableHashMap.Builder<ParamName, Object> builder =
+        TwoArraysImmutableHashMap.builder();
 
     ParamsInfo allParamInfo =
         typeCoercerFactory
@@ -160,8 +162,7 @@ public class RuleFunctionFactory {
     ImmutableList<String> withinView = ImmutableList.of();
 
     for (Map.Entry<String, Object> kwargEntry : kwargs.entrySet()) {
-      String paramName =
-          CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, kwargEntry.getKey());
+      ParamName paramName = ParamName.bySnakeCase(kwargEntry.getKey());
       if (kwargEntry.getKey().equals(VisibilityAttributes.VISIBILITY.getSnakeCase())) {
         visibility = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
         continue;
@@ -170,7 +171,7 @@ public class RuleFunctionFactory {
         withinView = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
         continue;
       }
-      if (!allParamInfo.getParamInfosByCamelCaseName().containsKey(paramName)) {
+      if (!allParamInfo.getParamInfosByCamelCaseName().containsKey(paramName.getCamelCase())) {
         throw new IllegalArgumentException(kwargEntry.getKey() + " is not a recognized attribute");
       }
       if (Runtime.NONE.equals(kwargEntry.getValue())) {

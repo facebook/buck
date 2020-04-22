@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.param.ParamName;
 import java.nio.file.Path;
 import java.util.Comparator;
 import javax.annotation.Nullable;
@@ -33,16 +34,13 @@ public interface ParamInfo<T> {
           .thenComparing(Comparator.naturalOrder());
 
   /** @return the user-facing name of this parameter */
-  String getName();
+  ParamName getName();
 
   /** @return the {@link TypeCoercer} that converts raw values to the correct type for this param */
   TypeCoercer<?, T> getTypeCoercer();
 
   /** @return Whether the coerced type is Optional or not */
   boolean isOptional();
-
-  /** @return the python-friendly (snake case) name for this param */
-  String getPythonName();
 
   /** @return Whether or not this parameter is a dependency */
   boolean isDep();

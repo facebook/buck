@@ -197,7 +197,7 @@ public class BuckPyFunctionTest {
                 "    add_rule({",
                 "        'buck.type': 'case',",
                 "        'name': name,",
-                "        'someField': some_field,",
+                "        'some_field': some_field,",
                 "        'visibility': visibility,",
                 "        'within_view': within_view,",
                 "    }, build_env)",

@@ -23,6 +23,7 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.rules.coercer.ParamsInfo;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
@@ -115,7 +116,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
             .getPathString();
     ImmutableList<String> visibility = ImmutableList.of();
     ImmutableList<String> withinView = ImmutableList.of();
-    TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
+    TwoArraysImmutableHashMap.Builder<ParamName, Object> builder =
+        TwoArraysImmutableHashMap.builder();
     /**
      * We can iterate through linearly because the calling conventions of {@link BaseFunction} are
      * such that it makes an {@link Object} array with arguments in the same order as our signature
@@ -129,7 +131,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       } else if (name.equals(VisibilityAttributes.WITHIN_VIEW.getSnakeCase())) {
         withinView = (ImmutableList<String>) args[i];
       } else {
-        builder.put(name, args[i]);
+        builder.put(ParamName.bySnakeCase(name), args[i]);
       }
       i++;
     }

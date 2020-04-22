@@ -16,6 +16,8 @@
 
 package com.facebook.buck.rules.param;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,6 +45,7 @@ public class ParamName implements Comparable<ParamName> {
   }
 
   /** Param name by snake case. */
+  @JsonValue
   public String getSnakeCase() {
     return snakeCase;
   }
@@ -146,5 +149,10 @@ public class ParamName implements Comparable<ParamName> {
     }
 
     return this.snakeCase.compareTo(that.snakeCase);
+  }
+
+  @JsonCreator
+  private static ParamName deserializeFromJson(String object) {
+    return bySnakeCase(object);
   }
 }

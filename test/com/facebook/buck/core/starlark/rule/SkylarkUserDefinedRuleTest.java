@@ -27,6 +27,7 @@ import com.facebook.buck.core.starlark.rule.attr.impl.IntAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.facebook.buck.rules.coercer.ParamsInfo;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
@@ -266,7 +267,8 @@ public class SkylarkUserDefinedRuleTest {
       throws EvalException, LabelSyntaxException, InterruptedException {
     // TODO: Add visibility when that's added to implicit params
     ImmutableMap<String, AttributeHolder> params = ImmutableMap.of();
-    ImmutableMap<String, Object> expected = ImmutableMap.of("name", "some_rule_name");
+    ImmutableMap<ParamName, Object> expected =
+        ImmutableMap.of(ParamName.bySnakeCase("name"), "some_rule_name");
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
@@ -307,13 +309,13 @@ public class SkylarkUserDefinedRuleTest {
             "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
             "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
             "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
-    ImmutableMap<String, Object> expected =
-        ImmutableMap.<String, Object>builder()
-            .put("name", "some_rule_name")
-            .put("arg1", "some string")
-            .put("arg2", "arg2_val")
-            .put("arg3", 5)
-            .put("arg4", 2)
+    ImmutableMap<ParamName, Object> expected =
+        ImmutableMap.<ParamName, Object>builder()
+            .put(ParamName.bySnakeCase("name"), "some_rule_name")
+            .put(ParamName.bySnakeCase("arg1"), "some string")
+            .put(ParamName.bySnakeCase("arg2"), "arg2_val")
+            .put(ParamName.bySnakeCase("arg3"), 5)
+            .put(ParamName.bySnakeCase("arg4"), 2)
             .build();
 
     SkylarkUserDefinedRule rule =
@@ -429,13 +431,13 @@ public class SkylarkUserDefinedRuleTest {
             "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
             "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
             "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
-    ImmutableMap<String, Object> expected =
-        ImmutableMap.<String, Object>builder()
-            .put("name", "some_rule_name")
-            .put("arg1", "arg1_val")
-            .put("arg2", "arg2_val")
-            .put("arg3", 1)
-            .put("arg4", 2)
+    ImmutableMap<ParamName, Object> expected =
+        ImmutableMap.<ParamName, Object>builder()
+            .put(ParamName.bySnakeCase("name"), "some_rule_name")
+            .put(ParamName.bySnakeCase("arg1"), "arg1_val")
+            .put(ParamName.bySnakeCase("arg2"), "arg2_val")
+            .put(ParamName.bySnakeCase("arg3"), 1)
+            .put(ParamName.bySnakeCase("arg4"), 2)
             .build();
 
     SkylarkUserDefinedRule rule =
@@ -504,11 +506,11 @@ public class SkylarkUserDefinedRuleTest {
     SkylarkParamInfo name = (SkylarkParamInfo) paramsInfo.getByCamelCaseName("name");
     SkylarkParamInfo arg1 = (SkylarkParamInfo) paramsInfo.getByCamelCaseName("arg1");
 
-    assertEquals("name", name.getName());
+    assertEquals("name", name.getName().getSnakeCase());
     assertEquals(
         StringAttribute.of("", "The name of the target", true, ImmutableList.of()), name.getAttr());
 
-    assertEquals("arg1", arg1.getName());
+    assertEquals("arg1", arg1.getName().getSnakeCase());
     assertEquals(params.get("arg1").getAttribute(), arg1.getAttr());
   }
 }

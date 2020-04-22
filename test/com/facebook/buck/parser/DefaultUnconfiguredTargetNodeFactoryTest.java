@@ -44,11 +44,13 @@ import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Rule;
@@ -140,7 +142,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
             cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
             buildTarget,
             DependencyStack.root(),
-            RawTargetNode.of(
+            RawTargetNode.copyOf(
                 ForwardRelativePath.of("a/b"),
                 "java_library",
                 ImmutableList.of("//a/..."),
@@ -152,7 +154,12 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
         RuleType.of("java_library", RuleType.Kind.BUILD), unconfiguredTargetNode.getRuleType());
     assertEquals(buildTarget.getUnflavoredBuildTarget(), unconfiguredTargetNode.getBuildTarget());
 
-    assertEquals(expectAttributes, unconfiguredTargetNode.getAttributes());
+    assertEquals(
+        expectAttributes.entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    e -> ParamName.byCamelCase(e.getKey()), Map.Entry::getValue)),
+        unconfiguredTargetNode.getAttributes());
 
     assertEquals(
         "//a/...",

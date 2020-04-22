@@ -61,6 +61,7 @@ import com.facebook.buck.rules.macros.UnconfiguredExecutableMacro;
 import com.facebook.buck.rules.macros.UnconfiguredLocationMacro;
 import com.facebook.buck.rules.macros.UnconfiguredMacroContainer;
 import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
 import com.facebook.buck.util.types.Either;
@@ -95,11 +96,11 @@ public class GenruleDescriptionTest {
             .getDescriptorByNameChecked("genrule", GenruleDescriptionArg.class)
             .dataTransferObjectDescriptor(typeCoercerFactory);
 
-    Map<String, Object> instance =
+    Map<ParamName, Object> instance =
         ImmutableMap.of(
-            "name",
+            ParamName.bySnakeCase("name"),
             buildTarget.getShortName(),
-            "srcs",
+            ParamName.bySnakeCase("srcs"),
             UnconfiguredSourceSet.ofUnnamedSources(
                 ImmutableSet.of(
                     new UnconfiguredSourcePath.BuildTarget(
@@ -107,9 +108,9 @@ public class GenruleDescriptionTest {
                     new UnconfiguredSourcePath.BuildTarget(
                         UnconfiguredBuildTargetWithOutputsFactoryForTests.newInstance(
                             "//biz:baz")))),
-            "out",
+            ParamName.bySnakeCase("out"),
             Optional.of("AndroidManifest.xml"),
-            "cmd",
+            ParamName.bySnakeCase("cmd"),
             Optional.of(
                 UnconfiguredStringWithMacros.ofUnconfigured(
                     ImmutableList.of(

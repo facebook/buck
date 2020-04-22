@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import java.util.Map;
 import java.util.Optional;
 
 /** Immutable implementation of {@link UnconfiguredTargetNode}. */
@@ -44,7 +46,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
 
   @Override
   @JsonProperty("attributes")
-  public abstract TwoArraysImmutableHashMap<String, Object> getAttributes();
+  public abstract TwoArraysImmutableHashMap<ParamName, Object> getAttributes();
 
   // Visibility patterns might not really serialize/deserialize well
   // TODO: should we move them out of UnconfiguredTargetNode to TargetNode ?
@@ -68,7 +70,7 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
   public static UnconfiguredTargetNode of(
       UnflavoredBuildTarget buildTarget,
       RuleType ruleType,
-      TwoArraysImmutableHashMap<String, Object> attributes,
+      TwoArraysImmutableHashMap<ParamName, Object> attributes,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
       Optional<UnconfiguredBuildTarget> defaultTargetPlatform,
@@ -96,7 +98,10 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
     return of(
         buildTarget,
         ruleType,
-        TwoArraysImmutableHashMap.copyOf(attributes),
+        attributes.entrySet().stream()
+            .collect(
+                TwoArraysImmutableHashMap.toMap(
+                    e -> ParamName.bySnakeCase(e.getKey()), Map.Entry::getValue)),
         visibilityPatterns,
         withinViewPatterns,
         defaultTargetPlatform,

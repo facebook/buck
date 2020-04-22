@@ -20,6 +20,7 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
@@ -50,7 +51,7 @@ public interface UnconfiguredTargetNode extends ComputeResult {
    * <p>Note that some of these attributes may require additional processing before they can be
    * stored in a constructor argument. For example, selectable arguments need to be resolved first.
    */
-  TwoArraysImmutableHashMap<String, Object> getAttributes();
+  TwoArraysImmutableHashMap<ParamName, Object> getAttributes();
 
   /** List of patterns from <code>visibility</code> attribute. */
   ImmutableSet<VisibilityPattern> getVisibilityPatterns();

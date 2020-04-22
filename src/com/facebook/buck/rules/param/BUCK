@@ -7,5 +7,6 @@ java_library(
     ],
     deps = [
         "//third-party/java/guava:guava",
+        "//third-party/java/jackson:jackson-annotations",
     ],
 )

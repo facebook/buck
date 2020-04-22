@@ -56,6 +56,7 @@ import com.facebook.buck.rules.coercer.ConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -165,7 +166,7 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "compatibleWith",
+                "compatible_with",
                 ImmutableList.of(
                     nonCompatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget())));
     assertFalse(
@@ -182,7 +183,7 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "compatibleWith",
+                "compatible_with",
                 ImmutableList.of(
                     compatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget(),
                     nonCompatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget())));
@@ -200,7 +201,7 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "compatibleWith",
+                "compatible_with",
                 ImmutableList.of(
                     compatibleConfigSettingWithValues
                         .getBuildTarget()
@@ -224,7 +225,7 @@ public class TargetCompatibilityCheckerTest {
     ConstructorArg targetNodeArg =
         createTargetNodeArg(
             ImmutableMap.of(
-                "compatibleWith",
+                "compatible_with",
                 ImmutableList.of(
                     compatibleConfigSettingWithValues
                         .getBuildTarget()
@@ -253,6 +254,11 @@ public class TargetCompatibilityCheckerTest {
     DataTransferObjectDescriptor<TestDescriptionArg> builder =
         typeCoercerFactory.getNativeConstructorArgDescriptor(TestDescriptionArg.class);
 
+    ImmutableMap.Builder<ParamName, Object> attributes = ImmutableMap.builder();
+    for (Map.Entry<String, Object> attr : rawNode.entrySet()) {
+      attributes.put(ParamName.bySnakeCase(attr.getKey()), attr.getValue());
+    }
+    attributes.put(ParamName.bySnakeCase("name"), "target");
     return marshaller.populate(
         TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
         projectFilesystem,
@@ -265,7 +271,7 @@ public class TargetCompatibilityCheckerTest {
         builder,
         ImmutableSet.builder(),
         ImmutableSet.builder(),
-        ImmutableMap.<String, Object>builder().putAll(rawNode).put("name", "target").build());
+        attributes.build());
   }
 
   static class TestRuleRuleDescription implements RuleDescription<AbstractTestDescriptionArg> {

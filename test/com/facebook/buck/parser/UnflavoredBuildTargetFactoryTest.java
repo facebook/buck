@@ -25,6 +25,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.parser.api.RawTargetNode;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
@@ -56,7 +57,7 @@ public class UnflavoredBuildTargetFactoryTest {
     RelPath relativeBuildFilePath = cell.getRootCell().getFilesystem().relativize(buildFilePath);
     String base_path = MorePaths.getParentOrEmpty(relativeBuildFilePath).toString();
 
-    Map<String, Object> malformedMap = ImmutableMap.of("name", "bar");
+    Map<ParamName, Object> malformedMap = ImmutableMap.of(ParamName.bySnakeCase("name"), "bar");
 
     UnflavoredBuildTargetFactory.createFromRawNode(
         cell.getRootCell().getRoot().getPath(),
@@ -75,7 +76,8 @@ public class UnflavoredBuildTargetFactoryTest {
     AbsPath buildFilePath = cell.getRootCell().getFilesystem().resolve("BUCK");
 
     // Missing base_path
-    Map<String, Object> malformedMap = ImmutableMap.of("bar", ImmutableMap.of("name", "bar"));
+    Map<ParamName, Object> malformedMap =
+        ImmutableMap.of(ParamName.bySnakeCase("bar"), ImmutableMap.of("name", "bar"));
 
     expectedException.expectMessage("malformed raw data");
 
@@ -93,7 +95,7 @@ public class UnflavoredBuildTargetFactoryTest {
 
   @Test
   public void exceptionOnSwappedRawNode() {
-    Map<String, Object> malformedMap = ImmutableMap.of("name", "bar");
+    Map<ParamName, Object> malformedMap = ImmutableMap.of(ParamName.bySnakeCase("name"), "bar");
 
     expectedException.expectMessage(
         "Raw data claims to come from [], but we tried rooting it at [a].");

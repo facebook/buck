@@ -47,6 +47,7 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercer;
 import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
 import com.facebook.buck.rules.coercer.concat.SingleElementJsonTypeConcatenatingCoercer;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -227,8 +228,8 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
     SortedMap<String, Object> convertedAttributes = new TreeMap<>();
 
-    for (Map.Entry<String, Object> attribute : attributes.getAttrs().entrySet()) {
-      String attributeName = attribute.getKey();
+    for (Map.Entry<ParamName, Object> attribute : attributes.getAttrs().entrySet()) {
+      ParamName attributeName = attribute.getKey();
       try {
         Object resolvedAttribute =
             resolveConfigurableAttributes(
@@ -245,7 +246,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         if (resolvedAttribute == null) {
           continue;
         }
-        convertedAttributes.put(attributeName, resolvedAttribute);
+        convertedAttributes.put(attributeName.getCamelCase(), resolvedAttribute);
       } catch (CoerceFailedException e) {
         throw new HumanReadableException(e, dependencyStack, e.getMessage());
       }
@@ -261,7 +262,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       CellNameResolver cellNameResolver,
       BuildTarget buildTarget,
       SelectorListFactory selectorListFactory,
-      String attributeName,
+      ParamName attributeName,
       Object jsonObject,
       DependencyStack dependencyStack)
       throws CoerceFailedException {
@@ -287,7 +288,12 @@ class ParserWithConfigurableAttributes extends AbstractParser {
     }
 
     return selectorListResolver.resolveList(
-        configurationContext, buildTarget, attributeName, selectorList, coercer, dependencyStack);
+        configurationContext,
+        buildTarget,
+        attributeName.getSnakeCase(),
+        selectorList,
+        coercer,
+        dependencyStack);
   }
 
   @Override
