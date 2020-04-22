@@ -29,7 +29,6 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodDescriptor;
-import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -209,9 +208,9 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
         if (!EvalUtils.isSkylarkAcceptable(result.getClass())) {
           throw new EvalException(
               ast.getLocation(),
-              Printer.format(
-                  "method '%s' returns an object of invalid type %r",
-                  getName(), result.getClass()));
+              String.format(
+                  "method '%s' returns an object of invalid type %s",
+                  getName(), result.getClass().getName()));
         }
         return result;
       } catch (WrongMethodTypeException e) {
