@@ -30,7 +30,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
@@ -115,7 +115,7 @@ public class SelectorFactoryTest {
         selectorFactory.createSelector(
             TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
             ForwardRelativePath.of(""),
-            ImmutableMap.of("//:z", Runtime.NONE, "//:a", "flavor2"));
+            ImmutableMap.of("//:z", Starlark.NONE, "//:a", "flavor2"));
 
     assertEquals(1, selector.getConditions().size());
     ImmutableMap<SelectorKey, Object> conditions = selector.getConditions();

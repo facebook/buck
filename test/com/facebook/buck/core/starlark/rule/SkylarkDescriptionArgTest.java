@@ -50,7 +50,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -143,7 +143,7 @@ public class SkylarkDescriptionArgTest {
                 "defaulted", IntAttribute.of(5, "", false, ImmutableList.of()),
                 "_hidden", IntAttribute.of(10, "", false, ImmutableList.of())),
             "//foo:bar.bzl",
-            (ctx) -> Runtime.NONE);
+            (ctx) -> Starlark.NONE);
     knownRuleTypes.addRule(fakeRule);
 
     DataTransferObjectDescriptor<SkylarkDescriptionArg> constructorArgDescriptor =

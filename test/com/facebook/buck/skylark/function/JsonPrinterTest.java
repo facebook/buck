@@ -22,8 +22,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Arrays;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,7 +35,7 @@ public class JsonPrinterTest {
 
   @Test
   public void noneIsPrintedAsNull() throws Exception {
-    assertEquals("null", print(Runtime.NONE));
+    assertEquals("null", print(Starlark.NONE));
   }
 
   @Test

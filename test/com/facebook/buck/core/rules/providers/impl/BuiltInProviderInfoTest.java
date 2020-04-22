@@ -37,9 +37,9 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -439,7 +439,7 @@ public class BuiltInProviderInfoTest {
                           SomeInfoWithNoneable.PROVIDER.getName(),
                           SomeInfoWithNoneable.PROVIDER,
                           "None",
-                          Runtime.NONE)))
+                          Starlark.NONE)))
               .build();
 
       Object none = TestStarlarkParser.eval(env, "SomeInfoWithNoneable(noneable_val=None, val=1)");
@@ -449,7 +449,7 @@ public class BuiltInProviderInfoTest {
       assertThat(none, Matchers.instanceOf(SomeInfoWithNoneable.class));
       assertThat(strValue, Matchers.instanceOf(SomeInfoWithNoneable.class));
 
-      assertEquals(Runtime.NONE, ((SomeInfoWithNoneable) none).noneableVal());
+      assertEquals(Starlark.NONE, ((SomeInfoWithNoneable) none).noneableVal());
       assertEquals("foo", ((SomeInfoWithNoneable) strValue).noneableVal());
 
       thrown.expect(EvalException.class);

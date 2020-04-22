@@ -39,7 +39,7 @@ import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -143,7 +143,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
             withinView,
             builder.build()),
         ast);
-    return Runtime.NONE;
+    return Starlark.NONE;
   }
 
   /** Create an instance of {@link SkylarkUserDefinedRule} */

@@ -37,9 +37,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -133,7 +133,7 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
       if (args instanceof SkylarkList) {
         builder.addAll((SkylarkList<?>) args, formatString, location);
       } else {
-        builder.add(args, Runtime.NONE, formatString, location);
+        builder.add(args, Starlark.NONE, formatString, location);
       }
     }
     return builder;

@@ -23,7 +23,7 @@ import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
 
 /** Implementation of {@link ProviderInfoCollection}. */
@@ -38,7 +38,7 @@ public class LegacyProviderInfoCollectionImpl implements ProviderInfoCollection 
   public Object getIndex(Object key, Location loc) throws EvalException {
     verifyKeyIsProvider(
         key, loc, "Type Target only supports indexing by object constructors, got %s instead");
-    return Runtime.NONE;
+    return Starlark.NONE;
   }
 
   @Override

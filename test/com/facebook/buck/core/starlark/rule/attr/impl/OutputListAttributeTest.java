@@ -35,7 +35,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -90,7 +90,7 @@ public class OutputListAttributeTest {
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
-        Runtime.NONE);
+        Starlark.NONE);
   }
 
   @Test

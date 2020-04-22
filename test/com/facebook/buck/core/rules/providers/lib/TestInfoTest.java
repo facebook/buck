@@ -30,8 +30,8 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.util.Optional;
@@ -59,7 +59,7 @@ public class TestInfoTest {
         TEST_CASE_NAME,
         (SkylarkList<String>) labels,
         contacts,
-        Runtime.NONE,
+        Starlark.NONE,
         false,
         TYPE,
         Location.BUILTIN);
@@ -76,7 +76,7 @@ public class TestInfoTest {
         TEST_CASE_NAME,
         labels,
         (SkylarkList<String>) contacts,
-        Runtime.NONE,
+        Starlark.NONE,
         false,
         TYPE,
         Location.BUILTIN);
@@ -114,7 +114,7 @@ public class TestInfoTest {
 
     assertEquals(ImmutableSet.of(), testInfo.labels());
     assertEquals(ImmutableSet.of(), testInfo.contacts());
-    assertEquals(Runtime.NONE, testInfo.timeoutMs());
+    assertEquals(Starlark.NONE, testInfo.timeoutMs());
     assertEquals("custom", testInfo.type());
     assertFalse(testInfo.runTestsSeparately());
     assertEquals(TEST_NAME, testInfo.testName());
@@ -135,7 +135,7 @@ public class TestInfoTest {
                           TestInfo.PROVIDER.getName(),
                           TestInfo.PROVIDER,
                           "None",
-                          Runtime.NONE,
+                          Starlark.NONE,
                           "True",
                           true)))
               .build();
@@ -203,7 +203,7 @@ public class TestInfoTest {
     }
     assertThat(raw1, Matchers.instanceOf(TestInfo.class));
     TestInfo val1 = (TestInfo) raw1;
-    assertEquals(Runtime.NONE, val1.timeoutMs());
+    assertEquals(Starlark.NONE, val1.timeoutMs());
     assertEquals(Optional.empty(), val1.typedTimeoutMs());
 
     assertThat(raw2, Matchers.instanceOf(TestInfo.class));

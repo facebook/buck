@@ -36,8 +36,8 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.util.Objects;
 import org.junit.Rule;
@@ -82,7 +82,7 @@ public class UserDefinedProviderInfoTest {
                 "bar",
                 "bar_value",
                 "empty",
-                Runtime.NONE));
+                Starlark.NONE));
 
     String expectedRepr =
         "FakeUserDefinedProviderInfo(foo = [1, 2, 3], bar = \"bar_value\", empty = None)";
@@ -101,10 +101,10 @@ public class UserDefinedProviderInfoTest {
                 "bar",
                 "bar_value",
                 "empty",
-                Runtime.NONE));
+                Starlark.NONE));
 
     assertEquals(ImmutableList.of("foo", "bar", "empty"), info.getFieldNames().asList());
-    assertEquals(Runtime.NONE, info.getValue("empty"));
+    assertEquals(Starlark.NONE, info.getValue("empty"));
     assertEquals("bar_value", info.getValue("bar"));
     assertNull(info.getValue("bad_field"));
   }
@@ -120,7 +120,7 @@ public class UserDefinedProviderInfoTest {
                 "bar",
                 "bar_value",
                 "empty",
-                Runtime.NONE));
+                Starlark.NONE));
 
     try (TestMutableEnv env = new TestMutableEnv(ImmutableMap.of("info", info))) {
       assertEquals(info.getValue("foo"), TestStarlarkParser.eval(env.getEnv(), "info.foo"));

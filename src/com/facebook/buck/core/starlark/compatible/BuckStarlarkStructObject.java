@@ -50,7 +50,8 @@ public abstract class BuckStarlarkStructObject implements ClassObject, SkylarkVa
         throw new EvalException(Location.BUILTIN, getErrorMessageForUnknownField(name));
       }
 
-      // TODO: make mappings for skylark types here: e.g Optionals -> Runtime.NONE. SkylarkList/Dict
+      // TODO: make mappings for skylark types here: e.g Optionals -> Starlark.NONE.
+      // SkylarkList/Dict
       // conversions.
       return method.invoke(this);
     } catch (IllegalAccessException | InvocationTargetException e) {

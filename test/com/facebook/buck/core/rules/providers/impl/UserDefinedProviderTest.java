@@ -29,7 +29,7 @@ import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -134,7 +134,7 @@ public class UserDefinedProviderTest {
 
       UserDefinedProviderInfo info = (UserDefinedProviderInfo) rawInfo;
       assertEquals("foo_value", info.getValue("foo"));
-      assertEquals(Runtime.NONE, info.getValue("bar"));
+      assertEquals(Starlark.NONE, info.getValue("bar"));
       assertEquals("baz_value", info.getValue("baz"));
     }
   }

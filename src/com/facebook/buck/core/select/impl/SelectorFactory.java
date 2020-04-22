@@ -25,7 +25,7 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -75,7 +75,7 @@ public class SelectorFactory {
                     unconfiguredBuildTargetViewFactory.createForPathRelativeToProjectRoot(
                         pathRelativeToProjectRoot, key, cellNameResolver)));
       }
-      if (entry.getValue() == Runtime.NONE) {
+      if (entry.getValue() == Starlark.NONE) {
         result.remove(selectorKey);
         nullConditions.add(selectorKey);
       } else {

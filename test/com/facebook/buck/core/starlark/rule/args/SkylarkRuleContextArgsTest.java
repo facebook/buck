@@ -28,8 +28,8 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import org.junit.Test;
 
 public class SkylarkRuleContextArgsTest {
@@ -38,7 +38,7 @@ public class SkylarkRuleContextArgsTest {
   public void addAddsArg() throws EvalException, LabelSyntaxException {
     CommandLineArgs args =
         new CommandLineArgsBuilder()
-            .add(1, Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add(1, Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
             .add(
                 "--foo",
                 Label.parseAbsolute("//foo:bar", ImmutableMap.of()),

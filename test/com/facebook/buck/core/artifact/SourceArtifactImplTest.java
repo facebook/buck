@@ -25,7 +25,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,7 +45,7 @@ public class SourceArtifactImplTest {
 
     assertEquals("bar.cpp", artifact.getBasename());
     assertEquals("cpp", artifact.getExtension());
-    assertEquals(Runtime.NONE, artifact.getOwner());
+    assertEquals(Starlark.NONE, artifact.getOwner());
     assertEquals(expectedShortPath, artifact.getShortPath());
     assertTrue(artifact.isSource());
     assertEquals(String.format("<source file '%s'>", expectedShortPath), Printer.repr(artifact));

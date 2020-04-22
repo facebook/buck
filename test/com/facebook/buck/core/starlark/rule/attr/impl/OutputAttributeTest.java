@@ -33,7 +33,7 @@ import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisContextImpl;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -46,7 +46,7 @@ public class OutputAttributeTest {
   private final CellNameResolver cellNameResolver =
       TestCellPathResolver.get(filesystem).getCellNameResolver();
 
-  private final OutputAttribute attr = ImmutableOutputAttribute.of(Runtime.NONE, "", true);
+  private final OutputAttribute attr = ImmutableOutputAttribute.of(Starlark.NONE, "", true);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -87,7 +87,7 @@ public class OutputAttributeTest {
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
-        Runtime.NONE);
+        Starlark.NONE);
   }
 
   @Test

@@ -41,9 +41,9 @@ import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
@@ -80,7 +80,7 @@ public class SkylarkDescriptionTest {
               } catch (EvalException e) {
                 throw new RuntimeException(e);
               }
-              return Runtime.NONE;
+              return Starlark.NONE;
             });
 
     SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
@@ -155,7 +155,7 @@ public class SkylarkDescriptionTest {
               } catch (EvalException e) {
                 throw new RuntimeException(e);
               }
-              return Runtime.NONE;
+              return Starlark.NONE;
             });
 
     SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);

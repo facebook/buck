@@ -23,9 +23,9 @@ import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -181,21 +181,21 @@ public class BuckSkylarkTypes {
    *     Skylark are properly turned into None
    */
   public static Object skylarkValueFromNullable(@Nullable Object object) {
-    return object == null ? Runtime.NONE : object;
+    return object == null ? Starlark.NONE : object;
   }
 
   /**
-   * Check that a value is either {@link Runtime#NONE} or an instance of {@code clazz}
+   * Check that a value is either {@link Starlark#NONE} or an instance of {@code clazz}
    *
    * @param location location of evaluation
-   * @param clazz the class that the object should be an instance of if not {@link Runtime#NONE}
+   * @param clazz the class that the object should be an instance of if not {@link Starlark#NONE}
    * @param object the object to check
    * @return the original value if it is of a correct type
    * @throws EvalException if the object is not of the correct type
    */
   public static Object validateNoneOrType(Location location, Class<?> clazz, Object object)
       throws EvalException {
-    if (object == Runtime.NONE || clazz.isAssignableFrom(object.getClass())) {
+    if (object == Starlark.NONE || clazz.isAssignableFrom(object.getClass())) {
       return object;
     }
     throw new EvalException(

@@ -27,8 +27,8 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParamDescriptor;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import org.junit.Rule;
 import org.junit.Test;
@@ -221,15 +221,15 @@ public class BuckStarlarkFunctionTest {
                           function.getMethodDescriptor().getName(),
                           function,
                           "None",
-                          Runtime.NONE)))
+                          Starlark.NONE)))
               .build();
 
       Object none = TestStarlarkParser.eval(env, "withNone(noneable=None, non_noneable=1)[1]");
       Object defaultNone = TestStarlarkParser.eval(env, "withNone(non_noneable=1)[1]");
       Object nonNull = TestStarlarkParser.eval(env, "withNone(noneable=2, non_noneable=1)[1]");
 
-      assertEquals(Runtime.NONE, none);
-      assertEquals(Runtime.NONE, defaultNone);
+      assertEquals(Starlark.NONE, none);
+      assertEquals(Starlark.NONE, defaultNone);
       assertEquals(2, nonNull);
 
       expectedException.expect(EvalException.class);

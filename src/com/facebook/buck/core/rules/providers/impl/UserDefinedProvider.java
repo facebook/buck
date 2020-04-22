@@ -31,7 +31,7 @@ import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.Collections;
 import java.util.Objects;
@@ -66,7 +66,7 @@ public class UserDefinedProvider extends BaseFunction
     super(
         null,
         FunctionSignature.namedOnly(0, fieldNames),
-        Collections.nCopies(fieldNames.length, Runtime.NONE),
+        Collections.nCopies(fieldNames.length, Starlark.NONE),
         location);
     this.key = new Key();
   }

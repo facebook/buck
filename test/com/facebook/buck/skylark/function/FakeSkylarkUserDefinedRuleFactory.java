@@ -33,7 +33,7 @@ import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.Map;
 import java.util.function.Function;
@@ -64,7 +64,7 @@ public class FakeSkylarkUserDefinedRuleFactory {
   public static SkylarkUserDefinedRule createSingleArgRuleWithLabel(
       String exportedName, String attrName, Attribute<?> attr, String label)
       throws EvalException, LabelSyntaxException {
-    return createRuleFromCallable(exportedName, attrName, attr, label, ctx -> Runtime.NONE);
+    return createRuleFromCallable(exportedName, attrName, attr, label, ctx -> Starlark.NONE);
   }
 
   public static SkylarkUserDefinedRule createSimpleRuleFromCallable(

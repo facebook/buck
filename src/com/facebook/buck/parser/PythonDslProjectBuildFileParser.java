@@ -71,7 +71,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 import com.google.common.io.CountingInputStream;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -609,7 +609,7 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
       Map<String, Object> conditions =
           (Map<String, Object>) Objects.requireNonNull(attributeValue.get("conditions"));
       Map<String, Object> convertedConditions =
-          Maps.transformValues(conditions, v -> v == null ? Runtime.NONE : v);
+          Maps.transformValues(conditions, v -> v == null ? Starlark.NONE : v);
       return SelectorValue.of(
           convertedConditions, Objects.toString(attributeValue.get("no_match_message"), ""));
     } else {

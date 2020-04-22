@@ -27,8 +27,8 @@ import com.google.devtools.build.lib.actions.CommandLineItem;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 
 /** Struct exposed to skylark to create {@link CommandLineArgs} instances. */
 public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
@@ -69,7 +69,7 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
     formatString = CommandLineArgsFactory.validateFormatString(formatString);
     try {
       ImmutableList<Object> args;
-      if (value == Runtime.NONE) {
+      if (value == Starlark.NONE) {
         args = ImmutableList.of(requireCorrectType(argNameOrValue));
       } else {
         args = ImmutableList.of(requireCorrectType(argNameOrValue), requireCorrectType(value));

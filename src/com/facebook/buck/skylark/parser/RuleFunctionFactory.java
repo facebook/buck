@@ -35,6 +35,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.List;
 import java.util.Map;
@@ -94,7 +95,7 @@ public class RuleFunctionFactory {
                 .getParamInfosByCamelCaseName();
         RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, kwargs, ast);
         parseContext.recordRule(recordedRule, ast);
-        return Runtime.NONE;
+        return Starlark.NONE;
       }
     };
   }
@@ -174,7 +175,7 @@ public class RuleFunctionFactory {
       if (!allParamInfo.getParamInfosByCamelCaseName().containsKey(paramName.getCamelCase())) {
         throw new IllegalArgumentException(kwargEntry.getKey() + " is not a recognized attribute");
       }
-      if (Runtime.NONE.equals(kwargEntry.getValue())) {
+      if (Starlark.NONE.equals(kwargEntry.getValue())) {
         continue;
       }
       builder.put(paramName, kwargEntry.getValue());
@@ -186,7 +187,7 @@ public class RuleFunctionFactory {
   }
 
   private static ImmutableList<String> toListOfString(String attrName, Object value) {
-    if (value == Runtime.NONE) {
+    if (value == Starlark.NONE) {
       return ImmutableList.of();
     } else if (value instanceof List<?>) {
       List<?> list = (List<?>) value;

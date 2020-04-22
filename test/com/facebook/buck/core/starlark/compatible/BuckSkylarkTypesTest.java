@@ -29,9 +29,9 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.SkylarkInfo;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.Tuple;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.util.Objects;
@@ -270,7 +270,7 @@ public class BuckSkylarkTypesTest {
 
   @Test
   public void skylarkValueFromNullableReturnsNoneOnNull() {
-    assertSame(Runtime.NONE, BuckSkylarkTypes.skylarkValueFromNullable(null));
+    assertSame(Starlark.NONE, BuckSkylarkTypes.skylarkValueFromNullable(null));
   }
 
   @Test
@@ -284,8 +284,8 @@ public class BuckSkylarkTypesTest {
     String foo = "foo";
     assertSame(foo, BuckSkylarkTypes.validateNoneOrType(Location.BUILTIN, String.class, foo));
     assertSame(
-        Runtime.NONE,
-        BuckSkylarkTypes.validateNoneOrType(Location.BUILTIN, String.class, Runtime.NONE));
+        Starlark.NONE,
+        BuckSkylarkTypes.validateNoneOrType(Location.BUILTIN, String.class, Starlark.NONE));
     thrown.expect(EvalException.class);
     thrown.expectMessage("Invalid type provided");
     BuckSkylarkTypes.validateNoneOrType(Location.BUILTIN, String.class, 1);

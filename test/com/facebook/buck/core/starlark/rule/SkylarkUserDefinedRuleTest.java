@@ -47,7 +47,6 @@ import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -292,7 +291,7 @@ public class SkylarkUserDefinedRuleTest {
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, null).getRecordedRules();
 
-      assertEquals(Runtime.NONE, res);
+      assertEquals(Starlark.NONE, res);
       assertEquals(1, rules.size());
       assertEquals("@foo//bar:extension.bzl:baz_rule", rules.get("some_rule_name").getBuckType());
       assertEquals("some_package/subdir", rules.get("some_rule_name").getBasePath().toString());
@@ -343,7 +342,7 @@ public class SkylarkUserDefinedRuleTest {
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, null).getRecordedRules();
 
-      assertEquals(Runtime.NONE, res);
+      assertEquals(Starlark.NONE, res);
       assertEquals(1, rules.size());
       assertEquals("@foo//bar:extension.bzl:baz_rule", rules.get("some_rule_name").getBuckType());
       assertEquals("some_package/subdir", rules.get("some_rule_name").getBasePath().toString());
@@ -475,7 +474,7 @@ public class SkylarkUserDefinedRuleTest {
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, null).getRecordedRules();
 
-      assertEquals(Runtime.NONE, res);
+      assertEquals(Starlark.NONE, res);
       assertEquals(1, rules.size());
       assertEquals("some_package/subdir", rules.get("some_rule_name").getBasePath().toString());
       assertEquals("@foo//bar:extension.bzl:baz_rule", rules.get("some_rule_name").getBuckType());

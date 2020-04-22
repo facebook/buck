@@ -25,7 +25,7 @@ import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
@@ -55,7 +55,7 @@ public class LegacyProviderInfoCollectionImplTest {
     ProviderInfoCollection providerInfoCollection = LegacyProviderInfoCollectionImpl.of();
 
     assertEquals(Optional.empty(), providerInfoCollection.get(provider));
-    assertEquals(Runtime.NONE, providerInfoCollection.getIndex(provider, Location.BUILTIN));
+    assertEquals(Starlark.NONE, providerInfoCollection.getIndex(provider, Location.BUILTIN));
   }
 
   @Test

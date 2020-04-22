@@ -19,7 +19,7 @@ package com.facebook.buck.skylark.function;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.protobuf.TextFormat;
 import java.util.List;
 
@@ -42,7 +42,7 @@ class JsonPrinter {
   private static void printJson(
       Object value, StringBuilder sb, Location loc, String container, String key)
       throws EvalException {
-    if (value == Runtime.NONE) {
+    if (value == Starlark.NONE) {
       sb.append("null");
     } else if (value instanceof ClassObject) {
       printJson((ClassObject) value, sb, loc);

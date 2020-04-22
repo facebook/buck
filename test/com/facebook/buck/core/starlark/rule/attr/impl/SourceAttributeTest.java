@@ -42,8 +42,8 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
@@ -60,7 +60,7 @@ public class SourceAttributeTest {
           filesystem,
           BuildTargetFactory.newInstance("//some:rule"));
 
-  private final SourceAttribute attr = ImmutableSourceAttribute.of(Runtime.NONE, "", true);
+  private final SourceAttribute attr = ImmutableSourceAttribute.of(Starlark.NONE, "", true);
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -115,7 +115,7 @@ public class SourceAttributeTest {
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
-        Runtime.NONE);
+        Starlark.NONE);
   }
 
   @Test

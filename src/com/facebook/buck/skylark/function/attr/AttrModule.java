@@ -34,8 +34,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.List;
 
 /** Class that actually instantiates Attribute objects for user defined rules */
@@ -134,7 +134,7 @@ public class AttrModule implements AttrModuleApi {
   @Override
   public AttributeHolder outputAttribute(
       Object defaultValue, String doc, boolean mandatory, Location location) throws EvalException {
-    if (defaultValue == Runtime.NONE && !mandatory) {
+    if (defaultValue == Starlark.NONE && !mandatory) {
       throw new EvalException(
           location, "output attributes must have a default value, or be mandatory");
     }

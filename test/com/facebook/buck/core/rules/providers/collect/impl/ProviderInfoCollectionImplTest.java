@@ -34,8 +34,8 @@ import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.Rule;
@@ -137,7 +137,8 @@ public class ProviderInfoCollectionImplTest {
         ProviderInfoCollectionImpl.builder().put(fakeInfo1).build(DEFAULT_INFO);
 
     assertEquals(fakeInfo1, providerInfoCollection.getIndex(builtinProvider1, Location.BUILTIN));
-    assertEquals(Runtime.NONE, providerInfoCollection.getIndex(builtinProvider2, Location.BUILTIN));
+    assertEquals(
+        Starlark.NONE, providerInfoCollection.getIndex(builtinProvider2, Location.BUILTIN));
   }
 
   @Test

@@ -51,9 +51,9 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.nio.file.Path;
@@ -104,11 +104,11 @@ public class RunInfoTest {
   public void handlesPartiallyBuiltCommandLineArgs() throws EvalException {
     CommandLineArgsBuilder builder =
         new CommandLineArgsBuilder()
-            .add("foo", Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
-            .add("bar", Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
+            .add("foo", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add("bar", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
 
     RunInfo runInfo = RunInfo.instantiateFromSkylark(SkylarkDict.empty(), builder);
-    builder.add("baz", Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
+    builder.add("baz", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
 
     CommandLine cli =
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
@@ -120,8 +120,8 @@ public class RunInfoTest {
   public void handlesCommandLineArgs() throws EvalException {
     CommandLineArgs args =
         new CommandLineArgsBuilder()
-            .add("foo", Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
-            .add("bar", Runtime.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add("foo", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
+            .add("bar", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
             .build();
 
     RunInfo runInfo = RunInfo.instantiateFromSkylark(SkylarkDict.empty(), args);

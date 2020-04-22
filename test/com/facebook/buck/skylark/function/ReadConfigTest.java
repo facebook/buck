@@ -36,7 +36,6 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -72,7 +71,8 @@ public class ReadConfigTest {
   @Test
   public void noneIsReturnedWhenFieldIsNotPresent() throws Exception {
     assertThat(
-        evaluate("value = read_config('foo', 'bar')").moduleLookup("value"), equalTo(Runtime.NONE));
+        evaluate("value = read_config('foo', 'bar')").moduleLookup("value"),
+        equalTo(Starlark.NONE));
   }
 
   @Test

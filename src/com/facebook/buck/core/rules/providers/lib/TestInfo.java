@@ -23,8 +23,8 @@ import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -71,7 +71,7 @@ public abstract class TestInfo extends BuiltInProviderInfo<TestInfo> {
   @Value.Lazy
   public Optional<Long> typedTimeoutMs() {
     Object raw = timeoutMs();
-    return raw == Runtime.NONE ? Optional.empty() : Optional.of(((Number) raw).longValue());
+    return raw == Starlark.NONE ? Optional.empty() : Optional.of(((Number) raw).longValue());
   }
 
   /** Create an instance from native values */
@@ -83,7 +83,7 @@ public abstract class TestInfo extends BuiltInProviderInfo<TestInfo> {
       Optional<Long> timeoutMs,
       boolean runTestsSeparately,
       String type) {
-    Object rawTimeoutMs = timeoutMs.isPresent() ? timeoutMs.get() : Runtime.NONE;
+    Object rawTimeoutMs = timeoutMs.isPresent() ? timeoutMs.get() : Starlark.NONE;
     return new ImmutableTestInfo(
         testName, testCaseName, labels, contacts, rawTimeoutMs, runTestsSeparately, type);
   }

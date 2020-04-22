@@ -18,7 +18,7 @@ package com.facebook.buck.core.artifact;
 
 import com.google.common.base.Preconditions;
 import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
 
 /**
@@ -60,7 +60,7 @@ abstract class AbstractArtifact implements Artifact {
 
   @Override
   public final Object getOwner() {
-    return getOwnerTyped().map(Object.class::cast).orElse(Runtime.NONE);
+    return getOwnerTyped().map(Object.class::cast).orElse(Starlark.NONE);
   }
 
   /**

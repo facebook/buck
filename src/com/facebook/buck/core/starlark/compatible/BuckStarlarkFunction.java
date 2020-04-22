@@ -30,7 +30,7 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodDescriptor;
 import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.lang.invoke.MethodHandle;
@@ -187,11 +187,11 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
       try {
         Object result = method.invokeWithArguments(argsForReflectionBuilder);
         if (method.type().returnType().equals(Void.TYPE)) {
-          return Runtime.NONE;
+          return Starlark.NONE;
         }
         if (result == null) {
           if (methodDescriptor.isAllowReturnNones()) {
-            return Runtime.NONE;
+            return Starlark.NONE;
           } else {
             throw new EvalException(
                 ast.getLocation(),

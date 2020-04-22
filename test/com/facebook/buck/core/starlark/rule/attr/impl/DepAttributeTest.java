@@ -43,8 +43,8 @@ import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.Runtime;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class DepAttributeTest {
           BuildTargetFactory.newInstance("//some:rule"));
 
   private final DepAttribute attr =
-      ImmutableDepAttribute.of(Runtime.NONE, "", true, ImmutableList.of());
+      ImmutableDepAttribute.of(Starlark.NONE, "", true, ImmutableList.of());
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -105,7 +105,7 @@ public class DepAttributeTest {
         ForwardRelativePath.of(""),
         UnconfiguredTargetConfiguration.INSTANCE,
         UnconfiguredTargetConfiguration.INSTANCE,
-        Runtime.NONE);
+        Starlark.NONE);
   }
 
   @Test
@@ -147,7 +147,7 @@ public class DepAttributeTest {
   public void failsTransformIfMissingRequiredProvider() throws CoerceFailedException {
     FakeBuiltInProvider expectedProvider = new FakeBuiltInProvider("expected");
     DepAttribute attr =
-        ImmutableDepAttribute.of(Runtime.NONE, "", true, ImmutableList.of(expectedProvider));
+        ImmutableDepAttribute.of(Starlark.NONE, "", true, ImmutableList.of(expectedProvider));
     FakeBuiltInProvider presentProvider = new FakeBuiltInProvider("present");
 
     FakeInfo info = new FakeInfo(presentProvider);
