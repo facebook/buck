@@ -1055,6 +1055,7 @@ public class TargetsCommand extends AbstractCommand {
         }
 
         // Print the build rule information as JSON.
+        // NOTE: we output camel-case attribute names here, not snake-case like in query
         StringWriter stringWriter = new StringWriter();
         try {
           ObjectMappers.WRITER
