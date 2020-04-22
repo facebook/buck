@@ -149,6 +149,9 @@ public class TestCommand extends BuildCommand {
   @Nullable
   private Boolean isBuildFiltered = null;
 
+  @Option(name = "--build-only", usage = "Only build test targets without running tests.")
+  private boolean isBuildOnly = false;
+
   // TODO(#9061229): See if we can remove this option entirely. For now, the
   // underlying code has been removed, and this option is ignored.
   @Option(
@@ -663,6 +666,10 @@ public class TestCommand extends BuildCommand {
           params.getBuckEventBus().post(BuildEvent.finished(started, exitCode));
           if (exitCode != ExitCode.SUCCESS) {
             return exitCode;
+          }
+
+          if (isBuildOnly) {
+            return ExitCode.SUCCESS;
           }
 
           // If the user requests that we build tests that we filter out, then we perform
