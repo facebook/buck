@@ -52,7 +52,7 @@ import javax.annotation.Nullable;
 public abstract class BuckStarlarkFunction implements StarlarkCallable {
 
   private final MethodDescriptor methodDescriptor;
-  private static MethodHandles.Lookup lookup = MethodHandles.lookup();
+  private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
   private final MethodHandle method;
 
   /**
