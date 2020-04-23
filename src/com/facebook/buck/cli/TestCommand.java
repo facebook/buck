@@ -48,6 +48,7 @@ import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.parser.ParsingContext;
@@ -63,6 +64,7 @@ import com.facebook.buck.rules.keys.RuleKeyFactories;
 import com.facebook.buck.rules.modern.builders.ModernBuildRuleBuilderFactory;
 import com.facebook.buck.rules.modern.config.ModernBuildRuleConfig;
 import com.facebook.buck.step.AdbOptions;
+import com.facebook.buck.support.fix.BuckRunSpec;
 import com.facebook.buck.test.CoverageReportFormat;
 import com.facebook.buck.test.TestRunningOptions;
 import com.facebook.buck.test.config.TestBuckConfig;
@@ -85,12 +87,15 @@ import com.facebook.infer.annotation.SuppressFieldNotInitialized;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -337,7 +342,8 @@ public class TestCommand extends BuildCommand {
       Build build,
       Iterable<String> command,
       Iterable<TestRule> testRules,
-      BuildContext buildContext)
+      BuildContext buildContext,
+      boolean isTtyForExternalTestRunnerEnabled)
       throws InterruptedException, IOException {
     Optional<TestRule> nonExternalTestRunnerRule =
         StreamSupport.stream(testRules.spliterator(), /* parallel */ true)
@@ -355,12 +361,10 @@ public class TestCommand extends BuildCommand {
     }
 
     TestRunningOptions options = getTestRunningOptions(params);
+    ProjectFilesystem filesystem = params.getCells().getRootCell().getFilesystem();
     AbsPath infoFile =
-        params
-            .getCells()
-            .getRootCell()
-            .getFilesystem()
-            .resolve(params.getCells().getRootCell().getFilesystem().getBuckPaths().getScratchDir())
+        filesystem
+            .resolve(filesystem.getBuckPaths().getScratchDir())
             .resolve("external_runner_specs.json");
 
     try (SimplePerfEvent.Scope event =
@@ -413,52 +417,77 @@ public class TestCommand extends BuildCommand {
 
       LOG.info("Finished writing external test runner specs.");
     }
-
-    // Launch and run the external test runner, forwarding it's stdout/stderr to the console.
-    // We wait for it to complete then returns its error code.
-    ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
-
-    ProcessExecutorParams.Builder builder =
-        ProcessExecutorParams.builder()
-            .addAllCommand(command)
-            .addAllCommand(withDashArguments)
-            .setEnvironment(params.getEnvironment())
-            .setDirectory(params.getCells().getRootCell().getFilesystem().getRootPath().getPath());
     if (!withDashArguments.contains("--buck-test-info")) {
-      builder = builder.addCommand("--buck-test-info", infoFile.toString());
+      withDashArguments.add("--buck-test-info");
+      withDashArguments.add(infoFile.toString());
     }
     if (!withDashArguments.contains("--jobs") && !withDashArguments.contains("-j")) {
-      builder =
-          builder.addCommand("--jobs", String.valueOf(getTestConcurrencyLimit(params).threadLimit));
+      withDashArguments.add("--jobs");
+      withDashArguments.add(String.valueOf(getTestConcurrencyLimit(params).threadLimit));
     }
-    ProcessExecutorParams processExecutorParams = builder.build();
 
-    ForwardingProcessListener processListener =
-        new ForwardingProcessListener(
-            params.getConsole().getStdOut(), params.getConsole().getStdErr());
-    ImmutableSet<String> testTargets =
-        StreamSupport.stream(testRules.spliterator(), /* parallel */ false)
-            .map(BuildRule::getBuildTarget)
-            .map(Object::toString)
-            .collect(ImmutableSet.toImmutableSet());
-    ListeningProcessExecutor.LaunchedProcess process =
-        processExecutor.launchProcess(processExecutorParams, processListener);
-    ExitCode exitCode = ExitCode.FATAL_GENERIC;
-    try {
-      params
-          .getBuckEventBus()
-          .post(
-              ExternalTestRunEvent.started(
-                  options.isRunAllTests(),
-                  options.getTestSelectorList(),
-                  options.shouldExplainTestSelectorList(),
-                  testTargets));
-      exitCode = ExitCode.map(processExecutor.waitForProcess(process));
-      return exitCode;
-    } finally {
-      params.getBuckEventBus().post(ExternalTestRunEvent.finished(testTargets, exitCode));
-      processExecutor.destroyProcess(process, /* force */ false);
-      processExecutor.waitForProcess(process);
+    AbsPath repositoryRoot = filesystem.getRootPath();
+    Path rootPath = repositoryRoot.getPath();
+
+    if (isTtyForExternalTestRunnerEnabled && commandArgsFile != null) {
+      ImmutableList<String> commandWithArgs =
+          ImmutableList.<String>builder().addAll(command).addAll(withDashArguments).build();
+      ImmutableMap<String, String> environmentVariables =
+          ImmutableMap.<String, String>builder().putAll(params.getEnvironment()).build();
+      BuckRunSpec runSpec =
+          BuckRunSpec.of(
+              commandWithArgs,
+              environmentVariables,
+              rootPath,
+              /* is_fix_script */ false,
+              /* print_command */ false);
+      Files.write(Paths.get(commandArgsFile), ObjectMappers.WRITER.writeValueAsBytes(runSpec));
+
+      // The BuckRunSpec contains the actual external test runner command that
+      // will be run by the python wrapper. The wrapper will run it and
+      // propagate the correct status code. Return success here to indicate
+      // that the build and writing of the command file succeeded.
+      return ExitCode.SUCCESS;
+    } else {
+      // Launch and run the external test runner, forwarding it's stdout/stderr to the console.
+      // We wait for it to complete then returns its error code.
+      ListeningProcessExecutor processExecutor = new ListeningProcessExecutor();
+
+      ProcessExecutorParams.Builder builder =
+          ProcessExecutorParams.builder()
+              .addAllCommand(command)
+              .addAllCommand(withDashArguments)
+              .setEnvironment(params.getEnvironment())
+              .setDirectory(rootPath);
+      ProcessExecutorParams processExecutorParams = builder.build();
+
+      ForwardingProcessListener processListener =
+          new ForwardingProcessListener(
+              params.getConsole().getStdOut(), params.getConsole().getStdErr());
+      ImmutableSet<String> testTargets =
+          StreamSupport.stream(testRules.spliterator(), /* parallel */ false)
+              .map(BuildRule::getBuildTarget)
+              .map(Object::toString)
+              .collect(ImmutableSet.toImmutableSet());
+      ListeningProcessExecutor.LaunchedProcess process =
+          processExecutor.launchProcess(processExecutorParams, processListener);
+      ExitCode exitCode = ExitCode.FATAL_GENERIC;
+      try {
+        params
+            .getBuckEventBus()
+            .post(
+                ExternalTestRunEvent.started(
+                    options.isRunAllTests(),
+                    options.getTestSelectorList(),
+                    options.shouldExplainTestSelectorList(),
+                    testTargets));
+        exitCode = ExitCode.map(processExecutor.waitForProcess(process));
+        return exitCode;
+      } finally {
+        params.getBuckEventBus().post(ExternalTestRunEvent.finished(testTargets, exitCode));
+        processExecutor.destroyProcess(process, /* force */ false);
+        processExecutor.waitForProcess(process);
+      }
     }
   }
 
@@ -701,12 +730,18 @@ public class TestCommand extends BuildCommand {
                       .getView(BuildBuckConfig.class)
                       .getShouldDeleteTemporaries());
 
+          TestBuckConfig testBuckConfig = params.getBuckConfig().getView(TestBuckConfig.class);
           // Once all of the rules are built, then run the tests.
           Optional<ImmutableList<String>> externalTestRunner =
-              params.getBuckConfig().getView(TestBuckConfig.class).getExternalTestRunner();
+              testBuckConfig.getExternalTestRunner();
           if (externalTestRunner.isPresent()) {
             return runTestsExternal(
-                params, build, externalTestRunner.get(), testRules, buildContext);
+                params,
+                build,
+                externalTestRunner.get(),
+                testRules,
+                buildContext,
+                testBuckConfig.isTtyForExternalTestRunnerEnabled());
           }
           return runTestsInternal(
               params,

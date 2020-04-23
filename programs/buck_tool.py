@@ -212,11 +212,11 @@ class ExitCodeCallable(object):
         return self.exit_code
 
 
-class ExecuteTarget(ExitCodeCallable):
-    """ Callable that executes a given target after the build finishes """
+class ExecuteProcess(ExitCodeCallable):
+    """ Callable that executes a given process after core buck finishes """
 
     def __init__(self, exit_code, path, argv, envp, cwd):
-        super(ExecuteTarget, self).__init__(exit_code)
+        super(ExecuteProcess, self).__init__(exit_code)
         self._path = path
         self._argv = argv
         self._envp = envp
@@ -699,7 +699,7 @@ class BuckTool(object):
                 elif cmd["is_fix_script"]:
                     return ExecuteFixScript(exit_code, path, argv, envp, cwd)
                 else:
-                    return ExecuteTarget(exit_code, path, argv, envp, cwd)
+                    return ExecuteProcess(exit_code, path, argv, envp, cwd)
 
     def launch_buck(self, build_id, client_cwd, java_path, argv):
         with Tracing("BuckTool.launch_buck"):

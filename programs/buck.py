@@ -35,7 +35,6 @@ from programs.buck_project import BuckProject, NoBuckConfigFoundException
 from programs.buck_tool import (
     BuckDaemonErrorException,
     BuckStatusReporter,
-    ExecuteTarget,
     ExitCode,
     ExitCodeCallable,
     install_signal_handlers,

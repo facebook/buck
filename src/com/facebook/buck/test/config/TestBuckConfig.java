@@ -98,6 +98,10 @@ public abstract class TestBuckConfig implements ConfigView<BuckConfig> {
         configValue -> ImmutableList.copyOf(Splitter.on(' ').splitToList(configValue)));
   }
 
+  public boolean isTtyForExternalTestRunnerEnabled() {
+    return getDelegate().getBooleanValue("test", "external_runner_tty", false);
+  }
+
   /** The timeout to apply to entire test rules. */
   public Optional<Long> getDefaultTestRuleTimeoutMs() {
     return getDelegate().getLong(TEST_SECTION_HEADER, "rule_timeout");

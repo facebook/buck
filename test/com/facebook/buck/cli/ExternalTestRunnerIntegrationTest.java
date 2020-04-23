@@ -34,8 +34,13 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.environment.PlatformType;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Joiner;
+import com.google.common.collect.Iterables;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import org.hamcrest.Matchers;
@@ -323,5 +328,66 @@ public class ExternalTestRunnerIntegrationTest {
             "//:pass");
     result.assertSuccess();
     assertThat(result.getStdout().trim(), is(equalTo("2")));
+  }
+
+  @Test
+  public void runnerHasNoTtyByDefault() {
+    // sh_test doesn't support Windows
+    assumeFalse(isWindowsOs);
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_tty.py"),
+            "//:pass");
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalTo("stdout is a tty: False\nstdin is a tty: False\n")));
+  }
+
+  @Test
+  public void buckWritesOutCommandArgsFileIfTtyEnabled() throws IOException {
+    // sh_test doesn't support Windows
+    assumeFalse(isWindowsOs);
+    String commandArgsFileLocation = tmp.newFile("command-args-file.json").toString();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "--command-args-file",
+            commandArgsFileLocation,
+            "-c",
+            "test.external_runner_tty=true",
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_tty.py"),
+            "//:pass");
+    result.assertSuccess();
+
+    // Test that the command file is not empty. It means buck has written out
+    // the command file as expected. The python wrapper will run the command.
+    String commandArgsJson =
+        Iterables.getOnlyElement(Files.readAllLines(Paths.get(commandArgsFileLocation)));
+    JsonNode jsonNode = ObjectMappers.READER.readTree(commandArgsJson);
+    assertTrue(jsonNode.has("is_fix_script"));
+    assertTrue(jsonNode.has("print_command"));
+  }
+
+  @Test
+  public void buckDoesNotWriteOutCommandArgsFileIfTtyEnabled() throws IOException {
+    // sh_test doesn't support Windows
+    assumeFalse(isWindowsOs);
+    String commandArgsFileLocation = tmp.newFile("command-args-file.json").toString();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "test",
+            "--command-args-file",
+            commandArgsFileLocation,
+            "-c",
+            "test.external_runner=" + workspace.getPath("test_runner_tty.py"),
+            "//:pass");
+    result.assertSuccess();
+    assertThat(result.getStdout(), is(equalTo("stdout is a tty: False\nstdin is a tty: False\n")));
+
+    // Test that the command file is empty. It should not have been written out.
+    byte[] allBytes = Files.readAllBytes(Paths.get(commandArgsFileLocation));
+    assertThat(allBytes.length, is(equalTo(0)));
   }
 }
