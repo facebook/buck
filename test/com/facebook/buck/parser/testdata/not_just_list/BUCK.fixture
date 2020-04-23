@@ -1,0 +1,19 @@
+MAP = {
+    "A.java": "B.java",
+    "B.java": "A.java",
+}
+
+java_library(
+    name = "map-values",
+    srcs = MAP.values(),
+)
+
+java_library(
+    name = "map-keys",
+    srcs = MAP.keys(),
+)
+
+java_library(
+    name = "tuple",
+    srcs = ("A.java", "B.java"),
+)

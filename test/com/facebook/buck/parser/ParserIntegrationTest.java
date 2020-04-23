@@ -26,6 +26,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.parser.api.Syntax;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -35,10 +36,14 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class ParserIntegrationTest {
   @Rule public TemporaryPaths temporaryFolder = new TemporaryPaths();
 
@@ -667,5 +672,21 @@ public class ParserIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "subcell_ignored", temporaryFolder);
     workspace.setUp();
     workspace.runBuckBuild("//...").assertSuccess();
+  }
+
+  private Syntax[] syntaxes() {
+    return Syntax.values();
+  }
+
+  @Test
+  @Parameters(method = "syntaxes")
+  public void notJustList(Syntax syntax) throws Exception {
+    // Check that parsers accept any sequence, not just list when parameter is list.
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "not_just_list", temporaryFolder);
+    workspace.setUp();
+    workspace
+        .runBuckBuild("//...", "-c", "parser.default_build_file_syntax=" + syntax)
+        .assertSuccess();
   }
 }
