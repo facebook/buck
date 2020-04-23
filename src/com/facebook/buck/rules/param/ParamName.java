@@ -31,7 +31,6 @@ public class ParamName implements Comparable<ParamName> {
   // We only have a hundred params or so, so it's OK to store them permanently.
   // Even if UDR authors create a million distinct param names, it would still be
   // fine to store them permanently.
-  private static final ConcurrentHashMap<String, ParamName> byCamelCase = new ConcurrentHashMap<>();
   private static final ConcurrentHashMap<String, ParamName> bySnakeCase = new ConcurrentHashMap<>();
 
   private ParamName(String camelCase, String snakeCase) {
@@ -48,24 +47,6 @@ public class ParamName implements Comparable<ParamName> {
   @JsonValue
   public String getSnakeCase() {
     return snakeCase;
-  }
-
-  private static ParamName put(String camelCase, String snakeCase) {
-    ParamName newParamName = new ParamName(camelCase, snakeCase);
-    ParamName prevParamName = byCamelCase.putIfAbsent(camelCase, newParamName);
-    if (prevParamName != null) {
-      // `bySnakeCase` might not yet contain the value, but that's fine,
-      // another thread is about to populate the value
-      return prevParamName;
-    } else {
-      prevParamName = bySnakeCase.put(snakeCase, newParamName);
-
-      // The thread which populated `byCamelCase` populates `bySnakeCase`
-      // thus it's not possible to see populated value here.
-      Preconditions.checkState(prevParamName == null);
-
-      return newParamName;
-    }
   }
 
   private static String validateCase(
@@ -85,22 +66,6 @@ public class ParamName implements Comparable<ParamName> {
     Preconditions.checkArgument(convertedBack.equals(string), "not a %s: %s", expected, string);
 
     return (underscore ? "_" : "") + converted;
-  }
-
-  /**
-   * Get a param name object by camel case.
-   *
-   * <p>This function fails is supplied string is not camel case.
-   */
-  public static ParamName byCamelCase(String camelCase) {
-    // fast path
-    ParamName paramName = byCamelCase.get(camelCase);
-    if (paramName != null) {
-      return paramName;
-    }
-
-    String snakeCase = validateCase(camelCase, CaseFormat.LOWER_CAMEL, CaseFormat.LOWER_UNDERSCORE);
-    return put(camelCase, snakeCase);
   }
 
   /**
@@ -129,7 +94,7 @@ public class ParamName implements Comparable<ParamName> {
 
     String camelCase = validateCase(snakeCase, CaseFormat.LOWER_UNDERSCORE, CaseFormat.LOWER_CAMEL);
 
-    return put(camelCase, snakeCase);
+    return bySnakeCase.computeIfAbsent(snakeCase, k -> new ParamName(camelCase, snakeCase));
   }
 
   // using identity equals and hashCode
@@ -141,8 +106,8 @@ public class ParamName implements Comparable<ParamName> {
 
   @Override
   public int compareTo(ParamName that) {
-    boolean thisIsName = this.getCamelCase().equals("name");
-    boolean thatIsName = that.getCamelCase().equals("name");
+    boolean thisIsName = this.getSnakeCase().equals("name");
+    boolean thatIsName = that.getSnakeCase().equals("name");
     if (thisIsName || thatIsName) {
       // "name" is smaller than all other strings
       return Boolean.compare(!thisIsName, !thatIsName);

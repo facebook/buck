@@ -204,19 +204,19 @@ public class ResolverIntegrationTest {
     assertEquals(1, rules.size());
     RawTargetNode rule = Iterables.getOnlyElement(rules.values());
     // Name is derived from the project identifier
-    assertEquals("no-deps", rule.get("name"));
+    assertEquals("no-deps", rule.getBySnakeCase("name"));
 
     // The binary jar should be set
-    assertEquals("no-deps-1.0.jar", rule.get("binaryJar"));
+    assertEquals("no-deps-1.0.jar", rule.getBySnakeCase("binary_jar"));
 
     // There was no source jar in the repo
-    assertNull(rule.get("sourceJar"));
+    assertNull(rule.getBySnakeCase("source_jar"));
 
     // It's a library that's requested on the CLI, so it gets full visibility.
     assertEquals(ImmutableList.of("PUBLIC"), rule.getVisibility());
 
     // And it doesn't depend on anything
-    assertNull(rule.get("deps"));
+    assertNull(rule.getBySnakeCase("deps"));
   }
 
   @Test
@@ -228,7 +228,7 @@ public class ResolverIntegrationTest {
         buildFileParser.getManifest(groupDir.resolve("BUCK")).getTargets();
 
     RawTargetNode rule = Iterables.getOnlyElement(rules.values());
-    assertEquals("with-sources-1.0-sources.jar", rule.get("sourceJar"));
+    assertEquals("with-sources-1.0-sources.jar", rule.getBySnakeCase("source_jar"));
   }
 
   @Test
@@ -256,11 +256,11 @@ public class ResolverIntegrationTest {
         ImmutableList.of(
             String.format("//%s:with-deps", PathFormatter.pathWithUnixSeparators(exampleDir))),
         visibility);
-    assertNull(noDeps.get("deps"));
+    assertNull(noDeps.getBySnakeCase("deps"));
 
     assertEquals(ImmutableList.of("PUBLIC"), withDeps.getVisibility());
     @SuppressWarnings("unchecked")
-    List<String> deps = (List<String>) withDeps.get("deps");
+    List<String> deps = (List<String>) withDeps.getBySnakeCase("deps");
     assertEquals(1, deps.size());
     assertEquals(
         ImmutableList.of(
@@ -284,7 +284,7 @@ public class ResolverIntegrationTest {
 
     // Although the "deps-in-same-project" could be in the visibility param, it doesn't need to be
     // because it's declared in the same build file.
-    assertNull(noDeps.get("visibility"));
+    assertNull(noDeps.getBySnakeCase("visibility"));
   }
 
   @Test

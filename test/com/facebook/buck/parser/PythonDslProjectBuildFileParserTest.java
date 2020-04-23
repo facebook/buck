@@ -521,8 +521,8 @@ public class PythonDslProjectBuildFileParserTest {
           buildFileParser.getManifest(cell.getRootCell().getRoot().resolve("foo").resolve("BUCK"));
     }
 
-    assertEquals(5L, out.getTargets().get("bar").get("val"));
-    assertEquals("bar", out.getTargets().get("bar").get("name"));
+    assertEquals(5L, out.getTargets().get("bar").getBySnakeCase("val"));
+    assertEquals("bar", out.getTargets().get("bar").getBySnakeCase("name"));
     assertNotNull(udrLoader.knownTypes(cell.getRootCell()).getRule("//foo:udr.bzl:my_rule"));
   }
 

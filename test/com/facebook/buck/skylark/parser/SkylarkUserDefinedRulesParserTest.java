@@ -127,7 +127,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(new PrintingEventHandler(EventKind.ALL_EVENTS));
 
-    assertEquals("echo target > $OUT", getSingleRule(buildFile).get("cmd"));
+    assertEquals("echo target > $OUT", getSingleRule(buildFile).getBySnakeCase("cmd"));
   }
 
   @Test
@@ -568,7 +568,7 @@ public class SkylarkUserDefinedRulesParserTest {
     BuildFileManifest manifest = parser.getManifest(AbsPath.of(buildFile));
     assertEquals(
         ImmutableList.of("foo@example.com", "bar@example.com"),
-        manifest.getTargets().get("target1").get("contacts"));
+        manifest.getTargets().get("target1").getBySnakeCase("contacts"));
   }
 
   @Test
@@ -803,7 +803,7 @@ public class SkylarkUserDefinedRulesParserTest {
     EventCollector collector = new EventCollector(EnumSet.allOf(EventKind.class));
     parser = createParser(collector);
 
-    assertEquals("target1", getSingleRule(buildFile).get("name"));
+    assertEquals("target1", getSingleRule(buildFile).getBySnakeCase("name"));
     Iterables.find(
         collector,
         e -> e.getKind() == EventKind.DEBUG && e.getMessage().contains("in bzl: DefaultInfo("));

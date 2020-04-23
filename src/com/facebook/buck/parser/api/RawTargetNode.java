@@ -60,8 +60,8 @@ public abstract class RawTargetNode {
   }
 
   @Nullable
-  public Object get(String name) {
-    return get(ParamName.byCamelCase(name));
+  public Object getBySnakeCase(String name) {
+    return get(ParamName.bySnakeCase(name));
   }
 
   public static RawTargetNode of(

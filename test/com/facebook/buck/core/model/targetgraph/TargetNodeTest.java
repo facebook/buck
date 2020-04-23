@@ -111,13 +111,13 @@ public class TargetNodeTest {
             depsTargets.stream()
                 .map(BuildTarget::getUnconfiguredBuildTarget)
                 .collect(ImmutableList.toImmutableList()),
-            "sourcePaths",
+            "source_paths",
             ImmutableList.of(
                 UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//example/path:two"),
                 UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath("//example/path:four"),
                 UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
                     "example/path/MyClass.java")),
-            "appleSource",
+            "apple_source",
             Optional.of(
                 UnconfiguredSourceWithFlags.of(
                     UnconfiguredSourcePathFactoryForTests.unconfiguredSourcePath(
@@ -271,7 +271,7 @@ public class TargetNodeTest {
             Optional.of("//example/path:one"),
             "target",
             Optional.of(UnconfiguredBuildTargetParser.parse("//example/path:two")),
-            "sourcePaths",
+            "source_paths",
             ImmutableList.of());
 
     return createTargetNode(cellNames, buildTarget, ImmutableSet.of(), rawNode, Sets.newHashSet());
@@ -319,7 +319,7 @@ public class TargetNodeTest {
         instance.entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
-                    e -> ParamName.byCamelCase(e.getKey()), Map.Entry::getValue));
+                    e -> ParamName.bySnakeCase(e.getKey()), Map.Entry::getValue));
 
     try {
       return marshaller.populate(

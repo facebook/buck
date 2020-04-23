@@ -35,7 +35,6 @@ public class ParamNameTest {
     assertEquals("aaaBbb", p.getCamelCase());
 
     assertSame(ParamName.bySnakeCase("aaa_bbb"), p);
-    assertSame(ParamName.byCamelCase("aaaBbb"), p);
   }
 
   @Test
@@ -45,7 +44,6 @@ public class ParamNameTest {
     assertEquals("aaa", p.getCamelCase());
 
     assertSame(ParamName.bySnakeCase("aaa"), p);
-    assertSame(ParamName.byCamelCase("aaa"), p);
   }
 
   @Test
@@ -56,44 +54,9 @@ public class ParamNameTest {
   }
 
   @Test
-  public void byCamelCase() {
-    ParamName p = ParamName.bySnakeCase("ccc_ddd");
-    assertEquals("ccc_ddd", p.getSnakeCase());
-    assertEquals("cccDdd", p.getCamelCase());
-
-    assertSame(ParamName.bySnakeCase("ccc_ddd"), p);
-    assertSame(ParamName.byCamelCase("cccDdd"), p);
-  }
-
-  @Test
-  public void byCamelCaseSimple() {
-    ParamName p = ParamName.bySnakeCase("ccc");
-    assertEquals("ccc", p.getSnakeCase());
-    assertEquals("ccc", p.getCamelCase());
-
-    assertSame(ParamName.bySnakeCase("ccc"), p);
-    assertSame(ParamName.byCamelCase("ccc"), p);
-  }
-
-  @Test
-  public void byCamelCaseNotCamelCase() {
-    thrown.expect(IllegalArgumentException.class);
-
-    ParamName.byCamelCase("snake_case");
-  }
-
-  @Test
   public void bySnakeCaseStartsWithUnderscore() {
     // special handling of underscore-prefixed UDR param names
     assertEquals("_s_u", ParamName.bySnakeCase("_s_u").getSnakeCase());
-    assertEquals("_sU", ParamName.byCamelCase("_sU").getCamelCase());
-  }
-
-  @Test
-  public void byCamelCaseStartsWithUnderscore() {
-    // special handling of underscore-prefixed UDR param names
-    assertEquals("_sV", ParamName.byCamelCase("_sV").getCamelCase());
-    assertEquals("_s_v", ParamName.bySnakeCase("_s_v").getSnakeCase());
   }
 
   @Test
@@ -103,11 +66,11 @@ public class ParamNameTest {
 
   @Test
   public void compare() {
-    assertTrue(ParamName.byCamelCase("ab").compareTo(ParamName.byCamelCase("cd")) < 0);
-    assertEquals(0, ParamName.byCamelCase("ab").compareTo(ParamName.byCamelCase("ab")));
+    assertTrue(ParamName.bySnakeCase("ab").compareTo(ParamName.bySnakeCase("cd")) < 0);
+    assertEquals(0, ParamName.bySnakeCase("ab").compareTo(ParamName.bySnakeCase("ab")));
 
-    assertTrue(ParamName.byCamelCase("name").compareTo(ParamName.byCamelCase("ab")) < 0);
-    assertTrue(ParamName.byCamelCase("ab").compareTo(ParamName.byCamelCase("name")) > 0);
-    assertEquals(0, ParamName.byCamelCase("name").compareTo(ParamName.byCamelCase("name")));
+    assertTrue(ParamName.bySnakeCase("name").compareTo(ParamName.bySnakeCase("ab")) < 0);
+    assertTrue(ParamName.bySnakeCase("ab").compareTo(ParamName.bySnakeCase("name")) > 0);
+    assertEquals(0, ParamName.bySnakeCase("name").compareTo(ParamName.bySnakeCase("name")));
   }
 }

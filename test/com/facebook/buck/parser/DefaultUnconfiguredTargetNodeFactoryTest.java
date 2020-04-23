@@ -158,7 +158,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
         expectAttributes.entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(
-                    e -> ParamName.byCamelCase(e.getKey()), Map.Entry::getValue)),
+                    e -> ParamName.bySnakeCase(e.getKey()), Map.Entry::getValue)),
         unconfiguredTargetNode.getAttributes());
 
     assertEquals(

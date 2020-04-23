@@ -138,10 +138,10 @@ public class SkylarkProjectBuildFileParserTest {
                 + ")"));
 
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("guava"));
-    assertThat(rule.get("binaryJar"), equalTo("guava.jar"));
-    assertThat(rule.get("licenses"), equalTo(ImmutableList.of("LICENSE")));
-    assertThat(rule.get("sourceJar"), equalTo("guava-sources.jar"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("guava"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("guava.jar"));
+    assertThat(rule.getBySnakeCase("licenses"), equalTo(ImmutableList.of("LICENSE")));
+    assertThat(rule.getBySnakeCase("source_jar"), equalTo("guava-sources.jar"));
     assertThat(rule.getVisibility(), equalTo(ImmutableList.of("PUBLIC")));
     assertThat(rule.getBasePath().toString(), equalTo("src/test"));
   }
@@ -339,7 +339,7 @@ public class SkylarkProjectBuildFileParserTest {
     Files.createFile(directory.resolve("file2").getPath());
     Files.createFile(directory.resolve("bad_file").getPath());
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("licenses"), equalTo(ImmutableList.of("file1", "file2")));
+    assertThat(rule.getBySnakeCase("licenses"), equalTo(ImmutableList.of("file1", "file2")));
   }
 
   @Test
@@ -351,7 +351,7 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile.getPath(),
         Collections.singletonList("prebuilt_jar(name=type(range(5)), binary_jar='foo.jar')"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("range"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("range"));
   }
 
   @Test
@@ -388,7 +388,7 @@ public class SkylarkProjectBuildFileParserTest {
         Collections.singletonList(
             "prebuilt_jar(name=read_config('app', 'name', 'guava'), binary_jar='foo.jar')"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("guava"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("guava"));
   }
 
   @Test
@@ -441,7 +441,7 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile.getPath(),
         Collections.singletonList("prebuilt_jar(name=package_name(), binary_jar='foo.jar')"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("pkg"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("pkg"));
   }
 
   @Test
@@ -511,7 +511,7 @@ public class SkylarkProjectBuildFileParserTest {
         extensionFile.getPath(),
         Arrays.asList("def get_name():", "  return native.read_config('foo', 'bar', 'baz')"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("baz"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("baz"));
   }
 
   @Test
@@ -639,7 +639,7 @@ public class SkylarkProjectBuildFileParserTest {
         extensionFile.getPath(),
         Arrays.asList("def get_name():", "  return native.package_name()"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("test"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("test"));
   }
 
   @Test
@@ -659,7 +659,7 @@ public class SkylarkProjectBuildFileParserTest {
         extensionFile.getPath(),
         Arrays.asList("def get_name():", "  return native.repository_name()"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("@"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("@"));
   }
 
   @Test
@@ -673,7 +673,7 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile.getPath(),
         Collections.singletonList("prebuilt_jar(name='foo', binary_jar=repository_name())"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("@"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("@"));
   }
 
   @Test
@@ -689,7 +689,7 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name='foo', binary_jar=JAR)"));
     Files.write(extensionFile.getPath(), Collections.singletonList("JAR='jar'"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("jar"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("jar"));
   }
 
   @Test
@@ -705,7 +705,7 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name='foo', binary_jar=jar)"));
     Files.write(extensionFile.getPath(), Arrays.asList("s = struct(x='j',y='ar')", "jar=s.x+s.y"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("jar"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("jar"));
   }
 
   @Test
@@ -723,7 +723,7 @@ public class SkylarkProjectBuildFileParserTest {
         extensionFile.getPath(),
         Arrays.asList("Info = provider(fields=['data'])", "s = Info(data='data')", "jar=s.data"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("data"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("data"));
   }
 
   @Test
@@ -760,7 +760,7 @@ public class SkylarkProjectBuildFileParserTest {
     SkylarkProjectBuildFileParserTestUtils.getSingleRule(parser, buildFile);
     RawTargetNode rule = getSingleRule(buildFile);
 
-    assertThat(rule.get("name"), equalTo("foo_custom"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("foo_custom"));
   }
 
   @Test
@@ -776,7 +776,7 @@ public class SkylarkProjectBuildFileParserTest {
             "prebuilt_jar(name='foo', binary_jar=get_name())"));
     Files.write(extensionFile.getPath(), Arrays.asList("def get_name():", "  return 'jar'"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("jar"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("jar"));
   }
 
   @Test
@@ -793,8 +793,8 @@ public class SkylarkProjectBuildFileParserTest {
         Arrays.asList(
             "def guava_jar(name):", "  native.prebuilt_jar(name=name, binary_jar='foo.jar')"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("foo"));
-    assertThat(rule.get("binaryJar"), equalTo("foo.jar"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("foo"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("foo.jar"));
   }
 
   @Test
@@ -831,9 +831,9 @@ public class SkylarkProjectBuildFileParserTest {
             "def guava_jar(name):",
             "  native.prebuilt_jar(name=name, binary_jar='foo.jar', licenses=native.glob(['*.txt']))"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("foo"));
-    assertThat(rule.get("binaryJar"), equalTo("foo.jar"));
-    assertThat(rule.get("licenses"), equalTo(ImmutableList.of()));
+    assertThat(rule.getBySnakeCase("name"), equalTo("foo"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("foo.jar"));
+    assertThat(rule.getBySnakeCase("licenses"), equalTo(ImmutableList.of()));
   }
 
   @Test
@@ -846,7 +846,7 @@ public class SkylarkProjectBuildFileParserTest {
         Collections.singletonList(
             "prebuilt_jar(name='a', binary_jar='a.jar', licenses=list(('l1', 'l2')))"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("licenses"), equalTo(ImmutableList.of("l1", "l2")));
+    assertThat(rule.getBySnakeCase("licenses"), equalTo(ImmutableList.of("l1", "l2")));
   }
 
   @Test
@@ -858,7 +858,7 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile.getPath(),
         Collections.singletonList("prebuilt_jar(name='β', binary_jar='a.jar')"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("β"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("β"));
   }
 
   @Test
@@ -920,7 +920,7 @@ public class SkylarkProjectBuildFileParserTest {
             "def guava_jar(name):",
             "  native.prebuilt_jar(name=name, binary_jar='foo.jar', licenses=list(('l1', 'l2')))"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("licenses"), equalTo(ImmutableList.of("l1", "l2")));
+    assertThat(rule.getBySnakeCase("licenses"), equalTo(ImmutableList.of("l1", "l2")));
   }
 
   @Test
@@ -942,7 +942,7 @@ public class SkylarkProjectBuildFileParserTest {
         ImmutableList.of(
             "load('//src/test:extension_rules.bzl', 'get_name')", "get_name = get_name"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("jar"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("jar"));
   }
 
   @Test
@@ -957,7 +957,7 @@ public class SkylarkProjectBuildFileParserTest {
             "load(':build_rules.bzl', 'jar')", "prebuilt_jar(name='foo', binary_jar=jar)"));
     Files.write(extensionFile.getPath(), Collections.singletonList("jar = 'jar.jar'"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("jar.jar"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("jar.jar"));
   }
 
   @Test
@@ -997,7 +997,7 @@ public class SkylarkProjectBuildFileParserTest {
         extensionFile.getPath(),
         ImmutableList.of("load(':extension_rules.bzl', 'get_name')", "get_name = get_name"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("jar"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("jar"));
   }
 
   @Test
@@ -1070,8 +1070,8 @@ public class SkylarkProjectBuildFileParserTest {
     Files.write(
         extensionFile.getPath(), Collections.singletonList("def get_name():\n  return 'jar'"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("foo"));
-    assertThat(rule.get("binaryJar"), equalTo("jar"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("foo"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("jar"));
   }
 
   @Test
@@ -1138,7 +1138,7 @@ public class SkylarkProjectBuildFileParserTest {
     assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(1));
     RawTargetNode prebuiltJarRule =
         Iterables.getOnlyElement(buildFileManifest.getTargets().values());
-    assertThat(prebuiltJarRule.get("name"), equalTo("foo"));
+    assertThat(prebuiltJarRule.getBySnakeCase("name"), equalTo("foo"));
     ImmutableSortedSet<String> includes = buildFileManifest.getIncludes();
     assertThat(
         includes.stream()
@@ -1248,8 +1248,8 @@ public class SkylarkProjectBuildFileParserTest {
     parser = createParserWithOptions(new PrintingEventHandler(EventKind.ALL_EVENTS), options);
 
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("foo"));
-    assertThat(rule.get("binaryJar"), equalTo("guava.jar"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("foo"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("guava.jar"));
   }
 
   @Test
@@ -1270,8 +1270,8 @@ public class SkylarkProjectBuildFileParserTest {
     parser = createParserWithOptions(new PrintingEventHandler(EventKind.ALL_EVENTS), options);
 
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("foo"));
-    assertThat(rule.get("binaryJar"), equalTo("guava.jar"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("foo"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("guava.jar"));
   }
 
   @Test
@@ -1319,7 +1319,7 @@ public class SkylarkProjectBuildFileParserTest {
         buildFile.getPath(),
         Collections.singletonList("prebuilt_jar(name=str(rule_exists('r')), binary_jar='foo')"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("name"), equalTo("False"));
+    assertThat(rule.getBySnakeCase("name"), equalTo("False"));
   }
 
   @Test
@@ -1342,7 +1342,7 @@ public class SkylarkProjectBuildFileParserTest {
         ImmutableList.of(
             "load('//src/test:extension_rules.bzl', 'get_name')", "get_name = get_name"));
     RawTargetNode rule = getSingleRule(buildFile);
-    assertThat(rule.get("binaryJar"), equalTo("False"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("False"));
   }
 
   @Test
@@ -1382,8 +1382,8 @@ public class SkylarkProjectBuildFileParserTest {
     BuildFileManifest buildFileManifest = parser.getManifest(buildFile);
     assertThat(buildFileManifest.getTargets(), Matchers.aMapWithSize(2));
     RawTargetNode rule = Iterables.getFirst(buildFileManifest.getTargets().values(), null);
-    assertThat(rule.get("name"), is("foo"));
-    assertThat(rule.get("binaryJar"), equalTo("True"));
+    assertThat(rule.getBySnakeCase("name"), is("foo"));
+    assertThat(rule.getBySnakeCase("binary_jar"), equalTo("True"));
   }
 
   @Test
@@ -1508,12 +1508,12 @@ public class SkylarkProjectBuildFileParserTest {
       assertThat(
           String.format(
               "Expected file at %s to parse and have name %s", kvp.getKey(), expectedName),
-          results.get("name"),
+          results.getBySnakeCase("name"),
           equalTo(expectedName));
       assertThat(
           String.format(
               "Expected file at %s to parse and have name %s", kvp.getKey(), expectedName),
-          results.get("binaryJar"),
+          results.getBySnakeCase("binary_jar"),
           equalTo(expectedName + ".jar"));
 
       assertThat(
@@ -1570,10 +1570,10 @@ public class SkylarkProjectBuildFileParserTest {
     RawTargetNode srcRule = getSingleRule(srcBuildFile);
     RawTargetNode rootRule = getSingleRule(rootBuildFile);
 
-    assertThat(srcRule.get("name"), equalTo("src"));
-    assertThat(srcRule.get("binaryJar"), equalTo("src.jar"));
-    assertThat(rootRule.get("name"), equalTo("root"));
-    assertThat(rootRule.get("binaryJar"), equalTo("root.jar"));
+    assertThat(srcRule.getBySnakeCase("name"), equalTo("src"));
+    assertThat(srcRule.getBySnakeCase("binary_jar"), equalTo("src.jar"));
+    assertThat(rootRule.getBySnakeCase("name"), equalTo("root"));
+    assertThat(rootRule.getBySnakeCase("binary_jar"), equalTo("root.jar"));
   }
 
   @Test
