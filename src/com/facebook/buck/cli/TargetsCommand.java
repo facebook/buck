@@ -732,7 +732,8 @@ public class TargetsCommand extends AbstractCommand {
         getReferencedFiles(params.getCells().getRootCell().getFilesystem().getRootPath());
     SortedMap<String, TargetNode<?>> matchingNodes;
     // If all of the referenced files are paths outside the project root, then print nothing.
-    if (!referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths.isEmpty()
+    if (!(referencedFiles.absolutePathsOutsideProjectRoot.isEmpty()
+            && referencedFiles.absoluteNonExistingPaths.isEmpty())
         && referencedFiles.relativePathsUnderProjectRoot.isEmpty()) {
       matchingNodes = ImmutableSortedMap.of();
     } else {

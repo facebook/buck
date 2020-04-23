@@ -18,8 +18,8 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -141,11 +141,14 @@ class TargetPatternEvaluator {
   }
 
   private ImmutableSet<QueryTarget> resolveFilePattern(String pattern) throws IOException {
-    ImmutableSet<RelPath> filePaths =
-        PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, ImmutableList.of(pattern))
-            .relativePathsUnderProjectRoot;
+    PathArguments.ReferencedFiles referencedFiles =
+        PathArguments.getCanonicalFilesUnderProjectRoot(projectRoot, ImmutableList.of(pattern));
 
-    return filePaths.stream()
+    if (!referencedFiles.absoluteNonExistingPaths.isEmpty()) {
+      throw new HumanReadableException("%s references non-existing file", pattern);
+    }
+
+    return referencedFiles.relativePathsUnderProjectRoot.stream()
         .map(path -> PathSourcePath.of(rootCell.getFilesystem(), path))
         .map(QueryFileTarget::of)
         .collect(ImmutableSortedSet.toImmutableSortedSet(QueryTarget::compare));

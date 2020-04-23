@@ -54,9 +54,10 @@ public class PathArgumentsTest {
             RelPath.get("src/com/facebook/AbsolutePath.txt")),
         referencedFiles.relativePathsUnderProjectRoot);
     assertEquals(
-        ImmutableSet.of(
-            projectRoot.resolve("PathNotUnderProjectRoot.txt").toRealPath(),
-            projectRoot.resolve("NonExistingPath.txt")),
-        referencedFiles.absolutePathsOutsideProjectRootOrNonExistingPaths);
+        ImmutableSet.of(projectRoot.resolve("PathNotUnderProjectRoot.txt").toRealPath()),
+        referencedFiles.absolutePathsOutsideProjectRoot);
+    assertEquals(
+        ImmutableSet.of(projectRoot.resolve("NonExistingPath.txt")),
+        referencedFiles.absoluteNonExistingPaths);
   }
 }

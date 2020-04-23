@@ -30,14 +30,16 @@ public class PathArguments {
 
   static class ReferencedFiles {
     final ImmutableSet<RelPath> relativePathsUnderProjectRoot;
-    final ImmutableSet<AbsPath> absolutePathsOutsideProjectRootOrNonExistingPaths;
+    final ImmutableSet<AbsPath> absolutePathsOutsideProjectRoot;
+    final ImmutableSet<AbsPath> absoluteNonExistingPaths;
 
     public ReferencedFiles(
         ImmutableSet<RelPath> relativePathsUnderProjectRoot,
-        ImmutableSet<AbsPath> absolutePathsOutsideProjectRootOrNonExistingPaths) {
+        ImmutableSet<AbsPath> absolutePathsOutsideProjectRoot,
+        ImmutableSet<AbsPath> absoluteNonExistingPaths) {
       this.relativePathsUnderProjectRoot = relativePathsUnderProjectRoot;
-      this.absolutePathsOutsideProjectRootOrNonExistingPaths =
-          absolutePathsOutsideProjectRootOrNonExistingPaths;
+      this.absolutePathsOutsideProjectRoot = absolutePathsOutsideProjectRoot;
+      this.absoluteNonExistingPaths = absoluteNonExistingPaths;
     }
   }
 
@@ -53,6 +55,7 @@ public class PathArguments {
     // not be reliable.
     ImmutableSet.Builder<RelPath> projectFiles = ImmutableSet.builder();
     ImmutableSet.Builder<AbsPath> nonProjectFiles = ImmutableSet.builder();
+    ImmutableSet.Builder<AbsPath> nonExistingFiles = ImmutableSet.builder();
     AbsPath normalizedRoot = projectRoot.toRealPath();
     for (String filePath : nonCanonicalFilePaths) {
       Path canonicalFullPath = Paths.get(filePath);
@@ -60,7 +63,7 @@ public class PathArguments {
         canonicalFullPath = projectRoot.resolve(canonicalFullPath).getPath();
       }
       if (!canonicalFullPath.toFile().exists()) {
-        nonProjectFiles.add(AbsPath.of(canonicalFullPath));
+        nonExistingFiles.add(AbsPath.of(canonicalFullPath));
         continue;
       }
       canonicalFullPath = canonicalFullPath.toRealPath();
@@ -75,6 +78,7 @@ public class PathArguments {
         nonProjectFiles.add(AbsPath.of(canonicalFullPath));
       }
     }
-    return new ReferencedFiles(projectFiles.build(), nonProjectFiles.build());
+    return new ReferencedFiles(
+        projectFiles.build(), nonProjectFiles.build(), nonExistingFiles.build());
   }
 }

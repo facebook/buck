@@ -882,6 +882,19 @@ public class QueryCommandIntegrationTest {
   }
 
   @Test
+  public void attrFilterWithNonExistentCellFails() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace
+            .runBuckCommand("query", "attrfilter(tests, '//example:four-tests', 'dafefas')")
+            .assertFailure();
+    assertThat(result.getStderr(), containsString("dafefas references non-existing file"));
+  }
+
+  @Test
   public void testFilterAttrOutputAttributesTests() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "query_command", tmp);
