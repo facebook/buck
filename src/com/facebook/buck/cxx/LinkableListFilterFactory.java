@@ -16,9 +16,9 @@
 
 package com.facebook.buck.cxx;
 
-import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMapping;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetMatcher;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -39,7 +39,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 
 /**
  * Factory for the creation of {@link LinkableListFilter} which can be used to filter the libraries
@@ -217,16 +216,18 @@ public class LinkableListFilterFactory {
   private static ImmutableList<BuildTarget> getBuildTargetsForMapping(
       TargetGraph targetGraph, CxxLinkGroupMappingTarget mappingTarget) {
 
-    Optional<Pattern> labelPattern = mappingTarget.getLabelPattern();
-    if (!labelPattern.isPresent()) {
+    Optional<CxxLinkGroupMappingTargetMatcher> matcher = mappingTarget.getMatcher();
+    if (!matcher.isPresent()) {
       return ImmutableList.of(mappingTarget.getBuildTarget());
     }
 
-    return findBuildTargetsMatchingLabelPattern(targetGraph, mappingTarget, labelPattern.get());
+    return findBuildTargetsMatchingLabelPattern(targetGraph, mappingTarget, matcher.get());
   }
 
   private static ImmutableList<BuildTarget> findBuildTargetsMatchingLabelPattern(
-      TargetGraph targetGraph, CxxLinkGroupMappingTarget mappingTarget, Pattern regex) {
+      TargetGraph targetGraph,
+      CxxLinkGroupMappingTarget mappingTarget,
+      CxxLinkGroupMappingTargetMatcher matcher) {
     ImmutableList.Builder<BuildTarget> allTargets = ImmutableList.builder();
     TargetNode<?> initialTargetNode = targetGraph.get(mappingTarget.getBuildTarget());
 
@@ -238,18 +239,9 @@ public class LinkableListFilterFactory {
               return Collections.emptySet();
             }
 
-            boolean matchesRegex = false;
-            if (node.getConstructorArg() instanceof BuildRuleArg) {
-              BuildRuleArg buildRuleArg = (BuildRuleArg) node.getConstructorArg();
-              for (String label : buildRuleArg.getLabels()) {
-                matchesRegex = regex.matcher(label).matches();
-                if (matchesRegex) {
-                  break;
-                }
-              }
-            }
+            boolean matches = matcher.matchesNode(node);
 
-            if (matchesRegex) {
+            if (matches) {
               allTargets.add(node.getBuildTarget());
               if (mappingTarget.getTraversal() == CxxLinkGroupMappingTarget.Traversal.TREE) {
                 // We can stop traversing the tree at this point because we've added the

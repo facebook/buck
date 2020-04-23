@@ -18,10 +18,10 @@ package com.facebook.buck.core.linkgroup;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ComparisonChain;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /**
  * Represents how a single build target should be mapped to a link group.
@@ -57,13 +57,13 @@ public abstract class CxxLinkGroupMappingTarget implements Comparable<CxxLinkGro
   public abstract Traversal getTraversal();
 
   @AddToRuleKey
-  public abstract Optional<Pattern> getLabelPattern();
+  public abstract Optional<CxxLinkGroupMappingTargetMatcher> getMatcher();
 
   public static CxxLinkGroupMappingTarget of(
       BuildTarget buildTarget,
       CxxLinkGroupMappingTarget.Traversal traversal,
-      Optional<? extends Pattern> labelPattern) {
-    return ImmutableCxxLinkGroupMappingTarget.ofImpl(buildTarget, traversal, labelPattern);
+      Optional<CxxLinkGroupMappingTargetMatcher> matcher) {
+    return ImmutableCxxLinkGroupMappingTarget.ofImpl(buildTarget, traversal, matcher);
   }
 
   @Override
@@ -72,33 +72,14 @@ public abstract class CxxLinkGroupMappingTarget implements Comparable<CxxLinkGro
       return 0;
     }
 
-    int labelComparison = compareLabelPattern(that);
-    if (labelComparison != 0) {
-      return labelComparison;
+    int matcherCompare = Optionals.compare(this.getMatcher(), that.getMatcher());
+    if (matcherCompare != 0) {
+      return matcherCompare;
     }
 
     return ComparisonChain.start()
         .compare(this.getBuildTarget(), that.getBuildTarget())
         .compare(this.getTraversal(), that.getTraversal())
         .result();
-  }
-
-  private int compareLabelPattern(CxxLinkGroupMappingTarget that) {
-    Optional<Pattern> thisLabelPattern = this.getLabelPattern();
-    Optional<Pattern> thatLabelPattern = that.getLabelPattern();
-
-    if (thisLabelPattern.isPresent() == thatLabelPattern.isPresent()) {
-      if (thisLabelPattern.isPresent()) {
-        return thisLabelPattern.get().pattern().compareTo(thatLabelPattern.get().pattern());
-      }
-
-      return 0;
-    }
-
-    if (!thisLabelPattern.isPresent()) {
-      return -1;
-    }
-
-    return 1;
   }
 }

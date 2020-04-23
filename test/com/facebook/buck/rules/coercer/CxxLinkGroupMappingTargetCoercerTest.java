@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetLabelMatcher;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -104,7 +105,11 @@ public class CxxLinkGroupMappingTargetCoercerTest {
             input);
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.TREE);
-    assertTrue(target.getLabelPattern().isPresent());
-    assertEquals(target.getLabelPattern().get().pattern(), labelRegex);
+    assertTrue(target.getMatcher().isPresent());
+    assertEquals(CxxLinkGroupMappingTargetLabelMatcher.class, target.getMatcher().get().getClass());
+
+    assertEquals(
+        ((CxxLinkGroupMappingTargetLabelMatcher) target.getMatcher().get()).labelPattern.toString(),
+        labelRegex);
   }
 }

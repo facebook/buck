@@ -18,6 +18,8 @@ package com.facebook.buck.rules.coercer;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetLabelMatcher;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetMatcher;
 import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -95,38 +97,46 @@ public class CxxLinkGroupMappingTargetCoercer
         CxxLinkGroupMappingTarget.Traversal traversal =
             traversalCoercer.coerceToUnconfigured(
                 cellRoots, filesystem, pathRelativeToProjectRoot, objects[1]);
-        Optional<Pattern> labelPattern = Optional.empty();
+        Optional<CxxLinkGroupMappingTargetMatcher> matcher = Optional.empty();
         if (collection.size() >= 3) {
-          String regexString = extractLabelRegexString(objects[2]);
-          labelPattern =
+          matcher =
               Optional.of(
-                  patternTypeCoercer.coerceToUnconfigured(
-                      cellRoots, filesystem, pathRelativeToProjectRoot, regexString));
+                  extractMatcher(cellRoots, filesystem, pathRelativeToProjectRoot, objects[2]));
         }
 
-        return UnconfiguredCxxLinkGroupMappingTarget.of(buildTarget, traversal, labelPattern);
+        return UnconfiguredCxxLinkGroupMappingTarget.of(buildTarget, traversal, matcher);
       }
     }
 
     throw CoerceFailedException.simple(
         object,
         getOutputType(),
-        "input should be pair of a build target and traversal, optionally with a label filter");
+        "input should be pair of a build target and traversal, optionally with a string filter");
   }
 
-  private String extractLabelRegexString(Object object) throws CoerceFailedException {
+  private CxxLinkGroupMappingTargetMatcher extractMatcher(
+      CellNameResolver cellRoots,
+      ProjectFilesystem filesystem,
+      ForwardRelativePath pathRelativeToProjectRoot,
+      Object object)
+      throws CoerceFailedException {
+    String error =
+        String.format("Third element must be a string starting with %s", LABEL_REGEX_PREFIX);
+
     if (!(object instanceof String)) {
-      throw CoerceFailedException.simple(
-          object, getOutputType(), "Third element should be a label regex filter");
+      throw CoerceFailedException.simple(object, getOutputType(), error);
     }
 
-    String prefixWithRegex = (String) object;
-    if (!prefixWithRegex.startsWith(LABEL_REGEX_PREFIX)) {
-      throw CoerceFailedException.simple(
-          object, getOutputType(), "Label regex filter should start with " + LABEL_REGEX_PREFIX);
+    String matcherString = (String) object;
+    if (matcherString.startsWith(LABEL_REGEX_PREFIX)) {
+      String regex = matcherString.substring(LABEL_REGEX_PREFIX.length());
+      Pattern labelPattern =
+          patternTypeCoercer.coerceToUnconfigured(
+              cellRoots, filesystem, pathRelativeToProjectRoot, regex);
+      return new CxxLinkGroupMappingTargetLabelMatcher(labelPattern);
     }
 
-    return prefixWithRegex.substring(LABEL_REGEX_PREFIX.length());
+    throw CoerceFailedException.simple(matcherString, getOutputType(), error);
   }
 
   @Override
@@ -141,6 +151,6 @@ public class CxxLinkGroupMappingTargetCoercer
     return CxxLinkGroupMappingTarget.of(
         object.getBuildTarget().configure(targetConfiguration),
         object.getTraversal(),
-        object.getLabelPattern());
+        object.getMatcher());
   }
 }

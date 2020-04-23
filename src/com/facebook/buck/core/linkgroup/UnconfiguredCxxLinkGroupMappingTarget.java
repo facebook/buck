@@ -20,7 +20,6 @@ import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 /** Unconfigured graph version of {@link CxxLinkGroupMappingTarget}. */
 @BuckStyleValue
@@ -33,13 +32,12 @@ public abstract class UnconfiguredCxxLinkGroupMappingTarget {
   public abstract CxxLinkGroupMappingTarget.Traversal getTraversal();
 
   @AddToRuleKey
-  public abstract Optional<Pattern> getLabelPattern();
+  public abstract Optional<CxxLinkGroupMappingTargetMatcher> getMatcher();
 
   public static UnconfiguredCxxLinkGroupMappingTarget of(
       UnconfiguredBuildTarget buildTarget,
       CxxLinkGroupMappingTarget.Traversal traversal,
-      Optional<? extends Pattern> labelPattern) {
-    return ImmutableUnconfiguredCxxLinkGroupMappingTarget.ofImpl(
-        buildTarget, traversal, labelPattern);
+      Optional<CxxLinkGroupMappingTargetMatcher> matcher) {
+    return ImmutableUnconfiguredCxxLinkGroupMappingTarget.ofImpl(buildTarget, traversal, matcher);
   }
 }
