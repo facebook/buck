@@ -4,7 +4,6 @@
     "//:rule_with_output" : {
       "success" : "SUCCESS",
       "type" : "BUILT_LOCALLY",
-      "output" : "<OUTPUT_PREFIX>rule_with_output.txt",
       "outputs" : {
         "DEFAULT" : [ "<OUTPUT_PREFIX>rule_with_output.txt" ]
       }

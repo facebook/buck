@@ -131,7 +131,13 @@ public class BuildReportIntegrationTest {
                     BuildTargetFactory.newInstance("cell2//:bar"),
                     "%s")
                 .resolve("bar.txt"),
-        reportRoot.get("results").get("cell2//:bar").get("output").textValue());
+        reportRoot
+            .get("results")
+            .get("cell2//:bar")
+            .get("outputs")
+            .get("DEFAULT")
+            .get(0)
+            .textValue());
   }
 
   @Test

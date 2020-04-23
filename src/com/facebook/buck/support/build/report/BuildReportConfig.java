@@ -40,7 +40,7 @@ public abstract class BuildReportConfig implements ConfigView<BuckConfig> {
 
   private static final boolean ENABLED_DEFAULT = false;
 
-  private static final boolean REMOVE_OUTPUT_FIELD_DEFAULT = false;
+  private static final boolean REMOVE_OUTPUT_FIELD_DEFAULT = true;
 
   @Override
   public abstract BuckConfig getDelegate();
