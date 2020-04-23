@@ -20,10 +20,13 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetLabelMatcher;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetMatcher;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetPatternMatcher;
 import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
+import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcherParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.reflect.TypeToken;
@@ -45,7 +48,11 @@ public class CxxLinkGroupMappingTargetCoercer
       traversalCoercer;
   private final TypeCoercer<Pattern, Pattern> patternTypeCoercer;
 
+  private static final BuildTargetMatcherParser<BuildTargetMatcher> buildTargetPatternParser =
+      BuildTargetMatcherParser.forVisibilityArgument();
+
   private static final String LABEL_REGEX_PREFIX = "label:";
+  private static final String PATTERN_REGEX_PREFIX = "pattern:";
 
   public CxxLinkGroupMappingTargetCoercer(
       TypeCoercer<UnconfiguredBuildTarget, BuildTarget> buildTargetTypeCoercer,
@@ -121,7 +128,9 @@ public class CxxLinkGroupMappingTargetCoercer
       Object object)
       throws CoerceFailedException {
     String error =
-        String.format("Third element must be a string starting with %s", LABEL_REGEX_PREFIX);
+        String.format(
+            "Third element must be a string starting with %s or %s",
+            LABEL_REGEX_PREFIX, PATTERN_REGEX_PREFIX);
 
     if (!(object instanceof String)) {
       throw CoerceFailedException.simple(object, getOutputType(), error);
@@ -134,6 +143,10 @@ public class CxxLinkGroupMappingTargetCoercer
           patternTypeCoercer.coerceToUnconfigured(
               cellRoots, filesystem, pathRelativeToProjectRoot, regex);
       return new CxxLinkGroupMappingTargetLabelMatcher(labelPattern);
+    } else if (matcherString.startsWith(PATTERN_REGEX_PREFIX)) {
+      String pattern = matcherString.substring(PATTERN_REGEX_PREFIX.length());
+      BuildTargetMatcher targetMatcher = buildTargetPatternParser.parse(pattern, cellRoots);
+      return new CxxLinkGroupMappingTargetPatternMatcher(pattern, targetMatcher);
     }
 
     throw CoerceFailedException.simple(matcherString, getOutputType(), error);

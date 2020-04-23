@@ -221,10 +221,10 @@ public class LinkableListFilterFactory {
       return ImmutableList.of(mappingTarget.getBuildTarget());
     }
 
-    return findBuildTargetsMatchingLabelPattern(targetGraph, mappingTarget, matcher.get());
+    return findMatchingBuildTargets(targetGraph, mappingTarget, matcher.get());
   }
 
-  private static ImmutableList<BuildTarget> findBuildTargetsMatchingLabelPattern(
+  private static ImmutableList<BuildTarget> findMatchingBuildTargets(
       TargetGraph targetGraph,
       CxxLinkGroupMappingTarget mappingTarget,
       CxxLinkGroupMappingTargetMatcher matcher) {

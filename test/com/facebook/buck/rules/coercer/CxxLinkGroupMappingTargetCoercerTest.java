@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTarget;
 import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetLabelMatcher;
+import com.facebook.buck.core.linkgroup.CxxLinkGroupMappingTargetPatternMatcher;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -31,7 +32,9 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class CxxLinkGroupMappingTargetCoercerTest {
   private final ProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -49,6 +52,8 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     return new CxxLinkGroupMappingTargetCoercer(
         buildTargetTypeCoercer, traversalTypeCoercer, new PatternTypeCoercer());
   }
+
+  @Rule public ExpectedException expectedException = ExpectedException.none();
 
   @Before
   public void setUp() {
@@ -111,5 +116,48 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     assertEquals(
         ((CxxLinkGroupMappingTargetLabelMatcher) target.getMatcher().get()).labelPattern.toString(),
         labelRegex);
+  }
+
+  @Test
+  public void canCoerceMappingWithTargetPattern() throws CoerceFailedException {
+    String targetString = "//foo:bar";
+    String buildTargetPattern = "//foo/...";
+    String targetPattern = "pattern:" + buildTargetPattern;
+    ImmutableList<Object> input = ImmutableList.of(targetString, "tree", targetPattern);
+    CxxLinkGroupMappingTarget target =
+        coercer.coerceBoth(
+            createCellRoots(filesystem).getCellNameResolver(),
+            filesystem,
+            basePath,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            UnconfiguredTargetConfiguration.INSTANCE,
+            input);
+    assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
+    assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.TREE);
+    assertTrue(target.getMatcher().isPresent());
+    assertEquals(
+        CxxLinkGroupMappingTargetPatternMatcher.class, target.getMatcher().get().getClass());
+
+    assertEquals(
+        ((CxxLinkGroupMappingTargetPatternMatcher) target.getMatcher().get()).pattern.toString(),
+        buildTargetPattern);
+  }
+
+  @Test
+  public void throwsOnInvalidMappingLabel() throws CoerceFailedException {
+    String targetString = "//foo:bar";
+    String label = "foorbar";
+    ImmutableList<Object> input = ImmutableList.of(targetString, "tree", label);
+
+    expectedException.expectMessage(
+        "Third element must be a string starting with label: or pattern:");
+
+    coercer.coerceBoth(
+        createCellRoots(filesystem).getCellNameResolver(),
+        filesystem,
+        basePath,
+        UnconfiguredTargetConfiguration.INSTANCE,
+        UnconfiguredTargetConfiguration.INSTANCE,
+        input);
   }
 }
