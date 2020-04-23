@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.versions.HasVersionUniverse;
 import com.facebook.buck.versions.VersionPropagator;
 
 public class CxxPrecompiledHeaderDescription
@@ -57,7 +58,8 @@ public class CxxPrecompiledHeaderDescription
   }
 
   @RuleArg
-  interface AbstractCxxPrecompiledHeaderDescriptionArg extends BuildRuleArg, HasDeclaredDeps {
+  interface AbstractCxxPrecompiledHeaderDescriptionArg
+      extends BuildRuleArg, HasDeclaredDeps, HasVersionUniverse {
     SourcePath getSrc();
   }
 }
