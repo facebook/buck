@@ -106,6 +106,8 @@
     <stepsBeforeRunProvider implementation="com.facebook.buck.intellij.ideabuck.configurations.BuckCommandBeforeRunTaskProvider"/>
 
     <postFormatProcessor implementation="com.facebook.buck.intellij.ideabuck.format.BuildifierPostFormatProcessor"/>
+
+    <postStartupActivity implementation="com.facebook.buck.intellij.ideabuck.format.BuildifierAutoFormatter" />
   </extensions>
 
   <actions>
@@ -183,12 +185,6 @@
         id="buck.BuildifierExternalFormatAction"/>
 
   </actions>
-
-  <application-components>
-    <component>
-      <implementation-class>com.facebook.buck.intellij.ideabuck.format.BuildifierAutoFormatter</implementation-class>
-    </component>
-  </application-components>
 
   <project-components>
     <component>

@@ -91,6 +91,7 @@ public class BuckSettingsUI extends JPanel {
   private TextFieldWithBrowseButton buildifierPathField;
   private TextFieldWithBrowseButton buildozerPathField;
   private JBTextField customizedInstallSettingField;
+  private JCheckBox autoFormatOnSave;
   private JCheckBox autoFormatOnBlur;
   private JCheckBox showDebug;
   private JCheckBox runAfterInstall;
@@ -323,7 +324,8 @@ public class BuckSettingsUI extends JPanel {
   }
 
   private JPanel initUISettingsSection() {
-    autoFormatOnBlur = new JCheckBox("Auto-format build files in editor (using buildifier)");
+    autoFormatOnSave = new JCheckBox("Auto-format build files on save (using buildifier)");
+    autoFormatOnBlur = new JCheckBox("Auto-format build files on editor switch (using buildifier)");
     showDebug = new JCheckBox("Show debug in tool window");
 
     JPanel panel = new JPanel(new GridBagLayout());
@@ -335,9 +337,12 @@ public class BuckSettingsUI extends JPanel {
     constraints.weightx = 1;
 
     constraints.gridy = 0;
-    panel.add(autoFormatOnBlur, constraints);
+    panel.add(autoFormatOnSave, constraints);
 
     constraints.gridy = 1;
+    panel.add(autoFormatOnBlur, constraints);
+
+    constraints.gridy = 2;
     panel.add(showDebug, constraints);
     return panel;
   }
@@ -630,6 +635,7 @@ public class BuckSettingsUI extends JPanel {
             buildozerPathField.getText().trim(),
             buckExecutableSettingsProvider.getBuildozerExecutableOverride().orElse(""))
         || buckProjectSettingsProvider.isRunAfterInstall() != runAfterInstall.isSelected()
+        || buckProjectSettingsProvider.isAutoFormatOnSave() != autoFormatOnSave.isSelected()
         || buckProjectSettingsProvider.isAutoFormatOnBlur() != autoFormatOnBlur.isSelected()
         || buckProjectSettingsProvider.isShowDebugWindow() != showDebug.isSelected()
         || buckProjectSettingsProvider.isMultiInstallMode() != multiInstallMode.isSelected()
@@ -651,6 +657,7 @@ public class BuckSettingsUI extends JPanel {
         textToOptional(buildifierPathField.getText()));
     buckExecutableSettingsProvider.setBuildozerExecutableOverride(
         textToOptional(buildozerPathField.getText()));
+    buckProjectSettingsProvider.setAutoFormatOnSave(autoFormatOnSave.isSelected());
     buckProjectSettingsProvider.setAutoFormatOnBlur(autoFormatOnBlur.isSelected());
     buckProjectSettingsProvider.setShowDebugWindow(showDebug.isSelected());
     buckProjectSettingsProvider.setRunAfterInstall(runAfterInstall.isSelected());
@@ -670,6 +677,7 @@ public class BuckSettingsUI extends JPanel {
         buckExecutableSettingsProvider.getBuildifierExecutableOverride().orElse(""));
     buildozerPathField.setText(
         buckExecutableSettingsProvider.getBuildozerExecutableOverride().orElse(""));
+    autoFormatOnSave.setSelected(buckProjectSettingsProvider.isAutoFormatOnSave());
     autoFormatOnBlur.setSelected(buckProjectSettingsProvider.isAutoFormatOnBlur());
     showDebug.setSelected(buckProjectSettingsProvider.isShowDebugWindow());
     runAfterInstall.setSelected(buckProjectSettingsProvider.isRunAfterInstall());

@@ -18,18 +18,20 @@ package com.facebook.buck.intellij.ideabuck.format;
 
 import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
+import com.intellij.AppTopics;
+import com.intellij.codeInsight.actions.ReformatCodeProcessor;
 import com.intellij.openapi.Disposable;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.command.CommandProcessor;
-import com.intellij.openapi.command.UndoConfirmationPolicy;
-import com.intellij.openapi.components.BaseComponent;
+import com.intellij.openapi.application.WriteAction;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileDocumentManagerListener;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.startup.StartupActivity;
+import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
@@ -37,15 +39,25 @@ import com.intellij.util.messages.MessageBusConnection;
 import org.jetbrains.annotations.NotNull;
 
 /** Reformats build files using {@code buildifier} before saving. */
-public class BuildifierAutoFormatter implements BaseComponent, Disposable {
+public class BuildifierAutoFormatter implements StartupActivity, Disposable {
 
   private static final Logger LOGGER = Logger.getInstance(BuildifierAutoFormatter.class);
 
   private MessageBusConnection mMessageBusConnection;
 
+  private void reformatBuckFileDocument(@NotNull Project project, @NotNull Document document) {
+    PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
+    if (psiFile == null || !BuckFileType.INSTANCE.equals(psiFile.getFileType())) {
+      return; // file type isn't a Buck file
+    }
+    LOGGER.info("Autoformatting " + psiFile.getVirtualFile().getPath());
+    WriteAction.run(
+        () -> new ReformatCodeProcessor(project, psiFile, psiFile.getTextRange(), false).run());
+  }
+
   @Override
-  public void initComponent() {
-    mMessageBusConnection = ApplicationManager.getApplication().getMessageBus().connect(this);
+  public void runActivity(@NotNull Project project) {
+    mMessageBusConnection = project.getMessageBus().connect(this);
     mMessageBusConnection.subscribe(
         FileEditorManagerListener.FILE_EDITOR_MANAGER,
         new FileEditorManagerListener() {
@@ -65,34 +77,28 @@ public class BuildifierAutoFormatter implements BaseComponent, Disposable {
             if (document == null) {
               return; // couldn't find document
             }
-            PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document);
-            if (!BuckFileType.INSTANCE.equals(psiFile.getFileType())) {
-              return; // file type isn't a Buck file
-            }
-            Runnable runnable = () -> BuildifierUtil.doReformat(project, virtualFile);
-            LOGGER.info("Autoformatting " + virtualFile.getPath());
-            CommandProcessor.getInstance()
-                .executeCommand(
-                    project,
-                    runnable,
-                    null,
-                    null,
-                    UndoConfirmationPolicy.DO_NOT_REQUEST_CONFIRMATION,
-                    document);
+            reformatBuckFileDocument(project, document);
           }
         });
-  }
-
-  @Override
-  public void disposeComponent() {
-    if (mMessageBusConnection != null) {
-      mMessageBusConnection.disconnect();
-      mMessageBusConnection = null;
-    }
+    mMessageBusConnection.subscribe(
+        AppTopics.FILE_DOCUMENT_SYNC,
+        new FileDocumentManagerListener() {
+          @Override
+          public void beforeDocumentSaving(@NotNull Document document) {
+            if (!BuckProjectSettingsProvider.getInstance(project).isAutoFormatOnSave()) {
+              return;
+            }
+            reformatBuckFileDocument(project, document);
+          }
+        });
+    Disposer.register(project, this::dispose);
   }
 
   @Override
   public void dispose() {
-    disposeComponent();
+    if (mMessageBusConnection != null) {
+      mMessageBusConnection.disconnect();
+      mMessageBusConnection = null;
+    }
   }
 }
