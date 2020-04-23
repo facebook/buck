@@ -893,4 +893,13 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     workspace.runBuckdCommand("build", "//foo:rule_2").assertSuccess();
     workspace.runBuckdCommand("build", "//foo:rule_3").assertSuccess();
   }
+
+  @Test
+  public void notJustList() throws Exception {
+    // Check that UDR is OK to accept any sequence when it declares that it accepts
+    // list or set
+
+    ProjectWorkspace workspace = setupWorkspace("not_just_list");
+    workspace.runBuckBuild("//...").assertSuccess();
+  }
 }

@@ -1,0 +1,32 @@
+load("//:defs.bzl", "my_rule")
+
+my_rule(
+    name = "with-list",
+    sl = [
+        "source1.txt",
+        "source2.txt",
+    ],
+)
+
+my_rule(
+    name = "with-tuple",
+    sl = (
+        "source1.txt",
+        "source2.txt",
+    ),
+)
+
+MAP = {
+    "source1.txt": "source2.txt",
+    "source2.txt": "source1.txt",
+}
+
+my_rule(
+    name = "with-map-keys",
+    sl = MAP.keys(),
+)
+
+my_rule(
+    name = "with-map-values",
+    sl = MAP.values(),
+)
