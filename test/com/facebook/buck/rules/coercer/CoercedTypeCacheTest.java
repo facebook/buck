@@ -61,23 +61,23 @@ public class CoercedTypeCacheTest {
   public void getName() {
     assertEquals(
         ImmutableSortedSet.of(
-            "consistentOverriddenInterfaceNonDep",
-            "consistentOverriddenInterfaceNonInput",
+            "consistent_overridden_interface_non_dep",
+            "consistent_overridden_interface_non_input",
             "default",
-            "interfaceDefault",
-            "interfaceNonDep",
-            "interfaceNonInput",
-            "interfaceOptional",
+            "interface_default",
+            "interface_non_dep",
+            "interface_non_input",
+            "interface_optional",
             "optional",
-            "overriddenInterfaceNonDep",
-            "overriddenInterfaceNonInput",
-            "nonDep",
-            "nonInput",
+            "overridden_interface_non_dep",
+            "overridden_interface_non_input",
+            "non_dep",
+            "non_input",
             "required"),
         ImmutableSortedSet.copyOf(
             coercedTypeCache
                 .extractForImmutableBuilder(Dto.Builder.class)
-                .getParamInfosByCamelCaseName()
+                .getParamInfosByStarlarkName()
                 .keySet()));
   }
 

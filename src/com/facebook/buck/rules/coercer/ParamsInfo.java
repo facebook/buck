@@ -30,12 +30,6 @@ public abstract class ParamsInfo {
   public abstract ImmutableList<ParamInfo<?>> getParamInfosSorted();
 
   @Value.Derived
-  public ImmutableMap<String, ParamInfo<?>> getParamInfosByCamelCaseName() {
-    return getParamInfosSorted().stream()
-        .collect(ImmutableMap.toImmutableMap(p -> p.getName().getCamelCase(), p -> p));
-  }
-
-  @Value.Derived
   public ImmutableMap<String, ParamInfo<?>> getParamInfosByStarlarkName() {
     return getParamInfosSorted().stream()
         .collect(ImmutableMap.toImmutableMap(p -> p.getName().getSnakeCase(), p -> p));

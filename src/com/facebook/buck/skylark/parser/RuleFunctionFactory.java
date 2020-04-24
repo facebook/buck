@@ -87,12 +87,6 @@ public class RuleFunctionFactory {
                 .getPathString();
         TwoArraysImmutableHashMap.Builder<String, Object> builder =
             TwoArraysImmutableHashMap.builder();
-        ImmutableMap<String, ParamInfo<?>> allParamInfo =
-            typeCoercerFactory
-                .getNativeConstructorArgDescriptor(
-                    (Class<? extends ConstructorArg>) ruleClass.getConstructorArgType())
-                .getParamsInfo()
-                .getParamInfosByCamelCaseName();
         RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, kwargs, ast);
         parseContext.recordRule(recordedRule, ast);
         return Starlark.NONE;
@@ -111,7 +105,7 @@ public class RuleFunctionFactory {
    */
   private void throwOnMissingRequiredAttribute(
       Map<String, Object> kwargs,
-      ImmutableMap<String, ParamInfo<?>> allParamInfo,
+      ImmutableMap<ParamName, ParamInfo<?>> allParamInfo,
       String name,
       FuncallExpression ast)
       throws EvalException {
@@ -172,7 +166,7 @@ public class RuleFunctionFactory {
         withinView = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
         continue;
       }
-      if (!allParamInfo.getParamInfosByCamelCaseName().containsKey(paramName.getCamelCase())) {
+      if (!allParamInfo.getParamInfosByName().containsKey(paramName)) {
         throw new IllegalArgumentException(kwargEntry.getKey() + " is not a recognized attribute");
       }
       if (Starlark.NONE.equals(kwargEntry.getValue())) {
@@ -181,7 +175,7 @@ public class RuleFunctionFactory {
       builder.put(paramName, kwargEntry.getValue());
     }
 
-    throwOnMissingRequiredAttribute(kwargs, allParamInfo.getParamInfosByCamelCaseName(), name, ast);
+    throwOnMissingRequiredAttribute(kwargs, allParamInfo.getParamInfosByName(), name, ast);
     return RecordedRule.of(
         ForwardRelativePath.of(basePath), name, visibility, withinView, builder.build());
   }
