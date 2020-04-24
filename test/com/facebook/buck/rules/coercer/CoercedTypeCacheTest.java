@@ -44,7 +44,7 @@ public class CoercedTypeCacheTest {
 
   @Test
   public void optionalIsInheritedOptional() {
-    assertTrue(getParamInfo("interfaceOptional").isOptional());
+    assertTrue(getParamInfo("interface_optional").isOptional());
   }
 
   @Test
@@ -54,7 +54,7 @@ public class CoercedTypeCacheTest {
 
   @Test
   public void defaultValuesAreOptionalThroughInheritence() {
-    assertTrue(getParamInfo("interfaceDefault").isOptional());
+    assertTrue(getParamInfo("interface_default").isOptional());
   }
 
   @Test
@@ -106,30 +106,30 @@ public class CoercedTypeCacheTest {
 
   @Test
   public void isDep() {
-    assertFalse(getParamInfo("nonDep").isDep());
+    assertFalse(getParamInfo("non_dep").isDep());
     assertTrue(getParamInfo("optional").isDep());
   }
 
   @Test
   public void isDepInherited() {
-    assertFalse(getParamInfo("interfaceNonDep").isDep());
-    assertFalse(getParamInfo("consistentOverriddenInterfaceNonDep").isDep());
-    assertTrue(getParamInfo("overriddenInterfaceNonDep").isDep());
-    assertTrue(getParamInfo("interfaceOptional").isDep());
+    assertFalse(getParamInfo("interface_non_dep").isDep());
+    assertFalse(getParamInfo("consistent_overridden_interface_non_dep").isDep());
+    assertTrue(getParamInfo("overridden_interface_non_dep").isDep());
+    assertTrue(getParamInfo("interface_optional").isDep());
   }
 
   @Test
   public void isInput() {
-    assertFalse(getParamInfo("nonInput").isInput());
+    assertFalse(getParamInfo("non_input").isInput());
     assertTrue(getParamInfo("optional").isInput());
   }
 
   @Test
   public void isInputInherited() {
-    assertFalse(getParamInfo("interfaceNonInput").isInput());
-    assertFalse(getParamInfo("consistentOverriddenInterfaceNonInput").isInput());
-    assertTrue(getParamInfo("overriddenInterfaceNonInput").isInput());
-    assertTrue(getParamInfo("interfaceOptional").isInput());
+    assertFalse(getParamInfo("interface_non_input").isInput());
+    assertFalse(getParamInfo("consistent_overridden_interface_non_input").isInput());
+    assertTrue(getParamInfo("overridden_interface_non_input").isInput());
+    assertTrue(getParamInfo("interface_optional").isInput());
   }
 
   interface DtoInterface {
@@ -192,6 +192,6 @@ public class CoercedTypeCacheTest {
   }
 
   private ParamInfo<?> getParamInfo(String name) {
-    return coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).getByCamelCaseName(name);
+    return coercedTypeCache.extractForImmutableBuilder(Dto.Builder.class).getByStarlarkName(name);
   }
 }

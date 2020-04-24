@@ -502,8 +502,8 @@ public class SkylarkUserDefinedRuleTest {
     assertEquals(
         ImmutableSet.of("name", "arg1"), paramsInfo.getParamInfosByCamelCaseName().keySet());
 
-    SkylarkParamInfo name = (SkylarkParamInfo) paramsInfo.getByCamelCaseName("name");
-    SkylarkParamInfo arg1 = (SkylarkParamInfo) paramsInfo.getByCamelCaseName("arg1");
+    SkylarkParamInfo name = (SkylarkParamInfo) paramsInfo.getByStarlarkName("name");
+    SkylarkParamInfo arg1 = (SkylarkParamInfo) paramsInfo.getByStarlarkName("arg1");
 
     assertEquals("name", name.getName().getSnakeCase());
     assertEquals(

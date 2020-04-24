@@ -55,11 +55,6 @@ public abstract class ParamsInfo {
   }
 
   @Nullable
-  public ParamInfo<?> getByCamelCaseName(String name) {
-    return getParamInfosByCamelCaseName().get(name);
-  }
-
-  @Nullable
   public ParamInfo<?> getByStarlarkName(String name) {
     return getParamInfosByStarlarkName().get(name);
   }

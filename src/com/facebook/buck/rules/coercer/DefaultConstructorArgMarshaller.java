@@ -157,7 +157,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     }
     T dto = constructorArgDescriptor.build(builder, buildTarget);
     collectDeclaredDeps(
-        cellNameResolver, allParamInfo.getByCamelCaseName("deps"), declaredDeps, dto);
+        cellNameResolver, allParamInfo.getByStarlarkName("deps"), declaredDeps, dto);
     return dto;
   }
 
