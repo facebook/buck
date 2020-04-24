@@ -16,11 +16,13 @@
 
 package com.facebook.buck.event;
 
+import java.time.Instant;
+
 /** Thin wrapper around guava event bus. */
 public interface EventDispatcher {
   void post(BuckEvent event);
 
-  void post(BuckEvent event, BuckEvent atTime);
+  void post(BuckEvent event, Instant atTime);
 
   void postWithoutConfiguring(BuckEvent event);
 

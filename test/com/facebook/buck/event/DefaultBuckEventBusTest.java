@@ -28,6 +28,7 @@ import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
 import com.facebook.buck.util.timing.DefaultClock;
 import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.eventbus.Subscribe;
+import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 
@@ -91,17 +92,22 @@ public class DefaultBuckEventBusTest {
   }
 
   @Test
-  public void whenEventPostedWithAnotherThenTimestampCopiedToPostedEvent() {
+  public void whenEventPostedWithTimestamp() {
     DefaultBuckEventBus eb =
         new DefaultBuckEventBus(
             new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
-    TestEvent timestamp = new TestEvent();
     TestEvent event = new TestEvent();
-    eb.timestamp(timestamp);
-    eb.post(event, timestamp);
+    Instant atTime = Instant.parse("2020-04-24T12:13:14.123456789Z");
+    eb.post(event, atTime);
     eb.close();
-    assertEquals(timestamp.getTimestampMillis(), event.getTimestampMillis());
-    assertEquals(timestamp.getNanoTime(), event.getNanoTime());
+
+    long epochSecond = atTime.getEpochSecond();
+    int nano = atTime.getNano();
+
+    assertEquals(
+        TimeUnit.SECONDS.toMillis(epochSecond) + TimeUnit.NANOSECONDS.toMillis(nano),
+        event.getTimestampMillis());
+    assertEquals(TimeUnit.SECONDS.toNanos(epochSecond) + nano, event.getNanoTime());
   }
 
   @Test

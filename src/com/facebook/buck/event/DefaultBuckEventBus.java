@@ -28,6 +28,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.MoreExecutors;
+import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -110,15 +111,14 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
     dispatch(event);
   }
 
-  /** Post event to the EventBus using the timestamp given by atTime. */
+  /** Post event to the EventBus using the given {@code atTime} timestamp. */
   @Override
-  public void post(BuckEvent event, BuckEvent atTime) {
-    event.configure(
-        atTime.getTimestampMillis(),
-        atTime.getNanoTime(),
-        atTime.getThreadUserNanoTime(),
-        threadIdSupplier.get(),
-        buildId);
+  public void post(BuckEvent event, Instant atTime) {
+    long threadId = threadIdSupplier.get();
+    long millis = atTime.toEpochMilli();
+    long nano = TimeUnit.SECONDS.toNanos(atTime.getEpochSecond()) + atTime.getNano();
+    long threadUserNanoTime = clock.threadUserNanoTime(threadId);
+    event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
     dispatch(event);
   }
 
@@ -221,7 +221,7 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
    */
   @Override
   public void timestamp(BuckEvent event) {
-    Long threadId = threadIdSupplier.get();
+    long threadId = threadIdSupplier.get();
     event.configure(
         clock.currentTimeMillis(),
         clock.nanoTime(),
