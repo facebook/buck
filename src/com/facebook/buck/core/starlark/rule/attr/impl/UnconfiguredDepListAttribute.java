@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -28,10 +28,10 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Represents a list of dependencies. These are exposed to users as {@link ProviderInfoCollection}
@@ -99,12 +99,18 @@ public abstract class UnconfiguredDepListAttribute
 
     return analysisContext
         .resolveDeps(
-            Iterables.transform(
-                listValue,
-                target -> {
-                  Verify.verify(target instanceof BuildTarget, "%s must be a BuildTarget", target);
-                  return (BuildTarget) target;
-                }))
+            listValue.stream()
+                .map(
+                    target -> {
+                      Verify.verify(
+                          target instanceof UnconfiguredBuildTarget,
+                          "%s must be a UnconfiguredBuildTarget",
+                          target);
+                      // TODO(nga): wrong configuration
+                      return ((UnconfiguredBuildTarget) target)
+                          .configure(UnconfiguredTargetConfiguration.INSTANCE);
+                    })
+                .collect(Collectors.toList()))
         .entrySet().stream()
         .map(
             targetAndProviders ->
