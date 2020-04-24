@@ -163,6 +163,8 @@ class PEX(object):  # noqa: T000
     user_site_distributions = OrderedSet()
 
     def all_distribution_paths(path):
+      if not path:
+          return set()
       locations = set(dist.location for dist in find_distributions(path))
       return set([path]) | locations | set(os.path.realpath(path) for path in locations)
 
