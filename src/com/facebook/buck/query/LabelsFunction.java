@@ -33,7 +33,7 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
-import com.google.common.base.CaseFormat;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import java.util.Set;
 
@@ -71,8 +71,7 @@ public class LabelsFunction<NODE_TYPE> implements QueryFunction<NODE_TYPE> {
       QueryEnvironment<NODE_TYPE> env,
       ImmutableList<Argument<NODE_TYPE>> args)
       throws QueryException {
-    final String label =
-        CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
+    ParamName label = ParamName.bySnakeCase(args.get(0).getWord());
     Set<NODE_TYPE> inputs = evaluator.eval(args.get(1).getExpression(), env);
     return Unions.of((NODE_TYPE input) -> env.getTargetsInAttribute(input, label), inputs);
   }

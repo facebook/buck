@@ -19,8 +19,8 @@ package com.facebook.buck.query;
 import com.facebook.buck.query.QueryEnvironment.Argument;
 import com.facebook.buck.query.QueryEnvironment.ArgumentType;
 import com.facebook.buck.query.QueryEnvironment.QueryFunction;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.util.string.StringMatcher;
-import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -63,7 +63,7 @@ public class AttrFilterFunction<NODE_TYPE> implements QueryFunction<NODE_TYPE> {
       ImmutableList<Argument<NODE_TYPE>> args)
       throws QueryException {
     QueryExpression<NODE_TYPE> argument = args.get(args.size() - 1).getExpression();
-    String attr = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, args.get(0).getWord());
+    ParamName attr = ParamName.bySnakeCase(args.get(0).getWord());
 
     String attrValue = args.get(1).getWord();
     Predicate<Object> predicate =

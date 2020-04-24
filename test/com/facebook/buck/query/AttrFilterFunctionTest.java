@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Collections;
@@ -75,11 +76,11 @@ public class AttrFilterFunctionTest {
   }
 
   private class TestQueryEnvironment extends BaseTestQueryEnvironment<QueryTarget> {
-    private final String attributeName;
+    private final ParamName attributeName;
     private final Object attributeValue;
 
     public TestQueryEnvironment(String attributeName, Object attributeValue) {
-      this.attributeName = attributeName;
+      this.attributeName = ParamName.bySnakeCase(attributeName);
       this.attributeValue = attributeValue;
     }
 
@@ -108,7 +109,7 @@ public class AttrFilterFunctionTest {
 
     @Override
     public Set<Object> filterAttributeContents(
-        QueryTarget target, String attribute, Predicate<Object> predicate) {
+        QueryTarget target, ParamName attribute, Predicate<Object> predicate) {
 
       if (target == onlyTarget && attribute.equals(this.attributeName)) {
         if (predicate.test(attributeValue)) {

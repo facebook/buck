@@ -30,6 +30,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
@@ -273,11 +274,11 @@ public interface QueryEnvironment<NODE_TYPE> {
    * <p>Note that unlike most methods in this interface, this method can return a heterogeneous
    * collection of objects (both paths and build targets).
    */
-  Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, String attribute) throws QueryException;
+  Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, ParamName attribute) throws QueryException;
 
   /** Returns the objects in the `attribute` of the given `target` that satisfy `predicate` */
   Set<Object> filterAttributeContents(
-      NODE_TYPE target, String attribute, Predicate<Object> predicate) throws QueryException;
+      NODE_TYPE target, ParamName attribute, Predicate<Object> predicate) throws QueryException;
 
   /** Returns the set of query functions implemented by this query environment. */
   Iterable<QueryFunction<NODE_TYPE>> getFunctions();

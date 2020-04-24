@@ -16,6 +16,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
@@ -94,14 +95,14 @@ public class TargetVariablesQueryEnvironment<NODE_TYPE> implements QueryEnvironm
   }
 
   @Override
-  public Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, String attribute)
+  public Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, ParamName attribute)
       throws QueryException {
     return delegate.getTargetsInAttribute(target, attribute);
   }
 
   @Override
   public Set<Object> filterAttributeContents(
-      NODE_TYPE target, String attribute, Predicate<Object> predicate) throws QueryException {
+      NODE_TYPE target, ParamName attribute, Predicate<Object> predicate) throws QueryException {
     return delegate.filterAttributeContents(target, attribute, predicate);
   }
 

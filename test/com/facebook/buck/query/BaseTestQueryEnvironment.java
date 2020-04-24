@@ -16,6 +16,7 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
 import java.util.Set;
@@ -84,13 +85,13 @@ public class BaseTestQueryEnvironment<NODE_TYPE> implements QueryEnvironment<NOD
   }
 
   @Override
-  public Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, String attribute) {
+  public Set<NODE_TYPE> getTargetsInAttribute(NODE_TYPE target, ParamName attribute) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public Set<Object> filterAttributeContents(
-      NODE_TYPE target, String attribute, Predicate<Object> predicate) {
+      NODE_TYPE target, ParamName attribute, Predicate<Object> predicate) {
     throw new UnsupportedOperationException();
   }
 

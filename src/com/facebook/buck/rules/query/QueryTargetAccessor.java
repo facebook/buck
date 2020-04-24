@@ -29,6 +29,7 @@ import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.nio.file.Path;
@@ -42,10 +43,10 @@ public class QueryTargetAccessor {
   public static <T extends ConstructorArg> ImmutableSet<QueryTarget> getTargetsInAttribute(
       TypeCoercerFactory typeCoercerFactory,
       TargetNode<T> node,
-      String attribute,
+      ParamName attribute,
       CellNameResolver cellPathResolver) {
     ParamInfo<?> info =
-        typeCoercerFactory.paramInfos(node.getConstructorArg()).getByCamelCaseName(attribute);
+        typeCoercerFactory.paramInfos(node.getConstructorArg()).getByName(attribute);
     if (info == null) {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();
@@ -80,11 +81,11 @@ public class QueryTargetAccessor {
   public static <T extends ConstructorArg> ImmutableSet<Object> filterAttributeContents(
       TypeCoercerFactory typeCoercerFactory,
       TargetNode<T> node,
-      String attribute,
+      ParamName attribute,
       Predicate<Object> predicate,
       CellNameResolver cellNameResolver) {
     ParamInfo<?> info =
-        typeCoercerFactory.paramInfos(node.getConstructorArg()).getByCamelCaseName(attribute);
+        typeCoercerFactory.paramInfos(node.getConstructorArg()).getByName(attribute);
     if (info == null) {
       // Ignore if the field does not exist in this rule.
       return ImmutableSet.of();

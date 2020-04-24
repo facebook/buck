@@ -61,6 +61,7 @@ import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.query.RdepsFunction;
 import com.facebook.buck.query.TestsOfFunction;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.query.QueryTargetAccessor;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -408,7 +409,7 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
   }
 
   @Override
-  public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, String attribute)
+  public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, ParamName attribute)
       throws QueryException {
     BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
     return QueryTargetAccessor.getTargetsInAttribute(
@@ -420,7 +421,7 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
-      QueryTarget target, String attribute, Predicate<Object> predicate) throws QueryException {
+      QueryTarget target, ParamName attribute, Predicate<Object> predicate) throws QueryException {
     BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
     return QueryTargetAccessor.filterAttributeContents(
         typeCoercerFactory,
