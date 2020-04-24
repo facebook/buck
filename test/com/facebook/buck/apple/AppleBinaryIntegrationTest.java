@@ -644,7 +644,7 @@ public class AppleBinaryIntegrationTest {
     assertThat(dylibSymbolTable, containsString("T _get_value_from_c"));
   }
 
-  @Test
+  @Test(timeout = 120000)
   public void testAppleBinaryWithLinkGroupsWithLabelFilterWithNodeTraversal() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
