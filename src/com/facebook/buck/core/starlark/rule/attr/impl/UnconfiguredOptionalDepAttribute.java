@@ -16,8 +16,8 @@
 
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
@@ -84,21 +84,24 @@ public abstract class UnconfiguredOptionalDepAttribute
         preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 
-  @SuppressWarnings("unused")
   private ImmutableList<SkylarkDependency> postCoercionTransform(
       Object coercedValue, RuleAnalysisContext analysisContext) {
-    Verify.verify(coercedValue instanceof List<?>, "Value %s must be a list", coercedValue);
-    List<?> listValue = (List<?>) coercedValue;
-    ImmutableList.Builder<SkylarkDependency> builder =
-        ImmutableList.builderWithExpectedSize(listValue.size());
+    Verify.verify(
+        coercedValue instanceof Optional<?>, "Value %s must be an optional", coercedValue);
+    Optional<?> optionalValue = (Optional<?>) coercedValue;
 
     return analysisContext
         .resolveDeps(
             Iterables.transform(
-                listValue,
+                optionalValue.map(ImmutableList::of).orElse(ImmutableList.of()),
                 target -> {
-                  Verify.verify(target instanceof BuildTarget, "%s must be a BuildTarget", target);
-                  return (BuildTarget) target;
+                  Verify.verify(
+                      target instanceof UnconfiguredBuildTarget,
+                      "%s must be an UnconfiuredBuildTarget",
+                      target);
+                  // TODO(nga): use proper configuration
+                  return ((UnconfiguredBuildTarget) target)
+                      .configure(UnconfiguredTargetConfiguration.INSTANCE);
                 }))
         .entrySet().stream()
         .map(
