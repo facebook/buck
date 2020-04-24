@@ -94,6 +94,11 @@ public class ParamName implements Comparable<ParamName> {
 
     String camelCase = validateCase(snakeCase, CaseFormat.LOWER_UNDERSCORE, CaseFormat.LOWER_CAMEL);
 
+    Preconditions.checkArgument(!snakeCase.isEmpty(), "param name must not be empty");
+    Preconditions.checkArgument(!snakeCase.equals("_"), "param name must not be underscore");
+    Preconditions.checkArgument(
+        !snakeCase.contains("."), "param name must not contain dot: %s", snakeCase);
+
     return bySnakeCase.computeIfAbsent(snakeCase, k -> new ParamName(camelCase, snakeCase));
   }
 

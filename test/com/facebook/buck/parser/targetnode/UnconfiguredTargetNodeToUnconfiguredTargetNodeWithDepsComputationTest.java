@@ -79,10 +79,6 @@ public class UnconfiguredTargetNodeToUnconfiguredTargetNodeWithDepsComputationTe
         ImmutableMap.of(
             "name",
             "target1",
-            "buck.type",
-            "java_library",
-            "buck.base_path",
-            "",
             "deps",
             ImmutableList.of(UnconfiguredBuildTargetParser.parse("//:target2")));
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =

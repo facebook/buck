@@ -41,15 +41,7 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
 
   private UnconfiguredTargetNodeWithDepsPackage getData() {
     ImmutableMap<String, Object> rawAttributes1 =
-        ImmutableMap.of(
-            "name",
-            "target1",
-            "buck.type",
-            "java_library",
-            "buck.base_path",
-            "base",
-            "deps",
-            ImmutableSet.of(":target2"));
+        ImmutableMap.of("name", "target1", "deps", ImmutableSet.of(":target2"));
 
     UnconfiguredBuildTarget unconfiguredBuildTarget1 =
         UnconfiguredBuildTarget.of(
@@ -64,8 +56,7 @@ public class UnconfiguredTargetNodeWithDepsPackageTest {
             Optional.empty(),
             ImmutableList.of());
 
-    ImmutableMap<String, Object> rawAttributes2 =
-        ImmutableMap.of("name", "target2", "buck.type", "java_library", "buck.base_path", "base");
+    ImmutableMap<String, Object> rawAttributes2 = ImmutableMap.of("name", "target2");
 
     UnconfiguredBuildTarget unconfiguredBuildTarget2 =
         UnconfiguredBuildTarget.of(
