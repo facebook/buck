@@ -1,8 +1,12 @@
 load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
 
+INTERFACE_SRCS = [
+    "CriticalPathReportableNode.java",
+]
+
 java_immutables_library(
     name = "interface",
-    srcs = glob(["CriticalPathReportableNode.java"]),
+    srcs = INTERFACE_SRCS,
     visibility = [
         "PUBLIC",
     ],
@@ -11,7 +15,10 @@ java_immutables_library(
 
 java_immutables_library(
     name = "listener",
-    srcs = glob(["*.java"]),
+    srcs = glob(
+        ["*.java"],
+        exclude = INTERFACE_SRCS,
+    ),
     tests = [
         "//test/com/facebook/buck/event/listener/integration:integration",
     ],
@@ -19,6 +26,7 @@ java_immutables_library(
         "PUBLIC",
     ],
     deps = [
+        ":interface",
         "//src-gen:remoteexecution-protobuf",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:steps",
