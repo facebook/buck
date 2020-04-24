@@ -62,6 +62,7 @@ standard_java_test(
         "//src/com/facebook/buck/jvm/java/classes:classes",
         "//src/com/facebook/buck/jvm/kotlin:kotlin",
         "//src/com/facebook/buck/jvm/scala:scala",
+        "//src/com/facebook/buck/log:config",
         "//src/com/facebook/buck/log:log",
         "//src/com/facebook/buck/parser:parser",
         "//src/com/facebook/buck/query:query",
