@@ -18,11 +18,11 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.parser.api.RawTargetNode;
-import java.nio.file.Path;
 
 /** Generic factory to create {@link UnconfiguredTargetNode} */
 public interface UnconfiguredTargetNodeFactory {
@@ -40,7 +40,7 @@ public interface UnconfiguredTargetNodeFactory {
    */
   UnconfiguredTargetNode create(
       Cell cell,
-      Path buildFile,
+      AbsPath buildFile,
       UnconfiguredBuildTarget buildTarget,
       DependencyStack dependencyStack,
       RawTargetNode rawNode,

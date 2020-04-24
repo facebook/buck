@@ -139,7 +139,7 @@ public class DefaultUnconfiguredTargetNodeFactoryTest {
     UnconfiguredTargetNode unconfiguredTargetNode =
         factory.create(
             cell.getRootCell(),
-            cell.getRootCell().getRoot().resolve("a/b/BUCK").getPath(),
+            cell.getRootCell().getRoot().resolve("a/b/BUCK"),
             buildTarget,
             DependencyStack.root(),
             RawTargetNode.copyOf(

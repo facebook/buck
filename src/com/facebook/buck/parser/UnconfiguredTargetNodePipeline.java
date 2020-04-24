@@ -208,8 +208,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
           unconfiguredTargetNodeFactory.create(
               cell,
               cell.getBuckConfigView(ParserConfig.class)
-                  .getAbsolutePathToBuildFile(cell, buildTarget)
-                  .getPath(),
+                  .getAbsolutePathToBuildFile(cell, buildTarget),
               buildTarget,
               dependencyStack,
               from,

@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
@@ -48,7 +49,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.reflect.TypeToken;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -167,7 +167,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   @Override
   public UnconfiguredTargetNode create(
       Cell cell,
-      Path buildFile,
+      AbsPath buildFile,
       UnconfiguredBuildTarget target,
       DependencyStack dependencyStack,
       RawTargetNode rawAttributes,
@@ -186,7 +186,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             cell.getCellPathResolver(),
             VisibilityAttributes.VISIBILITY.getSnakeCase(),
             rawAttributes.getVisibility(),
-            buildFile,
+            buildFile.getPath(),
             target::getFullyQualifiedName);
 
     if (visibilityPatterns.isEmpty()) {
@@ -198,7 +198,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             cell.getCellPathResolver(),
             VisibilityAttributes.WITHIN_VIEW.getSnakeCase(),
             rawAttributes.getWithinView(),
-            buildFile,
+            buildFile.getPath(),
             target::getFullyQualifiedName);
 
     if (withinViewPatterns.isEmpty()) {
