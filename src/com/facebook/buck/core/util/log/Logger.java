@@ -1,17 +1,17 @@
 /*
- * Copyright 2014-present Facebook, Inc.
+ * Portions Copyright (c) Facebook, Inc. and its affiliates.
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may
- * not use this file except in compliance with the License. You may obtain
- * a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 /*
@@ -125,7 +125,7 @@ public class Logger {
    * @param args arguments for the format string
    */
   public void verbose(@Nullable Throwable exception, String format, Object... args) {
-    logAppendableLogRecord(FINER, "VERBOSE", exception, format, args);
+    logAppendableLogRecord(FINER, exception, format, args);
   }
 
   /**
@@ -181,7 +181,7 @@ public class Logger {
    * @param args arguments for the format string
    */
   public void debug(@Nullable Throwable exception, String format, Object... args) {
-    logAppendableLogRecord(FINE, "DEBUG", exception, format, args);
+    logAppendableLogRecord(FINE, exception, format, args);
   }
 
   /**
@@ -209,7 +209,7 @@ public class Logger {
    * @param args arguments for the format string
    */
   public void info(@Nullable Throwable exception, String format, Object... args) {
-    logAppendableLogRecord(INFO, "INFO", exception, format, args);
+    logAppendableLogRecord(INFO, exception, format, args);
   }
 
   /**
@@ -257,7 +257,7 @@ public class Logger {
    * @param args arguments for the format string
    */
   public void warn(@Nullable Throwable exception, String format, Object... args) {
-    logAppendableLogRecord(WARNING, "WARN", exception, format, args);
+    logAppendableLogRecord(WARNING, exception, format, args);
   }
 
   /**
@@ -313,7 +313,7 @@ public class Logger {
    * @param args arguments for the format string
    */
   public void error(@Nullable Throwable exception, String format, Object... args) {
-    logAppendableLogRecord(SEVERE, "ERROR", exception, format, args);
+    logAppendableLogRecord(SEVERE, exception, format, args);
   }
 
   /**
@@ -352,14 +352,10 @@ public class Logger {
   }
 
   private void logAppendableLogRecord(
-      Level level,
-      String displayLevel,
-      @Nullable Throwable exception,
-      String format,
-      Object... args) {
+      Level level, @Nullable Throwable exception, String format, Object... args) {
     if (logger.isLoggable(level)) {
       String message = args.length != 0 ? String.format(format, args) : format;
-      AppendableLogRecord lr = new AppendableLogRecord(level, displayLevel, message);
+      AppendableLogRecord lr = new AppendableLogRecord(level, message);
       lr.setThrown(exception);
       lr.setLoggerName(logger.getName());
       logger.log(lr);

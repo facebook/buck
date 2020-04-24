@@ -16,45 +16,19 @@
 
 package com.facebook.buck.core.util.log.appendablelogrecord;
 
-import java.util.Arrays;
-import java.util.ConcurrentModificationException;
-import java.util.Formatter;
-import java.util.IllegalFormatException;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
+/**
+ * Subclass of LogRecord that only accepts preformatted strings. LogFormatter downcasts if it
+ * receives AppendableLogRecord instances, allowing us to avoid string allocations.
+ */
 public class AppendableLogRecord extends LogRecord {
-  private final String displayLevel;
-
-  public AppendableLogRecord(Level level, String displayLevel, String msg) {
+  public AppendableLogRecord(Level level, String msg) {
     super(level, msg);
-    this.displayLevel = displayLevel;
   }
 
   public void appendFormattedMessage(StringBuilder sb) {
-    // Unfortunately, there's no public API to reset a Formatter's
-    // Appendable. If this proves to be a perf issue, we can do
-    // runtime introspection to access the private Formatter.init()
-    // API to replace the Appendable.
-
-    try (Formatter f = new Formatter(sb, Locale.US)) {
-      f.format(getMessage(), getParameters());
-    } catch (IllegalFormatException e) {
-      sb.append("Invalid format string: ");
-      sb.append(displayLevel);
-      sb.append(" '");
-      sb.append(getMessage());
-      sb.append("' ");
-      Object[] params = getParameters();
-      if (params == null) {
-        params = new Object[0];
-      }
-      sb.append(Arrays.asList(params));
-    } catch (ConcurrentModificationException originalException) {
-      // This way we may be at least able to figure out where offending log was created.
-      throw new ConcurrentModificationException(
-          "Concurrent modification when logging for message " + getMessage(), originalException);
-    }
+    sb.append(getMessage());
   }
 }
