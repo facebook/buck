@@ -1,6 +1,13 @@
+PACKAGE_FINDER_SRCS = [
+    "JavaPackageFinder.java",
+]
+
 java_library(
     name = "core",
-    srcs = glob(["*.java"]),
+    srcs = glob(
+        ["*.java"],
+        exclude = PACKAGE_FINDER_SRCS,
+    ),
     visibility = ["PUBLIC"],
     deps = [
         "//src/com/facebook/buck/core/model:model",
@@ -20,9 +27,7 @@ java_library(
 
 java_library(
     name = "packagefinder",
-    srcs = [
-        "JavaPackageFinder.java",
-    ],
+    srcs = PACKAGE_FINDER_SRCS,
     visibility = [
         "//src/com/facebook/buck/core/build/context:context",
         "//src/com/facebook/buck/core/build/execution/context:context",
