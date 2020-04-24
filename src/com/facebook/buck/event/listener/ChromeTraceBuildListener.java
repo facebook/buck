@@ -418,11 +418,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
   @Subscribe
   public void stepStarted(StepEvent.Started started) {
     writeChromeTraceEvent(
-        "buck",
-        started.getShortStepName(),
-        ChromeTraceEvent.Phase.BEGIN,
-        ImmutableMap.of(),
-        started);
+        "buck", started.getShortStepName(), Phase.BEGIN, ImmutableMap.of(), started);
   }
 
   @Subscribe
@@ -430,10 +426,12 @@ public class ChromeTraceBuildListener implements BuckEventListener {
     writeChromeTraceEvent(
         "buck",
         finished.getShortStepName(),
-        ChromeTraceEvent.Phase.END,
+        Phase.END,
         ImmutableMap.of(
-            "description", finished.getDescription(),
-            "exit_code", Integer.toString(finished.getExitCode())),
+            "description",
+            finished.getDescription(),
+            "exit_code",
+            Integer.toString(finished.getExitCode())),
         finished);
   }
 
@@ -506,7 +504,7 @@ public class ChromeTraceBuildListener implements BuckEventListener {
 
     try {
       writeChromeTraceEvent(
-          "buck",
+          perfEvent.getCategory(),
           CONVERTED_EVENT_ID_CACHE.get(perfEvent.getEventId().getValue().intern()),
           phase,
           ImmutableMap.copyOf(perfEvent.getEventInfo()),
@@ -960,26 +958,10 @@ public class ChromeTraceBuildListener implements BuckEventListener {
       ChromeTraceEvent.Phase phase,
       ImmutableMap<String, ?> arguments,
       BuckEvent event) {
-    writeChromeTraceEvent(
-        category,
-        name,
-        phase,
-        arguments,
-        TimeUnit.NANOSECONDS.toMicros(event.getNanoTime()),
-        event);
-  }
-
-  void writeChromeTraceEvent(
-      String category,
-      String name,
-      ChromeTraceEvent.Phase phase,
-      ImmutableMap<String, ?> arguments,
-      long timestampInMicroseconds,
-      BuckEvent event) {
     long threadId = event.getThreadId();
+    long timestampInMicroseconds = TimeUnit.NANOSECONDS.toMicros(event.getNanoTime());
     long threadTimestampInMicroseconds =
         TimeUnit.NANOSECONDS.toMicros(event.getThreadUserNanoTime());
-
     ChromeTraceEvent chromeTraceEvent =
         new ChromeTraceEvent(
             category,

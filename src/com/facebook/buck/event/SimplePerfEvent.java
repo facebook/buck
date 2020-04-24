@@ -50,7 +50,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     FINISHED("Finished"),
     ;
 
-    private String value;
+    private final String value;
 
     public String getValue() {
       return value;
@@ -69,6 +69,9 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
 
   /** @return information associated with the event. */
   public abstract ImmutableMap<String, Object> getEventInfo();
+
+  /** @return event's category. */
+  public abstract String getCategory();
 
   /**
    * Prefer using {@link SimplePerfEvent#scope(BuckEventBus, PerfEventId, ImmutableMap)} when
@@ -123,6 +126,11 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   public static Started started(
       PerfEventId perfEventId, String k1, Object v1, String k2, Object v2) {
     return started(perfEventId, ImmutableMap.of(k1, v1, k2, v2));
+  }
+
+  public static Started started(
+      PerfEventId perfEventId, String category, ImmutableMap<String, Object> info) {
+    return new StartedImpl(perfEventId, category, info);
   }
 
   /**
@@ -183,11 +191,8 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
    */
   public static Scope scope(
       Optional<BuckEventBus> bus, PerfEventId perfEventId, ImmutableMap<String, Object> info) {
-    if (bus.isPresent()) {
-      return scope(bus.get(), perfEventId, info);
-    } else {
-      return new NoopScope();
-    }
+    return bus.map(buckEventBus -> scope(buckEventBus, perfEventId, info))
+        .orElseGet(NoopScope::new);
   }
 
   /**
@@ -302,6 +307,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
 
   /** Represents the scope within which a particular performance operation is taking place. */
   public interface Scope extends AutoCloseable {
+
     /**
      * Creates and sends an event which indicates an update in state of the scope. Every invocation
      * creates and sends a new event.
@@ -334,6 +340,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   }
 
   public interface Started extends BuckEvent {
+
     /**
      * Creates a new event which indicates an update to the performance data being gathered.
      *
@@ -358,22 +365,23 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
      */
     BuckEvent createFinishedEvent(ImmutableMap<String, Object> info);
 
-    /** Convenience wrapper for {@link Started#createFinishedEvent(String, Object)}. */
+    /** Convenience wrapper for {@link Started#createFinishedEvent(ImmutableMap)}. */
     BuckEvent createFinishedEvent();
 
-    /** Convenience wrapper for {@link Started#createFinishedEvent(String, Object)}. */
+    /** Convenience wrapper for {@link Started#createFinishedEvent(ImmutableMap)}. */
     BuckEvent createFinishedEvent(String k1, Object v1);
 
-    /** Convenience wrapper for {@link Started#createFinishedEvent(String, Object)}. */
+    /** Convenience wrapper for {@link Started#createFinishedEvent(ImmutableMap)}. */
     BuckEvent createFinishedEvent(String k1, Object v1, String k2, Object v2);
   }
 
-  @BuckStyleValue
   /**
    * This is an identifier for the various performance event names in use in the system. Should be
    * CamelCase (first letter capitalized).
    */
+  @BuckStyleValue
   public abstract static class PerfEventId {
+
     @JsonValue
     public abstract String getValue();
 
@@ -388,6 +396,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   }
 
   private static class NoopScope implements AutoCloseable, Scope {
+
     @Override
     public void update(ImmutableMap<String, Object> info) {}
 
@@ -408,10 +417,11 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   }
 
   private static class SimplePerfEventScope implements AutoCloseable, Scope {
-    protected BuckEventBus bus;
-    protected StartedImpl started;
-    protected ConcurrentMap<String, AtomicLong> finishedCounters;
-    protected ImmutableMap.Builder<String, Object> finishedInfoBuilder;
+
+    protected final BuckEventBus bus;
+    protected final StartedImpl started;
+    protected final ConcurrentMap<String, AtomicLong> finishedCounters;
+    protected final ImmutableMap.Builder<String, Object> finishedInfoBuilder;
 
     public SimplePerfEventScope(BuckEventBus bus, StartedImpl started) {
       this.bus = bus;
@@ -462,6 +472,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   }
 
   private static class MinimumTimePerfEventScope extends SimplePerfEventScope {
+
     private final long minimumDurationNanos;
     private final Scope parentScope;
     private final List<AbstractChainablePerfEvent> events;
@@ -504,18 +515,30 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
 
   /** Common implementation for the Started/Updated/Finished events. */
   private abstract static class AbstractChainablePerfEvent extends SimplePerfEvent {
-    private PerfEventId perfEventId;
-    private Type perfEventType;
-    private ImmutableMap<String, Object> info;
+
+    private final PerfEventId perfEventId;
+    private final Type perfEventType;
+    private final ImmutableMap<String, Object> info;
+    private final String category;
 
     public AbstractChainablePerfEvent(
         EventKey eventKey,
         PerfEventId perfEventId,
         Type perfEventType,
         ImmutableMap<String, Object> info) {
+      this(eventKey, perfEventId, perfEventType, "buck", info);
+    }
+
+    public AbstractChainablePerfEvent(
+        EventKey eventKey,
+        PerfEventId perfEventId,
+        Type perfEventType,
+        String category,
+        ImmutableMap<String, Object> info) {
       super(eventKey);
       this.perfEventId = perfEventId;
       this.perfEventType = perfEventType;
+      this.category = category;
       this.info = info;
     }
 
@@ -527,6 +550,11 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     @Override
     public Type getEventType() {
       return perfEventType;
+    }
+
+    @Override
+    public String getCategory() {
+      return category;
     }
 
     @Override
@@ -563,6 +591,7 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
   }
 
   private static class StartedImpl extends AbstractChainablePerfEvent implements Started {
+
     private boolean isChainFinished = false;
 
     /** @return whether creating new events off of this chain is allowed. */
@@ -621,6 +650,11 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     public StartedImpl(PerfEventId perfEventId, ImmutableMap<String, Object> info) {
       super(EventKey.unique(), perfEventId, Type.STARTED, info);
     }
+
+    public StartedImpl(
+        PerfEventId perfEventId, String category, ImmutableMap<String, Object> info) {
+      super(EventKey.unique(), perfEventId, Type.STARTED, category, info);
+    }
   }
 
   private static class Updated extends AbstractChainablePerfEvent {
@@ -628,12 +662,21 @@ public abstract class SimplePerfEvent extends AbstractBuckEvent {
     public Updated(StartedImpl started, ImmutableMap<String, Object> updateInfo) {
       super(started.getEventKey(), started.getEventId(), Type.UPDATED, updateInfo);
     }
+
+    public Updated(StartedImpl started, String category, ImmutableMap<String, Object> updateInfo) {
+      super(started.getEventKey(), started.getEventId(), Type.UPDATED, category, updateInfo);
+    }
   }
 
   public static class Finished extends AbstractChainablePerfEvent {
 
     public Finished(StartedImpl started, ImmutableMap<String, Object> finishedInfo) {
-      super(started.getEventKey(), started.getEventId(), Type.FINISHED, finishedInfo);
+      super(
+          started.getEventKey(),
+          started.getEventId(),
+          Type.FINISHED,
+          started.getCategory(),
+          finishedInfo);
       started.markChainFinished();
     }
   }
