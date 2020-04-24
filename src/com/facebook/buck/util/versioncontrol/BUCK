@@ -82,7 +82,7 @@ java_library(
     name = "versioncontrol",
     srcs = glob(
         ["*.java"],
-        exclude = CONFIG_SRCS + GENERATOR_SRCS + VALUE_TYPES_SRCS,
+        exclude = CONFIG_SRCS + GENERATOR_SRCS + VALUE_TYPES_SRCS + SUPPLIER_SRCS,
     ),
     tests = [
         "//test/com/facebook/buck/util/versioncontrol:versioncontrol",
