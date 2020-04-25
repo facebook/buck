@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.xml.sax.SAXException;
 
@@ -260,10 +261,10 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     String targetPackageName =
         tryToExtractTargetPackageFromManifest(pathResolver, apk.getApkInfo());
 
-    String ddmlib = getPathForResourceJar(ddmlibJar);
-    String kxml2 = getPathForResourceJar(kxml2Jar);
-    String guava = getPathForResourceJar(guavaJar);
-    String toolsCommon = getPathForResourceJar(toolsCommonJar);
+    String ddmlib = getPathForResourceJarString(ddmlibJar);
+    String kxml2 = getPathForResourceJarString(kxml2Jar);
+    String guava = getPathForResourceJarString(guavaJar);
+    String toolsCommon = getPathForResourceJarString(toolsCommonJar);
 
     Optional<AbsPath> exopackageSymlinkTreePath =
         getExopackageSymlinkTreePathIfNeeded(apk, isExternalRun);
@@ -304,9 +305,14 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         testRuleTimeoutMs);
   }
 
-  private String getPathForResourceJar(PackagedResource packagedResource) {
+  private String getPathForResourceJarString(PackagedResource packagedResource) {
     ProjectFilesystem filesystem = this.getProjectFilesystem();
     return filesystem.resolve(packagedResource.get()).toString();
+  }
+
+  private Path getPathForResourceJar(PackagedResource packagedResource) {
+    ProjectFilesystem filesystem = this.getProjectFilesystem();
+    return filesystem.resolve(packagedResource.get());
   }
 
   @Override
@@ -441,8 +447,17 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             executionContext.isCodeCoverageEnabled(),
             true);
 
-    ImmutableList<Path> requiredPaths =
-        getRequiredPaths(apk, instrumentationApkPath, apkUnderTestPath);
+    Path ddmlib = getPathForResourceJar(ddmlibJar);
+    Path kxml2 = getPathForResourceJar(kxml2Jar);
+    Path guava = getPathForResourceJar(guavaJar);
+    Path toolsCommon = getPathForResourceJar(toolsCommonJar);
+
+    List<Path> requiredPaths = getRequiredPaths(apk, instrumentationApkPath, apkUnderTestPath);
+    requiredPaths.add(ddmlib);
+    requiredPaths.add(kxml2);
+    requiredPaths.add(guava);
+    requiredPaths.add(toolsCommon);
+    requiredPaths.add(TESTRUNNER_CLASSES);
 
     return ExternalTestRunnerTestSpec.builder()
         .setCwd(getProjectFilesystem().getRootPath().getPath())
@@ -459,7 +474,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
    * @return a list of paths which must be materialized on disk before an external testrunner can
    *     execute the test.
    */
-  protected static ImmutableList<Path> getRequiredPaths(
+  protected static List<Path> getRequiredPaths(
       HasInstallableApk apkInstance,
       Optional<Path> instrumentationApkPath,
       Optional<Path> apkUnderTestPath) {
@@ -476,7 +491,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         .add(apkUnderTestSymlinkTreePath.map(AbsPath::getPath)).build().stream()
         .filter(Optional::isPresent)
         .map(Optional::get)
-        .collect(ImmutableList.toImmutableList());
+        .collect(Collectors.toList());
   }
 
   @Override
