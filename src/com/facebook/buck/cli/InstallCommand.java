@@ -1183,7 +1183,8 @@ public class InstallCommand extends BuildCommand {
         // looking for a more recent simulator with this name.
       } else {
         switch (appleDeviceController.getDeviceKind(simulator)) {
-          case MOBILE:
+          case IPHONE:
+          case IPAD:
             if (isIPhoneSimulator(appleBundle.getPlatformName())) {
               if (simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
                 LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator);
@@ -1208,6 +1209,7 @@ public class InstallCommand extends BuildCommand {
             break;
 
           case WATCH:
+          case UNKNOWN:
             break;
         }
       }

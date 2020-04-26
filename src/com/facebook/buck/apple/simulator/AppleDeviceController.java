@@ -41,7 +41,9 @@ public class AppleDeviceController {
 
   /** Enum indicating the different kinds of devices possible */
   public enum AppleDeviceKindEnum {
-    MOBILE,
+    UNKNOWN,
+    IPHONE,
+    IPAD,
     TV,
     WATCH,
   }
@@ -162,8 +164,7 @@ public class AppleDeviceController {
   /**
    * Picks the simulator to be used for testing
    *
-   * @return the udid of any booted simulator (iphone) and if there are none returns any simulator.
-   *     If there are none, returns optional empty
+   * @return the picked simulator
    */
   public Optional<String> getSimulatorUdidForTest() {
     ImmutableSet<AppleDevice> simulators = getSimulators();
@@ -176,7 +177,8 @@ public class AppleDeviceController {
       }
     }
     for (AppleDevice simulator : simulators) {
-      if (getDeviceKind(simulator) == AppleDeviceKindEnum.MOBILE) {
+      AppleDeviceKindEnum deviceKind = getDeviceKind(simulator);
+      if (deviceKind == AppleDeviceKindEnum.IPHONE || deviceKind == AppleDeviceKindEnum.IPAD) {
         return Optional.of(simulator.getUdid());
       }
     }
@@ -352,8 +354,10 @@ public class AppleDeviceController {
    * @return the enum indicating the kind of device it is
    */
   public AppleDeviceKindEnum getDeviceKind(AppleDevice device) {
+    if (device.getName().startsWith("iPhone")) return AppleDeviceKindEnum.IPHONE;
+    if (device.getName().startsWith("iPad")) return AppleDeviceKindEnum.IPAD;
     if (device.getName().contains("TV")) return AppleDeviceKindEnum.TV;
     if (device.getName().contains("Watch")) return AppleDeviceKindEnum.WATCH;
-    return AppleDeviceKindEnum.MOBILE;
+    return AppleDeviceKindEnum.UNKNOWN;
   }
 }
