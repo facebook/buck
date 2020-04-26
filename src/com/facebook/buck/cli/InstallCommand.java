@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cli;
 
+import static com.facebook.buck.apple.simulator.AppleDeviceController.AppleDeviceKindEnum.IPHONE;
+
 import com.facebook.buck.android.AdbHelper;
 import com.facebook.buck.android.AndroidBinary;
 import com.facebook.buck.android.AndroidInstallConfig;
@@ -957,7 +959,7 @@ public class InstallCommand extends BuildCommand {
           .getConsole()
           .printBuildFailure(
               String.format(
-                  "Cannot install %s (no appropriate simulator found)",
+                  "Cannot install %s (no appropriate simulator found, try specifying a simulator by name)",
                   appleBundle.getFullyQualifiedName()));
       return FAILURE;
     }
@@ -1006,7 +1008,7 @@ public class InstallCommand extends BuildCommand {
             .getConsole()
             .printBuildFailure(
                 String.format(
-                    "Cannot install %s (no appropriate simulator found)",
+                    "Cannot install %s (no appropriate simulator found, try specifying a simulator by name)",
                     appleBundle.getFullyQualifiedName()));
         return FAILURE;
       }
@@ -1153,6 +1155,7 @@ public class InstallCommand extends BuildCommand {
     Optional<AppleDevice> simulatorByName = Optional.empty();
     Optional<AppleDevice> bootedSimulator = Optional.empty();
     Optional<AppleDevice> defaultSimulator = Optional.empty();
+    Optional<AppleDevice> arbitrarySimulator = Optional.empty();
 
     boolean wantUdid = deviceOptions.getSerialNumber().isPresent();
     boolean wantName = deviceOptions.getSimulatorName().isPresent();
@@ -1193,6 +1196,9 @@ public class InstallCommand extends BuildCommand {
               if (simulator.getState().toLowerCase().equals("booted")) {
                 bootedSimulator = Optional.of(simulator);
               }
+              if (appleDeviceController.getDeviceKind(simulator) == IPHONE) {
+                arbitrarySimulator = Optional.of(simulator);
+              }
             }
             break;
 
@@ -1205,6 +1211,7 @@ public class InstallCommand extends BuildCommand {
               if (simulator.getState().toLowerCase().equals("booted")) {
                 bootedSimulator = Optional.of(simulator);
               }
+              arbitrarySimulator = Optional.of(simulator);
             }
             break;
 
@@ -1235,8 +1242,10 @@ public class InstallCommand extends BuildCommand {
       }
     } else if (bootedSimulator.isPresent()) {
       return bootedSimulator;
-    } else {
+    } else if (defaultSimulator.isPresent()) {
       return defaultSimulator;
+    } else {
+      return arbitrarySimulator;
     }
   }
 
@@ -1248,6 +1257,7 @@ public class InstallCommand extends BuildCommand {
     Optional<AppleSimulator> simulatorByUdid = Optional.empty();
     Optional<AppleSimulator> simulatorByName = Optional.empty();
     Optional<AppleSimulator> defaultSimulator = Optional.empty();
+    Optional<AppleSimulator> arbitrarySimulator = Optional.empty();
 
     boolean wantUdid = deviceOptions.getSerialNumber().isPresent();
     boolean wantName = deviceOptions.getSimulatorName().isPresent();
@@ -1274,14 +1284,22 @@ public class InstallCommand extends BuildCommand {
         simulatorByName = Optional.of(simulator);
         // We assume the simulators are sorted by OS version, so we'll keep
         // looking for a more recent simulator with this name.
-      } else if (isIPhoneSimulator(appleBundle.getPlatformName())
-          && simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
-        LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator);
-        defaultSimulator = Optional.of(simulator);
-      } else if (isAppleTVSimulator(appleBundle.getPlatformName())
-          && simulator.getName().equals(DEFAULT_APPLE_TV_SIMULATOR_NAME)) {
-        LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_TV_SIMULATOR_NAME, simulator);
-        defaultSimulator = Optional.of(simulator);
+      } else if (isIPhoneSimulator(appleBundle.getPlatformName())) {
+        if (simulator.getName().equals(DEFAULT_APPLE_SIMULATOR_NAME)) {
+          LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_SIMULATOR_NAME, simulator);
+          defaultSimulator = Optional.of(simulator);
+        }
+        if (simulator.getName().startsWith("iPhone")) {
+          arbitrarySimulator = Optional.of(simulator);
+        }
+      } else if (isAppleTVSimulator(appleBundle.getPlatformName())) {
+        if (simulator.getName().equals(DEFAULT_APPLE_TV_SIMULATOR_NAME)) {
+          LOG.debug("Got default match (%s): %s", DEFAULT_APPLE_TV_SIMULATOR_NAME, simulator);
+          defaultSimulator = Optional.of(simulator);
+        }
+        if (simulator.getName().startsWith("Apple TV")) {
+          arbitrarySimulator = Optional.of(simulator);
+        }
       }
     }
 
@@ -1303,8 +1321,10 @@ public class InstallCommand extends BuildCommand {
             deviceOptions.getSimulatorName().get());
         return Optional.empty();
       }
-    } else {
+    } else if (defaultSimulator.isPresent()) {
       return defaultSimulator;
+    } else {
+      return arbitrarySimulator;
     }
   }
 
