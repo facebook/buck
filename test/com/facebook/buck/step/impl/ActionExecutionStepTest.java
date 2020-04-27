@@ -24,7 +24,6 @@ import static org.junit.Assert.assertTrue;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -112,9 +111,7 @@ public class ActionExecutionStepTest {
                 .setPlatform(Platform.UNKNOWN)
                 .setEnvironment(ImmutableMap.of())
                 .setJavaPackageFinder(new FakeJavaPackageFinder())
-                .setExecutors(ImmutableMap.of())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
-                .setCells(new TestCellBuilder().setFilesystem(projectFilesystem).build())
                 .setBuildCellRootPath(baseCell)
                 .setProcessExecutor(new FakeProcessExecutor())
                 .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
@@ -167,9 +164,7 @@ public class ActionExecutionStepTest {
                 .setPlatform(Platform.UNKNOWN)
                 .setEnvironment(ImmutableMap.of())
                 .setJavaPackageFinder(new FakeJavaPackageFinder())
-                .setExecutors(ImmutableMap.of())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
-                .setCells(new TestCellBuilder().setFilesystem(projectFilesystem).build())
                 .setBuildCellRootPath(baseCell)
                 .setProcessExecutor(new FakeProcessExecutor())
                 .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
@@ -219,9 +214,7 @@ public class ActionExecutionStepTest {
                 .setPlatform(Platform.UNKNOWN)
                 .setEnvironment(ImmutableMap.of())
                 .setJavaPackageFinder(new FakeJavaPackageFinder())
-                .setExecutors(ImmutableMap.of())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
-                .setCells(new TestCellBuilder().setFilesystem(projectFilesystem).build())
                 .setBuildCellRootPath(baseCell)
                 .setProcessExecutor(new FakeProcessExecutor())
                 .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())

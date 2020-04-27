@@ -46,9 +46,12 @@ public class RmStepTest {
   @Before
   public void setUp() {
     filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
+    ExecutionContext executionContext = TestExecutionContext.newInstance();
     context =
-        TestExecutionContext.newInstance()
-            .withBuildCellRootPath(filesystem.getRootPath().getPath());
+        ExecutionContext.builder()
+            .from(executionContext)
+            .setBuildCellRootPath(filesystem.getRootPath().getPath())
+            .build();
   }
 
   @Test

@@ -19,7 +19,6 @@ package com.facebook.buck.core.build.execution.context;
 import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.rulekey.RuleKeyDiagnosticsMode;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
@@ -34,14 +33,12 @@ import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
-import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
 import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Closer;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -65,8 +62,6 @@ public abstract class ExecutionContext implements Closeable {
 
   public abstract JavaPackageFinder getJavaPackageFinder();
 
-  public abstract ImmutableMap<ExecutorPool, ListeningExecutorService> getExecutors();
-
   public abstract Optional<TargetDevice> getTargetDevice();
 
   public abstract Optional<AndroidDevicesHelper> getAndroidDevicesHelper();
@@ -78,8 +73,6 @@ public abstract class ExecutionContext implements Closeable {
   public abstract Optional<ConcurrentMap<String, WorkerProcessPool>> getPersistentWorkerPools();
 
   public abstract CellPathResolver getCellPathResolver();
-
-  public abstract Cells getCells();
 
   /** See {@link com.facebook.buck.core.build.context.BuildContext#getBuildCellRootPath}. */
   public abstract Path getBuildCellRootPath();
@@ -225,20 +218,6 @@ public abstract class ExecutionContext implements Closeable {
     }
 
     return builder().from(this).setProcessExecutor(processExecutor).build();
-  }
-
-  public ExecutionContext withBuildCellRootPath(Path cellRootPath) {
-    if (getBuildCellRootPath().equals(cellRootPath)) {
-      return this;
-    }
-    return builder().from(this).setBuildCellRootPath(cellRootPath).build();
-  }
-
-  public ExecutionContext withConsole(Console console) {
-    if (getConsole() == console) {
-      return this;
-    }
-    return builder().from(this).setConsole(console).build();
   }
 
   public static class Builder extends ImmutableExecutionContext.Builder {}

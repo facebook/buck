@@ -19,7 +19,6 @@ package com.facebook.buck.step.impl;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.actions.AbstractAction;
@@ -80,8 +79,6 @@ public class TestActionExecutionRunner {
   public interface ExecutionDetails<T> {
     T getAction();
 
-    BuckEventBusForTests.CapturingConsoleEventListener getEventListener();
-
     StepExecutionResult getResult();
   }
 
@@ -103,14 +100,12 @@ public class TestActionExecutionRunner {
                 .setPlatform(Platform.UNKNOWN)
                 .setEnvironment(ImmutableMap.of())
                 .setJavaPackageFinder(new FakeJavaPackageFinder())
-                .setExecutors(ImmutableMap.of())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
-                .setCells(new TestCellBuilder().setFilesystem(projectFilesystem).build())
                 .setBuildCellRootPath(projectFilesystem.getRootPath().getPath())
                 .setProcessExecutor(processExecutor)
                 .setProjectFilesystemFactory(projectFilesystemFactory)
                 .build());
 
-    return ImmutableExecutionDetails.ofImpl(action, consoleEventListener, executionResult);
+    return ImmutableExecutionDetails.ofImpl(action, executionResult);
   }
 }

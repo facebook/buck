@@ -18,7 +18,6 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
-import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
@@ -29,14 +28,8 @@ import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.FakeProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor;
-import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.buck.util.environment.Platform;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.Executors;
 
 public class TestExecutionContext {
 
@@ -49,10 +42,6 @@ public class TestExecutionContext {
   private static final ClassLoaderCache testClassLoaderCache = new ClassLoaderCache();
 
   public static ExecutionContext.Builder newBuilder() {
-    Map<ExecutorPool, ListeningExecutorService> executors = new HashMap<>();
-    executors.put(
-        ExecutorPool.CPU, MoreExecutors.listeningDecorator(Executors.newCachedThreadPool()));
-
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellPathResolver cellPathResolver = TestCellPathResolver.get(filesystem);
 
@@ -63,10 +52,8 @@ public class TestExecutionContext {
         .setEnvironment(EnvVariablesProvider.getSystemEnv())
         .setJavaPackageFinder(new FakeJavaPackageFinder())
         .setClassLoaderCache(testClassLoaderCache)
-        .setExecutors(executors)
         .setProcessExecutor(new FakeProcessExecutor())
         .setCellPathResolver(cellPathResolver)
-        .setCells(new TestCellBuilder().setFilesystem(filesystem).build())
         .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
         .setBuildCellRootPath(filesystem.getRootPath().getPath());
   }
