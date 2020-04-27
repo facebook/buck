@@ -195,6 +195,11 @@ windows_environment: &windows_environment
   BUCK_NUM_THREADS: 3
   BUCK_PEX_LOCATION: "./new_buck.pex"
 
+ignore_dev_branch: &ignore_dev_branch
+  filters:
+    branches:
+      ignore: dev
+
 jobs:
   linux_build_openjdk8:
     environment:
@@ -1092,84 +1097,46 @@ workflows:
     # jobs run in parallel
     jobs:
       - linux_build_openjdk8:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - linux_unit_groovy:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - linux_build_ant:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - linux_test_integration:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - linux_test_heavy_integration:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - linux_test_android_ndk_15:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - linux_test_android_ndk_16:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - linux_test_android_ndk_17:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - linux_test_android_ndk_18:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
 
   macos_jobs:
     jobs:
       - mac_build_openjdk8:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - macos_unit_groovy:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - macos_build_ant:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - macos_test_integration:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - macos_test_heavy_integration:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - macos_test_android_ndk_15:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - macos_test_android_ndk_16:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - macos_test_android_ndk_17:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
       - macos_test_android_ndk_18:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
 
   windows_jobs:
     jobs:
       - windows_build_test:
-          filters:
-            branches:
-              ignore: dev
+          <<: *ignore_dev_branch
