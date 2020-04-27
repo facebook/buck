@@ -16,6 +16,7 @@
 
 package com.facebook.buck.apple.xcode;
 
+import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
@@ -252,6 +253,7 @@ public class XCScheme {
     private final Optional<WatchInterface> watchInterface;
     private final LaunchStyle launchStyle;
     private final Optional<ImmutableMap<String, String>> environmentVariables;
+    private final Optional<BuildableReference> expandVariablesBasedOn;
     private final Optional<String> notificationPayloadFile;
 
     public LaunchAction(
@@ -262,6 +264,7 @@ public class XCScheme {
         Optional<WatchInterface> watchInterface,
         LaunchStyle launchStyle,
         Optional<ImmutableMap<String, String>> environmentVariables,
+        Optional<BuildableReference> expandVariablesBasedOn,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
         Optional<ImmutableList<SchemePrePostAction>> postActions,
         Optional<String> notificationPayloadFile) {
@@ -273,6 +276,7 @@ public class XCScheme {
       this.watchInterface = watchInterface;
       this.launchStyle = launchStyle;
       this.environmentVariables = environmentVariables;
+      this.expandVariablesBasedOn = expandVariablesBasedOn;
       this.notificationPayloadFile = notificationPayloadFile;
     }
 
@@ -307,23 +311,30 @@ public class XCScheme {
     public Optional<ImmutableMap<String, String>> getEnvironmentVariables() {
       return environmentVariables;
     }
+
+    public Optional<BuildableReference> getExpandVariablesBasedOn() {
+      return expandVariablesBasedOn;
+    }
   }
 
   public static class ProfileAction extends SchemeAction {
     BuildableReference buildableReference;
     private final String buildConfiguration;
     private final Optional<ImmutableMap<String, String>> environmentVariables;
+    private final Optional<BuildableReference> expandVariablesBasedOn;
 
     public ProfileAction(
         BuildableReference buildableReference,
         String buildConfiguration,
         Optional<ImmutableMap<String, String>> environmentVariables,
+        Optional<BuildableReference> expandVariablesBasedOn,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
         Optional<ImmutableList<SchemePrePostAction>> postActions) {
       super(preActions, postActions);
       this.buildableReference = buildableReference;
       this.buildConfiguration = buildConfiguration;
       this.environmentVariables = environmentVariables;
+      this.expandVariablesBasedOn = expandVariablesBasedOn;
     }
 
     public BuildableReference getBuildableReference() {
@@ -337,22 +348,29 @@ public class XCScheme {
     public Optional<ImmutableMap<String, String>> getEnvironmentVariables() {
       return environmentVariables;
     }
+
+    public Optional<BuildableReference> getExpandVariablesBasedOn() {
+      return expandVariablesBasedOn;
+    }
   }
 
   public static class TestAction extends SchemeAction {
     List<TestableReference> testables;
     private final String buildConfiguration;
     private final Optional<ImmutableMap<String, String>> environmentVariables;
+    private final Optional<BuildableReference> expandVariablesBasedOn;
 
     public TestAction(
         String buildConfiguration,
         Optional<ImmutableMap<String, String>> environmentVariables,
+        Optional<BuildableReference> expandVariablesBasedOn,
         Optional<ImmutableList<SchemePrePostAction>> preActions,
         Optional<ImmutableList<SchemePrePostAction>> postActions) {
       super(preActions, postActions);
       this.testables = new ArrayList<>();
       this.buildConfiguration = buildConfiguration;
       this.environmentVariables = environmentVariables;
+      this.expandVariablesBasedOn = expandVariablesBasedOn;
     }
 
     public void addTestableReference(TestableReference testable) {
@@ -369,6 +387,10 @@ public class XCScheme {
 
     public Optional<ImmutableMap<String, String>> getEnvironmentVariables() {
       return environmentVariables;
+    }
+
+    public Optional<BuildableReference> getExpandVariablesBasedOn() {
+      return expandVariablesBasedOn;
     }
   }
 

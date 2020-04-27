@@ -1,0 +1,46 @@
+EMPTY_CONFIGS = {
+    "Debug": {},
+    "Release": {},
+}
+
+apple_binary(
+    name = "TestAppBinary",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    deps = [
+    ],
+)
+
+apple_bundle(
+    name = "TestApp",
+    binary = ":TestAppBinary",
+    extension = "app",
+    info_plist = "Info.plist",
+    tests = [":TestAppTests"],
+    deps = [":TestAppBinary"],
+)
+
+apple_test(
+    name = "TestAppTests",
+    srcs = [],
+    configs = EMPTY_CONFIGS,
+    frameworks = [],
+    info_plist = "Test.plist",
+    deps = [
+        ":TestApp",
+    ],
+)
+
+xcode_workspace_config(
+    name = "workspace",
+    src_target = "//Apps:TestApp",
+    environment_variables = {
+      'Test': {
+        'TEST_ENV': 'SET'
+      }
+    },
+    expand_variables_based_on = {
+      'Test': ':TestApp'
+    }
+)
