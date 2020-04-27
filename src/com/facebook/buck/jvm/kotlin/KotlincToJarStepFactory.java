@@ -80,6 +80,10 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   @AddToRuleKey private final Kotlinc kotlinc;
   @AddToRuleKey private final ImmutableList<String> extraKotlincArguments;
   @AddToRuleKey private final ImmutableList<SourcePath> kotlincPlugins;
+
+  @AddToRuleKey
+  private final ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins;
+
   @AddToRuleKey private final ImmutableList<SourcePath> friendPaths;
   @AddToRuleKey private final AnnotationProcessingTool annotationProcessingTool;
   @AddToRuleKey private final ImmutableMap<String, String> kaptApOptions;
@@ -123,6 +127,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       @Nullable Path abiGenerationPlugin,
       ImmutableList<String> extraKotlincArguments,
       ImmutableList<SourcePath> kotlincPlugins,
+      ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins,
       ImmutableList<SourcePath> friendPaths,
       AnnotationProcessingTool annotationProcessingTool,
       ImmutableMap<String, String> kaptApOptions,
@@ -138,6 +143,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.abiGenerationPlugin = abiGenerationPlugin;
     this.extraKotlincArguments = extraKotlincArguments;
     this.kotlincPlugins = kotlincPlugins;
+    this.kotlinCompilerPlugins = kotlinCompilerPlugins;
     this.friendPaths = friendPaths;
     this.annotationProcessingTool = annotationProcessingTool;
     this.kaptApOptions = kaptApOptions;
@@ -184,6 +190,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       Path kaptGeneratedOutput =
           BuildTargetPaths.getAnnotationPath(
               projectFilesystem, invokingRule, "__%s_kapt_generated__");
+      Path kotlincPluginGeneratedOutput =
+          BuildTargetPaths.getAnnotationPath(
+              projectFilesystem, invokingRule, "__%s_kotlinc_plugin_generated__");
       Path annotationGenFolder = getKaptAnnotationGenPath(projectFilesystem, invokingRule);
       Path genOutputFolder =
           BuildTargetPaths.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
@@ -195,6 +204,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       addCreateFolderStep(steps, projectFilesystem, buildContext, stubsOutput);
       addCreateFolderStep(steps, projectFilesystem, buildContext, classesOutput);
       addCreateFolderStep(steps, projectFilesystem, buildContext, kaptGeneratedOutput);
+      addCreateFolderStep(steps, projectFilesystem, buildContext, kotlincPluginGeneratedOutput);
       addCreateFolderStep(steps, projectFilesystem, buildContext, sourcesOutput);
       addCreateFolderStep(steps, projectFilesystem, buildContext, annotationGenFolder);
       addCreateFolderStep(steps, projectFilesystem, buildContext, genOutputFolder);
@@ -320,6 +330,9 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
               .addAll(extraKotlincArguments)
               .add(friendPathsArg)
               .addAll(getKotlincPluginsArgs(resolver))
+              .addAll(
+                  getKotlinCompilerPluginsArgs(
+                      resolver, projectFilesystem.resolve(kotlincPluginGeneratedOutput).toString()))
               .addAll(annotationProcessingOptionsBuilder.build())
               .add(MODULE_NAME)
               .add(moduleName)
@@ -481,11 +494,48 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
   private ImmutableList<String> getKotlincPluginsArgs(
       SourcePathResolverAdapter sourcePathResolverAdapter) {
     return kotlincPlugins.stream()
-        // Ideally, we would not use getAbsolutePath() here, but getRelativePath() does not
-        // appear to work correctly if path is a BuildTargetSourcePath in a different cell than
-        // the kotlin_library() rule being defined.
-        .map(path -> "-Xplugin=" + sourcePathResolverAdapter.getAbsolutePath(path).toString())
+        .map(path -> getKotlincPluginBasicString(sourcePathResolverAdapter, path))
         .collect(ImmutableList.toImmutableList());
+  }
+
+  private ImmutableList<String> getKotlinCompilerPluginsArgs(
+      SourcePathResolverAdapter sourcePathResolverAdapter, String outputDir) {
+    ImmutableList.Builder<String> pluginArgs = ImmutableList.builder();
+    for (SourcePath pluginPath : kotlinCompilerPlugins.keySet()) {
+      // Add plugin basic string, e.g. "-Xplugins=<pluginPath>"
+      pluginArgs.add(getKotlincPluginBasicString(sourcePathResolverAdapter, pluginPath));
+
+      // If plugin options exist, add plugin option string,
+      // e.g. "-P" and "<optionKey>=<optionValue>,<optionKey2>=<optionValue2>,..."
+      ImmutableMap<String, String> pluginOptions = kotlinCompilerPlugins.get(pluginPath);
+      if (pluginOptions != null && !pluginOptions.isEmpty()) {
+        ImmutableList.Builder<String> pluginOptionStrings = ImmutableList.builder();
+        for (String pluginOptionKey : pluginOptions.keySet()) {
+          String pluginOptionValue = pluginOptions.get(pluginOptionKey);
+
+          // When value is "_codegen_dir_", it means it's asking buck to provide kotlin compiler
+          // plugin output dir
+          if (pluginOptionValue.equals("__codegen_dir__")) {
+            pluginOptionValue = outputDir;
+          }
+
+          pluginOptionStrings.add(pluginOptionKey + "=" + pluginOptionValue);
+        }
+        String pluginOptionString = Joiner.on(",").join(pluginOptionStrings.build());
+        pluginArgs.add(PLUGIN).add(pluginOptionString);
+      }
+    }
+    return pluginArgs.build();
+  }
+
+  /**
+   * Ideally, we would not use getAbsolutePath() here, but getRelativePath() does not appear to work
+   * correctly if path is a BuildTargetSourcePath in a different cell than the kotlin_library() rule
+   * being defined.
+   */
+  private String getKotlincPluginBasicString(
+      SourcePathResolverAdapter sourcePathResolverAdapter, SourcePath path) {
+    return X_PLUGIN_ARG + sourcePathResolverAdapter.getAbsolutePath(path).toString();
   }
 
   private static String getModuleName(BuildTarget invokingRule) {

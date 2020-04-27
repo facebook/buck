@@ -210,7 +210,12 @@ public class KotlinLibraryDescription
 
     ImmutableMap<String, String> getKaptApOptions();
 
+    // Plan replace kotlinc_plugins param with kotlin_compiler_plugins param.
+    // TODO(T66025937): Remove getKotlincPlugins() after all kotlinc_plugins usage switched to
+    //  kotlin_compiler_plugins
     ImmutableList<SourcePath> getKotlincPlugins();
+
+    ImmutableMap<SourcePath, ImmutableMap<String, String>> getKotlinCompilerPlugins();
   }
 
   @RuleArg

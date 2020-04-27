@@ -83,6 +83,7 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         pathToAbiGenerationPluginJar,
         kotlinArgs.getExtraKotlincArguments(),
         kotlinArgs.getKotlincPlugins(),
+        kotlinArgs.getKotlinCompilerPlugins(),
         getFriendSourcePaths(buildRuleResolver, kotlinArgs.getFriendPaths(), kotlinBuckConfig),
         kotlinArgs.getAnnotationProcessingTool().orElse(AnnotationProcessingTool.KAPT),
         kotlinArgs.getKaptApOptions(),

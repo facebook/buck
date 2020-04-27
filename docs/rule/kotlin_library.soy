@@ -65,22 +65,35 @@ the <code>resources</code> argument.
 {/call}
 
 {call buck.arg}
-  {param name: 'kotlinc_plugins' /}
-  {param default: '[]' /}
+  {param name: 'kotlin_compiler_plugins' /}
+  {{param default: '{}' /}}
   {param desc}
   Use this to specify <a href="https://kotlinlang.org/docs/reference/compiler-plugins.html">
   Kotlin compiler plugins</a> to use when compiling this library.
-  This takes a list of source paths, each of which will be prefixed
-  with <code>-Xplugin=</code> and passed as extra arguments to the compiler.
-  Unlike <code>extra_kotlinc_arguments</code>, these can be <em>source paths</em>,
-  not just strings (though <code>extra_kotlinc_arguments</code> should be used
-  to specify plugin compiler options with <code>-P</code>).
+  This takes a map, with each entry specify one plugin. Entry's key is plugin source path,
+  and value is a map of plugin option key value pair. Unlike <code>extra_kotlinc_arguments</code>,
+  these can be <em>source paths</em>, not just strings.
   <p>
-  For example, if you want to use{sp}
+  A special option value is
+  <code>__codegen_dir__</code>, in which case Buck will provide a default codegen folder's path as
+  option value instead.
+  E.g.
+{literal}<pre class="prettyprint lang-py">
+kotlin_compiler_plugins = {
+    "somePluginSourcePath": {
+        "plugin:somePluginId:somePluginOptionKey": "somePluginOptionValue",
+        "plugin:somePluginId:someDirectoryRelatedOptionKey": "__codegen_dir__",
+    },
+},
+</pre>{/literal}
+  Each plugin source path will be prefixed with <code>-Xplugin=</code> and passed as extra
+  arguments to the compiler. Plugin options will be appended after its plugin with <code>-P</code>.
+  <p>
+  A specific example is, if you want to use{sp}
   <a href="https://github.com/Kotlin/kotlinx.serialization">kotlinx.serialization</a>
   {sp}with <code>kotlin_library()</code>, you need to specify{sp}
   <code>kotlinx-serialization-compiler-plugin.jar</code> under{sp}
-  <code>kotlinc_plugins</code> and <code>kotlinx-serialization-runtime.jar</code>{sp}
+  <code>kotlin_compiler_plugins</code> and <code>kotlinx-serialization-runtime.jar</code>{sp}
   (which you may have to fetch from Maven) in your <code>deps</code>:
 {literal}<pre class="prettyprint lang-py">
 kotlin_library(
@@ -89,10 +102,10 @@ kotlin_library(
     deps = [
         ":kotlinx-serialization-runtime",
     ],
-    kotlinc_plugins = [
+    kotlin_compiler_plugins = {
         # Likely copied from your $KOTLIN_HOME directory.
-        "kotlinx-serialization-compiler-plugin.jar",
-    ],
+        "kotlinx-serialization-compiler-plugin.jar": {},
+    },
 )
 
 prebuilt_jar(
