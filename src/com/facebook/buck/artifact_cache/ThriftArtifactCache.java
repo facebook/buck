@@ -459,7 +459,7 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
     return cacheRequest;
   }
 
-  private Iterable<FetchResult> processMultiFetchResponse(
+  private ImmutableList<FetchResult> processMultiFetchResponse(
       ImmutableList<RuleKey> keys,
       ImmutableList<LazyPath> outputs,
       BuckCacheRequest cacheRequest,
@@ -479,21 +479,18 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       LOG.warn(message);
       CacheResult cacheResult = CacheResult.error(getName(), getMode(), message);
       return keys.stream()
-              .map(k -> ImmutableFetchResult.builder().setCacheResult(cacheResult).build())
-          ::iterator;
+          .map(k -> ImmutableFetchResult.builder().setCacheResult(cacheResult).build())
+          .collect(ImmutableList.toImmutableList());
     }
 
     try (ThriftArtifactCacheProtocol.Response response =
         ThriftArtifactCacheProtocol.parseResponse(PROTOCOL, httpResponse.getBody())) {
       return convertMultiFetchResponseToFetchResults(
-                  keys, outputs, cacheRequest, httpResponse, response)
-              .stream()
-              .map(b -> b.build())
-          ::iterator;
+          keys, outputs, cacheRequest, httpResponse, response);
     }
   }
 
-  private ImmutableList<ImmutableFetchResult.Builder> convertMultiFetchResponseToFetchResults(
+  private ImmutableList<FetchResult> convertMultiFetchResponseToFetchResults(
       ImmutableList<RuleKey> keys,
       ImmutableList<LazyPath> outputs,
       BuckCacheRequest cacheRequest,
@@ -514,7 +511,9 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       LOG.warn("Request was unsuccessful: %s", message);
       resultsBuilders.forEach(
           b -> b.setCacheResult(CacheResult.error(getName(), getMode(), message)));
-      return resultsBuilders;
+      return resultsBuilders.stream()
+          .map(ImmutableFetchResult.Builder::build)
+          .collect(ImmutableList.toImmutableList());
     }
 
     if (LOG.isDebugEnabled()) {
@@ -532,7 +531,9 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       LOG.warn(message);
       resultsBuilders.forEach(
           b -> b.setCacheResult(CacheResult.error(getName(), getMode(), message)));
-      return resultsBuilders;
+      return resultsBuilders.stream()
+          .map(ImmutableFetchResult.Builder::build)
+          .collect(ImmutableList.toImmutableList());
     }
 
     for (int i = 0; i < keys.size(); i++) {
@@ -545,7 +546,9 @@ public class ThriftArtifactCache extends AbstractNetworkCache {
       convertSingleMultiFetchResult(
           fetchResponse, ruleKey, new PayloadReader(response), outputs.get(i), builder);
     }
-    return resultsBuilders;
+    return resultsBuilders.stream()
+        .map(ImmutableFetchResult.Builder::build)
+        .collect(ImmutableList.toImmutableList());
   }
 
   private void convertSingleMultiFetchResult(
