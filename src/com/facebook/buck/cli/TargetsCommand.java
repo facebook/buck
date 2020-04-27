@@ -82,6 +82,8 @@ import com.facebook.buck.rules.keys.DefaultRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyCacheRecycler;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.RuleKeyFieldLoader;
+import com.facebook.buck.rules.param.ParamNameOrSpecial;
+import com.facebook.buck.rules.param.SpecialAttr;
 import com.facebook.buck.support.cli.config.AliasConfig;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.support.cli.config.JsonAttributeFormat;
@@ -1002,7 +1004,7 @@ public class TargetsCommand extends AbstractCommand {
       while (targetNodeIterator.hasNext()) {
         TargetNode<?> targetNode = targetNodeIterator.next();
         @Nullable
-        Map<String, Object> targetNodeAttributes =
+        SortedMap<ParamNameOrSpecial, Object> targetNodeAttributes =
             params
                 .getParser()
                 .getTargetNodeRawAttributes(
@@ -1034,7 +1036,7 @@ public class TargetsCommand extends AbstractCommand {
         }
 
         targetNodeAttributes.put(
-            "fully_qualified_name", targetNode.getBuildTarget().getFullyQualifiedName());
+            SpecialAttr.FULLY_QUALIFIED_NAME, targetNode.getBuildTarget().getFullyQualifiedName());
         if (isShowCellPath) {
           AbsPath cellPath =
               params
@@ -1042,18 +1044,16 @@ public class TargetsCommand extends AbstractCommand {
                   .getRootCell()
                   .getNewCellPathResolver()
                   .getCellPath(targetNode.getBuildTarget().getCell());
-          targetNodeAttributes.put("buck.cell_path", cellPath);
+          targetNodeAttributes.put(SpecialAttr.CELL_PATH, cellPath);
         }
 
-        if (jsonAttributeFormat != JsonAttributeFormat.LEGACY) {
-          targetNodeAttributes =
-              targetNodeAttributes.entrySet().stream()
-                  .collect(
-                      ImmutableSortedMap.toImmutableSortedMap(
-                          Comparator.naturalOrder(),
-                          e -> jsonAttributeFormat.format(e.getKey()),
-                          Entry::getValue));
-        }
+        ImmutableSortedMap<String, Object> byString =
+            targetNodeAttributes.entrySet().stream()
+                .collect(
+                    ImmutableSortedMap.toImmutableSortedMap(
+                        Comparator.naturalOrder(),
+                        e -> jsonAttributeFormat.format(e.getKey()),
+                        Entry::getValue));
 
         // Print the build rule information as JSON.
         // NOTE: we output camel-case attribute names here, not snake-case like in query
@@ -1061,9 +1061,7 @@ public class TargetsCommand extends AbstractCommand {
         try {
           ObjectMappers.WRITER
               .withDefaultPrettyPrinter()
-              .writeValue(
-                  stringWriter,
-                  attributesPatternsMatcher.filterMatchingMapKeys(targetNodeAttributes));
+              .writeValue(stringWriter, attributesPatternsMatcher.filterMatchingMapKeys(byString));
         } catch (IOException e) {
           // Shouldn't be possible while writing to a StringWriter...
           throw new RuntimeException(e);
@@ -1612,17 +1610,17 @@ public class TargetsCommand extends AbstractCommand {
   }
 
   private enum TargetResultFieldName {
-    OUTPUT_PATH("buck.outputPath", TargetResult::getOutputPath),
-    GEN_SRC_PATH("buck.generatedSourcePath", TargetResult::getGeneratedSourcePath),
-    TARGET_HASH("buck.targetHash", TargetResult::getTargetHash),
-    RULE_KEY("buck.ruleKey", TargetResult::getRuleKey),
-    RULE_TYPE("buck.ruleType", TargetResult::getRuleType),
-    OUTPUT_PATHS("buck.outputPaths", TargetResult::getOutputPaths);
+    OUTPUT_PATH(SpecialAttr.OUTPUT_PATH, TargetResult::getOutputPath),
+    GEN_SRC_PATH(SpecialAttr.GEN_SRC_PATH, TargetResult::getGeneratedSourcePath),
+    TARGET_HASH(SpecialAttr.TARGET_HASH, TargetResult::getTargetHash),
+    RULE_KEY(SpecialAttr.RULE_KEY, TargetResult::getRuleKey),
+    RULE_TYPE(SpecialAttr.RULE_TYPE, TargetResult::getRuleType),
+    OUTPUT_PATHS(SpecialAttr.OUTPUT_PATHS, TargetResult::getOutputPaths);
 
-    private String name;
-    private Function<TargetResult, Optional<?>> getter;
+    private final SpecialAttr name;
+    private final Function<TargetResult, Optional<?>> getter;
 
-    TargetResultFieldName(String name, Function<TargetResult, Optional<?>> getter) {
+    TargetResultFieldName(SpecialAttr name, Function<TargetResult, Optional<?>> getter) {
       this.name = name;
       this.getter = getter;
     }

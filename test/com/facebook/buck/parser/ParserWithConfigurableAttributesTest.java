@@ -99,6 +99,8 @@ import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.rules.param.ParamName;
+import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.shell.GenruleDescriptionArg;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TemporaryPaths;
@@ -1905,12 +1907,12 @@ public class ParserWithConfigurableAttributesTest {
 
     PerBuildState state =
         parser.getPerBuildStateFactory().create(parsingContext, parser.getPermState());
-    SortedMap<String, Object> targetNodeAttributes =
+    SortedMap<ParamNameOrSpecial, Object> targetNodeAttributes =
         parser.getTargetNodeRawAttributes(
             state, parsingContext.getCells().getRootCell(), targetNode, DependencyStack.root());
-    assertThat(targetNodeAttributes, Matchers.hasKey("name"));
     assertThat(
-        targetNodeAttributes.get("name"), equalTo(targetNode.getBuildTarget().getShortName()));
+        targetNodeAttributes.get(ParamName.bySnakeCase("name")),
+        equalTo(targetNode.getBuildTarget().getShortName()));
   }
 
   @Test
@@ -2661,7 +2663,7 @@ public class ParserWithConfigurableAttributesTest {
     TargetGraph targetGraph =
         parser.buildTargetGraph(parsingContext, buildTargetsList).getTargetGraph();
 
-    ImmutableMap<BuildTarget, Map<String, Object>> attributes =
+    ImmutableMap<BuildTarget, Map<ParamNameOrSpecial, Object>> attributes =
         getRawTargetNodes(
             parser,
             typeCoercerFactory,
@@ -2676,14 +2678,19 @@ public class ParserWithConfigurableAttributesTest {
     ImmutableMap.Builder<BuildTarget, HashCode> toReturn = ImmutableMap.builder();
     for (TargetNode<?> node : targetGraph.getNodes()) {
       Hasher hasher = Hashing.sha1().newHasher();
-      JsonObjectHashing.hashJsonObject(hasher, attributes.get(node.getBuildTarget()));
+      JsonObjectHashing.hashJsonObject(
+          hasher,
+          attributes.get(node.getBuildTarget()).entrySet().stream()
+              .collect(
+                  ImmutableMap.toImmutableMap(
+                      e -> e.getKey().getSnakeCase(), Map.Entry::getValue)));
       toReturn.put(node.getBuildTarget(), hasher.hash());
     }
 
     return toReturn.build();
   }
 
-  private ImmutableMap<BuildTarget, Map<String, Object>> getRawTargetNodes(
+  private ImmutableMap<BuildTarget, Map<ParamNameOrSpecial, Object>> getRawTargetNodes(
       Parser parser,
       TypeCoercerFactory typeCoercerFactory,
       BuckEventBus eventBus,
@@ -2694,7 +2701,7 @@ public class ParserWithConfigurableAttributesTest {
       ExecutableFinder executableFinder,
       BuildTarget... buildTargets)
       throws BuildFileParseException {
-    ImmutableMap.Builder<BuildTarget, Map<String, Object>> attributesByTarget =
+    ImmutableMap.Builder<BuildTarget, Map<ParamNameOrSpecial, Object>> attributesByTarget =
         ImmutableMap.builder();
     List<BuildTarget> buildTargetList = Lists.newArrayList(buildTargets);
     Map<Path, HashCode> hashes = new HashMap<>();

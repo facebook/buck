@@ -17,13 +17,12 @@
 package com.facebook.buck.rules.param;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Rule param name. */
-public class ParamName implements Comparable<ParamName> {
+public class ParamName implements Comparable<ParamName>, ParamNameOrSpecial {
 
   private final String camelCase;
   private final String snakeCase;
@@ -39,12 +38,13 @@ public class ParamName implements Comparable<ParamName> {
   }
 
   /** Param name by camel case. */
+  @Override
   public String getCamelCase() {
     return camelCase;
   }
 
   /** Param name by snake case. */
-  @JsonValue
+  @Override
   public String getSnakeCase() {
     return snakeCase;
   }

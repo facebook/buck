@@ -34,6 +34,7 @@ import com.facebook.buck.query.QueryFileTarget;
 import com.facebook.buck.query.QueryParserEnv;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
+import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
@@ -129,8 +130,8 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
             ? OutputFormat.JSON
             : outputFormat;
 
-    Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>> attributesByResult =
-        collectAttributes(params, env, queryResult);
+    Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+        attributesByResult = collectAttributes(params, env, queryResult);
 
     switch (trueOutputFormat) {
       case LIST:
@@ -212,7 +213,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private void printListOutput(
       Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream) {
     Preconditions.checkState(
@@ -228,14 +229,14 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private void printJsonOutput(
       Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
 
     Object printableObject;
     if (attributesByResultOptional.isPresent()) {
-      ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>> attributesByResult =
+      ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>> attributesByResult =
           attributesByResultOptional.get();
       printableObject =
           queryResult.stream()
@@ -262,7 +263,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private void printDotOutput(
       Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
@@ -272,7 +273,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private void printDotCompactOutput(
       Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
@@ -282,7 +283,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private void printDotBfsOutput(
       Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
@@ -291,7 +292,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private void printDotBfsCompactOutput(
       Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
@@ -300,7 +301,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private void printThriftOutput(
       Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       PrintStream printStream)
       throws IOException {
@@ -318,13 +319,15 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
     attributesByResultOptional.ifPresent(
         attrs ->
             thriftBuilder.nodeToAttributesFunction(
-                node -> attrs.get(resultByBuildTarget.get(node.getBuildTarget()))));
+                node ->
+                    attrMapToMapBySnakeCase(
+                        attrs.get(resultByBuildTarget.get(node.getBuildTarget())))));
     thriftBuilder.build().writeOutput(printStream);
   }
 
   private void printDotGraph(
       Set<QueryTarget> queryResult,
-      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>>
+      Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
           attributesByResultOptional,
       Dot.OutputOrder outputOrder,
       boolean compactMode,
@@ -347,25 +350,33 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
     attributesByResultOptional.ifPresent(
         attrs ->
             dotBuilder.setNodeToAttributes(
-                node -> attrs.get(resultByBuildTarget.get(node.getBuildTarget()))));
+                node ->
+                    attrMapToMapBySnakeCase(
+                        attrs.get(resultByBuildTarget.get(node.getBuildTarget())))));
     dotBuilder.build().writeOutput(printStream);
   }
 
-  private Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<String, Object>>> collectAttributes(
-      CommandRunnerParams params, ConfiguredQueryEnvironment env, Set<QueryTarget> queryResult) {
+  private Optional<ImmutableMap<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>>>
+      collectAttributes(
+          CommandRunnerParams params,
+          ConfiguredQueryEnvironment env,
+          Set<QueryTarget> queryResult) {
     if (!shouldOutputAttributes()) {
       return Optional.empty();
     }
 
     PatternsMatcher matcher = new PatternsMatcher(outputAttributes());
-    ImmutableMap.Builder<QueryTarget, ImmutableSortedMap<String, Object>> result =
+    ImmutableMap.Builder<QueryTarget, ImmutableSortedMap<ParamNameOrSpecial, Object>> result =
         ImmutableMap.builder();
 
     for (QueryTarget target : queryResult) {
       nodeForQueryTarget(env, target)
           .flatMap(node -> getAllAttributes(params, node))
           .map(attrs -> getMatchingAttributes(matcher, attrs))
-          .ifPresent(attrs -> result.put(target, ImmutableSortedMap.copyOf(attrs)));
+          .ifPresent(
+              attrs ->
+                  result.put(
+                      target, ImmutableSortedMap.copyOf(attrs, ParamNameOrSpecial.COMPARATOR)));
     }
 
     return Optional.of(result.build());
@@ -385,9 +396,9 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
     }
   }
 
-  private Optional<ImmutableMap<String, Object>> getAllAttributes(
+  private Optional<ImmutableMap<ParamNameOrSpecial, Object>> getAllAttributes(
       CommandRunnerParams params, TargetNode<?> node) {
-    SortedMap<String, Object> rawAttributes =
+    SortedMap<ParamNameOrSpecial, Object> rawAttributes =
         params
             .getParser()
             .getTargetNodeRawAttributes(

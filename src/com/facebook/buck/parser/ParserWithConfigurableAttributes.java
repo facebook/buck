@@ -48,6 +48,8 @@ import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercer;
 import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
 import com.facebook.buck.rules.coercer.concat.SingleElementJsonTypeConcatenatingCoercer;
 import com.facebook.buck.rules.param.ParamName;
+import com.facebook.buck.rules.param.ParamNameOrSpecial;
+import com.facebook.buck.rules.param.SpecialAttr;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -129,7 +131,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
    */
   @Override
   @Nullable
-  public SortedMap<String, Object> getTargetNodeRawAttributes(
+  public SortedMap<ParamNameOrSpecial, Object> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException {
     BuildTarget buildTarget = targetNode.getBuildTarget();
@@ -144,7 +146,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   }
 
   @Override
-  public ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
+  public ListenableFuture<SortedMap<ParamNameOrSpecial, Object>> getTargetNodeRawAttributesJob(
       PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException {
     Cell owningCell = cell.getCell(targetNode.getBuildTarget().getCell());
@@ -162,7 +164,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
   }
 
   @Nullable
-  private SortedMap<String, Object> getTargetFromManifest(
+  private SortedMap<ParamNameOrSpecial, Object> getTargetFromManifest(
       PerBuildState state,
       Cell cell,
       TargetNode<?> targetNode,
@@ -177,20 +179,21 @@ class ParserWithConfigurableAttributes extends AbstractParser {
 
     RawTargetNode attributes = buildFileManifest.getTargets().get(shortName);
 
-    SortedMap<String, Object> convertedAttributes =
-        copyWithResolvingConfigurableAttributes(
-            state, cell, buildTarget, attributes, dependencyStack);
+    SortedMap<ParamNameOrSpecial, Object> convertedAttributes =
+        new TreeMap<>(ParamNameOrSpecial.COMPARATOR);
+    convertedAttributes.putAll(
+        new TreeMap<ParamNameOrSpecial, Object>(
+            copyWithResolvingConfigurableAttributes(
+                state, cell, buildTarget, attributes, dependencyStack)));
 
     convertedAttributes.put(
-        InternalTargetAttributeNames.DIRECT_DEPENDENCIES,
+        SpecialAttr.DIRECT_DEPENDENCIES,
         targetNode.getParseDeps().stream()
             .map(Object::toString)
             .collect(ImmutableList.toImmutableList()));
     convertedAttributes.put(
-        InternalTargetAttributeNames.BASE_PATH,
-        targetNode.getBuildTarget().getBaseName().getPath().toString());
-    convertedAttributes.put(
-        InternalTargetAttributeNames.BUCK_TYPE, targetNode.getRuleType().getName());
+        SpecialAttr.BASE_PATH, targetNode.getBuildTarget().getBaseName().getPath().toString());
+    convertedAttributes.put(SpecialAttr.BUCK_TYPE, targetNode.getRuleType().getName());
 
     // NOTE: We are explicitly not using `attributes.getVisibility()` or
     // `attributes.getWithinView()` here as they don't take into account things like `PACKAGE`
@@ -200,7 +203,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             .map(visibilityPattern -> visibilityPattern.getRepresentation())
             .collect(ImmutableList.toImmutableList());
     if (!computedVisibility.isEmpty()) {
-      convertedAttributes.put(VisibilityAttributes.VISIBILITY.getSnakeCase(), computedVisibility);
+      convertedAttributes.put(VisibilityAttributes.VISIBILITY, computedVisibility);
     }
 
     List<String> computedWithinView =
@@ -208,13 +211,13 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             .map(visibilityPattern -> visibilityPattern.getRepresentation())
             .collect(ImmutableList.toImmutableList());
     if (!computedWithinView.isEmpty()) {
-      convertedAttributes.put(VisibilityAttributes.WITHIN_VIEW.getSnakeCase(), computedWithinView);
+      convertedAttributes.put(VisibilityAttributes.WITHIN_VIEW, computedWithinView);
     }
 
     return convertedAttributes;
   }
 
-  private SortedMap<String, Object> copyWithResolvingConfigurableAttributes(
+  private SortedMap<ParamName, Object> copyWithResolvingConfigurableAttributes(
       PerBuildState state,
       Cell cell,
       BuildTarget buildTarget,
@@ -226,7 +229,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             buildTarget.getTargetConfiguration(),
             state.getConfigurationRuleRegistry().getTargetPlatformResolver());
 
-    SortedMap<String, Object> convertedAttributes = new TreeMap<>();
+    SortedMap<ParamName, Object> convertedAttributes = new TreeMap<>();
 
     for (Map.Entry<ParamName, Object> attribute : attributes.getAttrs().entrySet()) {
       ParamName attributeName = attribute.getKey();
@@ -246,7 +249,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
         if (resolvedAttribute == null) {
           continue;
         }
-        convertedAttributes.put(attributeName.getCamelCase(), resolvedAttribute);
+        convertedAttributes.put(attributeName, resolvedAttribute);
       } catch (CoerceFailedException e) {
         throw new HumanReadableException(e, dependencyStack, e.getMessage());
       }

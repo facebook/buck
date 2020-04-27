@@ -28,6 +28,7 @@ import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
+import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -74,11 +75,11 @@ public interface Parser {
       throws BuildTargetException;
 
   @Nullable
-  SortedMap<String, Object> getTargetNodeRawAttributes(
+  SortedMap<ParamNameOrSpecial, Object> getTargetNodeRawAttributes(
       PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException;
 
-  ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
+  ListenableFuture<SortedMap<ParamNameOrSpecial, Object>> getTargetNodeRawAttributesJob(
       PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
       throws BuildFileParseException;
 

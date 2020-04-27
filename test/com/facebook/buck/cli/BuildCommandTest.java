@@ -75,6 +75,7 @@ import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.RuleKeyCacheScope;
 import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
+import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.cache.NoOpCacheStatsTracker;
@@ -706,14 +707,14 @@ public class BuildCommandTest {
 
     @Nullable
     @Override
-    public SortedMap<String, Object> getTargetNodeRawAttributes(
+    public SortedMap<ParamNameOrSpecial, Object> getTargetNodeRawAttributes(
         PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
         throws BuildFileParseException {
       return parser.getTargetNodeRawAttributes(state, cell, targetNode, dependencyStack);
     }
 
     @Override
-    public ListenableFuture<SortedMap<String, Object>> getTargetNodeRawAttributesJob(
+    public ListenableFuture<SortedMap<ParamNameOrSpecial, Object>> getTargetNodeRawAttributesJob(
         PerBuildState state, Cell cell, TargetNode<?> targetNode, DependencyStack dependencyStack)
         throws BuildFileParseException {
       return parser.getTargetNodeRawAttributesJob(state, cell, targetNode, dependencyStack);

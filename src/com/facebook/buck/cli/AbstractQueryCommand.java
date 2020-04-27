@@ -21,14 +21,15 @@ import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryNormalizer;
 import com.facebook.buck.query.QueryTarget;
+import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import java.io.BufferedOutputStream;
@@ -37,6 +38,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -238,15 +240,14 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
    * {@code matcher}. In the context of queries, this matcher normally represents the {@code
    * --output-attributes} parameter. Returns a new map of only matching key/values.
    */
-  protected ImmutableMap<String, Object> getMatchingAttributes(
-      PatternsMatcher matcher, ImmutableMap<String, Object> attributes) {
-    ImmutableMap.Builder<String, Object> result = ImmutableMap.builder();
+  protected ImmutableMap<ParamNameOrSpecial, Object> getMatchingAttributes(
+      PatternsMatcher matcher, ImmutableMap<ParamNameOrSpecial, Object> attributes) {
+    ImmutableMap.Builder<ParamNameOrSpecial, Object> result = ImmutableMap.builder();
     if (!matcher.isMatchesNone()) {
-      for (Map.Entry<String, Object> entry : attributes.entrySet()) {
-        String snakeCaseKey =
-            CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, entry.getKey());
+      for (Map.Entry<ParamNameOrSpecial, Object> entry : attributes.entrySet()) {
+        String snakeCaseKey = entry.getKey().getSnakeCase();
         if (matcher.matches(snakeCaseKey)) {
-          result.put(snakeCaseKey, entry.getValue());
+          result.put(entry.getKey(), entry.getValue());
         }
       }
     }
@@ -271,5 +272,17 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
     return CloseableWrapper.of(
         new PrintStream(new BufferedOutputStream(Files.newOutputStream(outputFile.toPath()))),
         stream -> stream.close());
+  }
+
+  /**
+   * Convert a map by param name to a map by string. It is a common operation in query
+   * implementations.
+   */
+  protected static ImmutableSortedMap<String, Object> attrMapToMapBySnakeCase(
+      Map<ParamNameOrSpecial, Object> attrs) {
+    return attrs.entrySet().stream()
+        .collect(
+            ImmutableSortedMap.toImmutableSortedMap(
+                Comparator.naturalOrder(), e -> e.getKey().getSnakeCase(), Map.Entry::getValue));
   }
 }

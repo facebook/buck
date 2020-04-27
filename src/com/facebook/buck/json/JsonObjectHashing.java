@@ -18,6 +18,7 @@ package com.facebook.buck.json;
 
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
+import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.hashing.StringHashing;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableSortedMap;
@@ -59,15 +60,20 @@ public class JsonObjectHashing {
           ImmutableSortedMap.naturalOrder();
       for (Map.Entry<?, ?> entry : map.entrySet()) {
         Object key = entry.getKey();
-        if (!(key instanceof String)) {
+        String keyString;
+        if (key instanceof String) {
+          keyString = (String) key;
+        } else if (key instanceof ParamNameOrSpecial) {
+          keyString = ((ParamNameOrSpecial) key).getSnakeCase();
+        } else {
           throw new RuntimeException(
               String.format(
-                  "Keys of JSON maps are expected to be strings. Actual type: %s, contents: %s",
+                  "Keys of JSON maps are expected to be String or ParamNameOrSpecial. Actual type: %s, contents: %s",
                   key.getClass().getName(), key));
         }
         Object value = entry.getValue();
         if (value != null) {
-          sortedMapBuilder.put((String) key, Optional.of(value));
+          sortedMapBuilder.put(keyString, Optional.of(value));
         }
       }
       ImmutableSortedMap<String, Optional<Object>> sortedMap = sortedMapBuilder.build();

@@ -24,10 +24,4 @@ public class InternalTargetAttributeNames {
 
   /** Rule type. */
   public static final String BUCK_TYPE = "buck.type";
-
-  /** All the dependencies of a target. */
-  public static final String DIRECT_DEPENDENCIES = "buck.direct_dependencies";
-
-  /** Target configuration attached to target */
-  public static final String TARGET_CONFIGURATIONS = "buck.target_configurations";
 }

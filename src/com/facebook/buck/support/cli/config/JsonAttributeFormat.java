@@ -16,26 +16,26 @@
 
 package com.facebook.buck.support.cli.config;
 
-import com.google.common.base.CaseFormat;
+import com.facebook.buck.rules.param.ParamNameOrSpecial;
 
 /** The format for attributes of rules in json output */
 public enum JsonAttributeFormat {
   SNAKE_CASE {
     @Override
-    public String format(String attribute) {
-      return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, attribute);
+    public String format(ParamNameOrSpecial attribute) {
+      return attribute.getSnakeCase();
     }
   },
   // Use the old defaults that are potentially inconsistent
   LEGACY {
     @Override
-    public String format(String attribute) {
-      return attribute;
+    public String format(ParamNameOrSpecial attribute) {
+      return attribute.getCamelCase();
     }
   };
 
   public static final JsonAttributeFormat DEFAULT = LEGACY;
 
   /** Returns a formatted rule attribute */
-  public abstract String format(String attribute);
+  public abstract String format(ParamNameOrSpecial attribute);
 }
