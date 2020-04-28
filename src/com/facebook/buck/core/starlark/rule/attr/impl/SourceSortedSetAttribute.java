@@ -25,7 +25,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 
@@ -73,31 +72,16 @@ public abstract class SourceSortedSetAttribute extends Attribute<ImmutableSorted
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, ImmutableSortedSet<Artifact>>
+  public PostCoercionTransform<
+          RuleAnalysisContext, ImmutableSortedSet<SourcePath>, ImmutableSortedSet<Artifact>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
   private ImmutableSortedSet<Artifact> postCoercionTransform(
-      Object coercedValue, RuleAnalysisContext analysisContext) {
-    if (!(coercedValue instanceof Iterable<?>)) {
-      throw new IllegalArgumentException(
-          String.format("Value %s must be an iterable", coercedValue));
-    }
-    Iterable<?> iterableValue = (Iterable<?>) coercedValue;
+      ImmutableSortedSet<SourcePath> coercedValue, RuleAnalysisContext analysisContext) {
 
-    return ImmutableSortedSet.copyOf(
-        analysisContext.resolveSrcs(
-            Iterables.transform(
-                iterableValue,
-                src -> {
-                  if (!(src instanceof SourcePath)) {
-                    throw new IllegalStateException(
-                        String.format("%s needs to be a SourcePath", src));
-                  } else {
-                    return (SourcePath) src;
-                  }
-                })));
+    return analysisContext.resolveSrcs(coercedValue);
   }
 
   public static SourceSortedSetAttribute of(

@@ -25,9 +25,7 @@ import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
@@ -73,7 +71,8 @@ public abstract class UnconfiguredOptionalDepAttribute
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, List<SkylarkDependency>>
+  public PostCoercionTransform<
+          RuleAnalysisContext, Optional<UnconfiguredBuildTarget>, List<SkylarkDependency>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
@@ -85,24 +84,17 @@ public abstract class UnconfiguredOptionalDepAttribute
   }
 
   private ImmutableList<SkylarkDependency> postCoercionTransform(
-      Object coercedValue, RuleAnalysisContext analysisContext) {
-    Verify.verify(
-        coercedValue instanceof Optional<?>, "Value %s must be an optional", coercedValue);
-    Optional<?> optionalValue = (Optional<?>) coercedValue;
-
+      Optional<UnconfiguredBuildTarget> coercedValue, RuleAnalysisContext analysisContext) {
     return analysisContext
         .resolveDeps(
-            Iterables.transform(
-                optionalValue.map(ImmutableList::of).orElse(ImmutableList.of()),
-                target -> {
-                  Verify.verify(
-                      target instanceof UnconfiguredBuildTarget,
-                      "%s must be an UnconfiuredBuildTarget",
-                      target);
-                  // TODO(nga): use proper configuration
-                  return ((UnconfiguredBuildTarget) target)
-                      .configure(UnconfiguredTargetConfiguration.INSTANCE);
-                }))
+            coercedValue
+                .map(
+                    target -> {
+                      // TODO(nga): use proper configuration
+                      return ImmutableList.of(
+                          target.configure(UnconfiguredTargetConfiguration.INSTANCE));
+                    })
+                .orElse(ImmutableList.of()))
         .entrySet().stream()
         .map(
             targetAndProviders ->

@@ -36,7 +36,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
  * function call.
  */
 @FunctionalInterface
-public interface PostCoercionTransform<AdditionalDataType, PostTransformType> {
+public interface PostCoercionTransform<AdditionalDataType, CoercedType, PostTransformType> {
 
   /**
    * Transform a coerced attribute value for a specific rule in a way that utilizes deps.
@@ -52,5 +52,16 @@ public interface PostCoercionTransform<AdditionalDataType, PostTransformType> {
    * @throws IllegalArgumentException if {@code coercedValue} is not of the correct type or could
    *     otherwise not be transformed (e.g. a required dep is missing from {@code deps}).
    */
-  PostTransformType postCoercionTransform(Object coercedValue, AdditionalDataType additionalData);
+  PostTransformType postCoercionTransform(
+      CoercedType coercedValue, AdditionalDataType additionalData);
+
+  /**
+   * Unsafe version of {@link #postCoercionTransform(Object, Object)}, to be used when we have
+   * object, and {@code CoercedType} is {@code ?}.
+   */
+  @SuppressWarnings("unchecked")
+  default PostTransformType postCoercionTransformUnchecked(
+      Object coercedValue, AdditionalDataType additionalData) {
+    return this.postCoercionTransform((CoercedType) coercedValue, additionalData);
+  }
 }

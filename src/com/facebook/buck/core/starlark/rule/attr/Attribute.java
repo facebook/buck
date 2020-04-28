@@ -38,7 +38,7 @@ import org.immutables.value.Value;
 /** Representation of a parameter of a user defined rule */
 public abstract class Attribute<CoercedType> implements AttributeHolder {
 
-  private static final PostCoercionTransform<RuleAnalysisContext, Object> IDENTITY =
+  private static final PostCoercionTransform<RuleAnalysisContext, ?, Object> IDENTITY =
       (Object object, RuleAnalysisContext analysisContext) -> object;
 
   @Override
@@ -112,8 +112,9 @@ public abstract class Attribute<CoercedType> implements AttributeHolder {
    * @return a method that transforms a coerced value into something more useful to users, taking
    *     into account the rule's dependencies
    */
-  public PostCoercionTransform<RuleAnalysisContext, ?> getPostCoercionTransform() {
-    return IDENTITY;
+  @SuppressWarnings("unchecked")
+  public PostCoercionTransform<RuleAnalysisContext, CoercedType, ?> getPostCoercionTransform() {
+    return (PostCoercionTransform<RuleAnalysisContext, CoercedType, ?>) IDENTITY;
   }
 
   /**

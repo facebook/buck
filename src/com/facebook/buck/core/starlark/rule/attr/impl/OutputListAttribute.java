@@ -26,7 +26,6 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
-import java.util.List;
 
 /**
  * Represents a list of output files.
@@ -70,7 +69,8 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, ?> getPostCoercionTransform() {
+  public PostCoercionTransform<RuleAnalysisContext, ImmutableList<String>, ?>
+      getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
@@ -80,14 +80,10 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
   }
 
   ImmutableList<Artifact> postCoercionTransform(
-      Object coercedValue, RuleAnalysisContext analysisContext) {
-    if (!(coercedValue instanceof List<?>)) {
-      throw new IllegalArgumentException(String.format("Value %s must be a list", coercedValue));
-    }
-    List<?> listValue = (List<?>) coercedValue;
+      ImmutableList<String> coercedValue, RuleAnalysisContext analysisContext) {
     ImmutableList.Builder<Artifact> builder =
-        ImmutableList.builderWithExpectedSize(listValue.size());
-    for (Object output : listValue) {
+        ImmutableList.builderWithExpectedSize(coercedValue.size());
+    for (String output : coercedValue) {
       builder.add(
           OutputAttributeValidator.validateAndRegisterArtifact(
               output, analysisContext.actionRegistry()));

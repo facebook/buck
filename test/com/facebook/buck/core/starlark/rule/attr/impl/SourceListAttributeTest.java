@@ -37,6 +37,7 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
@@ -157,18 +158,22 @@ public class SourceListAttributeTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void failsTransformIfInvalidCoercedTypeProvided() {
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(Exception.class);
 
-    attr.getPostCoercionTransform()
+    ((Attribute<Object>) (Attribute<?>) attr)
+        .getPostCoercionTransform()
         .postCoercionTransform("invalid", new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void failsTransformIfInvalidElementInList() {
-    thrown.expect(IllegalStateException.class);
+    thrown.expect(Exception.class);
 
-    attr.getPostCoercionTransform()
+    ((Attribute<Object>) (Attribute<?>) attr)
+        .getPostCoercionTransform()
         .postCoercionTransform(
             ImmutableList.of("invalid"), new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }

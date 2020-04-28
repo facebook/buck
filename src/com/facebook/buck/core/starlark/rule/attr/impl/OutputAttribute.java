@@ -57,7 +57,7 @@ public abstract class OutputAttribute extends Attribute<String> {
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, ?> getPostCoercionTransform() {
+  public PostCoercionTransform<RuleAnalysisContext, String, ?> getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
@@ -65,7 +65,7 @@ public abstract class OutputAttribute extends Attribute<String> {
     return ImmutableOutputAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory);
   }
 
-  Artifact postCoercionTransform(Object coercedValue, RuleAnalysisContext analysisContext) {
+  Artifact postCoercionTransform(String coercedValue, RuleAnalysisContext analysisContext) {
     return OutputAttributeValidator.validateAndRegisterArtifact(
         coercedValue, analysisContext.actionRegistry());
   }

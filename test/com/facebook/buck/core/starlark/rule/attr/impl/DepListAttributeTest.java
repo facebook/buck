@@ -35,6 +35,7 @@ import com.facebook.buck.core.rules.providers.collect.impl.ProviderInfoCollectio
 import com.facebook.buck.core.rules.providers.collect.impl.TestProviderInfoCollectionImpl;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
@@ -141,20 +142,22 @@ public class DepListAttributeTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void failsTransformIfInvalidCoercedTypeProvided() {
+    thrown.expect(Exception.class);
 
-    thrown.expect(VerifyException.class);
-
-    attr.getPostCoercionTransform()
+    ((Attribute<Object>) (Attribute<?>) attr)
+        .getPostCoercionTransform()
         .postCoercionTransform("invalid", new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void failsTransformIfInvalidElementInList() {
+    thrown.expect(Exception.class);
 
-    thrown.expect(VerifyException.class);
-
-    attr.getPostCoercionTransform()
+    ((Attribute<Object>) (Attribute<?>) attr)
+        .getPostCoercionTransform()
         .postCoercionTransform(
             ImmutableList.of("invalid"), new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }

@@ -25,7 +25,6 @@ import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -59,7 +58,8 @@ public abstract class DepAttribute extends Attribute<BuildTarget> {
   public abstract ImmutableList<Provider<?>> getProviders();
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, SkylarkDependency> getPostCoercionTransform() {
+  public PostCoercionTransform<RuleAnalysisContext, BuildTarget, SkylarkDependency>
+      getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
@@ -71,12 +71,10 @@ public abstract class DepAttribute extends Attribute<BuildTarget> {
     return ImmutableDepAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory, providers);
   }
 
-  private SkylarkDependency postCoercionTransform(Object dep, RuleAnalysisContext analysisContext) {
-    Verify.verify(dep instanceof BuildTarget, "%s must be a BuildTarget", dep);
-    BuildTarget target = (BuildTarget) dep;
-
-    ProviderInfoCollection providers = analysisContext.resolveDep(target);
-    validateProvidersPresent(getProviders(), target, providers);
-    return new SkylarkDependency(target, providers);
+  private SkylarkDependency postCoercionTransform(
+      BuildTarget dep, RuleAnalysisContext analysisContext) {
+    ProviderInfoCollection providers = analysisContext.resolveDep(dep);
+    validateProvidersPresent(getProviders(), dep, providers);
+    return new SkylarkDependency(dep, providers);
   }
 }

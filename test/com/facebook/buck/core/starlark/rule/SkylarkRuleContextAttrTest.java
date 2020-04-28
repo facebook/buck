@@ -81,12 +81,11 @@ public class SkylarkRuleContextAttrTest {
     }
 
     @Override
-    public PostCoercionTransform<RuleAnalysisContext, Pair<Artifact, BuildTarget>>
+    public PostCoercionTransform<RuleAnalysisContext, BuildTarget, Pair<Artifact, BuildTarget>>
         getPostCoercionTransform() {
       return (coercedValue, analysisContext) ->
           new Pair<>(
-              analysisContext.actionRegistry().declareArtifact(Paths.get("out.txt")),
-              BuildTargetFactory.newInstance((String) coercedValue));
+              analysisContext.actionRegistry().declareArtifact(Paths.get("out.txt")), coercedValue);
     }
   }
 
@@ -132,7 +131,7 @@ public class SkylarkRuleContextAttrTest {
     SkylarkRuleContextAttr ctxAttr =
         SkylarkRuleContextAttr.of(
             "some_method",
-            ImmutableMap.of("foo", "foo_value", "bar", "//foo:bar"),
+            ImmutableMap.of("foo", "foo_value", "bar", target),
             ImmutableMap.of("foo", placeholderStringAttr, "bar", attr),
             new FakeRuleAnalysisContextImpl(ImmutableMap.of(target, providerInfos)));
 

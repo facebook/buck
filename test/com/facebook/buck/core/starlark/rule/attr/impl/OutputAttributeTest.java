@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rules.analysis.impl.FakeRuleAnalysisContextImpl;
+import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableMap;
@@ -91,10 +92,12 @@ public class OutputAttributeTest {
   }
 
   @Test
+  @SuppressWarnings("unchecked")
   public void failsTransformIfInvalidCoercedTypeProvided() {
-    thrown.expect(IllegalArgumentException.class);
+    thrown.expect(Exception.class);
 
-    attr.getPostCoercionTransform()
+    ((Attribute<Object>) (Attribute<?>) attr)
+        .getPostCoercionTransform()
         .postCoercionTransform(1, new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 

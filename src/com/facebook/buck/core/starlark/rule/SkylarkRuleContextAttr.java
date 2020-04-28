@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
+import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -66,9 +67,11 @@ public class SkylarkRuleContextAttr implements ClassObject, SkylarkValue {
                   public Object load(String paramName) {
                     Object coercedValue =
                         Preconditions.checkNotNull(methodParameters.get(paramName));
-                    return Preconditions.checkNotNull(attributes.get(paramName))
-                        .getPostCoercionTransform()
-                        .postCoercionTransform(coercedValue, context);
+                    PostCoercionTransform<RuleAnalysisContext, ?, ?> postCoercionTransform =
+                        Preconditions.checkNotNull(attributes.get(paramName))
+                            .getPostCoercionTransform();
+                    return postCoercionTransform.postCoercionTransformUnchecked(
+                        coercedValue, context);
                   }
                 });
   }

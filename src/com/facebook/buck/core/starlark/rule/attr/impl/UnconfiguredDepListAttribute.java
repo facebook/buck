@@ -26,7 +26,6 @@ import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -75,7 +74,8 @@ public abstract class UnconfiguredDepListAttribute
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, List<SkylarkDependency>>
+  public PostCoercionTransform<
+          RuleAnalysisContext, ImmutableList<UnconfiguredBuildTarget>, List<SkylarkDependency>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
@@ -91,24 +91,17 @@ public abstract class UnconfiguredDepListAttribute
 
   @SuppressWarnings("unused")
   private ImmutableList<SkylarkDependency> postCoercionTransform(
-      Object coercedValue, RuleAnalysisContext analysisContext) {
-    Verify.verify(coercedValue instanceof List<?>, "Value %s must be a list", coercedValue);
-    List<?> listValue = (List<?>) coercedValue;
+      ImmutableList<UnconfiguredBuildTarget> coercedValue, RuleAnalysisContext analysisContext) {
     ImmutableList.Builder<SkylarkDependency> builder =
-        ImmutableList.builderWithExpectedSize(listValue.size());
+        ImmutableList.builderWithExpectedSize(coercedValue.size());
 
     return analysisContext
         .resolveDeps(
-            listValue.stream()
+            coercedValue.stream()
                 .map(
                     target -> {
-                      Verify.verify(
-                          target instanceof UnconfiguredBuildTarget,
-                          "%s must be a UnconfiguredBuildTarget",
-                          target);
                       // TODO(nga): wrong configuration
-                      return ((UnconfiguredBuildTarget) target)
-                          .configure(UnconfiguredTargetConfiguration.INSTANCE);
+                      return target.configure(UnconfiguredTargetConfiguration.INSTANCE);
                     })
                 .collect(Collectors.toList()))
         .entrySet().stream()

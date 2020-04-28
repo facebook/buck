@@ -26,9 +26,7 @@ import com.facebook.buck.core.starlark.rule.data.SkylarkDependency;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
@@ -75,7 +73,8 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, List<SkylarkDependency>>
+  public PostCoercionTransform<
+          RuleAnalysisContext, ImmutableList<BuildTarget>, List<SkylarkDependency>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
@@ -92,21 +91,11 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
 
   @SuppressWarnings("unused")
   private ImmutableList<SkylarkDependency> postCoercionTransform(
-      Object coercedValue, RuleAnalysisContext analysisContext) {
-    Verify.verify(coercedValue instanceof List<?>, "Value %s must be a list", coercedValue);
-    List<?> listValue = (List<?>) coercedValue;
+      ImmutableList<BuildTarget> coercedValue, RuleAnalysisContext analysisContext) {
     ImmutableList.Builder<SkylarkDependency> builder =
-        ImmutableList.builderWithExpectedSize(listValue.size());
+        ImmutableList.builderWithExpectedSize(coercedValue.size());
 
-    return analysisContext
-        .resolveDeps(
-            Iterables.transform(
-                listValue,
-                target -> {
-                  Verify.verify(target instanceof BuildTarget, "%s must be a BuildTarget", target);
-                  return (BuildTarget) target;
-                }))
-        .entrySet().stream()
+    return analysisContext.resolveDeps(coercedValue).entrySet().stream()
         .map(
             targetAndProviders -> {
               validateProvidersPresent(

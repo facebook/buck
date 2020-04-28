@@ -58,7 +58,8 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, Artifact> getPostCoercionTransform() {
+  public PostCoercionTransform<RuleAnalysisContext, SourcePath, Artifact>
+      getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
@@ -66,11 +67,7 @@ public abstract class SourceAttribute extends Attribute<SourcePath> {
     return ImmutableSourceAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory);
   }
 
-  private Artifact postCoercionTransform(Object src, RuleAnalysisContext analysisContext) {
-    if (!(src instanceof SourcePath)) {
-      throw new IllegalStateException(String.format("%s needs to be a SourcePath", src));
-    }
-
-    return analysisContext.resolveSrc((SourcePath) src);
+  private Artifact postCoercionTransform(SourcePath src, RuleAnalysisContext analysisContext) {
+    return analysisContext.resolveSrc(src);
   }
 }

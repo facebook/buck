@@ -25,7 +25,6 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import java.util.List;
@@ -73,7 +72,8 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, List<Artifact>> getPostCoercionTransform() {
+  public PostCoercionTransform<RuleAnalysisContext, ImmutableList<SourcePath>, List<Artifact>>
+      getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
@@ -86,23 +86,7 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   }
 
   private ImmutableList<Artifact> postCoercionTransform(
-      Object coercedValue, RuleAnalysisContext analysisContext) {
-    if (!(coercedValue instanceof List<?>)) {
-      throw new IllegalArgumentException(String.format("Value %s must be a list", coercedValue));
-    }
-    List<?> listValue = (List<?>) coercedValue;
-
-    return ImmutableList.copyOf(
-        analysisContext.resolveSrcs(
-            Iterables.transform(
-                listValue,
-                src -> {
-                  if (!(src instanceof SourcePath)) {
-                    throw new IllegalStateException(
-                        String.format("%s needs to be a SourcePath", src));
-                  } else {
-                    return (SourcePath) src;
-                  }
-                })));
+      ImmutableList<SourcePath> coercedValue, RuleAnalysisContext analysisContext) {
+    return ImmutableList.copyOf(analysisContext.resolveSrcs(coercedValue));
   }
 }
