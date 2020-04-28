@@ -26,6 +26,8 @@ import com.facebook.buck.support.jvm.GCCollectionEvent;
 import com.facebook.buck.util.environment.ExecutionEnvironment;
 import com.facebook.buck.util.unit.SizeUnit;
 import com.google.common.eventbus.Subscribe;
+import java.lang.management.GarbageCollectorMXBean;
+import java.lang.management.ManagementFactory;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +47,7 @@ public class GCTimeSpentListener implements BuckEventListener {
   private final long thresholdInMillis;
   private Optional<GCTimeSpentWarningEvent> warningEvent;
 
-  public GCTimeSpentListener(
+  GCTimeSpentListener(
       BuckEventBus buckEventBus,
       GCTimeSpentListenerConfig config,
       ExecutionEnvironment executionEnvironment) {
@@ -56,6 +58,28 @@ public class GCTimeSpentListener implements BuckEventListener {
     this.executionEnvironment = executionEnvironment;
     this.thresholdPercentage = config.getThresholdPercentage();
     this.thresholdInMillis = TimeUnit.SECONDS.toMillis(config.getThresholdInSec());
+  }
+
+  /**
+   * Register this listener to the event bus.
+   *
+   * @param buckEventBus Event bus to send warning events to.
+   * @param config Buck config for this listener.
+   * @param executionEnvironment Object to get total system memory.
+   */
+  public static void register(
+      BuckEventBus buckEventBus,
+      GCTimeSpentListenerConfig config,
+      ExecutionEnvironment executionEnvironment) {
+    // Register this listener only if all GC beans are of G1. Other concurrent collectors tend to
+    // give misleading values for duration spent in GC w.r.t the context of this listener. As there
+    // is an effort to move to G1 GC anyway, enable this listener only for G1 GC.
+    for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
+      if (!bean.getName().contains("G1")) {
+        return;
+      }
+    }
+    buckEventBus.register(new GCTimeSpentListener(buckEventBus, config, executionEnvironment));
   }
 
   private void postWarnings() {

@@ -1235,6 +1235,11 @@ public final class MainRunner {
           if (logBuckConfig.isJavaGCEventLoggingEnabled()) {
             // Register for GC events to be published to the event bus.
             GCNotificationEventEmitter.register(buildEventBus);
+            // Register for warnings when significant portion of build time is spent in GC.
+            GCTimeSpentListener.register(
+                buildEventBus,
+                buckConfig.getView(GCTimeSpentListenerConfig.class),
+                executionEnvironment);
           }
 
           ImmutableMap<ExecutorPool, ListeningExecutorService> executors =
@@ -2158,14 +2163,6 @@ public final class MainRunner {
     LogBuckConfig logBuckConfig = buckConfig.getView(LogBuckConfig.class);
     if (logBuckConfig.isJavaUtilsLoggingEnabled()) {
       eventListenersBuilder.add(new JavaUtilsLoggingBuildListener(projectFilesystem));
-    }
-
-    if (logBuckConfig.isJavaGCEventLoggingEnabled()) {
-      eventListenersBuilder.add(
-          new GCTimeSpentListener(
-              buckEventBus,
-              buckConfig.getView(GCTimeSpentListenerConfig.class),
-              executionEnvironment));
     }
     Path logDirectoryPath = invocationInfo.getLogDirectoryPath();
     Path criticalPathDir = projectFilesystem.resolve(logDirectoryPath);
