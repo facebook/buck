@@ -494,8 +494,7 @@ public abstract class CxxSourceRuleFactory {
                   depsBuilder.add(requireAggregatedPreprocessDepsRule());
 
                   PreprocessorDelegateCacheValue preprocessorDelegateValue =
-                      preprocessorDelegates.apply(
-                          PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
+                      getPreprocessorDelegateCacheValue(source);
                   depsBuilder.add(preprocessorDelegateValue.getPreprocessorDelegate());
 
                   Stream<Arg> commandPrefixFlags =
@@ -578,18 +577,10 @@ public abstract class CxxSourceRuleFactory {
     LOG.verbose("Creating preprocess and compile %s for %s", target, source);
     Preconditions.checkArgument(CxxSourceTypes.isPreprocessableType(source.getType()));
 
-    CompilerDelegate compilerDelegate =
-        new CompilerDelegate(
-            getCxxPlatform().getCompilerDebugPathSanitizer(),
-            CxxSourceTypes.getCompiler(
-                    getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(source.getType()))
-                .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration()),
-            computeCompilerFlags(source.getType(), source.getFlags()),
-            getCxxPlatform().getUseArgFile());
+    CompilerDelegate compilerDelegate = makeCompilerDelegateForPreprocessAndCompile(source);
 
     PreprocessorDelegateCacheValue preprocessorDelegateValue =
-        preprocessorDelegates.apply(
-            PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
+        getPreprocessorDelegateCacheValue(source);
     PreprocessorDelegate preprocessorDelegate = preprocessorDelegateValue.getPreprocessorDelegate();
 
     Optional<CxxPrecompiledHeader> precompiledHeaderRule =
@@ -615,6 +606,21 @@ public abstract class CxxSourceRuleFactory {
         source.getType(),
         precompiledHeaderRule,
         getSanitizer());
+  }
+
+  private CompilerDelegate makeCompilerDelegateForPreprocessAndCompile(CxxSource source) {
+    return new CompilerDelegate(
+        getCxxPlatform().getCompilerDebugPathSanitizer(),
+        CxxSourceTypes.getCompiler(
+                getCxxPlatform(), CxxSourceTypes.getPreprocessorOutputType(source.getType()))
+            .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration()),
+        computeCompilerFlags(source.getType(), source.getFlags()),
+        getCxxPlatform().getUseArgFile());
+  }
+
+  private PreprocessorDelegateCacheValue getPreprocessorDelegateCacheValue(CxxSource source) {
+    return preprocessorDelegates.apply(
+        PreprocessorDelegateCacheKey.of(source.getType(), source.getFlags()));
   }
 
   Optional<CxxPrecompiledHeader> getOptionalPrecompiledHeader(
