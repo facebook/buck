@@ -83,10 +83,10 @@ public class InstallTriggerIntegrationTest {
   public void testInstallTrigger() throws IOException {
     // Even without changes, the rule should always build locally.
     // Build it twice with buckd.
-    workspace.runBuckdCommand("install", TRIGGER_TARGET).assertSuccess();
+    workspace.runBuckCommand("install", TRIGGER_TARGET).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(TRIGGER_TARGET);
     workspace.getBuildLog().assertTargetBuiltLocally(NORMAL_TARGET);
-    workspace.runBuckdCommand("install", TRIGGER_TARGET).assertSuccess();
+    workspace.runBuckCommand("install", TRIGGER_TARGET).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(TRIGGER_TARGET);
     workspace.getBuildLog().assertTargetHadMatchingRuleKey(NORMAL_TARGET);
     // And once without buckd.

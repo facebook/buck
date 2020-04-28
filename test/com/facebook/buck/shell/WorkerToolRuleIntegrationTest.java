@@ -117,12 +117,12 @@ public class WorkerToolRuleIntegrationTest {
     BuildTarget target1 = workspace.newBuildTarget("//:test6");
     String fullyQualifiedName = target1.getFullyQualifiedName();
 
-    workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
+    workspace.runBuckCommand("build", fullyQualifiedName).assertSuccess();
     String contents =
         workspace.getFileContents(
             BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"));
     workspace.replaceFileContents("test6.input", "1", "2");
-    workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
+    workspace.runBuckCommand("build", fullyQualifiedName).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(fullyQualifiedName);
     contents +=
         workspace.getFileContents(
@@ -138,14 +138,14 @@ public class WorkerToolRuleIntegrationTest {
     BuildTarget target1 = workspace.newBuildTarget("//:test6");
     String fullyQualifiedName = target1.getFullyQualifiedName();
 
-    workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
+    workspace.runBuckCommand("build", fullyQualifiedName).assertSuccess();
     String contents =
         workspace.getFileContents(
             BuildTargetPaths.getGenPath(filesystem, target1, "%s/output.txt"));
     workspace.replaceFileContents("test6.input", "1", "2");
     workspace.replaceFileContents("concurrent_tool.sh", "sleep 1", "sleep 2");
 
-    workspace.runBuckdCommand("build", fullyQualifiedName).assertSuccess();
+    workspace.runBuckCommand("build", fullyQualifiedName).assertSuccess();
     workspace.getBuildLog().assertTargetBuiltLocally(fullyQualifiedName);
     contents +=
         workspace.getFileContents(

@@ -47,7 +47,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
@@ -176,7 +175,7 @@ public class DaemonIntegrationTest {
                 tmp.getRoot().getPath(),
                 tmp.getRoot().getPath().toAbsolutePath().toString(),
                 env,
-                Optional.of(context));
+                DaemonMode.DAEMON);
 
         MainRunner mainRunner =
             main.prepareMainRunner(
@@ -209,13 +208,13 @@ public class DaemonIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
-    ProcessResult result = workspace.runBuckdCommand("build", "app");
+    ProcessResult result = workspace.runBuckCommand("build", "app");
     result.assertSuccess();
 
     String fileName = "apps/myapp/BUCK";
     Files.delete(workspace.getPath(fileName));
 
-    workspace.runBuckdCommand("build", "app").assertExitCode(null, ExitCode.PARSE_ERROR);
+    workspace.runBuckCommand("build", "app").assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 
   @Test
@@ -223,13 +222,13 @@ public class DaemonIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
+    workspace.runBuckCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
     String fileName = "java/com/example/activity/BUCK";
     Files.delete(workspace.getPath(fileName));
 
     workspace
-        .runBuckdCommand("build", "//java/com/example/activity:activity")
+        .runBuckCommand("build", "//java/com/example/activity:activity")
         .assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 
@@ -245,10 +244,10 @@ public class DaemonIntegrationTest {
     String appBuckFile = "apps/myapp/BUCK";
     Files.write(
         workspace.getPath(appBuckFile), "Some Illegal Python".getBytes(StandardCharsets.UTF_8));
-    workspace.runBuckdCommand("build", "//apps/...").assertExitCode(null, ExitCode.PARSE_ERROR);
+    workspace.runBuckCommand("build", "//apps/...").assertExitCode(null, ExitCode.PARSE_ERROR);
 
     Files.delete(workspace.getPath(appBuckFile));
-    workspace.runBuckdCommand("build", "//apps/...").assertSuccess();
+    workspace.runBuckCommand("build", "//apps/...").assertSuccess();
   }
 
   @Test
@@ -256,13 +255,13 @@ public class DaemonIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
+    workspace.runBuckCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
     String fileName = "java/com/example/activity/MyFirstActivity.java";
     Files.delete(workspace.getPath(fileName));
 
     ProcessResult processResult =
-        workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
+        workspace.runBuckCommand("build", "//java/com/example/activity:activity");
     processResult.assertFailure();
     assertThat(
         "Failure should have been due to file removal.",
@@ -275,13 +274,13 @@ public class DaemonIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
+    workspace.runBuckCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
     String fileName = "java/com/example/activity/MyFirstActivity.java";
     Files.delete(workspace.getPath(fileName));
 
     ProcessResult processResult =
-        workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
+        workspace.runBuckCommand("build", "//java/com/example/activity:activity");
     processResult.assertFailure();
     assertThat(processResult.getStderr(), containsString("MyFirstActivity.java"));
   }
@@ -291,13 +290,13 @@ public class DaemonIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
-    workspace.runBuckdCommand("build", "app").assertSuccess();
+    workspace.runBuckCommand("build", "app").assertSuccess();
 
     String fileName = "apps/myapp/BUCK";
     Files.write(
         workspace.getPath(fileName), "Some Illegal Python".getBytes(StandardCharsets.UTF_8));
 
-    ProcessResult result = workspace.runBuckdCommand("build", "app");
+    ProcessResult result = workspace.runBuckCommand("build", "app");
     assertThat(
         "Failure should be due to syntax error.",
         result.getStderr(),
@@ -310,7 +309,7 @@ public class DaemonIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
-    ProcessResult result = workspace.runBuckdCommand("run", "//native/main:main");
+    ProcessResult result = workspace.runBuckCommand("run", "//native/main:main");
     result.assertSuccess();
     assertThat(
         "Output should contain 'my_string_123_my_string'",
@@ -319,7 +318,7 @@ public class DaemonIntegrationTest {
 
     workspace.replaceFileContents("native/lib/BUCK", "123", "456");
 
-    result = workspace.runBuckdCommand("run", "//native/main:main");
+    result = workspace.runBuckCommand("run", "//native/main:main");
     result.assertSuccess();
     assertThat(
         "Output should contain 'my_string_456_my_string'",
@@ -332,7 +331,7 @@ public class DaemonIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
-    ProcessResult result = workspace.runBuckdCommand("run", "//native/main:main");
+    ProcessResult result = workspace.runBuckCommand("run", "//native/main:main");
     result.assertSuccess();
     assertThat(
         "Output should contain 'my_string_123_my_string'",
@@ -342,7 +341,7 @@ public class DaemonIntegrationTest {
     workspace.replaceFileContents(
         "native/lib/lib.cpp", "THE_STRING", "\"my_string_456_my_string\"");
 
-    result = workspace.runBuckdCommand("run", "//native/main:main");
+    result = workspace.runBuckCommand("run", "//native/main:main");
     result.assertSuccess();
     assertThat(
         "Output should contain 'my_string_456_my_string'",
@@ -365,14 +364,14 @@ public class DaemonIntegrationTest {
         ImmutableMap.of(
             "repositories",
             ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
-    primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
-    ProcessResult result = primary.runBuckdCommand("run", "//:cxxbinary");
+    primary.runBuckCommand("build", "//:cxxbinary").assertSuccess();
+    ProcessResult result = primary.runBuckCommand("run", "//:cxxbinary");
     result.assertSuccess();
 
     String fileName = "sum.cpp";
     Files.write(secondary.getPath(fileName), "#error Failure".getBytes(StandardCharsets.UTF_8));
 
-    result = primary.runBuckdCommand("build", "//:cxxbinary");
+    result = primary.runBuckCommand("build", "//:cxxbinary");
     assertThat(
         "Failure should be due to compilation error.",
         result.getStderr(),
@@ -384,8 +383,8 @@ public class DaemonIntegrationTest {
         secondary.getPath(fileName),
         "#include \"sum.hpp\"\nint sum(int a, int b) {return a;}".getBytes(StandardCharsets.UTF_8));
 
-    primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
-    result = primary.runBuckdCommand("run", "//:cxxbinary");
+    primary.runBuckCommand("build", "//:cxxbinary").assertSuccess();
+    result = primary.runBuckCommand("run", "//:cxxbinary");
     result.assertFailure();
   }
 
@@ -404,13 +403,13 @@ public class DaemonIntegrationTest {
         ImmutableMap.of(
             "repositories",
             ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
-    primary.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
+    primary.runBuckCommand("build", "//:cxxbinary").assertSuccess();
 
     String fileName = "BUCK";
     Files.write(
         secondary.getPath(fileName), "Some Invalid Python".getBytes(StandardCharsets.UTF_8));
 
-    ProcessResult processResult = primary.runBuckdCommand("build", "//:cxxbinary");
+    ProcessResult processResult = primary.runBuckCommand("build", "//:cxxbinary");
     processResult.assertFailure();
     assertThat(
         processResult.getStderr(),
@@ -424,7 +423,7 @@ public class DaemonIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "file_watching", tmp);
     workspace.setUp();
 
-    workspace.runBuckdCommand("build", "//java/com/example/activity:activity").assertSuccess();
+    workspace.runBuckCommand("build", "//java/com/example/activity:activity").assertSuccess();
 
     Path buildLogFile = workspace.getPath("buck-out/bin/build.log");
 
@@ -433,7 +432,7 @@ public class DaemonIntegrationTest {
     Files.delete(buildLogFile);
 
     ProcessResult rebuild =
-        workspace.runBuckdCommand("build", "//java/com/example/activity:activity");
+        workspace.runBuckCommand("build", "//java/com/example/activity:activity");
     rebuild.assertSuccess();
 
     buildLogFile = workspace.getPath("buck-out/bin/build.log");
@@ -458,14 +457,14 @@ public class DaemonIntegrationTest {
             "repositories",
             ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
 
-    workspace.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
+    workspace.runBuckCommand("build", "//:cxxbinary").assertSuccess();
 
     Path buildLogFile = workspace.getPath("buck-out/bin/build.log");
     assertTrue(Files.isRegularFile(buildLogFile));
     assertThat(Files.readAllLines(buildLogFile), hasItem(containsString("BUILT_LOCALLY")));
     Files.delete(buildLogFile);
 
-    workspace.runBuckdCommand("build", "//:cxxbinary").assertSuccess();
+    workspace.runBuckCommand("build", "//:cxxbinary").assertSuccess();
     buildLogFile = workspace.getPath("buck-out/bin/build.log");
     assertTrue(Files.isRegularFile(buildLogFile));
     assertThat(Files.readAllLines(buildLogFile), not(hasItem(containsString("BUILT_LOCALLY"))));
@@ -488,8 +487,8 @@ public class DaemonIntegrationTest {
             "repositories",
             ImmutableMap.of("secondary", secondary.getPath(".").normalize().toString())));
 
-    primary.runBuckdCommand("build", ":rule").assertSuccess();
+    primary.runBuckCommand("build", ":rule").assertSuccess();
     Files.write(secondary.getPath("included_by_primary.py"), new byte[] {});
-    primary.runBuckdCommand("build", ":rule").assertExitCode(null, ExitCode.PARSE_ERROR);
+    primary.runBuckCommand("build", ":rule").assertExitCode(null, ExitCode.PARSE_ERROR);
   }
 }

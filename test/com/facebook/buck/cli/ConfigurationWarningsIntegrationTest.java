@@ -128,7 +128,7 @@ public class ConfigurationWarningsIntegrationTest {
             this, "configuration_warnings", tmp);
     workspace.setUp();
 
-    ProcessResult result = workspace.runBuckdCommand("query", "//...").assertSuccess();
+    ProcessResult result = workspace.runBuckCommand("query", "//...").assertSuccess();
 
     assertThat(
         result.getStderr(),
@@ -137,7 +137,7 @@ public class ConfigurationWarningsIntegrationTest {
                 "Invalidating internal cached state: Buck configuration options changed between invocations. This may cause slower builds.")));
 
     workspace.addBuckConfigLocalOption("foo", "bar", "baz1");
-    result = workspace.runBuckdCommand("query", "-c", "foo.bar=baz1", "//...").assertSuccess();
+    result = workspace.runBuckCommand("query", "-c", "foo.bar=baz1", "//...").assertSuccess();
     assertThat(
         result.getStderr(),
         containsString(
@@ -157,7 +157,7 @@ public class ConfigurationWarningsIntegrationTest {
             "parse error (in %s at line 3): no_value",
             tmp.getRoot().resolve(".buckconfig").toString());
 
-    ProcessResult result = workspace.runBuckdCommand("query", "//...").assertFailure();
+    ProcessResult result = workspace.runBuckCommand("query", "//...").assertFailure();
 
     assertThat(result.getStderr(), containsString(expected));
   }
@@ -176,7 +176,7 @@ public class ConfigurationWarningsIntegrationTest {
             "parse error (in %s at line 3): no_value",
             tmp.getRoot().resolve("included.bcfg").toString());
 
-    ProcessResult result = workspace.runBuckdCommand("query", "//...").assertFailure();
+    ProcessResult result = workspace.runBuckCommand("query", "//...").assertFailure();
 
     assertThat(result.getStderr(), containsString(expected));
   }
@@ -195,7 +195,7 @@ public class ConfigurationWarningsIntegrationTest {
             tmp.getRoot().resolve(".buckconfig").toString(),
             tmp.getRoot().resolve("other.bcfg").toString());
 
-    ProcessResult result = workspace.runBuckdCommand("query", "//...").assertFailure();
+    ProcessResult result = workspace.runBuckCommand("query", "//...").assertFailure();
 
     assertThat(result.getStderr(), containsString(expected));
   }

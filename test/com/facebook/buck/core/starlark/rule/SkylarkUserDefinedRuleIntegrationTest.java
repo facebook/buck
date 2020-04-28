@@ -890,8 +890,8 @@ public class SkylarkUserDefinedRuleIntegrationTest {
     // Ensure that we persist the known rule types cache across invocations of buckd.
     // If we don't, then the rule_3 build will fail to find the UDR properly
     workspace.runBuckBuild("//foo:rule_1").assertSuccess();
-    workspace.runBuckdCommand("build", "//foo:rule_2").assertSuccess();
-    workspace.runBuckdCommand("build", "//foo:rule_3").assertSuccess();
+    workspace.runBuckCommand("build", "//foo:rule_2").assertSuccess();
+    workspace.runBuckCommand("build", "//foo:rule_3").assertSuccess();
   }
 
   @Test

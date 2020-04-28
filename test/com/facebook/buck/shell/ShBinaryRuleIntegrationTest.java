@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
@@ -217,12 +216,8 @@ public class ShBinaryRuleIntegrationTest {
 
     String alteredPwd = workspace.getDestPath() + "////////";
     ProcessResult buildResult =
-        workspace.runBuckCommandWithEnvironmentOverridesAndContext(
-            workspace.getDestPath(),
-            Optional.empty(),
-            ImmutableMap.of("PWD", alteredPwd),
-            "run",
-            "//:pwd");
+        workspace.runBuckCommandWithEnvironmentOverrides(
+            workspace.getDestPath(), ImmutableMap.of("PWD", alteredPwd), "run", "//:pwd");
     buildResult.assertSuccess();
     assertThat(buildResult.getStdout(), Matchers.equalTo(alteredPwd));
   }

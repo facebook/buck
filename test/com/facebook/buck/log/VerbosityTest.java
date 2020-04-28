@@ -43,7 +43,7 @@ public class VerbosityTest {
 
   @Test
   public void noOutputOnNormalBuildWithVerboseZero() throws IOException {
-    ProcessResult result = workspace.runBuckdCommand("build", "--verbose", "0", "//:foo");
+    ProcessResult result = workspace.runBuckCommand("build", "--verbose", "0", "//:foo");
     result.assertSuccess();
     Assert.assertEquals("", result.getStderr());
     Assert.assertEquals("", result.getStdout());
@@ -51,7 +51,7 @@ public class VerbosityTest {
 
   @Test
   public void noOutputOnConfigChangeWithVerboseZero() throws IOException {
-    workspace.runBuckdCommand("build", "//:foo").assertSuccess();
+    workspace.runBuckCommand("build", "//:foo").assertSuccess();
     Map<String, ? extends Map<String, String>> override =
         ImmutableMap.<String, ImmutableMap<String, String>>builder()
             .put(
@@ -59,7 +59,7 @@ public class VerbosityTest {
                 ImmutableMap.<String, String>builder().put("somekey", "somevalue").build())
             .build();
     TestDataHelper.overrideBuckconfig(workspace, override);
-    ProcessResult result = workspace.runBuckdCommand("build", "--verbose", "0", "//:foo");
+    ProcessResult result = workspace.runBuckCommand("build", "--verbose", "0", "//:foo");
     result.assertSuccess();
     Assert.assertEquals("", result.getStderr());
     Assert.assertEquals("", result.getStdout());

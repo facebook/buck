@@ -51,7 +51,7 @@ public class Aapt2PackageResourcesIntegrationTest {
   public void aapt2CompileInvokesAfterResourceChange() throws IOException {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     AssumeAndroidPlatform.get(workspace).assumeBundleBuildIsSupported();
-    workspace.runBuckdCommand(BUILD, AAPT2_BUILD_TARGET);
+    workspace.runBuckCommand(BUILD, AAPT2_BUILD_TARGET);
     verifyAapt2RuleInvocation(workspace.getBuildLog());
 
     workspace.resetBuildLogFile();
@@ -60,7 +60,7 @@ public class Aapt2PackageResourcesIntegrationTest {
         "Hello world!",
         "Hello from " + getClass().getName() + " !!!");
 
-    workspace.runBuckdCommand(BUILD, AAPT2_BUILD_TARGET);
+    workspace.runBuckCommand(BUILD, AAPT2_BUILD_TARGET);
     verifyAapt2RuleInvocation(workspace.getBuildLog());
   }
 

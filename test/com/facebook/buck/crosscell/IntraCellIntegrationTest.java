@@ -127,14 +127,14 @@ public class IntraCellIntegrationTest {
 
     Path childRepoRoot = workspace.getPath("child-repo");
 
-    ProcessResult buildResult = workspace.runBuckdCommand(childRepoRoot, "build", target);
+    ProcessResult buildResult = workspace.runBuckCommand(childRepoRoot, "build", target);
     buildResult.assertSuccess();
     workspace.getBuildLog(childRepoRoot).assertTargetBuiltLocally(target);
 
     // Now change the contents of the file and rebuild
     workspace.replaceFileContents("child-repo/dummy.c", "exitCode = 0", "exitCode = 1");
 
-    ProcessResult rebuildResult = workspace.runBuckdCommand(childRepoRoot, "build", target);
+    ProcessResult rebuildResult = workspace.runBuckCommand(childRepoRoot, "build", target);
     rebuildResult.assertSuccess();
     workspace.getBuildLog(childRepoRoot).assertTargetBuiltLocally(target);
   }

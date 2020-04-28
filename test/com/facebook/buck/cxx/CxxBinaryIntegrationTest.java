@@ -84,6 +84,7 @@ import java.util.Optional;
 import java.util.Set;
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -170,6 +171,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void testInferCxxBinaryDepsInvalidateCacheWhenVersionChanges() throws IOException {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
     workspace.enableDirCache();
@@ -1190,6 +1192,7 @@ public class CxxBinaryIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void testChangingCompilerPathForcesRebuild() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
@@ -1231,9 +1234,8 @@ public class CxxBinaryIntegrationTest {
     // instance, both binaries are in the PATH but the first binary is not
     // marked executable so is not picked up.
     workspace
-        .runBuckCommandWithEnvironmentOverridesAndContext(
+        .runBuckCommandWithEnvironmentOverrides(
             workspace.getDestPath(),
-            Optional.empty(),
             ImmutableMap.of(
                 "PATH",
                 firstCompilerPath
@@ -1253,9 +1255,8 @@ public class CxxBinaryIntegrationTest {
     MostFiles.makeExecutable(firstCompiler);
 
     workspace
-        .runBuckCommandWithEnvironmentOverridesAndContext(
+        .runBuckCommandWithEnvironmentOverrides(
             workspace.getDestPath(),
-            Optional.empty(),
             ImmutableMap.of(
                 "PATH",
                 firstCompilerPath

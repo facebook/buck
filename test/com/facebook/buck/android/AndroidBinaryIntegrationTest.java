@@ -268,7 +268,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     HashFunction hashFunction = Hashing.sha1();
     String dexFileName = "classes.dex";
 
-    workspace.runBuckdCommand("build", SIMPLE_TARGET).assertSuccess();
+    workspace.runBuckCommand("build", SIMPLE_TARGET).assertSuccess();
     ZipInspector zipInspector = new ZipInspector(workspace.getPath(outputPath));
     HashCode originalHash = hashFunction.hashBytes(zipInspector.getFileContents(dexFileName));
 
@@ -276,7 +276,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
         "java/com/sample/app/MyApplication.java", "MyReplaceableName", "ChangedValue");
 
     workspace.resetBuildLogFile();
-    ProcessResult result = workspace.runBuckdCommand("build", SIMPLE_TARGET);
+    ProcessResult result = workspace.runBuckCommand("build", SIMPLE_TARGET);
     result.assertSuccess();
     BuckBuildLog buildLog = workspace.getBuildLog();
     buildLog.assertTargetBuiltLocally(SIMPLE_TARGET);

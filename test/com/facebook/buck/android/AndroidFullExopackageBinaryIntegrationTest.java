@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -127,6 +128,7 @@ public class AndroidFullExopackageBinaryIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void testEditingManifestReferencedImageForcesRebuild() throws IOException {
     workspace.copyFile(
         "res/com/sample/top/res/drawable/tiny_white.png",

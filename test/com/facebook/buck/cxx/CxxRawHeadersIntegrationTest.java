@@ -249,7 +249,7 @@ public class CxxRawHeadersIntegrationTest {
 
   private ProcessResult runCommand(String... args) throws IOException {
     if (useBuckd) {
-      return workspace.runBuckdCommand(args);
+      return workspace.runBuckCommand(args);
     } else {
       return workspace.runBuckCommand(args);
     }

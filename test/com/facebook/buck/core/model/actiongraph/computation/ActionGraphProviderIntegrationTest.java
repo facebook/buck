@@ -59,7 +59,7 @@ public class ActionGraphProviderIntegrationTest {
       throws IOException {
     try (TestContext context = new TestContext()) {
       workspace
-          .runBuckdCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
+          .runBuckCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
           .assertSuccess();
       assertEquals(
           "Should be a fresh daemon, so the ActionGraph cache should be empty.",
@@ -67,23 +67,21 @@ public class ActionGraphProviderIntegrationTest {
           getActionGraphCacheStatus());
 
       workspace
-          .runBuckdCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
+          .runBuckCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
           .assertSuccess();
       assertEquals(
           "Rebuilding the rule should hit the cache.",
           ActionGraphCacheStatus.HIT,
           getActionGraphCacheStatus());
 
-      workspace
-          .runBuckdCommand(context, "build", "//:pretend_this_is_a_cheap_rule")
-          .assertSuccess();
+      workspace.runBuckCommand(context, "build", "//:pretend_this_is_a_cheap_rule").assertSuccess();
       assertEquals(
           "Building a different rule as a non-oneoff should invalidate the cache.",
           ActionGraphCacheStatus.MISS_TARGET_GRAPH_MISMATCH,
           getActionGraphCacheStatus());
 
       workspace
-          .runBuckdCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
+          .runBuckCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
           .assertSuccess();
       assertEquals(
           "Building a different rule as a non-oneoff should invalidate the cache again.",
@@ -91,7 +89,7 @@ public class ActionGraphProviderIntegrationTest {
           getActionGraphCacheStatus());
 
       workspace
-          .runBuckdCommand(
+          .runBuckCommand(
               context,
               "build",
               "--config",
@@ -104,7 +102,7 @@ public class ActionGraphProviderIntegrationTest {
           getActionGraphCacheStatus());
 
       workspace
-          .runBuckdCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
+          .runBuckCommand(context, "build", "//:pretend_this_is_an_expensive_rule")
           .assertSuccess();
       assertEquals(
           "The ActionGraph for the expensive rule should still be in cache.",

@@ -329,13 +329,13 @@ public class GoTestIntegrationTest {
   @Test
   public void testGoTestWithSystemEnv() throws IOException {
     workspace
-        .runBuckdCommand(ImmutableMap.of(), "test", "//:test-with-system-env")
+        .runBuckCommand(ImmutableMap.of(), "test", "//:test-with-system-env")
         .assertTestFailure();
     workspace
-        .runBuckdCommand(ImmutableMap.of("FOO", "BAR"), "test", "//:test-with-system-env")
+        .runBuckCommand(ImmutableMap.of("FOO", "BAR"), "test", "//:test-with-system-env")
         .assertSuccess();
     workspace
-        .runBuckdCommand(ImmutableMap.of(), "test", "//:test-with-system-env")
+        .runBuckCommand(ImmutableMap.of(), "test", "//:test-with-system-env")
         .assertTestFailure();
   }
 

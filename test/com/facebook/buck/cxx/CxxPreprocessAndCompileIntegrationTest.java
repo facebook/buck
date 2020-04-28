@@ -136,9 +136,8 @@ public class CxxPreprocessAndCompileIntegrationTest {
     // the symlinked directory, even though it's not the right project root.
     BuildTarget target = BuildTargetFactory.newInstance("//:simple#default,static");
     workspace
-        .runBuckCommandWithEnvironmentOverridesAndContext(
+        .runBuckCommandWithEnvironmentOverrides(
             tmp.getRoot().getPath(),
-            Optional.empty(),
             ImmutableMap.of("PWD", symlinkedRoot.toString()),
             "build",
             target.getFullyQualifiedName())

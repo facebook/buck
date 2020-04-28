@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Rule;
@@ -61,9 +60,8 @@ public class AndroidPrebuiltAarIntegrationTest extends AbiCompilationModeTest {
     String badSdkPath = tmp.getRoot().resolve("some_non_existent_path").toString();
     workspace.addBuckConfigLocalOption("android", "sdk_path", badSdkPath);
     workspace
-        .runBuckCommandWithEnvironmentOverridesAndContext(
+        .runBuckCommandWithEnvironmentOverrides(
             tmp.getRoot().getPath(),
-            Optional.empty(),
             ImmutableMap.of("ANDROID_SDK", badSdkPath, "ANDROID_HOME", badSdkPath),
             "targets",
             "--show-rulekey",

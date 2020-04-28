@@ -69,7 +69,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
-import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.hamcrest.Matchers;
@@ -259,9 +258,8 @@ public class PythonBinaryIntegrationTest {
     // Pre-set library path.
     String nativeLibsEnvVar =
         workspace
-            .runBuckCommandWithEnvironmentOverridesAndContext(
+            .runBuckCommandWithEnvironmentOverrides(
                 workspace.getPath(""),
-                Optional.empty(),
                 ImmutableMap.of(nativeLibsEnvVarName, originalNativeLibsEnvVar),
                 "run",
                 ":bin-with-native-libs")
@@ -273,12 +271,8 @@ public class PythonBinaryIntegrationTest {
     // Empty library path.
     nativeLibsEnvVar =
         workspace
-            .runBuckCommandWithEnvironmentOverridesAndContext(
-                workspace.getPath(""),
-                Optional.empty(),
-                ImmutableMap.of(),
-                "run",
-                ":bin-with-native-libs")
+            .runBuckCommandWithEnvironmentOverrides(
+                workspace.getPath(""), ImmutableMap.of(), "run", ":bin-with-native-libs")
             .assertSuccess()
             .getStdout()
             .trim();

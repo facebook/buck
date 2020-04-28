@@ -352,13 +352,13 @@ public class ParserIntegrationTest {
     bigFileTree.visit(path -> Files.write(path, initialContents));
 
     workspace.copyFile("foo/BUCK.1", "foo/BUCK");
-    workspace.runBuckdCommand("build", "//foo:foo").assertSuccess();
+    workspace.runBuckCommand("build", "//foo:foo").assertSuccess();
 
     workspace.copyFile("foo/BUCK.2", "foo/BUCK");
     workspace.copyFile("foo/bar/BUCK.1", "foo/bar/BUCK");
     byte[] modifiedContents = "yyy".getBytes();
     bigFileTree.visit(path -> Files.write(path, modifiedContents));
-    workspace.runBuckdCommand("build", "//foo/bar:bar").assertSuccess();
+    workspace.runBuckCommand("build", "//foo/bar:bar").assertSuccess();
   }
 
   @Test

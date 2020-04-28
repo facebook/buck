@@ -24,11 +24,9 @@ import com.facebook.buck.support.state.BuckGlobalStateLifecycleManager;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.environment.CommandMode;
 import com.facebook.buck.util.environment.Platform;
-import com.facebook.nailgun.NGContext;
 import com.google.common.collect.ImmutableMap;
 import java.io.InputStream;
 import java.nio.file.Path;
-import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -46,8 +44,8 @@ public class MainForTests extends AbstractMain {
    *     command
    * @param projectRoot the root of the project for this test command
    * @param rawClientPwd the raw path of where the client invoked this command
-   * @param ngContext the nailgun context for this test command.
    * @param clientEnvironment the client environment being tested
+   * @param daemonMode whether the test should behave like daemon
    */
   public MainForTests(
       Console console,
@@ -56,7 +54,7 @@ public class MainForTests extends AbstractMain {
       Path projectRoot,
       @Nullable String rawClientPwd,
       ImmutableMap<String, String> clientEnvironment,
-      Optional<NGContext> ngContext) {
+      DaemonMode daemonMode) {
     super(
         console,
         stdIn,
@@ -65,7 +63,7 @@ public class MainForTests extends AbstractMain {
         projectRoot,
         rawClientPwd,
         CommandMode.TEST,
-        ngContext.map(ignored -> DaemonMode.DAEMON).orElse(DaemonMode.NON_DAEMON));
+        daemonMode);
     this.knownRuleTypesFactoryFactory = knownRuleTypesFactoryFactory;
   }
 
@@ -75,7 +73,7 @@ public class MainForTests extends AbstractMain {
    * @param clientEnvironment the client environment being tested
    * @param projectRoot the root of the project for this test command
    * @param rawClientPwd the raw path of where the client invoked this command
-   * @param ngContext the nailgun context for this test command.
+   * @param daemonMode whether the test should behave like daemon
    */
   public MainForTests(
       Console console,
@@ -83,7 +81,7 @@ public class MainForTests extends AbstractMain {
       Path projectRoot,
       @Nullable String rawClientPwd,
       ImmutableMap<String, String> clientEnvironment,
-      Optional<NGContext> ngContext) {
+      DaemonMode daemonMode) {
     this(
         console,
         stdIn,
@@ -91,7 +89,7 @@ public class MainForTests extends AbstractMain {
         projectRoot,
         rawClientPwd,
         clientEnvironment,
-        ngContext);
+        daemonMode);
   }
 
   @Override

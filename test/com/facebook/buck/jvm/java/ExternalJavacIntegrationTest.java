@@ -129,7 +129,7 @@ public class ExternalJavacIntegrationTest {
 
     workspace.replaceFileContents(".buckconfig", "@JAVAC@", javac.toAbsolutePath().toString());
     workspace
-        .runBuckdCommand(
+        .runBuckCommand(
             ImmutableMap.of(
                 "CHECK_THIS_VARIABLE",
                 "1",

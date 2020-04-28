@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeTrue;
 import com.dd.plist.BinaryPropertyListParser;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
+import com.facebook.buck.cli.DaemonMode;
 import com.facebook.buck.cli.MainForTests;
 import com.facebook.buck.cli.MainRunner;
 import com.facebook.buck.core.cell.Cell;
@@ -301,7 +302,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
     String[] totalArgs = new String[args.length + 1];
     totalArgs[0] = "build";
     System.arraycopy(args, 0, totalArgs, 1, args.length);
-    return runBuckCommand(context, root, env, totalArgs);
+    return runBuckCommand(root, env, totalArgs);
   }
 
   public ProcessResult runBuckTest(String... args) {
@@ -481,59 +482,28 @@ public class ProjectWorkspace extends AbstractWorkspace {
    */
   @Override
   public ProcessResult runBuckCommand(String... args) {
-    return runBuckCommand(Optional.empty(), destPath, args);
-  }
-
-  public ProcessResult runBuckCommand(Optional<NGContext> context, String... args) {
-    return runBuckCommand(context, destPath, args);
+    return runBuckCommand(destPath, args);
   }
 
   @Override
   public ProcessResult runBuckCommand(ImmutableMap<String, String> environment, String... args) {
-    return runBuckCommandWithEnvironmentOverridesAndContext(
-        destPath, Optional.empty(), environment, args);
+    return runBuckCommandWithEnvironmentOverrides(destPath, environment, args);
   }
 
   public ProcessResult runBuckCommand(Path repoRoot, String... args) {
-    return runBuckCommand(Optional.empty(), repoRoot, args);
-  }
-
-  public ProcessResult runBuckCommand(Optional<NGContext> context, Path repoRoot, String... args) {
-    return runBuckCommand(context, repoRoot, ImmutableMap.of(), args);
+    return runBuckCommand(repoRoot, ImmutableMap.of(), args);
   }
 
   public ProcessResult runBuckCommand(
-      Optional<NGContext> context,
-      Path repoRoot,
-      ImmutableMap<String, String> env,
-      String... args) {
-    return runBuckCommandWithEnvironmentOverridesAndContext(repoRoot, context, env, args);
+      Path repoRoot, ImmutableMap<String, String> env, String... args) {
+    return runBuckCommandWithEnvironmentOverrides(repoRoot, env, args);
   }
 
-  public ProcessResult runBuckdCommand(String... args) throws IOException {
-    try (TestContext context = new TestContext()) {
-      return runBuckdCommand(context, args);
-    }
+  public ProcessResult runBuckCommand(NGContext context, String... args) {
+    return runBuckCommand(destPath, context, args);
   }
 
-  public ProcessResult runBuckdCommand(ImmutableMap<String, String> environment, String... args)
-      throws IOException {
-    try (TestContext context = new TestContext(environment)) {
-      return runBuckdCommand(context, args);
-    }
-  }
-
-  public ProcessResult runBuckdCommand(Path repoRoot, String... args) throws IOException {
-    try (TestContext context = new TestContext()) {
-      return runBuckdCommand(repoRoot, context, args);
-    }
-  }
-
-  public ProcessResult runBuckdCommand(NGContext context, String... args) {
-    return runBuckdCommand(destPath, context, args);
-  }
-
-  public ProcessResult runBuckdCommand(Path repoRoot, NGContext context, String... args) {
+  public ProcessResult runBuckCommand(Path repoRoot, NGContext context, String... args) {
     assumeTrue(
         "watchman must exist to run buckd",
         new ExecutableFinder(Platform.detect())
@@ -541,15 +511,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
             .isPresent());
 
     ImmutableMap<String, String> clientEnv = ImmutableMap.copyOf((Map) context.getEnv());
-    return runBuckCommandWithEnvironmentOverridesAndContext(
-        repoRoot, Optional.of(context), clientEnv, args);
+    return runBuckCommandWithEnvironmentOverrides(repoRoot, clientEnv, args);
   }
 
-  public ProcessResult runBuckCommandWithEnvironmentOverridesAndContext(
-      Path repoRoot,
-      Optional<NGContext> context,
-      ImmutableMap<String, String> environmentOverrides,
-      String... args) {
+  public ProcessResult runBuckCommandWithEnvironmentOverrides(
+      Path repoRoot, ImmutableMap<String, String> environmentOverrides, String... args) {
     try {
       assertTrue("setUp() must be run before this method is invoked", isSetUp);
       TestConsole testConsole = new TestConsole();
@@ -570,7 +536,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
               repoRoot,
               repoRoot.toAbsolutePath().resolve(relativeWorkingDir).normalize().toString(),
               sanizitedEnv,
-              context);
+              DaemonMode.DAEMON);
 
       MainRunner mainRunner =
           main.prepareMainRunner(manager, buckDaemonState, new MainForTests.TestCommandManager());

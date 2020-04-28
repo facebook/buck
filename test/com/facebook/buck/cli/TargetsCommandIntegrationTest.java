@@ -1661,7 +1661,7 @@ public class TargetsCommandIntegrationTest {
 
     // the first execution with specific configuration params for ui.json_attribute_format
     ProcessResult result =
-        workspace.runBuckdCommand(
+        workspace.runBuckCommand(
             "targets",
             "--json",
             "-c",
@@ -1687,7 +1687,7 @@ public class TargetsCommandIntegrationTest {
     // the second execution without specific configuration params for ui.json_attribute_format but
     // with --reuse-current-config" param
     result =
-        workspace.runBuckdCommand(
+        workspace.runBuckCommand(
             "targets", "--json", GlobalCliOptions.REUSE_CURRENT_CONFIG_ARG, "--show-output", "...");
     result.assertSuccess();
     assertJsonMatchesWithOutputPlaceholder(expectedJson, result.getStdout());
@@ -1716,7 +1716,7 @@ public class TargetsCommandIntegrationTest {
 
     // the third execution without specific configuration params for ui.json_attribute_format and
     // without --reuse-current-config param
-    result = workspace.runBuckdCommand("targets", "--json", "--show-output", "...");
+    result = workspace.runBuckCommand("targets", "--json", "--show-output", "...");
     result.assertSuccess();
     assertJsonNotMatches(expectedJson, result.getStdout());
     assertThat(

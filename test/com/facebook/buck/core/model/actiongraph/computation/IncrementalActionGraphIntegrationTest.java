@@ -67,12 +67,12 @@ public class IncrementalActionGraphIntegrationTest {
 
       // First populate the cache
       workspace
-          .runBuckdCommand(context, "build", "--target-platforms=//:platform", "//:thing1")
+          .runBuckCommand(context, "build", "--target-platforms=//:platform", "//:thing1")
           .assertSuccess();
 
       // The new action graph must be built with no problems
       workspace
-          .runBuckdCommand(context, "build", "--target-platforms=//:platform", "//:thing2")
+          .runBuckCommand(context, "build", "--target-platforms=//:platform", "//:thing2")
           .assertSuccess();
 
       // make sure we attempted to incrementally create the action graph

@@ -423,8 +423,8 @@ public class InterCellIntegrationTest {
     Path primary = mainRepo.getPath("primary");
 
     ProcessResult result =
-        mainRepo.runBuckCommandWithEnvironmentOverridesAndContext(
-            primary, Optional.empty(), ImmutableMap.of(), "build", "//:bin");
+        mainRepo.runBuckCommandWithEnvironmentOverrides(
+            primary, ImmutableMap.of(), "build", "//:bin");
 
     result.assertSuccess();
   }

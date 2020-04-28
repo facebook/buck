@@ -152,7 +152,7 @@ public class CxxDependencyFileIntegrationTest {
 
   private ProcessResult runCommand(String... args) throws IOException {
     if (buckd) {
-      return workspace.runBuckdCommand(args);
+      return workspace.runBuckCommand(args);
     } else {
       return workspace.runBuckCommand(args);
     }
