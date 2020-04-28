@@ -24,6 +24,7 @@ import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -73,15 +74,15 @@ public abstract class SourceSortedSetAttribute extends Attribute<ImmutableSorted
 
   @Override
   public PostCoercionTransform<
-          RuleAnalysisContext, ImmutableSortedSet<SourcePath>, ImmutableSortedSet<Artifact>>
+          RuleAnalysisContext, ImmutableSortedSet<SourcePath>, ImmutableList<Artifact>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
-  private ImmutableSortedSet<Artifact> postCoercionTransform(
+  private ImmutableList<Artifact> postCoercionTransform(
       ImmutableSortedSet<SourcePath> coercedValue, RuleAnalysisContext analysisContext) {
 
-    return analysisContext.resolveSrcs(coercedValue);
+    return ImmutableList.copyOf(analysisContext.resolveSrcs(coercedValue));
   }
 
   public static SourceSortedSetAttribute of(

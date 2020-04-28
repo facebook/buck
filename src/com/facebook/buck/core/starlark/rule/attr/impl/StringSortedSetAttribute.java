@@ -16,10 +16,13 @@
 
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
+import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
@@ -59,6 +62,12 @@ public abstract class StringSortedSetAttribute extends Attribute<ImmutableSorted
     if (!getAllowEmpty() && values.isEmpty()) {
       throw new CoerceFailedException("List of strings may not be empty");
     }
+  }
+
+  @Override
+  public PostCoercionTransform<RuleAnalysisContext, ImmutableSortedSet<String>, ?>
+      getPostCoercionTransform() {
+    return (coercedValue, ctx) -> ImmutableList.copyOf(coercedValue);
   }
 
   public static StringSortedSetAttribute of(
