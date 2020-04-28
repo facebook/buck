@@ -24,10 +24,10 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import java.util.Set;
 
 /**
  * Utility class to resolve specified {@link com.facebook.buck.core.sourcepath.SourcePath} into
@@ -51,7 +51,7 @@ public class SourceArtifactConverter {
       if (providerInfos == null) {
         throw new IllegalStateException(String.format("Deps %s did not contain %s", deps, src));
       }
-      Set<Artifact> artifacts =
+      ImmutableList<Artifact> artifacts =
           DefaultInfoArtifactsRetriever.getArtifacts(
               providerInfos.getDefaultInfo(), targetWithOutputs);
       if (artifacts.size() != 1) {

@@ -79,7 +79,6 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -170,7 +169,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         actionFunction);
 
     ProviderInfoCollection providerInfoCollection =
-        createProviderInfoCollection(ImmutableMap.of(), ImmutableSet.of(artifact));
+        createProviderInfoCollection(ImmutableMap.of(), ImmutableList.of(artifact));
 
     RuleAnalysisLegacyBuildRuleView buildRule =
         createRuleAnalysisLegacyBuildRuleView(
@@ -237,10 +236,10 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         createProviderInfoCollection(
             ImmutableMap.of(
                 "setOne",
-                ImmutableSet.of(setOneArtifactOne),
+                ImmutableList.of(setOneArtifactOne),
                 "setTwo",
-                ImmutableSet.of(setTwoArtifactOne, setTwoArtifactTwo)),
-            ImmutableSet.of(defaultArtifact, defaultArtifact2));
+                ImmutableList.of(setTwoArtifactOne, setTwoArtifactTwo)),
+            ImmutableList.of(defaultArtifact, defaultArtifact2));
 
     RuleAnalysisLegacyBuildRuleView buildRule =
         createRuleAnalysisLegacyBuildRuleView(
@@ -286,7 +285,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         actionRegistry, ImmutableSortedSet.of(), ImmutableSortedSet.of(defaultArtifact));
 
     ProviderInfoCollection providerInfoCollection =
-        createProviderInfoCollection(ImmutableMap.of(), ImmutableSet.of(defaultArtifact));
+        createProviderInfoCollection(ImmutableMap.of(), ImmutableList.of(defaultArtifact));
 
     RuleAnalysisLegacyBuildRuleView buildRule =
         createRuleAnalysisLegacyBuildRuleView(
@@ -305,8 +304,8 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
 
     ProviderInfoCollection providerInfoCollection =
         createProviderInfoCollection(
-            ImmutableMap.of("setOne", ImmutableSet.of(), "setTwo", ImmutableSet.of()),
-            ImmutableSet.of());
+            ImmutableMap.of("setOne", ImmutableList.of(), "setTwo", ImmutableList.of()),
+            ImmutableList.of());
 
     RuleAnalysisLegacyBuildRuleView buildRule =
         createRuleAnalysisLegacyBuildRuleView(
@@ -345,10 +344,10 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
   }
 
   private static ProviderInfoCollection createProviderInfoCollection(
-      ImmutableMap<String, ImmutableSet<Artifact>> namedOutputs,
-      ImmutableSet<Artifact> defaultOutputs)
+      ImmutableMap<String, ImmutableList<Artifact>> namedOutputs,
+      ImmutableList<Artifact> defaultOutputs)
       throws EvalException {
-    SkylarkDict<String, Set<Artifact>> dict;
+    SkylarkDict<String, ImmutableList<Artifact>> dict;
     try (Mutability mutability = Mutability.create("test")) {
       StarlarkThread env =
           StarlarkThread.builder(mutability)
@@ -356,7 +355,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .build();
       dict = SkylarkDict.of(env);
-      for (Map.Entry<String, ImmutableSet<Artifact>> entry : namedOutputs.entrySet()) {
+      for (Map.Entry<String, ImmutableList<Artifact>> entry : namedOutputs.entrySet()) {
         dict.put(entry.getKey(), entry.getValue(), Location.BUILTIN);
       }
     }

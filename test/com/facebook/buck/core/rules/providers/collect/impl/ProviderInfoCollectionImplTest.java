@@ -37,7 +37,6 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
-import java.util.Set;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -145,7 +144,7 @@ public class ProviderInfoCollectionImplTest {
   public void throwsExceptionIfAddingMutableValue() {
     try (TestMutableEnv env = new TestMutableEnv()) {
       ProviderInfoCollectionImpl.Builder collection = ProviderInfoCollectionImpl.builder();
-      SkylarkDict<String, Set<Artifact>> mutableDict = SkylarkDict.of(env.getEnv());
+      SkylarkDict<String, ImmutableList<Artifact>> mutableDict = SkylarkDict.of(env.getEnv());
 
       assertFalse(mutableDict.isImmutable());
       expectedException.expect(MutableObjectException.class);

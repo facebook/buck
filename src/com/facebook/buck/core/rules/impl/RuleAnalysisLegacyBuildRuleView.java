@@ -47,7 +47,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -188,7 +187,8 @@ public class RuleAnalysisLegacyBuildRuleView extends AbstractBuildRule
     return providerInfoCollection;
   }
 
-  private static ImmutableSortedSet<SourcePath> convertToSourcePaths(Set<Artifact> artifacts) {
+  private static ImmutableSortedSet<SourcePath> convertToSourcePaths(
+      ImmutableList<Artifact> artifacts) {
     return artifacts.stream()
         .map(artifact -> artifact.asBound().getSourcePath())
         .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));

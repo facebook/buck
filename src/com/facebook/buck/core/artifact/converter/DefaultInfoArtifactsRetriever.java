@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rules.providers.lib.DefaultInfo;
 import com.google.common.base.Preconditions;
-import java.util.Set;
+import com.google.common.collect.ImmutableList;
 
 /**
  * Utility class for getting artifacts from {@link
@@ -35,13 +35,13 @@ public class DefaultInfoArtifactsRetriever {
    * Returns the {@link Artifact} instances associated with the given {@link BuildTarget} and {@link
    * OutputLabel}.
    */
-  public static Set<Artifact> getArtifacts(
+  public static ImmutableList<Artifact> getArtifacts(
       DefaultInfo defaultInfo, BuildTargetWithOutputs buildTargetWithOutputs) {
     OutputLabel outputLabel = buildTargetWithOutputs.getOutputLabel();
     if (outputLabel.isDefault()) {
       return defaultInfo.defaultOutputs();
     }
-    Set<Artifact> namedArtifacts =
+    ImmutableList<Artifact> namedArtifacts =
         defaultInfo.namedOutputs().get(OutputLabel.internals().getLabel(outputLabel));
     Preconditions.checkNotNull(
         namedArtifacts,

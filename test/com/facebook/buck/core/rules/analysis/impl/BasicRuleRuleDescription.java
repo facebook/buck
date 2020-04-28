@@ -36,6 +36,7 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.util.json.ObjectMappers;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescriptionArg> {
 
@@ -73,11 +73,11 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
 
     ImmutableSortedSet.Builder<Artifact> allArtifactsBuilder = ImmutableSortedSet.naturalOrder();
 
-    ImmutableSet<Artifact> defaultOutputs =
+    ImmutableList<Artifact> defaultOutputs =
         getDefaultOutputs(actionRegistry, args.getDefaultOuts());
     allArtifactsBuilder.addAll(defaultOutputs);
 
-    SkylarkDict<String, Set<Artifact>> namedOutputs =
+    SkylarkDict<String, ImmutableList<Artifact>> namedOutputs =
         getNamedOutputs(context.actionRegistry(), args);
     namedOutputs.values().forEach(allArtifactsBuilder::addAll);
 
@@ -161,18 +161,18 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
     return BasicRuleDescriptionArg.class;
   }
 
-  private ImmutableSet<Artifact> getDefaultOutputs(
+  private ImmutableList<Artifact> getDefaultOutputs(
       ActionRegistry actionRegistry, Optional<ImmutableSet<String>> defaultOuts) {
     return declareArtifacts(actionRegistry, defaultOuts.orElseGet(() -> ImmutableSet.of("output")));
   }
 
-  private SkylarkDict<String, Set<Artifact>> getNamedOutputs(
+  private SkylarkDict<String, ImmutableList<Artifact>> getNamedOutputs(
       ActionRegistry actionRegistry, BasicRuleDescriptionArg args) {
     if (!args.getNamedOuts().isPresent()) {
       return SkylarkDict.empty();
     }
     ImmutableMap<String, ImmutableSet<String>> namedOuts = args.getNamedOuts().get();
-    SkylarkDict<String, Set<Artifact>> dict;
+    SkylarkDict<String, ImmutableList<Artifact>> dict;
     try (Mutability mutability = Mutability.create("test")) {
       StarlarkThread env =
           StarlarkThread.builder(mutability)
@@ -195,11 +195,11 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
     return dict;
   }
 
-  private ImmutableSet<Artifact> declareArtifacts(
-      ActionRegistry actionRegistry, ImmutableSet<String> outNames) {
+  private ImmutableList<Artifact> declareArtifacts(
+      ActionRegistry actionRegistry, ImmutableCollection<String> outNames) {
     return outNames.stream()
         .map(out -> actionRegistry.declareArtifact(Paths.get(out), Location.BUILTIN))
-        .collect(ImmutableSet.toImmutableSet());
+        .collect(ImmutableList.toImmutableList());
   }
 
   @RuleArg
