@@ -39,6 +39,17 @@
 {/template}
 
 /***/
+{template .deps_arg}
+{call buck.arg}
+  {param name: 'deps' /}
+  {param default : '[]' /}
+  {param desc}
+  Other rules that list <code>srcs</code> from which this rule imports.
+  {/param}
+{/call}
+{/template}
+
+/***/
 {template .platform_srcs_arg}
 {call buck.arg}
   {param name : 'platform_srcs' /}

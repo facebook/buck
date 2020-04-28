@@ -1,0 +1,121 @@
+/*
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+{namespace cxx_python_extension}
+
+/***/
+{template .soyweb}
+  {call buck.page}
+    {param title: 'cxx_python_extension()' /}
+    {param navid: 'rule_cxx_python_extension' /}
+    {param prettify: true /}
+    {param description}
+      A cxx_python_extension() rule builds a native Python extension module from C/C++ source files.
+    {/param}
+    {param content}
+
+{call buck.rule}
+{param status: 'UNFROZEN' /}
+{param overview}
+A <code>cxx_python_extension()</code> rule is a variant of a C/C++ library which is built as a Python module. As such,
+it has a module name formed by the <code>base_module</code> parameter and the rule name.
+{/param}
+
+{param args}
+
+{call buck.name_arg /}
+
+{call python_common.base_module_arg /}
+
+{call cxx_common.srcs_arg /}
+
+{call cxx_common.deps_arg /}
+
+{call cxx_common.platform_srcs_arg /}
+
+{call cxx_common.headers_arg /}
+
+{call cxx_common.platform_headers_arg /}
+
+{call cxx_common.header_namespace_arg /}
+
+{call cxx_common.preprocessor_flags_arg /}
+
+{call cxx_common.platform_preprocessor_flags_arg /}
+
+{call cxx_common.compiler_flags_arg /}
+
+{call cxx_common.platform_compiler_flags_arg /}
+
+{call buck.arg}
+  {param name : 'link_style' /}
+  {param default: 'shared' /}
+  {param desc}
+  Determines whether to build and link this rule's dependencies statically or dynamically.
+  Can be either <code>static</code>, <code>static_pic</code> or <code>shared</code>.
+  Note: since shared libraries re-export its dependencies, depending on multiple shared libraries
+  which themselves have overlapping static dependencies may cause problems if they init using global state.
+  {/param}
+{/call}
+
+{call cxx_common.linker_extra_outputs_arg /}
+
+{call cxx_common.linker_flags_arg /}
+
+{call cxx_common.platform_linker_flags_arg /}
+
+{call buck.tests_arg /}
+
+{/param} // close args
+
+{param examples}
+{literal}<pre class="prettyprint lang-py">
+# A rule that builds a Python extension from a single .cpp file.
+cxx_python_extension(
+  name = 'mymodule',
+  base_module = 'foo.bar',
+  srcs = [
+    'mymodule.cpp',
+  ],
+)
+
+# A library rule which has a single source importing the above extension.
+python_library(
+  name = 'utils',
+  srcs = [
+    'utils.py',
+  ],
+  deps = [
+    ':mymodule',
+  ],
+)
+</pre>{/literal}
+
+{literal}<pre class="prettyprint lang-py">
+## The `utils.py` source, wrapped by the `utils` rule above.
+
+## Import the C/C++ extension build above.
+from foo.bar import mymodule
+
+...
+</pre>{/literal}
+{/param}
+
+{/call} // close buck.rule
+
+{/param}
+{/call}
+{/template}
