@@ -54,6 +54,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.CxxBinaryDescriptionArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxDiagnosticsEnhancer;
 import com.facebook.buck.cxx.CxxLibraryDescription;
 import com.facebook.buck.cxx.CxxLibraryDescriptionArg;
 import com.facebook.buck.cxx.CxxLinkGroupMapDatabase;
@@ -1199,6 +1200,7 @@ public class AppleDescriptions {
     return flavors.contains(CxxCompilationDatabase.COMPILATION_DATABASE)
         || flavors.contains(CxxCompilationDatabase.UBER_COMPILATION_DATABASE)
         || flavors.contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)
+        || flavors.contains(CxxDiagnosticsEnhancer.DIAGNOSTIC_AGGREGATION_FLAVOR)
         || flavors.contains(CxxDescriptionEnhancer.STATIC_FLAVOR)
         || flavors.contains(CxxDescriptionEnhancer.STATIC_PIC_FLAVOR)
         || flavors.contains(CxxDescriptionEnhancer.EXPORTED_HEADER_SYMLINK_TREE_FLAVOR)

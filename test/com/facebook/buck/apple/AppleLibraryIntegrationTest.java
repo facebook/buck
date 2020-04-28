@@ -22,6 +22,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
@@ -31,8 +32,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxDiagnosticsEnhancer;
 import com.facebook.buck.cxx.CxxStrip;
 import com.facebook.buck.cxx.toolchain.HeaderMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
@@ -47,18 +50,75 @@ import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 
 public class AppleLibraryIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
+
+  @Test
+  public void testAppleLibraryDiagnostic() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_diagnostics", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//Libraries/TestLibrary:TestLibrary#diagnostics,macosx-x86_64");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    Path diagnosticsPath =
+        filesystem.getPathForRelativePath(
+            BuildPaths.getGenDir(filesystem, target)
+                .resolve(CxxDiagnosticsEnhancer.DIAGNOSTICS_JSON_FILENAME));
+
+    assertTrue(Files.exists(diagnosticsPath));
+
+    JsonNode diagnosticsArray =
+        ObjectMappers.READER.readTree(new String(Files.readAllBytes(diagnosticsPath)));
+    assertTrue(diagnosticsArray.isArray());
+    assertSame(
+        diagnosticsArray.size(),
+        /** number of source files */
+        2);
+
+    for (int i = 0; i < diagnosticsArray.size(); ++i) {
+      JsonNode fileDiagnosticsInfo = diagnosticsArray.get(i);
+      assertTrue(fileDiagnosticsInfo.isObject());
+
+      JsonNode inputPathNode = fileDiagnosticsInfo.get("input_path");
+      assertTrue(inputPathNode.isTextual());
+      Path inputPath = Paths.get(inputPathNode.textValue());
+      Assert.assertFalse(inputPath.isAbsolute());
+
+      JsonNode diagnosticName = fileDiagnosticsInfo.get("diagnostic_name");
+      assertTrue(diagnosticName.isTextual());
+      assertEquals(diagnosticName.textValue(), "tc");
+
+      JsonNode tokenCountDiagnostics = fileDiagnosticsInfo.get("diagnostic_data");
+      assertTrue(tokenCountDiagnostics.isObject());
+
+      JsonNode tokenCount = tokenCountDiagnostics.get("token_count");
+      assertTrue(tokenCount.isNumber());
+      assertTrue(tokenCount.numberValue().longValue() > 0);
+    }
+  }
 
   @Test
   public void testAppleLibraryBuildsSomething() throws IOException {

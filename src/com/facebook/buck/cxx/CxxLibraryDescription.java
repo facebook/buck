@@ -545,6 +545,8 @@ public class CxxLibraryDescription
     }
 
     Optional<Boolean> getSupportsMergedLinking();
+
+    ImmutableMap<String, SourcePath> getDiagnostics();
   }
 
   @RuleArg

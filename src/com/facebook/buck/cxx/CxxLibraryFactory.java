@@ -28,6 +28,8 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.Tools;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
@@ -65,6 +67,7 @@ import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
+import com.google.common.collect.Ordering;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -149,6 +152,47 @@ public class CxxLibraryFactory {
               configuredDelegate);
       return CxxCompilationDatabase.createCompilationDatabase(
           buildTarget, projectFilesystem, objects.keySet());
+    } else if (buildTarget
+        .getFlavors()
+        .contains(CxxDiagnosticsEnhancer.DIAGNOSTIC_AGGREGATION_FLAVOR)) {
+
+      CxxPlatform cxxPlatformOrDefault = cxxPlatformOrDefaultSupplier.get();
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> configuredDelegate =
+          delegate.requireDelegate(buildTarget, cxxPlatformOrDefault, graphBuilder);
+
+      BuildTarget targetWithoutDiagnosticsFlavor =
+          buildTarget.withoutFlavors(CxxDiagnosticsEnhancer.DIAGNOSTIC_AGGREGATION_FLAVOR);
+      CxxSourceRuleFactory sourceRuleFactory =
+          createSourceRuleFactory(
+              targetWithoutDiagnosticsFlavor,
+              projectFilesystem,
+              graphBuilder,
+              cellRoots,
+              cxxBuckConfig,
+              cxxPlatformOrDefault,
+              cxxPlatformOrDefault.getPicTypeForSharedLinking(),
+              args,
+              cxxDeps.get(graphBuilder, cxxPlatformOrDefault),
+              transitiveCxxPreprocessorInputFunction,
+              configuredDelegate);
+
+      ImmutableMap.Builder<String, Tool> toolsBuilder = ImmutableMap.builder();
+      for (Map.Entry<String, SourcePath> diagnosticPair : args.getDiagnostics().entrySet()) {
+        Tool tool = Tools.resolveTool(diagnosticPair.getValue(), graphBuilder);
+        toolsBuilder.put(diagnosticPair.getKey(), tool);
+      }
+
+      ImmutableMap<String, CxxSource> sources =
+          parseCxxSourcesFromArgs(
+              targetWithoutDiagnosticsFlavor, graphBuilder, cxxPlatformOrDefault, args);
+      ImmutableSortedSet<SourcePath> extractionRuleInputs =
+          sourceRuleFactory.requireDiagnosticExtractionBuildRules(sources, toolsBuilder.build())
+              .stream()
+              .map(BuildRule::getSourcePathToOutput)
+              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+
+      return new CxxDiagnosticAggregationRule(
+          buildTarget, projectFilesystem, graphBuilder, extractionRuleInputs);
     } else if (buildTarget.getFlavors().contains(CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE)) {
       Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> configuredDelegate =
           delegate.requireDelegate(buildTarget, platform.get(), graphBuilder);
@@ -476,7 +520,15 @@ public class CxxLibraryFactory {
             transitivePreprocessorInputs,
             delegate);
     return sourceRuleFactory.requirePreprocessAndCompileRules(
-        CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args));
+        parseCxxSourcesFromArgs(buildTarget, graphBuilder, cxxPlatform, args));
+  }
+
+  private static ImmutableMap<String, CxxSource> parseCxxSourcesFromArgs(
+      BuildTarget buildTarget,
+      ActionGraphBuilder graphBuilder,
+      CxxPlatform cxxPlatform,
+      CxxConstructorArg args) {
+    return CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args);
   }
 
   private static CxxSourceRuleFactory createSourceRuleFactory(

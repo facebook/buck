@@ -1,0 +1,18 @@
+apple_library(
+    name = "TestLibrary",
+    srcs = [
+        "TestClass.m",
+        ":Hello",
+    ],
+    info_plist = "Info.plist",
+    linker_flags = ["-lobjc"],
+    diagnostics = {
+        "tc": "//Diagnostics:tokencount",
+    },
+)
+
+genrule(
+    name = "Hello",
+    cmd = "echo \"int hello(void) { return 42; }\" > ${OUT}",
+    out = "Hello.c",
+)

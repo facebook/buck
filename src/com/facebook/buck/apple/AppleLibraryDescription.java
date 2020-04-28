@@ -52,6 +52,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
+import com.facebook.buck.cxx.CxxDiagnosticsEnhancer;
 import com.facebook.buck.cxx.CxxHeaders;
 import com.facebook.buck.cxx.CxxHeadersDir;
 import com.facebook.buck.cxx.CxxLibraryDescription;
@@ -124,6 +125,7 @@ public class AppleLibraryDescription
   private static final Set<Flavor> SUPPORTED_FLAVORS =
       ImmutableSet.of(
           CxxLinkGroupMapDatabase.LINK_GROUP_MAP_DATABASE,
+          CxxDiagnosticsEnhancer.DIAGNOSTIC_AGGREGATION_FLAVOR,
           CxxCompilationDatabase.COMPILATION_DATABASE,
           CxxCompilationDatabase.UBER_COMPILATION_DATABASE,
           CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR,

@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.impl.DependencyAggregation;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
@@ -50,6 +51,7 @@ import com.facebook.buck.rules.keys.AlterRuleKeys;
 import com.facebook.buck.rules.keys.NoopRuleKeyScopedHasher;
 import com.facebook.buck.rules.keys.hasher.GuavaRuleKeyHasher;
 import com.facebook.buck.util.MoreSuppliers;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -59,6 +61,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.Hashing;
 import java.io.File;
 import java.nio.file.Path;
@@ -286,6 +289,20 @@ public abstract class CxxSourceRuleFactory {
             getCxxPlatform().getFlavor(),
             InternalFlavor.of(
                 String.format("%s-%s", CxxInferEnhancer.INFER_CAPTURE_BUILDRULE, outputName)));
+  }
+
+  private BuildTarget createDiagnosticExtractionBuildTarget(String name, String diagnosticName) {
+    String outputName = CxxFlavorSanitizer.sanitize(getCompileFlavorSuffix(name));
+    String sanitizedDiagnosticName = Flavor.replaceInvalidCharacters(diagnosticName);
+    return getBaseBuildTarget()
+        .withAppendedFlavors(
+            getCxxPlatform().getFlavor(),
+            InternalFlavor.of(
+                String.format(
+                    "%s-%s-%s",
+                    CxxDiagnosticsEnhancer.DIAGNOSTIC_EXTRACTION_FLAVOR.toString(),
+                    sanitizedDiagnosticName,
+                    outputName)));
   }
 
   // Use a "lazy" method here to memoize the sanitizer function.  This is necessary as it's used to
@@ -710,6 +727,60 @@ public abstract class CxxSourceRuleFactory {
         sourceFlags,
         graphBuilder,
         pathResolver);
+  }
+
+  private CxxDiagnosticExtractionRule createDiagnosticExtractionBuildRule(
+      BuildTarget target, CxxSource source, Pair<String, Tool> tools) {
+    Optional<PreprocessorDelegate> preprocessorDelegate = Optional.empty();
+    CompilerDelegate compilerDelegate;
+
+    if (CxxSourceTypes.isPreprocessableType(source.getType())) {
+      PreprocessorDelegateCacheValue cacheValue = getPreprocessorDelegateCacheValue(source);
+      preprocessorDelegate = Optional.of(cacheValue.getPreprocessorDelegate());
+      compilerDelegate = makeCompilerDelegateForPreprocessAndCompile(source);
+    } else {
+      compilerDelegate = makeCompilerDelegateForCompileOnly(source);
+    }
+
+    return new CxxDiagnosticExtractionRule(
+        target,
+        getProjectFilesystem(),
+        tools,
+        getActionGraphBuilder(),
+        preprocessorDelegate,
+        compilerDelegate,
+        source.getPath(),
+        source.getType(),
+        getSanitizer());
+  }
+
+  private CxxDiagnosticExtractionRule requireDiagnosticExtractionBuildRule(
+      String name, CxxSource source, Pair<String, Tool> diagnostic) {
+    return (CxxDiagnosticExtractionRule)
+        getActionGraphBuilder()
+            .computeIfAbsent(
+                createDiagnosticExtractionBuildTarget(name, diagnostic.getFirst()),
+                target -> createDiagnosticExtractionBuildRule(target, source, diagnostic));
+  }
+
+  /** Returns diagnostics rule given a set of Cxx sources and tools to produce such diagnostics. */
+  public ImmutableSortedSet<CxxDiagnosticExtractionRule> requireDiagnosticExtractionBuildRules(
+      ImmutableMap<String, CxxSource> sources, ImmutableMap<String, Tool> tools) {
+    ImmutableSortedSet.Builder<CxxDiagnosticExtractionRule> extractionRules =
+        ImmutableSortedSet.naturalOrder();
+
+    for (Map.Entry<String, CxxSource> nameSourceEntry : sources.entrySet()) {
+      for (Map.Entry<String, Tool> diagnosticNameToolEntry : tools.entrySet()) {
+        CxxDiagnosticExtractionRule extractionRule =
+            requireDiagnosticExtractionBuildRule(
+                nameSourceEntry.getKey(),
+                nameSourceEntry.getValue(),
+                new Pair<>(diagnosticNameToolEntry.getKey(), diagnosticNameToolEntry.getValue()));
+        extractionRules.add(extractionRule);
+      }
+    }
+
+    return extractionRules.build();
   }
 
   public ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(

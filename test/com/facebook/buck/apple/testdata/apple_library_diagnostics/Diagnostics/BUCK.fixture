@@ -1,0 +1,15 @@
+python_binary(
+    name = "tokencount",
+    main_module = "tokencount.main",
+    platform = "py3",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":tokencount-lib",
+    ],
+)
+
+python_library(
+    name = "tokencount-lib",
+    srcs = glob(["**/*.py"]),
+    base_module = "tokencount",
+)
