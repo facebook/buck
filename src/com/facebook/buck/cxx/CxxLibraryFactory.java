@@ -462,6 +462,35 @@ public class CxxLibraryFactory {
       ImmutableSet<BuildRule> deps,
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
       Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate) {
+    CxxSourceRuleFactory sourceRuleFactory =
+        createSourceRuleFactory(
+            buildTarget,
+            projectFilesystem,
+            graphBuilder,
+            cellRoots,
+            cxxBuckConfig,
+            cxxPlatform,
+            pic,
+            args,
+            deps,
+            transitivePreprocessorInputs,
+            delegate);
+    return sourceRuleFactory.requirePreprocessAndCompileRules(
+        CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args));
+  }
+
+  private static CxxSourceRuleFactory createSourceRuleFactory(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      CellPathResolver cellRoots,
+      CxxBuckConfig cxxBuckConfig,
+      CxxPlatform cxxPlatform,
+      PicType pic,
+      CxxLibraryDescriptionArg args,
+      ImmutableSet<BuildRule> deps,
+      CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitivePreprocessorInputs,
+      Optional<CxxLibraryDescriptionDelegate.ConfiguredDelegate> delegate) {
 
     boolean shouldCreatePrivateHeadersSymlinks =
         args.getXcodePrivateHeadersSymlinks()
@@ -497,29 +526,27 @@ public class CxxLibraryFactory {
                         buildTarget, cellRoots, graphBuilder, cxxPlatform)
                     ::convert));
     return CxxSourceRuleFactory.of(
-            projectFilesystem,
-            buildTarget,
-            graphBuilder,
-            graphBuilder.getSourcePathResolver(),
+        projectFilesystem,
+        buildTarget,
+        graphBuilder,
+        graphBuilder.getSourcePathResolver(),
+        cxxBuckConfig,
+        cxxPlatform,
+        CxxLibraryDescription.getPreprocessorInputsForBuildingLibrarySources(
             cxxBuckConfig,
+            graphBuilder,
+            cellRoots,
+            buildTarget,
+            args,
             cxxPlatform,
-            CxxLibraryDescription.getPreprocessorInputsForBuildingLibrarySources(
-                cxxBuckConfig,
-                graphBuilder,
-                cellRoots,
-                buildTarget,
-                args,
-                cxxPlatform,
-                deps,
-                transitivePreprocessorInputs,
-                privateHeaderSymlinkTrees.build(),
-                projectFilesystem),
-            compilerFlags,
-            args.getPrefixHeader(),
-            args.getPrecompiledHeader(),
-            pic)
-        .requirePreprocessAndCompileRules(
-            CxxDescriptionEnhancer.parseCxxSources(buildTarget, graphBuilder, cxxPlatform, args));
+            deps,
+            transitivePreprocessorInputs,
+            privateHeaderSymlinkTrees.build(),
+            projectFilesystem),
+        compilerFlags,
+        args.getPrefixHeader(),
+        args.getPrecompiledHeader(),
+        pic);
   }
 
   private static NativeLinkableInput getSharedLibraryNativeLinkTargetInput(
