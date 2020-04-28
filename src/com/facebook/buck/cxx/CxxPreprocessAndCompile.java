@@ -324,47 +324,70 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
       this.precompiledHeaderData = precompiledHeaderRule.map(CxxPrecompiledHeader::getData);
     }
 
+    protected CxxPreprocessAndCompileStep.ToolCommand makeCommand(
+        SourcePathResolverAdapter resolver, ImmutableList<Arg> arguments) {
+      return new CxxPreprocessAndCompileStep.ToolCommand(
+          compilerDelegate.getCommandPrefix(resolver),
+          Arg.stringify(arguments, resolver),
+          compilerDelegate.getEnvironment(resolver));
+    }
+
+    protected Optional<Path> getDepFile(Path resolvedOutput) {
+      // Use a depfile if there's a preprocessing stage, this logic should be kept in sync with
+      // getInputsAfterBuildingLocally.
+      return CxxSourceTypes.supportsDepFiles(inputType)
+          ? preprocessDelegate.map(ignored -> getDepFilePath(resolvedOutput))
+          : Optional.empty();
+    }
+
+    protected CxxPreprocessAndCompileStep.Operation getOperation() {
+      return preprocessDelegate.isPresent()
+          ? CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE
+          : CxxPreprocessAndCompileStep.Operation.COMPILE;
+    }
+
+    protected ImmutableList<Arg> getArguments(
+        ProjectFilesystem filesystem, CxxToolFlags preprocessorDelegateFlags) {
+      return compilerDelegate.getArguments(
+          preprocessorDelegateFlags, filesystem.getRootPath().getPath());
+    }
+
+    protected CxxToolFlags getCxxToolFlags(SourcePathResolverAdapter resolver) {
+      return preprocessDelegate
+          .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderData, resolver))
+          .orElseGet(CxxToolFlags::of);
+    }
+
+    protected HeaderPathNormalizer getHeaderPathNormalizer(BuildContext context) {
+      // If we're compiling, this will just be empty.
+      return preprocessDelegate
+          .map(x -> x.getHeaderPathNormalizer(context))
+          .orElseGet(() -> HeaderPathNormalizer.empty());
+    }
+
     CxxPreprocessAndCompileStep makeMainStep(
         BuildContext context,
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         boolean useArgfile) {
       SourcePathResolverAdapter resolver = context.getSourcePathResolver();
-      // If we're compiling, this will just be empty.
-      HeaderPathNormalizer headerPathNormalizer =
-          preprocessDelegate
-              .map(x -> x.getHeaderPathNormalizer(context))
-              .orElseGet(() -> HeaderPathNormalizer.empty());
+      HeaderPathNormalizer headerPathNormalizer = getHeaderPathNormalizer(context);
 
-      CxxToolFlags preprocessorDelegateFlags =
-          preprocessDelegate
-              .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderData, resolver))
-              .orElseGet(CxxToolFlags::of);
+      CxxToolFlags preprocessorDelegateFlags = getCxxToolFlags(resolver);
 
-      ImmutableList<Arg> arguments =
-          compilerDelegate.getArguments(
-              preprocessorDelegateFlags, filesystem.getRootPath().getPath());
+      ImmutableList<Arg> arguments = getArguments(filesystem, preprocessorDelegateFlags);
 
       RelPath relativeInputPath = filesystem.relativize(resolver.getAbsolutePath(input));
       Path resolvedOutput = outputPathResolver.resolvePath(output);
 
       return new CxxPreprocessAndCompileStep(
           filesystem,
-          preprocessDelegate.isPresent()
-              ? CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE
-              : CxxPreprocessAndCompileStep.Operation.COMPILE,
+          getOperation(),
           resolvedOutput,
-          // Use a depfile if there's a preprocessing stage, this logic should be kept in sync with
-          // getInputsAfterBuildingLocally.
-          CxxSourceTypes.supportsDepFiles(inputType)
-              ? preprocessDelegate.map(ignored -> getDepFilePath(resolvedOutput))
-              : Optional.empty(),
+          getDepFile(resolvedOutput),
           relativeInputPath.getPath(),
           inputType,
-          new CxxPreprocessAndCompileStep.ToolCommand(
-              compilerDelegate.getCommandPrefix(resolver),
-              Arg.stringify(arguments, resolver),
-              compilerDelegate.getEnvironment(resolver)),
+          makeCommand(resolver, arguments),
           context.getSourcePathResolver(),
           headerPathNormalizer,
           sanitizer,
