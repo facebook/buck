@@ -27,7 +27,6 @@ import com.facebook.buck.artifact_cache.config.ArtifactCacheMode.CacheType;
 import com.facebook.buck.artifact_cache.config.DirCacheEntry;
 import com.facebook.buck.artifact_cache.config.HttpCacheEntry;
 import com.facebook.buck.artifact_cache.config.MultiFetchType;
-import com.facebook.buck.artifact_cache.config.SQLiteCacheEntry;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfigurationSerializer;
@@ -67,7 +66,6 @@ import io.grpc.ManagedChannel;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -339,13 +337,7 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
               clientCertificateHandler);
           break;
         case sqlite:
-          initializeSQLiteCaches(
-              cacheEntries,
-              buckEventBus,
-              unconfiguredBuildTargetFactory,
-              targetConfigurationSerializer,
-              projectFilesystem,
-              builder);
+          initializeSQLiteCaches(cacheEntries, builder);
           break;
         case thrift_over_http:
         case hybrid_thrift_grpc:
@@ -468,23 +460,10 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
   }
 
   private static void initializeSQLiteCaches(
-      ArtifactCacheEntries artifactCacheEntries,
-      BuckEventBus buckEventBus,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
-      TargetConfigurationSerializer targetConfigurationSerializer,
-      ProjectFilesystem projectFilesystem,
-      ImmutableList.Builder<ArtifactCache> builder) {
+      ArtifactCacheEntries artifactCacheEntries, ImmutableList.Builder<ArtifactCache> builder) {
     artifactCacheEntries
         .getSQLiteCacheEntries()
-        .forEach(
-            cacheEntry ->
-                builder.add(
-                    createSQLiteArtifactCache(
-                        buckEventBus,
-                        cacheEntry,
-                        unconfiguredBuildTargetFactory,
-                        targetConfigurationSerializer,
-                        projectFilesystem)));
+        .forEach(cacheEntry -> builder.add(new SQLiteArtifactCache(cacheEntry.getCacheReadMode())));
   }
 
   private static ArtifactCache createDirArtifactCache(
@@ -710,35 +689,6 @@ public class ArtifactCaches implements ArtifactCacheFactory, AutoCloseable {
             .setErrorTextTemplate(cacheDescription.getErrorMessageFormat())
             .setErrorTextLimit(cacheDescription.getErrorMessageLimit())
             .build());
-  }
-
-  private static ArtifactCache createSQLiteArtifactCache(
-      BuckEventBus buckEventBus,
-      SQLiteCacheEntry cacheConfig,
-      Function<String, UnconfiguredBuildTarget> unconfiguredBuildTargetFactory,
-      TargetConfigurationSerializer targetConfigurationSerializer,
-      ProjectFilesystem projectFilesystem) {
-    Path cacheDir = cacheConfig.getCacheDir();
-    try {
-      SQLiteArtifactCache sqLiteArtifactCache =
-          new SQLiteArtifactCache(
-              "sqlite",
-              projectFilesystem,
-              cacheDir,
-              buckEventBus,
-              cacheConfig.getMaxSizeBytes(),
-              cacheConfig.getMaxInlinedSizeBytes(),
-              cacheConfig.getCacheReadMode());
-
-      return new LoggingArtifactCacheDecorator(
-          buckEventBus,
-          sqLiteArtifactCache,
-          new SQLiteArtifactCacheEvent.SQLiteArtifactCacheEventFactory(
-              unconfiguredBuildTargetFactory, targetConfigurationSerializer));
-    } catch (IOException | SQLException e) {
-      throw new HumanReadableException(
-          e, "Failure initializing artifact cache directory: %s", cacheDir);
-    }
   }
 
   private static SecondLevelArtifactCache createSecondLevelCache(
