@@ -16,13 +16,16 @@
 
 package com.facebook.buck.parser.exceptions;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import java.nio.file.Path;
 
 /** Thrown when build file is missing for the provided target */
 public class MissingBuildFileException extends BuildTargetException {
 
-  public MissingBuildFileException(String spec, Path buildFile) {
-    super(String.format("No build file at %s when resolving target %s.", buildFile, spec));
+  public MissingBuildFileException(DependencyStack dependencyStack, String spec, Path buildFile) {
+    super(
+        dependencyStack,
+        String.format("No build file at %s when resolving target %s.", buildFile, spec));
   }
 
   @Override

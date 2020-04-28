@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.exceptions;
 
+import javax.annotation.Nullable;
+
 public interface ExceptionWithHumanReadableMessage {
 
   /** @return a human-readable error message */
@@ -24,5 +26,14 @@ public interface ExceptionWithHumanReadableMessage {
   /** Get the dependency stack associated with this error */
   default DependencyStack getDependencyStack() {
     return DependencyStack.root();
+  }
+
+  /** Get dependency stack if the exception have some otherwise return an empty stack. */
+  static DependencyStack getDependencyStack(@Nullable Throwable throwable) {
+    if (throwable instanceof ExceptionWithHumanReadableMessage) {
+      return ((ExceptionWithHumanReadableMessage) throwable).getDependencyStack();
+    } else {
+      return DependencyStack.root();
+    }
   }
 }

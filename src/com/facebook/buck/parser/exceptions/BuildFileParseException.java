@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.exceptions;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -29,6 +30,10 @@ public class BuildFileParseException extends HumanReadableException {
 
   public BuildFileParseException(@Nullable Throwable cause, String humanReadableErrorMessage) {
     super(cause, humanReadableErrorMessage);
+  }
+
+  protected BuildFileParseException(DependencyStack dependencyStack, String message) {
+    super(dependencyStack, message);
   }
 
   protected BuildFileParseException(String message, Object... args) {

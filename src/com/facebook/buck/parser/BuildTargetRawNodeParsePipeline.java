@@ -17,6 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.parser.api.RawTargetNode;
@@ -73,13 +74,14 @@ public class BuildTargetRawNodeParsePipeline implements BuildTargetParsePipeline
   }
 
   @Override
-  public ListenableFuture<RawTargetNode> getNodeJob(Cell cell, UnconfiguredBuildTarget buildTarget)
+  public ListenableFuture<RawTargetNode> getNodeJob(
+      Cell cell, UnconfiguredBuildTarget buildTarget, DependencyStack dependencyStack)
       throws BuildTargetException {
     return Futures.transformAsync(
         buildFileRawNodeParsePipeline.getFileJob(
             cell,
             cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(cell, buildTarget)),
+                .getAbsolutePathToBuildFile(cell, buildTarget, dependencyStack)),
         input -> {
           if (!input.getTargets().containsKey(buildTarget.getName())) {
             ParserConfig parserConfig = cell.getBuckConfigView(ParserConfig.class);
@@ -99,7 +101,9 @@ public class BuildTargetRawNodeParsePipeline implements BuildTargetParsePipeline
                     return OptionalLong.empty();
                   }
                 },
-                parserConfig.getAbsolutePathToBuildFile(cell, buildTarget).getPath());
+                parserConfig
+                    .getAbsolutePathToBuildFile(cell, buildTarget, dependencyStack)
+                    .getPath());
           }
           return Futures.immediateFuture(input.getTargets().get(buildTarget.getName()));
         },

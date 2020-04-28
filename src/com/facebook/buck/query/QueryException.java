@@ -16,12 +16,16 @@
 
 package com.facebook.buck.query;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.ExceptionWithHumanReadableMessage;
 
 public class QueryException extends Exception implements ExceptionWithHumanReadableMessage {
 
+  private final DependencyStack dependencyStack;
+
   public QueryException(String message) {
     super(message);
+    dependencyStack = DependencyStack.root();
   }
 
   public QueryException(String humanReadableFormatString, Object... args) {
@@ -30,14 +34,21 @@ public class QueryException extends Exception implements ExceptionWithHumanReada
 
   public QueryException(Throwable cause, String message) {
     super(message, cause);
+    dependencyStack = ExceptionWithHumanReadableMessage.getDependencyStack(cause);
   }
 
   public QueryException(Throwable cause, String humanReadableFormatString, Object... args) {
     super(String.format(humanReadableFormatString, args), cause);
+    dependencyStack = ExceptionWithHumanReadableMessage.getDependencyStack(cause);
   }
 
   @Override
   public String getHumanReadableErrorMessage() {
     return getLocalizedMessage();
+  }
+
+  @Override
+  public DependencyStack getDependencyStack() {
+    return dependencyStack;
   }
 }

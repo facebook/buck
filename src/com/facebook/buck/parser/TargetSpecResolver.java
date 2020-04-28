@@ -20,6 +20,7 @@ import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableExceptions;
 import com.facebook.buck.core.files.DirectoryListCache;
 import com.facebook.buck.core.files.DirectoryListComputation;
@@ -237,7 +238,9 @@ public class TargetSpecResolver implements AutoCloseable {
       // Format a proper error message for non-existent build files.
       if (!cell.getFilesystem().isFile(buildFile)) {
         throw new MissingBuildFileException(
-            firstSpec.toString(), cell.getFilesystem().relativize(buildFile).getPath());
+            DependencyStack.root(),
+            firstSpec.toString(),
+            cell.getFilesystem().relativize(buildFile).getPath());
       }
 
       for (int index : buildFileSpecs) {

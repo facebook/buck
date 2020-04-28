@@ -132,7 +132,8 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
         rawTargetNodeToTargetNodeFactory.createTargetNode(
             cell,
             cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTarget()),
+                .getAbsolutePathToBuildFile(
+                    cell, buildTarget.getUnconfiguredBuildTarget(), dependencyStack),
             buildTarget,
             dependencyStack,
             rawNode,

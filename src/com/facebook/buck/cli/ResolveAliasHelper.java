@@ -18,6 +18,7 @@ package com.facebook.buck.cli;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -81,7 +82,8 @@ public class ResolveAliasHelper {
       buildFile =
           owningCell
               .getBuckConfigView(ParserConfig.class)
-              .getAbsolutePathToBuildFile(owningCell, buildTarget);
+              .getAbsolutePathToBuildFile(
+                  owningCell, buildTarget, DependencyStack.top(buildTarget));
     } catch (MissingBuildFileException e) {
       throw new HumanReadableException(e);
     }

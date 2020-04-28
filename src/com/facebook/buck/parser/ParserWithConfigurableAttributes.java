@@ -141,7 +141,10 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             state,
             owningCell,
             cell.getBuckConfigView(ParserConfig.class)
-                .getAbsolutePathToBuildFile(cell, buildTarget.getUnconfiguredBuildTarget()));
+                .getAbsolutePathToBuildFile(
+                    cell,
+                    buildTarget.getUnconfiguredBuildTarget(),
+                    dependencyStack.child(buildTarget)));
     return getTargetFromManifest(state, cell, targetNode, dependencyStack, buildFileManifest);
   }
 
@@ -155,7 +158,9 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             owningCell,
             cell.getBuckConfigView(ParserConfig.class)
                 .getAbsolutePathToBuildFile(
-                    cell, targetNode.getBuildTarget().getUnconfiguredBuildTarget()));
+                    cell,
+                    targetNode.getBuildTarget().getUnconfiguredBuildTarget(),
+                    dependencyStack.child(targetNode.getBuildTarget())));
     return Futures.transform(
         buildFileManifestFuture,
         buildFileManifest ->

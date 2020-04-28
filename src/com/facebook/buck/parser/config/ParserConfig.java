@@ -20,6 +20,7 @@ import com.facebook.buck.command.config.BuildBuckConfig;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.ConfigView;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -371,12 +372,14 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
    * @param target target to look up
    * @return an absolute path to a build file that contains the definition of the given target.
    */
-  public AbsPath getAbsolutePathToBuildFile(Cell cell, UnconfiguredBuildTarget target)
+  public AbsPath getAbsolutePathToBuildFile(
+      Cell cell, UnconfiguredBuildTarget target, DependencyStack dependencyStack)
       throws MissingBuildFileException {
     AbsPath buildFile = getAbsolutePathToBuildFileUnsafe(cell, target);
     Cell targetCell = cell.getCell(target.getCell());
     if (!targetCell.getFilesystem().isFile(buildFile)) {
       throw new MissingBuildFileException(
+          dependencyStack,
           target.getFullyQualifiedName(),
           target
               .getCellRelativeBasePath()

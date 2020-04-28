@@ -20,6 +20,7 @@ import static com.facebook.buck.util.concurrent.MoreFutures.propagateCauseIfInst
 import static com.google.common.base.Throwables.throwIfInstanceOf;
 
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -46,10 +47,10 @@ public interface BuildTargetParsePipeline<T> extends AutoCloseable {
    * @throws BuildFileParseException for syntax errors in the build file.
    * @throws BuildTargetException if the buildTarget is malformed
    */
-  default T getNode(Cell cell, UnconfiguredBuildTarget buildTarget)
+  default T getNode(Cell cell, UnconfiguredBuildTarget buildTarget, DependencyStack dependencyStack)
       throws BuildFileParseException, BuildTargetException {
     try {
-      return getNodeJob(cell, buildTarget).get();
+      return getNodeJob(cell, buildTarget, dependencyStack).get();
     } catch (Exception e) {
       if (e.getCause() != null) {
         throwIfInstanceOf(e.getCause(), BuildFileParseException.class);
@@ -71,6 +72,7 @@ public interface BuildTargetParsePipeline<T> extends AutoCloseable {
    * @return future.
    * @throws BuildTargetException when the buildTarget is malformed.
    */
-  ListenableFuture<T> getNodeJob(Cell cell, UnconfiguredBuildTarget buildTarget)
+  ListenableFuture<T> getNodeJob(
+      Cell cell, UnconfiguredBuildTarget buildTarget, DependencyStack dependencyStack)
       throws BuildTargetException;
 }

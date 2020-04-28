@@ -163,7 +163,8 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
       throws BuildTargetException {
 
     AbsPath buildFile =
-        cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget);
+        cell.getBuckConfigView(ParserConfig.class)
+            .getAbsolutePathToBuildFile(cell, buildTarget, dependencyStack);
 
     return cache.getJobWithCacheLookup(
         cell,
@@ -172,7 +173,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
             Futures.transformAsync(
                 MoreFutures.combinedFutures(
                     packagePipeline.getPackageJob(cell, buildFile),
-                    buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget),
+                    buildTargetRawNodeParsePipeline.getNodeJob(cell, buildTarget, dependencyStack),
                     executorService),
                 resultingPair -> {
                   RawTargetNode rawAttributes = resultingPair.getSecond();
@@ -208,7 +209,7 @@ public class UnconfiguredTargetNodePipeline implements AutoCloseable {
           unconfiguredTargetNodeFactory.create(
               cell,
               cell.getBuckConfigView(ParserConfig.class)
-                  .getAbsolutePathToBuildFile(cell, buildTarget),
+                  .getAbsolutePathToBuildFile(cell, buildTarget, dependencyStack),
               buildTarget,
               dependencyStack,
               from,

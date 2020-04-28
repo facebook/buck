@@ -94,8 +94,10 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
      * TODO: If we want to support packages in the query service, we'll need to implement the
      * required computations.
      */
+    // TODO(nga): dependency stack
     AbsPath buildFile =
-        cell.getBuckConfigView(ParserConfig.class).getAbsolutePathToBuildFile(cell, buildTarget);
+        cell.getBuckConfigView(ParserConfig.class)
+            .getAbsolutePathToBuildFile(cell, buildTarget, DependencyStack.top(buildTarget));
 
     Package stubPackage =
         PackageFactory.create(

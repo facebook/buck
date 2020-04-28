@@ -16,9 +16,15 @@
 
 package com.facebook.buck.parser.exceptions;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
+
 /** Base class for exceptions raised when parser is unable to resolve a dependency */
 public abstract class BuildTargetException extends BuildFileParseException {
   public BuildTargetException(String message) {
     super(message);
+  }
+
+  public BuildTargetException(DependencyStack dependencyStack, String message) {
+    super(dependencyStack, message);
   }
 }
