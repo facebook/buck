@@ -52,7 +52,6 @@ import com.facebook.buck.event.BuckEventBusForTests.CapturingConsoleEventListene
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.JavaLibraryDescription;
 import com.facebook.buck.jvm.java.JavaTestBuilder;
@@ -144,7 +143,6 @@ public class TargetsCommandTest {
             FakeBuckConfig.builder().build(),
             Platform.detect(),
             EnvVariablesProvider.getSystemEnv(),
-            new FakeJavaPackageFinder(),
             Optional.empty());
     executor = MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
   }

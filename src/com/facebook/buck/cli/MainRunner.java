@@ -126,7 +126,6 @@ import com.facebook.buck.io.watchman.WatchmanFactory;
 import com.facebook.buck.io.watchman.WatchmanWatcher;
 import com.facebook.buck.io.watchman.WatchmanWatcher.FreshInstanceAction;
 import com.facebook.buck.io.watchman.WatchmanWatcherException;
-import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.log.ConsoleHandlerState;
 import com.facebook.buck.log.GlobalStateManager;
 import com.facebook.buck.log.InvocationInfo;
@@ -1495,11 +1494,6 @@ public final class MainRunner {
                         buildEventBus,
                         platform,
                         clientEnvironment,
-                        cells
-                            .getRootCell()
-                            .getBuckConfig()
-                            .getView(JavaBuckConfig.class)
-                            .createDefaultJavaPackageFinder(),
                         clock,
                         vcStatsGenerator,
                         processManager,

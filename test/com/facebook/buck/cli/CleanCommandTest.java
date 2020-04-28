@@ -35,7 +35,6 @@ import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.CloseableMemoizedSupplier;
@@ -277,7 +276,6 @@ public class CleanCommandTest {
         buckConfig,
         Platform.detect(),
         EnvVariablesProvider.getSystemEnv(),
-        new FakeJavaPackageFinder(),
         Optional.empty());
   }
 }

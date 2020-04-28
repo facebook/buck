@@ -37,7 +37,6 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.Watchman;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.log.InvocationInfo;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.remoteexecution.interfaces.MetadataProvider;
@@ -100,8 +99,6 @@ public abstract class CommandRunnerParams {
   public abstract Platform getPlatform();
 
   public abstract ImmutableMap<String, String> getEnvironment();
-
-  public abstract JavaPackageFinder getJavaPackageFinder();
 
   public abstract Clock getClock();
 
@@ -204,7 +201,6 @@ public abstract class CommandRunnerParams {
         getBuckEventBus(),
         getPlatform(),
         getEnvironment(),
-        getJavaPackageFinder(),
         getClock(),
         getVersionControlStatsGenerator(),
         getProcessManager(),
@@ -253,7 +249,6 @@ public abstract class CommandRunnerParams {
         getBuckEventBus(),
         getPlatform(),
         getEnvironment(),
-        getJavaPackageFinder(),
         getClock(),
         getVersionControlStatsGenerator(),
         getProcessManager(),

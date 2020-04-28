@@ -42,7 +42,6 @@ import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.Console;
@@ -110,7 +109,6 @@ public class ActionExecutionStepTest {
                 .setBuckEventBus(testEventBus)
                 .setPlatform(Platform.UNKNOWN)
                 .setEnvironment(ImmutableMap.of())
-                .setJavaPackageFinder(new FakeJavaPackageFinder())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
                 .setBuildCellRootPath(baseCell)
                 .setProcessExecutor(new FakeProcessExecutor())
@@ -163,7 +161,6 @@ public class ActionExecutionStepTest {
                 .setBuckEventBus(testEventBus)
                 .setPlatform(Platform.UNKNOWN)
                 .setEnvironment(ImmutableMap.of())
-                .setJavaPackageFinder(new FakeJavaPackageFinder())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
                 .setBuildCellRootPath(baseCell)
                 .setProcessExecutor(new FakeProcessExecutor())
@@ -213,7 +210,6 @@ public class ActionExecutionStepTest {
                 .setBuckEventBus(testEventBus)
                 .setPlatform(Platform.UNKNOWN)
                 .setEnvironment(ImmutableMap.of())
-                .setJavaPackageFinder(new FakeJavaPackageFinder())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
                 .setBuildCellRootPath(baseCell)
                 .setProcessExecutor(new FakeProcessExecutor())

@@ -52,6 +52,7 @@ import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.cli.config.CliConfig;
 import com.facebook.buck.test.config.TestBuckConfig;
+import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
@@ -423,21 +424,22 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     TestBuckConfig testBuckConfig = buckConfig.getView(TestBuckConfig.class);
     CliConfig cliConfig = buckConfig.getView(CliConfig.class);
 
+    Cell rootCell = params.getCells().getRootCell();
+    Console console = params.getConsole();
     ExecutionContext.Builder builder =
         ExecutionContext.builder()
-            .setConsole(params.getConsole())
+            .setConsole(console)
             .setBuckEventBus(params.getBuckEventBus())
             .setPlatform(params.getPlatform())
             .setEnvironment(params.getEnvironment())
-            .setJavaPackageFinder(params.getJavaPackageFinder())
-            .setCellPathResolver(params.getCells().getRootCell().getCellPathResolver())
-            .setBuildCellRootPath(params.getCells().getRootCell().getRoot().getPath())
-            .setProcessExecutor(new DefaultProcessExecutor(params.getConsole()))
+            .setCellPathResolver(rootCell.getCellPathResolver())
+            .setBuildCellRootPath(rootCell.getRoot().getPath())
+            .setProcessExecutor(new DefaultProcessExecutor(console))
             .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
             .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled())
             .setRuleKeyDiagnosticsMode(
                 buckConfig.getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
-            .setConcurrencyLimit(getConcurrencyLimit(params.getBuckConfig()))
+            .setConcurrencyLimit(getConcurrencyLimit(buckConfig))
             .setPersistentWorkerPools(params.getPersistentWorkerPools())
             .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
             .setTruncateFailingCommandEnabled(cliConfig.getEnableFailingCommandTruncation());

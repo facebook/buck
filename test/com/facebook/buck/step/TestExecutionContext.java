@@ -22,7 +22,6 @@ import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -50,7 +49,6 @@ public class TestExecutionContext {
         .setBuckEventBus(BuckEventBusForTests.newInstance())
         .setPlatform(Platform.detect())
         .setEnvironment(EnvVariablesProvider.getSystemEnv())
-        .setJavaPackageFinder(new FakeJavaPackageFinder())
         .setClassLoaderCache(testClassLoaderCache)
         .setProcessExecutor(new FakeProcessExecutor())
         .setCellPathResolver(cellPathResolver)

@@ -59,7 +59,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.DaemonicParserState;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParsingContext;
@@ -525,7 +524,6 @@ public class BuildCommandTest {
         TestKnownRuleTypesProvider.create(pluginManager);
 
     return CommandRunnerParamsForTesting.createCommandRunnerParamsForTesting(
-        executor.get(),
         console,
         cell,
         artifactCache,
@@ -533,7 +531,6 @@ public class BuildCommandTest {
         FakeBuckConfig.builder().build(),
         Platform.detect(),
         EnvVariablesProvider.getSystemEnv(),
-        new FakeJavaPackageFinder(),
         Optional.empty(),
         pluginManager,
         knownRuleTypesProvider,

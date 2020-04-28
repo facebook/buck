@@ -36,7 +36,6 @@ import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.testutil.CloseableResource;
 import com.facebook.buck.testutil.TestConsole;
@@ -88,7 +87,6 @@ public class AuditInputCommandTest {
             FakeBuckConfig.builder().build(),
             Platform.detect(),
             EnvVariablesProvider.getSystemEnv(),
-            new FakeJavaPackageFinder(),
             Optional.empty());
   }
 

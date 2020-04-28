@@ -44,8 +44,6 @@ import com.facebook.buck.httpserver.WebServer;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.jvm.core.JavaPackageFinder;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.TestParserFactory;
 import com.facebook.buck.remoteexecution.MetadataProviderFactory;
@@ -102,14 +100,12 @@ public class CommandRunnerParamsForTesting {
       BuckConfig config,
       Platform platform,
       ImmutableMap<String, String> environment,
-      JavaPackageFinder javaPackageFinder,
       Optional<WebServer> webServer) {
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     KnownRuleTypesProvider knownRuleTypesProvider =
         TestKnownRuleTypesProvider.create(pluginManager);
     Parser parser = TestParserFactory.create(executor, cells.getRootCell(), knownRuleTypesProvider);
     return createCommandRunnerParamsForTesting(
-        executor,
         console,
         cells,
         artifactCache,
@@ -117,7 +113,6 @@ public class CommandRunnerParamsForTesting {
         config,
         platform,
         environment,
-        javaPackageFinder,
         webServer,
         pluginManager,
         knownRuleTypesProvider,
@@ -125,7 +120,6 @@ public class CommandRunnerParamsForTesting {
   }
 
   public static CommandRunnerParams createCommandRunnerParamsForTesting(
-      DepsAwareExecutor<? super ComputeResult, ?> executor,
       Console console,
       Cells cells,
       ArtifactCache artifactCache,
@@ -133,7 +127,6 @@ public class CommandRunnerParamsForTesting {
       BuckConfig config,
       Platform platform,
       ImmutableMap<String, String> environment,
-      JavaPackageFinder javaPackageFinder,
       Optional<WebServer> webServer,
       PluginManager pluginManager,
       KnownRuleTypesProvider knownRuleTypesProvider,
@@ -186,7 +179,6 @@ public class CommandRunnerParamsForTesting {
         eventBus,
         platform,
         environment,
-        javaPackageFinder,
         new DefaultClock(),
         new VersionControlStatsGenerator(new NoOpCmdLineInterface(), Optional.empty()),
         Optional.empty(),
@@ -231,7 +223,6 @@ public class CommandRunnerParamsForTesting {
     private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     private final Platform platform = Platform.detect();
     private final ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();
-    private final JavaPackageFinder javaPackageFinder = new FakeJavaPackageFinder();
     private Optional<WebServer> webServer = Optional.empty();
     @Nullable private ToolchainProvider toolchainProvider = null;
 
@@ -248,7 +239,6 @@ public class CommandRunnerParamsForTesting {
           TestParserFactory.create(executor, cell.getRootCell(), knownRuleTypesProvider);
 
       return createCommandRunnerParamsForTesting(
-          executor,
           console,
           cell,
           artifactCache,
@@ -256,7 +246,6 @@ public class CommandRunnerParamsForTesting {
           config,
           platform,
           environment,
-          javaPackageFinder,
           webServer,
           pluginManager,
           knownRuleTypesProvider,

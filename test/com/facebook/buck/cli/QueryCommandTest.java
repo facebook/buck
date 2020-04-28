@@ -36,7 +36,6 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.watchman.WatchmanFactory;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
@@ -110,7 +109,6 @@ public class QueryCommandTest {
             FakeBuckConfig.builder().build(),
             Platform.detect(),
             EnvVariablesProvider.getSystemEnv(),
-            new FakeJavaPackageFinder(),
             Optional.empty());
 
     ListeningExecutorService executorService = new FakeListeningExecutorService();

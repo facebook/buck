@@ -32,7 +32,6 @@ import com.facebook.buck.event.BuckEventBusForTests;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.ProjectFilesystemFactory;
 import com.facebook.buck.io.filesystem.impl.DefaultProjectFilesystemFactory;
-import com.facebook.buck.jvm.java.FakeJavaPackageFinder;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Console;
@@ -99,7 +98,6 @@ public class TestActionExecutionRunner {
                 .setBuckEventBus(testEventBus)
                 .setPlatform(Platform.UNKNOWN)
                 .setEnvironment(ImmutableMap.of())
-                .setJavaPackageFinder(new FakeJavaPackageFinder())
                 .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
                 .setBuildCellRootPath(projectFilesystem.getRootPath().getPath())
                 .setProcessExecutor(processExecutor)

@@ -28,6 +28,7 @@ import com.facebook.buck.core.build.engine.delegate.LocalCachingBuildEngineDeleg
 import com.facebook.buck.core.build.engine.impl.CachingBuildEngine;
 import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -525,6 +526,7 @@ public class TestCommand extends BuildCommand {
               .withSpeculativeParsing(SpeculativeParsing.ENABLED);
 
       ImmutableSet<BuildTarget> explicitBuildTargets = ImmutableSet.of();
+      Cell rootCell = params.getCells().getRootCell();
       try {
 
         // If the user asked to run all of the tests, parse all of the build files looking for any
@@ -539,8 +541,7 @@ public class TestCommand extends BuildCommand {
                           TargetNodePredicateSpec.of(
                               BuildFileSpec.fromRecursivePath(
                                   CellRelativePath.of(
-                                      params.getCells().getRootCell().getCanonicalName(),
-                                      ForwardRelativePath.of(""))),
+                                      rootCell.getCanonicalName(), ForwardRelativePath.of(""))),
                               true)),
                       params.getTargetConfiguration());
           targetGraphCreationResult = targetGraphCreationResult.withBuildTargets(ImmutableSet.of());
@@ -555,7 +556,7 @@ public class TestCommand extends BuildCommand {
                   .buildTargetGraphWithoutTopLevelConfigurationTargets(
                       parsingContext,
                       parseArgumentsAsTargetNodeSpecs(
-                          params.getCells().getRootCell(),
+                          rootCell,
                           params.getClientWorkingDir(),
                           getArguments(),
                           params.getBuckConfig()),
@@ -647,8 +648,8 @@ public class TestCommand extends BuildCommand {
                         params.getBuckConfig().getView(ModernBuildRuleConfig.class),
                         params.getBuckConfig().getView(RemoteExecutionConfig.class),
                         actionGraphAndBuilder.getActionGraphBuilder(),
-                        params.getCells().getRootCell(),
-                        params.getCells().getRootCell().getCellPathResolver(),
+                        rootCell,
+                        rootCell.getCellPathResolver(),
                         localCachingBuildEngineDelegate.getFileHashCache(),
                         params.getBuckEventBus(),
                         params.getMetadataProvider(),
@@ -681,7 +682,7 @@ public class TestCommand extends BuildCommand {
             Build build =
                 new Build(
                     actionGraphAndBuilder.getActionGraphBuilder(),
-                    params.getCells().getRootCell(),
+                    rootCell,
                     cachingBuildEngine,
                     params.getArtifactCacheFactory().newInstance(),
                     params
@@ -722,8 +723,11 @@ public class TestCommand extends BuildCommand {
           BuildContext buildContext =
               BuildContext.of(
                   actionGraphAndBuilder.getActionGraphBuilder().getSourcePathResolver(),
-                  params.getCells().getRootCell().getRoot().getPath(),
-                  params.getJavaPackageFinder(),
+                  rootCell.getRoot().getPath(),
+                  rootCell
+                      .getBuckConfig()
+                      .getView(JavaBuckConfig.class)
+                      .createDefaultJavaPackageFinder(),
                   params.getBuckEventBus(),
                   params
                       .getBuckConfig()

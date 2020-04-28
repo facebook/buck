@@ -388,6 +388,7 @@ java_test(
         ["testdata/**"],
     ),
     deps = [
+        ":fakepackagefinder",
         "//src-gen:thrift",
         "//src/com/facebook/buck/android:helpers",
         "//src/com/facebook/buck/android:rules",

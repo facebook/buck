@@ -529,6 +529,7 @@ public class JarBuildStepsFactory
     JavacToJarStepFactory javacToJarStepFactory = (JavacToJarStepFactory) configuredCompiler;
     CompilerParameters compilerParameters = getCompilerParameters(context, filesystem, firstRule);
     return javacToJarStepFactory.createPipelineState(
+        context.getJavaPackageFinder(),
         firstRule,
         compilerParameters,
         getAbiJarParameters(firstRule, context, filesystem, compilerParameters).orElse(null),

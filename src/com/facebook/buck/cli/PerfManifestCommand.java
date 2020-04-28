@@ -19,6 +19,7 @@ package com.facebook.buck.cli;
 import com.facebook.buck.cli.PerfManifestCommand.Context;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.manifest.Manifest;
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetGraphCreationResult;
@@ -28,6 +29,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.rules.keys.DefaultRuleKeyCache;
 import com.facebook.buck.rules.keys.DependencyFileRuleKeyFactory;
 import com.facebook.buck.rules.keys.RuleKeyFactories;
@@ -178,6 +180,7 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
           if (rule instanceof SupportsDependencyFileRuleKey
               && ((SupportsDependencyFileRuleKey) rule).useDependencyFileRuleKeys()) {
             try {
+              Cell rootCell = params.getCells().getRootCell();
               usedInputs.put(
                   rule,
                   ImmutableSet.copyOf(
@@ -185,11 +188,14 @@ public class PerfManifestCommand extends AbstractPerfCommand<Context> {
                           .getInputsAfterBuildingLocally(
                               BuildContext.of(
                                   graphBuilder.getSourcePathResolver(),
-                                  params.getCells().getRootCell().getRoot().getPath(),
-                                  params.getJavaPackageFinder(),
+                                  rootCell.getRoot().getPath(),
+                                  rootCell
+                                      .getBuckConfig()
+                                      .getView(JavaBuckConfig.class)
+                                      .createDefaultJavaPackageFinder(),
                                   params.getBuckEventBus(),
                                   false),
-                              params.getCells().getRootCell().getCellPathResolver())));
+                              rootCell.getCellPathResolver())));
             } catch (Exception e) {
               throw new BuckUncheckedExecutionException(
                   e, "When asking %s for its inputs.", rule.getBuildTarget());
