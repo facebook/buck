@@ -24,7 +24,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -40,9 +39,7 @@ import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
-import com.facebook.buck.rules.modern.Buildable;
 import com.facebook.buck.rules.modern.ModernBuildRule;
-import com.facebook.buck.rules.modern.OutputPath;
 import com.facebook.buck.rules.modern.OutputPathResolver;
 import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
@@ -292,19 +289,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
   }
 
   /** Buildable implementation for CxxPreprocessAndCompile. */
-  static class Impl implements Buildable {
-    @AddToRuleKey private final BuildTarget targetName;
-    /** The presence or absence of this field denotes whether the input needs to be preprocessed. */
-    @AddToRuleKey private final Optional<PreprocessorDelegate> preprocessDelegate;
-
-    @AddToRuleKey private final CompilerDelegate compilerDelegate;
-    @AddToRuleKey private final DebugPathSanitizer sanitizer;
-    @AddToRuleKey private final OutputPath output;
-    @AddToRuleKey private final SourcePath input;
-    @AddToRuleKey private final CxxSource.Type inputType;
-
-    @AddToRuleKey private final Optional<PrecompiledHeaderData> precompiledHeaderData;
-
+  static class Impl extends CxxPreprocessAndCompileBaseBuildable {
     public Impl(
         BuildTarget targetName,
         Optional<PreprocessorDelegate> preprocessDelegate,
@@ -314,55 +299,15 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
         Optional<CxxPrecompiledHeader> precompiledHeaderRule,
         Type inputType,
         DebugPathSanitizer sanitizer) {
-      this.targetName = targetName;
-      this.preprocessDelegate = preprocessDelegate;
-      this.compilerDelegate = compilerDelegate;
-      this.sanitizer = sanitizer;
-      this.output = new OutputPath(outputName);
-      this.input = input;
-      this.inputType = inputType;
-      this.precompiledHeaderData = precompiledHeaderRule.map(CxxPrecompiledHeader::getData);
-    }
-
-    protected CxxPreprocessAndCompileStep.ToolCommand makeCommand(
-        SourcePathResolverAdapter resolver, ImmutableList<Arg> arguments) {
-      return new CxxPreprocessAndCompileStep.ToolCommand(
-          compilerDelegate.getCommandPrefix(resolver),
-          Arg.stringify(arguments, resolver),
-          compilerDelegate.getEnvironment(resolver));
-    }
-
-    protected Optional<Path> getDepFile(Path resolvedOutput) {
-      // Use a depfile if there's a preprocessing stage, this logic should be kept in sync with
-      // getInputsAfterBuildingLocally.
-      return CxxSourceTypes.supportsDepFiles(inputType)
-          ? preprocessDelegate.map(ignored -> getDepFilePath(resolvedOutput))
-          : Optional.empty();
-    }
-
-    protected CxxPreprocessAndCompileStep.Operation getOperation() {
-      return preprocessDelegate.isPresent()
-          ? CxxPreprocessAndCompileStep.Operation.PREPROCESS_AND_COMPILE
-          : CxxPreprocessAndCompileStep.Operation.COMPILE;
-    }
-
-    protected ImmutableList<Arg> getArguments(
-        ProjectFilesystem filesystem, CxxToolFlags preprocessorDelegateFlags) {
-      return compilerDelegate.getArguments(
-          preprocessorDelegateFlags, filesystem.getRootPath().getPath());
-    }
-
-    protected CxxToolFlags getCxxToolFlags(SourcePathResolverAdapter resolver) {
-      return preprocessDelegate
-          .map(delegate -> delegate.getFlagsWithSearchPaths(precompiledHeaderData, resolver))
-          .orElseGet(CxxToolFlags::of);
-    }
-
-    protected HeaderPathNormalizer getHeaderPathNormalizer(BuildContext context) {
-      // If we're compiling, this will just be empty.
-      return preprocessDelegate
-          .map(x -> x.getHeaderPathNormalizer(context))
-          .orElseGet(() -> HeaderPathNormalizer.empty());
+      super(
+          targetName,
+          preprocessDelegate,
+          compilerDelegate,
+          outputName,
+          input,
+          precompiledHeaderRule,
+          inputType,
+          sanitizer);
     }
 
     CxxPreprocessAndCompileStep makeMainStep(
@@ -400,10 +345,6 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                   Optional.ofNullable(targetName),
                   Optional.ofNullable(relativeInputPath.getPath()),
                   Optional.ofNullable(resolvedOutput))));
-    }
-
-    static Path getDepFilePath(Path outputPath) {
-      return outputPath.getParent().resolve(outputPath.getFileName() + ".dep");
     }
 
     @Override
