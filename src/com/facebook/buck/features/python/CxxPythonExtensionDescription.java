@@ -342,7 +342,7 @@ public class CxxPythonExtensionDescription
         Optional.of(extensionName),
         extensionPath,
         args.getLinkerExtraOutputs(),
-        Linker.LinkableDepType.SHARED,
+        args.getLinkStyle().orElse(Linker.LinkableDepType.SHARED),
         Optional.empty(),
         CxxLinkOptions.of(),
         RichStream.from(deps)
@@ -508,10 +508,13 @@ public class CxxPythonExtensionDescription
           ActionGraphBuilder graphBuilder,
           boolean includePrivateLinkerFlags) {
         ImmutableList<NativeLinkable> linkTargetDeps =
-            RichStream.from(getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args))
-                .filter(NativeLinkableGroup.class)
-                .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
-                .toImmutableList();
+            args.getLinkStyle().orElse(Linker.LinkableDepType.SHARED)
+                    == Linker.LinkableDepType.SHARED
+                ? RichStream.from(getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args))
+                    .filter(NativeLinkableGroup.class)
+                    .map(g -> g.getNativeLinkable(cxxPlatform, graphBuilder))
+                    .toImmutableList()
+                : ImmutableList.of();
 
         NativeLinkableInput linkableInput =
             NativeLinkableInput.builder()
@@ -602,5 +605,7 @@ public class CxxPythonExtensionDescription
     Optional<String> getBaseModule();
 
     Optional<String> getModuleName();
+
+    Optional<Linker.LinkableDepType> getLinkStyle();
   }
 }

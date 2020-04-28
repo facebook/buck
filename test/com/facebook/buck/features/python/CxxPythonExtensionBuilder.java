@@ -26,6 +26,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.coercer.FrameworkPath;
@@ -116,6 +117,11 @@ public class CxxPythonExtensionBuilder
 
   public CxxPythonExtensionBuilder setDeps(ImmutableSortedSet<BuildTarget> deps) {
     getArgForPopulating().setDeps(deps);
+    return this;
+  }
+
+  public CxxPythonExtensionBuilder setLinkStyle(Linker.LinkableDepType linkStyle) {
+    getArgForPopulating().setLinkStyle(linkStyle);
     return this;
   }
 }

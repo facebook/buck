@@ -390,6 +390,35 @@ public class CxxPythonExtensionDescriptionTest {
   }
 
   @Test
+  public void nativeLinkTargetDepsStaticLinkStyle() {
+    TargetNode<CxxLibraryDescriptionArg> cxxDepNode =
+        new CxxLibraryBuilder(BuildTargetFactory.newInstance("//:dep")).build();
+
+    ActionGraphBuilder graphBuilder =
+        new TestActionGraphBuilder(TargetGraphFactory.newInstance(cxxDepNode));
+
+    CxxLibraryGroup dep = (CxxLibraryGroup) graphBuilder.requireRule(cxxDepNode.getBuildTarget());
+
+    CxxPythonExtensionBuilder builder =
+        new CxxPythonExtensionBuilder(
+            BuildTargetFactory.newInstance("//:rule"),
+            FlavorDomain.of("Python Platform", PY2, PY3),
+            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            CxxTestUtils.createDefaultPlatforms());
+    CxxPythonExtension rule =
+        builder
+            .setDeps(ImmutableSortedSet.of(dep.getBuildTarget()))
+            .setLinkStyle(Linker.LinkableDepType.STATIC)
+            .build(graphBuilder);
+    NativeLinkTarget nativeLinkTarget =
+        rule.getNativeLinkTarget(PY2, CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder, true);
+    assertThat(
+        FluentIterable.from(nativeLinkTarget.getNativeLinkTargetDeps(graphBuilder))
+            .transform(NativeLinkable::getBuildTarget),
+        Matchers.not(Matchers.hasItem(dep.getBuildTarget())));
+  }
+
+  @Test
   public void nativeLinkTargetDepsIncludePlatformCxxLibrary() {
     ProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxLibraryBuilder python2Builder = new CxxLibraryBuilder(PYTHON2_DEP_TARGET);
