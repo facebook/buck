@@ -43,7 +43,7 @@ public class CxxLinkGroupMappingTargetPatternMatcherTest {
   public void matchesValidResursiveTargetPattern() {
     String pattern = "//foo/...";
     CxxLinkGroupMappingTargetPatternMatcher testMatcher =
-        new CxxLinkGroupMappingTargetPatternMatcher(
+        CxxLinkGroupMappingTargetPatternMatcher.of(
             pattern, buildTargetPatternParser.parse(pattern, cellRoots));
 
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
@@ -55,7 +55,7 @@ public class CxxLinkGroupMappingTargetPatternMatcherTest {
   public void matchesValidPackageTargetPattern() {
     String pattern = "//foo:";
     CxxLinkGroupMappingTargetPatternMatcher testMatcher =
-        new CxxLinkGroupMappingTargetPatternMatcher(
+        CxxLinkGroupMappingTargetPatternMatcher.of(
             pattern, buildTargetPatternParser.parse(pattern, cellRoots));
 
     BuildTarget fooLibTarget = BuildTargetFactory.newInstance("//foo:lib");
@@ -67,7 +67,7 @@ public class CxxLinkGroupMappingTargetPatternMatcherTest {
   public void doesNotMatchInvalidTarget() {
     String pattern = "//foo/...";
     CxxLinkGroupMappingTargetPatternMatcher testMatcher =
-        new CxxLinkGroupMappingTargetPatternMatcher(
+        CxxLinkGroupMappingTargetPatternMatcher.of(
             pattern, buildTargetPatternParser.parse(pattern, cellRoots));
 
     BuildTarget barLibTarget = BuildTargetFactory.newInstance("//bar:lib");

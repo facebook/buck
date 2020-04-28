@@ -142,11 +142,11 @@ public class CxxLinkGroupMappingTargetCoercer
       Pattern labelPattern =
           patternTypeCoercer.coerceToUnconfigured(
               cellRoots, filesystem, pathRelativeToProjectRoot, regex);
-      return new CxxLinkGroupMappingTargetLabelMatcher(labelPattern);
+      return CxxLinkGroupMappingTargetLabelMatcher.of(labelPattern);
     } else if (matcherString.startsWith(PATTERN_REGEX_PREFIX)) {
       String pattern = matcherString.substring(PATTERN_REGEX_PREFIX.length());
       BuildTargetMatcher targetMatcher = buildTargetPatternParser.parse(pattern, cellRoots);
-      return new CxxLinkGroupMappingTargetPatternMatcher(pattern, targetMatcher);
+      return CxxLinkGroupMappingTargetPatternMatcher.of(pattern, targetMatcher);
     }
 
     throw CoerceFailedException.simple(matcherString, getOutputType(), error);

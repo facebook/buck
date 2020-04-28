@@ -18,16 +18,20 @@ package com.facebook.buck.core.linkgroup;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.annotations.VisibleForTesting;
 import java.util.regex.Pattern;
 
 /** Target matcher for regex labels beginning with "label:". */
-public class CxxLinkGroupMappingTargetLabelMatcher implements CxxLinkGroupMappingTargetMatcher {
+@BuckStyleValue
+public abstract class CxxLinkGroupMappingTargetLabelMatcher
+    implements CxxLinkGroupMappingTargetMatcher {
 
-  @VisibleForTesting public Pattern labelPattern;
+  @VisibleForTesting
+  public abstract Pattern getLabelPattern();
 
-  public CxxLinkGroupMappingTargetLabelMatcher(Pattern labelPattern) {
-    this.labelPattern = labelPattern;
+  public static CxxLinkGroupMappingTargetLabelMatcher of(Pattern labelPattern) {
+    return ImmutableCxxLinkGroupMappingTargetLabelMatcher.ofImpl(labelPattern);
   }
 
   @Override
@@ -36,7 +40,7 @@ public class CxxLinkGroupMappingTargetLabelMatcher implements CxxLinkGroupMappin
     if (node.getConstructorArg() instanceof BuildRuleArg) {
       BuildRuleArg buildRuleArg = (BuildRuleArg) node.getConstructorArg();
       for (String label : buildRuleArg.getLabels()) {
-        matchesRegex = labelPattern.matcher(label).matches();
+        matchesRegex = getLabelPattern().matcher(label).matches();
         if (matchesRegex) {
           break;
         }
@@ -52,9 +56,9 @@ public class CxxLinkGroupMappingTargetLabelMatcher implements CxxLinkGroupMappin
     }
 
     if (that instanceof CxxLinkGroupMappingTargetLabelMatcher) {
-      return this.labelPattern
+      return this.getLabelPattern()
           .pattern()
-          .compareTo(((CxxLinkGroupMappingTargetLabelMatcher) that).labelPattern.pattern());
+          .compareTo(((CxxLinkGroupMappingTargetLabelMatcher) that).getLabelPattern().pattern());
     }
 
     return this.getClass().getName().compareTo(that.getClass().getName());

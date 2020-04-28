@@ -18,24 +18,27 @@ package com.facebook.buck.core.linkgroup;
 
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.annotations.VisibleForTesting;
 
 /** Target matcher for build target pattern labels beginning with "pattern:". */
-public class CxxLinkGroupMappingTargetPatternMatcher implements CxxLinkGroupMappingTargetMatcher {
+@BuckStyleValue
+public abstract class CxxLinkGroupMappingTargetPatternMatcher
+    implements CxxLinkGroupMappingTargetMatcher {
 
-  @VisibleForTesting public String pattern;
+  @VisibleForTesting
+  public abstract String getPattern();
 
-  private BuildTargetMatcher patternMatcher;
+  abstract BuildTargetMatcher getPatternMatcher();
 
-  public CxxLinkGroupMappingTargetPatternMatcher(
+  public static CxxLinkGroupMappingTargetPatternMatcher of(
       String pattern, BuildTargetMatcher patternMatcher) {
-    this.pattern = pattern;
-    this.patternMatcher = patternMatcher;
+    return ImmutableCxxLinkGroupMappingTargetPatternMatcher.ofImpl(pattern, patternMatcher);
   }
 
   @Override
   public boolean matchesNode(TargetNode<?> node) {
-    return patternMatcher.matches(node.getBuildTarget().getUnconfiguredBuildTarget());
+    return getPatternMatcher().matches(node.getBuildTarget().getUnconfiguredBuildTarget());
   }
 
   @Override
@@ -45,7 +48,8 @@ public class CxxLinkGroupMappingTargetPatternMatcher implements CxxLinkGroupMapp
     }
 
     if (that instanceof CxxLinkGroupMappingTargetLabelMatcher) {
-      return this.pattern.compareTo(((CxxLinkGroupMappingTargetPatternMatcher) that).pattern);
+      return this.getPattern()
+          .compareTo(((CxxLinkGroupMappingTargetPatternMatcher) that).getPattern());
     }
 
     return this.getClass().getName().compareTo(that.getClass().getName());

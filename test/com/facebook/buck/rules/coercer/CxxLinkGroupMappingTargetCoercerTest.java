@@ -111,10 +111,12 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.TREE);
     assertTrue(target.getMatcher().isPresent());
-    assertEquals(CxxLinkGroupMappingTargetLabelMatcher.class, target.getMatcher().get().getClass());
+    assertTrue(target.getMatcher().get() instanceof CxxLinkGroupMappingTargetLabelMatcher);
 
     assertEquals(
-        ((CxxLinkGroupMappingTargetLabelMatcher) target.getMatcher().get()).labelPattern.toString(),
+        ((CxxLinkGroupMappingTargetLabelMatcher) target.getMatcher().get())
+            .getLabelPattern()
+            .toString(),
         labelRegex);
   }
 
@@ -135,11 +137,12 @@ public class CxxLinkGroupMappingTargetCoercerTest {
     assertEquals(target.getBuildTarget().getFullyQualifiedName(), targetString);
     assertEquals(target.getTraversal(), CxxLinkGroupMappingTarget.Traversal.TREE);
     assertTrue(target.getMatcher().isPresent());
-    assertEquals(
-        CxxLinkGroupMappingTargetPatternMatcher.class, target.getMatcher().get().getClass());
+    assertTrue(target.getMatcher().get() instanceof CxxLinkGroupMappingTargetPatternMatcher);
 
     assertEquals(
-        ((CxxLinkGroupMappingTargetPatternMatcher) target.getMatcher().get()).pattern.toString(),
+        ((CxxLinkGroupMappingTargetPatternMatcher) target.getMatcher().get())
+            .getPattern()
+            .toString(),
         buildTargetPattern);
   }
 
