@@ -26,7 +26,6 @@ import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.util.Console;
@@ -162,37 +161,18 @@ class CxxPreprocessAndCompileStep implements Step {
 
   @VisibleForTesting
   ImmutableList<String> getArguments(boolean allowColorsInDiagnostics) {
-    boolean useUnixPathSeparator = compiler.getUseUnixPathSeparator();
-    String inputLanguage =
-        operation == Operation.GENERATE_PCH
-            ? inputType.getPrecompiledHeaderLanguage().get()
-            : inputType.getLanguage();
-    return ImmutableList.<String>builder()
-        .addAll(
-            (allowColorsInDiagnostics
-                    ? compiler.getFlagsForColorDiagnostics()
-                    : Optional.<ImmutableList<String>>empty())
-                .orElseGet(ImmutableList::of))
-        .addAll(compiler.languageArgs(inputLanguage))
-        .addAll(command.getArguments())
-        .addAll(
-            sanitizer.getCompilationFlags(
-                compiler, filesystem.getRootPath().getPath(), headerPathNormalizer.getPrefixMap()))
-        .addAll(
-            compiler.outputArgs(
-                useUnixPathSeparator
-                    ? PathFormatter.pathWithUnixSeparators(output.toString())
-                    : output.toString()))
-        .add("-c")
-        .addAll(
-            depFile
-                .map(depFile -> compiler.outputDependenciesArgs(depFile.toString()))
-                .orElseGet(ImmutableList::of))
-        .add(
-            useUnixPathSeparator
-                ? PathFormatter.pathWithUnixSeparators(input.toString())
-                : input.toString())
-        .build();
+    return CxxPreprocessAndCompileEnhancer.getCompilationCommandArguments(
+        allowColorsInDiagnostics,
+        compiler,
+        operation,
+        inputType,
+        command,
+        sanitizer,
+        filesystem,
+        headerPathNormalizer,
+        output,
+        depFile,
+        input);
   }
 
   private ProcessExecutor.Result executeCompilation(ExecutionContext context)
@@ -423,10 +403,18 @@ class CxxPreprocessAndCompileStep implements Step {
     // compilation database (its contents should not depend on how Buck was invoked) and in the
     // step's description. It is not used to determine what command this step runs, which needs
     // to decide whether to use colors or not based on whether the terminal supports them.
-    return ImmutableList.<String>builder()
-        .addAll(command.getCommandPrefix())
-        .addAll(getArguments(false))
-        .build();
+    return CxxPreprocessAndCompileEnhancer.getCompilationCommand(
+        false,
+        compiler,
+        operation,
+        inputType,
+        command,
+        sanitizer,
+        filesystem,
+        headerPathNormalizer,
+        output,
+        depFile,
+        input);
   }
 
   @Override
