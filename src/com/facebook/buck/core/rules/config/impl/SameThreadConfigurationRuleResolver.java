@@ -19,7 +19,7 @@ package com.facebook.buck.core.rules.config.impl;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
@@ -80,8 +80,7 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
   private <T extends ConfigurationRuleArg, R extends ConfigurationRule>
       ConfigurationRule createConfigurationRule(
           BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
-    Preconditions.checkArgument(
-        buildTarget.getTargetConfiguration() == ConfigurationForConfigurationTargets.INSTANCE);
+    ConfigurationBuildTargets.validateTarget(buildTarget);
 
     TargetNode<T> targetNode =
         (TargetNode<T>) targetNodeSupplier.apply(buildTarget, dependencyStack);

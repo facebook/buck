@@ -27,7 +27,7 @@ public abstract class RuleBasedTargetConfiguration extends TargetConfiguration {
 
   @Value.Check
   protected void check() {
-    ConfigurationForConfigurationTargets.validateTarget(getTargetPlatform());
+    ConfigurationBuildTargets.validateTarget(getTargetPlatform());
   }
 
   public abstract BuildTarget getTargetPlatform();

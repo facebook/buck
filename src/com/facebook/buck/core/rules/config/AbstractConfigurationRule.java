@@ -17,14 +17,14 @@
 package com.facebook.buck.core.rules.config;
 
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 
 /** Base class and common implementation of all configuration rules */
 public abstract class AbstractConfigurationRule implements ConfigurationRule {
   private final BuildTarget buildTarget;
 
   public AbstractConfigurationRule(BuildTarget buildTarget) {
-    ConfigurationForConfigurationTargets.validateTarget(buildTarget);
+    ConfigurationBuildTargets.validateTarget(buildTarget);
     this.buildTarget = buildTarget;
   }
 

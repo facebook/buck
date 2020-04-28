@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -74,5 +75,14 @@ public class ConfigurationBuildTargets {
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(
                 Comparator.naturalOrder(), Map.Entry::getKey, entry -> convert(entry.getValue())));
+  }
+
+  /** Validate build target is configuration target */
+  public static void validateTarget(BuildTarget buildTarget) {
+    Preconditions.checkArgument(
+        buildTarget.getTargetConfiguration() == ConfigurationForConfigurationTargets.INSTANCE,
+        "must be a configuration target: %s (%s)",
+        buildTarget,
+        buildTarget.getTargetConfiguration());
   }
 }
