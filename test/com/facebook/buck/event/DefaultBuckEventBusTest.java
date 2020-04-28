@@ -16,12 +16,11 @@
 
 package com.facebook.buck.event;
 
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.lessThanOrEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.concurrent.MostExecutors.NamedThreadFactory;
@@ -30,79 +29,98 @@ import com.facebook.buck.util.timing.SettableFakeClock;
 import com.google.common.eventbus.Subscribe;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 public class DefaultBuckEventBusTest {
 
-  private static final int timeoutMillis = 500;
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
+  private static final int TIMEOUT_MILLIS = 500;
+  private static final Instant AT_TIME = Instant.parse("2020-04-24T12:13:14.123456789Z");
+
+  private DefaultBuckEventBus buckEventBus =
+      new DefaultBuckEventBus(
+          new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, TIMEOUT_MILLIS);
 
   @Test
   public void testShutdownSuccess() {
-    DefaultBuckEventBus eb =
-        new DefaultBuckEventBus(
-            new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
-    eb.register(new SleepSubscriber());
-    eb.post(new SleepEvent(1));
+    buckEventBus.register(new SleepSubscriber());
+    buckEventBus.post(new SleepEvent(1));
     long start = System.nanoTime();
-    eb.close();
+    buckEventBus.close();
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
     assertThat(
         "Shutdown should not take a long time.",
         durationMillis,
-        lessThanOrEqualTo((long) timeoutMillis));
+        lessThanOrEqualTo((long) TIMEOUT_MILLIS));
   }
 
   @Test
   public void testShutdownFailure() {
-    DefaultBuckEventBus eb =
-        new DefaultBuckEventBus(
-            new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
-    eb.register(new SleepSubscriber());
-    eb.post(new SleepEvent(timeoutMillis * 3));
+    buckEventBus.register(new SleepSubscriber());
+    buckEventBus.post(new SleepEvent(TIMEOUT_MILLIS * 3));
     long start = System.nanoTime();
-    eb.close();
+    buckEventBus.close();
     // We'd like to test the Logger output here, but there's not a clean way to do that.
     long durationNanos = System.nanoTime() - start;
     long durationMillis = TimeUnit.MILLISECONDS.convert(durationNanos, TimeUnit.NANOSECONDS);
     assertThat(
         "Shutdown should not take a long time.",
         durationMillis,
-        lessThanOrEqualTo((long) timeoutMillis * 2));
+        lessThanOrEqualTo((long) TIMEOUT_MILLIS * 2));
   }
 
   @Test
   public void whenEventTimestampedThenEventCannotBePosted() {
-    DefaultBuckEventBus eb =
-        new DefaultBuckEventBus(
-            new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
+    thrown.expect(IllegalStateException.class);
+    thrown.expectMessage(equalTo("Events can only be configured once."));
+
     TestEvent event = new TestEvent();
-    eb.timestamp(event);
+    buckEventBus.timestamp(event);
     try {
-      eb.post(event);
-      fail("Post should throw IllegalStateException.");
-    } catch (IllegalStateException e) {
-      assertThat(
-          "Exception should be due to double configuration.",
-          e.getMessage(),
-          containsString("Events can only be configured once."));
+      buckEventBus.post(event);
     } finally {
-      eb.close();
+      buckEventBus.close();
     }
   }
 
   @Test
   public void whenEventPostedWithTimestamp() {
-    DefaultBuckEventBus eb =
-        new DefaultBuckEventBus(
-            new DefaultClock(), false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
     TestEvent event = new TestEvent();
-    Instant atTime = Instant.parse("2020-04-24T12:13:14.123456789Z");
-    eb.post(event, atTime);
-    eb.close();
+    buckEventBus.post(event, AT_TIME);
+    buckEventBus.close();
 
-    long epochSecond = atTime.getEpochSecond();
-    int nano = atTime.getNano();
+    verifyTimestamps(event);
+    assertEquals(Thread.currentThread().getId(), event.getThreadId());
+  }
+
+  @Test
+  public void whenEventPostedWithTimestampAndThreadId() {
+    TestEvent event = new TestEvent();
+    int threadId = 123;
+    buckEventBus.post(event, AT_TIME, threadId);
+    buckEventBus.close();
+
+    verifyTimestamps(event);
+    assertEquals(threadId, event.getThreadId());
+  }
+
+  @Test
+  public void whenEventPostedWithThreadId() {
+    TestEvent event = new TestEvent();
+    int threadId = 123;
+    buckEventBus.post(event, threadId);
+    buckEventBus.close();
+
+    assertEquals(threadId, event.getThreadId());
+  }
+
+  private void verifyTimestamps(TestEvent event) {
+    long epochSecond = AT_TIME.getEpochSecond();
+    int nano = AT_TIME.getNano();
 
     assertEquals(
         TimeUnit.SECONDS.toMillis(epochSecond) + TimeUnit.NANOSECONDS.toMillis(nano),
@@ -113,12 +131,12 @@ public class DefaultBuckEventBusTest {
   @Test
   public void timestampedEventHasSeparateNanosAndMillis() {
     SettableFakeClock fakeClock = new SettableFakeClock(49152, 64738);
-    DefaultBuckEventBus eb =
+    DefaultBuckEventBus buckEventBus =
         new DefaultBuckEventBus(
-            fakeClock, false, BuckEventBusForTests.BUILD_ID_FOR_TEST, timeoutMillis);
+            fakeClock, false, BuckEventBusForTests.BUILD_ID_FOR_TEST, TIMEOUT_MILLIS);
     TestEvent event = new TestEvent();
-    eb.post(event);
-    eb.close();
+    buckEventBus.post(event);
+    buckEventBus.close();
     assertEquals(event.getTimestampMillis(), 49152);
     assertEquals(event.getNanoTime(), 64738);
   }
@@ -130,7 +148,7 @@ public class DefaultBuckEventBusTest {
         new DefaultBuckEventBus(
             new DefaultClock(),
             BuckEventBusForTests.BUILD_ID_FOR_TEST,
-            timeoutMillis,
+            TIMEOUT_MILLIS,
             MostExecutors.newSingleThreadExecutor(threadFactory));
 
     buckEventBus.register(

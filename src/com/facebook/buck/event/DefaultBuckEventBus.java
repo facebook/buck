@@ -111,14 +111,23 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
     dispatch(event);
   }
 
-  /** Post event to the EventBus using the given {@code atTime} timestamp. */
   @Override
-  public void post(BuckEvent event, Instant atTime) {
-    long threadId = threadIdSupplier.get();
+  public void post(BuckEvent event, Instant atTime, long threadId) {
     long millis = atTime.toEpochMilli();
     long nano = TimeUnit.SECONDS.toNanos(atTime.getEpochSecond()) + atTime.getNano();
     long threadUserNanoTime = clock.threadUserNanoTime(threadId);
     event.configure(millis, nano, threadUserNanoTime, threadId, buildId);
+    dispatch(event);
+  }
+
+  @Override
+  public void post(BuckEvent event, Instant atTime) {
+    post(event, atTime, threadIdSupplier.get());
+  }
+
+  @Override
+  public void post(BuckEvent event, long threadId) {
+    timestamp(event, threadId);
     dispatch(event);
   }
 
@@ -215,13 +224,13 @@ public class DefaultBuckEventBus implements com.facebook.buck.event.BuckEventBus
     return true;
   }
 
-  /**
-   * Timestamp event. A timestamped event cannot subsequently being posted and is useful only to
-   * pass its timestamp on to another posted event.
-   */
   @Override
   public void timestamp(BuckEvent event) {
-    long threadId = threadIdSupplier.get();
+    timestamp(event, threadIdSupplier.get());
+  }
+
+  @Override
+  public void timestamp(BuckEvent event, long threadId) {
     event.configure(
         clock.currentTimeMillis(),
         clock.nanoTime(),
