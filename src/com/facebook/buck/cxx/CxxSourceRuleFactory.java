@@ -391,6 +391,21 @@ public abstract class CxxSourceRuleFactory {
 
     BuildTarget target = createCompileBuildTarget(name);
 
+    CompilerDelegate compilerDelegate = makeCompilerDelegateForCompileOnly(source);
+
+    // Build the CxxCompile rule and add it to our sorted set of build rules.
+    return CxxPreprocessAndCompile.compile(
+        target,
+        getProjectFilesystem(),
+        getActionGraphBuilder(),
+        compilerDelegate,
+        getCompileOutputName(name),
+        source.getPath(),
+        source.getType(),
+        getSanitizer());
+  }
+
+  private CompilerDelegate makeCompilerDelegateForCompileOnly(CxxSource source) {
     Compiler compiler =
         CxxSourceTypes.getCompiler(getCxxPlatform(), source.getType())
             .resolve(getActionGraphBuilder(), getBaseBuildTarget().getTargetConfiguration());
@@ -408,25 +423,12 @@ public abstract class CxxSourceRuleFactory {
             .addAllRuleFlags(sanitizedArgs(StringArg.from(source.getFlags())))
             .build();
 
-    CompilerDelegate compilerDelegate =
-        new CompilerDelegate(
-            getCxxPlatform().getCompilerDebugPathSanitizer(),
-            compiler,
-            flags,
-            getCxxPlatform().getUseArgFile());
-
     // TODO(steveo): this does not account for `precompiledHeaderRule`.
-
-    // Build the CxxCompile rule and add it to our sorted set of build rules.
-    return CxxPreprocessAndCompile.compile(
-        target,
-        getProjectFilesystem(),
-        getActionGraphBuilder(),
-        compilerDelegate,
-        getCompileOutputName(name),
-        source.getPath(),
-        source.getType(),
-        getSanitizer());
+    return new CompilerDelegate(
+        getCxxPlatform().getCompilerDebugPathSanitizer(),
+        compiler,
+        flags,
+        getCxxPlatform().getUseArgFile());
   }
 
   @VisibleForTesting
