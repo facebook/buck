@@ -233,4 +233,35 @@ public class KotlinLibraryIntegrationTest {
             "kotlin.add_jvm_target_to_kotlinc=true");
     buildResult.assertSuccess("Build should have succeeded.");
   }
+
+  @Test
+  public void shouldCompileKotlinClassWithPlugins() {
+    ProcessResult buildResult =
+        workspace.runBuckCommand("build", "//com/example/compilerplugin:example");
+    buildResult.assertSuccess("Build should have succeeded.");
+  }
+
+  @Test
+  public void shouldFailToCompileKotlinClassWithoutNecessaryPlugin() {
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//com/example/compilerplugin:example_without_necessary_plugin");
+    buildResult.assertFailure();
+  }
+
+  @Test
+  public void shouldFailToCompileKotlinClassWithPluginsAndMissingOptions() {
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//com/example/compilerplugin:example_with_missing_options");
+    buildResult.assertFailure();
+  }
+
+  @Test
+  public void shouldFailToCompileKotlinClassWithPluginsAndWrongOptions() {
+    ProcessResult buildResult =
+        workspace.runBuckCommand(
+            "build", "//com/example/compilerplugin:example_with_wrong_options");
+    buildResult.assertFailure();
+  }
 }

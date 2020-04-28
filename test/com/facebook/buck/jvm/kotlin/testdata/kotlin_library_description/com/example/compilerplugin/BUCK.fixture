@@ -1,0 +1,44 @@
+kotlin_library(
+    name = "plugin",
+    srcs = ["TestPlugin.kt"],
+    resources = glob(["resources/**"]),
+    resources_root = "resources",
+)
+
+kotlin_library(
+    name = "example",
+    srcs = ["Example.kt"],
+    kotlin_compiler_plugins = {
+        ":plugin": {
+            "plugin:com.example.compilerplugin.test:newMethodName": "transformedMethod",
+            "plugin:com.example.compilerplugin.test:oldMethodName": "originalMethod",
+            "plugin:com.example.compilerplugin.test:outputDir": "__codegen_dir__",
+        },
+    },
+)
+
+kotlin_library(
+    name = "example_without_necessary_plugin",
+    srcs = ["Example.kt"],
+)
+
+kotlin_library(
+    name = "example_with_missing_options",
+    srcs = ["Example.kt"],
+    kotlin_compiler_plugins = {
+        ":plugin": {},
+    },
+)
+
+kotlin_library(
+    name = "example_with_wrong_options",
+    srcs = ["Example.kt"],
+    kotlin_compiler_plugins = {
+        ":plugin": {
+            "plugin:com.example.compilerplugin.test:newMethodName": "transformedMethod",
+            "plugin:com.example.compilerplugin.test:oldMethodName": "originalMethod",
+            "plugin:com.example.compilerplugin.test:outputDir": "__codegen_dir__",
+            "plugin:com.example.compilerplugin.test:wrongKey": "someValue",
+        },
+    },
+)
