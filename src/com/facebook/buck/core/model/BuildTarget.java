@@ -22,6 +22,7 @@ import com.facebook.buck.log.views.JsonViews;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
@@ -42,6 +43,13 @@ public class BuildTarget implements Comparable<BuildTarget>, DependencyStack.Ele
 
   private BuildTarget(
       UnconfiguredBuildTarget unconfiguredBuildTarget, TargetConfiguration targetConfiguration) {
+    if (targetConfiguration == ConfigurationForConfigurationTargets.INSTANCE) {
+      Preconditions.checkArgument(
+          unconfiguredBuildTarget.getFlavors().isEmpty(),
+          "configuration target must be unflavored: %s",
+          unconfiguredBuildTarget);
+    }
+
     this.unconfiguredBuildTarget = unconfiguredBuildTarget;
     this.targetConfiguration = targetConfiguration;
     this.hash = Objects.hash(unconfiguredBuildTarget, targetConfiguration);

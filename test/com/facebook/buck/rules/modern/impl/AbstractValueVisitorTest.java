@@ -279,6 +279,7 @@ public abstract class AbstractValueVisitorTest {
     @AddToRuleKey
     final BuildTarget target =
         someBuildTarget
+            .withoutFlavors()
             .getUnconfiguredBuildTarget()
             .configure(ConfigurationForConfigurationTargets.INSTANCE);
   }

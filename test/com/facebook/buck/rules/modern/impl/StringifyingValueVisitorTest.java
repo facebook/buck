@@ -233,8 +233,6 @@ public class StringifyingValueVisitorTest extends AbstractValueVisitorTest {
         "target:Optional<\n"
             + "  string(other)\n"
             + ">string(//some)string(target)SortedSet<\n"
-            + "  string(flavor1)\n"
-            + "  string(flavor2)\n"
             + ">configuration<configurationTarget>",
         stringify(new WithBuildTargetWithConfigurationForConfigurationTargets()));
   }
