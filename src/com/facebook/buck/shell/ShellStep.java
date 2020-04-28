@@ -110,13 +110,14 @@ public abstract class ShellStep implements Step {
     builder.setEnvironment(ImmutableMap.copyOf(environment));
     builder.setDirectory(context.getBuildCellRootPath().resolve(workingDirectory));
 
-    if (getStdin(context).isPresent()) {
+    Optional<String> stdin = getStdin(context);
+    if (stdin.isPresent()) {
       builder.setRedirectInput(ProcessBuilder.Redirect.PIPE);
     }
 
     double initialLoad = OS_JMX.getSystemLoadAverage();
     startTime = System.currentTimeMillis();
-    ProcessExecutor.Result result = launchAndInteractWithProcess(context, builder.build());
+    ProcessExecutor.Result result = launchAndInteractWithProcess(context, builder.build(), stdin);
     int exitCode = getExitCodeFromResult(context, result);
     endTime = System.currentTimeMillis();
     double endLoad = OS_JMX.getSystemLoadAverage();
@@ -170,7 +171,7 @@ public abstract class ShellStep implements Step {
 
   @VisibleForTesting
   ProcessExecutor.Result launchAndInteractWithProcess(
-      ExecutionContext context, ProcessExecutorParams params)
+      ExecutionContext context, ProcessExecutorParams params, Optional<String> stdin)
       throws InterruptedException, IOException {
     ImmutableSet.Builder<Option> options = ImmutableSet.builder();
 
@@ -179,7 +180,7 @@ public abstract class ShellStep implements Step {
     ProcessExecutor executor = context.getProcessExecutor();
     ProcessExecutor.Result result =
         executor.launchAndExecute(
-            params, options.build(), getStdin(context), getTimeout(), getTimeoutHandler(context));
+            params, options.build(), stdin, getTimeout(), getTimeoutHandler(context));
     stdout = result.getStdout();
     stderr = result.getStderr();
 

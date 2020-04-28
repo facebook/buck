@@ -209,7 +209,7 @@ public class ShellStepTest {
     FakeProcess process = new FakeProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.STANDARD_INFORMATION);
     ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
-    command.launchAndInteractWithProcess(context, params);
+    command.launchAndInteractWithProcess(context, params, Optional.empty());
     assertEquals(ERROR_MSG, console.getTextWrittenToStdErr());
   }
 
@@ -220,7 +220,7 @@ public class ShellStepTest {
     FakeProcess process = new FakeProcess(EXIT_FAILURE, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.SILENT);
     ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
-    command.launchAndInteractWithProcess(context, params);
+    command.launchAndInteractWithProcess(context, params, Optional.empty());
     assertEquals(ERROR_MSG, console.getTextWrittenToStdErr());
   }
 
@@ -231,7 +231,7 @@ public class ShellStepTest {
     FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.STANDARD_INFORMATION);
     ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
-    command.launchAndInteractWithProcess(context, params);
+    command.launchAndInteractWithProcess(context, params, Optional.empty());
     assertEquals("", console.getTextWrittenToStdErr());
   }
 
@@ -242,7 +242,7 @@ public class ShellStepTest {
     FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.SILENT);
     ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
-    command.launchAndInteractWithProcess(context, params);
+    command.launchAndInteractWithProcess(context, params, Optional.empty());
     assertEquals(ERROR_MSG, console.getTextWrittenToStdErr());
   }
 
@@ -253,7 +253,7 @@ public class ShellStepTest {
     FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.ALL);
     ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
-    command.launchAndInteractWithProcess(context, params);
+    command.launchAndInteractWithProcess(context, params, Optional.empty());
     assertEquals("", console.getTextWrittenToStdErr());
   }
 
@@ -297,7 +297,7 @@ public class ShellStepTest {
     FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.ALL);
     ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
-    command.launchAndInteractWithProcess(context, params);
+    command.launchAndInteractWithProcess(context, params, stdin);
     assertEquals(stdin.get(), process.getOutput());
   }
 
@@ -316,7 +316,7 @@ public class ShellStepTest {
     FakeProcess process = new FakeProcess(EXIT_SUCCESS, OUTPUT_MSG, ERROR_MSG);
     TestConsole console = new TestConsole(Verbosity.ALL);
     ExecutionContext context = createContext(ImmutableMap.of(params, process), console);
-    command.launchAndInteractWithProcess(context, params);
+    command.launchAndInteractWithProcess(context, params, stdin);
     assertEquals("", process.getOutput());
   }
 }
