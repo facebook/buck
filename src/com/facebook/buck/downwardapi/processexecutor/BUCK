@@ -1,0 +1,32 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+UTILS_SRCS = ["DownwardApiExecutionContext.java"]
+
+java_library(
+    name = "processexecutor",
+    srcs = glob(
+        ["*.java"],
+        exclude = UTILS_SRCS,
+    ),
+    visibility = ["PUBLIC"],
+    deps = [
+        ":utils",
+        "//src/com/facebook/buck/core/build/execution/context:context",
+        "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/downwardapi/processexecutor/handlers:handlers",
+        "//src/com/facebook/buck/downwardapi/protocol:protocol",
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/io/namedpipes:namedpipes",
+        "//src/com/facebook/buck/util:util",
+    ],
+)
+
+java_immutables_library(
+    name = "utils",
+    srcs = UTILS_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        "//src/com/facebook/buck/event:interfaces",
+        "//src/com/facebook/buck/util:util",
+    ],
+)
