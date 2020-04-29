@@ -30,7 +30,9 @@ import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -52,10 +54,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -74,6 +80,7 @@ class XctoolRunTestsStep implements Step {
       Executors.newSingleThreadScheduledExecutor();
   private static final String XCTOOL_ENV_VARIABLE_PREFIX = "XCTOOL_TEST_ENV_";
   private static final String FB_REFERENCE_IMAGE_DIR = "FB_REFERENCE_IMAGE_DIR";
+  private static final Locale LOCALE = Locale.US;
 
   private final ProjectFilesystem filesystem;
 
@@ -259,6 +266,7 @@ class XctoolRunTestsStep implements Step {
             .setEnvironment(env);
 
     Console console = context.getConsole();
+    ProcessExecutor processExecutor = context.getProcessExecutor();
     if (!testSelectorList.isEmpty()) {
       ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();
       if (isUsingXCodeBuildTool) {
@@ -275,7 +283,7 @@ class XctoolRunTestsStep implements Step {
       } else {
         int returnCode =
             listAndFilterTestsThenFormatXctoolParams(
-                context.getProcessExecutor(),
+                processExecutor,
                 console,
                 testSelectorList,
                 // Copy the entire xctool command and environment but add a -listTestsOnly arg.
@@ -293,7 +301,7 @@ class XctoolRunTestsStep implements Step {
       if (xctoolFilterParams.isEmpty()) {
         console.printBuildFailure(
             String.format(
-                Locale.US,
+                LOCALE,
                 "No tests found matching specified filter (%s)",
                 testSelectorList.getExplanation()));
         return StepExecutionResults.SUCCESS;
@@ -310,24 +318,26 @@ class XctoolRunTestsStep implements Step {
 
       acquireStutterLock(stutterLockIsNotified);
 
-      // Start the process.
-      ProcessExecutor.LaunchedProcess launchedProcess =
-          context.getProcessExecutor().launchProcess(processExecutorParams);
+      long timeoutInMillis = timeoutInMs.orElse(1000L);
 
+      // Start the process.
       int exitCode;
       String stderr;
-      try {
+      LaunchedProcess launchedProcess = null;
+      try (LaunchedProcess ignore =
+          launchedProcess = processExecutor.launchProcess(processExecutorParams)) {
         ProcessStdoutReader stdoutReader = new ProcessStdoutReader(launchedProcess);
         ProcessStderrReader stderrReader = new ProcessStderrReader(launchedProcess);
-        Thread stdoutReaderThread = new Thread(stdoutReader);
-        Thread stderrReaderThread = new Thread(stderrReader);
-        stdoutReaderThread.start();
-        stderrReaderThread.start();
-        exitCode =
-            waitForProcessAndGetExitCode(
-                context.getProcessExecutor(), launchedProcess, timeoutInMs);
-        stdoutReaderThread.join(timeoutInMs.orElse(1000L));
-        stderrReaderThread.join(timeoutInMs.orElse(1000L));
+
+        ExecutorService executorService =
+            MostExecutors.newMultiThreadExecutor(
+                getClass().getSimpleName() + "_process_output_readers", 2);
+        Future<?> stdoutFuture = executorService.submit(stdoutReader);
+        Future<?> stderrFuture = executorService.submit(stderrReader);
+
+        exitCode = waitForProcessAndGetExitCode(processExecutor, launchedProcess, timeoutInMs);
+        processOutputStreams(executorService, timeoutInMillis, stdoutFuture, stderrFuture);
+
         Optional<IOException> exception = stdoutReader.getException();
         if (exception.isPresent()) {
           throw exception.get();
@@ -335,18 +345,20 @@ class XctoolRunTestsStep implements Step {
         stderr = stderrReader.getStdErr();
         LOG.debug("Finished running command, exit code %d, stderr %s", exitCode, stderr);
       } finally {
-        context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
-        context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
+        if (launchedProcess != null) {
+          processExecutor.waitForLaunchedProcess(launchedProcess);
+        }
       }
 
       if (exitCode != StepExecutionResults.SUCCESS_EXIT_CODE) {
-        if (!stderr.isEmpty()) {
-          console.printErrorText(
-              String.format(Locale.US, "xctool failed with exit code %d: %s", exitCode, stderr));
+        String errorMessage;
+        if (stderr.isEmpty()) {
+          errorMessage = String.format(LOCALE, "xctool failed with exit code %d", exitCode);
         } else {
-          console.printErrorText(
-              String.format(Locale.US, "xctool failed with exit code %d", exitCode));
+          errorMessage =
+              String.format(LOCALE, "xctool failed with exit code %d: %s", exitCode, stderr);
         }
+        console.printErrorText(errorMessage);
       }
 
       return StepExecutionResult.builder()
@@ -354,18 +366,36 @@ class XctoolRunTestsStep implements Step {
           .setExecutedCommand(launchedProcess.getCommand())
           .setStderr(Optional.ofNullable(stderr))
           .build();
-
     } finally {
       releaseStutterLock(stutterLockIsNotified);
     }
   }
 
+  private void processOutputStreams(
+      ExecutorService executorService,
+      long timeoutInMillis,
+      Future<?> stdoutFuture,
+      Future<?> stderrFuture)
+      throws InterruptedException {
+
+    try {
+      stdoutFuture.get(timeoutInMillis, TimeUnit.MILLISECONDS);
+      stderrFuture.get(timeoutInMillis, TimeUnit.MILLISECONDS);
+    } catch (ExecutionException e) {
+      LOG.warn(e.getCause(), "Exception during reading stdout and stderr streams");
+    } catch (TimeoutException e) {
+      LOG.warn("Timeout during reading stdout and stderr streams.");
+    } finally {
+      MostExecutors.shutdown(executorService, timeoutInMillis, TimeUnit.MILLISECONDS);
+    }
+  }
+
   private class ProcessStdoutReader implements Runnable {
 
-    private final ProcessExecutor.LaunchedProcess launchedProcess;
+    private final LaunchedProcess launchedProcess;
     private Optional<IOException> exception = Optional.empty();
 
-    public ProcessStdoutReader(ProcessExecutor.LaunchedProcess launchedProcess) {
+    public ProcessStdoutReader(LaunchedProcess launchedProcess) {
       this.launchedProcess = launchedProcess;
     }
 
@@ -396,10 +426,10 @@ class XctoolRunTestsStep implements Step {
 
   private static class ProcessStderrReader implements Runnable {
 
-    private final ProcessExecutor.LaunchedProcess launchedProcess;
+    private final LaunchedProcess launchedProcess;
     private String stderr = "";
 
-    public ProcessStderrReader(ProcessExecutor.LaunchedProcess launchedProcess) {
+    public ProcessStderrReader(LaunchedProcess launchedProcess) {
       this.launchedProcess = launchedProcess;
     }
 
@@ -492,38 +522,38 @@ class XctoolRunTestsStep implements Step {
     LOG.debug("Filtering tests with selector list: %s", testSelectorList.getExplanation());
 
     LOG.debug("Listing tests with command: %s", listTestsOnlyParams);
-    ProcessExecutor.LaunchedProcess launchedProcess =
-        processExecutor.launchProcess(listTestsOnlyParams);
+    try (LaunchedProcess launchedProcess = processExecutor.launchProcess(listTestsOnlyParams)) {
 
-    ListTestsOnlyHandler listTestsOnlyHandler = new ListTestsOnlyHandler();
-    String stderr;
-    int listTestsResult;
-    try (InputStreamReader isr =
-            new InputStreamReader(launchedProcess.getStdout(), StandardCharsets.UTF_8);
-        BufferedReader br = new BufferedReader(isr);
-        InputStreamReader esr =
-            new InputStreamReader(launchedProcess.getStderr(), StandardCharsets.UTF_8);
-        BufferedReader ebr = new BufferedReader(esr)) {
-      XctoolOutputParsing.streamOutputFromReader(br, listTestsOnlyHandler);
-      stderr = CharStreams.toString(ebr).trim();
-      listTestsResult = processExecutor.waitForLaunchedProcess(launchedProcess).getExitCode();
-    }
-
-    if (listTestsResult != 0) {
-      if (!stderr.isEmpty()) {
-        console.printErrorText(
-            String.format(
-                Locale.US, "xctool failed with exit code %d: %s", listTestsResult, stderr));
-      } else {
-        console.printErrorText(
-            String.format(Locale.US, "xctool failed with exit code %d", listTestsResult));
+      ListTestsOnlyHandler listTestsOnlyHandler = new ListTestsOnlyHandler();
+      String stderr;
+      int listTestsResult;
+      try (InputStreamReader isr =
+              new InputStreamReader(launchedProcess.getStdout(), StandardCharsets.UTF_8);
+          BufferedReader br = new BufferedReader(isr);
+          InputStreamReader esr =
+              new InputStreamReader(launchedProcess.getStderr(), StandardCharsets.UTF_8);
+          BufferedReader ebr = new BufferedReader(esr)) {
+        XctoolOutputParsing.streamOutputFromReader(br, listTestsOnlyHandler);
+        stderr = CharStreams.toString(ebr).trim();
+        listTestsResult = processExecutor.waitForLaunchedProcess(launchedProcess).getExitCode();
       }
-    } else {
-      formatXctoolFilterParams(
-          testSelectorList, listTestsOnlyHandler.testTargetsToDescriptions, filterParamsBuilder);
-    }
 
-    return listTestsResult;
+      if (listTestsResult != 0) {
+        if (!stderr.isEmpty()) {
+          console.printErrorText(
+              String.format(
+                  LOCALE, "xctool failed with exit code %d: %s", listTestsResult, stderr));
+        } else {
+          console.printErrorText(
+              String.format(LOCALE, "xctool failed with exit code %d", listTestsResult));
+        }
+      } else {
+        formatXctoolFilterParams(
+            testSelectorList, listTestsOnlyHandler.testTargetsToDescriptions, filterParamsBuilder);
+      }
+
+      return listTestsResult;
+    }
   }
 
   private static void formatXctoolFilterParams(
@@ -603,9 +633,7 @@ class XctoolRunTestsStep implements Step {
   }
 
   private static int waitForProcessAndGetExitCode(
-      ProcessExecutor processExecutor,
-      ProcessExecutor.LaunchedProcess launchedProcess,
-      Optional<Long> timeoutInMs)
+      ProcessExecutor processExecutor, LaunchedProcess launchedProcess, Optional<Long> timeoutInMs)
       throws InterruptedException {
     int processExitCode;
     if (timeoutInMs.isPresent()) {

@@ -29,7 +29,9 @@ import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.concurrent.MostExecutors;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
@@ -49,10 +51,14 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Runs {@code idb} on one or more logic, ui or application tests */
@@ -62,6 +68,8 @@ public class IdbRunTestsStep implements Step {
   private static final ScheduledExecutorService stutterTimeoutExecutorService =
       Executors.newSingleThreadScheduledExecutor();
   private static final Logger LOG = Logger.get(IdbRunTestsStep.class);
+
+  private static final Locale LOCALE = Locale.US;
 
   private enum TestTypeEnum {
     LOGIC,
@@ -249,15 +257,14 @@ public class IdbRunTestsStep implements Step {
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder().setCommand(installCommand).build();
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
+    ProcessExecutor processExecutor = context.getProcessExecutor();
     ProcessExecutor.Result result =
-        context
-            .getProcessExecutor()
-            .launchAndExecute(
-                processExecutorParams,
-                options,
-                /* stdin */ Optional.empty(),
-                /* timeOutMs */ Optional.empty(),
-                /* timeOutHandler */ Optional.empty());
+        processExecutor.launchAndExecute(
+            processExecutorParams,
+            options,
+            /* stdin */ Optional.empty(),
+            /* timeOutMs */ Optional.empty(),
+            /* timeOutHandler */ Optional.empty());
 
     // Getting the result of the test
     if (result.getExitCode() != 0) {
@@ -275,7 +282,7 @@ public class IdbRunTestsStep implements Step {
 
     // Booting the simulator for the test (if not mac)
     AppleDeviceController appleDeviceController =
-        new AppleDeviceController(context.getProcessExecutor(), idbPath);
+        new AppleDeviceController(processExecutor, idbPath);
     if (deviceUdid.isPresent() && sdkName.contains("iphone")) {
       appleDeviceController.bootSimulator(deviceUdid.get());
     }
@@ -319,7 +326,7 @@ public class IdbRunTestsStep implements Step {
       ImmutableList.Builder<String> idbFilterParamsBuilder = ImmutableList.builder();
       int returnCode =
           listAndFilterTestThenFormatIdbParams(
-              context.getProcessExecutor(), testSelectorList, idbFilterParamsBuilder);
+              processExecutor, testSelectorList, idbFilterParamsBuilder);
       if (returnCode != 0) {
         console.printErrorText("Failed to query tests with idb");
         return StepExecutionResult.of(returnCode);
@@ -328,7 +335,7 @@ public class IdbRunTestsStep implements Step {
       if (idbFilterParams.isEmpty()) {
         console.printBuildFailure(
             String.format(
-                Locale.US,
+                LOCALE,
                 "No tests found matching specified filter (%s)",
                 testSelectorList.getExplanation()));
         return StepExecutionResults.SUCCESS;
@@ -357,24 +364,25 @@ public class IdbRunTestsStep implements Step {
 
       acquireStutterLock(stutterLockIsNotified);
 
+      long timeoutInMillis = timeoutInMs.orElse(1000L);
       // Start the process.
-      ProcessExecutor.LaunchedProcess launchedProcess =
-          context.getProcessExecutor().launchProcess(processExecutorParams);
 
       int exitCode;
       String stderr;
-      try {
+      LaunchedProcess launchedProcess = null;
+      try (LaunchedProcess ignore =
+          launchedProcess = processExecutor.launchProcess(processExecutorParams)) {
         ProcessStdoutReader stdoutReader = new ProcessStdoutReader(launchedProcess);
         ProcessStderrReader stderrReader = new ProcessStderrReader(launchedProcess);
-        Thread stdoutReaderThread = new Thread(stdoutReader);
-        Thread stderrReaderThread = new Thread(stderrReader);
-        stdoutReaderThread.start();
-        stderrReaderThread.start();
-        exitCode =
-            waitForProcessAndGetExitCode(
-                context.getProcessExecutor(), launchedProcess, timeoutInMs);
-        stdoutReaderThread.join(timeoutInMs.orElse(1000L));
-        stderrReaderThread.join(timeoutInMs.orElse(1000L));
+        ExecutorService executorService =
+            MostExecutors.newMultiThreadExecutor(
+                getClass().getSimpleName() + "_process_output_readers", 2);
+        Future<?> stdoutFuture = executorService.submit(stdoutReader);
+        Future<?> stderrFuture = executorService.submit(stderrReader);
+
+        exitCode = waitForProcessAndGetExitCode(processExecutor, launchedProcess, timeoutInMs);
+        processOutputStreams(executorService, timeoutInMillis, stdoutFuture, stderrFuture);
+
         Optional<IOException> exception = stdoutReader.getException();
         if (exception.isPresent()) {
           throw exception.get();
@@ -382,18 +390,20 @@ public class IdbRunTestsStep implements Step {
         stderr = stderrReader.getStdErr();
         LOG.debug("Finished running command, exit code %d, stderr %s", exitCode, stderr);
       } finally {
-        context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
-        context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
+        if (launchedProcess != null) {
+          processExecutor.waitForLaunchedProcess(launchedProcess);
+        }
       }
 
       if (exitCode != StepExecutionResults.SUCCESS_EXIT_CODE) {
-        if (!stderr.isEmpty()) {
-          console.printErrorText(
-              String.format(Locale.US, "idb failed with exit code %d: %s", exitCode, stderr));
+        String errorMessage;
+        if (stderr.isEmpty()) {
+          errorMessage = String.format(LOCALE, "idb failed with exit code %d", exitCode);
         } else {
-          console.printErrorText(
-              String.format(Locale.US, "idb failed with exit code %d", exitCode));
+          errorMessage =
+              String.format(LOCALE, "idb failed with exit code %d: %s", exitCode, stderr);
         }
+        console.printErrorText(errorMessage);
       }
 
       return StepExecutionResult.builder()
@@ -401,18 +411,36 @@ public class IdbRunTestsStep implements Step {
           .setExecutedCommand(launchedProcess.getCommand())
           .setStderr(Optional.ofNullable(stderr))
           .build();
-
     } finally {
       releaseStutterLock(stutterLockIsNotified);
     }
   }
 
+  private void processOutputStreams(
+      ExecutorService executorService,
+      long timeoutInMillis,
+      Future<?> stdoutFuture,
+      Future<?> stderrFuture)
+      throws InterruptedException {
+
+    try {
+      stdoutFuture.get(timeoutInMillis, TimeUnit.MILLISECONDS);
+      stderrFuture.get(timeoutInMillis, TimeUnit.MILLISECONDS);
+    } catch (ExecutionException e) {
+      LOG.warn(e.getCause(), "Exception during reading stdout and stderr streams");
+    } catch (TimeoutException e) {
+      LOG.warn("Timeout during reading stdout and stderr streams.");
+    } finally {
+      MostExecutors.shutdown(executorService, timeoutInMillis, TimeUnit.MILLISECONDS);
+    }
+  }
+
   private class ProcessStdoutReader implements Runnable {
 
-    private final ProcessExecutor.LaunchedProcess launchedProcess;
+    private final LaunchedProcess launchedProcess;
     private Optional<IOException> exception = Optional.empty();
 
-    public ProcessStdoutReader(ProcessExecutor.LaunchedProcess launchedProcess) {
+    public ProcessStdoutReader(LaunchedProcess launchedProcess) {
       this.launchedProcess = launchedProcess;
     }
 
@@ -443,10 +471,10 @@ public class IdbRunTestsStep implements Step {
 
   private static class ProcessStderrReader implements Runnable {
 
-    private final ProcessExecutor.LaunchedProcess launchedProcess;
+    private final LaunchedProcess launchedProcess;
     private String stderr = "";
 
-    public ProcessStderrReader(ProcessExecutor.LaunchedProcess launchedProcess) {
+    public ProcessStderrReader(LaunchedProcess launchedProcess) {
       this.launchedProcess = launchedProcess;
     }
 
@@ -467,9 +495,7 @@ public class IdbRunTestsStep implements Step {
   }
 
   private static int waitForProcessAndGetExitCode(
-      ProcessExecutor processExecutor,
-      ProcessExecutor.LaunchedProcess launchedProcess,
-      Optional<Long> timeoutInMs)
+      ProcessExecutor processExecutor, LaunchedProcess launchedProcess, Optional<Long> timeoutInMs)
       throws InterruptedException {
     int processExitCode;
     if (timeoutInMs.isPresent()) {

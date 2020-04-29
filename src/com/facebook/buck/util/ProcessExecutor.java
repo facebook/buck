@@ -108,9 +108,6 @@ public interface ProcessExecutor {
   LaunchedProcess launchProcess(ProcessExecutorParams params, ImmutableMap<String, String> context)
       throws IOException;
 
-  /** Terminates a process previously returned by {@link #launchProcess(ProcessExecutorParams)}. */
-  void destroyLaunchedProcess(LaunchedProcess launchedProcess);
-
   /**
    * Blocks while waiting for a process previously returned by {@link
    * #launchProcess(ProcessExecutorParams)} to exit, then returns the exit code of the process.
@@ -158,7 +155,7 @@ public interface ProcessExecutor {
   }
 
   /** Represents a running process returned by {@link #launchProcess(ProcessExecutorParams)}. */
-  interface LaunchedProcess {
+  interface LaunchedProcess extends AutoCloseable {
 
     /** @return false if process is killed, or true if it is alive. */
     boolean isAlive();
@@ -175,6 +172,10 @@ public interface ProcessExecutor {
 
     /** Input stream that maps into stderr of the process. You'd read process' stderr from it. */
     InputStream getStderr();
+
+    /** Terminates a running process. */
+    @Override
+    void close();
   }
 
   /**

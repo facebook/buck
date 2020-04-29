@@ -23,7 +23,9 @@ import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
@@ -119,41 +121,41 @@ class XctestRunTestsStep implements Step {
     LOG.debug("xctest command: %s", Joiner.on(" ").join(params.getCommand()));
 
     ProcessExecutor executor = context.getProcessExecutor();
-    ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params);
+    try (LaunchedProcess launchedProcess = executor.launchProcess(params)) {
 
-    int exitCode;
-    try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
-        TeeInputStream outputWrapperStream =
-            new TeeInputStream(launchedProcess.getStdout(), outputStream)) {
-      if (outputReadingCallback.isPresent()) {
-        // The caller is responsible for reading all the data, which TeeInputStream will
-        // copy to outputStream.
-        outputReadingCallback.get().readOutput(outputWrapperStream);
-      } else {
-        // Nobody's going to read from outputWrapperStream, so close it and copy
-        // the process's stdout and stderr to outputPath directly.
-        outputWrapperStream.close();
-        ByteStreams.copy(launchedProcess.getStdout(), outputStream);
+      int exitCode;
+      try (OutputStream outputStream = filesystem.newFileOutputStream(outputPath);
+          TeeInputStream outputWrapperStream =
+              new TeeInputStream(launchedProcess.getStdout(), outputStream)) {
+        if (outputReadingCallback.isPresent()) {
+          // The caller is responsible for reading all the data, which TeeInputStream will
+          // copy to outputStream.
+          outputReadingCallback.get().readOutput(outputWrapperStream);
+        } else {
+          // Nobody's going to read from outputWrapperStream, so close it and copy
+          // the process's stdout and stderr to outputPath directly.
+          outputWrapperStream.close();
+          ByteStreams.copy(launchedProcess.getStdout(), outputStream);
+        }
+        exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
+        LOG.debug("Finished running command, exit code %d", exitCode);
+
+        // There's no way to distinguish a test failure from an xctest issue. We don't
+        // want to fail the step on a test failure, so return 0 for any xctest exit code.
+        exitCode = 0;
+      } finally {
+        launchedProcess.close();
+        executor.waitForLaunchedProcess(launchedProcess);
       }
-      exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
 
-      // There's no way to distinguish a test failure from an xctest issue. We don't
-      // want to fail the step on a test failure, so return 0 for any xctest exit code.
-      exitCode = 0;
+      if (exitCode != StepExecutionResults.SUCCESS_EXIT_CODE) {
+        context
+            .getConsole()
+            .printErrorText(String.format(Locale.US, "xctest failed with exit code %d", exitCode));
+      }
 
-      LOG.debug("Finished running command, exit code %d", exitCode);
-    } finally {
-      context.getProcessExecutor().destroyLaunchedProcess(launchedProcess);
-      context.getProcessExecutor().waitForLaunchedProcess(launchedProcess);
+      return StepExecutionResult.of(exitCode);
     }
-
-    if (exitCode != 0) {
-      context
-          .getConsole()
-          .printErrorText(String.format(Locale.US, "xctest failed with exit code %d", exitCode));
-    }
-
-    return StepExecutionResult.of(exitCode);
   }
 
   @Override

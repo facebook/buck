@@ -19,6 +19,7 @@ package com.facebook.buck.android.relinker;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.collect.ImmutableList;
@@ -195,13 +196,14 @@ public class Symbols {
             .setCommand(args)
             .setRedirectError(ProcessBuilder.Redirect.INHERIT)
             .build();
-    ProcessExecutor.LaunchedProcess p = executor.launchProcess(params);
-    BufferedReader output = new BufferedReader(new InputStreamReader(p.getStdout()));
-    CharStreams.readLines(output, lineProcessor);
-    ProcessExecutor.Result result = executor.waitForLaunchedProcess(p);
-
-    if (result.getExitCode() != 0) {
-      throw new RuntimeException(result.getMessageForUnexpectedResult("Objdump"));
+    try (LaunchedProcess launchedProcess = executor.launchProcess(params);
+        BufferedReader output =
+            new BufferedReader(new InputStreamReader(launchedProcess.getStdout()))) {
+      CharStreams.readLines(output, lineProcessor);
+      ProcessExecutor.Result result = executor.waitForLaunchedProcess(launchedProcess);
+      if (result.getExitCode() != 0) {
+        throw new RuntimeException(result.getMessageForUnexpectedResult("Objdump"));
+      }
     }
   }
 }

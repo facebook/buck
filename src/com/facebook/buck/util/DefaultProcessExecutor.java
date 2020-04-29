@@ -124,12 +124,6 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   }
 
   @Override
-  public void destroyLaunchedProcess(LaunchedProcess launchedProcess) {
-    checkState(launchedProcess instanceof LaunchedProcessImpl);
-    ((LaunchedProcessImpl) launchedProcess).process.destroy();
-  }
-
-  @Override
   public Result waitForLaunchedProcess(LaunchedProcess launchedProcess)
       throws InterruptedException {
     checkState(launchedProcess instanceof LaunchedProcessImpl);
@@ -192,6 +186,20 @@ public class DefaultProcessExecutor implements ProcessExecutor {
    */
   @Override
   public Result execute(
+      LaunchedProcess launchedProcess,
+      Set<Option> options,
+      Optional<String> stdin,
+      Optional<Long> timeOutMs,
+      Optional<Consumer<Process>> timeOutHandler)
+      throws InterruptedException {
+    try {
+      return getExecutionResult(launchedProcess, options, stdin, timeOutMs, timeOutHandler);
+    } finally {
+      launchedProcess.close();
+    }
+  }
+
+  private Result getExecutionResult(
       LaunchedProcess launchedProcess,
       Set<Option> options,
       Optional<String> stdin,
@@ -342,6 +350,11 @@ public class DefaultProcessExecutor implements ProcessExecutor {
     @Override
     public InputStream getStderr() {
       return process.getErrorStream();
+    }
+
+    @Override
+    public void close() {
+      process.destroy();
     }
   }
 }

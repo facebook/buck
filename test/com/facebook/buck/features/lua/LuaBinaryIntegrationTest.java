@@ -121,10 +121,11 @@ public class LuaBinaryIntegrationTest {
             .setRedirectInput(ProcessBuilder.Redirect.PIPE)
             .build();
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
-    ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params);
-    launchedProcess.getStdin().close();
-    int exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
-    luaDevel = exitCode == 0;
+    try (ProcessExecutor.LaunchedProcess launchedProcess = executor.launchProcess(params)) {
+      launchedProcess.getStdin().close();
+      int exitCode = executor.waitForLaunchedProcess(launchedProcess).getExitCode();
+      luaDevel = exitCode == 0;
+    }
     if (starterType == LuaBinaryDescription.StarterType.NATIVE) {
       assumeTrue("Lua devel package required for native starter", luaDevel);
     }

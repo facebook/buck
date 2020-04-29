@@ -56,4 +56,9 @@ public abstract class DelegateLaunchedProcess implements ProcessExecutor.Launche
   public InputStream getStderr() {
     return delegate.getStderr();
   }
+
+  @Override
+  public void close() {
+    delegate.close();
+  }
 }

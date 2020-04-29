@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.ProcessExecutor;
+import com.facebook.buck.util.ProcessExecutor.LaunchedProcess;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
@@ -46,7 +47,7 @@ public class WorkerProcess implements Closeable {
   private final AtomicInteger currentMessageID = new AtomicInteger();
   private boolean handshakePerformed = false;
   @Nullable private WorkerProcessProtocol.CommandSender protocol;
-  @Nullable private ProcessExecutor.LaunchedProcess launchedProcess;
+  @Nullable private LaunchedProcess launchedProcess;
 
   /**
    * Worker process is a process that stays alive and receives commands which describe jobs. Worker
@@ -94,7 +95,7 @@ public class WorkerProcess implements Closeable {
             stdErr,
             () -> {
               if (launchedProcess != null) {
-                executor.destroyLaunchedProcess(launchedProcess);
+                launchedProcess.close();
               }
             },
             () -> launchedProcess != null && launchedProcess.isAlive());

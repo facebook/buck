@@ -80,12 +80,13 @@ public class CxxDependentOnPyTestEndToEndTest {
   @Test
   public void interruptTestsGracefully(EndToEndTestDescriptor test, EndToEndWorkspace workspace)
       throws Exception {
-    LaunchedProcess launchedProcess = workspace.launchBuckCommandProcess(test);
+    try (LaunchedProcess launchedProcess = workspace.launchBuckCommandProcess(test)) {
 
-    assertFileExists(workspace, "started_neverending_test_runner.txt", 25);
+      assertFileExists(workspace, "started_neverending_test_runner.txt", 25);
 
-    workspace.sendSigInt(launchedProcess);
-    Assert.assertTrue(workspace.waitForProcess(launchedProcess));
-    assertFileExists(workspace, "signal_cancelled_runner.txt", 5);
+      workspace.sendSigInt(launchedProcess);
+      Assert.assertTrue(workspace.waitForProcess(launchedProcess));
+      assertFileExists(workspace, "signal_cancelled_runner.txt", 5);
+    }
   }
 }

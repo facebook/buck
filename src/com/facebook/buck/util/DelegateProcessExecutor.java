@@ -34,11 +34,6 @@ public abstract class DelegateProcessExecutor implements ProcessExecutor {
   }
 
   @Override
-  public void destroyLaunchedProcess(LaunchedProcess launchedProcess) {
-    delegate.destroyLaunchedProcess(launchedProcess);
-  }
-
-  @Override
   public Result waitForLaunchedProcess(LaunchedProcess launchedProcess)
       throws InterruptedException {
     return delegate.waitForLaunchedProcess(launchedProcess);
