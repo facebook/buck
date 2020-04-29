@@ -113,6 +113,15 @@ class DefaultIjModuleFactoryResolver implements IjModuleFactoryResolver {
   }
 
   @Override
+  public Optional<Path> getResourceAndroidManifestPath(
+      TargetNode<AndroidResourceDescriptionArg> targetNode) {
+    Optional<SourcePath> manifestPath = targetNode.getConstructorArg().getManifest();
+    return manifestPath
+        .map(sourcePathResolver::getAbsolutePath)
+        .map(path -> projectFilesystem.relativize(path).getPath());
+  }
+
+  @Override
   public Optional<Path> getProguardConfigPath(TargetNode<AndroidBinaryDescriptionArg> targetNode) {
     return targetNode
         .getConstructorArg()

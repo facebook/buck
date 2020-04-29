@@ -713,6 +713,12 @@ public class DefaultIjModuleFactoryTest {
               }
 
               @Override
+              public Optional<Path> getResourceAndroidManifestPath(
+                  TargetNode<AndroidResourceDescriptionArg> targetNode) {
+                return Optional.empty();
+              }
+
+              @Override
               public Optional<Path> getProguardConfigPath(
                   TargetNode<AndroidBinaryDescriptionArg> targetNode) {
                 return Optional.empty();

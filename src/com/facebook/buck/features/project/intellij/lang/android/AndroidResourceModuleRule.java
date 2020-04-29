@@ -39,11 +39,14 @@ import java.util.Optional;
 
 public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResourceDescriptionArg> {
 
+  private final AndroidManifestParser androidManifestParser;
+
   public AndroidResourceModuleRule(
       ProjectFilesystem projectFilesystem,
       IjModuleFactoryResolver moduleFactoryResolver,
       IjProjectConfig projectConfig) {
     super(projectFilesystem, moduleFactoryResolver, projectConfig, AndroidProjectType.LIBRARY);
+    androidManifestParser = new AndroidManifestParser(projectFilesystem);
   }
 
   @Override
@@ -83,6 +86,16 @@ public class AndroidResourceModuleRule extends AndroidModuleRule<AndroidResource
     }
 
     androidFacetBuilder.setPackageName(target.getConstructorArg().getPackage());
+
+    moduleFactoryResolver
+        .getResourceAndroidManifestPath(target)
+        .ifPresent(
+            manifestPath -> {
+              androidFacetBuilder.addManifestPaths(manifestPath);
+              androidManifestParser
+                  .parseMinSdkVersion(manifestPath)
+                  .ifPresent(androidFacetBuilder::addMinSdkVersions);
+            });
 
     Optional<Path> dummyRDotJavaClassPath = moduleFactoryResolver.getDummyRDotJavaPath(target);
     if (dummyRDotJavaClassPath.isPresent()) {
