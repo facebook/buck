@@ -25,7 +25,7 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.Printer;
 
 /**
  * Represents a list of output files.
@@ -52,7 +52,7 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
   public abstract boolean getAllowEmpty();
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<attr.output_list>");
   }
 

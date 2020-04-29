@@ -20,24 +20,24 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Ordering;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
 /**
  * Marks a Java object as accessible by Skylark as a struct-like object called {@link ClassObject}.
- * This also marks it as a {@link SkylarkValue}.
+ * This also marks it as a {@link StarlarkValue}.
  *
  * <p>A struct like object is an object containing fields accessible via the dot syntax, like {@code
  * obj.field}.
  *
  * <p>We currently do not support method calls.
  */
-public abstract class BuckStarlarkStructObject implements ClassObject, SkylarkValue {
+public abstract class BuckStarlarkStructObject implements ClassObject, StarlarkValue {
 
   private @Nullable ImmutableMap<String, Method> values;
 
@@ -51,7 +51,7 @@ public abstract class BuckStarlarkStructObject implements ClassObject, SkylarkVa
       }
 
       // TODO: make mappings for skylark types here: e.g Optionals -> Starlark.NONE.
-      // SkylarkList/Dict
+      // StarlarkList/Dict
       // conversions.
       return method.invoke(this);
     } catch (IllegalAccessException | InvocationTargetException e) {
@@ -81,7 +81,7 @@ public abstract class BuckStarlarkStructObject implements ClassObject, SkylarkVa
   }
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     boolean first = true;
     printer.format("%s(", getDeclaredClass());
     // Sort by key to ensure deterministic output.

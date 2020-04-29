@@ -34,8 +34,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -81,19 +81,19 @@ public class SkylarkRuleContextActionsTest {
     Artifact artifact2 = actions.declareFile("bar2.sh", testLocation);
 
     actions.run(
-        SkylarkList.createImmutable(
+        StarlarkList.immutableCopyOf(
             ImmutableList.of(artifact1.asSkylarkOutputArtifact(Location.BUILTIN))),
         Starlark.NONE,
         Starlark.NONE,
         Location.BUILTIN);
     actions.run(
-        SkylarkList.createImmutable(
+        StarlarkList.immutableCopyOf(
             ImmutableList.of("echo", artifact2.asSkylarkOutputArtifact(Location.BUILTIN))),
         Starlark.NONE,
         Starlark.NONE,
         Location.BUILTIN);
     actions.run(
-        SkylarkList.createImmutable(ImmutableList.of(artifact1)),
+        StarlarkList.immutableCopyOf(ImmutableList.of(artifact1)),
         "some script",
         Starlark.NONE,
         Location.BUILTIN);

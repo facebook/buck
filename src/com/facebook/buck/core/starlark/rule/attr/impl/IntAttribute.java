@@ -21,7 +21,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.Printer;
 import java.util.List;
 
 /** Class that represents an Integer attribute to a user defined rule */
@@ -44,7 +44,7 @@ public abstract class IntAttribute extends Attribute<Integer> {
   abstract List<Integer> getValues();
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<attr.int>");
   }
 

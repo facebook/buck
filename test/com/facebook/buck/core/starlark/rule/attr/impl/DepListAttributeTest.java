@@ -44,7 +44,7 @@ import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import java.nio.file.Paths;
 import java.util.List;
 import org.junit.Rule;
@@ -222,11 +222,9 @@ public class DepListAttributeTest {
     Artifact buildArtifact4 = registry2.declareArtifact(Paths.get("out4"));
 
     ImmutableDefaultInfo defaultInfo1 =
-        new ImmutableDefaultInfo(
-            SkylarkDict.empty(), ImmutableList.of(buildArtifact1, buildArtifact2));
+        new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(buildArtifact1, buildArtifact2));
     ImmutableDefaultInfo defaultInfo2 =
-        new ImmutableDefaultInfo(
-            SkylarkDict.empty(), ImmutableList.of(buildArtifact3, buildArtifact4));
+        new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(buildArtifact3, buildArtifact4));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
         ImmutableMap.of(

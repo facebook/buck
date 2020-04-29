@@ -19,16 +19,16 @@ package com.facebook.buck.core.starlark.compatible;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.profiler.Profiler;
 import com.google.devtools.build.lib.profiler.ProfilerTask;
 import com.google.devtools.build.lib.profiler.SilentCloseable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.CallUtils;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodDescriptor;
+import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkCallable;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -205,7 +205,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
                     + ")");
           }
         }
-        if (!EvalUtils.isSkylarkAcceptable(result.getClass())) {
+        if (!Starlark.valid(result)) {
           throw new EvalException(
               ast.getLocation(),
               String.format(
@@ -230,7 +230,7 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
   }
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<built-in function " + methodDescriptor.getName() + ">");
   }
 
@@ -254,6 +254,12 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
     return result;
   }
 
+  @Override
+  public Location getLocation() {
+    return Location.BUILTIN;
+  }
+
+  @Override
   public String getName() {
     return getMethodDescriptor().getName();
   }

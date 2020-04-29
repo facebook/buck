@@ -45,10 +45,11 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.syntax.BaseFunction;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Sequence;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
 import java.util.List;
@@ -99,7 +100,7 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
       }
 
       List<SkylarkProviderInfo> returnedProviders =
-          SkylarkList.castSkylarkListOrNoneToList(implResult, SkylarkProviderInfo.class, null);
+          Sequence.castSkylarkListOrNoneToList(implResult, SkylarkProviderInfo.class, null);
 
       // TODO: Verify that we get providers back, validate types, etc, etc
       return getProviderInfos(returnedProviders, ImmutableSet.of(), ctx, implementation, args);
@@ -115,6 +116,13 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
   @Override
   public String getRuleName(SkylarkDescriptionArg args) {
     return args.getRule().getName();
+  }
+
+  private static String getFullName(BaseFunction function) {
+    return (function.getClass() != null
+            ? EvalUtils.getDataTypeNameFromClass(function.getClass(), false) + "."
+            : "")
+        + function.getName();
   }
 
   private ProviderInfoCollection getProviderInfos(
@@ -149,7 +157,7 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
       if (outputs.isEmpty()) {
         outputs = ctx.getOutputs();
       }
-      suppliedDefaultInfo = new ImmutableDefaultInfo(SkylarkDict.empty(), outputs);
+      suppliedDefaultInfo = new ImmutableDefaultInfo(Dict.empty(), outputs);
     }
     if (inferRunInfo) {
       if (suppliedRunInfo != null) {
@@ -160,7 +168,7 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
                     + "explicitly returned. Either remove RunInfo from the returned values and "
                     + "allow Buck to infer a RunInfo value, or remove `infer_run_info` from the "
                     + "`rule()` declaration",
-                implementation.getFullName(), ctx.getLabel()));
+                getFullName(implementation), ctx.getLabel()));
       }
       if (suppliedDefaultInfo.defaultOutputs().size() != 1) {
         throw new EvalException(
@@ -169,7 +177,7 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
                 "Rule %s for %s specified `infer_run_info`, but a RunInfo provider could not be "
                     + "inferred. This provider can only be inferred if the rule returns a single "
                     + "default output in DefaultInfo, rather than %s outputs",
-                implementation.getFullName(),
+                getFullName(implementation),
                 ctx.getLabel(),
                 suppliedDefaultInfo.defaultOutputs().size()));
       }
@@ -205,7 +213,7 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
                   "Rule %s for %s was marked as a test rule, but did not return a RunInfo object. "
                       + "Either set `infer_run_info` to True to make Buck infer a RunInfo instance, "
                       + "or return a RunInfo instance from your implementation function",
-                  implementation.getFullName(), ctx.getLabel()));
+                  getFullName(implementation), ctx.getLabel()));
         }
         infos.put(suppliedTestInfo);
       } else {
@@ -215,7 +223,7 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
                 "Rule %s for %s was not marked as a test rule, but returned a TestInfo provider. "
                     + "Please mark it as a test rule so that the rule() call, and the return value "
                     + "are consistent.",
-                implementation.getFullName(), ctx.getLabel()));
+                getFullName(implementation), ctx.getLabel()));
       }
     }
 

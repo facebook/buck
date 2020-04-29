@@ -18,7 +18,7 @@ package com.facebook.buck.core.rules.analysis.impl;
 
 import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.Printer;
 
 public class FakeInfo implements ProviderInfo<FakeInfo> {
 
@@ -39,7 +39,7 @@ public class FakeInfo implements ProviderInfo<FakeInfo> {
   }
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<FakeInfo>");
   }
 

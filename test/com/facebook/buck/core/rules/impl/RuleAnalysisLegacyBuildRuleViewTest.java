@@ -67,10 +67,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.IOException;
@@ -347,14 +347,14 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
       ImmutableMap<String, ImmutableList<Artifact>> namedOutputs,
       ImmutableList<Artifact> defaultOutputs)
       throws EvalException {
-    SkylarkDict<String, ImmutableList<Artifact>> dict;
+    Dict<String, ImmutableList<Artifact>> dict;
     try (Mutability mutability = Mutability.create("test")) {
       StarlarkThread env =
           StarlarkThread.builder(mutability)
               .setGlobals(Module.createForBuiltins(Starlark.UNIVERSE))
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .build();
-      dict = SkylarkDict.of(env);
+      dict = Dict.of(env.mutability());
       for (Map.Entry<String, ImmutableList<Artifact>> entry : namedOutputs.entrySet()) {
         dict.put(entry.getKey(), entry.getValue(), Location.BUILTIN);
       }

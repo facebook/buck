@@ -39,7 +39,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import java.nio.file.Path;
 import org.immutables.value.Value;
 
@@ -113,7 +113,7 @@ public class CsharpLibraryDescription
         new ImmutableDotnetLibraryProviderInfo(output);
     return ProviderInfoCollectionImpl.builder()
         .put(dotNetProvider)
-        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(output)));
+        .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(output)));
   }
 
   @RuleArg

@@ -40,10 +40,10 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
@@ -114,11 +114,10 @@ public class SkylarkDescriptionTest {
                 ctx.getActions().write(f, "content", false, Location.BUILTIN);
                 Artifact g = ctx.getActions().declareFile("baz2.sh", Location.BUILTIN);
                 ctx.getActions().write(g, "content", false, Location.BUILTIN);
-                return SkylarkList.createImmutable(
+                return StarlarkList.immutableCopyOf(
                     ImmutableList.of(
                         new ImmutableDefaultInfo(
-                            SkylarkDict.empty(),
-                            SkylarkList.createImmutable(ImmutableList.of(f)))));
+                            Dict.empty(), StarlarkList.immutableCopyOf(ImmutableList.of(f)))));
               } catch (EvalException e) {
                 throw new RuntimeException(e);
               }

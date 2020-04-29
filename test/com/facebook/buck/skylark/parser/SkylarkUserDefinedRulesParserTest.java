@@ -233,7 +233,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'sequence of strings'");
+        eventCollector, parser, buildFile, "expected value of type 'list of strings'");
   }
 
   @Test
@@ -325,7 +325,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'sequence of strings'");
+        eventCollector, parser, buildFile, "expected value of type 'list of strings'");
   }
 
   @Test
@@ -367,7 +367,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'sequence of strings'");
+        eventCollector, parser, buildFile, "expected value of type 'list of strings'");
   }
 
   @Test
@@ -391,8 +391,7 @@ public class SkylarkUserDefinedRulesParserTest {
 
     parser = createParser(eventCollector);
 
-    assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'sequence of ints'");
+    assertParserFails(eventCollector, parser, buildFile, "expected value of type 'list of ints'");
   }
 
   @Test
@@ -459,7 +458,7 @@ public class SkylarkUserDefinedRulesParserTest {
     parser = createParser(eventCollector);
 
     assertParserFails(
-        eventCollector, parser, buildFile, "expected value of type 'sequence of strings'");
+        eventCollector, parser, buildFile, "expected value of type 'list of strings'");
   }
 
   @Test

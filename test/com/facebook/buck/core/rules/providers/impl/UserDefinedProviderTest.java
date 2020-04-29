@@ -53,7 +53,7 @@ public class UserDefinedProviderTest {
     provider.export(Label.parseAbsolute("//package:file.bzl", ImmutableMap.of()), "FooInfo");
     String expectedRepr = "FooInfo(foo, bar, baz) defined at package/file.bzl:5:6";
 
-    assertEquals(expectedRepr, Printer.repr(provider));
+    assertEquals(expectedRepr, Printer.getPrinter().repr(provider).toString());
   }
 
   @Test
@@ -110,7 +110,8 @@ public class UserDefinedProviderTest {
     UserDefinedProvider provider = new UserDefinedProvider(location, new String[] {"foo"});
 
     try (TestMutableEnv env = new TestMutableEnv()) {
-      thrown.expect(NullPointerException.class);
+      thrown.expect(Exception.class);
+      thrown.expectMessage("Tried to call a Provider before exporting it");
       provider.call(ImmutableList.of(), ImmutableMap.of("foo", "foo_value"), null, env.getEnv());
     }
   }

@@ -69,13 +69,22 @@ public class SkylarkUserDefinedRuleTest {
 
   public static class SimpleFunction extends BaseFunction {
 
+    private final String name;
+
     public SimpleFunction(
         String name, FunctionSignature signature, ImmutableList<Object> defaultValues) {
-      super(name, signature, defaultValues, null);
+      super(signature, defaultValues);
+      this.name = name;
     }
 
     public SimpleFunction(String name, FunctionSignature signature) {
-      super(name, signature);
+      super(signature);
+      this.name = name;
+    }
+
+    @Override
+    public String getName() {
+      return name;
     }
 
     static SimpleFunction of(int numArgs) {

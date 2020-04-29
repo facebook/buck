@@ -19,10 +19,10 @@ package com.facebook.buck.skylark.function;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.Provider;
 import com.google.devtools.build.lib.packages.SkylarkProvider;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkType;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -36,17 +36,17 @@ public class SkylarkProviderFunction implements SkylarkProviderFunctionApi {
   @Override
   public Provider provider(String doc, Object fields, Location location) throws EvalException {
     @Nullable Iterable<String> fieldNames = null;
-    if (fields instanceof SkylarkList<?>) {
+    if (fields instanceof StarlarkList<?>) {
       @SuppressWarnings("unchecked")
-      SkylarkList<String> list =
+      StarlarkList<String> list =
           SkylarkType.cast(
               fields,
-              SkylarkList.class,
+              StarlarkList.class,
               String.class,
               location,
               "Expected list of strings or dictionary of string -> string for 'fields'");
       fieldNames = list;
-    } else if (fields instanceof SkylarkDict) {
+    } else if (fields instanceof Dict) {
       Map<String, String> dict =
           SkylarkType.castMap(
               fields,

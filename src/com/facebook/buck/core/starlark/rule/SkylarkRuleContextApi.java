@@ -20,7 +20,7 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /** The `ctx` variable that is passed to user implementation functions */
 @SkylarkModule(
@@ -30,7 +30,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
             + "Provides information about dependencies, attributes, actions, etc",
     title = "ctx",
     category = SkylarkModuleCategory.BUILTIN)
-interface SkylarkRuleContextApi extends SkylarkValue {
+interface SkylarkRuleContextApi extends StarlarkValue {
 
   @SkylarkCallable(
       name = "actions",

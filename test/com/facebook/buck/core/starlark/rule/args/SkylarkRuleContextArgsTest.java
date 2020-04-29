@@ -28,8 +28,8 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import org.junit.Test;
 
 public class SkylarkRuleContextArgsTest {
@@ -58,7 +58,7 @@ public class SkylarkRuleContextArgsTest {
     CommandLineArgs args =
         new CommandLineArgsBuilder()
             .addAll(
-                SkylarkList.createImmutable(
+                StarlarkList.immutableCopyOf(
                     ImmutableList.of(
                         1, "--foo", Label.parseAbsolute("//foo:bar", ImmutableMap.of()))),
                 CommandLineArgs.DEFAULT_FORMAT_STRING,

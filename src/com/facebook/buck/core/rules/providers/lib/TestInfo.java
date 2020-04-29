@@ -23,8 +23,8 @@ import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -92,8 +92,8 @@ public abstract class TestInfo extends BuiltInProviderInfo<TestInfo> {
   public static TestInfo instantiateFromSkylark(
       String testName,
       String testCaseName,
-      SkylarkList<String> labels,
-      SkylarkList<String> contacts,
+      StarlarkList<String> labels,
+      StarlarkList<String> contacts,
       Object timeoutMs,
       boolean runTestsSeparately,
       String type,

@@ -26,7 +26,7 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 
 /**
@@ -62,7 +62,7 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
             doc = "whether to inherit properties from the parent package."),
         @Param(
             name = VisibilityAttributes.VISIBILITY_NAME,
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = String.class,
             defaultValue = "[]",
             named = true,
@@ -70,7 +70,7 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
             doc = "a list of build patterns to make targets visible to."),
         @Param(
             name = VisibilityAttributes.WITHIN_VIEW_NAME,
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = String.class,
             defaultValue = "[]",
             named = true,
@@ -79,8 +79,8 @@ public class SkylarkPackageModule extends AbstractSkylarkFunctions
       })
   public void packageFunction(
       Boolean inherit,
-      SkylarkList<String> visibility,
-      SkylarkList<String> within_view,
+      StarlarkList<String> visibility,
+      StarlarkList<String> within_view,
       FuncallExpression ast,
       StarlarkThread env)
       throws EvalException {

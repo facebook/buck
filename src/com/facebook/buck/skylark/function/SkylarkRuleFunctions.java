@@ -31,11 +31,11 @@ import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.cmdline.LabelValidator;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.BaseFunction;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.Map;
 import java.util.Set;
@@ -92,7 +92,7 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   @Override
   public SkylarkUserDefinedRule rule(
       BaseFunction implementation,
-      SkylarkDict<String, AttributeHolder> attrs,
+      Dict<String, AttributeHolder> attrs,
       boolean inferRunInfo,
       boolean test,
       Location loc,
@@ -118,11 +118,11 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
   public UserDefinedProvider provider(String doc, Object fields, Location location)
       throws EvalException {
     Iterable<String> fieldNames;
-    if (fields instanceof SkylarkList<?>) {
-      fieldNames = ((SkylarkList<?>) fields).getContents(String.class, "fields parameter");
-    } else if (fields instanceof SkylarkDict) {
+    if (fields instanceof StarlarkList<?>) {
+      fieldNames = ((StarlarkList<?>) fields).getContents(String.class, "fields parameter");
+    } else if (fields instanceof Dict) {
       fieldNames =
-          ((SkylarkDict<?, ?>) fields)
+          ((Dict<?, ?>) fields)
               .getContents(String.class, String.class, "fields parameter")
               .keySet();
     } else {

@@ -25,10 +25,10 @@ import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.actions.CommandLineItem;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 
 /** Struct exposed to skylark to create {@link CommandLineArgs} instances. */
 public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
@@ -84,7 +84,7 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
 
   @Override
   public CommandLineArgsBuilder addAll(
-      SkylarkList<?> values, String formatString, Location location) throws EvalException {
+      StarlarkList<?> values, String formatString, Location location) throws EvalException {
 
     try {
       for (Object value : values) {
@@ -100,7 +100,7 @@ public class CommandLineArgsBuilder implements CommandLineArgsBuilderApi {
   }
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<args>");
   }
 }

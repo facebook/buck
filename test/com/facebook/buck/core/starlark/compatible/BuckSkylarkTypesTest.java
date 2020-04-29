@@ -28,10 +28,10 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.SkylarkInfo;
 import com.google.devtools.build.lib.packages.StructProvider;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.Tuple;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.util.Objects;
@@ -73,7 +73,7 @@ public class BuckSkylarkTypesTest {
 
   @Test
   public void toJavaListFailsOnWrongType() throws EvalException {
-    SkylarkList<?> skylarkList = Tuple.of(1, 2, 3);
+    Tuple<?> skylarkList = Tuple.of(1, 2, 3);
 
     thrown.expect(EvalException.class);
     BuckSkylarkTypes.toJavaList(skylarkList, FakeClass.class, null);
@@ -92,7 +92,7 @@ public class BuckSkylarkTypesTest {
 
   @Test
   public void toJavaListNonGenericsProperly() throws EvalException {
-    SkylarkList<?> skylarkList = Tuple.of(1, 2, 3);
+    Tuple<?> skylarkList = Tuple.of(1, 2, 3);
     ImmutableList<Integer> list = BuckSkylarkTypes.toJavaList(skylarkList, Integer.class, null);
 
     assertEquals(ImmutableList.of(1, 2, 3), list);
@@ -110,8 +110,8 @@ public class BuckSkylarkTypesTest {
 
   @Test
   public void asDeepImmutableReturnsIdentityForImmutableSkylarkValues() {
-    SkylarkList<String> list = SkylarkList.createImmutable(ImmutableList.of("foo", "bar"));
-    SkylarkDict<String, String> dict = SkylarkDict.of(null, "foo", "bar");
+    StarlarkList<String> list = StarlarkList.immutableCopyOf(ImmutableList.of("foo", "bar"));
+    Dict<String, String> dict = Dict.of(null, "foo", "bar");
     SkylarkInfo struct = StructProvider.STRUCT.create(ImmutableMap.of("foo", "bar"), "not found");
 
     assertTrue(list.isImmutable());
@@ -125,15 +125,13 @@ public class BuckSkylarkTypesTest {
   @Test
   public void asDeepImmutableReturnsListOfImmutablesIfSubElementIsMutable() {
     try (TestMutableEnv env = new TestMutableEnv()) {
-      SkylarkList.MutableList<String> subList =
-          SkylarkList.MutableList.of(env.getEnv(), "foo", "bar");
-      SkylarkList.MutableList<SkylarkList.MutableList<String>> list =
-          SkylarkList.MutableList.of(env.getEnv(), subList);
+      StarlarkList<String> subList = StarlarkList.of(env.getEnv().mutability(), "foo", "bar");
+      StarlarkList<StarlarkList<String>> list = StarlarkList.of(env.getEnv().mutability(), subList);
 
       Object result = BuckSkylarkTypes.asDeepImmutable(list);
 
       assertFalse(list.isImmutable());
-      assertTrue(((SkylarkList<?>) result).isImmutable());
+      assertTrue(((StarlarkList<?>) result).isImmutable());
       assertEquals(list, result);
       assertNotSame(list, result);
     }
@@ -142,12 +140,12 @@ public class BuckSkylarkTypesTest {
   @Test
   public void asDeepImmutableReturnsListOfImmutablesIfAllElementsAreImmutable() {
     try (TestMutableEnv env = new TestMutableEnv()) {
-      SkylarkList.MutableList<String> list = SkylarkList.MutableList.of(env.getEnv(), "foo", "bar");
+      StarlarkList<String> list = StarlarkList.of(env.getEnv().mutability(), "foo", "bar");
 
       Object result = BuckSkylarkTypes.asDeepImmutable(list);
 
       assertFalse(list.isImmutable());
-      assertTrue(((SkylarkList<?>) result).isImmutable());
+      assertTrue(((StarlarkList<?>) result).isImmutable());
       assertEquals(list, result);
       assertNotSame(list, result);
     }
@@ -157,8 +155,8 @@ public class BuckSkylarkTypesTest {
   public void asDeepImmutableFailsIfListHasMutableElementThatCannotBeMadeImmutable() {
     try (TestMutableEnv env = new TestMutableEnv()) {
       FakeMutableSkylarkObject mutable = new FakeMutableSkylarkObject();
-      SkylarkList.MutableList<FakeMutableSkylarkObject> list =
-          SkylarkList.MutableList.of(env.getEnv(), mutable);
+      StarlarkList<FakeMutableSkylarkObject> list =
+          StarlarkList.of(env.getEnv().mutability(), mutable);
 
       thrown.expect(MutableObjectException.class);
       BuckSkylarkTypes.asDeepImmutable(list);
@@ -168,14 +166,13 @@ public class BuckSkylarkTypesTest {
   @Test
   public void asDeepImmutableReturnsDictOfImmutablesIfKeyIsMutable() {
     try (TestMutableEnv env = new TestMutableEnv()) {
-      SkylarkList.MutableList<String> list = SkylarkList.MutableList.of(env.getEnv(), "foo", "bar");
-      SkylarkDict<SkylarkList.MutableList<String>, String> dict =
-          SkylarkDict.of(env.getEnv(), list, "foo");
+      StarlarkList<String> list = StarlarkList.of(env.getEnv().mutability(), "foo", "bar");
+      Dict<StarlarkList<String>, String> dict = Dict.of(env.getEnv().mutability(), list, "foo");
 
       Object result = BuckSkylarkTypes.asDeepImmutable(dict);
 
       assertFalse(dict.isImmutable());
-      assertTrue(((SkylarkDict<?, ?>) result).isImmutable());
+      assertTrue(((Dict<?, ?>) result).isImmutable());
       assertEquals(dict, result);
       assertNotSame(dict, result);
     }
@@ -184,14 +181,13 @@ public class BuckSkylarkTypesTest {
   @Test
   public void asDeepImmutableReturnsDictOfImmutablesIfValueIsMutable() {
     try (TestMutableEnv env = new TestMutableEnv()) {
-      SkylarkList.MutableList<String> list = SkylarkList.MutableList.of(env.getEnv(), "foo", "bar");
-      SkylarkDict<String, SkylarkList.MutableList<String>> dict =
-          SkylarkDict.of(env.getEnv(), "foo", list);
+      StarlarkList<String> list = StarlarkList.of(env.getEnv().mutability(), "foo", "bar");
+      Dict<String, StarlarkList<String>> dict = Dict.of(env.getEnv().mutability(), "foo", list);
 
       Object result = BuckSkylarkTypes.asDeepImmutable(dict);
 
       assertFalse(dict.isImmutable());
-      assertTrue(((SkylarkDict<?, ?>) result).isImmutable());
+      assertTrue(((Dict<?, ?>) result).isImmutable());
       assertEquals(dict, result);
       assertNotSame(dict, result);
     }
@@ -200,12 +196,12 @@ public class BuckSkylarkTypesTest {
   @Test
   public void asDeepImmutableReturnsDictOfImmutablesIfAllKeysAndValuesAreImmutable() {
     try (TestMutableEnv env = new TestMutableEnv()) {
-      SkylarkDict<String, String> dict = SkylarkDict.of(env.getEnv(), "foo", "bar");
+      Dict<String, String> dict = Dict.of(env.getEnv().mutability(), "foo", "bar");
 
       Object result = BuckSkylarkTypes.asDeepImmutable(dict);
 
       assertFalse(dict.isImmutable());
-      assertTrue(((SkylarkDict<?, ?>) result).isImmutable());
+      assertTrue(((Dict<?, ?>) result).isImmutable());
       assertEquals(dict, result);
       assertNotSame(dict, result);
     }
@@ -214,8 +210,8 @@ public class BuckSkylarkTypesTest {
   @Test
   public void asDeepImmutableFailsIfDictHasMutableKeyThatCannotBeMadeImmutable() {
     try (TestMutableEnv env = new TestMutableEnv()) {
-      SkylarkDict<FakeMutableSkylarkObject, String> dict =
-          SkylarkDict.of(env.getEnv(), new FakeMutableSkylarkObject(), "foo");
+      Dict<FakeMutableSkylarkObject, String> dict =
+          Dict.of(env.getEnv().mutability(), new FakeMutableSkylarkObject(), "foo");
 
       thrown.expect(MutableObjectException.class);
       BuckSkylarkTypes.asDeepImmutable(dict);
@@ -225,8 +221,8 @@ public class BuckSkylarkTypesTest {
   @Test
   public void asDeepImmutableFailsIfDictHasMutableValueThatCannotBeMadeImmutable() {
     try (TestMutableEnv env = new TestMutableEnv()) {
-      SkylarkDict<String, FakeMutableSkylarkObject> dict =
-          SkylarkDict.of(env.getEnv(), "foo", new FakeMutableSkylarkObject());
+      Dict<String, FakeMutableSkylarkObject> dict =
+          Dict.of(env.getEnv().mutability(), "foo", new FakeMutableSkylarkObject());
 
       thrown.expect(MutableObjectException.class);
       BuckSkylarkTypes.asDeepImmutable(dict);
@@ -302,8 +298,8 @@ public class BuckSkylarkTypesTest {
     assertTrue(
         BuckSkylarkTypes.isImmutable(
             ImmutableMap.of(
-                "foo", SkylarkList.createImmutable(ImmutableList.of("list1", "list2")))));
-    assertTrue(BuckSkylarkTypes.isImmutable(ImmutableMap.of("foo", SkylarkDict.empty())));
+                "foo", StarlarkList.immutableCopyOf(ImmutableList.of("list1", "list2")))));
+    assertTrue(BuckSkylarkTypes.isImmutable(ImmutableMap.of("foo", Dict.empty())));
     assertTrue(
         BuckSkylarkTypes.isImmutable(ImmutableMap.of("foo", ImmutableList.of("list1", "list2"))));
     assertTrue(
@@ -314,8 +310,8 @@ public class BuckSkylarkTypesTest {
     assertTrue(BuckSkylarkTypes.isImmutable(ImmutableList.of(true)));
     assertTrue(
         BuckSkylarkTypes.isImmutable(
-            ImmutableList.of(SkylarkList.createImmutable(ImmutableList.of("list1", "list2")))));
-    assertTrue(BuckSkylarkTypes.isImmutable(ImmutableList.of(SkylarkDict.empty())));
+            ImmutableList.of(StarlarkList.immutableCopyOf(ImmutableList.of("list1", "list2")))));
+    assertTrue(BuckSkylarkTypes.isImmutable(ImmutableList.of(Dict.empty())));
     assertTrue(BuckSkylarkTypes.isImmutable(ImmutableList.of(ImmutableList.of("list1", "list2"))));
     assertTrue(BuckSkylarkTypes.isImmutable(ImmutableList.of(ImmutableMap.of("key", "value"))));
 
@@ -324,14 +320,14 @@ public class BuckSkylarkTypesTest {
     assertTrue(BuckSkylarkTypes.isImmutable(true));
     assertTrue(
         BuckSkylarkTypes.isImmutable(
-            SkylarkList.createImmutable(ImmutableList.of("list1", "list2"))));
-    assertTrue(BuckSkylarkTypes.isImmutable(SkylarkDict.empty()));
+            StarlarkList.immutableCopyOf(ImmutableList.of("list1", "list2"))));
+    assertTrue(BuckSkylarkTypes.isImmutable(Dict.empty()));
 
-    SkylarkList mutableList;
-    SkylarkDict mutableDict;
+    StarlarkList mutableList;
+    Dict mutableDict;
     try (TestMutableEnv env = new TestMutableEnv(ImmutableMap.of())) {
-      mutableList = SkylarkList.MutableList.of(env.getEnv(), 1, 2, 3);
-      mutableDict = SkylarkDict.of(env.getEnv(), "key1", "val1");
+      mutableList = StarlarkList.of(env.getEnv().mutability(), 1, 2, 3);
+      mutableDict = Dict.of(env.getEnv().mutability(), "key1", "val1");
 
       assertFalse(BuckSkylarkTypes.isImmutable(mutableList));
       assertFalse(BuckSkylarkTypes.isImmutable(mutableDict));

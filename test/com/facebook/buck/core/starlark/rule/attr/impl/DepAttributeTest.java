@@ -44,7 +44,7 @@ import com.google.common.base.VerifyException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Paths;
 import org.junit.Rule;
@@ -182,7 +182,7 @@ public class DepAttributeTest {
     ActionRegistryForTests registry = new ActionRegistryForTests(target, filesystem);
     Artifact buildArtifact = registry.declareArtifact(Paths.get("baz1"));
     ImmutableDefaultInfo defaultInfo =
-        new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(buildArtifact));
+        new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(buildArtifact));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
         ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));

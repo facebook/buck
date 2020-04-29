@@ -16,13 +16,13 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
+import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /** Simple skylark object that is mutable and cannot be made immutable */
-public class FakeMutableSkylarkObject implements SkylarkValue {
+public class FakeMutableSkylarkObject implements StarlarkValue {
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("mutable_object()");
   }
 

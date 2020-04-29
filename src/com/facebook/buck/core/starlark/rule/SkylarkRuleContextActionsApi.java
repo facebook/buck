@@ -25,9 +25,10 @@ import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.ParamType;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkList;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /**
  * Struct containing methods that create actions within the implementation function of a user
@@ -37,7 +38,7 @@ import com.google.devtools.build.lib.syntax.SkylarkList;
     name = "actions",
     title = "actions",
     doc = "Struct containing methods to create actions within a rule's implementation method")
-public interface SkylarkRuleContextActionsApi {
+public interface SkylarkRuleContextActionsApi extends StarlarkValue {
 
   @SkylarkCallable(
       name = "args",
@@ -114,7 +115,7 @@ public interface SkylarkRuleContextActionsApi {
                     + "be at least one argument. Empty lists will result in a build failure. Any "
                     + "`OutputArtifact`s must be written to by the specified executable.",
             named = true,
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             defaultValue = "[]"),
         @Param(
             name = "short_name",
@@ -128,10 +129,10 @@ public interface SkylarkRuleContextActionsApi {
             doc = "Environment variables that should be set when this action is executed",
             named = true,
             noneable = true,
-            type = SkylarkDict.class,
+            type = Dict.class,
             defaultValue = "None")
       })
-  void run(SkylarkList<Object> arguments, Object shortName, Object userEnv, Location location)
+  void run(StarlarkList<Object> arguments, Object shortName, Object userEnv, Location location)
       throws EvalException;
 
   @SkylarkCallable(

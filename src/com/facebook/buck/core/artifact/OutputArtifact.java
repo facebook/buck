@@ -21,7 +21,7 @@ import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.starlark.rule.artifact.SkylarkOutputArtifactApi;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.Printer;
 
 /**
  * A wrapper around {@link ArtifactImpl} that indicates that it should be used as an output to an
@@ -54,7 +54,7 @@ public abstract class OutputArtifact
   }
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     ArtifactImpl.repr(printer, getArtifact(), true);
   }
 

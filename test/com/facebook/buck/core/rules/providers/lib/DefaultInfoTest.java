@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 import com.facebook.buck.core.artifact.Artifact;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import java.lang.reflect.InvocationTargetException;
 import org.junit.Test;
 
@@ -29,9 +29,8 @@ public class DefaultInfoTest {
   @Test
   public void canInstantiateDefaultInfo()
       throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    DefaultInfo defaultInfo =
-        DefaultInfo.PROVIDER.createInfo(SkylarkDict.empty(), ImmutableSet.of());
-    assertEquals(SkylarkDict.<String, ImmutableList<Artifact>>empty(), defaultInfo.namedOutputs());
+    DefaultInfo defaultInfo = DefaultInfo.PROVIDER.createInfo(Dict.empty(), ImmutableSet.of());
+    assertEquals(Dict.<String, ImmutableList<Artifact>>empty(), defaultInfo.namedOutputs());
     assertEquals(ImmutableList.of(), defaultInfo.defaultOutputs());
   }
 

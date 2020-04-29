@@ -32,12 +32,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.util.Objects;
 import org.junit.Rule;
@@ -61,7 +60,7 @@ public class UserDefinedProviderInfoTest {
     }
 
     @Override
-    public void repr(SkylarkPrinter printer) {}
+    public void repr(Printer printer) {}
 
     @Override
     public String toString() {
@@ -78,7 +77,7 @@ public class UserDefinedProviderInfoTest {
             new FakeUserDefinedProvider(),
             ImmutableMap.of(
                 "foo",
-                SkylarkList.createImmutable(ImmutableList.of(1, 2, 3)),
+                StarlarkList.immutableCopyOf(ImmutableList.of(1, 2, 3)),
                 "bar",
                 "bar_value",
                 "empty",
@@ -87,7 +86,7 @@ public class UserDefinedProviderInfoTest {
     String expectedRepr =
         "FakeUserDefinedProviderInfo(foo = [1, 2, 3], bar = \"bar_value\", empty = None)";
 
-    assertEquals(expectedRepr, Printer.repr(info));
+    assertEquals(expectedRepr, Printer.getPrinter().repr(info).toString());
   }
 
   @Test
@@ -97,7 +96,7 @@ public class UserDefinedProviderInfoTest {
             new FakeUserDefinedProvider(),
             ImmutableMap.of(
                 "foo",
-                SkylarkList.createImmutable(ImmutableList.of(1, 2, 3)),
+                StarlarkList.immutableCopyOf(ImmutableList.of(1, 2, 3)),
                 "bar",
                 "bar_value",
                 "empty",
@@ -116,7 +115,7 @@ public class UserDefinedProviderInfoTest {
             new FakeUserDefinedProvider(),
             ImmutableMap.of(
                 "foo",
-                SkylarkList.createImmutable(ImmutableList.of(1, 2, 3)),
+                StarlarkList.immutableCopyOf(ImmutableList.of(1, 2, 3)),
                 "bar",
                 "bar_value",
                 "empty",
@@ -148,10 +147,10 @@ public class UserDefinedProviderInfoTest {
     UserDefinedProvider userInfo =
         functions.provider(
             "",
-            SkylarkList.createImmutable(ImmutableList.of("value", "immutable", "mutable")),
+            StarlarkList.immutableCopyOf(ImmutableList.of("value", "immutable", "mutable")),
             Location.BUILTIN);
     userInfo.export(Label.parseAbsolute("//:foo.bzl", ImmutableMap.of()), "UserInfo");
-    SkylarkList<Integer> immutableList = SkylarkList.createImmutable(ImmutableList.of(1, 2, 3));
+    StarlarkList<Integer> immutableList = StarlarkList.immutableCopyOf(ImmutableList.of(1, 2, 3));
 
     UserDefinedProviderInfo out1;
     UserDefinedProviderInfo out2;
@@ -160,8 +159,7 @@ public class UserDefinedProviderInfoTest {
         new TestMutableEnv(
             ImmutableMap.of("immutable_list", immutableList, "UserInfo", userInfo))) {
 
-      SkylarkList.MutableList<Integer> mutableList =
-          SkylarkList.MutableList.of(env.getEnv(), 4, 5, 6);
+      StarlarkList<Integer> mutableList = StarlarkList.of(env.getEnv().mutability(), 4, 5, 6);
       env.getEnv().update("mutable_list", mutableList);
 
       assertFalse(mutableList.isImmutable());
@@ -185,16 +183,16 @@ public class UserDefinedProviderInfoTest {
 
       assertEquals(
           ImmutableList.of(1, 2, 3),
-          ((SkylarkList<?>) out1.getValue("immutable")).getImmutableList());
+          ((StarlarkList<?>) out1.getValue("immutable")).getImmutableList());
       assertEquals(
           ImmutableList.of(4, 5, 6, 7, 8),
-          ((SkylarkList<?>) out1.getValue("mutable")).getImmutableList());
+          ((StarlarkList<?>) out1.getValue("mutable")).getImmutableList());
       assertEquals(
           ImmutableList.of(1, 2, 3),
-          ((SkylarkList<?>) out2.getValue("immutable")).getImmutableList());
+          ((StarlarkList<?>) out2.getValue("immutable")).getImmutableList());
       assertEquals(
           ImmutableList.of(4, 5, 6, 7, 8),
-          ((SkylarkList<?>) out2.getValue("mutable")).getImmutableList());
+          ((StarlarkList<?>) out2.getValue("mutable")).getImmutableList());
     }
 
     assertTrue(out1.isImmutable());

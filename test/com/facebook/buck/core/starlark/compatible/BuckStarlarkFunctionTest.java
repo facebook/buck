@@ -27,8 +27,8 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParamDescriptor;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,7 +81,7 @@ public class BuckStarlarkFunctionTest {
     BuckStarlarkFunction function =
         new BuckStarlarkFunction(
             "skylarkLists", ImmutableList.of("list"), ImmutableList.of("[]"), ImmutableSet.of()) {
-          public String skylarkLists(SkylarkList<Integer> list) {
+          public String skylarkLists(StarlarkList<Integer> list) {
             return list.toString();
           }
         };
@@ -92,7 +92,7 @@ public class BuckStarlarkFunctionTest {
         Iterables.getOnlyElement(function.getMethodDescriptor().getParameters());
 
     assertEquals("list", param.getName());
-    assertEquals(SkylarkList.class, param.getType());
+    assertEquals(StarlarkList.class, param.getType());
   }
 
   @Test
@@ -207,7 +207,7 @@ public class BuckStarlarkFunctionTest {
             ImmutableList.of("None"),
             ImmutableSet.of("noneable")) {
           public Object withNone(Object nonNoneable, Object noneable) {
-            return SkylarkList.createImmutable(ImmutableList.of(nonNoneable, noneable));
+            return StarlarkList.immutableCopyOf(ImmutableList.of(nonNoneable, noneable));
           }
         };
 

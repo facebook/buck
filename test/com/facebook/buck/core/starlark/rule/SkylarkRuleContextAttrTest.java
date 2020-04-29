@@ -41,7 +41,7 @@ import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.Printer;
 import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
@@ -76,7 +76,7 @@ public class SkylarkRuleContextAttrTest {
     }
 
     @Override
-    public void repr(SkylarkPrinter printer) {
+    public void repr(Printer printer) {
       printer.append("<test_attr>");
     }
 

@@ -16,13 +16,14 @@
 
 package com.facebook.buck.core.rules.providers;
 
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /**
  * The information, which is a struct-like object, passed between rules during rule analysis. This
  * object is created via {@link Provider}.
  */
-public interface ProviderInfo<U extends ProviderInfo<U>> extends SkylarkProviderInfo, SkylarkValue {
+public interface ProviderInfo<U extends ProviderInfo<U>>
+    extends SkylarkProviderInfo, StarlarkValue {
 
   /** @return the {@link Provider} instance that constructs instances of this info. */
   Provider<U> getProvider();

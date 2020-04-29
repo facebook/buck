@@ -25,7 +25,7 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.Printer;
 
 /** Class that represents a sorted set of uniq strings */
 @BuckStyleValue
@@ -48,7 +48,7 @@ public abstract class StringSortedSetAttribute extends Attribute<ImmutableSorted
   public abstract boolean getAllowEmpty();
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<attr.string_set>");
   }
 

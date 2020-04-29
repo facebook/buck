@@ -30,9 +30,9 @@ import com.facebook.buck.core.starlark.rule.args.CommandLineArgsBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -62,11 +62,11 @@ public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> implements Co
    *
    * @param env environment variables to use when executing
    * @param args arguments used to execute this program. Must be one of {@link
-   *     CommandLineArgsBuilder}, {@link CommandLineArgs} or {@link SkylarkList}.
+   *     CommandLineArgsBuilder}, {@link CommandLineArgs} or {@link StarlarkList}.
    * @return An instance of {@link RunInfo} with immutable {@link #env()} and {@link #args()}
    * @throws EvalException the type passed in was incorrect
    */
-  public static RunInfo instantiateFromSkylark(SkylarkDict<String, String> env, Object args)
+  public static RunInfo instantiateFromSkylark(Dict<String, String> env, Object args)
       throws EvalException {
     Map<String, String> validatedEnv = env.getContents(String.class, String.class, "environment");
     CommandLineArgs commandLineArgs;
@@ -74,9 +74,9 @@ public abstract class RunInfo extends BuiltInProviderInfo<RunInfo> implements Co
       commandLineArgs = ((CommandLineArgsBuilder) args).build();
     } else if (args instanceof CommandLineArgs) {
       commandLineArgs = (CommandLineArgs) args;
-    } else if (args instanceof SkylarkList) {
+    } else if (args instanceof StarlarkList) {
       ImmutableList<Object> validatedArgs =
-          BuckSkylarkTypes.toJavaList((SkylarkList<?>) args, Object.class, "getting args");
+          BuckSkylarkTypes.toJavaList((StarlarkList<?>) args, Object.class, "getting args");
       commandLineArgs = CommandLineArgsFactory.from(validatedArgs);
     } else {
       throw new HumanReadableException(

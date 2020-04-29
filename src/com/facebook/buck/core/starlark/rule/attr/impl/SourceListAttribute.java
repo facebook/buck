@@ -26,7 +26,7 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.Printer;
 import java.util.List;
 
 /**
@@ -55,7 +55,7 @@ public abstract class SourceListAttribute extends Attribute<ImmutableList<Source
   public abstract boolean getAllowEmpty();
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<attr.source_list>");
   }
 

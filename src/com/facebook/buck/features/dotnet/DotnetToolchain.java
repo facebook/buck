@@ -31,7 +31,7 @@ import com.facebook.buck.core.toolchain.toolprovider.impl.SystemToolProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Verify;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import java.util.function.Consumer;
 
 /** Toolchain for dotnet */
@@ -64,7 +64,7 @@ abstract class DotnetToolchain implements RuleAnalysisLegacyToolchain, Toolchain
 
     return ProviderInfoCollectionImpl.builder()
         .put(info)
-        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()));
+        .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of()));
   }
 
   @Override

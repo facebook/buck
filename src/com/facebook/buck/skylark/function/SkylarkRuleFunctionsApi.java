@@ -27,10 +27,10 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkConstructor;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkGlobalLibrary;
 import com.google.devtools.build.lib.syntax.BaseFunction;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 
 /**
@@ -73,7 +73,7 @@ public interface SkylarkRuleFunctionsApi {
                     + "and if it returns anything, it must return a list of ProviderInfo objects."),
         @Param(
             name = "attrs",
-            type = SkylarkDict.class,
+            type = Dict.class,
             positional = false,
             named = true,
             doc =
@@ -110,7 +110,7 @@ public interface SkylarkRuleFunctionsApi {
       useLocation = true)
   SkylarkUserDefinedRule rule(
       BaseFunction implementation,
-      SkylarkDict<String, AttributeHolder> attrs,
+      Dict<String, AttributeHolder> attrs,
       boolean executable,
       boolean test,
       Location loc,
@@ -155,8 +155,8 @@ public interface SkylarkRuleFunctionsApi {
                     + "currently used by Buck itself, however they can be used by external "
                     + "documentation generating tools.",
             allowedTypes = {
-              @ParamType(type = SkylarkList.class, generic1 = String.class),
-              @ParamType(type = SkylarkDict.class)
+              @ParamType(type = StarlarkList.class, generic1 = String.class),
+              @ParamType(type = Dict.class)
             },
             noneable = false,
             named = true,

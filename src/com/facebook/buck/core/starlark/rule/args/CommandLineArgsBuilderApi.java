@@ -25,9 +25,9 @@ import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.ParamType;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkList;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /**
  * Struct for creating more efficient and validated lists of arguments to pass to actions' command
@@ -36,7 +36,7 @@ import com.google.devtools.build.lib.syntax.SkylarkList;
 @SkylarkModule(
     name = "args",
     doc = "Struct for creating lists of arguments to use in command lines of actions")
-public interface CommandLineArgsBuilderApi extends SkylarkValue {
+public interface CommandLineArgsBuilderApi extends StarlarkValue {
   @SkylarkCallable(
       name = "add",
       doc =
@@ -102,7 +102,7 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
             name = "values",
             doc =
                 "Values to add to the existing `Args` object. See `args.add()` for type restrictions",
-            type = SkylarkList.class),
+            type = StarlarkList.class),
         @Param(
             name = "format",
             doc =
@@ -114,6 +114,6 @@ public interface CommandLineArgsBuilderApi extends SkylarkValue {
             defaultValue = "\"%s\"")
       },
       useLocation = true)
-  CommandLineArgsBuilderApi addAll(SkylarkList<?> values, String formatString, Location location)
+  CommandLineArgsBuilderApi addAll(StarlarkList<?> values, String formatString, Location location)
       throws EvalException;
 }

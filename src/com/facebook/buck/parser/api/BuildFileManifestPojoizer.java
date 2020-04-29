@@ -104,8 +104,8 @@ public class BuildFileManifestPojoizer {
    *
    * <p>This function is allowed to be called from transformer function for full recursion
    *
-   * <p>Examples: SkylarkDict is replaced with ImmutableMap, SkylarkList is replaced with
-   * ImmutableList recursively
+   * <p>Examples: Dict is replaced with ImmutableMap, StarlarkList is replaced with ImmutableList
+   * recursively
    */
   public Object convertToPojo(Object parserObj) {
     // if none of user transformers matched, apply default transformations

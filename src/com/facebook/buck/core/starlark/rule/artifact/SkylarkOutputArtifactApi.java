@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.starlark.rule.artifact;
 
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /**
  * Dummy interface to represent {@link com.facebook.buck.core.artifact.OutputArtifact} in skylark
  */
-public interface SkylarkOutputArtifactApi extends SkylarkValue {}
+public interface SkylarkOutputArtifactApi extends StarlarkValue {}

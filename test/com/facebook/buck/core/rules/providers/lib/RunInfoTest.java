@@ -48,12 +48,12 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.nio.file.Path;
@@ -76,10 +76,10 @@ public class RunInfoTest {
   public void errorOnInvalidEnvType() throws EvalException {
 
     try (Mutability mut = Mutability.create("test")) {
-      Object env = SkylarkDict.of(getEnv(mut), "foo", 1, "bar", 2);
+      Object env = Dict.of(getEnv(mut).mutability(), "foo", 1, "bar", 2);
       thrown.expect(EvalException.class);
       // Broken cast, but this can apparently happen, so... verify :)
-      RunInfo.instantiateFromSkylark((SkylarkDict<String, String>) env, ImmutableList.of("value"));
+      RunInfo.instantiateFromSkylark((Dict<String, String>) env, ImmutableList.of("value"));
     }
   }
 
@@ -88,7 +88,7 @@ public class RunInfoTest {
     thrown.expect(HumanReadableException.class);
     thrown.expectMessage("must either be a list of arguments");
 
-    RunInfo.instantiateFromSkylark(SkylarkDict.empty(), 1);
+    RunInfo.instantiateFromSkylark(Dict.empty(), 1);
   }
 
   @Test
@@ -97,7 +97,7 @@ public class RunInfoTest {
     thrown.expectMessage("Invalid command line argument type");
 
     RunInfo.instantiateFromSkylark(
-        SkylarkDict.empty(), SkylarkList.createImmutable(ImmutableList.of(ImmutableList.of(1))));
+        Dict.empty(), StarlarkList.immutableCopyOf(ImmutableList.of(ImmutableList.of(1))));
   }
 
   @Test
@@ -107,7 +107,7 @@ public class RunInfoTest {
             .add("foo", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
             .add("bar", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
 
-    RunInfo runInfo = RunInfo.instantiateFromSkylark(SkylarkDict.empty(), builder);
+    RunInfo runInfo = RunInfo.instantiateFromSkylark(Dict.empty(), builder);
     builder.add("baz", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN);
 
     CommandLine cli =
@@ -124,7 +124,7 @@ public class RunInfoTest {
             .add("bar", Starlark.NONE, CommandLineArgs.DEFAULT_FORMAT_STRING, Location.BUILTIN)
             .build();
 
-    RunInfo runInfo = RunInfo.instantiateFromSkylark(SkylarkDict.empty(), args);
+    RunInfo runInfo = RunInfo.instantiateFromSkylark(Dict.empty(), args);
 
     CommandLine cli =
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
@@ -136,7 +136,7 @@ public class RunInfoTest {
   public void handlesListOfArgs() throws EvalException {
     RunInfo runInfo =
         RunInfo.instantiateFromSkylark(
-            SkylarkDict.empty(), SkylarkList.createImmutable(ImmutableList.of("foo", 1)));
+            Dict.empty(), StarlarkList.immutableCopyOf(ImmutableList.of("foo", 1)));
 
     CommandLine cli =
         new ExecCompatibleCommandLineBuilder(new ArtifactFilesystem(new FakeProjectFilesystem()))
@@ -183,11 +183,11 @@ public class RunInfoTest {
       Path artifact2Path = BuildPaths.getGenDir(filesystem, target).resolve("out.txt");
 
       StarlarkThread environment = getEnv(mut);
-      SkylarkDict<String, String> env =
-          SkylarkDict.of(environment, "foo", "foo_val", "bar", "bar_val");
-      SkylarkList.MutableList<Object> args =
-          SkylarkList.MutableList.of(
-              environment,
+      Dict<String, String> env =
+          Dict.of(environment.mutability(), "foo", "foo_val", "bar", "bar_val");
+      StarlarkList<Object> args =
+          StarlarkList.of(
+              environment.mutability(),
               CommandLineArgsFactory.from(ImmutableList.of("arg1", "arg2")),
               artifact,
               artifact2Output);
@@ -195,7 +195,7 @@ public class RunInfoTest {
       RunInfo info = RunInfo.instantiateFromSkylark(env, args);
 
       // Make sure we're freezing properly
-      args.add("arg3", Location.BUILTIN, mut);
+      args.add("arg3", Location.BUILTIN);
       env.pop("foo", "", Location.BUILTIN, environment);
 
       new WriteAction(

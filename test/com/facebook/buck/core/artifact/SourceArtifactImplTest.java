@@ -48,7 +48,9 @@ public class SourceArtifactImplTest {
     assertEquals(Starlark.NONE, artifact.getOwner());
     assertEquals(expectedShortPath, artifact.getShortPath());
     assertTrue(artifact.isSource());
-    assertEquals(String.format("<source file '%s'>", expectedShortPath), Printer.repr(artifact));
+    assertEquals(
+        String.format("<source file '%s'>", expectedShortPath),
+        Printer.getPrinter().repr(artifact).toString());
 
     assertTrue(artifact.isImmutable());
   }

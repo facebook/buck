@@ -22,8 +22,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Arrays;
 import org.junit.Rule;
 import org.junit.Test;
@@ -58,7 +58,7 @@ public class JsonPrinterTest {
 
   @Test
   public void listIsPrintedAsList() throws Exception {
-    assertEquals("[\"foo\",4]", print(SkylarkList.createImmutable(Arrays.asList("foo", 4))));
+    assertEquals("[\"foo\",4]", print(StarlarkList.immutableCopyOf(Arrays.asList("foo", 4))));
   }
 
   @Test

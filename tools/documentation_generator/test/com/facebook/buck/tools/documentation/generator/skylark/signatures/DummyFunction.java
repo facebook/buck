@@ -18,7 +18,7 @@ package com.facebook.buck.tools.documentation.generator.skylark.signatures;
 
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Collections;
 
 public class DummyFunction {
@@ -32,7 +32,7 @@ public class DummyFunction {
       documented = false,
       useAst = true,
       useStarlarkThread = true)
-  public SkylarkList<String> dummy(String seed) {
-    return SkylarkList.createImmutable(Collections.singleton(seed));
+  public StarlarkList<String> dummy(String seed) {
+    return StarlarkList.immutableCopyOf(Collections.singleton(seed));
   }
 }

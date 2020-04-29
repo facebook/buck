@@ -23,17 +23,17 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.SkylarkIndexable;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /**
  * Skylark object provided to users to get extra information about a dependency, including its
  * original build target, its {@link ProviderInfoCollection}, and more in the future. {@link
  * SkylarkIndexable} operations are proxied to the provided {@link ProviderInfoCollection}
  */
-public class SkylarkDependency implements SkylarkValue, SkylarkIndexable {
+public class SkylarkDependency implements StarlarkValue, SkylarkIndexable {
 
   private final Label label;
   private final ProviderInfoCollection providerInfos;
@@ -65,7 +65,7 @@ public class SkylarkDependency implements SkylarkValue, SkylarkIndexable {
   }
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.format("<dependency %s>", label);
   }
 

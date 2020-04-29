@@ -185,7 +185,9 @@ public class ArtifactImplTest {
     assertEquals(Label.parseAbsolute("//my:foo", ImmutableMap.of()), artifact.getOwner());
     assertEquals(expectedShortPath, artifact.getShortPath());
     assertFalse(artifact.isSource());
-    assertEquals(String.format("<generated file '%s'>", expectedShortPath), Printer.repr(artifact));
+    assertEquals(
+        String.format("<generated file '%s'>", expectedShortPath),
+        Printer.getPrinter().repr(artifact).toString());
 
     ArtifactImpl artifact2 =
         ArtifactImpl.of(target, genDir, packagePath, Paths.get("bar/no_ext"), Location.BUILTIN);

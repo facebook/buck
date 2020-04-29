@@ -62,6 +62,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   @Nullable private String name = null;
   @Nullable private Label label = null;
   @Nullable private String exportedName = null;
+  private final Location location;
   private final BaseFunction implementation;
   private final ImmutableMap<String, Attribute<?>> attrs;
   private final Set<String> hiddenImplicitAttributes;
@@ -82,7 +83,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
      * The name is incomplete until {@link #export(Label, String)} is called, so we know what is on
      * the left side of the assignment operator to create a function name
      */
-    super("<incomplete rule>", signature, defaultValues, location);
+    super(signature, defaultValues);
+    this.location = location;
     this.implementation = implementation;
     this.attrs = attrs;
     this.hiddenImplicitAttributes = hiddenImplicitAttributes;

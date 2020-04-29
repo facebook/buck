@@ -27,7 +27,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.Printer;
 
 /** Represents a single dependency. This is exposed to users as a {@link ProviderInfoCollection} */
 @BuckStyleValue
@@ -46,7 +46,7 @@ public abstract class DepAttribute extends Attribute<BuildTarget> {
   public abstract boolean getMandatory();
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<attr.dep>");
   }
 

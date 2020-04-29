@@ -32,31 +32,32 @@ import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringListAttribute;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.Sequence;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.List;
 
 /** Class that actually instantiates Attribute objects for user defined rules */
 public class AttrModule implements AttrModuleApi {
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<attr>");
   }
 
   @Override
   public AttributeHolder intAttribute(
-      Integer defaultValue, String doc, Boolean mandatory, SkylarkList<Integer> values)
+      Integer defaultValue, String doc, Boolean mandatory, StarlarkList<Integer> values)
       throws EvalException {
-    List<Integer> validatedValues = SkylarkList.castList(values, Integer.class, null);
+    List<Integer> validatedValues = Sequence.castList(values, Integer.class, null);
     return IntAttribute.of(defaultValue, doc, mandatory, validatedValues);
   }
 
   @Override
   public AttributeHolder intListAttribute(
-      SkylarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     ImmutableList<Integer> validatedDefaultValue =
         ImmutableList.copyOf(defaultValue.getContents(Integer.class, null));
@@ -66,16 +67,16 @@ public class AttrModule implements AttrModuleApi {
 
   @Override
   public AttributeHolder stringAttribute(
-      String defaultValue, String doc, Boolean mandatory, SkylarkList<String> values)
+      String defaultValue, String doc, Boolean mandatory, StarlarkList<String> values)
       throws EvalException {
-    List<String> validatedValues = SkylarkList.castList(values, String.class, null);
+    List<String> validatedValues = Sequence.castList(values, String.class, null);
 
     return StringAttribute.of(defaultValue, doc, mandatory, validatedValues);
   }
 
   @Override
   public AttributeHolder stringListAttribute(
-      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     ImmutableList<String> validatedDefaultValue =
         ImmutableList.copyOf(defaultValue.getContents(String.class, null));
@@ -90,7 +91,7 @@ public class AttrModule implements AttrModuleApi {
 
   @Override
   public AttributeHolder sourceListAttribute(
-      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     ImmutableList<String> validatedDefaultValues =
         BuckSkylarkTypes.toJavaList(defaultValue, String.class, null);
@@ -106,7 +107,7 @@ public class AttrModule implements AttrModuleApi {
 
   @Override
   public AttributeHolder depAttribute(
-      Object defaultValue, String doc, boolean mandatory, SkylarkList<Provider<?>> providers)
+      Object defaultValue, String doc, boolean mandatory, StarlarkList<Provider<?>> providers)
       throws EvalException {
     ImmutableList<Provider<?>> validatedProviders =
         BuckSkylarkTypes.toJavaList(providers, Provider.class, null);
@@ -116,11 +117,11 @@ public class AttrModule implements AttrModuleApi {
 
   @Override
   public AttributeHolder depListAttribute(
-      SkylarkList<String> defaultValue,
+      StarlarkList<String> defaultValue,
       String doc,
       boolean mandatory,
       boolean allowEmpty,
-      SkylarkList<Provider<?>> providers)
+      StarlarkList<Provider<?>> providers)
       throws EvalException {
     ImmutableList<String> validatedDefaultValues =
         BuckSkylarkTypes.toJavaList(defaultValue, String.class, null);
@@ -143,7 +144,7 @@ public class AttrModule implements AttrModuleApi {
 
   @Override
   public AttributeHolder outputListAttribute(
-      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException {
     List<String> validatedValues = defaultValue.getContents(String.class, null);
     return OutputListAttribute.of(validatedValues, doc, mandatory, allowEmpty);

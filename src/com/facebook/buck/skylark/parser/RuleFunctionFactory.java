@@ -34,7 +34,7 @@ import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
-import com.google.devtools.build.lib.syntax.Runtime;
+import com.google.devtools.build.lib.syntax.NoneType;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.List;
@@ -72,11 +72,15 @@ public class RuleFunctionFactory {
    */
   BuiltinFunction create(BaseDescription<?> ruleClass) {
     String name = DescriptionCache.getRuleType(ruleClass).getName();
-    return new BuiltinFunction(name, FunctionSignature.KWARGS) {
+    return new BuiltinFunction(FunctionSignature.KWARGS) {
+
+      @Override
+      public String getName() {
+        return name;
+      }
 
       @SuppressWarnings({"unused"})
-      public Runtime.NoneType invoke(
-          Map<String, Object> kwargs, FuncallExpression ast, StarlarkThread env)
+      public NoneType invoke(Map<String, Object> kwargs, FuncallExpression ast, StarlarkThread env)
           throws EvalException {
         ParseContext parseContext = ParseContext.getParseContext(env, ast);
         String basePath =

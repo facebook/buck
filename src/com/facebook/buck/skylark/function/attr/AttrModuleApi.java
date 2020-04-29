@@ -23,9 +23,9 @@ import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkList;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /** Skylark module used to configure the attribute schema for user defined rules */
 @SkylarkModule(
@@ -34,7 +34,7 @@ import com.google.devtools.build.lib.syntax.SkylarkList;
     doc = "A module which contains methods to define parameters for user defined rules",
     category = SkylarkModuleCategory.BUILTIN,
     namespace = true)
-public interface AttrModuleApi extends SkylarkValue {
+public interface AttrModuleApi extends StarlarkValue {
   @SkylarkCallable(
       name = "int",
       doc = "Specifies a parameter for a User Defined Rule that is an integer.",
@@ -71,10 +71,10 @@ public interface AttrModuleApi extends SkylarkValue {
             positional = false,
             named = true,
             generic1 = Integer.class,
-            type = SkylarkList.class)
+            type = StarlarkList.class)
       })
   AttributeHolder intAttribute(
-      Integer defaultValue, String doc, Boolean mandatory, SkylarkList<Integer> values)
+      Integer defaultValue, String doc, Boolean mandatory, StarlarkList<Integer> values)
       throws EvalException;
 
   @SkylarkCallable(
@@ -88,7 +88,7 @@ public interface AttrModuleApi extends SkylarkValue {
             noneable = false,
             positional = false,
             named = true,
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = Integer.class),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
@@ -115,7 +115,7 @@ public interface AttrModuleApi extends SkylarkValue {
             type = Boolean.class)
       })
   AttributeHolder intListAttribute(
-      SkylarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<Integer> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
   @SkylarkCallable(
@@ -154,10 +154,10 @@ public interface AttrModuleApi extends SkylarkValue {
             positional = false,
             named = true,
             generic1 = String.class,
-            type = SkylarkList.class)
+            type = StarlarkList.class)
       })
   AttributeHolder stringAttribute(
-      String defaultValue, String doc, Boolean mandatory, SkylarkList<String> values)
+      String defaultValue, String doc, Boolean mandatory, StarlarkList<String> values)
       throws EvalException;
 
   @SkylarkCallable(
@@ -171,7 +171,7 @@ public interface AttrModuleApi extends SkylarkValue {
             noneable = false,
             positional = false,
             named = true,
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = String.class),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
@@ -198,7 +198,7 @@ public interface AttrModuleApi extends SkylarkValue {
             type = Boolean.class)
       })
   AttributeHolder stringListAttribute(
-      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
   @SkylarkCallable(
@@ -292,7 +292,7 @@ public interface AttrModuleApi extends SkylarkValue {
             noneable = false,
             positional = false,
             named = true,
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = String.class),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
@@ -319,7 +319,7 @@ public interface AttrModuleApi extends SkylarkValue {
             type = Boolean.class)
       })
   AttributeHolder sourceListAttribute(
-      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 
   @SkylarkCallable(
@@ -362,11 +362,11 @@ public interface AttrModuleApi extends SkylarkValue {
             defaultValue = "[]",
             positional = false,
             named = true,
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = Provider.class)
       })
   AttributeHolder depAttribute(
-      Object defaultValue, String doc, boolean mandatory, SkylarkList<Provider<?>> providers)
+      Object defaultValue, String doc, boolean mandatory, StarlarkList<Provider<?>> providers)
       throws EvalException;
 
   @SkylarkCallable(
@@ -383,7 +383,7 @@ public interface AttrModuleApi extends SkylarkValue {
             noneable = false,
             positional = false,
             named = true,
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = String.class),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
@@ -416,15 +416,15 @@ public interface AttrModuleApi extends SkylarkValue {
             defaultValue = "[]",
             positional = false,
             named = true,
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = Provider.class)
       })
   AttributeHolder depListAttribute(
-      SkylarkList<String> defaultValue,
+      StarlarkList<String> defaultValue,
       String doc,
       boolean mandatory,
       boolean allowEmpty,
-      SkylarkList<Provider<?>> providers)
+      StarlarkList<Provider<?>> providers)
       throws EvalException;
 
   @SkylarkCallable(
@@ -485,7 +485,7 @@ public interface AttrModuleApi extends SkylarkValue {
             noneable = false,
             positional = false,
             named = true,
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = String.class),
         @Param(
             name = AttributeConstants.DOC_PARAM_NAME,
@@ -512,6 +512,6 @@ public interface AttrModuleApi extends SkylarkValue {
             type = Boolean.class),
       })
   AttributeHolder outputListAttribute(
-      SkylarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
+      StarlarkList<String> defaultValue, String doc, boolean mandatory, boolean allowEmpty)
       throws EvalException;
 }

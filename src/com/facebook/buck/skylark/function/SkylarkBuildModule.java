@@ -27,8 +27,8 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -114,13 +114,13 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       parameters = {
         @Param(
             name = "include",
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = String.class,
             named = true,
             doc = "a list of strings specifying patterns of files to include."),
         @Param(
             name = "exclude",
-            type = SkylarkList.class,
+            type = StarlarkList.class,
             generic1 = String.class,
             defaultValue = "[]",
             positional = false,
@@ -137,9 +137,9 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       documented = false,
       useAst = true,
       useStarlarkThread = true)
-  public SkylarkList<String> glob(
-      SkylarkList<String> include,
-      SkylarkList<String> exclude,
+  public StarlarkList<String> glob(
+      StarlarkList<String> include,
+      StarlarkList<String> exclude,
       Boolean excludeDirectories,
       FuncallExpression ast,
       StarlarkThread env)
@@ -155,7 +155,7 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
                   "glob's 'include' attribute is empty. "
                       + "Such calls are expensive and unnecessary. "
                       + "Please use an empty list ([]) instead."));
-      return SkylarkList.MutableList.empty();
+      return StarlarkList.empty();
     }
     if (parseContext.getPackageContext().getPackageIdentifier().getRunfilesPath().isEmpty()
         && include.stream().anyMatch(str -> TOP_LEVEL_GLOB_PATTERN.matcher(str).matches())) {
@@ -164,8 +164,8 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
     }
 
     try {
-      return SkylarkList.MutableList.copyOf(
-          env,
+      return StarlarkList.copyOf(
+          env.mutability(),
           parseContext.getPackageContext().getGlobber().run(include, exclude, excludeDirectories)
               .stream()
               .sorted()

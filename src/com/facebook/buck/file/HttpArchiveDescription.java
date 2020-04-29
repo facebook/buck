@@ -41,7 +41,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -162,7 +162,7 @@ public class HttpArchiveDescription
             context.getProjectFilesystem(),
             outputSourcePath(context.getProjectFilesystem(), buildTarget, args));
     return ProviderInfoCollectionImpl.builder()
-        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(artifact)));
+        .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(artifact)));
   }
 
   /** Arguments for an http_archive rule */

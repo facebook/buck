@@ -34,7 +34,7 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.ExecutableFinder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
@@ -85,7 +85,7 @@ public abstract class SystemToolProvider implements ToolProvider, RuleAnalysisLe
       DependencyOnlyRuleAnalysisContext context, TargetConfiguration targetConfiguration) {
     Artifact executable = context.resolveSrc(resolveSourcePath());
     return new ImmutableRunInfo(
-        SkylarkDict.empty(), CommandLineArgsFactory.from(ImmutableList.of(executable)));
+        Dict.empty(), CommandLineArgsFactory.from(ImmutableList.of(executable)));
   }
 
   @Override

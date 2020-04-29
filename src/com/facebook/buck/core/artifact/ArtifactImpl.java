@@ -29,8 +29,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Printer;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -251,11 +251,11 @@ class ArtifactImpl extends AbstractArtifact
   }
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     repr(printer, this, false);
   }
 
-  static void repr(SkylarkPrinter printer, Artifact artifact, boolean isOutputArtifact) {
+  static void repr(Printer printer, Artifact artifact, boolean isOutputArtifact) {
     printer.append("<generated ");
     if (isOutputArtifact) {
       printer.append("output");

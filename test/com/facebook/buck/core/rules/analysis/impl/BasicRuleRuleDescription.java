@@ -44,10 +44,10 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.common.io.CharStreams;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.IOException;
@@ -77,7 +77,7 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
         getDefaultOutputs(actionRegistry, args.getDefaultOuts());
     allArtifactsBuilder.addAll(defaultOutputs);
 
-    SkylarkDict<String, ImmutableList<Artifact>> namedOutputs =
+    Dict<String, ImmutableList<Artifact>> namedOutputs =
         getNamedOutputs(context.actionRegistry(), args);
     namedOutputs.values().forEach(allArtifactsBuilder::addAll);
 
@@ -166,20 +166,20 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
     return declareArtifacts(actionRegistry, defaultOuts.orElseGet(() -> ImmutableSet.of("output")));
   }
 
-  private SkylarkDict<String, ImmutableList<Artifact>> getNamedOutputs(
+  private Dict<String, ImmutableList<Artifact>> getNamedOutputs(
       ActionRegistry actionRegistry, BasicRuleDescriptionArg args) {
     if (!args.getNamedOuts().isPresent()) {
-      return SkylarkDict.empty();
+      return Dict.empty();
     }
     ImmutableMap<String, ImmutableSet<String>> namedOuts = args.getNamedOuts().get();
-    SkylarkDict<String, ImmutableList<Artifact>> dict;
+    Dict<String, ImmutableList<Artifact>> dict;
     try (Mutability mutability = Mutability.create("test")) {
       StarlarkThread env =
           StarlarkThread.builder(mutability)
               .setGlobals(Module.createForBuiltins(Starlark.UNIVERSE))
               .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
               .build();
-      dict = SkylarkDict.of(env);
+      dict = Dict.of(env.mutability());
 
       for (Map.Entry<String, ImmutableSet<String>> labelsToNamedOutnames : namedOuts.entrySet()) {
         try {

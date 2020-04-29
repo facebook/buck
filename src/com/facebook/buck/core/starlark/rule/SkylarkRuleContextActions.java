@@ -35,11 +35,11 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -130,8 +130,8 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
       throws EvalException {
     CommandLineArgsBuilder builder = new CommandLineArgsBuilder();
     if (!EvalUtils.isNullOrNone(args)) {
-      if (args instanceof SkylarkList) {
-        builder.addAll((SkylarkList<?>) args, formatString, location);
+      if (args instanceof StarlarkList) {
+        builder.addAll((StarlarkList<?>) args, formatString, location);
       } else {
         builder.add(args, Starlark.NONE, formatString, location);
       }
@@ -149,10 +149,10 @@ public class SkylarkRuleContextActions implements SkylarkRuleContextActionsApi {
 
   @Override
   public void run(
-      SkylarkList<Object> arguments, Object shortName, Object userEnv, Location location)
+      StarlarkList<Object> arguments, Object shortName, Object userEnv, Location location)
       throws EvalException {
     Map<String, String> userEnvValidated =
-        SkylarkDict.castSkylarkDictOrNoneToDict(userEnv, String.class, String.class, null);
+        Dict.castSkylarkDictOrNoneToDict(userEnv, String.class, String.class, null);
 
     CommandLineArgs argumentsValidated;
     Object firstArgument;

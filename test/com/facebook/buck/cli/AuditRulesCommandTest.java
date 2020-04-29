@@ -22,13 +22,15 @@ import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Dict;
+import com.google.devtools.build.lib.syntax.Mutability;
 import org.junit.Test;
 
 public class AuditRulesCommandTest {
 
   @Test
-  public void testCreateDisplayString() {
+  public void testCreateDisplayString() throws Exception {
     assertEquals("None", AuditRulesCommand.createDisplayString(null));
     assertEquals("True", AuditRulesCommand.createDisplayString(true));
     assertEquals("False", AuditRulesCommand.createDisplayString(false));
@@ -46,20 +48,25 @@ public class AuditRulesCommandTest {
     assertEquals(
         "{\n  \"foo\": [\n    1,\n  ],\n}",
         AuditRulesCommand.createDisplayString(ImmutableMap.of("foo", ImmutableList.of(1))));
-    SkylarkDict<String, String> testDict = SkylarkDict.of(null, "one", "two");
+    Dict<String, String> testDict = Dict.of(null, "one", "two");
     assertEquals(
         "select({\n  \"one\": \"two\",\n})",
         AuditRulesCommand.createDisplayString(
             ListWithSelects.of(ImmutableList.of(SelectorValue.of(testDict, "")), String.class)));
-    SkylarkDict<String, String> testDict2 = SkylarkDict.of(null, "three", "four");
-    SkylarkDict<String, String> twoEntryDict = SkylarkDict.plus(testDict, testDict2, null);
+    Dict<String, String> testDict2 = Dict.of(Mutability.create(), "three", "four");
+    Dict<String, String> twoEntryDict = Dict.of(Mutability.create());
+    twoEntryDict.putAll(testDict, Location.BUILTIN);
+    twoEntryDict.putAll(testDict2, Location.BUILTIN);
     assertEquals(
         "select({\n  \"one\": \"two\",\n  \"three\": \"four\",\n})",
         AuditRulesCommand.createDisplayString(
             ListWithSelects.of(
                 ImmutableList.of(SelectorValue.of(twoEntryDict, "")), String.class)));
-    SkylarkDict<String, ImmutableList<String>> testDict3 = SkylarkDict.of(null, "foo", testList);
-    testDict3 = SkylarkDict.plus(testDict3, SkylarkDict.of(null, "bar", testList), null);
+    Dict<String, ImmutableList<String>> testDict3 = Dict.of(null, "foo", testList);
+    Dict<String, ImmutableList<String>> result = Dict.of(Mutability.create());
+    result.putAll(testDict3, Location.BUILTIN);
+    result.putAll(Dict.of(null, "bar", testList), Location.BUILTIN);
+    testDict3 = result;
     // ListWithSelects with SelectorValue only
     assertEquals(
         "select({\n  \"foo\": [\n    \"foo\",\n    \"bar\",\n    \"baz\",\n  ],\n  \"bar\": [\n    \"foo\",\n    \"bar\",\n    \"baz\",\n  ],\n})",

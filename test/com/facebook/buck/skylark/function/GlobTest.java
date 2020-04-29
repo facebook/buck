@@ -41,9 +41,9 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
@@ -75,7 +75,7 @@ public class GlobTest {
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['*.txt'])");
     assertThat(
         assertEvaluate(buildFile).moduleLookup("txts"),
-        equalTo(SkylarkList.createImmutable(ImmutableList.of("bar.txt", "foo.txt"))));
+        equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("bar.txt", "foo.txt"))));
   }
 
   @Test
@@ -88,7 +88,7 @@ public class GlobTest {
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(include=['*.txt'])");
     assertThat(
         assertEvaluate(buildFile).moduleLookup("txts"),
-        equalTo(SkylarkList.createImmutable(ImmutableList.of("bar.txt", "foo.txt"))));
+        equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("bar.txt", "foo.txt"))));
   }
 
   @Test
@@ -101,7 +101,7 @@ public class GlobTest {
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['*.txt'], exclude=['bar.txt'])");
     assertThat(
         assertEvaluate(buildFile).moduleLookup("txts"),
-        equalTo(SkylarkList.createImmutable(ImmutableList.of("foo.txt"))));
+        equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("foo.txt"))));
   }
 
   @Test
@@ -112,7 +112,7 @@ public class GlobTest {
         buildFile, "txts = glob(['some_dir'], exclude_directories=False)");
     assertThat(
         assertEvaluate(buildFile).moduleLookup("txts"),
-        equalTo(SkylarkList.createImmutable(ImmutableList.of("some_dir"))));
+        equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("some_dir"))));
   }
 
   @Test
@@ -123,7 +123,7 @@ public class GlobTest {
         buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
     assertThat(
         assertEvaluate(buildFile).moduleLookup("txts"),
-        equalTo(SkylarkList.createImmutable(ImmutableList.of())));
+        equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
   }
 
   @Test
@@ -133,7 +133,7 @@ public class GlobTest {
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['some_dir'])");
     assertThat(
         assertEvaluate(buildFile).moduleLookup("txts"),
-        equalTo(SkylarkList.createImmutable(ImmutableList.of())));
+        equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
   }
 
   @Test
@@ -142,7 +142,7 @@ public class GlobTest {
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob([])");
     assertThat(
         assertEvaluate(buildFile).moduleLookup("txts"),
-        equalTo(SkylarkList.createImmutable(ImmutableList.of())));
+        equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
     Event event = Iterables.getOnlyElement(eventHandler);
     assertThat(event.getKind(), is(EventKind.WARNING));
     assertThat(event.getLocation(), notNullValue());

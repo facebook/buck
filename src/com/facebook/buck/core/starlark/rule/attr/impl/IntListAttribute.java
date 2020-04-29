@@ -22,7 +22,7 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.Printer;
 
 /** Class that represents a list of integers */
 @BuckStyleValue
@@ -44,7 +44,7 @@ public abstract class IntListAttribute extends Attribute<ImmutableList<Integer>>
   public abstract boolean getAllowEmpty();
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<attr.int_list>");
   }
 

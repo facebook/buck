@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.providers.annotations.ImmutableInfo;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProviderInfo;
 import com.google.common.collect.ImmutableList;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 
 /**
  * The standard default information that all rules should be propagating via {@link ProviderInfo}.
@@ -42,7 +42,7 @@ public abstract class DefaultInfo extends BuiltInProviderInfo<DefaultInfo> {
    * @return a map of a String, which is the named identifier to a set of outputs.
    */
   // TODO(bobyf): replace with our own map types?
-  public abstract SkylarkDict<String, ImmutableList<Artifact>> namedOutputs();
+  public abstract Dict<String, ImmutableList<Artifact>> namedOutputs();
 
   /** @return the set of default outputs built by the rule if no output selection is specified. */
   public abstract ImmutableList<Artifact> defaultOutputs();

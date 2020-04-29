@@ -30,8 +30,8 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import java.util.Optional;
@@ -50,14 +50,15 @@ public class TestInfoTest {
 
   @Test
   public void errorOnInvalidLabelsType() throws EvalException {
-    Object labels = SkylarkList.createImmutable(ImmutableList.of("label1", "label2", 1));
-    SkylarkList<String> contacts = SkylarkList.createImmutable(ImmutableList.of("foo@example.com"));
+    Object labels = StarlarkList.immutableCopyOf(ImmutableList.of("label1", "label2", 1));
+    StarlarkList<String> contacts =
+        StarlarkList.immutableCopyOf(ImmutableList.of("foo@example.com"));
     thrown.expect(EvalException.class);
     // Broken cast, but this can apparently happen, so... verify :)
     TestInfo.instantiateFromSkylark(
         TEST_NAME,
         TEST_CASE_NAME,
-        (SkylarkList<String>) labels,
+        (StarlarkList<String>) labels,
         contacts,
         Starlark.NONE,
         false,
@@ -67,15 +68,16 @@ public class TestInfoTest {
 
   @Test
   public void errorOnInvalidContactsType() throws EvalException {
-    SkylarkList<String> labels = SkylarkList.createImmutable(ImmutableList.of("label1", "label2"));
-    Object contacts = SkylarkList.createImmutable(ImmutableList.of("foo@example.com", 1));
+    StarlarkList<String> labels =
+        StarlarkList.immutableCopyOf(ImmutableList.of("label1", "label2"));
+    Object contacts = StarlarkList.immutableCopyOf(ImmutableList.of("foo@example.com", 1));
     thrown.expect(EvalException.class);
     // Broken cast, but this can apparently happen, so... verify :)
     TestInfo.instantiateFromSkylark(
         TEST_NAME,
         TEST_CASE_NAME,
         labels,
-        (SkylarkList<String>) contacts,
+        (StarlarkList<String>) contacts,
         Starlark.NONE,
         false,
         TYPE,
@@ -84,8 +86,10 @@ public class TestInfoTest {
 
   @Test
   public void errorOnInvalidTimeoutMsType() throws EvalException {
-    SkylarkList<String> labels = SkylarkList.createImmutable(ImmutableList.of("label1", "label2"));
-    SkylarkList<String> contacts = SkylarkList.createImmutable(ImmutableList.of("foo@example.com"));
+    StarlarkList<String> labels =
+        StarlarkList.immutableCopyOf(ImmutableList.of("label1", "label2"));
+    StarlarkList<String> contacts =
+        StarlarkList.immutableCopyOf(ImmutableList.of("foo@example.com"));
     thrown.expect(EvalException.class);
     TestInfo.instantiateFromSkylark(
         TEST_NAME, TEST_CASE_NAME, labels, contacts, "not an int", false, TYPE, Location.BUILTIN);

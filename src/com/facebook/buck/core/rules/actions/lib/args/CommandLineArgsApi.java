@@ -16,16 +16,16 @@
 
 package com.facebook.buck.core.rules.actions.lib.args;
 
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
+import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /**
  * Simple interface to expose {@link com.facebook.buck.core.rules.actions.lib.args.CommandLineArgs}
  * to skylark. It cannot actually be used by anything in skylark directly
  */
-public interface CommandLineArgsApi extends SkylarkValue {
+public interface CommandLineArgsApi extends StarlarkValue {
   @Override
-  default void repr(SkylarkPrinter printer) {
+  default void repr(Printer printer) {
     printer.append("<command line arguments>");
   }
 

@@ -38,7 +38,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import java.util.Optional;
 
 /**
@@ -123,7 +123,7 @@ public class HttpFileDescription
           new ImmutableRunInfo(
               ImmutableMap.of(), CommandLineArgsFactory.from(ImmutableList.of(output))));
     }
-    return builder.build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(output)));
+    return builder.build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(output)));
   }
 
   /** Args required for http_rule */

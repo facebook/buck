@@ -1,6 +1,8 @@
 java_library(
     name = "compatible",
     srcs = glob(["*.java"]),
+    # Work around bug P129476630
+    abi_generation_mode = "class",
     tests = [
         "//test/com/facebook/buck/core/starlark/compatible:compatible",
     ],

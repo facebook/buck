@@ -32,14 +32,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import com.google.devtools.build.lib.vfs.PathFragment;
@@ -97,7 +97,7 @@ public class BuiltInProviderInfoTest {
         BuiltInProvider.of(ImmutableInfoWithMap.class);
 
     @Value.Parameter(order = 0)
-    public abstract SkylarkDict<String, Integer> map();
+    public abstract Dict<String, Integer> map();
   }
 
   @ImmutableInfo(args = {"val"})
@@ -121,8 +121,8 @@ public class BuiltInProviderInfoTest {
 
     public abstract String myInfo();
 
-    public static SomeInfoWithInstantiate instantiateFromSkylark(
-        SkylarkDict<String, String> s, int myInfo) throws EvalException {
+    public static SomeInfoWithInstantiate instantiateFromSkylark(Dict<String, String> s, int myInfo)
+        throws EvalException {
       Map<String, String> validated = s.getContents(String.class, String.class, "stuff");
       return new ImmutableSomeInfoWithInstantiate(
           ImmutableList.copyOf(validated.keySet()), Integer.toString(myInfo));
@@ -144,7 +144,7 @@ public class BuiltInProviderInfoTest {
     public abstract Location location();
 
     public static SomeInfoWithInstantiateAndLocation instantiateFromSkylark(
-        SkylarkDict<String, String> s, int myInfo, Location location) throws EvalException {
+        Dict<String, String> s, int myInfo, Location location) throws EvalException {
       Map<String, String> validated = s.getContents(String.class, String.class, "stuff");
       return new ImmutableSomeInfoWithInstantiateAndLocation(
           ImmutableList.copyOf(validated.keySet()), Integer.toString(myInfo), location);
@@ -187,14 +187,14 @@ public class BuiltInProviderInfoTest {
     public static final BuiltInProvider<SomeInfoWithMutableAndImmutable> PROVIDER =
         BuiltInProvider.of(ImmutableSomeInfoWithMutableAndImmutable.class);
 
-    public abstract SkylarkList<String> strList();
+    public abstract StarlarkList<String> strList();
 
     public abstract ImmutableList<Object> otherList();
 
     public abstract String val();
 
     public static SomeInfoWithMutableAndImmutable instantiateFromSkylark(
-        SkylarkList<String> strList, SkylarkList<Object> otherList, String val) {
+        StarlarkList<String> strList, StarlarkList<Object> otherList, String val) {
       return new ImmutableSomeInfoWithMutableAndImmutable(
           strList, otherList.getImmutableList(), val);
     }
@@ -251,14 +251,14 @@ public class BuiltInProviderInfoTest {
   @Test
   public void infoWithMapCanBeCreatedProperly()
       throws IllegalAccessException, InstantiationException, InvocationTargetException {
-    InfoWithMap someInfo1 = new ImmutableInfoWithMap(SkylarkDict.of(null, "a", 1));
-    assertEquals(SkylarkDict.of(null, "a", 1), someInfo1.map());
+    InfoWithMap someInfo1 = new ImmutableInfoWithMap(Dict.of(null, "a", 1));
+    assertEquals(Dict.of(null, "a", 1), someInfo1.map());
 
-    InfoWithMap someInfo2 = someInfo1.getProvider().createInfo(SkylarkDict.of(null, "b", 2));
-    assertEquals(SkylarkDict.of(null, "b", 2), someInfo2.map());
+    InfoWithMap someInfo2 = someInfo1.getProvider().createInfo(Dict.of(null, "b", 2));
+    assertEquals(Dict.of(null, "b", 2), someInfo2.map());
 
-    InfoWithMap someInfo3 = InfoWithMap.PROVIDER.createInfo(SkylarkDict.of(null));
-    assertEquals(SkylarkDict.<String, Integer>of(null), someInfo3.map());
+    InfoWithMap someInfo3 = InfoWithMap.PROVIDER.createInfo(Dict.of(null));
+    assertEquals(Dict.<String, Integer>of(null), someInfo3.map());
   }
 
   @Test
@@ -480,8 +480,7 @@ public class BuiltInProviderInfoTest {
         new TestMutableEnv(
             ImmutableMap.of(
                 "SomeInfoWithMutableAndImmutable", SomeInfoWithMutableAndImmutable.PROVIDER))) {
-      SkylarkList.MutableList<Integer> mutableList =
-          SkylarkList.MutableList.of(env.getEnv(), 1, 2, 3);
+      StarlarkList<Integer> mutableList = StarlarkList.of(env.getEnv().mutability(), 1, 2, 3);
       env.getEnv().update("mutable_list", mutableList);
 
       out = (SomeInfoWithMutableAndImmutable) TestStarlarkParser.eval(env.getEnv(), buildFile);

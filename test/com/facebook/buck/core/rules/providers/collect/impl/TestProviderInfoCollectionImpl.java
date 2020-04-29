@@ -22,7 +22,7 @@ import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 
 /**
  * Implementation of {@link ProviderInfoCollection} for tests that automatically creates an empty
@@ -58,7 +58,7 @@ public class TestProviderInfoCollectionImpl extends ProviderInfoCollectionImpl {
     }
 
     public ProviderInfoCollection build() {
-      return super.build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of()));
+      return super.build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of()));
     }
   }
 }

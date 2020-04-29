@@ -65,7 +65,7 @@ import com.google.devtools.build.lib.events.EventCollector;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -373,10 +373,7 @@ public class SkylarkProjectBuildFileParserTest {
         equalTo(
             ImmutableList.of(
                 GlobSpecWithResult.of(
-                    GlobSpec.of(
-                        SkylarkList.MutableList.of(null, "f*"),
-                        SkylarkList.MutableList.of(null),
-                        true),
+                    GlobSpec.of(StarlarkList.of(null, "f*"), StarlarkList.of(null), true),
                     ImmutableSet.of("file1", "file2")))));
   }
 

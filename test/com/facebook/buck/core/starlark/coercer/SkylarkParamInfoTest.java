@@ -43,8 +43,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Printer;
 import java.lang.reflect.Type;
 import java.util.Optional;
 import org.junit.Rule;
@@ -73,7 +73,7 @@ public class SkylarkParamInfoTest {
     }
 
     @Override
-    public void repr(SkylarkPrinter printer) {
+    public void repr(Printer printer) {
       printer.append("<attr.test_int>");
     }
   }
@@ -96,7 +96,7 @@ public class SkylarkParamInfoTest {
     }
 
     @Override
-    public void repr(SkylarkPrinter printer) {
+    public void repr(Printer printer) {
       printer.append("<attr.test_optional_int>");
     }
   }
@@ -118,7 +118,7 @@ public class SkylarkParamInfoTest {
     }
 
     @Override
-    public void repr(SkylarkPrinter printer) {
+    public void repr(Printer printer) {
       printer.append("<attr.test_list_string>");
     }
   }
@@ -140,7 +140,7 @@ public class SkylarkParamInfoTest {
     }
 
     @Override
-    public void repr(SkylarkPrinter printer) {
+    public void repr(Printer printer) {
       printer.append("<attr.test_map_string>");
     }
   }

@@ -16,19 +16,19 @@
 
 package com.facebook.buck.core.starlark.rule.attr;
 
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /**
  * Simple wrapper object to hold onto Attribute objects and get around some type erasure problems in
- * {@link SkylarkDict#getContents(Class, Class, String)}. If using {@code
- * com.facebook.buck.core.starlark.rule.attr.Attribute<T>}, then a {@code Class<T>} cannot be
+ * {@link com.google.devtools.build.lib.syntax.Dict#getContents(Class, Class, String)}. If using
+ * {@code com.facebook.buck.core.starlark.rule.attr.Attribute<T>}, then a {@code Class<T>} cannot be
  * instantiated. If the generic {@link com.facebook.buck.core.starlark.rule.attr.Attribute} type is
- * passed and used, then it is a compile error. We need {@link SkylarkDict#getContents(Class, Class,
- * String)} to succeed in order to validate the types of the objects in that dictionary, so add an
- * intermediate class. This is terrible.
+ * passed and used, then it is a compile error. We need {@link
+ * com.google.devtools.build.lib.syntax.Dict#getContents(Class, Class, String)} to succeed in order
+ * to validate the types of the objects in that dictionary, so add an intermediate class. This is
+ * terrible.
  */
-public interface AttributeHolder extends SkylarkValue {
+public interface AttributeHolder extends StarlarkValue {
   /** Get the actual attribute object */
   Attribute<?> getAttribute();
 }

@@ -25,14 +25,14 @@ import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.SkylarkExportable;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
+import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 import java.util.Collections;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -48,9 +48,10 @@ import javax.annotation.Nullable;
  * the user defined name of the class) are not safe to call.
  */
 public class UserDefinedProvider extends BaseFunction
-    implements Provider<UserDefinedProviderInfo>, SkylarkValue, SkylarkExportable {
+    implements Provider<UserDefinedProviderInfo>, StarlarkValue, SkylarkExportable {
 
   private final Key key;
+  private final Location location;
   private boolean isExported = false;
   @Nullable private String name = null;
 
@@ -64,10 +65,9 @@ public class UserDefinedProvider extends BaseFunction
    */
   public UserDefinedProvider(Location location, String[] fieldNames) {
     super(
-        null,
         FunctionSignature.namedOnly(0, fieldNames),
-        Collections.nCopies(fieldNames.length, Starlark.NONE),
-        location);
+        Collections.nCopies(fieldNames.length, Starlark.NONE));
+    this.location = location;
     this.key = new Key();
   }
 
@@ -82,7 +82,7 @@ public class UserDefinedProvider extends BaseFunction
   }
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.format("%s(", getName());
     MoreIterables.enumerate(Objects.requireNonNull(getSignature()).getParameterNames())
         .forEach(
@@ -105,6 +105,11 @@ public class UserDefinedProvider extends BaseFunction
   public String getName() {
     return Preconditions.checkNotNull(
         name, "Tried to get name before function has been assigned to a variable and exported");
+  }
+
+  @Override
+  public Location getLocation() {
+    return location;
   }
 
   @Override

@@ -29,9 +29,9 @@ import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.facebook.buck.core.starlark.testutil.TestStarlarkParser;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Printer;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.SyntaxError;
 import org.junit.Test;
 
@@ -50,7 +50,7 @@ public class SkylarkDependencyTest {
         new SkylarkDependency(
             BuildTargetFactory.newInstance("//foo:bar"),
             ProviderInfoCollectionImpl.builder()
-                .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of())));
+                .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of())));
 
     try (TestMutableEnv env = env(dep)) {
       boolean labelString =
@@ -67,9 +67,9 @@ public class SkylarkDependencyTest {
         new SkylarkDependency(
             BuildTargetFactory.newInstance("//foo:bar"),
             ProviderInfoCollectionImpl.builder()
-                .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of())));
+                .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of())));
 
-    assertEquals("<dependency //foo:bar>", Printer.repr(dep));
+    assertEquals("<dependency //foo:bar>", Printer.getPrinter().repr(dep).toString());
   }
 
   @Test
@@ -79,7 +79,7 @@ public class SkylarkDependencyTest {
         new SkylarkDependency(
             BuildTargetFactory.newInstance("//foo:bar"),
             ProviderInfoCollectionImpl.builder()
-                .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of())));
+                .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of())));
 
     try (TestMutableEnv env = env(dep)) {
       boolean presentProvider =
@@ -98,7 +98,7 @@ public class SkylarkDependencyTest {
         new SkylarkDependency(
             BuildTargetFactory.newInstance("//foo:bar"),
             ProviderInfoCollectionImpl.builder()
-                .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of())));
+                .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of())));
 
     try (TestMutableEnv env = env(dep)) {
       boolean presentProvider =

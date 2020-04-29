@@ -20,8 +20,8 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkValue;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.StarlarkValue;
 
 /**
  * Helper struct fields that should be available to users of Artifact inside of user defined rules
@@ -35,7 +35,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
     doc = "Represents either a generated file, or a source file",
     title = "Artifact",
     category = SkylarkModuleCategory.BUILTIN)
-public interface SkylarkArtifactApi extends SkylarkValue {
+public interface SkylarkArtifactApi extends StarlarkValue {
 
   @SkylarkCallable(
       name = "basename",

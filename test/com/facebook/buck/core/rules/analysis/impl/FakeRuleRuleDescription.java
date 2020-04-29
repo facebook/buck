@@ -31,7 +31,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -69,7 +69,7 @@ public class FakeRuleRuleDescription implements RuleDescription<FakeRuleDescript
         ImmutableSortedSet.of(artifact),
         actionExecution);
     return TestProviderInfoCollectionImpl.builder()
-        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of(artifact)));
+        .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(artifact)));
   }
 
   @Override

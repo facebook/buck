@@ -28,7 +28,7 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import com.google.devtools.build.lib.skylarkinterface.SkylarkPrinter;
+import com.google.devtools.build.lib.syntax.Printer;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,7 +56,7 @@ public abstract class UnconfiguredDepListAttribute
   public abstract boolean getAllowEmpty();
 
   @Override
-  public void repr(SkylarkPrinter printer) {
+  public void repr(Printer printer) {
     printer.append("<attr.dep_list>");
   }
 

@@ -48,7 +48,7 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -162,7 +162,7 @@ public class LegacyRuleDescription
     Artifact artifact = BuildTargetSourcePathToArtifactConverter.convert(filesystem, sourcePath);
 
     return ProviderInfoCollectionImpl.builder()
-        .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)));
+        .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableSet.of(artifact)));
   }
 
   @RuleArg

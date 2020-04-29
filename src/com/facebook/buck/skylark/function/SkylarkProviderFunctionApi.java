@@ -22,9 +22,9 @@ import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.ParamType;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkGlobalLibrary;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
-import com.google.devtools.build.lib.syntax.SkylarkList;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 
 /**
  * Interface for a global Skylark library containing the provider method.
@@ -65,8 +65,8 @@ public interface SkylarkProviderFunctionApi {
                     + "</ul>"
                     + "All fields are optional.",
             allowedTypes = {
-              @ParamType(type = SkylarkList.class, generic1 = String.class),
-              @ParamType(type = SkylarkDict.class)
+              @ParamType(type = StarlarkList.class, generic1 = String.class),
+              @ParamType(type = Dict.class)
             },
             noneable = true,
             named = true,

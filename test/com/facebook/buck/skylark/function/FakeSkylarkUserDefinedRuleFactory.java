@@ -96,12 +96,17 @@ public class FakeSkylarkUserDefinedRuleFactory {
     FunctionSignature signature =
         FunctionSignature.create(1, 0, 0, 0, false, false, ImmutableList.of("ctx"));
     BaseFunction implementation =
-        new BaseFunction("unconfigured", signature) {
+        new BaseFunction(signature) {
           @Override
           public Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env) {
             Preconditions.checkArgument(args.length == 1);
             Preconditions.checkArgument(args[0] instanceof SkylarkRuleContext);
             return callable.apply((SkylarkRuleContext) args[0]);
+          }
+
+          @Override
+          public String getName() {
+            return "unconfigured";
           }
         };
     SkylarkUserDefinedRule ret =

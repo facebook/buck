@@ -37,7 +37,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
+import com.google.devtools.build.lib.syntax.Dict;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -56,7 +56,7 @@ public class SourceArtifactConverterTest {
 
     ProviderInfoCollection dep =
         TestProviderInfoCollectionImpl.builder()
-            .build(new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableSet.of(artifact)));
+            .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableSet.of(artifact)));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps = ImmutableMap.of(target, dep);
 

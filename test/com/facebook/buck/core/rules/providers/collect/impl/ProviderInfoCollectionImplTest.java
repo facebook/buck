@@ -32,9 +32,10 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.starlark.compatible.MutableObjectException;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkDict;
 import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.Optional;
 import org.junit.Rule;
@@ -46,7 +47,7 @@ public class ProviderInfoCollectionImplTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private static final DefaultInfo DEFAULT_INFO =
-      new ImmutableDefaultInfo(SkylarkDict.empty(), ImmutableList.of());
+      new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of());
 
   @Test
   public void getIndexThrowsWhenKeyNotProvider() throws EvalException {
@@ -144,11 +145,11 @@ public class ProviderInfoCollectionImplTest {
   public void throwsExceptionIfAddingMutableValue() {
     try (TestMutableEnv env = new TestMutableEnv()) {
       ProviderInfoCollectionImpl.Builder collection = ProviderInfoCollectionImpl.builder();
-      SkylarkDict<String, ImmutableList<Artifact>> mutableDict = SkylarkDict.of(env.getEnv());
+      Dict<String, ImmutableList<Artifact>> mutableDict = Dict.of(env.getEnv().mutability());
 
       assertFalse(mutableDict.isImmutable());
       expectedException.expect(MutableObjectException.class);
-      collection.put(new ImmutableDefaultInfo(mutableDict, ImmutableList.of()));
+      collection.put(new ImmutableDefaultInfo(mutableDict, ImmutableSet.of()));
     }
   }
 }

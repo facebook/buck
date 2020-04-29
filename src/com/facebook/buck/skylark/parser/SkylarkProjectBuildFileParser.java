@@ -204,10 +204,10 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
             }));
     pojoizer.addPojoTransformer(
         BuildFileManifestPojoizer.PojoTransformer.of(
-            com.google.devtools.build.lib.syntax.SkylarkNestedSet.class,
+            com.google.devtools.build.lib.syntax.Depset.class,
             obj -> {
-              com.google.devtools.build.lib.syntax.SkylarkNestedSet skylarkNestedSet =
-                  (com.google.devtools.build.lib.syntax.SkylarkNestedSet) obj;
+              com.google.devtools.build.lib.syntax.Depset skylarkNestedSet =
+                  (com.google.devtools.build.lib.syntax.Depset) obj;
               // recursively convert set elements
               return pojoizer.convertToPojo(skylarkNestedSet.toCollection());
             }));
