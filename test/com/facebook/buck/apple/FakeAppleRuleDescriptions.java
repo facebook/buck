@@ -112,24 +112,25 @@ public class FakeAppleRuleDescriptions {
               () -> {
                 ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
                 Stream.of(
+                        "Platforms/iPhoneOS.platform/Developer/usr/bin/libtool",
+                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/ar",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil",
+                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/ld",
+                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/lipo",
+                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/nm",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/ranlib",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/strip",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc",
                         "Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/nm",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/ar",
-                        "Toolchains/XcodeDefault.xctoolchain/usr/bin/libtool",
-                        "Platforms/iPhoneOS.platform/Developer/usr/bin/libtool",
+                        "Tools/otest",
                         "usr/bin/actool",
                         "usr/bin/ibtool",
                         "usr/bin/momc",
                         "usr/bin/copySceneKitAssets",
                         "usr/bin/lldb",
-                        "Tools/otest",
                         "usr/bin/xctest")
                     .forEach(
                         path -> {
