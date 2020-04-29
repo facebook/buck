@@ -451,7 +451,10 @@ public class Serializer {
       } else if (value instanceof ConfigurationForConfigurationTargets) {
         stream.writeInt(TARGET_CONFIGURATION_TYPE_CONFIGURATION);
       } else {
-        throw new IllegalArgumentException("Cannot serialize target configuration: " + value);
+        throw new BuckUncheckedExecutionException(
+            String.format(
+                "Cannot serialize target configuration %s (%s)",
+                value, value.getClass().getName()));
       }
     }
   }

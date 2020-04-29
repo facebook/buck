@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
@@ -71,8 +72,11 @@ public class JsonTargetConfigurationSerializer implements TargetConfigurationSer
         return objectWriter.writeValueAsString(targetConfiguration);
       }
     } catch (JsonProcessingException e) {
-      throw new HumanReadableException(
-          e, "Cannot serialize target configuration %s", targetConfiguration);
+      throw new BuckUncheckedExecutionException(
+          e,
+          String.format(
+              "Cannot serialize target configuration %s (%s)",
+              targetConfiguration, targetConfiguration.getClass().getName()));
     }
   }
 
