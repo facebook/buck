@@ -8,6 +8,9 @@ java_library(
         ["*.java"],
         exclude = UTILS_SRCS,
     ),
+    tests = [
+        "//test/com/facebook/buck/downwardapi/processexecutor:processexecutor",
+    ],
     visibility = ["PUBLIC"],
     deps = [
         ":utils",
