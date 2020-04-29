@@ -50,6 +50,7 @@ public class InstrumentationTestRunner {
   private final Map<String, String> extraInstrumentationArguments;
   private final boolean debug;
   private final boolean codeCoverage;
+  private final boolean autoRunOnConnectedDevice;
   @Nullable private final String instrumentationApkPath;
   @Nullable private final String apkUnderTestPath;
   @Nullable private final String codeCoverageOutputFile;
@@ -71,6 +72,7 @@ public class InstrumentationTestRunner {
       boolean debug,
       boolean codeCoverage,
       String codeCoverageOutputFile,
+      boolean autoRunOnConnectedDevice,
       Map<String, String> extraInstrumentationArguments) {
     this.adbExecutablePath = adbExecutablePath;
     this.deviceSerial = deviceSerial;
@@ -86,6 +88,7 @@ public class InstrumentationTestRunner {
     this.attemptUninstallInstrumentationApk = attemptUninstallInstrumentationApk;
     this.codeCoverageOutputFile = codeCoverageOutputFile;
     this.extraInstrumentationArguments = extraInstrumentationArguments;
+    this.autoRunOnConnectedDevice = autoRunOnConnectedDevice;
     this.debug = debug;
     this.codeCoverage = codeCoverage;
   }
@@ -105,6 +108,7 @@ public class InstrumentationTestRunner {
     boolean attemptUninstallInstrumentationApk = false;
     boolean debug = false;
     boolean codeCoverage = false;
+    boolean autoRunOnConnectedDevice = false;
     Map<String, String> extraInstrumentationArguments = new HashMap<String, String>();
 
     for (int i = 0; i < args.length; i++) {
@@ -159,6 +163,9 @@ public class InstrumentationTestRunner {
         case "--code-coverage-output-file":
           codeCoverageOutputFile = args[++i];
           break;
+        case "--auto-run-on-connected-device":
+          autoRunOnConnectedDevice = true;
+          break;
         case "--extra-instrumentation-argument":
           String rawArg = args[++i];
           String[] extraArguments = rawArg.split("=", 2);
@@ -197,8 +204,9 @@ public class InstrumentationTestRunner {
     }
 
     String deviceSerial = System.getProperty("buck.device.id");
-    if (deviceSerial == null) {
-      System.err.println("Must pass buck.device.id system property.");
+    if (deviceSerial == null && !autoRunOnConnectedDevice) {
+      System.err.println(
+          "Must pass buck.device.id system property, as this run is not configured to auto-connect to device.");
       System.exit(1);
     }
 
@@ -218,16 +226,12 @@ public class InstrumentationTestRunner {
         debug,
         codeCoverage,
         codeCoverageOutputFile,
+        autoRunOnConnectedDevice,
         extraInstrumentationArguments);
   }
 
   public void run() throws Throwable {
-    IDevice device = getDevice(this.deviceSerial);
-
-    if (device == null) {
-      System.err.printf("Unable to get device/emulator with serial %s", this.deviceSerial);
-      System.exit(1);
-    }
+    IDevice device = getAndroidDevice(this.autoRunOnConnectedDevice, this.deviceSerial);
 
     if (this.instrumentationApkPath != null) {
       DdmPreferences.setTimeOut(60000);
@@ -249,7 +253,10 @@ public class InstrumentationTestRunner {
 
     try {
       RemoteAndroidTestRunner runner =
-          new RemoteAndroidTestRunner(this.packageName, this.testRunner, getDevice(deviceSerial));
+          new RemoteAndroidTestRunner(
+              this.packageName,
+              this.testRunner,
+              getAndroidDevice(this.autoRunOnConnectedDevice, this.deviceSerial));
 
       for (Map.Entry<String, String> entry : this.extraInstrumentationArguments.entrySet()) {
         runner.addInstrumentationArg(entry.getKey(), entry.getValue());
@@ -318,13 +325,49 @@ public class InstrumentationTestRunner {
   }
 
   @Nullable
-  private IDevice getDevice(String serial) throws InterruptedException {
+  private IDevice getAndroidDevice(boolean autoRunOnConnectedDevice, String deviceSerial)
+      throws InterruptedException {
+    IDevice device = null;
+    if (autoRunOnConnectedDevice) {
+      device = getSingleConnectedDevice();
+    } else {
+      device = getDevice(deviceSerial);
+      if (device == null) {
+        System.err.printf("Unable to get device/emulator with serial %s", deviceSerial);
+        System.exit(1);
+      }
+    }
+
+    return device;
+  }
+
+  @Nullable
+  private AndroidDebugBridge getADB() throws InterruptedException {
     AndroidDebugBridge adb = createAdb();
 
     if (adb == null) {
       System.err.println("Unable to set up adb.");
       System.exit(1);
     }
+    return adb;
+  }
+
+  @Nullable
+  private IDevice getSingleConnectedDevice() throws InterruptedException {
+    AndroidDebugBridge adb = getADB();
+
+    IDevice[] allDevices = adb.getDevices();
+    if (allDevices.length != 1) {
+      System.err.println(
+          "Found " + allDevices.length + " devices, we expect one device to be present.");
+      System.exit(1);
+    }
+    return allDevices[0];
+  }
+
+  @Nullable
+  private IDevice getDevice(String serial) throws InterruptedException {
+    AndroidDebugBridge adb = getADB();
 
     IDevice[] allDevices = adb.getDevices();
     for (IDevice device : allDevices) {
