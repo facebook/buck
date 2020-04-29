@@ -68,7 +68,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
 import java.io.IOException;
 import java.util.Collection;
@@ -211,8 +210,7 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
 
   public ImmutableSet<QueryBuildTarget> getTargetsFromTargetNodes(
       Iterable<TargetNode<?>> targetNodes) {
-    ImmutableSortedSet.Builder<QueryBuildTarget> builder =
-        new ImmutableSortedSet.Builder<>(QueryTarget::compare);
+    ImmutableSet.Builder<QueryBuildTarget> builder = ImmutableSet.builder();
     for (TargetNode<?> targetNode : targetNodes) {
       builder.add(getOrCreateQueryBuildTarget(targetNode.getBuildTarget()));
     }
@@ -221,8 +219,7 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
 
   public ImmutableSet<QueryBuildTarget> getTargetsFromBuildTargets(
       Iterable<BuildTarget> buildTargets) {
-    ImmutableSortedSet.Builder<QueryBuildTarget> builder =
-        new ImmutableSortedSet.Builder<>(QueryTarget::compare);
+    ImmutableSet.Builder<QueryBuildTarget> builder = ImmutableSet.builder();
     for (BuildTarget buildTarget : buildTargets) {
       builder.add(getOrCreateQueryBuildTarget(buildTarget));
     }

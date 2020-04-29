@@ -37,6 +37,7 @@ import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
+import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
 import com.facebook.buck.parser.spec.BuildTargetMatcherTargetNodeParser;
@@ -46,6 +47,7 @@ import com.facebook.buck.util.MoreExceptions;
 import com.facebook.buck.util.types.Pair;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.base.Functions;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -241,10 +243,16 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
   public ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
       Cell cell, AbsPath buildFile, Optional<TargetConfiguration> targetConfiguration) {
     // TODO(srice): Should we be ignorning the configuration here?
+
+    // The index was built up with directories, but the input to this function is a buildfile path.
+    // Make sure we're getting what we expect and then chop off the buildfile name.
+    Preconditions.checkState(
+        buildFile.endsWith(cell.getBuckConfigView(ParserConfig.class).getBuildFileName()));
+    AbsPath buildFileDirectory = buildFile.getParent();
     CellRelativePath cellRelativePath =
         CellRelativePath.of(
             cell.getCanonicalName(),
-            ForwardRelativePath.ofRelPath(cell.getRoot().relativize(buildFile)));
+            ForwardRelativePath.ofRelPath(cell.getRoot().relativize(buildFileDirectory)));
     return pathToBuildTargetIndex.get(cellRelativePath).stream()
         .map(targetToNodeIndex::get)
         .collect(ImmutableList.toImmutableList());

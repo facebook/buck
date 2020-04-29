@@ -453,6 +453,19 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void ownerFunctionReturnsOwnerOfFileInAllConfigurationsInUniverse() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "owner(lib/bar-all.m)", "--target-universe", "//bin:ios-bin,//bin:tvos-bin");
+    assertOutputMatches(
+        "//lib:bar (//config/platform:ios)\n//lib:bar (//config/platform:tvos)", result);
+  }
+
+  @Test
   public void ownerForFileWithOwnerThatsOutsideTargetUniverseReturnsNothing() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
