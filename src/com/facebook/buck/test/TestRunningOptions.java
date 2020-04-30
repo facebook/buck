@@ -16,6 +16,7 @@
 
 package com.facebook.buck.test;
 
+import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.google.common.collect.ImmutableMap;
@@ -29,6 +30,11 @@ public abstract class TestRunningOptions {
 
   @Value.Default
   public boolean isCodeCoverageEnabled() {
+    return false;
+  }
+
+  @Value.Default
+  public boolean isDebugEnabled() {
     return false;
   }
 
@@ -49,6 +55,16 @@ public abstract class TestRunningOptions {
 
   @Value.Default
   public boolean isShufflingTests() {
+    return false;
+  }
+
+  @Value.Default
+  public long getDefaultTestTimeoutMillis() {
+    return 0L;
+  }
+
+  @Value.Default
+  public boolean isInclNoLocationClassesEnabled() {
     return false;
   }
 
@@ -73,6 +89,8 @@ public abstract class TestRunningOptions {
   public abstract Optional<String> getCoverageIncludes();
 
   public abstract Optional<String> getJavaTempDir();
+
+  public abstract Optional<TargetDevice> getTargetDevice();
 
   public static Builder builder() {
     return new Builder();

@@ -228,14 +228,6 @@ abstract class AbstractBuildCommand extends AbstractCommand {
     return arguments;
   }
 
-  public boolean isCodeCoverageEnabled() {
-    return false;
-  }
-
-  public boolean isDebugEnabled() {
-    return false;
-  }
-
   /** Which build mode. */
   public Optional<BuildType> getBuildEngineMode() {
     Optional<BuildType> mode = Optional.empty();
@@ -807,9 +799,6 @@ abstract class AbstractBuildCommand extends AbstractCommand {
   @Override
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
     return super.getExecutionContextBuilder(params)
-        .setTargetDevice(Optional.empty())
-        .setCodeCoverageEnabled(isCodeCoverageEnabled())
-        .setDebugEnabled(isDebugEnabled())
         .setShouldReportAbsolutePaths(shouldReportAbsolutePaths());
   }
 

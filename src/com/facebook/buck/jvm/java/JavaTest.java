@@ -226,7 +226,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         amendVmArgs(
             Arg.stringify(this.vmArgs, pathResolver),
             pathResolver,
-            executionContext.getTargetDevice(),
+            options.getTargetDevice(),
             options.getJavaTempDir());
 
     BuckEventBus buckEventBus = executionContext.getBuckEventBus();
@@ -239,9 +239,10 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setDirectoryForTestResults(outDir)
             .setClasspathFile(getClassPathFile())
             .setTestRunnerClasspath(TESTRUNNER_CLASSES)
-            .setCodeCoverageEnabled(executionContext.isCodeCoverageEnabled())
-            .setInclNoLocationClassesEnabled(executionContext.isInclNoLocationClassesEnabled())
-            .setDebugEnabled(executionContext.isDebugEnabled())
+            .setCodeCoverageEnabled(options.isCodeCoverageEnabled())
+            .setInclNoLocationClassesEnabled(options.isInclNoLocationClassesEnabled())
+            .setDefaultTestTimeoutMillis(options.getDefaultTestTimeoutMillis())
+            .setDebugEnabled(options.isDebugEnabled())
             .setPathToJavaAgent(options.getPathToJavaAgent())
             .setBuildId(buildId)
             .setBuckModuleBaseSourceCodePath(

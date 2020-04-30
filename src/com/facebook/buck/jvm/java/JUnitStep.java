@@ -49,7 +49,7 @@ public class JUnitStep extends ShellStep {
   private final Optional<Long> testCaseTimeoutMs;
   private final ImmutableMap<String, String> env;
   private final JUnitJvmArgs junitJvmArgs;
-  private Supplier<Path> classpathArgfile;
+  private final Supplier<Path> classpathArgfile;
 
   // Set when the junit command times out.
   private boolean hasTimedOut = false;
@@ -109,7 +109,7 @@ public class JUnitStep extends ShellStep {
         filesystem,
         classpathArgfile,
         context.getVerbosity(),
-        testCaseTimeoutMs.orElse(context.getDefaultTestTimeoutMillis()));
+        testCaseTimeoutMs.orElse(junitJvmArgs.getDefaultTestTimeoutMillis()));
 
     if (junitJvmArgs.isDebugEnabled()) {
       warnUser(

@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.build.execution.context;
 
-import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelper;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.model.BuildId;
@@ -47,8 +46,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import org.immutables.value.Value;
 
-@BuckStyleValueWithBuilder
 /** The context exposed for executing {@link com.facebook.buck.step.Step}s */
+@BuckStyleValueWithBuilder
 public abstract class ExecutionContext implements Closeable {
 
   public abstract Console getConsole();
@@ -58,8 +57,6 @@ public abstract class ExecutionContext implements Closeable {
   public abstract Platform getPlatform();
 
   public abstract ImmutableMap<String, String> getEnvironment();
-
-  public abstract Optional<TargetDevice> getTargetDevice();
 
   public abstract Optional<AndroidDevicesHelper> getAndroidDevicesHelper();
 
@@ -79,27 +76,7 @@ public abstract class ExecutionContext implements Closeable {
   public abstract ProjectFilesystemFactory getProjectFilesystemFactory();
 
   @Value.Default
-  public long getDefaultTestTimeoutMillis() {
-    return 0L;
-  }
-
-  @Value.Default
-  public boolean isCodeCoverageEnabled() {
-    return false;
-  }
-
-  @Value.Default
-  public boolean isInclNoLocationClassesEnabled() {
-    return false;
-  }
-
-  @Value.Default
   public boolean shouldReportAbsolutePaths() {
-    return false;
-  }
-
-  @Value.Default
-  public boolean isDebugEnabled() {
     return false;
   }
 

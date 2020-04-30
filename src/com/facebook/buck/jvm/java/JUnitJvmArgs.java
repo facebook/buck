@@ -85,6 +85,11 @@ abstract class JUnitJvmArgs {
     return false;
   }
 
+  @Value.Default
+  public long getDefaultTestTimeoutMillis() {
+    return 0L;
+  }
+
   /** @return If true, include explanations for tests that were filtered out. */
   @Value.Default
   boolean isShouldExplainTestSelectorList() {

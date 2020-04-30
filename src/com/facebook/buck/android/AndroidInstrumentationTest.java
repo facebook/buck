@@ -218,8 +218,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             getFilterString(options),
             Optional.empty(),
             options.getEnvironmentOverrides(),
-            executionContext.isDebugEnabled(),
-            executionContext.isCodeCoverageEnabled(),
+            options.isDebugEnabled(),
+            options.isCodeCoverageEnabled(),
             false));
 
     return steps.build();
@@ -443,8 +443,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
             Optional.empty(),
             apkUnderTestPath,
             testRunningOptions.getEnvironmentOverrides(),
-            executionContext.isDebugEnabled(),
-            executionContext.isCodeCoverageEnabled(),
+            testRunningOptions.isDebugEnabled(),
+            testRunningOptions.isCodeCoverageEnabled(),
             true);
 
     Path ddmlib = getPathForResourceJar(ddmlibJar);

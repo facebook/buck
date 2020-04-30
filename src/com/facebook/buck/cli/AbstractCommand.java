@@ -51,7 +51,6 @@ import com.facebook.buck.rules.keys.TrackedRuleKeyCache;
 import com.facebook.buck.support.cli.args.BuckCellArg;
 import com.facebook.buck.support.cli.args.GlobalCliOptions;
 import com.facebook.buck.support.cli.config.CliConfig;
-import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
 import com.facebook.buck.util.ExitCode;
@@ -421,7 +420,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
 
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
     BuckConfig buckConfig = params.getBuckConfig();
-    TestBuckConfig testBuckConfig = buckConfig.getView(TestBuckConfig.class);
     CliConfig cliConfig = buckConfig.getView(CliConfig.class);
 
     Cell rootCell = params.getCells().getRootCell();
@@ -435,8 +433,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setCellPathResolver(rootCell.getCellPathResolver())
             .setBuildCellRootPath(rootCell.getRoot().getPath())
             .setProcessExecutor(new DefaultProcessExecutor(console))
-            .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
-            .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled())
             .setRuleKeyDiagnosticsMode(
                 buckConfig.getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
             .setConcurrencyLimit(getConcurrencyLimit(buckConfig))

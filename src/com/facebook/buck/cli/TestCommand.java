@@ -16,7 +16,6 @@
 
 package com.facebook.buck.cli;
 
-import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.android.device.TargetDeviceOptions;
 import com.facebook.buck.android.exopackage.AndroidDevicesHelperFactory;
 import com.facebook.buck.command.Build;
@@ -213,20 +212,6 @@ public class TestCommand extends BuildCommand {
     return all || getArguments().isEmpty();
   }
 
-  @Override
-  public boolean isCodeCoverageEnabled() {
-    return isCodeCoverageEnabled;
-  }
-
-  @Override
-  public boolean isDebugEnabled() {
-    return isDebugEnabled;
-  }
-
-  public Optional<TargetDevice> getTargetDeviceOptional() {
-    return targetDeviceOptions.getTargetDeviceOptional();
-  }
-
   public AdbOptions getAdbOptions(BuckConfig buckConfig) {
     return adbOptions.getAdbOptions(buckConfig);
   }
@@ -254,14 +239,14 @@ public class TestCommand extends BuildCommand {
   }
 
   public int getNumTestThreads(BuckConfig buckConfig) {
-    if (isDebugEnabled()) {
+    if (isDebugEnabled) {
       return 1;
     }
     return buckConfig.getView(TestBuckConfig.class).getNumTestThreads();
   }
 
   public int getNumTestManagedThreads(ResourcesConfig resourcesConfig) {
-    if (isDebugEnabled()) {
+    if (isDebugEnabled) {
       return 1;
     }
     return resourcesConfig.getManagedThreadCount();
@@ -273,9 +258,11 @@ public class TestCommand extends BuildCommand {
     EnumSet<CoverageReportFormat> coverageFormats = EnumSet.noneOf(CoverageReportFormat.class);
     coverageFormats.addAll(Arrays.asList(this.coverageReportFormats));
 
+    BuckConfig buckConfig = params.getBuckConfig();
+    TestBuckConfig testBuckConfig = buckConfig.getView(TestBuckConfig.class);
+
     TestRunningOptions.Builder builder =
         TestRunningOptions.builder()
-            .setCodeCoverageEnabled(isCodeCoverageEnabled)
             .setRunAllTests(isRunAllTests())
             .setTestSelectorList(testSelectorOptions.getTestSelectorList())
             .setShouldExplainTestSelectorList(testSelectorOptions.shouldExplain())
@@ -285,9 +272,13 @@ public class TestCommand extends BuildCommand {
             .setCoverageReportFormats(coverageFormats)
             .setCoverageReportTitle(coverageReportTitle)
             .setEnvironmentOverrides(environmentOverrides)
-            .setJavaTempDir(params.getBuckConfig().getView(JavaBuckConfig.class).getJavaTempDir());
+            .setJavaTempDir(params.getBuckConfig().getView(JavaBuckConfig.class).getJavaTempDir())
+            .setTargetDevice(targetDeviceOptions.getTargetDeviceOptional())
+            .setCodeCoverageEnabled(isCodeCoverageEnabled)
+            .setDebugEnabled(isDebugEnabled)
+            .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
+            .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled());
 
-    TestBuckConfig testBuckConfig = params.getBuckConfig().getView(TestBuckConfig.class);
     Optional<ImmutableList<String>> coverageIncludes = testBuckConfig.getCoverageIncludes();
     Optional<ImmutableList<String>> coverageExcludes = testBuckConfig.getCoverageExcludes();
 
@@ -762,7 +753,6 @@ public class TestCommand extends BuildCommand {
   @Override
   protected ExecutionContext.Builder getExecutionContextBuilder(CommandRunnerParams params) {
     return super.getExecutionContextBuilder(params)
-        .setTargetDevice(getTargetDeviceOptional())
         .setAndroidDevicesHelper(
             AndroidDevicesHelperFactory.get(
                 params.getCells().getRootCell().getToolchainProvider(),

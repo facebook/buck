@@ -76,6 +76,7 @@ public class JUnitStepTest {
             .setTestType(TestType.JUNIT)
             .setDirectoryForTestResults(directoryForTestResults)
             .addAllTestClasses(testClassNames)
+            .setDefaultTestTimeoutMillis(5000L)
             .build();
 
     JUnitStep junit =
@@ -89,12 +90,9 @@ public class JUnitStepTest {
             args);
 
     ExecutionContext executionContext =
-        TestExecutionContext.newBuilder()
-            .setConsole(new TestConsole(Verbosity.ALL))
-            .setDefaultTestTimeoutMillis(5000L)
-            .build();
+        TestExecutionContext.newBuilder().setConsole(new TestConsole(Verbosity.ALL)).build();
     assertEquals(executionContext.getVerbosity(), Verbosity.ALL);
-    assertEquals(executionContext.getDefaultTestTimeoutMillis(), 5000L);
+    assertEquals(args.getDefaultTestTimeoutMillis(), 5000L);
 
     List<String> observedArgs = junit.getShellCommand(executionContext);
     MoreAsserts.assertListEquals(
@@ -154,6 +152,7 @@ public class JUnitStepTest {
             .setTestType(TestType.JUNIT)
             .setDirectoryForTestResults(directoryForTestResults)
             .addAllTestClasses(testClassNames)
+            .setDefaultTestTimeoutMillis(5000L)
             .build();
 
     JUnitStep junit =
@@ -167,12 +166,9 @@ public class JUnitStepTest {
             args);
 
     ExecutionContext executionContext =
-        TestExecutionContext.newBuilder()
-            .setConsole(new TestConsole(Verbosity.ALL))
-            .setDefaultTestTimeoutMillis(5000L)
-            .build();
+        TestExecutionContext.newBuilder().setConsole(new TestConsole(Verbosity.ALL)).build();
     assertEquals(executionContext.getVerbosity(), Verbosity.ALL);
-    assertEquals(executionContext.getDefaultTestTimeoutMillis(), 5000L);
+    assertEquals(args.getDefaultTestTimeoutMillis(), 5000L);
 
     Path classpathArgfile = filesystem.resolve(junit.getClasspathArgfile());
 
@@ -285,7 +281,7 @@ public class JUnitStepTest {
 
     TestConsole console = new TestConsole(Verbosity.ALL);
     ExecutionContext executionContext =
-        TestExecutionContext.newBuilder().setConsole(console).setDebugEnabled(true).build();
+        TestExecutionContext.newBuilder().setConsole(console).build();
 
     List<String> observedArgs = junit.getShellCommand(executionContext);
     MoreAsserts.assertListEquals(

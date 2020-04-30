@@ -1653,7 +1653,6 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
       ExecutionContext executionContext =
           TestExecutionContext.newBuilder()
               .setConsole(new Console(Verbosity.SILENT, System.out, System.err, Ansi.withoutTty()))
-              .setDebugEnabled(true)
               .build();
 
       return javacCommand.getOptions(executionContext, buildClasspath);

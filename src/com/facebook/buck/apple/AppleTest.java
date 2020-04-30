@@ -379,7 +379,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               xctoolStdoutReader,
               appleDeveloperDirectoryForTestsProvider,
               options.getTestSelectorList(),
-              context.isDebugEnabled(),
+              options.isDebugEnabled(),
               Optional.of(testLogDirectoryEnvironmentVariable),
               Optional.of(resolvedTestLogsPath),
               Optional.of(testLogLevelEnvironmentVariable),
