@@ -114,7 +114,7 @@ public class ShellStepTest {
 
     return new ShellStep(workingDirectory) {
       @Override
-      public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+      public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
         return env;
       }
 
@@ -124,7 +124,7 @@ public class ShellStepTest {
       }
 
       @Override
-      protected Optional<String> getStdin(ExecutionContext context) {
+      protected Optional<String> getStdin() {
         return stdin;
       }
 

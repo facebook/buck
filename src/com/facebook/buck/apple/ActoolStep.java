@@ -20,6 +20,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -126,7 +127,7 @@ class ActoolStep extends ShellStep {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
     return environment;
   }
 

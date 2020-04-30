@@ -599,7 +599,6 @@ public class GenruleBuildable implements Buildable {
         programRunner) {
       @Override
       protected void addEnvironmentVariables(
-          ExecutionContext executionContext,
           ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
         GenruleBuildable.this.addEnvironmentVariables(
             sourcePathResolverAdapter,

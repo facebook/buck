@@ -58,10 +58,11 @@ public class ExternallyBuiltApplePackageTest {
   private ProjectFilesystem projectFilesystem;
   private ActionGraphBuilder graphBuilder;
   private ExternallyBuiltApplePackage.ApplePackageConfigAndPlatformInfo config;
+  private Platform platform = Platform.detect();
 
   @Before
   public void setUp() {
-    assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
+    assumeTrue(platform == Platform.MACOS || platform == Platform.LINUX);
     bundleLocation = "Fake/Bundle/Location";
     buildTarget = BuildTargetFactory.newInstance("//foo", "package");
     projectFilesystem = new FakeProjectFilesystem();
@@ -94,7 +95,7 @@ public class ExternallyBuiltApplePackageTest {
                     new FakeBuildableContext()),
                 AbstractGenruleStep.class));
     assertThat(
-        step.getEnvironmentVariables(TestExecutionContext.newInstance()),
+        step.getEnvironmentVariables(platform),
         hasEntry(
             "SDKROOT",
             FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_ARMV7_PLATFORM

@@ -27,6 +27,7 @@ import com.facebook.buck.test.selectors.TestDescription;
 import com.facebook.buck.test.selectors.TestSelectorList;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -206,7 +207,7 @@ public class PythonRunTestsStep implements Step {
       }
 
       @Override
-      public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+      public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
         return environment;
       }
 

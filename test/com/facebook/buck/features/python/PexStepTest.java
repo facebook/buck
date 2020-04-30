@@ -169,9 +169,7 @@ public class PexStepTest {
                 .build(),
             PRELOAD_LIBRARIES);
 
-    Map<String, Object> args =
-        ObjectMappers.readValue(
-            step.getStdin(TestExecutionContext.newInstance()).orElse(""), Map.class);
+    Map<String, Object> args = ObjectMappers.readValue(step.getStdin().orElse(""), Map.class);
     Assert.assertTrue(file1.isAbsolute());
     Assert.assertTrue(file2.isAbsolute());
     Assert.assertTrue(childFile.isAbsolute());

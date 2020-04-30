@@ -127,7 +127,7 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
     ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
     env.putAll(this.env);
     env.putAll(nativeLibsEnvironment);
@@ -223,7 +223,7 @@ public class JUnitStep extends ShellStep {
   }
 
   @Override
-  protected int getExitCodeFromResult(ExecutionContext context, ProcessExecutor.Result result) {
+  protected int getExitCodeFromResult(ProcessExecutor.Result result) {
     int exitCode = result.getExitCode();
 
     // If we timed out, force the exit code to 0 just so that the step itself doesn't fail,

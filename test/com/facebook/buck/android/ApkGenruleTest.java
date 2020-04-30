@@ -187,7 +187,7 @@ public class ApkGenruleTest {
     AbstractGenruleStep genruleStep = (AbstractGenruleStep) maybeGenruleStep.get();
     assertEquals("genrule", genruleStep.getShortName());
     ImmutableMap<String, String> environmentVariables =
-        genruleStep.getEnvironmentVariables(executionContext);
+        genruleStep.getEnvironmentVariables(executionContext.getPlatform());
     assertEquals(
         new ImmutableMap.Builder<String, String>()
             .put(

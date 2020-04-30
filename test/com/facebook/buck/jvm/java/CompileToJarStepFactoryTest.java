@@ -25,6 +25,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -50,6 +51,7 @@ public class CompileToJarStepFactoryTest {
             .add(filesystem.resolve("dep.jar").getPath())
             .build();
     ExecutionContext executionContext = TestExecutionContext.newInstance();
+    Platform platform = executionContext.getPlatform();
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
     commands.addAll(
@@ -74,7 +76,7 @@ public class CompileToJarStepFactoryTest {
             androidBootClassPath,
             "COMPILATION_CLASSPATH",
             Joiner.on(':').join(Iterables.transform(classpathEntries, filesystem::resolve))),
-        step0.getEnvironmentVariables(executionContext));
+        step0.getEnvironmentVariables(platform));
 
     assertTrue(steps.get(1) instanceof ShellStep);
     ShellStep step1 = (ShellStep) steps.get(1);
@@ -87,6 +89,6 @@ public class CompileToJarStepFactoryTest {
             androidBootClassPath,
             "COMPILATION_CLASSPATH",
             Joiner.on(':').join(Iterables.transform(classpathEntries, filesystem::resolve))),
-        step1.getEnvironmentVariables(executionContext));
+        step1.getEnvironmentVariables(platform));
   }
 }

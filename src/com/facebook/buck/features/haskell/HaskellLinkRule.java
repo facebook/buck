@@ -40,6 +40,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
@@ -143,10 +144,9 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             new ShellStep(getProjectFilesystem().getRootPath()) {
 
               @Override
-              public ImmutableMap<String, String> getEnvironmentVariables(
-                  ExecutionContext context) {
+              public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
                 return ImmutableMap.<String, String>builder()
-                    .putAll(super.getEnvironmentVariables(context))
+                    .putAll(super.getEnvironmentVariables(platform))
                     .putAll(linker.getEnvironment(buildContext.getSourcePathResolver()))
                     .build();
               }

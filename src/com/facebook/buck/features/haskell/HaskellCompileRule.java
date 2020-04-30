@@ -49,6 +49,7 @@ import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.MoreIterables;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -297,9 +298,9 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
 
     @Override
-    public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
       return ImmutableMap.<String, String>builder()
-          .putAll(super.getEnvironmentVariables(context))
+          .putAll(super.getEnvironmentVariables(platform))
           .putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()))
           .build();
     }

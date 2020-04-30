@@ -44,6 +44,7 @@ import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.SymlinkTreeStep;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -314,7 +315,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
             }
 
             @Override
-            public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+            public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
               ImmutableMap.Builder<String, String> env = ImmutableMap.builder();
               env.putAll(compiler.getEnvironment(buildContext.getSourcePathResolver()));
               env.putAll(

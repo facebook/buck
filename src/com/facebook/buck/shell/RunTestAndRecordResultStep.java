@@ -26,6 +26,7 @@ import com.facebook.buck.step.StepExecutionResults;
 import com.facebook.buck.test.TestResultSummary;
 import com.facebook.buck.test.result.type.ResultType;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -99,7 +100,7 @@ public class RunTestAndRecordResultStep implements Step {
           }
 
           @Override
-          public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+          public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
             return ImmutableMap.<String, String>builder().put("NO_BUCKD", "1").putAll(env).build();
           }
 

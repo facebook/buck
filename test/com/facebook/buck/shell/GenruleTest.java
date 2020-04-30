@@ -308,7 +308,7 @@ public class GenruleTest {
                             .resolve("AndroidManifest.xml"))
                     .toString())
             .build(),
-        genruleCommand.getEnvironmentVariables(executionContext));
+        genruleCommand.getEnvironmentVariables(executionContext.getPlatform()));
     Path scriptFilePath = genruleCommand.getScriptFilePath(executionContext);
     String scriptFileContents = genruleCommand.getScriptFileContents(executionContext);
     if (Platform.detect() == Platform.WINDOWS) {

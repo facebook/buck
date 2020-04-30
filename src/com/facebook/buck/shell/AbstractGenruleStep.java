@@ -119,15 +119,15 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
     ImmutableMap.Builder<String, String> allEnvironmentVariablesBuilder = ImmutableMap.builder();
-    addEnvironmentVariables(context, allEnvironmentVariablesBuilder);
+    addEnvironmentVariables(allEnvironmentVariablesBuilder);
     ImmutableMap<String, String> allEnvironmentVariables = allEnvironmentVariablesBuilder.build();
 
     // Long lists of environment variables can extend the length of the command such that it exceeds
     // exec()'s ARG_MAX limit. Defend against this by filtering out variables that do not appear in
     // the command string.
-    String command = getExecutionArgsAndCommand(context.getPlatform()).command;
+    String command = getExecutionArgsAndCommand(platform).command;
     ImmutableMap.Builder<String, String> usedEnvironmentVariablesBuilder = ImmutableMap.builder();
     for (Map.Entry<String, String> environmentVariable : allEnvironmentVariables.entrySet()) {
       // We check for the presence of the variable without adornment for $ or %% so it works on both
@@ -148,12 +148,12 @@ public abstract class AbstractGenruleStep extends ShellStep {
 
   @VisibleForTesting
   public String getScriptFileContents(ExecutionContext context) {
-    ExecutionArgsAndCommand executionArgsAndCommand =
-        getExecutionArgsAndCommand(context.getPlatform());
-    if (context.getPlatform() == Platform.WINDOWS) {
+    Platform platform = context.getPlatform();
+    ExecutionArgsAndCommand executionArgsAndCommand = getExecutionArgsAndCommand(platform);
+    if (platform == Platform.WINDOWS) {
       executionArgsAndCommand =
           getExpandedCommandAndExecutionArgs(
-              executionArgsAndCommand, getEnvironmentVariables(context));
+              executionArgsAndCommand, getEnvironmentVariables(platform));
     }
     return executionArgsAndCommand.command;
   }
@@ -173,7 +173,7 @@ public abstract class AbstractGenruleStep extends ShellStep {
   }
 
   protected abstract void addEnvironmentVariables(
-      ExecutionContext context, ImmutableMap.Builder<String, String> environmentVariablesBuilder);
+      ImmutableMap.Builder<String, String> environmentVariablesBuilder);
 
   private static ExecutionArgsAndCommand getExpandedCommandAndExecutionArgs(
       ExecutionArgsAndCommand original, ImmutableMap<String, String> environmentVariablesToExpand) {

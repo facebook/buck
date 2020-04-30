@@ -18,7 +18,6 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -27,6 +26,7 @@ import com.facebook.buck.shell.BashStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -277,7 +277,7 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
           new BashStep(
               filesystem.getRootPath(), postprocessClassesCommand + " " + outputDirectory) {
             @Override
-            public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+            public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
               return envVars;
             }
           };

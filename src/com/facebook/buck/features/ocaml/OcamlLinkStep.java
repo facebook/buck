@@ -22,6 +22,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.MoreIterables;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -161,7 +162,7 @@ public class OcamlLinkStep extends ShellStep {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
     return environment;
   }
 }

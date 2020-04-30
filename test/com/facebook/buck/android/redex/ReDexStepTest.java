@@ -82,7 +82,7 @@ public class ReDexStepTest {
     ExecutionContext context = TestExecutionContext.newBuilder().build();
     assertEquals(
         ImmutableMap.of("ANDROID_SDK", sdkDirectory.toString(), "REDEX_DEBUG", "1"),
-        redex.getEnvironmentVariables(context));
+        redex.getEnvironmentVariables(context.getPlatform()));
 
     assertEquals(
         ImmutableList.of(

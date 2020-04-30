@@ -556,7 +556,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         .setTarget(getBuildTarget())
         .setType("junit")
         .setCommand(externalJunitStep.getShellCommandInternal(executionContext))
-        .setEnv(externalJunitStep.getEnvironmentVariables(executionContext))
+        .setEnv(externalJunitStep.getEnvironmentVariables(executionContext.getPlatform()))
         .setLabels(getLabels())
         .setContacts(getContacts())
         .addAllRequiredPaths(getRuntimeClasspath(buildContext))

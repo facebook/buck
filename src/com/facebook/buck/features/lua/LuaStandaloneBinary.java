@@ -104,7 +104,7 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
         new ShellStep(getProjectFilesystem().getRootPath()) {
 
           @Override
-          protected Optional<String> getStdin(ExecutionContext context) {
+          protected Optional<String> getStdin() {
             try {
               return Optional.of(
                   ObjectMappers.WRITER.writeValueAsString(

@@ -67,7 +67,7 @@ public class StripStep extends ShellStep {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
     return environment;
   }
 

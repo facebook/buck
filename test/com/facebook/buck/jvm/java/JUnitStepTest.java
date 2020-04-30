@@ -31,6 +31,7 @@ import com.facebook.buck.step.TestExecutionContext;
 import com.facebook.buck.testutil.MoreAsserts;
 import com.facebook.buck.testutil.TestConsole;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -231,7 +232,7 @@ public class JUnitStepTest {
             args);
 
     ImmutableMap<String, String> observedEnvironment =
-        junit.getEnvironmentVariables(TestExecutionContext.newInstance());
+        junit.getEnvironmentVariables(Platform.detect());
     assertThat(observedEnvironment, hasEntry("FOO", "BAR"));
   }
 

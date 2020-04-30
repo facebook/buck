@@ -19,6 +19,7 @@ package com.facebook.buck.features.go;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.util.ProcessExecutor.Option;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -95,14 +96,14 @@ public class GoListStep extends ShellStep {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
     return ImmutableMap.<String, String>builder()
         // The go list command relies on these environment variables, so they are set here
         // in case the inherited/default ones are wrong
-        .put("GOROOT", platform.getGoRoot().toString())
-        .put("GOOS", platform.getGoOs().getEnvVarValue())
-        .put("GOARCH", platform.getGoArch().getEnvVarValue())
-        .put("GOARM", platform.getGoArch().getEnvVarValueForArm())
+        .put("GOROOT", this.platform.getGoRoot().toString())
+        .put("GOOS", this.platform.getGoOs().getEnvVarValue())
+        .put("GOARCH", this.platform.getGoArch().getEnvVarValue())
+        .put("GOARM", this.platform.getGoArch().getEnvVarValueForArm())
         // without this env variable go tool list tries to download packages from go.mod
         // for source files outside GOROOT that's always true for Buck
         .put("GO111MODULE", "off")

@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.features.python.toolchain.PythonVersion;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
@@ -85,7 +86,7 @@ public class PexStep extends ShellStep {
    * occasionally get extremely large, and surpass exec/shell limits on arguments.
    */
   @Override
-  protected Optional<String> getStdin(ExecutionContext context) throws IOException {
+  protected Optional<String> getStdin() throws IOException {
     // Convert the map of paths to a map of strings before converting to JSON.
     ImmutableMap.Builder<String, String> modulesBuilder = ImmutableMap.builder();
     components.forEachModule((dest, src) -> modulesBuilder.put(dest.toString(), src.toString()));
@@ -129,7 +130,7 @@ public class PexStep extends ShellStep {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
     return environment;
   }
 

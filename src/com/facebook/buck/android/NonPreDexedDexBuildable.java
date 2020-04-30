@@ -386,7 +386,6 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
 
             @Override
             protected void addEnvironmentVariables(
-                ExecutionContext context,
                 ImmutableMap.Builder<String, String> environmentVariablesBuilder) {
               environmentVariablesBuilder.put(
                   "IN_JARS_DIR",

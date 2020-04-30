@@ -35,6 +35,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -110,8 +111,7 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             }
 
             @Override
-            public ImmutableMap<String, String> getEnvironmentVariables(
-                ExecutionContext executionContext) {
+            public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
               return momc.getEnvironment(context.getSourcePathResolver());
             }
 

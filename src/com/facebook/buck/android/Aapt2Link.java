@@ -257,7 +257,7 @@ public class Aapt2Link extends AbstractBuildRule {
     }
 
     @Override
-    protected int getExitCodeFromResult(ExecutionContext context, ProcessExecutor.Result result) {
+    protected int getExitCodeFromResult(ProcessExecutor.Result result) {
       // If there's nothing to do (i.e. no matches), print a warning, but don't fail.
       int realExitCode = result.getExitCode();
       if (realExitCode == ZIP_NOTHING_TO_DO_EXIT_CODE) {

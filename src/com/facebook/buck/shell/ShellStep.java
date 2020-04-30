@@ -28,6 +28,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Option;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -110,7 +111,7 @@ public abstract class ShellStep implements Step {
     builder.setEnvironment(ImmutableMap.copyOf(environment));
     builder.setDirectory(context.getBuildCellRootPath().resolve(workingDirectory));
 
-    Optional<String> stdin = getStdin(context);
+    Optional<String> stdin = getStdin();
     if (stdin.isPresent()) {
       builder.setRedirectInput(ProcessBuilder.Redirect.PIPE);
     }
@@ -118,7 +119,7 @@ public abstract class ShellStep implements Step {
     double initialLoad = OS_JMX.getSystemLoadAverage();
     startTime = System.currentTimeMillis();
     ProcessExecutor.Result result = launchAndInteractWithProcess(context, builder.build(), stdin);
-    int exitCode = getExitCodeFromResult(context, result);
+    int exitCode = getExitCodeFromResult(result);
     endTime = System.currentTimeMillis();
     double endLoad = OS_JMX.getSystemLoadAverage();
 
@@ -158,14 +159,15 @@ public abstract class ShellStep implements Step {
     environment.put("PWD", workDir);
 
     // Add extra environment variables for step, if appropriate.
-    if (!getEnvironmentVariables(context).isEmpty()) {
-      environment.putAll(getEnvironmentVariables(context));
+    Platform platform = context.getPlatform();
+    ImmutableMap<String, String> environmentVariables = getEnvironmentVariables(platform);
+    if (!environmentVariables.isEmpty()) {
+      environment.putAll(environmentVariables);
     }
   }
 
   /** @return the exit code interpreted from the {@code result}. */
-  @SuppressWarnings("unused")
-  protected int getExitCodeFromResult(ExecutionContext context, ProcessExecutor.Result result) {
+  protected int getExitCodeFromResult(ProcessExecutor.Result result) {
     return result.getExitCode();
   }
 
@@ -228,8 +230,7 @@ public abstract class ShellStep implements Step {
     return getShellCommand(context);
   }
 
-  @SuppressWarnings("unused")
-  protected Optional<String> getStdin(ExecutionContext context) throws IOException {
+  protected Optional<String> getStdin() throws IOException {
     return Optional.empty();
   }
 
@@ -243,7 +244,7 @@ public abstract class ShellStep implements Step {
     // quoted as necessary.
     Iterable<String> env =
         Iterables.transform(
-            getEnvironmentVariables(context).entrySet(),
+            getEnvironmentVariables(context.getPlatform()).entrySet(),
             e -> String.format("%s=%s", e.getKey(), Escaper.escapeAsBashString(e.getValue())));
 
     // Quote the arguments to the shell command as needed (this applies to $0 as well
@@ -267,9 +268,9 @@ public abstract class ShellStep implements Step {
    *
    * <p>By default, this method returns an empty map.
    *
-   * @param context that may be useful when determining environment variables to include.
+   * @param platform that may be useful when determining environment variables to include.
    */
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
     return ImmutableMap.of();
   }
 

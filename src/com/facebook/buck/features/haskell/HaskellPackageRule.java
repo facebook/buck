@@ -42,6 +42,7 @@ import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Verbosity;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -321,9 +322,9 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     }
 
     @Override
-    public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+    public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
       return ImmutableMap.<String, String>builder()
-          .putAll(super.getEnvironmentVariables(context))
+          .putAll(super.getEnvironmentVariables(platform))
           .putAll(ghcPkg.getEnvironment(resolver))
           .putAll(env)
           .build();

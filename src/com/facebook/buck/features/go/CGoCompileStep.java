@@ -19,6 +19,7 @@ package com.facebook.buck.features.go;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.shell.ShellStep;
+import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.nio.file.Path;
@@ -70,15 +71,15 @@ public class CGoCompileStep extends ShellStep {
   }
 
   @Override
-  public ImmutableMap<String, String> getEnvironmentVariables(ExecutionContext context) {
+  public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
     return ImmutableMap.<String, String>builder()
         .putAll(environment)
         // cgo silently calls C preprocessor, so we need to set CC env in order
         // to use toolchain provided via cxxPlatform (not the system one)
         .put("CC", String.join(" ", cppCommandPrefix))
-        .put("GOOS", platform.getGoOs().getEnvVarValue())
-        .put("GOARCH", platform.getGoArch().getEnvVarValue())
-        .put("GOARM", platform.getGoArch().getEnvVarValueForArm())
+        .put("GOOS", this.platform.getGoOs().getEnvVarValue())
+        .put("GOARCH", this.platform.getGoArch().getEnvVarValue())
+        .put("GOARM", this.platform.getGoArch().getEnvVarValueForArm())
         .build();
   }
 
