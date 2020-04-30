@@ -79,7 +79,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
   @AddToRuleKey private final Kotlinc kotlinc;
   @AddToRuleKey private final ImmutableList<String> extraKotlincArguments;
-  @AddToRuleKey private final ImmutableList<SourcePath> kotlincPlugins;
 
   @AddToRuleKey
   private final ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins;
@@ -126,7 +125,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       ImmutableSortedSet<Path> kotlinHomeLibraries,
       @Nullable Path abiGenerationPlugin,
       ImmutableList<String> extraKotlincArguments,
-      ImmutableList<SourcePath> kotlincPlugins,
       ImmutableMap<SourcePath, ImmutableMap<String, String>> kotlinCompilerPlugins,
       ImmutableList<SourcePath> friendPaths,
       AnnotationProcessingTool annotationProcessingTool,
@@ -142,7 +140,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     this.kotlinHomeLibraries = kotlinHomeLibraries;
     this.abiGenerationPlugin = abiGenerationPlugin;
     this.extraKotlincArguments = extraKotlincArguments;
-    this.kotlincPlugins = kotlincPlugins;
     this.kotlinCompilerPlugins = kotlinCompilerPlugins;
     this.friendPaths = friendPaths;
     this.annotationProcessingTool = annotationProcessingTool;
@@ -329,7 +326,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
           ImmutableList.<String>builder()
               .addAll(extraKotlincArguments)
               .add(friendPathsArg)
-              .addAll(getKotlincPluginsArgs(resolver))
               .addAll(
                   getKotlinCompilerPluginsArgs(
                       resolver, projectFilesystem.resolve(kotlincPluginGeneratedOutput).toString()))
@@ -489,13 +485,6 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     return "-Xfriend-paths="
         + absoluteFriendPaths.stream().reduce("", (path1, path2) -> path1 + "," + path2);
-  }
-
-  private ImmutableList<String> getKotlincPluginsArgs(
-      SourcePathResolverAdapter sourcePathResolverAdapter) {
-    return kotlincPlugins.stream()
-        .map(path -> getKotlincPluginBasicString(sourcePathResolverAdapter, path))
-        .collect(ImmutableList.toImmutableList());
   }
 
   private ImmutableList<String> getKotlinCompilerPluginsArgs(
