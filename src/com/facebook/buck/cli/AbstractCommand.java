@@ -58,7 +58,7 @@ import com.facebook.buck.util.cache.InstrumentingCacheStatsTracker;
 import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.concurrent.ExecutorPool;
 import com.facebook.buck.util.config.Configs;
-import com.facebook.buck.util.types.Pair;
+import com.facebook.buck.util.types.Unit;
 import com.facebook.buck.versions.VersionException;
 import com.google.common.base.Splitter;
 import com.google.common.base.Suppliers;
@@ -97,7 +97,7 @@ import org.kohsuke.args4j.Option;
 
 public abstract class AbstractCommand extends CommandWithPluginManager {
   private static final Logger LOG = Logger.get(Configs.class);
-  List<Object> configOverrides = new ArrayList<>();
+  List<CommandConfigOverride> configOverrides = new ArrayList<>();
   /**
    * This value should never be read. {@link VerbosityParser} should be used instead. args4j
    * requires that all options that could be passed in are listed as fields, so we include this
@@ -133,7 +133,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       usage = "Override options in .buckconfig using a file parameter",
       metaVar = "PATH")
   void addConfigFile(String filePath) {
-    configOverrides.add(filePath);
+    configOverrides.add(new CommandConfigOverride.File(filePath));
   }
 
   @Option(
@@ -539,9 +539,9 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
         .collect(ImmutableSet.toImmutableSet());
   }
 
-  private void parseConfigOption(CellConfig.Builder builder, Pair<String, String> config) {
+  private void parseConfigOption(CellConfig.Builder builder, String keyString, String value) {
     // Parse command-line config overrides.
-    List<String> key = Splitter.on("//").limit(2).splitToList(config.getFirst());
+    List<String> key = Splitter.on("//").limit(2).splitToList(keyString);
     CellName cellName = CellName.ALL_CELLS_SPECIAL_NAME;
     String configKey = key.get(0);
     if (key.size() == 2) {
@@ -558,7 +558,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
     if (separatorIndex < 0 || separatorIndex == configKey.length() - 1) {
       throw new HumanReadableException(
           "Invalid config override \"%s=%s\" Expected <section>.<field>=<value>.",
-          configKey, config.getSecond());
+          configKey, value);
     }
     // Overrides for locations of transitive children of cells are weird as the order of overrides
     // can affect the result (for example `-c a/b/c.k=v -c a/b//repositories.c=foo` causes an
@@ -573,7 +573,6 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
               + "is not supported. Please place a .buckconfig.local in the appropriate location and "
               + "use that instead.");
     }
-    String value = config.getSecond();
     String field = configKey.substring(separatorIndex + 1);
     builder.put(cellName, section, field, value);
   }
@@ -650,20 +649,29 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
           "Invalid config configOverride \"%s\" Expected <section>.<field>=<value>.",
           configOverride);
 
-    maybeValue.ifPresent(value -> configOverrides.add(new Pair<String, String>(key, value)));
+    maybeValue.ifPresent(
+        value -> configOverrides.add(new CommandConfigOverride.Config(key, value)));
   }
 
   @Override
-  @SuppressWarnings("unchecked")
   public CellConfig getConfigOverrides(ImmutableMap<CellName, AbsPath> cellMapping) {
     CellConfig.Builder builder = CellConfig.builder();
 
-    for (Object option : configOverrides) {
-      if (option instanceof String) {
-        parseConfigFileOption(cellMapping, builder, (String) option);
-      } else {
-        parseConfigOption(builder, (Pair<String, String>) option);
-      }
+    for (CommandConfigOverride option : configOverrides) {
+      option.match(
+          new CommandConfigOverride.Matcher<Unit>() {
+            @Override
+            public Unit config(String key, String value) {
+              parseConfigOption(builder, key, value);
+              return Unit.UNIT;
+            }
+
+            @Override
+            public Unit file(String path) {
+              parseConfigFileOption(cellMapping, builder, path);
+              return Unit.UNIT;
+            }
+          });
     }
     if (numThreads != null) {
       builder.put(CellName.ALL_CELLS_SPECIAL_NAME, "build", "threads", String.valueOf(numThreads));
