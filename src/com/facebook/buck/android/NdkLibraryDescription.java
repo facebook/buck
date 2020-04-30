@@ -62,6 +62,7 @@ import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.VersionStringComparator;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.string.MoreStrings;
 import com.facebook.buck.util.types.Pair;
@@ -108,9 +109,12 @@ public class NdkLibraryDescription
       ImmutableList.of(new EnvironmentVariableMacroExpander(Platform.detect()));
 
   private final ToolchainProvider toolchainProvider;
+  private final ConcurrencyLimit concurrencyLimit;
 
-  public NdkLibraryDescription(ToolchainProvider toolchainProvider) {
+  public NdkLibraryDescription(
+      ToolchainProvider toolchainProvider, ConcurrencyLimit concurrencyLimit) {
     this.toolchainProvider = toolchainProvider;
+    this.concurrencyLimit = concurrencyLimit;
   }
 
   @Override
@@ -367,7 +371,7 @@ public class NdkLibraryDescription
 
     String contents = Joiner.on(System.lineSeparator()).join(outputLinesBuilder.build());
 
-    return new Pair<String, Iterable<BuildRule>>(contents, deps.build());
+    return new Pair<>(contents, deps.build());
   }
 
   @VisibleForTesting
@@ -446,6 +450,7 @@ public class NdkLibraryDescription
     AndroidNdk androidNdk =
         toolchainProvider.getByName(
             AndroidNdk.DEFAULT_NAME, buildTarget.getTargetConfiguration(), AndroidNdk.class);
+
     return new NdkLibrary(
         buildTarget,
         projectFilesystem,
@@ -458,7 +463,8 @@ public class NdkLibraryDescription
         sources,
         flags,
         args.getIsAsset(),
-        androidNdk.getNdkVersion());
+        androidNdk.getNdkVersion(),
+        concurrencyLimit);
   }
 
   @Override

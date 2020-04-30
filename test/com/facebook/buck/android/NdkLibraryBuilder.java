@@ -36,6 +36,9 @@ import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
+import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
+import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -80,7 +83,7 @@ public class NdkLibraryBuilder
   public NdkLibraryBuilder(
       BuildTarget target, ProjectFilesystem filesystem, ToolchainProvider toolchainProvider) {
     super(
-        new NdkLibraryDescription(toolchainProvider) {
+        new NdkLibraryDescription(toolchainProvider, getConcurrencyLimit()) {
           @Override
           protected ImmutableSortedSet<SourcePath> findSources(
               ProjectFilesystem filesystem, Path buildRulePath) {
@@ -116,5 +119,14 @@ public class NdkLibraryBuilder
   public NdkLibraryBuilder setIsAsset(boolean isAsset) {
     getArgForPopulating().setIsAsset(isAsset);
     return this;
+  }
+
+  private static ConcurrencyLimit getConcurrencyLimit() {
+    return new ConcurrencyLimit(
+        Runtime.getRuntime().availableProcessors(),
+        ResourceAllocationFairness.FAIR,
+        ResourceAmountsEstimator.DEFAULT_MANAGED_THREAD_COUNT,
+        ResourceAmountsEstimator.DEFAULT_AMOUNTS,
+        ResourceAmountsEstimator.DEFAULT_MAXIMUM_AMOUNTS);
   }
 }

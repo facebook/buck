@@ -30,9 +30,6 @@ import com.facebook.buck.util.ClassLoaderCache;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
-import com.facebook.buck.util.concurrent.ConcurrencyLimit;
-import com.facebook.buck.util.concurrent.ResourceAllocationFairness;
-import com.facebook.buck.util.concurrent.ResourceAmountsEstimator;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.worker.WorkerProcessPool;
 import com.google.common.collect.ImmutableMap;
@@ -97,16 +94,6 @@ public abstract class ExecutionContext implements Closeable {
   @Value.Default
   public ConcurrentMap<String, WorkerProcessPool> getWorkerProcessPools() {
     return new ConcurrentHashMap<>();
-  }
-
-  @Value.Default
-  public ConcurrencyLimit getConcurrencyLimit() {
-    return new ConcurrencyLimit(
-        /* threadLimit */ Runtime.getRuntime().availableProcessors(),
-        ResourceAllocationFairness.FAIR,
-        ResourceAmountsEstimator.DEFAULT_MANAGED_THREAD_COUNT,
-        ResourceAmountsEstimator.DEFAULT_AMOUNTS,
-        ResourceAmountsEstimator.DEFAULT_MAXIMUM_AMOUNTS);
   }
 
   @Value.Default

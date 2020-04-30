@@ -43,6 +43,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.facebook.buck.step.fs.WriteFileStep;
+import com.facebook.buck.util.concurrent.ConcurrencyLimit;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -91,6 +92,8 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey
   private final String ndkVersion;
 
+  private final ConcurrencyLimit concurrencyLimit;
+
   protected NdkLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -101,10 +104,12 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Set<SourcePath> sources,
       ImmutableList<Arg> flags,
       boolean isAsset,
-      String ndkVersion) {
+      String ndkVersion,
+      ConcurrencyLimit concurrencyLimit) {
     super(buildTarget, projectFilesystem, params);
     this.androidNdk = androidNdk;
     this.isAsset = isAsset;
+    this.concurrencyLimit = concurrencyLimit;
 
     this.root =
         buildTarget.getCellRelativeBasePath().getPath().toPath(projectFilesystem.getFileSystem());
@@ -163,7 +168,8 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             makefile,
             buildArtifactsDirectory,
             binDirectory,
-            Arg.stringify(flags, context.getSourcePathResolver())));
+            Arg.stringify(flags, context.getSourcePathResolver()),
+            concurrencyLimit));
 
     steps.addAll(
         MakeCleanDirectoryStep.of(

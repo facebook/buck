@@ -20,6 +20,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
+import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -41,6 +42,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     BuckConfig config = context.getBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
     JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
+    ResourcesConfig resourcesConfig = config.getView(ResourcesConfig.class);
 
     ProGuardConfig proGuardConfig = new ProGuardConfig(config);
     DxConfig dxConfig = new DxConfig(config);
@@ -92,7 +94,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new RobolectricTestDescription(
             toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
-        new NdkLibraryDescription(toolchainProvider),
+        new NdkLibraryDescription(toolchainProvider, resourcesConfig.getConcurrencyLimit()),
         new NdkToolchainDescription(),
         new GenAidlDescription(),
         new ApkGenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));

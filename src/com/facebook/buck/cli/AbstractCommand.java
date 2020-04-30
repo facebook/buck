@@ -435,14 +435,13 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
             .setProcessExecutor(new DefaultProcessExecutor(console))
             .setRuleKeyDiagnosticsMode(
                 buckConfig.getView(RuleKeyConfig.class).getRuleKeyDiagnosticsMode())
-            .setConcurrencyLimit(getConcurrencyLimit(buckConfig))
             .setPersistentWorkerPools(params.getPersistentWorkerPools())
             .setProjectFilesystemFactory(params.getProjectFilesystemFactory())
             .setTruncateFailingCommandEnabled(cliConfig.getEnableFailingCommandTruncation());
     return builder;
   }
 
-  public ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
+  protected ConcurrencyLimit getConcurrencyLimit(BuckConfig buckConfig) {
     return buckConfig.getView(ResourcesConfig.class).getConcurrencyLimit();
   }
 

@@ -38,6 +38,7 @@ public class NdkBuildStep extends ShellStep {
   private final Path buildArtifactsDirectory;
   private final Path binDirectory;
   private final ImmutableList<String> flags;
+  private final ConcurrencyLimit concurrencyLimit;
 
   public NdkBuildStep(
       ProjectFilesystem filesystem,
@@ -46,7 +47,8 @@ public class NdkBuildStep extends ShellStep {
       Path makefile,
       Path buildArtifactsDirectory,
       Path binDirectory,
-      Iterable<String> flags) {
+      Iterable<String> flags,
+      ConcurrencyLimit concurrencyLimit) {
     super(filesystem.getRootPath());
 
     this.filesystem = filesystem;
@@ -56,6 +58,7 @@ public class NdkBuildStep extends ShellStep {
     this.buildArtifactsDirectory = buildArtifactsDirectory;
     this.binDirectory = binDirectory;
     this.flags = ImmutableList.copyOf(flags);
+    this.concurrencyLimit = concurrencyLimit;
   }
 
   @Override
@@ -70,8 +73,6 @@ public class NdkBuildStep extends ShellStep {
 
   @Override
   protected ImmutableList<String> getShellCommandInternal(ExecutionContext context) {
-    ConcurrencyLimit concurrencyLimit = context.getConcurrencyLimit();
-
     ImmutableList.Builder<String> builder = ImmutableList.builder();
     builder.add(
         androidNdk.getNdkBuildExecutable().toAbsolutePath().toString(),
