@@ -166,7 +166,7 @@ public class ConfigurationsIntegrationTest {
     MatcherAssert.assertThat(
         result.getStderr(),
         Matchers.containsString(
-            "//invalid:lib: attribute 'compatibleWith' cannot be configured using select"));
+            "//invalid:lib: attribute 'compatible_with' cannot be configured using select"));
   }
 
   @Test

@@ -159,8 +159,7 @@ public abstract class AbstractParamInfo<T> implements ParamInfo<T> {
               hostConfiguration,
               value));
     } catch (CoerceFailedException e) {
-      // TODO(nga): snake case
-      throw new ParamInfoException(name.getCamelCase(), e.getMessage(), e);
+      throw new ParamInfoException(name.getSnakeCase(), e.getMessage(), e);
     }
   }
 

@@ -104,11 +104,6 @@ public class BuilderParamInfoTest {
   }
 
   @Test
-  public void getName() {
-    assertEquals("someString", getParamInfo().getName().getCamelCase());
-  }
-
-  @Test
   public void getPythonName() {
     assertEquals("some_string", getParamInfo().getName().getSnakeCase());
   }

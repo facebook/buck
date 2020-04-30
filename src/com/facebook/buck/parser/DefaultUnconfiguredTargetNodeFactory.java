@@ -104,14 +104,8 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
               ParamInfo<?> paramInfo = constructorDescriptor.getParamsInfo().getByName(k);
               Preconditions.checkNotNull(
                   paramInfo, "cannot find param info for arg %s of target %s", k, target);
-              return (convertSelectorListInAttrValue(
-                  cell,
-                  target,
-                  paramInfo,
-                  k.getCamelCase(),
-                  v,
-                  pathRelativeToProjectRoot,
-                  dependencyStack));
+              return convertSelectorListInAttrValue(
+                  cell, target, paramInfo, v, pathRelativeToProjectRoot, dependencyStack);
             });
   }
 
@@ -122,10 +116,10 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       Cell cell,
       UnconfiguredBuildTarget buildTarget,
       ParamInfo<?> paramInfo,
-      String attrName,
       Object attrValue,
       CellRelativePath pathRelativeToProjectRoot,
       DependencyStack dependencyStack) {
+    ParamName attrName = paramInfo.getName();
     try {
       if (attrValue instanceof ListWithSelects) {
         if (!paramInfo.isConfigurable()) {
