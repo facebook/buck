@@ -39,7 +39,7 @@ import javax.annotation.Nullable;
 public class BuckSkylarkTypes {
 
   /** Matches python identifiers in the parser */
-  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
+  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("^[a-z_][a-z0-9_]*$");
 
   private BuckSkylarkTypes() {}
 
