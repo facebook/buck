@@ -77,7 +77,7 @@ public class SwiftPlatformFactoryIntegrationTest {
   }
 
   private Tool swiftcTool;
-  private Tool swiftStdTool;
+  private VersionedTool swiftStdTool;
 
   @Before
   public void setUp() {

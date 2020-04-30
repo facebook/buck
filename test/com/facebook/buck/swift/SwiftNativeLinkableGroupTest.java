@@ -47,7 +47,7 @@ public class SwiftNativeLinkableGroupTest {
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private Tool swiftcTool;
-  private Tool swiftStdTool;
+  private VersionedTool swiftStdTool;
   private SourcePathResolverAdapter sourcePathResolverAdapter;
   private AppleSdk iphoneSdk;
   private AppleSdkPaths iphoneSdkPaths;

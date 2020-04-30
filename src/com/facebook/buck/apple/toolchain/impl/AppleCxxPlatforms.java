@@ -523,8 +523,7 @@ public class AppleCxxPlatforms {
       String version) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    if (shouldSetSDKVersion(filesystem, xcodeToolFinder, toolSearchPaths, appleConfig, version)
-        .get()) {
+    if (shouldSetSDKVersion(filesystem, xcodeToolFinder, toolSearchPaths, version).get()) {
       builder.addAll(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
     }
 
@@ -563,10 +562,10 @@ public class AppleCxxPlatforms {
       applySourceLibrariesParamIfNeeded(swiftStdlibToolParamsBuilder, toolchainPath, platformName);
     }
 
-    Optional<Tool> swiftc =
+    Optional<VersionedTool> swiftc =
         getOptionalToolWithParams(
             "swiftc", toolSearchPaths, xcodeToolFinder, version, swiftParams, filesystem);
-    Optional<Tool> swiftStdLibTool =
+    Optional<VersionedTool> swiftStdLibTool =
         getOptionalToolWithParams(
             "swift-stdlib-tool",
             toolSearchPaths,
@@ -598,7 +597,7 @@ public class AppleCxxPlatforms {
     }
   }
 
-  private static Optional<Tool> getOptionalTool(
+  private static Optional<VersionedTool> getOptionalTool(
       String tool,
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder,
@@ -608,7 +607,7 @@ public class AppleCxxPlatforms {
         tool, toolSearchPaths, xcodeToolFinder, version, ImmutableList.of(), filesystem);
   }
 
-  private static Optional<Tool> getOptionalToolWithParams(
+  private static Optional<VersionedTool> getOptionalToolWithParams(
       String tool,
       ImmutableList<Path> toolSearchPaths,
       XcodeToolFinder xcodeToolFinder,
@@ -634,7 +633,6 @@ public class AppleCxxPlatforms {
       ProjectFilesystem filesystem,
       XcodeToolFinder xcodeToolFinder,
       ImmutableList<Path> toolSearchPaths,
-      AppleConfig appleConfig,
       String version) {
     return MoreSuppliers.memoize(
         () -> {
@@ -644,7 +642,7 @@ public class AppleCxxPlatforms {
           // believe the driver will not pass it.
           // https://reviews.llvm.org/rG25ce33a6e4f3b13732c0f851e68390dc2acb9123
           Optional<Double> ldVersion =
-              getLdVersion(filesystem, xcodeToolFinder, toolSearchPaths, appleConfig, version);
+              getLdVersion(filesystem, xcodeToolFinder, toolSearchPaths, version);
           if (ldVersion.isPresent()) {
             return ldVersion.get() < 520;
           }
@@ -656,16 +654,20 @@ public class AppleCxxPlatforms {
       ProjectFilesystem filesystem,
       XcodeToolFinder xcodeToolFinder,
       ImmutableList<Path> toolSearchPaths,
-      AppleConfig appleConfig,
       String version) {
 
-    VersionedTool ld =
-        getXcodeTool(filesystem, toolSearchPaths, xcodeToolFinder, appleConfig, "ld", version);
+    Optional<VersionedTool> ld =
+        getOptionalTool("ld", toolSearchPaths, xcodeToolFinder, version, filesystem);
+
+    // If no ld we found, we can't get it's version
+    if (!ld.isPresent()) {
+      return Optional.empty();
+    }
 
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
     ProcessExecutorParams processExecutorParams =
         ProcessExecutorParams.builder()
-            .setCommand(ImmutableList.of(ld.getPath().toString(), "-v"))
+            .setCommand(ImmutableList.of(ld.get().getPath().toString(), "-v"))
             .build();
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor.Result result;
@@ -684,7 +686,7 @@ public class AppleCxxPlatforms {
 
     if (result.getExitCode() != 0) {
       throw new RuntimeException(
-          result.getMessageForUnexpectedResult(ld.getPath().toString() + " -v"));
+          result.getMessageForUnexpectedResult(ld.get().getPath().toString() + " -v"));
     }
 
     Double parsedVersion = 0.0;

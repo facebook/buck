@@ -20,6 +20,7 @@ import com.facebook.buck.apple.platform_type.ApplePlatformType;
 import com.facebook.buck.apple.toolchain.AppleSdk;
 import com.facebook.buck.apple.toolchain.AppleSdkPaths;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.core.toolchain.tool.impl.VersionedTool;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.swift.toolchain.SwiftPlatform;
 import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
@@ -44,7 +45,7 @@ public class SwiftPlatformFactory {
       AppleSdk sdk,
       AppleSdkPaths sdkPaths,
       Tool swiftc,
-      Optional<Tool> swiftStdLibTool,
+      Optional<VersionedTool> swiftStdLibTool,
       boolean shouldLinkSystemSwift,
       SwiftTargetTriple swiftTarget) {
     String platformName = sdk.getApplePlatform().getName();
