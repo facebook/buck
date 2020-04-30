@@ -110,7 +110,21 @@ final class BuildFilePythonResultDeserializer extends StdDeserializer<BuildFileP
     ImmutableList.Builder<Object> builder = ImmutableList.builder();
     JsonToken token;
     while ((token = jp.nextToken()) != JsonToken.END_ARRAY) {
-      builder.add(deserializeRecursive(jp, token));
+      Object obj = deserializeRecursive(jp, token);
+      if (obj != null) {
+        builder.add(obj);
+      }
+      else {
+        // null elements can't be added to ImmutableList, an NPE will be thrown.
+        // Throw a meaningful exception here instead.
+        StringBuilder message = new StringBuilder();
+        message.append("null value can't be added to [");
+        for (Object element: builder.build()) {
+          message.append("'").append(element).append("'").append(", ");
+        }
+        message.append("]");
+        throw new IllegalArgumentException(message.toString());
+      }
     }
     if (token != JsonToken.END_ARRAY) {
       throw new JsonParseException(jp, "Missing expected END_ARRAY");
