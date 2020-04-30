@@ -40,16 +40,17 @@ public abstract class RawTargetNode {
   public abstract TwoArraysImmutableHashMap<ParamName, Object> getAttrs();
 
   /** Get attributes including special attributes not present in {@link #getAttrs()}. */
-  public TwoArraysImmutableHashMap<String, Object> getAttrsIncludingSpecial() {
-    TwoArraysImmutableHashMap.Builder<String, Object> builder = TwoArraysImmutableHashMap.builder();
+  public TwoArraysImmutableHashMap<ParamName, Object> getAttrsIncludingSpecial() {
+    TwoArraysImmutableHashMap.Builder<ParamName, Object> builder =
+        TwoArraysImmutableHashMap.builder();
     for (Map.Entry<ParamName, Object> attr : getAttrs().entrySet()) {
-      builder.put(attr.getKey().getCamelCase(), attr.getValue());
+      builder.put(attr.getKey(), attr.getValue());
     }
     if (!getVisibility().isEmpty()) {
-      builder.put(VisibilityAttributes.VISIBILITY.getSnakeCase(), getVisibility());
+      builder.put(VisibilityAttributes.VISIBILITY, getVisibility());
     }
     if (!getWithinView().isEmpty()) {
-      builder.put(VisibilityAttributes.WITHIN_VIEW.getSnakeCase(), getWithinView());
+      builder.put(VisibilityAttributes.WITHIN_VIEW, getWithinView());
     }
     return builder.build();
   }

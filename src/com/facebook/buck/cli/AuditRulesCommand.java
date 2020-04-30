@@ -26,13 +26,13 @@ import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.CaseFormat;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import java.io.BufferedOutputStream;
@@ -66,11 +66,11 @@ public class AuditRulesCommand extends AbstractCommand {
   private static final String INDENT = "  ";
 
   /** Properties that should be listed last in the declaration of a build rule. */
-  private static final ImmutableSet<String> LAST_PROPERTIES =
+  private static final ImmutableSet<ParamName> LAST_PROPERTIES =
       ImmutableSet.of(
-          "deps",
-          VisibilityAttributes.VISIBILITY.getSnakeCase(),
-          VisibilityAttributes.WITHIN_VIEW.getSnakeCase());
+          ParamName.bySnakeCase("deps"),
+          VisibilityAttributes.VISIBILITY,
+          VisibilityAttributes.WITHIN_VIEW);
 
   @Option(
       name = "--type",
@@ -173,17 +173,17 @@ public class AuditRulesCommand extends AbstractCommand {
     out.printf("%s(\n", type);
 
     // The properties in the order they should be displayed for this rule.
-    LinkedHashSet<String> properties = new LinkedHashSet<>();
+    LinkedHashSet<ParamName> properties = new LinkedHashSet<>();
 
     // Always display the "name" property first.
-    properties.add("name");
+    properties.add(ParamName.bySnakeCase("name"));
 
     // Add the properties specific to the rule.
-    SortedSet<String> customProperties = new TreeSet<>();
+    SortedSet<ParamName> customProperties = new TreeSet<>();
 
-    TwoArraysImmutableHashMap<String, Object> attrs = rawRule.getAttrsIncludingSpecial();
+    TwoArraysImmutableHashMap<ParamName, Object> attrs = rawRule.getAttrsIncludingSpecial();
 
-    for (String key : attrs.keySet()) {
+    for (ParamName key : attrs.keySet()) {
       // Ignore keys that start with "buck.".
       if (!LAST_PROPERTIES.contains(key)) {
         customProperties.add(key);
@@ -195,21 +195,17 @@ public class AuditRulesCommand extends AbstractCommand {
     properties.addAll(Sets.intersection(LAST_PROPERTIES, attrs.keySet()));
 
     // Write out the properties and their corresponding values.
-    for (String property : properties) {
+    for (ParamName property : properties) {
       Object rawValue = attrs.get(property);
       if (!shouldInclude(rawValue)) {
         continue;
       }
       String displayValue = createDisplayString(INDENT, rawValue);
-      out.printf("%s%s = %s,\n", INDENT, formatAttribute(property), displayValue);
+      out.printf("%s%s = %s,\n", INDENT, property.getSnakeCase(), displayValue);
     }
 
     // Close the rule definition.
     out.print(")\n\n");
-  }
-
-  private static String formatAttribute(String property) {
-    return CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, property);
   }
 
   private static boolean shouldInclude(@Nullable Object rawValue) {
