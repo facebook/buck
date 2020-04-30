@@ -500,6 +500,16 @@ public class SwiftLibraryDescription
         .getUnresolvedCxxPlatforms();
   }
 
+  public ImmutableSet<Flavor> getSupportedFlavors(
+    ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+    ImmutableSet<Flavor> currentSupportedFlavors =
+      ImmutableSet.copyOf(Sets.filter(flavors, SUPPORTED_FLAVORS::contains));
+    ImmutableSet<Flavor> supportedCxxPlatformsFlavors =
+      ImmutableSet.copyOf(Sets.filter(flavors, getCxxPlatforms(toolchainTargetConfiguration)::contains));
+
+    return ImmutableSet.copyOf(Sets.union(currentSupportedFlavors, supportedCxxPlatformsFlavors));
+  }
+
   @RuleArg
   interface AbstractSwiftLibraryDescriptionArg extends BuildRuleArg, HasDeclaredDeps, HasSrcs {
     Optional<String> getModuleName();

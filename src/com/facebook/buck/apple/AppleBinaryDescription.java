@@ -178,24 +178,28 @@ public class AppleBinaryDescription
   @Override
   public boolean hasFlavors(
       ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
-    if (FluentIterable.from(flavors).allMatch(SUPPORTED_FLAVORS::contains)) {
+    Set<Flavor> unmatchedFlavors = Sets.difference(flavors, SUPPORTED_FLAVORS);
+    if (unmatchedFlavors.isEmpty()) {
       return true;
     }
     ImmutableSet<Flavor> delegateFlavors =
-        ImmutableSet.copyOf(Sets.difference(flavors, NON_DELEGATE_FLAVORS));
-    if (swiftDelegate
-        .map(swift -> swift.hasFlavors(delegateFlavors, toolchainTargetConfiguration))
-        .orElse(false)) {
+      ImmutableSet.copyOf(Sets.difference(flavors, NON_DELEGATE_FLAVORS));
+    ImmutableSet<Flavor> supportedDelegateFlavors = swiftDelegate
+      .map(swift -> swift.getSupportedFlavors(delegateFlavors, toolchainTargetConfiguration))
+      .orElse(ImmutableSet.<Flavor>of());
+    unmatchedFlavors = Sets.difference(unmatchedFlavors, supportedDelegateFlavors);
+    if (unmatchedFlavors.isEmpty()) {
       return true;
     }
     ImmutableList<ImmutableSortedSet<Flavor>> thinFlavorSets =
-        generateThinDelegateFlavors(delegateFlavors);
+      generateThinDelegateFlavors(ImmutableSet.<Flavor>copyOf(unmatchedFlavors));
     if (thinFlavorSets.size() > 0) {
       return Iterables.all(
-          thinFlavorSets,
-          inputFlavors -> cxxBinaryFlavored.hasFlavors(inputFlavors, toolchainTargetConfiguration));
+        thinFlavorSets,
+        inputFlavors -> cxxBinaryFlavored.hasFlavors(inputFlavors, toolchainTargetConfiguration));
     } else {
-      return cxxBinaryFlavored.hasFlavors(delegateFlavors, toolchainTargetConfiguration);
+      return cxxBinaryFlavored.hasFlavors(ImmutableSet.<Flavor>copyOf(unmatchedFlavors),
+        toolchainTargetConfiguration);
     }
   }
 
