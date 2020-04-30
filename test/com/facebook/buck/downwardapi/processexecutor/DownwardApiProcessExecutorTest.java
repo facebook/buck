@@ -289,7 +289,11 @@ public class DownwardApiProcessExecutorTest {
   private void verifyDuration(long epochSecond, int expectedRelativeDuration, long nanoTime) {
     long eventTimeInSeconds = TimeUnit.NANOSECONDS.toSeconds(nanoTime);
     long relativeTimeInSeconds = eventTimeInSeconds - epochSecond;
-    assertTrue(relativeTimeInSeconds - expectedRelativeDuration <= 1);
+    int diffInSeconds = (int) (relativeTimeInSeconds - expectedRelativeDuration);
+    int diffThreshold = 2;
+    assertTrue(
+        "Diff in seconds: " + diffInSeconds + " should be less than threshold: " + diffThreshold,
+        diffInSeconds <= diffThreshold);
   }
 
   private void process(NamedPipe namedPipe) throws IOException, InterruptedException {
