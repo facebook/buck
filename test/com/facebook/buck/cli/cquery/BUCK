@@ -9,6 +9,7 @@ java_test(
     ),
     deps = [
         "//src-gen:thrift",
+        "//src/com/facebook/buck/io/file:file",
         "//test/com/facebook/buck/cli:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",

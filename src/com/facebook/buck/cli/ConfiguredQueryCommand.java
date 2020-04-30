@@ -21,6 +21,8 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.parser.ParserPythonInterpreterProvider;
 import com.facebook.buck.parser.ParsingContext;
 import com.facebook.buck.parser.PerBuildState;
@@ -420,6 +422,12 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
   private String toPresentationForm(QueryTarget target) {
     if (target instanceof QueryFileTarget) {
       QueryFileTarget fileTarget = (QueryFileTarget) target;
+      // Attempt to return the relative file path for backwards compatibility with QueryCommand
+      SourcePath path = fileTarget.getPath();
+      if (path instanceof PathSourcePath) {
+        PathSourcePath psp = (PathSourcePath) path;
+        return psp.getRelativePath().toString();
+      }
       return fileTarget.toString();
     } else if (target instanceof QueryBuildTarget) {
       QueryBuildTarget buildTarget = (QueryBuildTarget) target;

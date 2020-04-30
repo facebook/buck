@@ -20,6 +20,7 @@ import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.ThriftOutputUtils;
+import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraphNode;
 import com.facebook.buck.testutil.OutputHelper;
@@ -572,5 +573,15 @@ public class ConfiguredQueryCommandIntegrationTest {
             "cquery", "deps(//lib:foo)", "--target-universe", "//bin:mac-bin,//bin:tvos-bin");
     assertOutputMatchesFileContents(
         "stdout-deps-function-returns-dependencies-for-configured-targets", result, workspace);
+  }
+
+  @Test
+  public void inputsFunctionReturnsRelativePathForSuppliedTarget() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("cquery", "inputs(//lib:foo)");
+    assertOutputMatches(MorePaths.pathWithPlatformSeparators("lib/foo-ios.m"), result);
   }
 }
