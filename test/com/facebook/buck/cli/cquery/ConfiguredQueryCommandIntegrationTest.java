@@ -560,4 +560,17 @@ public class ConfiguredQueryCommandIntegrationTest {
             "//config/platform:ios");
     assertOutputMatches("//lib:foo (//config/platform:macos)", result);
   }
+
+  @Test
+  public void depsFunctionReturnsDependenciesForConfiguredTargets() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "deps(//lib:foo)", "--target-universe", "//bin:mac-bin,//bin:tvos-bin");
+    assertOutputMatchesFileContents(
+        "stdout-deps-function-returns-dependencies-for-configured-targets", result, workspace);
+  }
 }

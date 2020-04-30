@@ -1,0 +1,5 @@
+//lib:bar (//config/platform:macos)
+//lib:bar (//config/platform:tvos)
+//lib:foo (//config/platform:macos)
+//lib:foo (//config/platform:tvos)
+//lib:maconly (//config/platform:macos)
