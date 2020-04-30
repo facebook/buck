@@ -83,11 +83,6 @@ public abstract class ParsingContext {
     return true;
   }
 
-  @Value.Default
-  public boolean useUnconfiguredSelectorResolver() {
-    return false;
-  }
-
   public final ParsingContext withSpeculativeParsing(SpeculativeParsing value) {
     if (getSpeculativeParsing().equals(value)) {
       return this;

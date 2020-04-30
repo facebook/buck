@@ -38,7 +38,6 @@ import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.select.impl.SelectorFactory;
 import com.facebook.buck.core.select.impl.SelectorListFactory;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
-import com.facebook.buck.core.select.impl.UnconfiguredSelectorListResolver;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.io.watchman.Watchman;
 import com.facebook.buck.log.GlobalStateManager;
@@ -238,11 +237,7 @@ public class PerBuildStateFactory {
             configurationRuleRegistry.getConfigurationRuleResolver());
 
     SelectorListResolver selectorListResolver;
-    if (parsingContext.useUnconfiguredSelectorResolver()) {
-      selectorListResolver = new UnconfiguredSelectorListResolver(selectableResolver);
-    } else {
-      selectorListResolver = new DefaultSelectorListResolver(selectableResolver);
-    }
+    selectorListResolver = new DefaultSelectorListResolver(selectableResolver);
 
     UnconfiguredTargetNodeToTargetNodeFactory unconfiguredTargetNodeToTargetNodeFactory =
         new UnconfiguredTargetNodeToTargetNodeFactory(
