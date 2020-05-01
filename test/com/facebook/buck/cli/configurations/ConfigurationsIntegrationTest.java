@@ -373,6 +373,23 @@ public class ConfigurationsIntegrationTest {
   }
 
   @Test
+  public void cycle() throws Exception {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "cycle", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckBuild("--target-platforms=//:p", "//:j");
+    result.assertFailure();
+    MatcherAssert.assertThat(
+        result.getStderr().replace("\r\n", "\n"),
+        Matchers.containsString(
+            "cycle detected when resolving configuration rule\n"
+                + "    At //:cs\n"
+                + "    At //:c2\n"
+                + "    At //:cs\n"));
+  }
+
+  @Test
   public void requireTargetPlatformBuildFailure() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "require_target_platform", tmp);

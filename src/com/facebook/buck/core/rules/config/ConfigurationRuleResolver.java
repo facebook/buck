@@ -16,9 +16,9 @@
 
 package com.facebook.buck.core.rules.config;
 
-import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 
 /** Provides access to {@link ConfigurationRule}. */
 public interface ConfigurationRuleResolver {
@@ -29,5 +29,7 @@ public interface ConfigurationRuleResolver {
    * @throws HumanReadableException if no rule is associated with the target.
    */
   <R extends ConfigurationRule> R getRule(
-      BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack);
+      BuildTarget buildTarget,
+      Class<R> ruleClass,
+      ConfigurationGraphDependencyStack dependencyStack);
 }

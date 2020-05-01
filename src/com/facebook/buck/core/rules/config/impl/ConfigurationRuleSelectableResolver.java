@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.core.select.ProvidesSelectable;
 import com.facebook.buck.core.select.Selectable;
 import com.facebook.buck.core.select.SelectableResolver;
@@ -42,7 +43,10 @@ public class ConfigurationRuleSelectableResolver implements SelectableResolver {
   @Override
   public Selectable getSelectable(BuildTarget buildTarget, DependencyStack dependencyStack) {
     ConfigurationRule configurationRule =
-        configurationRuleResolver.getRule(buildTarget, ConfigurationRule.class, dependencyStack);
+        configurationRuleResolver.getRule(
+            buildTarget,
+            ConfigurationRule.class,
+            ConfigurationGraphDependencyStack.root(dependencyStack));
     if (!(configurationRule instanceof ProvidesSelectable)) {
       throw new HumanReadableException(
           dependencyStack,

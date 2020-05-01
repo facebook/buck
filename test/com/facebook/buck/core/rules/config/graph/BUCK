@@ -1,0 +1,11 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "graph",
+    srcs = glob(["*Test.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/rules/config/graph:graph",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -47,7 +48,9 @@ public class RuleBasedConstraintResolverTest {
             new ConfigurationRuleResolver() {
               @Override
               public <R extends ConfigurationRule> R getRule(
-                  BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+                  BuildTarget buildTarget,
+                  Class<R> ruleClass,
+                  ConfigurationGraphDependencyStack dependencyStack) {
                 if (buildTarget.equals(constraintSettingTarget)) {
                   return ruleClass.cast(new ConstraintSettingRule(buildTarget));
                 } else {

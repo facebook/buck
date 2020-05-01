@@ -41,6 +41,7 @@ import com.facebook.buck.core.rules.actions.ActionCreationException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
@@ -96,7 +97,9 @@ public class TargetCompatibilityCheckerTest {
             new ConfigurationRuleResolver() {
               @Override
               public <R extends ConfigurationRule> R getRule(
-                  BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+                  BuildTarget buildTarget,
+                  Class<R> ruleClass,
+                  ConfigurationGraphDependencyStack dependencyStack) {
                 if (buildTarget.equals(cs1.getBuildTarget())) {
                   return ruleClass.cast(new ConstraintSettingRule(buildTarget));
                 } else {
@@ -123,7 +126,9 @@ public class TargetCompatibilityCheckerTest {
         new ConfigurationRuleResolver() {
           @Override
           public <R extends ConfigurationRule> R getRule(
-              BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+              BuildTarget buildTarget,
+              Class<R> ruleClass,
+              ConfigurationGraphDependencyStack dependencyStack) {
             if (buildTarget
                 .toString()
                 .equals(compatibleConfigSetting.getBuildTarget().toString())) {

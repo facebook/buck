@@ -18,13 +18,13 @@ package com.facebook.buck.android.toolchain.platform;
 
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.description.arg.Hint;
-import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
@@ -63,7 +63,7 @@ public class AndroidPlatformDescription
   public AndroidMultiPlatformRule createConfigurationRule(
       ConfigurationRuleResolver configurationRuleResolver,
       BuildTarget buildTarget,
-      DependencyStack dependencyStack,
+      ConfigurationGraphDependencyStack dependencyStack,
       AndroidPlatformArg arg) {
     return new AndroidMultiPlatformRule(
         buildTarget,

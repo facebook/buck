@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
 import com.google.common.collect.ImmutableList;
@@ -77,7 +78,8 @@ class TargetCompatibilityChecker {
           configurationRuleResolver.getRule(
               ConfigurationBuildTargets.convert(compatibleConfigTarget),
               ConfigSettingRule.class,
-              dependencyStack.child(compatibleConfigTarget));
+              ConfigurationGraphDependencyStack.root(dependencyStack)
+                  .child(compatibleConfigTarget));
 
       if (configSettingRule
           .getSelectable()

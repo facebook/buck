@@ -1,0 +1,24 @@
+constraint_value(
+    name = "c2",
+    constraint_setting = ":cs",  #  error is here
+)
+
+config_setting(
+    name = "cs",
+    constraint_values = [
+        ":c2",
+    ],
+)
+
+platform(
+    name = "p",
+    constraint_values = [
+    ],
+)
+
+java_library(
+    name = "j",
+    compatible_with = [
+        ":cs",
+    ],
+)

@@ -23,6 +23,7 @@ import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 
 /** {@link PlatformResolver} that supports multiplatforms. */
 public class RuleBasedMultiPlatformResolver implements PlatformResolver {
@@ -46,7 +47,10 @@ public class RuleBasedMultiPlatformResolver implements PlatformResolver {
   private MultiPlatformRule getMultiPlatformRule(
       BuildTarget buildTarget, DependencyStack dependencyStack) {
     ConfigurationRule configurationRule =
-        configurationRuleResolver.getRule(buildTarget, ConfigurationRule.class, dependencyStack);
+        configurationRuleResolver.getRule(
+            buildTarget,
+            ConfigurationRule.class,
+            ConfigurationGraphDependencyStack.root(dependencyStack));
     if (!(configurationRule instanceof MultiPlatformRule)) {
       throw new HumanReadableException(
           dependencyStack,

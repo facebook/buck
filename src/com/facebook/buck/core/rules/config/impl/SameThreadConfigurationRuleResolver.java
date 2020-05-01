@@ -25,6 +25,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -65,31 +66,41 @@ public class SameThreadConfigurationRuleResolver implements ConfigurationRuleRes
 
   @Override
   public <R extends ConfigurationRule> R getRule(
-      BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+      BuildTarget buildTarget,
+      Class<R> ruleClass,
+      ConfigurationGraphDependencyStack dependencyStack) {
     ConfigurationRule configurationRule =
         computeIfAbsent(buildTarget, t -> createConfigurationRule(t, ruleClass, dependencyStack));
     try {
       return ruleClass.cast(configurationRule);
     } catch (ClassCastException e) {
       throw wrongRuleClassException(
-          buildTarget, dependencyStack, ruleClass, configurationRule.getClass());
+          buildTarget,
+          dependencyStack.getDependencyStack(),
+          ruleClass,
+          configurationRule.getClass());
     }
   }
 
   @SuppressWarnings("unchecked")
   private <T extends ConfigurationRuleArg, R extends ConfigurationRule>
       ConfigurationRule createConfigurationRule(
-          BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+          BuildTarget buildTarget,
+          Class<R> ruleClass,
+          ConfigurationGraphDependencyStack dependencyStack) {
     ConfigurationBuildTargets.validateTarget(buildTarget);
 
     TargetNode<T> targetNode =
-        (TargetNode<T>) targetNodeSupplier.apply(buildTarget, dependencyStack);
+        (TargetNode<T>) targetNodeSupplier.apply(buildTarget, dependencyStack.getDependencyStack());
     ConfigurationRuleDescription<T, ?> configurationRuleDescription =
         (ConfigurationRuleDescription<T, ?>) targetNode.getDescription();
 
     if (!ruleClass.isAssignableFrom(configurationRuleDescription.getRuleClass())) {
       throw wrongRuleClassException(
-          buildTarget, dependencyStack, ruleClass, configurationRuleDescription.getRuleClass());
+          buildTarget,
+          dependencyStack.getDependencyStack(),
+          ruleClass,
+          configurationRuleDescription.getRuleClass());
     }
 
     ConfigurationRule configurationRule =

@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -49,7 +50,9 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
             buildTarget,
             t -> {
               return configurationRuleResolver.getRule(
-                  buildTarget, ConstraintSettingRule.class, dependencyStack);
+                  buildTarget,
+                  ConstraintSettingRule.class,
+                  ConfigurationGraphDependencyStack.root(dependencyStack));
             })
         .getConstraintSetting();
   }
@@ -65,7 +68,9 @@ public class RuleBasedConstraintResolver implements ConstraintResolver {
             buildTarget,
             t -> {
               return configurationRuleResolver.getRule(
-                  buildTarget, ConstraintValueRule.class, dependencyStack);
+                  buildTarget,
+                  ConstraintValueRule.class,
+                  ConfigurationGraphDependencyStack.root(dependencyStack));
             })
         .getConstraintValue();
   }

@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Iterables;
@@ -46,7 +47,9 @@ public class RuleBasedPlatformResolverTest {
             new ConfigurationRuleResolver() {
               @Override
               public <R extends ConfigurationRule> R getRule(
-                  BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+                  BuildTarget buildTarget,
+                  Class<R> ruleClass,
+                  ConfigurationGraphDependencyStack dependencyStack) {
                 return ruleClass.cast(new ConstraintSettingRule(constraint));
               }
             });
@@ -75,7 +78,9 @@ public class RuleBasedPlatformResolverTest {
         new ConfigurationRuleResolver() {
           @Override
           public <R extends ConfigurationRule> R getRule(
-              BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+              BuildTarget buildTarget,
+              Class<R> ruleClass,
+              ConfigurationGraphDependencyStack dependencyStack) {
             if (buildTarget.equals(platformTarget)) {
               return ruleClass.cast(
                   ImmutablePlatformRule.ofImpl(

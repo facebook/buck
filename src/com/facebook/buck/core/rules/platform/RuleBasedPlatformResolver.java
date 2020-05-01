@@ -25,6 +25,7 @@ import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.core.util.graph.AcyclicDepthFirstPostOrderTraversalWithPayloadAndDependencyStack;
 import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayloadAndDependencyStack;
@@ -78,7 +79,10 @@ public class RuleBasedPlatformResolver implements PlatformResolver {
   private PlatformDescription.PlatformRule getPlatformRule(
       BuildTarget buildTarget, DependencyStack dependencyStack) {
     ConfigurationRule configurationRule =
-        configurationRuleResolver.getRule(buildTarget, ConfigurationRule.class, dependencyStack);
+        configurationRuleResolver.getRule(
+            buildTarget,
+            ConfigurationRule.class,
+            ConfigurationGraphDependencyStack.root(dependencyStack));
     if (!(configurationRule instanceof PlatformDescription.PlatformRule)) {
       throw new HumanReadableException(
           dependencyStack,

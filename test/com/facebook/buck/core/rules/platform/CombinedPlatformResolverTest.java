@@ -26,6 +26,7 @@ import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
+import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -45,7 +46,9 @@ public class CombinedPlatformResolverTest {
         new ConfigurationRuleResolver() {
           @Override
           public <R extends ConfigurationRule> R getRule(
-              BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+              BuildTarget buildTarget,
+              Class<R> ruleClass,
+              ConfigurationGraphDependencyStack dependencyStack) {
             return ruleClass.cast(new ConstraintSettingRule(constraint));
           }
         };
@@ -94,7 +97,9 @@ public class CombinedPlatformResolverTest {
         new ConfigurationRuleResolver() {
           @Override
           public <R extends ConfigurationRule> R getRule(
-              BuildTarget buildTarget, Class<R> ruleClass, DependencyStack dependencyStack) {
+              BuildTarget buildTarget,
+              Class<R> ruleClass,
+              ConfigurationGraphDependencyStack dependencyStack) {
             if (buildTarget.equals(multiPlatformTarget)) {
               return ruleClass.cast(
                   new FakeMultiPlatformRule(
