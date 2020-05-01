@@ -77,9 +77,8 @@ public class NdkBuildStep extends ShellStep {
     builder.add(
         androidNdk.getNdkBuildExecutable().toAbsolutePath().toString(),
         "-j",
-        // TODO(dancol): using -j here is wrong.  It lets make run too many work when we do
-        // other work in parallel.  Instead, implement the GNU Make job server so make and Buck can
-        // coordinate job concurrency.
+        // TODO(msemko): Use -j 1 here. Rules shouldn't have their own concurrency and ndk_library
+        // isn't really used and is (long) deprecated anyway.
         Integer.toString(concurrencyLimit.threadLimit),
         "-C",
         this.root.toString());
