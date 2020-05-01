@@ -66,6 +66,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import java.util.Collection;
 import java.util.Objects;
@@ -178,7 +179,8 @@ public class JsBundleDescription
 
     Either<ImmutableSet<String>, String> entryPoint = args.getEntry();
     TransitiveLibraryDependencies libsResolver =
-        new TransitiveLibraryDependencies(buildTarget, context.getTargetGraph(), graphBuilder);
+        new TransitiveLibraryDependencies(
+            buildTarget, context.getTargetGraph(), graphBuilder, args.getDefaultTransformProfile());
     ImmutableSet<JsLibrary> flavoredLibraryDeps = libsResolver.collect(args.getDeps());
     Stream<BuildRule> generatedDeps =
         findGeneratedSources(graphBuilder, flavoredLibraryDeps.stream())
@@ -377,6 +379,8 @@ public class JsBundleDescription
 
     /** For R.java */
     Optional<String> getAndroidPackage();
+
+    Optional<String> getDefaultTransformProfile();
   }
 
   private static class TransitiveLibraryDependencies {
@@ -385,18 +389,34 @@ public class JsBundleDescription
     private final TargetGraph targetGraph;
 
     private TransitiveLibraryDependencies(
-        BuildTarget bundleTarget, TargetGraph targetGraph, ActionGraphBuilder graphBuilder) {
+        BuildTarget bundleTarget,
+        TargetGraph targetGraph,
+        ActionGraphBuilder graphBuilder,
+        Optional<String> defaultTransformProfile) {
       this.targetGraph = targetGraph;
       this.graphBuilder = graphBuilder;
 
       FlavorSet bundleFlavors = bundleTarget.getFlavors();
-      extraFlavors =
+
+      Stream<Flavor> extraFlavorsStream =
           bundleFlavors.getSet().stream()
               .filter(
                   flavor ->
                       JsLibraryDescription.FLAVOR_DOMAINS.stream()
-                          .anyMatch(domain -> domain.contains(flavor)))
-              .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
+                          .anyMatch(domain -> domain.contains(flavor)));
+      if (!JsFlavors.TRANSFORM_PROFILE_DOMAIN.containsAnyOf(bundleFlavors)
+          && defaultTransformProfile.isPresent()
+          && !defaultTransformProfile.get().equals("default")) {
+        Flavor defaultTransformProfileFlavor =
+            Iterables.getOnlyElement(
+                JsFlavors.TRANSFORM_PROFILE_DOMAIN.getFlavors().asList().stream()
+                        .filter(flavor -> flavor.getName().equals(defaultTransformProfile.get()))
+                    ::iterator);
+        extraFlavorsStream =
+            Stream.concat(extraFlavorsStream, Stream.of(defaultTransformProfileFlavor));
+      }
+      extraFlavors =
+          extraFlavorsStream.collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
     }
 
     ImmutableSet<JsLibrary> collect(Collection<BuildTarget> deps) {

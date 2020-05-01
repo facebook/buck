@@ -72,21 +72,24 @@ public class JsTestScenario {
   }
 
   JsBundle createBundle(String target, ImmutableSortedSet<BuildTarget> deps) {
-    return createBundle(target, builder -> builder.setDeps(deps));
+    return createBundle(BuildTargetFactory.newInstance(target), builder -> builder.setDeps(deps));
   }
 
   JsBundle createBundle(String target, Function<JsBundleBuilder, JsBundleBuilder> setUp) {
+    return createBundle(
+        BuildTargetFactory.newInstance(target), Either.ofLeft(ImmutableSet.of()), setUp);
+  }
+
+  JsBundle createBundle(BuildTarget target, Function<JsBundleBuilder, JsBundleBuilder> setUp) {
     return createBundle(target, Either.ofLeft(ImmutableSet.of()), setUp);
   }
 
   private JsBundle createBundle(
-      String target,
+      BuildTarget target,
       Either<ImmutableSet<String>, String> entry,
       Function<JsBundleBuilder, JsBundleBuilder> setUp) {
     return setUp
-        .apply(
-            new JsBundleBuilder(
-                BuildTargetFactory.newInstance(target), workerTarget, entry, filesystem))
+        .apply(new JsBundleBuilder(target, workerTarget, entry, filesystem))
         .build(graphBuilder, targetGraph);
   }
 

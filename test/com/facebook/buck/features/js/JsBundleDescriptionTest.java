@@ -245,6 +245,43 @@ public class JsBundleDescriptionTest {
     }
 
     @Test
+    public void defaultTransformProfilePropagatesAsLibraryFlavor() {
+      BuildTarget libraryTarget = BuildTargetFactory.newInstance("//libs:a");
+      JsTestScenario scenario = JsTestScenario.builder().library(libraryTarget).build();
+      JsBundle bundle =
+          scenario.createBundle(
+              "//:bundle",
+              builder ->
+                  builder
+                      .setDeps(ImmutableSortedSet.of(libraryTarget))
+                      .setDefaultTransformProfile("hermes-stable"));
+      assertThat(
+          libraryTarget.withAppendedFlavors(JsFlavors.HERMES_STABLE),
+          in(dependencyTargets(bundle)));
+    }
+
+    @Test
+    public void defaultTransformProfileDoesNotOverrideExplicitBundleFlavor() {
+      BuildTarget bundleTarget =
+          BuildTargetFactory.newInstance("//:bundle").withAppendedFlavors(JsFlavors.HERMES_CANARY);
+      BuildTarget libraryTarget = BuildTargetFactory.newInstance("//libs:a");
+      JsTestScenario scenario = JsTestScenario.builder().library(libraryTarget).build();
+      JsBundle bundle =
+          scenario.createBundle(
+              bundleTarget,
+              builder ->
+                  builder
+                      .setDeps(ImmutableSortedSet.of(libraryTarget))
+                      .setDefaultTransformProfile("hermes-stable"));
+      assertThat(
+          libraryTarget.withAppendedFlavors(JsFlavors.HERMES_CANARY),
+          in(dependencyTargets(bundle)));
+      assertThat(
+          libraryTarget.withAppendedFlavors(JsFlavors.HERMES_STABLE),
+          not(in(dependencyTargets(bundle))));
+    }
+
+    @Test
     public void bundleRulesDependOnGeneratedSources() {
       BuildTarget a = BuildTargetFactory.newInstance("//:node_modules");
       BuildTarget b = BuildTargetFactory.newInstance("//generated:dep");

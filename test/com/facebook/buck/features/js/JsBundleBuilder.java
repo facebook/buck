@@ -69,4 +69,9 @@ public class JsBundleBuilder
     getArgForPopulating().setExtraJson(StringWithMacrosUtils.format(format, macros));
     return this;
   }
+
+  JsBundleBuilder setDefaultTransformProfile(String transformProfile) {
+    getArgForPopulating().setDefaultTransformProfile(transformProfile);
+    return this;
+  }
 }
