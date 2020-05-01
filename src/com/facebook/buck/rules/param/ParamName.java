@@ -20,9 +20,13 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 /** Rule param name. */
 public class ParamName implements Comparable<ParamName>, ParamNameOrSpecial {
+
+  /** Matches python identifiers in the parser */
+  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("^[a-z_][a-z0-9_]*$");
 
   private final String camelCase;
   private final String snakeCase;
@@ -59,11 +63,12 @@ public class ParamName implements Comparable<ParamName>, ParamNameOrSpecial {
       underscore = false;
     }
 
-    Preconditions.checkArgument(!string.isEmpty());
+    Preconditions.checkArgument(!string.isEmpty(), "param name must not be empty");
 
     String converted = expected.to(validateAgainst, string);
     String convertedBack = validateAgainst.to(expected, converted);
-    Preconditions.checkArgument(convertedBack.equals(string), "not a %s: %s", expected, string);
+    Preconditions.checkArgument(
+        convertedBack.equals(string), "converted parameter is not %s: %s", expected, string);
 
     return (underscore ? "_" : "") + converted;
   }
@@ -98,6 +103,10 @@ public class ParamName implements Comparable<ParamName>, ParamNameOrSpecial {
     Preconditions.checkArgument(!snakeCase.equals("_"), "param name must not be underscore");
     Preconditions.checkArgument(
         !snakeCase.contains("."), "param name must not contain dot: %s", snakeCase);
+    Preconditions.checkArgument(
+        VALID_IDENTIFIER_REGEX.matcher(snakeCase).matches(),
+        "param name is not a valid identifier: %s",
+        snakeCase);
 
     return bySnakeCase.computeIfAbsent(snakeCase, k -> new ParamName(camelCase, snakeCase));
   }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.starlark.compatible;
 
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -29,7 +30,6 @@ import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -37,9 +37,6 @@ import javax.annotation.Nullable;
  * utilities that supplement the built in helpers.
  */
 public class BuckSkylarkTypes {
-
-  /** Matches python identifiers in the parser */
-  private static final Pattern VALID_IDENTIFIER_REGEX = Pattern.compile("^[a-z_][a-z0-9_]*$");
 
   private BuckSkylarkTypes() {}
 
@@ -170,7 +167,9 @@ public class BuckSkylarkTypes {
      * accessing the parameter with <code>getattr(ctx.attr, "some attr")</code> We'd rather just
      * bail out early so typos don't confuse users or allow non-idiomatic usage
      */
-    if (!VALID_IDENTIFIER_REGEX.matcher(kwarg).matches()) {
+    try {
+      ParamName.bySnakeCase(kwarg);
+    } catch (IllegalArgumentException e) {
       throw new EvalException(
           location, String.format("Attribute name '%s' is not a valid identifier", kwarg));
     }

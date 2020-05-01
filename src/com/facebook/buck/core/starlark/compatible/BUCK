@@ -12,6 +12,7 @@ java_library(
         "//third-party/java/jsr:jsr305",
     ],
     exported_deps = [
+        "//src/com/facebook/buck/rules/param:param",
         "//third-party/java/bazel:bazel",
     ],
 )
