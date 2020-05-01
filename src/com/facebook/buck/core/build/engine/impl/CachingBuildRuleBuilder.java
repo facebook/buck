@@ -88,6 +88,7 @@ import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
 import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.Discardable;
+import com.facebook.buck.util.ErrorLogger;
 import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.Scope;
 import com.facebook.buck.util.Threads;
@@ -412,7 +413,8 @@ class CachingBuildRuleBuilder {
               if (consoleLogBuildFailuresInline) {
                 // TODO(cjhopman): This probably shouldn't be a thing. Why can't we just rely on the
                 // propagated failure being printed?
-                eventBus.post(ConsoleEvent.severe(message));
+                eventBus.post(
+                    ConsoleEvent.severe(ErrorLogger.getUserFriendlyMessage(failedException)));
               }
               recordFailureAndCleanUp(failedException);
               return Futures.immediateFuture(failure(thrown));
