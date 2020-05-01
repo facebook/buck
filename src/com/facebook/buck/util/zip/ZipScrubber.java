@@ -86,8 +86,10 @@ public class ZipScrubber {
       ByteBuffer localEntry = slice(map, entry.getInt(ZipEntry.CENOFF));
       scrubLocalEntry(localEntry);
       scrubExtraFields(
-          slice(entry, ZipEntry.CENHDR + entry.getShort(ZipEntry.CENNAM)),
-          entry.getShort(ZipEntry.CENEXT));
+          slice(
+              entry,
+              ZipEntry.CENHDR + entry.getShort(ZipEntry.CENNAM),
+              entry.getShort(ZipEntry.CENEXT)));
 
       cdOffset +=
           ZipEntry.CENHDR
@@ -105,20 +107,50 @@ public class ZipScrubber {
     return result;
   }
 
+  // Duplicate as using `slice.limit` has compatibility issues because of Java9 APIs.
+  private static ByteBuffer slice(ByteBuffer map, int offset, int limit) {
+    ByteBuffer result = slice(map, offset);
+    result.limit(limit);
+    return result;
+  }
+
   private static void scrubLocalEntry(ByteBuffer entry) throws IOException {
     check(entry.getInt(0) == ZipEntry.LOCSIG, "expected local header signature");
     entry.putInt(ZipEntry.LOCTIM, ZipConstants.DOS_FAKE_TIME);
     scrubExtraFields(
-        slice(entry, ZipEntry.LOCHDR + entry.getShort(ZipEntry.LOCNAM)),
-        entry.getShort(ZipEntry.LOCEXT));
+        slice(
+            entry,
+            ZipEntry.LOCHDR + entry.getShort(ZipEntry.LOCNAM),
+            entry.getShort(ZipEntry.LOCEXT)));
   }
 
-  private static void scrubExtraFields(ByteBuffer data, short length) {
+  private static void scrubExtraFields(ByteBuffer data) {
     // See http://mdfs.net/Docs/Comp/Archiving/Zip/ExtraField for structure of extra fields.
-    int end = data.position() + length;
+    //
+    // Additionally, tools like zipalign inject zero values for padding, which seem to violate
+    // the official zip spec.
+    // zipalign README:
+    // https://android.googlesource.com/platform/build/+/refs/tags/android-10.0.0_r33/tools/zipalign/README.txt
+    // zipalign padding:
+    // https://android.googlesource.com/platform/build/+/refs/tags/android-10.0.0_r33/tools/zipalign/ZipEntry.cpp#200
+
+    final int end = data.limit();
+
     while (data.position() < end) {
+      if (end - data.position() < 4) {
+        // Check that all padding bytes are zero.
+        int padding = 0;
+        while (data.position() != end) {
+          padding = (padding << 8) | (data.get() & 0xFF);
+        }
+        if (padding != 0) {
+          throw new IllegalStateException("Non-zero padding " + padding);
+        }
+        break;
+      }
+
       int id = data.getShort();
-      int size = data.getShort();
+      int size = data.getShort() & 0xFFFF;
 
       if (id == EXTENDED_TIMESTAMP_ID) {
         // 1 byte flag
@@ -130,6 +162,10 @@ public class ZipScrubber {
           size -= 4;
         }
       } else {
+        if (id == 0 && size != 0) {
+          // Padding should be length zero.
+          throw new IllegalStateException("Non-zero length padding " + size);
+        }
         if (data.position() + size >= end) {
           break;
         }

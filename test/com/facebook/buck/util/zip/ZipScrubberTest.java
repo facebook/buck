@@ -18,8 +18,10 @@ package com.facebook.buck.util.zip;
 
 import static org.junit.Assert.assertThat;
 
+import com.google.common.io.Resources;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -107,6 +109,63 @@ public class ZipScrubberTest {
     }
 
     byte[] bytes = byteArrayOutputStream.toByteArray();
+    ZipScrubber.scrubZipBuffer(bytes.length, ByteBuffer.wrap(bytes));
+
+    // Iterate over each of the entries, expecting to see all zeros in the time fields.
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
+    try (ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(bytes))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
+      }
+    }
+  }
+
+  @Test
+  public void modificationTimesSmallPadding() throws Exception {
+    // Small test file that has padding (inserted by `zipalign 4`).
+    String packageName = getClass().getPackage().getName().replace('.', '/');
+    URL sample = Resources.getResource(packageName + "/aligned.4.zip");
+    byte[] bytes = Resources.toByteArray(sample);
+
+    // Execute the zip scrubber step.
+    ZipScrubber.scrubZipBuffer(bytes.length, ByteBuffer.wrap(bytes));
+
+    // Iterate over each of the entries, expecting to see all zeros in the time fields.
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
+    try (ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(bytes))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
+      }
+    }
+  }
+
+  @Test
+  public void modificationTimesSmallPaddingNoExtra() throws Exception {
+    // Small test file that has padding (inserted by `zipalign 4`).
+    String packageName = getClass().getPackage().getName().replace('.', '/');
+    URL sample = Resources.getResource(packageName + "/aligned.4.no_extra.zip");
+    byte[] bytes = Resources.toByteArray(sample);
+
+    // Execute the zip scrubber step.
+    ZipScrubber.scrubZipBuffer(bytes.length, ByteBuffer.wrap(bytes));
+
+    // Iterate over each of the entries, expecting to see all zeros in the time fields.
+    Date dosEpoch = new Date(ZipUtil.dosToJavaTime(ZipConstants.DOS_FAKE_TIME));
+    try (ZipInputStream is = new ZipInputStream(new ByteArrayInputStream(bytes))) {
+      for (ZipEntry entry = is.getNextEntry(); entry != null; entry = is.getNextEntry()) {
+        assertThat(entry.getName(), new Date(entry.getTime()), Matchers.equalTo(dosEpoch));
+      }
+    }
+  }
+
+  @Test
+  public void modificationTimesLargePadding() throws Exception {
+    // Small test file that has padding (inserted by `zipalign 4`).
+    String packageName = getClass().getPackage().getName().replace('.', '/');
+    URL sample = Resources.getResource(packageName + "/aligned.page.zip");
+    byte[] bytes = Resources.toByteArray(sample);
+
+    // Execute the zip scrubber step.
     ZipScrubber.scrubZipBuffer(bytes.length, ByteBuffer.wrap(bytes));
 
     // Iterate over each of the entries, expecting to see all zeros in the time fields.

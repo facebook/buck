@@ -4,6 +4,12 @@ java_test(
     name = "zip",
     srcs = glob(["*Test.java"]),
     resources = [
+        # Generated as: echo "1" > test.so && zip -0 test.zip test.so && zipalign 4 test.zip aligned.4.zip
+        "aligned.4.zip",
+        # Generated as: echo "1" > test.so && zip -0 -X test.zip test.so && zipalign 4 test.zip aligned.4.zip
+        "aligned.4.no_extra.zip",
+        # Generated as: echo "1" > test.so && zip -0 test.zip test.so && zipalign -p 4 test.zip aligned.page.zip
+        "aligned.page.zip",
         "macbeth.dat",
         "sample-bytes.dat",
     ],
