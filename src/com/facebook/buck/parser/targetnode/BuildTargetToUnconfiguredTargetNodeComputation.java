@@ -87,7 +87,8 @@ public class BuildTargetToUnconfiguredTargetNodeComputation
     BuildFileManifest manifest = env.getDep(getManifestKey(key));
     @Nullable RawTargetNode rawAttributes = manifest.getTargets().get(buildTarget.getName());
     if (rawAttributes == null) {
-      throw new NoSuchBuildTargetException(buildTarget);
+      // TODO(nga): dependency stack
+      throw new NoSuchBuildTargetException(DependencyStack.top(buildTarget), buildTarget);
     }
 
     /**

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.parser.exceptions;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.google.common.collect.ImmutableList;
@@ -29,16 +30,17 @@ public class NoSuchBuildTargetException extends BuildTargetException {
 
   private static int MAX_SIMILAR_TARGETS_TO_DISPLAY = 15;
 
-  public NoSuchBuildTargetException(BuildTarget target) {
-    this(String.format("No such target: '%s'", target));
+  public NoSuchBuildTargetException(DependencyStack dependencyStack, BuildTarget target) {
+    this(dependencyStack, String.format("No such target: '%s'", target));
   }
 
-  public NoSuchBuildTargetException(UnconfiguredBuildTarget target) {
-    this(String.format("No such target: '%s'", target));
+  public NoSuchBuildTargetException(
+      DependencyStack dependencyStack, UnconfiguredBuildTarget target) {
+    this(dependencyStack, String.format("No such target: '%s'", target));
   }
 
-  private NoSuchBuildTargetException(String message) {
-    super(message);
+  private NoSuchBuildTargetException(DependencyStack dependencyStack, String message) {
+    super(dependencyStack, message);
   }
 
   /**
@@ -54,7 +56,8 @@ public class NoSuchBuildTargetException extends BuildTargetException {
       ImmutableList<UnconfiguredBuildTarget> similarTargets,
       int totalTargets,
       Function<Path, OptionalLong> fileSizeFetcher,
-      Path buildFilePath) {
+      Path buildFilePath,
+      DependencyStack dependencyStack) {
 
     StringBuilder builder =
         new StringBuilder(
@@ -83,7 +86,7 @@ public class NoSuchBuildTargetException extends BuildTargetException {
         builder.append(System.lineSeparator());
       }
     }
-    return new NoSuchBuildTargetException(builder.toString());
+    return new NoSuchBuildTargetException(dependencyStack, builder.toString());
   }
 
   @Override

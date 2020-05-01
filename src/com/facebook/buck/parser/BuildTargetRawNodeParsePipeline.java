@@ -103,7 +103,8 @@ public class BuildTargetRawNodeParsePipeline implements BuildTargetParsePipeline
                 },
                 parserConfig
                     .getAbsolutePathToBuildFile(cell, buildTarget, dependencyStack)
-                    .getPath());
+                    .getPath(),
+                dependencyStack);
           }
           return Futures.immediateFuture(input.getTargets().get(buildTarget.getName()));
         },

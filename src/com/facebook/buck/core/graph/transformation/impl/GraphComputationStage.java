@@ -78,6 +78,7 @@ public class GraphComputationStage<
   }
 
   ResultType transform(KeyType key, ComputationEnvironment env) throws Exception {
+    // TODO(nga): dependency stack
     ResultType result = transformer.transform(key, env);
 
     cache.put(key, result);

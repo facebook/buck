@@ -91,6 +91,7 @@ public class LegacyCompatibleRuleAnalysisComputation
       throws ActionCreationException, RuleAnalysisException {
     BaseDescription<T> description = targetNode.getDescription();
     if (description instanceof RuleDescription) {
+      // TODO(nga): dependency stack
       return delegate.transform(key, env);
     } else if (description instanceof LegacyProviderCompatibleDescription) {
       return computeLegacyProviders(
