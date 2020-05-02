@@ -36,6 +36,7 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -326,8 +327,9 @@ public class TargetNodeTest {
           createCellRoots(projectFilesystem).getCellNameResolver(),
           projectFilesystem,
           new ThrowingSelectorListResolver(),
-          new ThrowingTargetConfigurationTransformer(),
           new ThrowingSelectableConfigurationContext(),
+          new ThrowingTargetConfigurationTransformer(),
+          new ThrowingPlatformResolver(),
           buildTarget,
           UnconfiguredTargetConfiguration.INSTANCE,
           DependencyStack.root(),

@@ -34,6 +34,7 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.UnconfiguredBuildTargetWithOutputsFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -137,8 +138,9 @@ public class GenruleDescriptionTest {
             createCellRoots(projectFilesystem).getCellNameResolver(),
             projectFilesystem,
             new ThrowingSelectorListResolver(),
-            new ThrowingTargetConfigurationTransformer(),
             new ThrowingSelectableConfigurationContext(),
+            new ThrowingTargetConfigurationTransformer(),
+            new ThrowingPlatformResolver(),
             buildTarget,
             UnconfiguredTargetConfiguration.INSTANCE,
             DependencyStack.root(),

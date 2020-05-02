@@ -26,6 +26,7 @@ standard_java_test(
         "//src/com/facebook/buck/util/json:json",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/model/platform:testutil",
         "//test/com/facebook/buck/core/rules/analysis/impl:testutil",
         "//test/com/facebook/buck/core/rules/providers/collect/impl:testutil",
         "//test/com/facebook/buck/core/select:testutil",

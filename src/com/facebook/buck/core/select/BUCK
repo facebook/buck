@@ -10,6 +10,7 @@ java_library(
         "//third-party/java/jsr:jsr305",
     ],
     exported_deps = [
+        "//src/com/facebook/buck/core/model/platform:platform",
         "//src/com/facebook/buck/rules/coercer/concat:concat",
         "//src/com/facebook/buck/util/function:function",
     ],

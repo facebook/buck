@@ -17,17 +17,29 @@
 package com.facebook.buck.core.model.platform.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.model.ConfigurationForConfigurationTargets;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 
-/** Platform resolver which always throws. Can be used for unconfigurable targets or in tests */
-public class ThrowingPlatformResolver implements TargetPlatformResolver {
+/**
+ * Target platform resolver used for configuration graphs (where all configurations are {@link
+ * ConfigurationForConfigurationTargets}).
+ */
+public class ConfigurationPlatformResolver implements TargetPlatformResolver {
 
-  /** Unconditionally throw */
   @Override
   public Platform getTargetPlatform(
       TargetConfiguration targetConfiguration, DependencyStack dependencyStack) {
-    throw new UnsupportedOperationException();
+
+    // When we create configuration targets, we use this instance of platform resolver,
+    // So return some platform here.
+    // This behavior is consistent with DefaultTargetPlatformResolver.
+    if (targetConfiguration instanceof ConfigurationForConfigurationTargets) {
+      return UnconfiguredPlatform.INSTANCE;
+    }
+
+    throw new UnsupportedOperationException(
+        "attempt to resolve configuration: " + targetConfiguration);
   }
 }

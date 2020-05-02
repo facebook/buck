@@ -16,16 +16,26 @@
 
 package com.facebook.buck.core.select.impl;
 
-import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 
 /** Fake implementation which throws unconditionally */
 public class ThrowingSelectableConfigurationContext implements SelectableConfigurationContext {
 
+  @Override
+  public BuckConfig getBuckConfig() {
+    throw new IllegalStateException();
+  }
+
   /** Throw unconditionally */
   @Override
-  public SelectableConfigurationContext withTargetConfiguration(
-      TargetConfiguration targetConfiguration) {
+  public SelectableConfigurationContext withPlatform(Platform platform) {
+    throw new IllegalStateException();
+  }
+
+  @Override
+  public Platform getPlatform() {
     throw new IllegalStateException();
   }
 }

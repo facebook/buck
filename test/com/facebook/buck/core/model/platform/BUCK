@@ -9,6 +9,9 @@ java_library(
         ],
     ),
     visibility = ["//test/..."],
+    deps = [
+        "//src/com/facebook/buck/core/model/platform/impl:impl",
+    ],
     exported_deps = [
         "//src/com/facebook/buck/core/model/platform:platform",
     ],

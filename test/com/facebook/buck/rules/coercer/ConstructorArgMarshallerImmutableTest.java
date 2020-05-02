@@ -41,6 +41,7 @@ import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransfo
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.FakeMultiPlatform;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
+import com.facebook.buck.core.model.platform.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
@@ -117,8 +118,9 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             new ThrowingSelectorListResolver(),
-            new ThrowingTargetConfigurationTransformer(),
             new ThrowingSelectableConfigurationContext(),
+            new ThrowingTargetConfigurationTransformer(),
+            new ThrowingPlatformResolver(),
             TARGET,
             UnconfiguredTargetConfiguration.INSTANCE,
             DependencyStack.root(),
@@ -514,9 +516,7 @@ public class ConstructorArgMarshallerImmutableTest {
         (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =
         DefaultSelectableConfigurationContext.of(
-            FakeBuckConfig.builder().build(),
-            UnconfiguredTargetConfiguration.INSTANCE,
-            targetPlatformResolver);
+            FakeBuckConfig.builder().build(), UnconfiguredPlatform.INSTANCE);
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
@@ -527,8 +527,9 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
-            targetConfigurationTransformer,
             selectableConfigurationContext,
+            targetConfigurationTransformer,
+            targetPlatformResolver,
             TARGET,
             UnconfiguredTargetConfiguration.INSTANCE,
             DependencyStack.root(),
@@ -559,8 +560,9 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
-            targetConfigurationTransformer,
             NonCopyingSelectableConfigurationContext.INSTANCE,
+            targetConfigurationTransformer,
+            new ThrowingPlatformResolver(),
             TARGET,
             UnconfiguredTargetConfiguration.INSTANCE,
             DependencyStack.root(),
@@ -586,8 +588,9 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         selectorListResolver,
-        targetConfigurationTransformer,
         NonCopyingSelectableConfigurationContext.INSTANCE,
+        targetConfigurationTransformer,
+        new ThrowingPlatformResolver(),
         TARGET,
         UnconfiguredTargetConfiguration.INSTANCE,
         DependencyStack.root(),
@@ -614,8 +617,9 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
-            targetConfigurationTransformer,
             NonCopyingSelectableConfigurationContext.INSTANCE,
+            targetConfigurationTransformer,
+            new ThrowingPlatformResolver(),
             TARGET,
             UnconfiguredTargetConfiguration.INSTANCE,
             DependencyStack.root(),
@@ -653,16 +657,17 @@ public class ConstructorArgMarshallerImmutableTest {
     SelectableConfigurationContext selectableConfigurationContext =
         DefaultSelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
-            RuleBasedTargetConfiguration.of(multiPlatformTarget),
-            targetPlatformResolver);
+            targetPlatformResolver.getTargetPlatform(
+                RuleBasedTargetConfiguration.of(multiPlatformTarget), DependencyStack.root()));
 
     DtoWithSplit dto =
         marshaller.populate(
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
-            targetConfigurationTransformer,
             selectableConfigurationContext,
+            targetConfigurationTransformer,
+            targetPlatformResolver,
             TARGET,
             UnconfiguredTargetConfiguration.INSTANCE,
             DependencyStack.root(),
@@ -700,8 +705,9 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
-            targetConfigurationTransformer,
             NonCopyingSelectableConfigurationContext.INSTANCE,
+            targetConfigurationTransformer,
+            new ThrowingPlatformResolver(),
             TARGET,
             execConfiguration,
             DependencyStack.root(),

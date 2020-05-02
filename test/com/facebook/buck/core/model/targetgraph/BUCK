@@ -6,6 +6,7 @@ java_test(
     has_immutable_types = True,
     deps = [
         ":testutil",
+        "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/model/targetgraph/impl:impl",
         "//src/com/facebook/buck/core/parser/buildtargetpattern:buildtargetpattern",
         "//src/com/facebook/buck/core/rules/knowntypes:knowntypes",
@@ -15,6 +16,7 @@ java_test(
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/cell/nameresolver:testutil",
         "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/model/platform:testutil",
         "//test/com/facebook/buck/core/rules/impl:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",

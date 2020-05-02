@@ -17,9 +17,7 @@
 package com.facebook.buck.parser;
 
 import com.facebook.buck.core.config.BuckConfig;
-import com.facebook.buck.core.model.TargetConfiguration;
-import com.facebook.buck.core.model.platform.TargetPlatformResolver;
-import com.facebook.buck.core.rules.configsetting.ConfigSettingSelectableConfigurationContext;
+import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
@@ -29,28 +27,20 @@ import com.facebook.buck.core.util.immutables.BuckStyleValue;
  */
 @BuckStyleValue
 public abstract class DefaultSelectableConfigurationContext
-    implements ConfigSettingSelectableConfigurationContext {
+    implements SelectableConfigurationContext {
 
   @Override
   public abstract BuckConfig getBuckConfig();
 
   @Override
-  public abstract TargetConfiguration getTargetConfiguration();
-
-  @Override
-  public abstract TargetPlatformResolver getPlatformProvider();
-
-  @Override
-  public SelectableConfigurationContext withTargetConfiguration(TargetConfiguration value) {
-    return ImmutableDefaultSelectableConfigurationContext.of(
-        getBuckConfig(), value, getPlatformProvider());
+  public SelectableConfigurationContext withPlatform(Platform value) {
+    return ImmutableDefaultSelectableConfigurationContext.of(getBuckConfig(), getPlatform());
   }
 
-  public static DefaultSelectableConfigurationContext of(
-      BuckConfig buckConfig,
-      TargetConfiguration targetConfiguration,
-      TargetPlatformResolver platformProvider) {
-    return ImmutableDefaultSelectableConfigurationContext.ofImpl(
-        buckConfig, targetConfiguration, platformProvider);
+  @Override
+  public abstract Platform getPlatform();
+
+  public static DefaultSelectableConfigurationContext of(BuckConfig buckConfig, Platform platform) {
+    return ImmutableDefaultSelectableConfigurationContext.ofImpl(buckConfig, platform);
   }
 }

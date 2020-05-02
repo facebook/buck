@@ -28,6 +28,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
+import com.facebook.buck.core.model.platform.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
@@ -158,13 +160,15 @@ public class SkylarkDescriptionArgTest {
         ImmutableMap.of(
             ParamName.bySnakeCase("name"), "bar", ParamName.bySnakeCase("defaulted"), 1);
 
+    TargetPlatformResolver platformResolver = new ThrowingPlatformResolver();
     SkylarkDescriptionArg populated1 =
         marshaller.populate(
             cellNameResolver,
             filesystem,
             selectorListResolver,
-            targetConfigurationTransformer,
             configurationContext,
+            targetConfigurationTransformer,
+            platformResolver,
             target,
             hostConfiguration,
             dependencyStack,
@@ -178,8 +182,9 @@ public class SkylarkDescriptionArgTest {
             cellNameResolver,
             filesystem,
             selectorListResolver,
-            targetConfigurationTransformer,
             configurationContext,
+            targetConfigurationTransformer,
+            platformResolver,
             target,
             hostConfiguration,
             dependencyStack,

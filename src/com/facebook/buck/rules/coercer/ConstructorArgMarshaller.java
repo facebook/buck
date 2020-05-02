@@ -22,6 +22,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.TargetConfigurationTransformer;
+import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
@@ -74,8 +75,9 @@ public interface ConstructorArgMarshaller {
       CellNameResolver cellNameResolver,
       ProjectFilesystem filesystem,
       SelectorListResolver selectorListResolver,
-      TargetConfigurationTransformer targetConfigurationTransformer,
       SelectableConfigurationContext configurationContext,
+      TargetConfigurationTransformer targetConfigurationTransformer,
+      TargetPlatformResolver platformResolver,
       BuildTarget buildTarget,
       TargetConfiguration hostConfiguration,
       DependencyStack dependencyStack,

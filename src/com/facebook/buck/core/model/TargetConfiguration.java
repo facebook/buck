@@ -16,11 +16,20 @@
 
 package com.facebook.buck.core.model;
 
+import com.facebook.buck.core.exceptions.DependencyStack;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Optional;
 
 /** Contains configuration information attached to a configured build target. */
-public abstract class TargetConfiguration implements Comparable<TargetConfiguration> {
+public abstract class TargetConfiguration
+    implements Comparable<TargetConfiguration>, DependencyStack.Element {
   public abstract Optional<BuildTarget> getConfigurationTarget();
+
+  @Override
+  @JsonIgnore
+  public DependencyStack.Element getElement() {
+    return this;
+  }
 
   /** Build target for rule based build target or class name otherwise. */
   @Override

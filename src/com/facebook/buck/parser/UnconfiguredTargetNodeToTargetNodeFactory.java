@@ -110,7 +110,10 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
 
     SelectableConfigurationContext configurationContext =
         ImmutableDefaultSelectableConfigurationContext.of(
-            cell.getBuckConfig(), target.getTargetConfiguration(), targetPlatformResolver);
+            cell.getBuckConfig(),
+            targetPlatformResolver.getTargetPlatform(
+                target.getTargetConfiguration(),
+                dependencyStack.child(target.getTargetConfiguration())));
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
     ImmutableSortedSet.Builder<BuildTarget> configurationDeps = ImmutableSortedSet.naturalOrder();
     Object constructorArg;
@@ -144,8 +147,9 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
               targetCell.getCellNameResolver(),
               targetCell.getFilesystem(),
               selectorListResolver,
-              targetConfigurationTransformer,
               configurationContext,
+              targetConfigurationTransformer,
+              targetPlatformResolver,
               target,
               hostConfiguration,
               dependencyStack,

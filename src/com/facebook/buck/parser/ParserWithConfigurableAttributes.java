@@ -229,10 +229,14 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       RawTargetNode attributes,
       DependencyStack dependencyStack) {
     SelectableConfigurationContext configurationContext =
-        ImmutableDefaultSelectableConfigurationContext.of(
+        DefaultSelectableConfigurationContext.of(
             cell.getBuckConfig(),
-            buildTarget.getTargetConfiguration(),
-            state.getConfigurationRuleRegistry().getTargetPlatformResolver());
+            state
+                .getConfigurationRuleRegistry()
+                .getTargetPlatformResolver()
+                .getTargetPlatform(
+                    buildTarget.getTargetConfiguration(),
+                    dependencyStack.child(buildTarget.getTargetConfiguration())));
 
     SortedMap<ParamName, Object> convertedAttributes = new TreeMap<>();
 

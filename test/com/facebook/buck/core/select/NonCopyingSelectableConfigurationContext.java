@@ -16,7 +16,8 @@
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.model.platform.Platform;
 
 public class NonCopyingSelectableConfigurationContext implements SelectableConfigurationContext {
 
@@ -26,8 +27,17 @@ public class NonCopyingSelectableConfigurationContext implements SelectableConfi
   private NonCopyingSelectableConfigurationContext() {}
 
   @Override
-  public SelectableConfigurationContext withTargetConfiguration(
-      TargetConfiguration targetConfiguration) {
+  public BuckConfig getBuckConfig() {
+    throw new IllegalStateException();
+  }
+
+  @Override
+  public SelectableConfigurationContext withPlatform(Platform platform) {
     return this;
+  }
+
+  @Override
+  public Platform getPlatform() {
+    throw new IllegalStateException();
   }
 }

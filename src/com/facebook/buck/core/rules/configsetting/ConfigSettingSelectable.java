@@ -53,13 +53,9 @@ public class ConfigSettingSelectable implements Selectable {
   @Override
   public boolean matches(
       SelectableConfigurationContext configurationContext, DependencyStack dependencyStack) {
-    ConfigSettingSelectableConfigurationContext context =
-        (ConfigSettingSelectableConfigurationContext) configurationContext;
     return calculateMatches(
-        context.getBuckConfig(),
-        context
-            .getPlatformProvider()
-            .getTargetPlatform(context.getTargetConfiguration(), dependencyStack),
+        configurationContext.getBuckConfig(),
+        configurationContext.getPlatform(),
         dependencyStack,
         constraintValues,
         values);

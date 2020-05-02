@@ -23,7 +23,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
-import com.facebook.buck.core.model.platform.impl.ThrowingPlatformResolver;
+import com.facebook.buck.core.model.platform.impl.ConfigurationPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
@@ -203,8 +203,8 @@ public class PerBuildStateFactory {
             packageBoundaryChecker,
             symlinkCheckers,
             new ThrowingSelectorListResolver(),
-            new ThrowingPlatformResolver(),
-            new MultiPlatformTargetConfigurationTransformer(new ThrowingPlatformResolver()),
+            new ConfigurationPlatformResolver(),
+            new MultiPlatformTargetConfigurationTransformer(new ConfigurationPlatformResolver()),
             hostConfiguration,
             parsingContext.getCells().getBuckConfig(),
             Optional.empty());
