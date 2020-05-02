@@ -41,15 +41,9 @@ public class TestSelectable implements Selectable {
   }
 
   @Override
-  public boolean matches(
-      SelectableConfigurationContext configurationContext, DependencyStack dependencyStack) {
-    return matches;
-  }
-
-  @Override
   public boolean matchesPlatform(
       Platform platform, DependencyStack dependencyStack, BuckConfig buckConfig) {
-    throw new RuntimeException("not implemented");
+    return matches;
   }
 
   @Override

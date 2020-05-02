@@ -22,7 +22,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.select.Selectable;
-import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -47,17 +46,6 @@ public class ConfigSettingSelectable implements Selectable {
     this.buildTarget = buildTarget;
     this.values = values;
     this.constraintValues = constraintValues;
-  }
-
-  @Override
-  public boolean matches(
-      SelectableConfigurationContext configurationContext, DependencyStack dependencyStack) {
-    return calculateMatches(
-        configurationContext.getBuckConfig(),
-        configurationContext.getPlatform(),
-        dependencyStack,
-        constraintValues,
-        values);
   }
 
   @Override

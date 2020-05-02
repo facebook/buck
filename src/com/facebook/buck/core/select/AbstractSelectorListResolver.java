@@ -107,7 +107,10 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
     Selectable selectable =
         selectableResolver.getSelectable(selectorKey.getBuildTarget(), dependencyStack);
 
-    if (selectable.matches(configurationContext, dependencyStack)) {
+    if (selectable.matchesPlatform(
+        configurationContext.getPlatform(),
+        dependencyStack,
+        configurationContext.getBuckConfig())) {
       updateConditions(matchingConditions, selectable, value);
     }
   }

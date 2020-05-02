@@ -17,8 +17,11 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.config.BuckConfig;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 
+// TODO(nga): replace with default DefaultSelectableConfigurationContext
 public class NonCopyingSelectableConfigurationContext implements SelectableConfigurationContext {
 
   public static final NonCopyingSelectableConfigurationContext INSTANCE =
@@ -28,7 +31,7 @@ public class NonCopyingSelectableConfigurationContext implements SelectableConfi
 
   @Override
   public BuckConfig getBuckConfig() {
-    throw new IllegalStateException();
+    return FakeBuckConfig.builder().build();
   }
 
   @Override
@@ -38,6 +41,6 @@ public class NonCopyingSelectableConfigurationContext implements SelectableConfi
 
   @Override
   public Platform getPlatform() {
-    throw new IllegalStateException();
+    return UnconfiguredPlatform.INSTANCE;
   }
 }

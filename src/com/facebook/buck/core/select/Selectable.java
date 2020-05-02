@@ -30,10 +30,6 @@ import com.facebook.buck.core.model.platform.Platform;
  */
 public interface Selectable {
 
-  /** @return <code>true</code> if this condition matches the configuration */
-  boolean matches(
-      SelectableConfigurationContext configurationContext, DependencyStack dependencyStack);
-
   /** @return <code>true</code> if this condition matches the platform */
   boolean matchesPlatform(
       Platform platform, DependencyStack dependencyStack, BuckConfig buckConfig);
