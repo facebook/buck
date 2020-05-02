@@ -31,7 +31,6 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.ThrowingTargetConfigurationTransformer;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
@@ -47,7 +46,6 @@ import com.facebook.buck.core.rules.configsetting.BuckConfigKey;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
-import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
@@ -93,21 +91,6 @@ public class TargetCompatibilityCheckerTest {
         new ConstraintBasedPlatform(
             ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform"),
             ImmutableSet.of(cs1v1));
-    ConstraintResolver constraintResolver =
-        new RuleBasedConstraintResolver(
-            new ConfigurationRuleResolver() {
-              @Override
-              public <R extends ConfigurationRule> R getRule(
-                  BuildTarget buildTarget,
-                  Class<R> ruleClass,
-                  ConfigurationGraphDependencyStack dependencyStack) {
-                if (buildTarget.equals(cs1.getBuildTarget())) {
-                  return ruleClass.cast(new ConstraintSettingRule(buildTarget));
-                } else {
-                  return ruleClass.cast(new ConstraintValueRule(buildTarget, cs1r));
-                }
-              }
-            });
     compatibleConfigSetting =
         new ConfigSettingRule(
             ConfigurationBuildTargetFactoryForTests.newInstance("//configs:c1"),
@@ -151,7 +134,6 @@ public class TargetCompatibilityCheckerTest {
     configurationRuleRegistry =
         ConfigurationRuleRegistry.of(
             configurationRuleResolver,
-            constraintResolver,
             (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
   }
 

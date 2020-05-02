@@ -19,7 +19,6 @@ package com.facebook.buck.core.select;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.Platform;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
@@ -49,10 +48,7 @@ public class TestSelectable implements Selectable {
 
   @Override
   public boolean matchesPlatform(
-      Platform platform,
-      ConstraintResolver constraintResolver,
-      DependencyStack dependencyStack,
-      BuckConfig buckConfig) {
+      Platform platform, DependencyStack dependencyStack, BuckConfig buckConfig) {
     throw new RuntimeException("not implemented");
   }
 

@@ -18,7 +18,6 @@ package com.facebook.buck.core.rules.config.registry.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.PlatformResolver;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -29,7 +28,6 @@ import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.rules.platform.CachingPlatformResolver;
 import com.facebook.buck.core.rules.platform.CombinedPlatformResolver;
 import com.facebook.buck.core.rules.platform.DefaultTargetPlatformResolver;
-import com.facebook.buck.core.rules.platform.RuleBasedConstraintResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedMultiPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedPlatformResolver;
 import com.facebook.buck.core.rules.platform.RuleBasedTargetPlatformResolver;
@@ -49,9 +47,6 @@ public class ConfigurationRuleRegistryFactory {
     ConfigurationRuleResolver configurationRuleResolver =
         new SameThreadConfigurationRuleResolver(targetNodeSupplier);
 
-    ConstraintResolver constraintResolver =
-        new RuleBasedConstraintResolver(configurationRuleResolver);
-
     RuleBasedPlatformResolver ruleBasedPlatformResolver =
         new RuleBasedPlatformResolver(configurationRuleResolver);
     PlatformResolver platformResolver =
@@ -64,7 +59,6 @@ public class ConfigurationRuleRegistryFactory {
     TargetPlatformResolver targetPlatformResolver =
         new DefaultTargetPlatformResolver(new RuleBasedTargetPlatformResolver(platformResolver));
 
-    return ConfigurationRuleRegistry.of(
-        configurationRuleResolver, constraintResolver, targetPlatformResolver);
+    return ConfigurationRuleRegistry.of(configurationRuleResolver, targetPlatformResolver);
   }
 }

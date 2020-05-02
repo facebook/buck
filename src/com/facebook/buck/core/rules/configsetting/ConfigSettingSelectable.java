@@ -19,7 +19,6 @@ package com.facebook.buck.core.rules.configsetting;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.platform.ConstraintResolver;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.select.Selectable;
@@ -63,10 +62,7 @@ public class ConfigSettingSelectable implements Selectable {
 
   @Override
   public boolean matchesPlatform(
-      Platform platform,
-      ConstraintResolver constraintResolver,
-      DependencyStack dependencyStack,
-      BuckConfig buckConfig) {
+      Platform platform, DependencyStack dependencyStack, BuckConfig buckConfig) {
     for (Map.Entry<BuckConfigKey, String> entry : values.entrySet()) {
       if (!matches(buckConfig, entry.getKey(), entry.getValue())) {
         return false;
