@@ -57,7 +57,7 @@ public class ConfigSettingSelectableTest {
 
   @Test
   public void refinesReturnsTrueWithSameValues() {
-    ImmutableMap<String, String> values = ImmutableMap.of("a", "b");
+    ImmutableMap<BuckConfigKey, String> values = ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b");
 
     ConfigSettingSelectable configSetting1 =
         new ConfigSettingSelectable(
@@ -78,14 +78,14 @@ public class ConfigSettingSelectableTest {
     ConfigSettingSelectable configSetting1 =
         new ConfigSettingSelectable(
             buildTarget("//a:b"),
-            ImmutableMap.of("a", "b", "c", "d"),
+            ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b", BuckConfigKey.parse("c.cc"), "d"),
             ImmutableSet.of(
                 constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
 
     ConfigSettingSelectable configSetting2 =
         new ConfigSettingSelectable(
             buildTarget("//a:c"),
-            ImmutableMap.of("a", "b"),
+            ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b"),
             ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
 
     assertTrue(configSetting1.refines(configSetting2));
@@ -96,14 +96,14 @@ public class ConfigSettingSelectableTest {
     ConfigSettingSelectable configSetting1 =
         new ConfigSettingSelectable(
             buildTarget("//a:b"),
-            ImmutableMap.of("a", "b"),
+            ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b"),
             ImmutableSet.of(
                 constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
 
     ConfigSettingSelectable configSetting2 =
         new ConfigSettingSelectable(
             buildTarget("//a:c"),
-            ImmutableMap.of("a", "b", "c", "d"),
+            ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b", BuckConfigKey.parse("c.cc"), "d"),
             ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
 
     assertFalse(configSetting1.refines(configSetting2));
@@ -111,7 +111,7 @@ public class ConfigSettingSelectableTest {
 
   @Test
   public void refinesReturnsFalseWithNonSpecializedConstraints() {
-    ImmutableMap<String, String> values = ImmutableMap.of("a", "b");
+    ImmutableMap<BuckConfigKey, String> values = ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b");
 
     ConfigSettingSelectable configSetting1 =
         new ConfigSettingSelectable(

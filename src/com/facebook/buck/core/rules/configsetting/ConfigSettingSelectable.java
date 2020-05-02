@@ -38,12 +38,12 @@ import java.util.Optional;
 public class ConfigSettingSelectable implements Selectable {
 
   private final BuildTarget buildTarget;
-  private final ImmutableMap<String, String> values;
+  private final ImmutableMap<BuckConfigKey, String> values;
   private final ImmutableSet<ConstraintValue> constraintValues;
 
   public ConfigSettingSelectable(
       BuildTarget buildTarget,
-      ImmutableMap<String, String> values,
+      ImmutableMap<BuckConfigKey, String> values,
       ImmutableSet<ConstraintValue> constraintValues) {
     this.buildTarget = buildTarget;
     this.values = values;
@@ -67,7 +67,7 @@ public class ConfigSettingSelectable implements Selectable {
       ConstraintResolver constraintResolver,
       DependencyStack dependencyStack,
       BuckConfig buckConfig) {
-    for (Map.Entry<String, String> entry : values.entrySet()) {
+    for (Map.Entry<BuckConfigKey, String> entry : values.entrySet()) {
       if (!matches(buckConfig, entry.getKey(), entry.getValue())) {
         return false;
       }
@@ -120,8 +120,8 @@ public class ConfigSettingSelectable implements Selectable {
       Platform targetPlatform,
       DependencyStack dependencyStack,
       Collection<ConstraintValue> constraintValues,
-      ImmutableMap<String, String> values) {
-    for (Map.Entry<String, String> entry : values.entrySet()) {
+      ImmutableMap<BuckConfigKey, String> values) {
+    for (Map.Entry<BuckConfigKey, String> entry : values.entrySet()) {
       if (!matches(buckConfig, entry.getKey(), entry.getValue())) {
         return false;
       }
@@ -134,13 +134,8 @@ public class ConfigSettingSelectable implements Selectable {
     return targetPlatform.matchesAll(constraintValues, dependencyStack);
   }
 
-  private static boolean matches(BuckConfig buckConfig, String key, String value) {
-    String[] keyParts = key.split("\\.");
-    Preconditions.checkArgument(
-        keyParts.length == 2,
-        String.format("Config option should be in format 'section.option', but given: %s", key));
-
-    Optional<String> currentValue = buckConfig.getValue(keyParts[0], keyParts[1]);
+  private static boolean matches(BuckConfig buckConfig, BuckConfigKey key, String value) {
+    Optional<String> currentValue = buckConfig.getValue(key.getSection(), key.getProperty());
     return currentValue.map(curValue -> curValue.equals(value)).orElse(false);
   }
 

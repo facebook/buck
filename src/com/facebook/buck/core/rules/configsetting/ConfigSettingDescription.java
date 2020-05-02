@@ -17,6 +17,7 @@
 package com.facebook.buck.core.rules.configsetting;
 
 import com.facebook.buck.core.description.arg.Hint;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
@@ -28,9 +29,11 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.util.Map;
 import org.immutables.value.Value;
 
 /**
@@ -89,7 +92,23 @@ public class ConfigSettingDescription
     ConstraintValueUtil.validateUniqueConstraintSettings(
         "config_setting", buildTarget, dependencyStack.getDependencyStack(), constraintValues);
 
-    return new ConfigSettingRule(buildTarget, arg.getValues(), constraintValueRules);
+    ImmutableMap<BuckConfigKey, String> values =
+        arg.getValues().entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(
+                    e -> {
+                      try {
+                        return BuckConfigKey.parse(e.getKey());
+                      } catch (IllegalArgumentException ex) {
+                        throw new HumanReadableException(
+                            dependencyStack.getDependencyStack(),
+                            "not a property.section: %s",
+                            e.getKey());
+                      }
+                    },
+                    Map.Entry::getValue));
+
+    return new ConfigSettingRule(buildTarget, values, constraintValueRules);
   }
 
   @Override

@@ -43,6 +43,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRule;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
+import com.facebook.buck.core.rules.configsetting.BuckConfigKey;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
@@ -120,7 +121,7 @@ public class TargetCompatibilityCheckerTest {
     compatibleConfigSettingWithValues =
         new ConfigSettingRule(
             ConfigurationBuildTargetFactoryForTests.newInstance("//configs:c-values"),
-            ImmutableMap.of("section.config", "true"),
+            ImmutableMap.of(BuckConfigKey.parse("section.config"), "true"),
             ImmutableSet.of());
     ConfigurationRuleResolver configurationRuleResolver =
         new ConfigurationRuleResolver() {

@@ -31,7 +31,7 @@ public class ConfigSettingRule extends AbstractConfigurationRule implements Prov
 
   public ConfigSettingRule(
       BuildTarget buildTarget,
-      ImmutableMap<String, String> values,
+      ImmutableMap<BuckConfigKey, String> values,
       ImmutableSet<ConstraintValueRule> constraintValueRules) {
     super(buildTarget);
     this.configSettingSelectable =
