@@ -63,12 +63,7 @@ public class ConfigSettingSelectable implements Selectable {
   @Override
   public boolean matchesPlatform(
       Platform platform, DependencyStack dependencyStack, BuckConfig buckConfig) {
-    for (Map.Entry<BuckConfigKey, String> entry : values.entrySet()) {
-      if (!matches(buckConfig, entry.getKey(), entry.getValue())) {
-        return false;
-      }
-    }
-    return platform.matchesAll(constraintValues, dependencyStack);
+    return calculateMatches(buckConfig, platform, dependencyStack, constraintValues, values);
   }
 
   /**
