@@ -113,6 +113,11 @@ public class IjProjectBuckConfig {
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_name"))
         .setAndroidGenDir(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_generated_files_directory"))
+        .setFlattenAndroidGenPathWithHash(
+            buckConfig.getBooleanValue(
+                INTELLIJ_BUCK_CONFIG_SECTION,
+                "flatten_android_generated_files_path_with_hash",
+                false))
         .setAndroidModuleSdkType(
             buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "android_module_sdk_type"))
         .setIntellijModuleSdkName(

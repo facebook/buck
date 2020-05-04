@@ -18,11 +18,21 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.io.pathformat.PathFormatter;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 
 public abstract class Util {
+  private static final HashFunction hashFunction = Hashing.murmur3_32();
 
-  public static String intelliJModuleNameFromPath(String path) {
-    String name = path;
+  public static String hash(String s) {
+    return hashFunction.hashString(s, StandardCharsets.UTF_8).toString();
+  }
+
+  public static String intelliJModuleNameFromPath(Path path) {
+    String name = PathFormatter.pathWithUnixSeparators(path);
     if (name.isEmpty()) {
       return "project_root";
     } else {

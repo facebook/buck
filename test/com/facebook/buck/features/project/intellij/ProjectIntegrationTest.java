@@ -336,6 +336,11 @@ public class ProjectIntegrationTest {
   }
 
   @Test
+  public void testGeneratingAndroidManifestWithHashedPath() throws IOException {
+    runBuckProjectAndVerify("generate_android_manifest_with_hashed_path");
+  }
+
+  @Test
   public void testGeneratingAndroidManifestWithMinSdkWithDifferentVersionsFromManifest()
       throws IOException {
     runBuckProjectAndVerify("min_sdk_version_different_from_manifests");

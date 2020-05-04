@@ -69,6 +69,7 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
         "intellij",
         ImmutableSet.of(
             "android_generated_files_directory",
+            "flatten_android_generated_files_path_with_hash",
             "auto_generate_android_facet_sources",
             "multi_cell_module_support",
             "keep_module_files_in_module_dirs",

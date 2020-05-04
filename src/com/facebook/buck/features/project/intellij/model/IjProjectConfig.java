@@ -48,6 +48,8 @@ public abstract class IjProjectConfig {
 
   public abstract Optional<String> getAndroidGenDir();
 
+  public abstract boolean isFlattenAndroidGenPathWithHash();
+
   public abstract Optional<String> getAndroidModuleSdkType();
 
   public abstract Optional<String> getIntellijModuleSdkName();

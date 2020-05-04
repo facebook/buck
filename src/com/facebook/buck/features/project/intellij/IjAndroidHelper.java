@@ -48,9 +48,12 @@ public final class IjAndroidHelper {
 
   public static Path createAndroidGenPath(
       ProjectFilesystem projectFilesystem, IjProjectConfig projectConfig, Path moduleBasePath) {
-    return Paths.get(getAndroidGenDir(projectFilesystem, projectConfig))
-        .resolve(moduleBasePath)
-        .resolve("gen");
+    Path androidGenDirPath = Paths.get(getAndroidGenDir(projectFilesystem, projectConfig));
+    if (projectConfig.isFlattenAndroidGenPathWithHash()) {
+      return androidGenDirPath.resolve(Util.hash(Util.intelliJModuleNameFromPath(moduleBasePath)));
+    } else {
+      return androidGenDirPath.resolve(moduleBasePath).resolve("gen");
+    }
   }
 
   public static Path getGeneratedAndroidManifestPath(IjModuleAndroidFacet androidFacet) {
