@@ -421,21 +421,27 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private String toPresentationForm(QueryTarget target) {
     if (target instanceof QueryFileTarget) {
-      QueryFileTarget fileTarget = (QueryFileTarget) target;
-      // Attempt to return the relative file path for backwards compatibility with QueryCommand
-      SourcePath path = fileTarget.getPath();
-      if (path instanceof PathSourcePath) {
-        PathSourcePath psp = (PathSourcePath) path;
-        return psp.getRelativePath().toString();
-      }
-      return fileTarget.toString();
+      return toPresentationForm((QueryFileTarget) target);
     } else if (target instanceof QueryBuildTarget) {
-      QueryBuildTarget buildTarget = (QueryBuildTarget) target;
-      return toPresentationForm(buildTarget.getBuildTarget());
+      return toPresentationForm((QueryBuildTarget) target);
     } else {
       throw new IllegalStateException(
           String.format("Unknown QueryTarget implementation - %s", target.getClass().toString()));
     }
+  }
+
+  private String toPresentationForm(QueryBuildTarget queryBuildTarget) {
+    return toPresentationForm(queryBuildTarget.getBuildTarget());
+  }
+
+  private String toPresentationForm(QueryFileTarget queryFileTarget) {
+    // Attempt to return the relative file path for backwards compatibility with QueryCommand
+    SourcePath path = queryFileTarget.getPath();
+    if (path instanceof PathSourcePath) {
+      PathSourcePath psp = (PathSourcePath) path;
+      return psp.getRelativePath().toString();
+    }
+    return queryFileTarget.toString();
   }
 
   private String toPresentationForm(BuildTarget buildTarget) {
