@@ -65,7 +65,6 @@ import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
-import com.facebook.buck.parser.DefaultSelectableConfigurationContext;
 import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -514,7 +513,7 @@ public class ConstructorArgMarshallerImmutableTest {
     TargetPlatformResolver targetPlatformResolver =
         (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =
-        DefaultSelectableConfigurationContext.of(
+        SelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(), UnconfiguredPlatform.INSTANCE);
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
@@ -654,7 +653,7 @@ public class ConstructorArgMarshallerImmutableTest {
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
     SelectableConfigurationContext selectableConfigurationContext =
-        DefaultSelectableConfigurationContext.of(
+        SelectableConfigurationContext.of(
             FakeBuckConfig.builder().build(),
             targetPlatformResolver.getTargetPlatform(
                 RuleBasedTargetConfiguration.of(multiPlatformTarget), DependencyStack.root()));

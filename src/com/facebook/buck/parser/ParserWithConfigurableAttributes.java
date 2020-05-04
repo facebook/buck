@@ -229,7 +229,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
       RawTargetNode attributes,
       DependencyStack dependencyStack) {
     SelectableConfigurationContext configurationContext =
-        DefaultSelectableConfigurationContext.of(
+        SelectableConfigurationContext.of(
             cell.getBuckConfig(),
             state
                 .getConfigurationRuleRegistry()

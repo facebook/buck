@@ -109,7 +109,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactory
     Cell targetCell = cell.getCell(target.getCell());
 
     SelectableConfigurationContext configurationContext =
-        ImmutableDefaultSelectableConfigurationContext.of(
+        SelectableConfigurationContext.of(
             cell.getBuckConfig(),
             targetPlatformResolver.getTargetPlatform(
                 target.getTargetConfiguration(),

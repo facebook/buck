@@ -18,15 +18,24 @@ package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.platform.Platform;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 
 /**
  * Contains context that can be accessed by {@link Selectable} to get information about the current
  * configuration.
  */
-public interface SelectableConfigurationContext {
-  BuckConfig getBuckConfig();
+@BuckStyleValue
+public abstract class SelectableConfigurationContext {
 
-  SelectableConfigurationContext withPlatform(Platform platform);
+  public abstract BuckConfig getBuckConfig();
 
-  Platform getPlatform();
+  public abstract Platform getPlatform();
+
+  public SelectableConfigurationContext withPlatform(Platform platform) {
+    return of(getBuckConfig(), platform);
+  }
+
+  public static SelectableConfigurationContext of(BuckConfig buckConfig, Platform platform) {
+    return ImmutableSelectableConfigurationContext.ofImpl(buckConfig, platform);
+  }
 }
