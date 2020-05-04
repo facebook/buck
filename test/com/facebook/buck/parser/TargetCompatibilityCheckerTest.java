@@ -156,7 +156,7 @@ public class TargetCompatibilityCheckerTest {
             ImmutableMap.of(
                 "compatible_with",
                 ImmutableList.of(
-                    nonCompatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget())));
+                    nonCompatibleConfigSetting.getBuildTarget().getUnflavoredBuildTarget())));
     assertFalse(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry,
@@ -173,8 +173,8 @@ public class TargetCompatibilityCheckerTest {
             ImmutableMap.of(
                 "compatible_with",
                 ImmutableList.of(
-                    compatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget(),
-                    nonCompatibleConfigSetting.getBuildTarget().getUnconfiguredBuildTarget())));
+                    compatibleConfigSetting.getBuildTarget().getUnflavoredBuildTarget(),
+                    nonCompatibleConfigSetting.getBuildTarget().getUnflavoredBuildTarget())));
     assertTrue(
         TargetCompatibilityChecker.targetNodeArgMatchesPlatform(
             configurationRuleRegistry,
@@ -193,7 +193,7 @@ public class TargetCompatibilityCheckerTest {
                 ImmutableList.of(
                     compatibleConfigSettingWithValues
                         .getBuildTarget()
-                        .getUnconfiguredBuildTarget())));
+                        .getUnflavoredBuildTarget())));
 
     BuckConfig compatibleBuckConfig =
         FakeBuckConfig.builder()
@@ -217,7 +217,7 @@ public class TargetCompatibilityCheckerTest {
                 ImmutableList.of(
                     compatibleConfigSettingWithValues
                         .getBuildTarget()
-                        .getUnconfiguredBuildTarget())));
+                        .getUnflavoredBuildTarget())));
 
     BuckConfig incompatibleBuckConfig =
         FakeBuckConfig.builder()

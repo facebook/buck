@@ -16,8 +16,10 @@
 
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
@@ -33,12 +35,12 @@ import java.util.Optional;
 
 /** Represents a list of targets. Currently used only for {@code default_target_platform}. */
 @BuckStyleValue
-public abstract class UnconfiguredOptionalDepAttribute
-    extends Attribute<Optional<UnconfiguredBuildTarget>> {
+public abstract class UnflavoredOptionalDepAttribute
+    extends Attribute<Optional<UnflavoredBuildTarget>> {
 
-  private static final TypeCoercer<?, Optional<UnconfiguredBuildTarget>> coercer =
+  private static final TypeCoercer<?, Optional<UnflavoredBuildTarget>> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(
-          new TypeToken<Optional<UnconfiguredBuildTarget>>() {});
+          new TypeToken<Optional<UnflavoredBuildTarget>>() {});
 
   @Override
   public abstract Optional<String> getPreCoercionDefaultValue();
@@ -58,12 +60,12 @@ public abstract class UnconfiguredOptionalDepAttribute
   }
 
   @Override
-  public TypeCoercer<?, Optional<UnconfiguredBuildTarget>> getTypeCoercer() {
+  public TypeCoercer<?, Optional<UnflavoredBuildTarget>> getTypeCoercer() {
     return coercer;
   }
 
   @Override
-  public void validateCoercedValue(Optional<UnconfiguredBuildTarget> paths)
+  public void validateCoercedValue(Optional<UnflavoredBuildTarget> paths)
       throws CoerceFailedException {
     if (!getAllowEmpty() && !paths.isPresent()) {
       throw new CoerceFailedException("List of dep paths may not be empty");
@@ -72,19 +74,19 @@ public abstract class UnconfiguredOptionalDepAttribute
 
   @Override
   public PostCoercionTransform<
-          RuleAnalysisContext, Optional<UnconfiguredBuildTarget>, List<SkylarkDependency>>
+          RuleAnalysisContext, Optional<UnflavoredBuildTarget>, List<SkylarkDependency>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
-  public static UnconfiguredOptionalDepAttribute of(
+  public static UnflavoredOptionalDepAttribute of(
       Optional<String> preCoercionDefaultValue, String doc, boolean mandatory, boolean allowEmpty) {
-    return ImmutableUnconfiguredOptionalDepAttribute.ofImpl(
+    return ImmutableUnflavoredOptionalDepAttribute.ofImpl(
         preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 
   private ImmutableList<SkylarkDependency> postCoercionTransform(
-      Optional<UnconfiguredBuildTarget> coercedValue, RuleAnalysisContext analysisContext) {
+      Optional<UnflavoredBuildTarget> coercedValue, RuleAnalysisContext analysisContext) {
     return analysisContext
         .resolveDeps(
             coercedValue
@@ -92,7 +94,8 @@ public abstract class UnconfiguredOptionalDepAttribute
                     target -> {
                       // TODO(nga): use proper configuration
                       return ImmutableList.of(
-                          target.configure(UnconfiguredTargetConfiguration.INSTANCE));
+                          UnconfiguredBuildTarget.of(target, FlavorSet.NO_FLAVORS)
+                              .configure(UnconfiguredTargetConfiguration.INSTANCE));
                     })
                 .orElse(ImmutableList.of()))
         .entrySet().stream()

@@ -16,8 +16,10 @@
 
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
+import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
@@ -36,12 +38,12 @@ import java.util.stream.Collectors;
  * Represents a list of dependencies. These are exposed to users as {@link ProviderInfoCollection}
  */
 @BuckStyleValue
-public abstract class UnconfiguredDepListAttribute
-    extends Attribute<ImmutableList<UnconfiguredBuildTarget>> {
+public abstract class UnflavoredDepListAttribute
+    extends Attribute<ImmutableList<UnflavoredBuildTarget>> {
 
-  private static final TypeCoercer<?, ImmutableList<UnconfiguredBuildTarget>> coercer =
+  private static final TypeCoercer<?, ImmutableList<UnflavoredBuildTarget>> coercer =
       TypeCoercerFactoryForStarlark.typeCoercerForType(
-          new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {});
+          new TypeToken<ImmutableList<UnflavoredBuildTarget>>() {});
 
   @Override
   public abstract ImmutableList<String> getPreCoercionDefaultValue();
@@ -61,12 +63,12 @@ public abstract class UnconfiguredDepListAttribute
   }
 
   @Override
-  public TypeCoercer<?, ImmutableList<UnconfiguredBuildTarget>> getTypeCoercer() {
+  public TypeCoercer<?, ImmutableList<UnflavoredBuildTarget>> getTypeCoercer() {
     return coercer;
   }
 
   @Override
-  public void validateCoercedValue(ImmutableList<UnconfiguredBuildTarget> paths)
+  public void validateCoercedValue(ImmutableList<UnflavoredBuildTarget> paths)
       throws CoerceFailedException {
     if (!getAllowEmpty() && paths.isEmpty()) {
       throw new CoerceFailedException("List of dep paths may not be empty");
@@ -75,23 +77,23 @@ public abstract class UnconfiguredDepListAttribute
 
   @Override
   public PostCoercionTransform<
-          RuleAnalysisContext, ImmutableList<UnconfiguredBuildTarget>, List<SkylarkDependency>>
+          RuleAnalysisContext, ImmutableList<UnflavoredBuildTarget>, List<SkylarkDependency>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
-  public static UnconfiguredDepListAttribute of(
+  public static UnflavoredDepListAttribute of(
       ImmutableList<String> preCoercionDefaultValue,
       String doc,
       boolean mandatory,
       boolean allowEmpty) {
-    return ImmutableUnconfiguredDepListAttribute.ofImpl(
+    return ImmutableUnflavoredDepListAttribute.ofImpl(
         preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 
   @SuppressWarnings("unused")
   private ImmutableList<SkylarkDependency> postCoercionTransform(
-      ImmutableList<UnconfiguredBuildTarget> coercedValue, RuleAnalysisContext analysisContext) {
+      ImmutableList<UnflavoredBuildTarget> coercedValue, RuleAnalysisContext analysisContext) {
     ImmutableList.Builder<SkylarkDependency> builder =
         ImmutableList.builderWithExpectedSize(coercedValue.size());
 
@@ -101,7 +103,8 @@ public abstract class UnconfiguredDepListAttribute
                 .map(
                     target -> {
                       // TODO(nga): wrong configuration
-                      return target.configure(UnconfiguredTargetConfiguration.INSTANCE);
+                      return UnconfiguredBuildTarget.of(target, FlavorSet.NO_FLAVORS)
+                          .configure(UnconfiguredTargetConfiguration.INSTANCE);
                     })
                 .collect(Collectors.toList()))
         .entrySet().stream()

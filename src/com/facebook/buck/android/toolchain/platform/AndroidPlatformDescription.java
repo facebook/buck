@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
@@ -88,6 +89,6 @@ public class AndroidPlatformDescription
 
     @Value.NaturalOrder
     @Hint(isConfigurable = false)
-    ImmutableSortedMap<TargetCpuType, UnconfiguredBuildTarget> getNativePlatforms();
+    ImmutableSortedMap<TargetCpuType, UnflavoredBuildTarget> getNativePlatforms();
   }
 }

@@ -18,7 +18,7 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.DataTransferObject;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgBuilder;
@@ -51,8 +51,8 @@ public class SkylarkDescriptionArg
   private final SkylarkUserDefinedRule rule;
   private final Map<String, Object> coercedAttrValues;
   @Nullable private String name;
-  @Nullable private ImmutableList<UnconfiguredBuildTarget> compatibleWith;
-  @Nullable private Optional<UnconfiguredBuildTarget> defaultTargetPlatform;
+  @Nullable private ImmutableList<UnflavoredBuildTarget> compatibleWith;
+  @Nullable private Optional<UnflavoredBuildTarget> defaultTargetPlatform;
 
   /**
    * Create an instance of {@link SkylarkDescriptionArg}
@@ -97,11 +97,11 @@ public class SkylarkDescriptionArg
     attrValuesAreMutable = false;
     name = (String) Preconditions.checkNotNull(coercedAttrValues.get("name"));
     compatibleWith =
-        (ImmutableList<UnconfiguredBuildTarget>)
+        (ImmutableList<UnflavoredBuildTarget>)
             Preconditions.checkNotNull(
                 coercedAttrValues.getOrDefault("compatible_with", ImmutableList.of()));
     defaultTargetPlatform =
-        (Optional<UnconfiguredBuildTarget>)
+        (Optional<UnflavoredBuildTarget>)
             coercedAttrValues.getOrDefault("default_target_platform", Optional.empty());
     return this;
   }
@@ -136,7 +136,7 @@ public class SkylarkDescriptionArg
   }
 
   @Override
-  public Optional<UnconfiguredBuildTarget> getDefaultTargetPlatform() {
+  public Optional<UnflavoredBuildTarget> getDefaultTargetPlatform() {
     return Preconditions.checkNotNull(defaultTargetPlatform);
   }
 
@@ -177,7 +177,7 @@ public class SkylarkDescriptionArg
   }
 
   @Override
-  public ImmutableList<UnconfiguredBuildTarget> getCompatibleWith() {
+  public ImmutableList<UnflavoredBuildTarget> getCompatibleWith() {
     return Preconditions.checkNotNull(compatibleWith);
   }
 

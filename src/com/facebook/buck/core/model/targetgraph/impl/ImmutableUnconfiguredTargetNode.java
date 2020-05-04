@@ -17,7 +17,6 @@
 package com.facebook.buck.core.model.targetgraph.impl;
 
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
@@ -61,11 +60,11 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
 
   @Override
   @JsonProperty("defaultTargetPlatform")
-  public abstract Optional<UnconfiguredBuildTarget> getDefaultTargetPlatform();
+  public abstract Optional<UnflavoredBuildTarget> getDefaultTargetPlatform();
 
   @Override
   @JsonProperty("compatibleWith")
-  public abstract ImmutableList<UnconfiguredBuildTarget> getCompatibleWith();
+  public abstract ImmutableList<UnflavoredBuildTarget> getCompatibleWith();
 
   public static UnconfiguredTargetNode of(
       UnflavoredBuildTarget buildTarget,
@@ -73,8 +72,8 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
       TwoArraysImmutableHashMap<ParamName, Object> attributes,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
-      Optional<UnconfiguredBuildTarget> defaultTargetPlatform,
-      ImmutableList<UnconfiguredBuildTarget> compatibleWith) {
+      Optional<UnflavoredBuildTarget> defaultTargetPlatform,
+      ImmutableList<UnflavoredBuildTarget> compatibleWith) {
     return ImmutableImmutableUnconfiguredTargetNode.ofImpl(
         buildTarget,
         ruleType,
@@ -93,8 +92,8 @@ public abstract class ImmutableUnconfiguredTargetNode implements UnconfiguredTar
       ImmutableMap<String, Object> attributes,
       ImmutableSet<VisibilityPattern> visibilityPatterns,
       ImmutableSet<VisibilityPattern> withinViewPatterns,
-      Optional<UnconfiguredBuildTarget> defaultTargetPlatform,
-      ImmutableList<UnconfiguredBuildTarget> compatibleWith) {
+      Optional<UnflavoredBuildTarget> defaultTargetPlatform,
+      ImmutableList<UnflavoredBuildTarget> compatibleWith) {
     return of(
         buildTarget,
         ruleType,

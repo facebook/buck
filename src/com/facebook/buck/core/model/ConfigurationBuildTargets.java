@@ -43,6 +43,12 @@ public class ConfigurationBuildTargets {
     return buildTarget.configure(ConfigurationForConfigurationTargets.INSTANCE);
   }
 
+  /** @return {@link BuildTarget} that corresponds to a given {@link UnconfiguredBuildTarget}. */
+  public static BuildTarget convert(UnflavoredBuildTarget buildTarget) {
+    return UnconfiguredBuildTarget.of(buildTarget, FlavorSet.NO_FLAVORS)
+        .configure(ConfigurationForConfigurationTargets.INSTANCE);
+  }
+
   /**
    * Performs conversion similar to {@link #convert(UnconfiguredBuildTarget)} for an optional value.
    */
@@ -54,7 +60,7 @@ public class ConfigurationBuildTargets {
    * Performs conversion similar to {@link #convert(UnconfiguredBuildTarget)} for a set of targets.
    */
   public static ImmutableSet<BuildTarget> convert(
-      ImmutableSet<UnconfiguredBuildTarget> buildTargets) {
+      ImmutableSet<UnflavoredBuildTarget> buildTargets) {
     return buildTargets.stream()
         .map(ConfigurationBuildTargets::convert)
         .collect(ImmutableSet.toImmutableSet());
@@ -62,7 +68,7 @@ public class ConfigurationBuildTargets {
 
   /** Applies conversion similar to {@link #convert(UnconfiguredBuildTarget)} to values in a map. */
   public static <T> ImmutableMap<T, BuildTarget> convertValues(
-      ImmutableMap<T, UnconfiguredBuildTarget> map) {
+      ImmutableMap<T, UnflavoredBuildTarget> map) {
     return map.entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> convert(entry.getValue())));
@@ -70,7 +76,7 @@ public class ConfigurationBuildTargets {
 
   /** Applies conversion similar to {@link #convert(UnconfiguredBuildTarget)} to values in a map. */
   public static <T extends Comparable<T>> ImmutableSortedMap<T, BuildTarget> convertValues(
-      ImmutableSortedMap<T, UnconfiguredBuildTarget> map) {
+      ImmutableSortedMap<T, UnflavoredBuildTarget> map) {
     return map.entrySet().stream()
         .collect(
             ImmutableSortedMap.toImmutableSortedMap(

@@ -23,6 +23,7 @@ import com.facebook.buck.core.linkgroup.UnconfiguredCxxLinkGroupMappingTarget;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.parser.buildtargetparser.BuildTargetMatcher;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -102,6 +103,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
 
   private final TypeCoercer<UnconfiguredBuildTarget, UnconfiguredBuildTarget>
       unconfiguredBuildTargetTypeCoercer;
+  private final TypeCoercer<UnflavoredBuildTarget, UnflavoredBuildTarget>
+      unflavoredBuildTargetTypeCoercer;
   private final TypeCoercer<Pattern, Pattern> patternTypeCoercer = new PatternTypeCoercer();
 
   private final TypeCoercer<Object, ?>[] nonParameterizedTypeCoercers;
@@ -119,6 +122,8 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
     unconfiguredBuildTargetFactory = new ParsingUnconfiguredBuildTargetViewFactory();
     unconfiguredBuildTargetTypeCoercer =
         new UnconfiguredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
+    unflavoredBuildTargetTypeCoercer =
+        new UnflavoredBuildTargetTypeCoercer(unconfiguredBuildTargetFactory);
     BuildTargetTypeCoercer buildTargetTypeCoercer =
         new BuildTargetTypeCoercer(unconfiguredBuildTargetTypeCoercer);
     BuildTargetWithOutputsTypeCoercer buildTargetWithOutputsTypeCoercer =
@@ -343,6 +348,7 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
               flavorTypeCoercer,
               sourcePathTypeCoercer,
               unconfiguredBuildTargetTypeCoercer,
+              unflavoredBuildTargetTypeCoercer,
               buildTargetTypeCoercer,
               buildTargetWithOutputsTypeCoercer,
               buildTargetPatternTypeCoercer,

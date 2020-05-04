@@ -21,6 +21,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.util.types.Either;
 import java.nio.file.Path;
@@ -59,6 +60,12 @@ public interface UnconfiguredBuildTargetViewFactory {
       BaseName baseName, String buildTargetName, CellNameResolver cellNameResolver);
 
   UnconfiguredBuildTarget createForPathRelativeToProjectRoot(
+      ForwardRelativePath pathRelativeToProjectRoot,
+      String buildTargetName,
+      CellNameResolver cellNameResolver);
+
+  /** Parse an unflavored target relative to given path. */
+  UnflavoredBuildTarget createUnflavoredForPathRelativeToProjectRoot(
       ForwardRelativePath pathRelativeToProjectRoot,
       String buildTargetName,
       CellNameResolver cellNameResolver);

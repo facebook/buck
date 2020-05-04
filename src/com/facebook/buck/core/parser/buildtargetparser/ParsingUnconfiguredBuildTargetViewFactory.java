@@ -17,9 +17,11 @@
 package com.facebook.buck.core.parser.buildtargetparser;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.util.types.Either;
 
@@ -47,6 +49,21 @@ public class ParsingUnconfiguredBuildTargetViewFactory
       CellNameResolver cellNameResolver) {
     return createForBaseName(
         BaseName.ofPath(pathRelativeToProjectRoot), buildTargetName, cellNameResolver);
+  }
+
+  @Override
+  public UnflavoredBuildTarget createUnflavoredForPathRelativeToProjectRoot(
+      ForwardRelativePath pathRelativeToProjectRoot,
+      String buildTargetName,
+      CellNameResolver cellNameResolver) {
+    UnconfiguredBuildTarget unconfiguredBuildTarget =
+        createForPathRelativeToProjectRoot(
+            pathRelativeToProjectRoot, buildTargetName, cellNameResolver);
+    if (!unconfiguredBuildTarget.getFlavors().isEmpty()) {
+      throw new BuildTargetParseException(
+          String.format("expecting unflavored target: %s", buildTargetName));
+    }
+    return unconfiguredBuildTarget.getUnflavoredBuildTarget();
   }
 
   @Override

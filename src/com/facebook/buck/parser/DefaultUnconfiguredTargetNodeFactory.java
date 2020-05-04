@@ -24,6 +24,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -62,8 +63,8 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
   private final Cells cells;
   private final SelectorListFactory selectorListFactory;
   private final TypeCoercerFactory typeCoercerFactory;
-  private final TypeCoercer<ImmutableList<UnconfiguredBuildTarget>, ?> compatibleWithCoercer;
-  private final TypeCoercer<UnconfiguredBuildTarget, ?> defaultTargetPlatformCoercer;
+  private final TypeCoercer<ImmutableList<UnflavoredBuildTarget>, ?> compatibleWithCoercer;
+  private final TypeCoercer<UnflavoredBuildTarget, ?> defaultTargetPlatformCoercer;
 
   public DefaultUnconfiguredTargetNodeFactory(
       KnownRuleTypesProvider knownRuleTypesProvider,
@@ -78,13 +79,13 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     this.typeCoercerFactory = typeCoercerFactory;
     this.compatibleWithCoercer =
         typeCoercerFactory
-            .typeCoercerForType(new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {})
+            .typeCoercerForType(new TypeToken<ImmutableList<UnflavoredBuildTarget>>() {})
             .checkUnconfiguredAssignableTo(
-                new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {});
+                new TypeToken<ImmutableList<UnflavoredBuildTarget>>() {});
     this.defaultTargetPlatformCoercer =
         typeCoercerFactory
-            .typeCoercerForType(TypeToken.of(UnconfiguredBuildTarget.class))
-            .checkUnconfiguredAssignableTo(TypeToken.of(UnconfiguredBuildTarget.class));
+            .typeCoercerForType(TypeToken.of(UnflavoredBuildTarget.class))
+            .checkUnconfiguredAssignableTo(TypeToken.of(UnflavoredBuildTarget.class));
   }
 
   private TwoArraysImmutableHashMap<ParamName, Object> convertSelects(
@@ -208,7 +209,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             target.getCellRelativeBasePath(),
             dependencyStack);
 
-    Optional<UnconfiguredBuildTarget> defaultTargetPlatform = Optional.empty();
+    Optional<UnflavoredBuildTarget> defaultTargetPlatform = Optional.empty();
     Object rawDefaultTargetPlatform =
         rawAttributes.get(ParamName.bySnakeCase("default_target_platform"));
     // TODO(nga): old rules vs UDR rules mess
@@ -232,7 +233,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
       }
     }
 
-    ImmutableList<UnconfiguredBuildTarget> compatibleWith = ImmutableList.of();
+    ImmutableList<UnflavoredBuildTarget> compatibleWith = ImmutableList.of();
 
     Object rawCompatibleWith =
         rawAttributes.getAttrs().get(ParamName.bySnakeCase("compatible_with"));

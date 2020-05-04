@@ -47,7 +47,7 @@ public abstract class RuleBasedTargetConfiguration extends TargetConfiguration {
     return ImmutableRuleBasedTargetConfiguration.ofImpl(targetPlatform);
   }
 
-  public static RuleBasedTargetConfiguration of(UnconfiguredBuildTarget targetPlatform) {
+  public static RuleBasedTargetConfiguration of(UnflavoredBuildTarget targetPlatform) {
     return of(ConfigurationBuildTargets.convert(targetPlatform));
   }
 }

@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.TargetNodeMaybeIncompatible;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
@@ -324,7 +325,7 @@ public class UnconfiguredTargetNodeToTargetNodeParsePipeline implements AutoClos
     }
 
     // We use `default_target_platform` only when global platform is not specified
-    Optional<UnconfiguredBuildTarget> defaultTargetPlatform =
+    Optional<UnflavoredBuildTarget> defaultTargetPlatform =
         unconfiguredTargetNode.getDefaultTargetPlatform();
     if (defaultTargetPlatform.isPresent()) {
       return RuleBasedTargetConfiguration.of(

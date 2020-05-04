@@ -18,7 +18,6 @@ package com.facebook.buck.core.model.targetgraph.raw;
 
 import com.facebook.buck.core.graph.transformation.model.ComputeResult;
 import com.facebook.buck.core.model.RuleType;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
 import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
@@ -63,11 +62,11 @@ public interface UnconfiguredTargetNode extends ComputeResult {
    * Value of {@code default_target_platform} attribute. Note this attribute only exists for build
    * targets.
    */
-  Optional<UnconfiguredBuildTarget> getDefaultTargetPlatform();
+  Optional<UnflavoredBuildTarget> getDefaultTargetPlatform();
 
   /**
    * List of targets from <code>compatible_with</code> attribute. Note method exists for all rules,
    * while {@code compatible_with} can be defined only for build rules.
    */
-  ImmutableList<UnconfiguredBuildTarget> getCompatibleWith();
+  ImmutableList<UnflavoredBuildTarget> getCompatibleWith();
 }

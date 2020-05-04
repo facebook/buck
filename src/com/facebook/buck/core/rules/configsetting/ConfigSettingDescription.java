@@ -20,7 +20,7 @@ import com.facebook.buck.core.description.arg.Hint;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.ConstraintValueUtil;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
@@ -124,6 +124,6 @@ public class ConfigSettingDescription
 
     @Value.NaturalOrder
     @Hint(isConfigurable = false)
-    ImmutableSortedSet<UnconfiguredBuildTarget> getConstraintValues();
+    ImmutableSortedSet<UnflavoredBuildTarget> getConstraintValues();
   }
 }

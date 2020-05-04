@@ -18,15 +18,15 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.SourceSortedSetAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringSortedSetAttribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.UnconfiguredDepListAttribute;
-import com.facebook.buck.core.starlark.rule.attr.impl.UnconfiguredOptionalDepAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.UnflavoredDepListAttribute;
+import com.facebook.buck.core.starlark.rule.attr.impl.UnflavoredOptionalDepAttribute;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -105,12 +105,12 @@ class SkylarkRuleFunctionImplicitAttributes {
     } else if (new TypeToken<ImmutableList<BuildTarget>>() {}.getType()
         .equals(method.getGenericReturnType())) {
       return StringListAttribute.of(ImmutableList.of(), "", false, true);
-    } else if (new TypeToken<ImmutableList<UnconfiguredBuildTarget>>() {}.getType()
+    } else if (new TypeToken<ImmutableList<UnflavoredBuildTarget>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return UnconfiguredDepListAttribute.of(ImmutableList.of(), "", false, true);
-    } else if (new TypeToken<Optional<UnconfiguredBuildTarget>>() {}.getType()
+      return UnflavoredDepListAttribute.of(ImmutableList.of(), "", false, true);
+    } else if (new TypeToken<Optional<UnflavoredBuildTarget>>() {}.getType()
         .equals(method.getGenericReturnType())) {
-      return UnconfiguredOptionalDepAttribute.of(Optional.empty(), "", false, true);
+      return UnflavoredOptionalDepAttribute.of(Optional.empty(), "", false, true);
     } else {
       throw new IllegalStateException("unknown type for method: " + method);
     }
