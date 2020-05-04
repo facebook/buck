@@ -63,7 +63,6 @@ import com.facebook.buck.swift.toolchain.SwiftTargetTriple;
 import com.facebook.buck.swift.toolchain.impl.SwiftPlatformFactory;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
-import com.facebook.buck.util.MoreSuppliers;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
@@ -86,7 +85,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.xml.parsers.ParserConfigurationException;
 import org.xml.sax.SAXException;
@@ -523,7 +521,7 @@ public class AppleCxxPlatforms {
       String version) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    if (shouldSetSDKVersion(filesystem, xcodeToolFinder, toolSearchPaths, version).get()) {
+    if (shouldSetSDKVersion(filesystem, xcodeToolFinder, toolSearchPaths, version)) {
       builder.addAll(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
     }
 
@@ -629,25 +627,22 @@ public class AppleCxxPlatforms {
     return result.get();
   }
 
-  private static Supplier<Boolean> shouldSetSDKVersion(
+  private static boolean shouldSetSDKVersion(
       ProjectFilesystem filesystem,
       XcodeToolFinder xcodeToolFinder,
       ImmutableList<Path> toolSearchPaths,
       String version) {
-    return MoreSuppliers.memoize(
-        () -> {
-          // If the Clang driver detects ld version at 520 or above, it will pass -platform_version,
-          // otherwise it will pass -<platform>_version_min. As -platform_version is incompatible
-          // with -sdk_version (which Buck passes), we should only be passing -sdk_version if we
-          // believe the driver will not pass it.
-          // https://reviews.llvm.org/rG25ce33a6e4f3b13732c0f851e68390dc2acb9123
-          Optional<Double> ldVersion =
-              getLdVersion(filesystem, xcodeToolFinder, toolSearchPaths, version);
-          if (ldVersion.isPresent()) {
-            return ldVersion.get() < 520;
-          }
-          return true;
-        });
+    // If the Clang driver detects ld version at 520 or above, it will pass -platform_version,
+    // otherwise it will pass -<platform>_version_min. As -platform_version is incompatible
+    // with -sdk_version (which Buck passes), we should only be passing -sdk_version if we
+    // believe the driver will not pass it.
+    // https://reviews.llvm.org/rG25ce33a6e4f3b13732c0f851e68390dc2acb9123
+    Optional<Double> ldVersion =
+        getLdVersion(filesystem, xcodeToolFinder, toolSearchPaths, version);
+    if (ldVersion.isPresent()) {
+      return ldVersion.get() < 520;
+    }
+    return true;
   }
 
   private static Optional<Double> getLdVersion(
