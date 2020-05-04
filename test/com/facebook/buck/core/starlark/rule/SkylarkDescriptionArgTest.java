@@ -31,8 +31,8 @@ import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransfo
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.model.platform.ThrowingPlatformResolver;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
-import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
+import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
@@ -132,7 +132,7 @@ public class SkylarkDescriptionArgTest {
         new MultiPlatformTargetConfigurationTransformer(
             (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE);
     SelectableConfigurationContext configurationContext =
-        NonCopyingSelectableConfigurationContext.INSTANCE;
+        SelectableConfigurationContextFactory.UNCONFIGURED;
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     TargetConfiguration hostConfiguration = UnconfiguredTargetConfiguration.INSTANCE;
     DependencyStack dependencyStack = DependencyStack.root();

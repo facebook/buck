@@ -27,8 +27,8 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
-import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
+import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
@@ -53,7 +53,7 @@ public class DefaultSelectorListResolverTest {
 
   @Before
   public void setUp() {
-    configurationContext = NonCopyingSelectableConfigurationContext.INSTANCE;
+    configurationContext = SelectableConfigurationContextFactory.UNCONFIGURED;
   }
 
   @Test

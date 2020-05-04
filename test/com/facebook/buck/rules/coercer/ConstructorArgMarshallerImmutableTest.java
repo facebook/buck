@@ -46,7 +46,6 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.Selector;
@@ -560,7 +559,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
-            NonCopyingSelectableConfigurationContext.INSTANCE,
+            SelectableConfigurationContextFactory.UNCONFIGURED,
             targetConfigurationTransformer,
             new ThrowingPlatformResolver(),
             TARGET,
@@ -588,7 +587,7 @@ public class ConstructorArgMarshallerImmutableTest {
         createCellRoots(filesystem).getCellNameResolver(),
         filesystem,
         selectorListResolver,
-        NonCopyingSelectableConfigurationContext.INSTANCE,
+        SelectableConfigurationContextFactory.UNCONFIGURED,
         targetConfigurationTransformer,
         new ThrowingPlatformResolver(),
         TARGET,
@@ -617,7 +616,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
-            NonCopyingSelectableConfigurationContext.INSTANCE,
+            SelectableConfigurationContextFactory.UNCONFIGURED,
             targetConfigurationTransformer,
             new ThrowingPlatformResolver(),
             TARGET,
@@ -705,7 +704,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             selectorListResolver,
-            NonCopyingSelectableConfigurationContext.INSTANCE,
+            SelectableConfigurationContextFactory.UNCONFIGURED,
             targetConfigurationTransformer,
             new ThrowingPlatformResolver(),
             TARGET,
