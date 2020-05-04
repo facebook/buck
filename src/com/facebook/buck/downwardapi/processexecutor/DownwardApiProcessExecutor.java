@@ -211,9 +211,13 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
               downwardProtocol = DownwardProtocolType.readProtocol(inputStream);
             }
             EventTypeMessage.EventType eventType = downwardProtocol.readEventType(inputStream);
-            EventHandler eventHandler = EventHandler.getEventHandler(eventType);
             AbstractMessage event = downwardProtocol.readEvent(inputStream, eventType);
-            eventHandler.handleEvent(context, event);
+            EventHandler eventHandler = EventHandler.getEventHandler(eventType);
+            try {
+              eventHandler.handleEvent(context, event);
+            } catch (Exception e) {
+              LOG.error(e, "Can't handle event: %s", event);
+            }
           } catch (IOException e) {
             LOG.error("Exception during processing event from named pipe: %s", namedPipe, e);
           }

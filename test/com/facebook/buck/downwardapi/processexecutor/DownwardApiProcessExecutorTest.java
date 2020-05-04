@@ -298,7 +298,7 @@ public class DownwardApiProcessExecutorTest {
 
   private void process(NamedPipe namedPipe) throws IOException, InterruptedException {
     try (OutputStream outputStream = namedPipe.getOutputStream()) {
-      List<String> messages = getJsonRepresentationOfMessages();
+      List<String> messages = getJsonMessages();
       for (String message : messages) {
         LOG.info("Writing into named pipe: %s%s", System.lineSeparator(), message);
         outputStream.write(message.getBytes(StandardCharsets.UTF_8));
@@ -307,7 +307,7 @@ public class DownwardApiProcessExecutorTest {
     }
   }
 
-  private ImmutableList<String> getJsonRepresentationOfMessages() throws IOException {
+  private ImmutableList<String> getJsonMessages() throws IOException {
     DownwardProtocolType protocolType = DownwardProtocolType.JSON;
     DownwardProtocol downwardProtocol = protocolType.getDownwardProtocol();
 
@@ -316,6 +316,9 @@ public class DownwardApiProcessExecutorTest {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     protocolType.writeDelimitedTo(outputStream);
     builder.add(outputStream.toString(StandardCharsets.UTF_8.name()));
+
+    // finished without start event
+    builder.add(stepEvent(downwardProtocol, FINISHED, "launched_process_orphan step started", 1));
 
     builder.add(stepEvent(downwardProtocol, STARTED, "launched_process step started", 50));
     builder.add(consoleEvent(downwardProtocol));
