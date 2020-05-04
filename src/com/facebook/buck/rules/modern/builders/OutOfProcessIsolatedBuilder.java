@@ -54,11 +54,12 @@ public class OutOfProcessIsolatedBuilder {
     checkArguments(args);
 
     Console console = createConsole(args);
-    Thread.setDefaultUncaughtExceptionHandler((thread, error) -> handleException(console, error));
+    Thread.setDefaultUncaughtExceptionHandler(
+        (thread, error) -> handleException(thread, console, error));
     try {
       build(args, console);
     } catch (Exception e) {
-      handleException(console, e);
+      handleException(Thread.currentThread(), console, e);
     }
 
     System.exit(0);
@@ -83,9 +84,10 @@ public class OutOfProcessIsolatedBuilder {
         isAnsiEscapeSequencesEnabled ? Ansi.forceTty() : Ansi.withoutTty());
   }
 
-  private static void handleException(Console console, Throwable throwable) {
+  private static void handleException(Thread thread, Console console, Throwable throwable) {
     console.printErrorText(
-        "Cannot execute a rule out of process. On RE worker."
+        "Cannot execute a rule out of process. On RE worker. Thread: "
+            + thread
             + System.lineSeparator()
             + Throwables.getStackTraceAsString(throwable));
     System.exit(1);
