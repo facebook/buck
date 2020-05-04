@@ -1,0 +1,28 @@
+apple_test(
+    name = "DatabaseKitTest",
+    srcs = ["DatabaseKitTest.m"],
+    contacts = ["AppleTeam"],
+    default_target_platform = "//config/platform:ios",
+    info_plist = "Info.plist",
+    visibility = ["PUBLIC"],
+    deps = [
+        "//libraries/apple:DatabaseKit",
+    ],
+)
+
+apple_test(
+    name = "LanguageUtilitiesTest",
+    srcs = ["LanguageUtilitiesTest.m"],
+    compatible_with = [
+        "//config/os:ios",
+        "//config/os:macos",
+        "//config/os:tvos",
+    ],
+    contacts = ["AppleTeam"],
+    default_target_platform = "//config/platform:ios",
+    info_plist = "Info.plist",
+    visibility = ["PUBLIC"],
+    deps = [
+        "//libraries/apple:LanguageUtilities",
+    ],
+)

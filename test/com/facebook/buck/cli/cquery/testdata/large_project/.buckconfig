@@ -1,0 +1,2 @@
+[alias]
+  appletv-app-prod = //apps/apple:TVAppBinary-Release

@@ -1,0 +1,3 @@
+//libraries/apple:PhoneProductKit (//config/platform:ios-opt)
+//libraries/apple:ProductInfraKit (//config/platform:ios-opt)
+//libraries/apple:TVProductKit (//config/platform:tvos-opt)

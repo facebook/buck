@@ -1,0 +1,95 @@
+android_library(
+    name = "foo-product",
+    srcs = ["FooProduct.java"],
+    default_target_platform = "//config/platform:android",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":database",
+        ":devicecompat",
+        ":network",
+        ":product-infra",
+    ],
+)
+
+android_library(
+    name = "bar-product",
+    srcs = ["BarProduct.java"],
+    default_target_platform = "//config/platform:android",
+    visibility = ["PUBLIC"],
+    deps = [
+        ":bar-infra",
+        ":database",
+        ":devicecompat",
+        ":network",
+        ":product-infra",
+    ],
+)
+
+android_library(
+    name = "tv-product",
+    srcs = ["TVProduct.java"],
+    default_target_platform = "//config/platform:androidtv",
+    deps = [
+        ":database",
+        ":devicecompat",
+        ":network",
+        ":product-infra",
+    ],
+)
+
+android_library(
+    name = "bar-infra",
+    srcs = ["BarInfra.java"],
+    default_target_platform = "//config/platform:android",
+    tests = ["//tests/android:bar-infra"],
+    visibility = ["PUBLIC"],
+    deps = [
+        ":product-infra",
+        ":database",
+    ],
+)
+
+android_library(
+    name = "product-infra",
+    srcs = ["ProductInfra.java"],
+    default_target_platform = "//config/platform:android",
+    resources = select({
+        "//config/os:android": ["prod-infra-res.txt"],
+        "//config/os:androidtv": ["prod-infra-tv-res.txt"],
+    }),
+    visibility = ["PUBLIC"],
+    deps = [
+        ":database",
+        ":network",
+    ],
+)
+
+android_library(
+    name = "database",
+    srcs = ["Database.java"],
+    default_target_platform = "//config/platform:android",
+    tests = ["//tests/android:database"],
+    visibility = ["PUBLIC"],
+)
+
+android_library(
+    name = "network",
+    srcs = [
+        "Network.java",
+        "//codegen:backend-types-android",
+    ],
+    default_target_platform = "//config/platform:android",
+    visibility = ["PUBLIC"],
+)
+
+android_library(
+    name = "devicecompat",
+    srcs = ["DeviceCompat.java"],
+    compatible_with = [
+        "//config/os:android",
+        "//config/os:androidtv",
+    ],
+    default_target_platform = "//config/platform:android",
+    required_for_source_only_abi = True,
+    visibility = ["PUBLIC"],
+)

@@ -1,0 +1,13 @@
+genrule(
+    name = "backend-types-apple",
+    cmd = "$(exe //tools:codegen-tool) --generate apple",
+    out = "NetworkTypes.h",
+    visibility = ["PUBLIC"],
+)
+
+genrule(
+    name = "backend-types-android",
+    cmd = "$(exe //tools:codegen-tool) --generate android",
+    out = "NetworkTypes.java",
+    visibility = ["PUBLIC"],
+)

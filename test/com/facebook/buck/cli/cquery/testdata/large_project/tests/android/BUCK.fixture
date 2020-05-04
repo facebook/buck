@@ -1,0 +1,21 @@
+android_library(
+    name = "bar-infra",
+    srcs = ["BarInfraTest.java"],
+    contacts = ["AndroidTeam"],
+    default_target_platform = "//config/platform:android",
+    visibility = ["PUBLIC"],
+    deps = [
+        "//libraries/android:bar-infra",
+    ],
+)
+
+robolectric_test(
+    name = "database",
+    srcs = ["DatabaseTest.java"],
+    contacts = ["AndroidTeam"],
+    default_target_platform = "//config/platform:android",
+    visibility = ["PUBLIC"],
+    deps = [
+        "//libraries/android:database",
+    ],
+)

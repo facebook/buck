@@ -1,0 +1,39 @@
+config_setting(
+    name = "android",
+    constraint_values = [
+        "//config/os/constraints:android",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "androidtv",
+    constraint_values = [
+        "//config/os/constraints:androidtv",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "ios",
+    constraint_values = [
+        "//config/os/constraints:ios",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "macos",
+    constraint_values = [
+        "//config/os/constraints:macos",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "tvos",
+    constraint_values = [
+        "//config/os/constraints:tvos",
+    ],
+    visibility = ["PUBLIC"],
+)

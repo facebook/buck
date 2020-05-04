@@ -1,0 +1,14 @@
+constraint_setting(
+    name = "build-mode",
+    visibility = ["PUBLIC"],
+)
+
+constraint_value(
+    name = "dev",
+    constraint_setting = ":build-mode",
+)
+
+constraint_value(
+    name = "opt",
+    constraint_setting = ":build-mode",
+)

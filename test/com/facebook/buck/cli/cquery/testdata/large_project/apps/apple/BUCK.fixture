@@ -1,0 +1,35 @@
+apple_binary(
+    name = "PhoneAppBinary",
+    srcs = ["phone-app-main.m"],
+    default_target_platform = "//config/platform:ios",
+    deps = [
+        "//libraries/apple:PhoneProductKit",
+    ],
+)
+
+apple_binary(
+    name = "PhoneAppBinary-Release",
+    srcs = ["phone-app-main.m"],
+    default_target_platform = "//config/platform:ios-opt",
+    deps = [
+        "//libraries/apple:PhoneProductKit",
+    ],
+)
+
+apple_binary(
+    name = "TVAppBinary",
+    srcs = ["tv-app-main.m"],
+    default_target_platform = "//config/platform:tvos",
+    deps = [
+        "//libraries/apple:TVProductKit",
+    ],
+)
+
+apple_binary(
+    name = "TVAppBinary-Release",
+    srcs = ["tv-app-main.m"],
+    default_target_platform = "//config/platform:tvos-opt",
+    deps = [
+        "//libraries/apple:TVProductKit",
+    ],
+)

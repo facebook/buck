@@ -1,0 +1,2 @@
+//apps/apple:PhoneAppBinary-Release (//config/platform:ios-opt)
+//apps/apple:TVAppBinary-Release (//config/platform:tvos-opt)

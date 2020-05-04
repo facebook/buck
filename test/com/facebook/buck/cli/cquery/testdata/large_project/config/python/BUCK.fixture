@@ -1,0 +1,34 @@
+config_setting(
+    name = "py3",
+    constraint_values = [
+        "//config/python/constraints:py3",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "py36",
+    constraint_values = [
+        "//config/python/constraints:py3",
+        "//config/python/constraints:py36",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "py37",
+    constraint_values = [
+        "//config/python/constraints:py3",
+        "//config/python/constraints:py37",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+config_setting(
+    name = "py38",
+    constraint_values = [
+        "//config/python/constraints:py3",
+        "//config/python/constraints:py38",
+    ],
+    visibility = ["PUBLIC"],
+)

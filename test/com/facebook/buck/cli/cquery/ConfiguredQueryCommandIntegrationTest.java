@@ -584,4 +584,121 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("cquery", "inputs(//lib:foo)");
     assertOutputMatches(MorePaths.pathWithPlatformSeparators("lib/foo-ios.m"), result);
   }
+
+  @Test
+  public void allpathsFunctionReturnsSubgraphBetweenTwoNodes() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "allpaths(//apps/apple/..., //codegen/...)",
+            "--target-universe",
+            "//apps/...");
+    result.assertSuccess();
+    assertOutputMatchesFileContents(
+        "stdout-allpaths-function-returns-subgraph-between-two-nodes", result, workspace);
+  }
+
+  @Test
+  public void attrfilterFunctionOnlyReturnsTargetsWithMatchingValue() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "attrfilter(compiler_flags, '-Oz', //libraries/apple/...)",
+            "--target-universe",
+            "//apps/apple/...");
+
+    result.assertSuccess();
+    assertOutputMatchesFileContents(
+        "stdout-attrfilter-function-only-returns-targets-with-matching-value", result, workspace);
+  }
+
+  @Test
+  public void attrregexfilterFunctionAppliesRegexMatchingToAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "attrregexfilter(default_target_platform, '.*-opt', //apps/apple/...)");
+
+    result.assertSuccess();
+    assertOutputMatchesFileContents(
+        "stdout-attrregexfilter-function-applies-regex-matching-to-attribute", result, workspace);
+  }
+
+  @Test
+  public void buildfileFunctionReturnsPathToBUCKFileOfTarget() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result = workspace.runBuckCommand("cquery", "buildfile(appletv-app-prod)");
+
+    result.assertSuccess();
+    assertOutputMatches(MorePaths.pathWithPlatformSeparators("apps/apple/BUCK"), result);
+  }
+
+  @Test
+  public void filterFunctionReturnsTargetsWhoseNamesMatchRegularExpressions() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "filter('-infra', //libraries/android/...)",
+            "--target-universe",
+            "//apps/android/...");
+
+    result.assertSuccess();
+    assertOutputMatchesFileContents(
+        "stdout-filter-function-returns-targets-whose-names-match-regular-expression",
+        result,
+        workspace);
+  }
+
+  @Test
+  public void kindFunctionReturnsTargetsWhoseTypeMatchesRegex() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand("cquery", "kind(genrule, deps(//apps/android:foo-binary))");
+
+    result.assertSuccess();
+    assertOutputMatches("//codegen:backend-types-android (//config/platform:android)", result);
+  }
+
+  @Test
+  public void labelsFunctionReturnsValueOfAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand("cquery", "labels(exported_headers, //libraries/apple/...)");
+
+    result.assertSuccess();
+    assertOutputMatches(
+        MorePaths.pathWithPlatformSeparators("libraries/apple/LanguageUtilities.h"), result);
+  }
+
+  @Test
+  public void testsofFunctionReturnsValueOfTestsAttribute() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery", "testsof(deps(set(//apps/android/... //apps/apple/...)))");
+
+    result.assertSuccess();
+    assertOutputMatchesFileContents(
+        "stdout-testsof-function-returns-value-of-tests-attribute", result, workspace);
+  }
 }
