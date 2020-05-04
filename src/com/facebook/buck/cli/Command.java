@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ScheduledExecutorService;
@@ -89,4 +90,7 @@ public interface Command {
    * Creates a basic {@link ParsingContext} with some options populated from command's arguments.
    */
   ParsingContext createParsingContext(Cells cells, ListeningExecutorService executor);
+
+  /** @return file to write build ID too, if any */
+  Optional<Path> getWriteBuildIdFile();
 }

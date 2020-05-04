@@ -241,6 +241,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.sun.jna.Pointer;
+import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -249,6 +250,7 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.lang.management.ManagementFactory;
 import java.nio.channels.ClosedByInterruptException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
@@ -257,6 +259,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -674,6 +677,24 @@ public final class MainRunner {
     } catch (CmdLineException e) {
       throw new CommandLineException(e, e.getLocalizedMessage() + "\nFor help see 'buck --help'.");
     }
+
+    command
+        .getWriteBuildIdFile()
+        .ifPresent(
+            writeBuildIdFile -> {
+              try (OutputStream outputStream =
+                  new BufferedOutputStream(
+                      Files.newOutputStream(
+                          writeBuildIdFile,
+                          StandardOpenOption.CREATE,
+                          StandardOpenOption.TRUNCATE_EXISTING,
+                          StandardOpenOption.WRITE,
+                          StandardOpenOption.SYNC))) {
+                outputStream.write(buildId.toString().getBytes(StandardCharsets.UTF_8));
+              } catch (IOException e) {
+                LOG.debug("Cannot write build ID to '%s': %s", writeBuildIdFile, e);
+              }
+            });
 
     // Return help strings fast if the command is a help request.
     Optional<ExitCode> result = command.runHelp(printConsole.getStdOut());

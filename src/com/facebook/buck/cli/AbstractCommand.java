@@ -197,7 +197,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       name = GlobalCliOptions.COMMAND_ARGS_FILE_LONG_ARG,
       usage = GlobalCliOptions.COMMAND_ARGS_FILE_HELP,
       hidden = true)
-  protected String commandArgsFile;
+  protected String commandArgsFile = null;
 
   @Option(
       name = GlobalCliOptions.ONCALL_ARG,
@@ -205,6 +205,13 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       usage = "Oncall(s) responsible for this particular invocation of Buck",
       handler = StringSetOptionHandler.class)
   private Supplier<ImmutableSet<String>> oncalls = Suppliers.ofInstance(ImmutableSet.of());
+
+  @Nullable
+  @Option(
+      name = GlobalCliOptions.WRITE_BUILD_ID_ARG,
+      usage = "Create/overwrite file with buck UUID string",
+      metaVar = "FILE")
+  private Path writeBuildIdFile = null;
 
   /** @return {code true} if the {@code [cache]} in {@code .buckconfig} should be ignored. */
   public boolean isNoCache() {
@@ -298,6 +305,7 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
       try {
         OutputStream outputStream =
             new BufferedOutputStream(Files.newOutputStream(Paths.get(skylarkProfile)));
+
         Profiler.instance()
             .start(
                 ImmutableSet.copyOf(ProfilerTask.values()),
@@ -705,5 +713,10 @@ public abstract class AbstractCommand extends CommandWithPluginManager {
   @Override
   public ImmutableSet<String> getOncalls() {
     return oncalls.get();
+  }
+
+  @Override
+  public Optional<Path> getWriteBuildIdFile() {
+    return Optional.ofNullable(writeBuildIdFile);
   }
 }

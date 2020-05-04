@@ -32,6 +32,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
@@ -207,5 +208,10 @@ public abstract class AbstractContainerCommand extends CommandWithPluginManager 
   @Override
   public ImmutableSet<String> getOncalls() {
     return getSubcommand().map(Command::getOncalls).orElseGet(ImmutableSet::of);
+  }
+
+  @Override
+  public Optional<Path> getWriteBuildIdFile() {
+    return getSubcommand().flatMap(Command::getWriteBuildIdFile);
   }
 }

@@ -41,6 +41,7 @@ public class GlobalCliOptions {
   public static final String REUSE_CURRENT_CONFIG_ARG = "--reuse-current-config";
   public static final String COMMAND_ARGS_FILE_LONG_ARG = "--command-args-file";
   public static final String ONCALL_ARG = "--oncall";
+  public static final String WRITE_BUILD_ID_ARG = "--write-build-id";
 
   public static final String COMMAND_ARGS_FILE_HELP =
       "Serialize any commands that need to be run by the python wrapper to this file.";
@@ -65,7 +66,8 @@ public class GlobalCliOptions {
           TARGET_PLATFORMS_LONG_ARG,
           EXCLUDE_INCOMPATIBLE_TARGETS_LONG_ARG,
           REUSE_CURRENT_CONFIG_ARG,
-          ONCALL_ARG);
+          ONCALL_ARG,
+          WRITE_BUILD_ID_ARG);
 
   public static boolean isGlobalOption(OptionHandler<?> optionHandler) {
     OptionDef option = optionHandler.option;
