@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
@@ -36,19 +35,19 @@ public class ConstraintBasedPlatformTest {
       ConfigurationBuildTargetFactoryForTests.newInstance("//platform:platform");
 
   private final ConstraintSetting cs1 =
-      ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs1"));
+      ConstraintSetting.of(ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1"));
   private final ConstraintValue cs1v1 =
-      ConstraintValue.of(BuildTargetFactory.newInstance("//cs:cs1v1"), cs1);
+      ConstraintValue.of(ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs1v1"), cs1);
 
   private final ConstraintSetting cs2 =
-      ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs2"));
+      ConstraintSetting.of(ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs2"));
   private final ConstraintValue cs2v1 =
-      ConstraintValue.of(BuildTargetFactory.newInstance("//cs:cs2v1"), cs2);
+      ConstraintValue.of(ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs2v1"), cs2);
 
   private final ConstraintSetting cs3 =
-      ConstraintSetting.of(BuildTargetFactory.newInstance("//cs:cs3"));
+      ConstraintSetting.of(ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs3"));
   private final ConstraintValue cs3v1 =
-      ConstraintValue.of(BuildTargetFactory.newInstance("//cs:cs3v1"), cs3);
+      ConstraintValue.of(ConfigurationBuildTargetFactoryForTests.newInstance("//cs:cs3v1"), cs3);
 
   @Test
   public void testMatchesAllReturnsTrueForSubsetOfConstraints() {

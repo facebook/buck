@@ -17,12 +17,19 @@
 package com.facebook.buck.core.model.platform;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
+import org.immutables.value.Value;
 
 /** Represents a group of constraints defined using {@code constraint_setting}. */
 @BuckStylePrehashedValue
 public abstract class ConstraintSetting {
   public abstract BuildTarget getBuildTarget();
+
+  @Value.Check
+  protected void checkBuildTarget() {
+    ConfigurationBuildTargets.validateTarget(getBuildTarget());
+  }
 
   public static ConstraintSetting of(BuildTarget buildTarget) {
     return ImmutableConstraintSetting.ofImpl(buildTarget);

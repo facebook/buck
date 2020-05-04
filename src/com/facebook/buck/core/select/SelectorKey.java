@@ -17,6 +17,7 @@
 package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.model.BuildTarget;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -34,6 +35,7 @@ public class SelectorKey {
   private @Nullable final BuildTarget buildTarget;
 
   public SelectorKey(BuildTarget buildTarget) {
+    ConfigurationBuildTargets.validateTarget(buildTarget);
     this.buildTarget = Objects.requireNonNull(buildTarget);
   }
 
