@@ -445,13 +445,9 @@ public class IjProjectTemplateDataPreparer {
 
   private Optional<Path> getAndroidManifestPath(IjModuleAndroidFacet androidFacet) {
     if (projectConfig.isGeneratingAndroidManifestEnabled()) {
-      Optional<String> packageName = androidFacet.discoverPackageName(androidManifestParser);
-      if (packageName.isPresent()) {
-        return Optional.of(
-            androidFacet
-                .getGeneratedSourcePath()
-                .resolve(packageName.get().replace('.', '/'))
-                .resolve("AndroidManifest.xml"));
+      if (androidFacet.discoverPackageName(androidManifestParser).isPresent()) {
+        // AndroidManifest.xml is only generated when package name exists
+        return Optional.of(IjAndroidHelper.getGeneratedAndroidManifestPath(androidFacet));
       }
     }
 

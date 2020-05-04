@@ -132,7 +132,12 @@ public class PregeneratedCodeWriter {
             .add("className", className)
             .add("content", content);
 
-    writeTemplateToFile(androidFacet, className + ".java", packageName, contents);
+    Path fileToWrite =
+        androidFacet
+            .getGeneratedSourcePath()
+            .resolve(packageName.replace('.', '/'))
+            .resolve(className + ".java");
+    writeTemplateToFile(fileToWrite, contents);
   }
 
   private void writeAndroidManifestToFile(
@@ -143,18 +148,10 @@ public class PregeneratedCodeWriter {
 
     contents.add("minSdkVersion", minSdkVersion.orElse(null));
 
-    writeTemplateToFile(androidFacet, "AndroidManifest.xml", packageName, contents);
+    writeTemplateToFile(IjAndroidHelper.getGeneratedAndroidManifestPath(androidFacet), contents);
   }
 
-  private void writeTemplateToFile(
-      IjModuleAndroidFacet androidFacet, String filename, String packageName, ST contents)
-      throws IOException {
-    Path fileToWrite =
-        androidFacet
-            .getGeneratedSourcePath()
-            .resolve(packageName.replace('.', '/'))
-            .resolve(filename);
-
+  private void writeTemplateToFile(Path fileToWrite, ST contents) throws IOException {
     cleaner.doNotDelete(fileToWrite);
 
     StringTemplateFile.writeToFile(
