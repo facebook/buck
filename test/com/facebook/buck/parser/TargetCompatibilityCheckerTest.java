@@ -47,7 +47,7 @@ import com.facebook.buck.core.rules.configsetting.ConfigSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintSettingRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
-import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
+import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -251,7 +251,7 @@ public class TargetCompatibilityCheckerTest {
         TestCellPathResolver.get(projectFilesystem).getCellNameResolver(),
         projectFilesystem,
         new ThrowingSelectorListResolver(),
-        new ThrowingSelectableConfigurationContext(),
+        SelectableConfigurationContextFactory.UNCONFIGURED,
         new ThrowingTargetConfigurationTransformer(),
         configurationRuleRegistry.getTargetPlatformResolver(),
         buildTarget,

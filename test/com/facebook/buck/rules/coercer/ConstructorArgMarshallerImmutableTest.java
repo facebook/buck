@@ -48,6 +48,7 @@ import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetP
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.select.NonCopyingSelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
+import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
@@ -55,7 +56,6 @@ import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
-import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
@@ -118,7 +118,7 @@ public class ConstructorArgMarshallerImmutableTest {
             createCellRoots(filesystem).getCellNameResolver(),
             filesystem,
             new ThrowingSelectorListResolver(),
-            new ThrowingSelectableConfigurationContext(),
+            SelectableConfigurationContextFactory.UNCONFIGURED,
             new ThrowingTargetConfigurationTransformer(),
             new ThrowingPlatformResolver(),
             TARGET,

@@ -46,7 +46,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
-import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
+import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
@@ -327,7 +327,7 @@ public class TargetNodeTest {
           createCellRoots(projectFilesystem).getCellNameResolver(),
           projectFilesystem,
           new ThrowingSelectorListResolver(),
-          new ThrowingSelectableConfigurationContext(),
+          SelectableConfigurationContextFactory.UNCONFIGURED,
           new ThrowingTargetConfigurationTransformer(),
           new ThrowingPlatformResolver(),
           buildTarget,

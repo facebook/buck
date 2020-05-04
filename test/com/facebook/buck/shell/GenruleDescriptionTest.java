@@ -43,7 +43,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.knowntypes.KnownNativeRuleTypes;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
-import com.facebook.buck.core.select.impl.ThrowingSelectableConfigurationContext;
+import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
@@ -138,7 +138,7 @@ public class GenruleDescriptionTest {
             createCellRoots(projectFilesystem).getCellNameResolver(),
             projectFilesystem,
             new ThrowingSelectorListResolver(),
-            new ThrowingSelectableConfigurationContext(),
+            SelectableConfigurationContextFactory.UNCONFIGURED,
             new ThrowingTargetConfigurationTransformer(),
             new ThrowingPlatformResolver(),
             buildTarget,

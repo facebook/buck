@@ -12,6 +12,7 @@ java_library(
         "//src/com/facebook/buck/core/model/impl:impl",
         "//src/com/facebook/buck/core/model/platform/impl:impl",
         "//src/com/facebook/buck/core/select/impl:impl",
+        "//src/com/facebook/buck/parser:parser",
         "//test/com/facebook/buck/core/cell:testutil",
         "//test/com/facebook/buck/core/model:testutil",
         "//third-party/java/guava:guava",

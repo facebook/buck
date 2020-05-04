@@ -18,6 +18,7 @@ java_test(
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/core/model/platform:testutil",
         "//test/com/facebook/buck/core/rules/impl:testutil",
+        "//test/com/facebook/buck/core/select:testutil",
         "//test/com/facebook/buck/core/sourcepath:testutil",
         "//test/com/facebook/buck/jvm/java:testutil",
         "//test/com/facebook/buck/testutil:testutil",
