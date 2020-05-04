@@ -83,7 +83,7 @@ class TargetCompatibilityChecker {
 
       if (configSettingRule
           .getSelectable()
-          .matchesPlatform(platform, dependencyStack.child(compatibleConfigTarget), buckConfig)) {
+          .matchesPlatform(platform, buckConfig, dependencyStack.child(compatibleConfigTarget))) {
         compatible = true;
         break;
       }

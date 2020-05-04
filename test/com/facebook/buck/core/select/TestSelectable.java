@@ -42,7 +42,7 @@ public class TestSelectable implements Selectable {
 
   @Override
   public boolean matchesPlatform(
-      Platform platform, DependencyStack dependencyStack, BuckConfig buckConfig) {
+      Platform platform, BuckConfig buckConfig, DependencyStack dependencyStack) {
     return matches;
   }
 

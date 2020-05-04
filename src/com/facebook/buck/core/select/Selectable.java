@@ -32,7 +32,7 @@ public interface Selectable {
 
   /** @return <code>true</code> if this condition matches the platform */
   boolean matchesPlatform(
-      Platform platform, DependencyStack dependencyStack, BuckConfig buckConfig);
+      Platform platform, BuckConfig buckConfig, DependencyStack dependencyStack);
 
   /** @return <code>true</code> if this condition is more specialized than the given one */
   boolean refines(Selectable other);

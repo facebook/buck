@@ -109,8 +109,8 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
 
     if (selectable.matchesPlatform(
         configurationContext.getPlatform(),
-        dependencyStack,
-        configurationContext.getBuckConfig())) {
+        configurationContext.getBuckConfig(),
+        dependencyStack)) {
       updateConditions(matchingConditions, selectable, value);
     }
   }
