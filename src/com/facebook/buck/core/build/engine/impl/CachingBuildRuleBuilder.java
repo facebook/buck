@@ -138,6 +138,7 @@ class CachingBuildRuleBuilder {
   private final WeightedListeningExecutorService service;
   private final BuildRule rule;
   private final ExecutionContext executionContext;
+  private final ImmutableMap<String, String> processExecutorContext;
   private final OnDiskBuildInfo onDiskBuildInfo;
   private final Discardable<BuildInfoRecorder> buildInfoRecorder;
   private final BuildableContext buildableContext;
@@ -275,7 +276,7 @@ class CachingBuildRuleBuilder {
             eventBus,
             buildInfoStoreManager,
             onDiskBuildInfo);
-    inputBasedRuleKeyManager =
+    this.inputBasedRuleKeyManager =
         new InputBasedRuleKeyManager(
             eventBus,
             ruleKeyFactories,
@@ -290,7 +291,7 @@ class CachingBuildRuleBuilder {
     ManifestRuleKeyService manifestRuleKeyService;
     manifestRuleKeyService =
         ManifestRuleKeyServiceFactory.fromArtifactCache(buildCacheArtifactFetcher, artifactCache);
-    manifestRuleKeyManager =
+    this.manifestRuleKeyManager =
         new ManifestRuleKeyManager(
             depFiles,
             rule,
@@ -302,7 +303,7 @@ class CachingBuildRuleBuilder {
             artifactCache,
             manifestBasedKeySupplier,
             manifestRuleKeyService);
-    buildCacheArtifactUploader =
+    this.buildCacheArtifactUploader =
         new BuildCacheArtifactUploader(
             defaultKey,
             inputBasedKey,
@@ -313,6 +314,12 @@ class CachingBuildRuleBuilder {
             artifactCache,
             artifactCacheSizeLimit);
     this.customBuildRuleStrategy = customBuildRuleStrategy;
+    this.processExecutorContext =
+        ImmutableMap.of(
+            CachingBuildEngine.BUILD_RULE_TYPE_CONTEXT_KEY,
+            rule.getType(),
+            CachingBuildEngine.STEP_TYPE_CONTEXT_KEY,
+            StepType.BUILD_STEP.toString());
   }
 
   // Return a `BuildResult.Builder` with rule-specific state pre-filled.
@@ -398,7 +405,7 @@ class CachingBuildRuleBuilder {
     buildResult =
         Futures.transformAsync(
             buildResult,
-            ruleAsyncFunction(result -> finalizeBuildRule(result)),
+            ruleAsyncFunction(this::finalizeBuildRule),
             serviceByAdjustingDefaultWeightsTo(
                 CachingBuildEngine.RULE_KEY_COMPUTATION_RESOURCE_AMOUNTS));
 
@@ -1041,7 +1048,7 @@ class CachingBuildRuleBuilder {
 
               return Futures.transformAsync(
                   buildRuleBuilderDelegate.getDepResults(rule, executionContext),
-                  (depResults) -> handleDepsResults(depResults),
+                  this::handleDepsResults,
                   serviceByAdjustingDefaultWeightsTo(
                       CachingBuildEngine.SCHEDULING_MORE_WORK_RESOURCE_AMOUNTS));
             });
@@ -1130,7 +1137,7 @@ class CachingBuildRuleBuilder {
         rule,
         pipeline ->
             new RunnableWithFuture<Optional<BuildResult>>() {
-              BuildRuleSteps<T> steps = new BuildRuleSteps<>(cacheResult, pipeline);
+              final BuildRuleSteps<T> steps = new BuildRuleSteps<>(cacheResult, pipeline);
 
               @Override
               public ListenableFuture<Optional<BuildResult>> getFuture() {
@@ -1295,12 +1302,7 @@ class CachingBuildRuleBuilder {
       StepRunner.runStep(
           executionContext.withProcessExecutor(
               new ContextualProcessExecutor(
-                  executionContext.getProcessExecutor(),
-                  ImmutableMap.of(
-                      CachingBuildEngine.BUILD_RULE_TYPE_CONTEXT_KEY,
-                      rule.getType(),
-                      CachingBuildEngine.STEP_TYPE_CONTEXT_KEY,
-                      CachingBuildEngine.StepType.POST_BUILD_STEP.toString()))),
+                  executionContext.getProcessExecutor(), processExecutorContext)),
           step,
           Optional.of(rule.getBuildTarget()));
 
@@ -1424,12 +1426,7 @@ class CachingBuildRuleBuilder {
       this.ruleExecutionContext =
           executionContext.withProcessExecutor(
               new ContextualProcessExecutor(
-                  executionContext.getProcessExecutor(),
-                  ImmutableMap.of(
-                      CachingBuildEngine.BUILD_RULE_TYPE_CONTEXT_KEY,
-                      rule.getType(),
-                      CachingBuildEngine.STEP_TYPE_CONTEXT_KEY,
-                      StepType.BUILD_STEP.toString())));
+                  executionContext.getProcessExecutor(), processExecutorContext));
     }
 
     public SettableFuture<Optional<BuildResult>> getFuture() {
