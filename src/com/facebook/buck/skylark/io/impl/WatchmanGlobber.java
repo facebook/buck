@@ -65,6 +65,14 @@ public class WatchmanGlobber {
      */
     EXCLUDE_DIRECTORIES,
     /**
+     * Do not return regular files which match include patterns.
+     *
+     * <p>This option corresponds to a <a
+     * href="https://facebook.github.io/watchman/docs/expr/type.html">{@code type} expression</a>
+     * which excludes directories.
+     */
+    EXCLUDE_REGULAR_FILES,
+    /**
      * Do not return symbolic links which match include patterns.
      *
      * <p>Without this option, symbolic links are returned, regardless of their target.
@@ -208,8 +216,11 @@ public class WatchmanGlobber {
 
   /** Returns an expression for matching types of files to return. */
   private static ImmutableList<Object> toTypeExpression(EnumSet<Option> options) {
-    ImmutableList.Builder<Object> typeExpressionBuilder =
-        ImmutableList.builder().add("anyof").add(ImmutableList.of("type", "f"));
+    ImmutableList.Builder<Object> typeExpressionBuilder = ImmutableList.builder().add("anyof");
+
+    if (!options.contains(Option.EXCLUDE_REGULAR_FILES)) {
+      typeExpressionBuilder.add(ImmutableList.of("type", "f"));
+    }
     if (!options.contains(Option.EXCLUDE_DIRECTORIES)) {
       typeExpressionBuilder.add(ImmutableList.of("type", "d"));
     }

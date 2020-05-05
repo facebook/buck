@@ -16,9 +16,15 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
+import com.facebook.buck.io.watchman.Watchman;
+
 /** A method creates {@link PathsChecker} */
 public class PathsCheckerFactory {
   private PathsCheckerFactory() {}
+
+  public static PathsChecker createWatchmanPathChecker(Watchman watchman) {
+    return new WatchmanPathsChecker(watchman);
+  }
 
   public static PathsChecker createNoopPathsChecker() {
     return new NoopPathsChecker();

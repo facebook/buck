@@ -90,13 +90,17 @@ public class PerBuildStateFactory {
     this.hostConfiguration = hostConfiguration;
   }
 
-  private PathsChecker getPathsChecker(ParserConfig.PathsCheckMethod pathsCheckMethod) {
-    if (pathsCheckMethod == ParserConfig.PathsCheckMethod.FILESYSTEM) {
-      return PathsCheckerFactory.createFileSystemPathsChecker();
-    } else if (pathsCheckMethod == ParserConfig.PathsCheckMethod.NONE) {
-      return PathsCheckerFactory.createNoopPathsChecker();
-    } else {
-      throw new IllegalStateException("Unexpected path check method: " + pathsCheckMethod);
+  private static PathsChecker getPathsChecker(
+      ParserConfig.PathsCheckMethod pathsCheckMethod, Watchman watchman) {
+    switch (pathsCheckMethod) {
+      case FILESYSTEM:
+        return PathsCheckerFactory.createFileSystemPathsChecker();
+      case WATCHMAN:
+        return PathsCheckerFactory.createWatchmanPathChecker(watchman);
+      case NONE:
+        return PathsCheckerFactory.createNoopPathsChecker();
+      default:
+        throw new IllegalStateException("Unexpected path check method: " + pathsCheckMethod);
     }
   }
 
@@ -137,7 +141,7 @@ public class PerBuildStateFactory {
     TargetNodeFactory targetNodeFactory =
         new TargetNodeFactory(
             typeCoercerFactory,
-            getPathsChecker(parserConfig.getPathsCheckMethod()),
+            getPathsChecker(parserConfig.getPathsCheckMethod(), watchman),
             new DefaultCellNameResolverProvider(cells));
 
     SelectorListFactory selectorListFactory =
