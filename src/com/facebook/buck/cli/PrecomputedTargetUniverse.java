@@ -40,6 +40,7 @@ import com.facebook.buck.parser.PerBuildState;
 import com.facebook.buck.parser.config.ParserConfig;
 import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.exceptions.BuildTargetException;
+import com.facebook.buck.parser.spec.BuildFileSpec;
 import com.facebook.buck.parser.spec.BuildTargetMatcherTargetNodeParser;
 import com.facebook.buck.parser.spec.TargetNodeSpec;
 import com.facebook.buck.query.QueryException;
@@ -73,6 +74,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
   private final DirectedAcyclicGraph<TargetNode<?>> graph;
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetToNodeIndex;
   private final ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex;
+  private final BuildFileDescendantsIndex descendantsIndex;
 
   /** Creates a `PrecomputedTargetUniverse` by parsing the transitive closure of `targets`. */
   public static PrecomputedTargetUniverse createFromRootTargets(
@@ -195,16 +197,19 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
     return new PrecomputedTargetUniverse(
         new DirectedAcyclicGraph<>(graph),
         ImmutableMap.copyOf(targetToNodeIndex),
-        pathToBuildTargetIndex);
+        pathToBuildTargetIndex,
+        BuildFileDescendantsIndex.createFromLeafPaths(pathToBuildTargetIndex.keySet()));
   }
 
   private PrecomputedTargetUniverse(
       DirectedAcyclicGraph<TargetNode<?>> graph,
       ImmutableMap<BuildTarget, TargetNode<?>> targetToNodeIndex,
-      ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex) {
+      ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex,
+      BuildFileDescendantsIndex descendantsIndex) {
     this.graph = graph;
     this.targetToNodeIndex = targetToNodeIndex;
     this.pathToBuildTargetIndex = pathToBuildTargetIndex;
+    this.descendantsIndex = descendantsIndex;
   }
 
   @Override
@@ -220,10 +225,10 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
       throws BuildFileParseException, InterruptedException {
     ImmutableList.Builder<ImmutableSet<BuildTarget>> resultBuilder = ImmutableList.builder();
     for (TargetNodeSpec spec : specs) {
-      CellRelativePath specBuildFile = spec.getBuildFileSpec().getCellRelativeBaseName();
-      ImmutableSet<BuildTarget> buildfileTargets = pathToBuildTargetIndex.get(specBuildFile);
+      ImmutableSet<CellRelativePath> specBuildFiles = resolveBuildFilePathsForSpec(spec);
       ImmutableSet<TargetNodeMaybeIncompatible> buildfileTargetNodes =
-          buildfileTargets.stream()
+          specBuildFiles.stream()
+              .flatMap(path -> pathToBuildTargetIndex.get(path).stream())
               .map(targetToNodeIndex::get)
               .map(TargetNodeMaybeIncompatible::ofCompatible)
               .collect(ImmutableSet.toImmutableSet());
@@ -402,5 +407,15 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
           }
           throw exceptionInput;
         });
+  }
+
+  private ImmutableSet<CellRelativePath> resolveBuildFilePathsForSpec(TargetNodeSpec spec) {
+    BuildFileSpec buildFileSpec = spec.getBuildFileSpec();
+    CellRelativePath buildFilePath = buildFileSpec.getCellRelativeBaseName();
+    if (!buildFileSpec.isRecursive()) {
+      return ImmutableSet.of(buildFilePath);
+    } else {
+      return descendantsIndex.getRecursiveDescendants(buildFilePath);
+    }
   }
 }

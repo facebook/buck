@@ -546,6 +546,17 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void rootRecursiveTargetSpecPrintsEveryTarget() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result = workspace.runBuckCommand("cquery", "//...");
+    assertOutputMatchesFileContents(
+        "stdout-root-recursive-target-spec-prints-every-target", result, workspace);
+  }
+
+  @Test
   public void configFunctionCanCreateTargetsOtherThanTargetPlatform() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
@@ -593,10 +604,7 @@ public class ConfiguredQueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "cquery",
-            "allpaths(//apps/apple/..., //codegen/...)",
-            "--target-universe",
-            "//apps/...");
+            "cquery", "allpaths(//apps/..., //codegen/...)", "--target-universe", "//apps/...");
     result.assertSuccess();
     assertOutputMatchesFileContents(
         "stdout-allpaths-function-returns-subgraph-between-two-nodes", result, workspace);
