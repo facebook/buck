@@ -26,6 +26,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -280,6 +281,49 @@ public class AppleCxxPlatformsTest {
             .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE)
             .getCommandPrefix(resolver)
             .get(0));
+  }
+
+  @Test
+  public void linkerFlagsDetermineSDKVersionForDefaultAuto() {
+    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatformWithConfig(buckConfig);
+
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
+
+    CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+
+    assertThat(
+        Arg.stringify(cxxPlatform.getLdflags(), resolver), hasConsecutiveItems("-Wl,-sdk_version"));
+  }
+
+  @Test
+  public void linkerFlagsHaveSDKVersionForAlways() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder().setSections("[apple]", "add_linker_sdk_version = always").build();
+    AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatformWithConfig(buckConfig);
+
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
+
+    CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+
+    assertThat(
+        Arg.stringify(cxxPlatform.getLdflags(), resolver), hasConsecutiveItems("-Wl,-sdk_version"));
+  }
+
+  @Test
+  public void linkerFlagsDoNotHaveSDKVersionForNever() {
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder().setSections("[apple]", "add_linker_sdk_version = never").build();
+    AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatformWithConfig(buckConfig);
+
+    BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
+    SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
+
+    CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
+
+    assertFalse(Arg.stringify(cxxPlatform.getLdflags(), resolver).contains("-Wl,-sdk_version"));
   }
 
   @Test

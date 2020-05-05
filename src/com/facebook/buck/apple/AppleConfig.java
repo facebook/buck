@@ -79,6 +79,12 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return new AppleConfig(delegate);
   }
 
+  public enum AddLinkerSDKVersion {
+    AUTO,
+    ALWAYS,
+    NEVER
+  }
+
   @Override
   public BuckConfig getDelegate() {
     return delegate;
@@ -447,6 +453,25 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate
         .getValue(APPLE_SECTION, toolName + "_version_override")
         .orElse(defaultToolVersion);
+  }
+
+  /**
+   * Whether to always, never or automatically determine whether to add the sdk_version to linker
+   * args.
+   */
+  public AddLinkerSDKVersion shouldAddLinkerSDKVersion() {
+    Optional<String> optVal = delegate.getRawValue(APPLE_SECTION, "add_linker_sdk_version");
+
+    String val = optVal.isPresent() ? optVal.get() : "auto";
+
+    try {
+      return AddLinkerSDKVersion.valueOf(val.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new HumanReadableException(
+          "Invalid value provided for 'should_set_linker_args_sdk_version': "
+              + val
+              + ". Allowed values are 'auto' (default), 'always' or 'never'.");
+    }
   }
 
   /**

@@ -521,7 +521,20 @@ public class AppleCxxPlatforms {
       String version) {
     ImmutableList.Builder<String> builder = ImmutableList.builder();
 
-    if (shouldSetSDKVersion(filesystem, xcodeToolFinder, toolSearchPaths, version)) {
+    boolean setSDKVersion;
+    switch (appleConfig.shouldAddLinkerSDKVersion()) {
+      case ALWAYS:
+        setSDKVersion = true;
+        break;
+      case NEVER:
+        setSDKVersion = false;
+        break;
+      case AUTO:
+      default:
+        setSDKVersion = shouldSetSDKVersion(filesystem, xcodeToolFinder, toolSearchPaths, version);
+    }
+
+    if (setSDKVersion) {
       builder.addAll(Linkers.iXlinker("-sdk_version", targetSdk.getVersion()));
     }
 
