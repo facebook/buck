@@ -16,19 +16,15 @@
 
 package com.facebook.buck.core.model.targetgraph.impl;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.google.common.collect.ImmutableSet;
+/** A method creates {@link PathsChecker} */
+public class PathsCheckerFactory {
+  private PathsCheckerFactory() {}
 
-/** Generic interface to perform some checks of paths. */
-public interface PathsChecker {
+  public static PathsChecker createNoopPathsChecker() {
+    return new NoopPathsChecker();
+  }
 
-  /** Check a set of paths relative to the given file system. */
-  void checkPaths(
-      ProjectFilesystem projectFilesystem,
-      BuildTarget buildTarget,
-      ImmutableSet<ForwardRelativePath> paths,
-      ImmutableSet<ForwardRelativePath> filePaths,
-      ImmutableSet<ForwardRelativePath> dirPaths);
+  public static PathsChecker createFileSystemPathsChecker() {
+    return new MissingPathsChecker();
+  }
 }

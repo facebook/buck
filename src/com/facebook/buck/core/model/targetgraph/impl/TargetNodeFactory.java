@@ -40,7 +40,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.ParamsInfo;
-import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerificationMode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.util.collect.MoreSets;
@@ -58,14 +57,10 @@ public class TargetNodeFactory implements NodeCopier {
 
   public TargetNodeFactory(
       TypeCoercerFactory typeCoercerFactory, CellNameResolverProvider cellNames) {
-    this(typeCoercerFactory, PathExistenceVerificationMode.VERIFY, cellNames);
-  }
 
-  public TargetNodeFactory(
-      TypeCoercerFactory typeCoercerFactory,
-      PathExistenceVerificationMode pathExistenceVerificationMode,
-      CellNameResolverProvider cellNames) {
-    this(typeCoercerFactory, getPathsChecker(pathExistenceVerificationMode), cellNames);
+    this.typeCoercerFactory = typeCoercerFactory;
+    this.pathsChecker = PathsCheckerFactory.createFileSystemPathsChecker();
+    this.cellNames = cellNames;
   }
 
   public TargetNodeFactory(
@@ -76,14 +71,6 @@ public class TargetNodeFactory implements NodeCopier {
     this.typeCoercerFactory = typeCoercerFactory;
     this.pathsChecker = pathsChecker;
     this.cellNames = cellNames;
-  }
-
-  private static PathsChecker getPathsChecker(
-      PathExistenceVerificationMode pathExistenceVerificationMode) {
-    if (pathExistenceVerificationMode == PathExistenceVerificationMode.VERIFY) {
-      return new MissingPathsChecker();
-    }
-    return new NoopPathsChecker();
   }
 
   /**

@@ -26,6 +26,7 @@ import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.actiongraph.ActionGraph;
+import com.facebook.buck.core.model.targetgraph.impl.PathsCheckerFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
@@ -42,7 +43,6 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
-import com.facebook.buck.rules.coercer.PathTypeCoercer.PathExistenceVerificationMode;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.rules.query.QueryCache;
 import com.facebook.buck.rules.query.QueryUtils;
@@ -185,7 +185,7 @@ public abstract class AbstractNodeBuilder<
       TargetNodeFactory factory =
           new TargetNodeFactory(
               TYPE_COERCER_FACTORY,
-              PathExistenceVerificationMode.DO_NOT_VERIFY,
+              PathsCheckerFactory.createNoopPathsChecker(),
               new SimpleCellNameResolverProvider(target.getCell()));
       TArg populatedArg = getPopulatedArg();
       return factory

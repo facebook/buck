@@ -78,9 +78,4 @@ public class PathTypeCoercer extends LeafUnconfiguredOnlyCoercer<Path> {
       throw CoerceFailedException.simple(object, getOutputType());
     }
   }
-
-  public enum PathExistenceVerificationMode {
-    VERIFY,
-    DO_NOT_VERIFY,
-  }
 }

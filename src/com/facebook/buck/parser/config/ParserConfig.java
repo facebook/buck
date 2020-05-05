@@ -87,6 +87,13 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
     ;
   }
 
+  /** Control how to check the existence of paths */
+  public enum PathsCheckMethod {
+    FILESYSTEM,
+    WATCHMAN,
+    NONE,
+  }
+
   /** Controls whether default flavors should be applied to unflavored targets. */
   public enum ApplyDefaultFlavorsMode {
     DISABLED,
@@ -165,6 +172,13 @@ public abstract class ParserConfig implements ConfigView<BuckConfig> {
     return getDelegate()
         .getEnum("project", "build_file_search_method", BuildFileSearchMethod.class)
         .orElse(BuildFileSearchMethod.FILESYSTEM_CRAWL);
+  }
+
+  @Value.Lazy
+  public PathsCheckMethod getPathsCheckMethod() {
+    return getDelegate()
+        .getEnum("project", "paths_check_method", PathsCheckMethod.class)
+        .orElse(PathsCheckMethod.FILESYSTEM);
   }
 
   @Value.Lazy

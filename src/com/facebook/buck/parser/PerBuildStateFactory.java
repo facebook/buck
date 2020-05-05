@@ -25,6 +25,8 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.impl.ConfigurationPlatformResolver;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.model.targetgraph.impl.PathsChecker;
+import com.facebook.buck.core.model.targetgraph.impl.PathsCheckerFactory;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.resources.ResourcesConfig;
@@ -88,6 +90,16 @@ public class PerBuildStateFactory {
     this.hostConfiguration = hostConfiguration;
   }
 
+  private PathsChecker getPathsChecker(ParserConfig.PathsCheckMethod pathsCheckMethod) {
+    if (pathsCheckMethod == ParserConfig.PathsCheckMethod.FILESYSTEM) {
+      return PathsCheckerFactory.createFileSystemPathsChecker();
+    } else if (pathsCheckMethod == ParserConfig.PathsCheckMethod.NONE) {
+      return PathsCheckerFactory.createNoopPathsChecker();
+    } else {
+      throw new IllegalStateException("Unexpected path check method: " + pathsCheckMethod);
+    }
+  }
+
   private PerBuildState create(
       ParsingContext parsingContext,
       DaemonicParserState daemonicParserState,
@@ -123,7 +135,10 @@ public class PerBuildStateFactory {
             parsingContext.isProfilingEnabled());
 
     TargetNodeFactory targetNodeFactory =
-        new TargetNodeFactory(typeCoercerFactory, new DefaultCellNameResolverProvider(cells));
+        new TargetNodeFactory(
+            typeCoercerFactory,
+            getPathsChecker(parserConfig.getPathsCheckMethod()),
+            new DefaultCellNameResolverProvider(cells));
 
     SelectorListFactory selectorListFactory =
         new SelectorListFactory(new SelectorFactory(unconfiguredBuildTargetFactory));
