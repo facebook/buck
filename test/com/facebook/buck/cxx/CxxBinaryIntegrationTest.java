@@ -2305,7 +2305,13 @@ public class CxxBinaryIntegrationTest {
             "//foo:binary_with_dep")
         .assertSuccess();
     ImmutableSortedSet<Path> initialObjects =
-        findFiles(tmp.getRoot(), tmp.getRoot().getFileSystem().getPathMatcher("glob:**/*.o"));
+        findFiles(
+            tmp.getRoot().resolve("buck-out/gen"),
+            tmp.getRoot().getFileSystem().getPathMatcher("glob:**/*.o"));
+
+    // sanity check
+    assertFalse(initialObjects.isEmpty());
+
     workspace.runBuckCommand("clean", "--keep-cache");
     workspace
         .runBuckBuild(
@@ -2321,7 +2327,9 @@ public class CxxBinaryIntegrationTest {
             CxxDescriptionEnhancer.createCxxLinkTarget(
                 BuildTargetFactory.newInstance("//foo:binary_with_dep"), Optional.empty()));
     ImmutableSortedSet<Path> subsequentObjects =
-        findFiles(tmp.getRoot(), tmp.getRoot().getFileSystem().getPathMatcher("glob:**/*.o"));
+        findFiles(
+            tmp.getRoot().resolve("buck-out/gen"),
+            tmp.getRoot().getFileSystem().getPathMatcher("glob:**/*.o"));
     assertThat(initialObjects, Matchers.equalTo(subsequentObjects));
   }
 
