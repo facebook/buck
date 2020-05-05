@@ -157,7 +157,7 @@ public class BuckSkylarkTypes {
    * @param location location of the kwarg currently being evaluated
    * @param kwarg the name of a kwarg / field
    */
-  public static void validateKwargName(Location location, String kwarg) throws EvalException {
+  public static ParamName validateKwargName(Location location, String kwarg) throws EvalException {
     /**
      * Identifier regex is taken from Bazel's skylark {@link Lexer} line 884 (where @{link
      * Lexer#identifierOrKeyword} is called.
@@ -168,7 +168,7 @@ public class BuckSkylarkTypes {
      * bail out early so typos don't confuse users or allow non-idiomatic usage
      */
     try {
-      ParamName.bySnakeCase(kwarg);
+      return ParamName.bySnakeCase(kwarg);
     } catch (IllegalArgumentException e) {
       throw new EvalException(
           location, String.format("Attribute name '%s' is not a valid identifier", kwarg));

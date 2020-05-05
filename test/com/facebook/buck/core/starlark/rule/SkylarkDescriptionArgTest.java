@@ -68,7 +68,7 @@ public class SkylarkDescriptionArgTest {
         new SkylarkDescriptionArg(FakeSkylarkUserDefinedRuleFactory.createSimpleRule());
 
     expected.expect(NullPointerException.class);
-    arg.getPostCoercionValue("baz");
+    arg.getPostCoercionValue(ParamName.bySnakeCase("baz"));
   }
 
   @Test
@@ -78,19 +78,19 @@ public class SkylarkDescriptionArgTest {
 
     expected.expect(IllegalStateException.class);
     expected.expectMessage("it was not one of the attributes");
-    arg.setPostCoercionValue("not_declared", 1);
+    arg.setPostCoercionValue(ParamName.bySnakeCase("not_declared"), 1);
   }
 
   @Test
   public void throwsWhenSettingAfterBuilding() throws LabelSyntaxException, EvalException {
     SkylarkDescriptionArg arg =
         new SkylarkDescriptionArg(FakeSkylarkUserDefinedRuleFactory.createSimpleRule());
-    arg.setPostCoercionValue("name", "ohmy");
+    arg.setPostCoercionValue(ParamName.bySnakeCase("name"), "ohmy");
     arg.build();
 
     expected.expect(IllegalStateException.class);
     expected.expectMessage("after building an instance");
-    arg.setPostCoercionValue("baz", 1);
+    arg.setPostCoercionValue(ParamName.bySnakeCase("baz"), 1);
   }
 
   @Test
@@ -98,8 +98,8 @@ public class SkylarkDescriptionArgTest {
     SkylarkDescriptionArg arg =
         new SkylarkDescriptionArg(FakeSkylarkUserDefinedRuleFactory.createSimpleRule());
 
-    arg.setPostCoercionValue("baz", 1);
-    assertEquals(1, arg.getPostCoercionValue("baz"));
+    arg.setPostCoercionValue(ParamName.bySnakeCase("baz"), 1);
+    assertEquals(1, arg.getPostCoercionValue(ParamName.bySnakeCase("baz")));
   }
 
   @Test
@@ -110,8 +110,8 @@ public class SkylarkDescriptionArgTest {
             DefaultBuildTargetSourcePath.of(BuildTargetFactory.newInstance("//:LICENSE2")));
     SkylarkDescriptionArg arg =
         new SkylarkDescriptionArg(FakeSkylarkUserDefinedRuleFactory.createSimpleRule());
-    arg.setPostCoercionValue("labels", ImmutableSortedSet.of("foo", "bar"));
-    arg.setPostCoercionValue("licenses", licenses);
+    arg.setPostCoercionValue(ParamName.bySnakeCase("labels"), ImmutableSortedSet.of("foo", "bar"));
+    arg.setPostCoercionValue(ParamName.bySnakeCase("licenses"), licenses);
 
     assertEquals(ImmutableSortedSet.of("bar", "foo"), arg.getLabels());
     assertEquals(licenses, arg.getLicenses());
@@ -193,12 +193,14 @@ public class SkylarkDescriptionArgTest {
             ImmutableSet.builder(),
             attributes2);
 
-    assertEquals(ImmutableSortedSet.of(), populated1.getPostCoercionValue("labels"));
-    assertEquals(5, populated1.getPostCoercionValue("defaulted"));
-    assertEquals(10, populated1.getPostCoercionValue("_hidden"));
+    assertEquals(
+        ImmutableSortedSet.of(), populated1.getPostCoercionValue(ParamName.bySnakeCase("labels")));
+    assertEquals(5, populated1.getPostCoercionValue(ParamName.bySnakeCase("defaulted")));
+    assertEquals(10, populated1.getPostCoercionValue(ParamName.bySnakeCase("_hidden")));
 
-    assertEquals(ImmutableSortedSet.of(), populated2.getPostCoercionValue("labels"));
-    assertEquals(1, populated2.getPostCoercionValue("defaulted"));
-    assertEquals(10, populated2.getPostCoercionValue("_hidden"));
+    assertEquals(
+        ImmutableSortedSet.of(), populated2.getPostCoercionValue(ParamName.bySnakeCase("labels")));
+    assertEquals(1, populated2.getPostCoercionValue(ParamName.bySnakeCase("defaulted")));
+    assertEquals(10, populated2.getPostCoercionValue(ParamName.bySnakeCase("_hidden")));
   }
 }

@@ -36,6 +36,7 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.rules.coercer.BuildTargetTypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.UnconfiguredBuildTargetTypeCoercer;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
@@ -103,8 +104,8 @@ public class SkylarkRuleContextAttrTest {
     SkylarkRuleContextAttr attr =
         SkylarkRuleContextAttr.of(
             "some_method",
-            ImmutableMap.of("foo", "foo_value"),
-            ImmutableMap.of("foo", placeholderStringAttr),
+            ImmutableMap.of(ParamName.bySnakeCase("foo"), "foo_value"),
+            ImmutableMap.of(ParamName.bySnakeCase("foo"), placeholderStringAttr),
             new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
 
     assertEquals("foo_value", attr.getValue("foo"));
@@ -116,8 +117,16 @@ public class SkylarkRuleContextAttrTest {
     SkylarkRuleContextAttr attr =
         SkylarkRuleContextAttr.of(
             "some_method",
-            ImmutableMap.of("foo", "foo_value", "bar", "bar_value"),
-            ImmutableMap.of("foo", placeholderStringAttr, "bar", placeholderStringAttr),
+            ImmutableMap.of(
+                ParamName.bySnakeCase("foo"),
+                "foo_value",
+                ParamName.bySnakeCase("bar"),
+                "bar_value"),
+            ImmutableMap.of(
+                ParamName.bySnakeCase("foo"),
+                placeholderStringAttr,
+                ParamName.bySnakeCase("bar"),
+                placeholderStringAttr),
             new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
 
     assertEquals(ImmutableSet.of("bar", "foo"), attr.getFieldNames());
@@ -131,8 +140,13 @@ public class SkylarkRuleContextAttrTest {
     SkylarkRuleContextAttr ctxAttr =
         SkylarkRuleContextAttr.of(
             "some_method",
-            ImmutableMap.of("foo", "foo_value", "bar", target),
-            ImmutableMap.of("foo", placeholderStringAttr, "bar", attr),
+            ImmutableMap.of(
+                ParamName.bySnakeCase("foo"), "foo_value", ParamName.bySnakeCase("bar"), target),
+            ImmutableMap.of(
+                ParamName.bySnakeCase("foo"),
+                placeholderStringAttr,
+                ParamName.bySnakeCase("bar"),
+                attr),
             new FakeRuleAnalysisContextImpl(ImmutableMap.of(target, providerInfos)));
 
     assertEquals("foo_value", ctxAttr.getValue("foo"));

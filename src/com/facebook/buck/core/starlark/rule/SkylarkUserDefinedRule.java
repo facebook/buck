@@ -18,7 +18,6 @@ package com.facebook.buck.core.starlark.rule;
 
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.starlark.coercer.SkylarkParamInfo;
-import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
@@ -64,8 +63,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   @Nullable private String exportedName = null;
   private final Location location;
   private final BaseFunction implementation;
-  private final ImmutableMap<String, Attribute<?>> attrs;
-  private final Set<String> hiddenImplicitAttributes;
+  private final ImmutableMap<ParamName, Attribute<?>> attrs;
+  private final Set<ParamName> hiddenImplicitAttributes;
   private final boolean shouldInferRunInfo;
   private final boolean shouldBeTestRule;
   private final ParamsInfo params;
@@ -75,8 +74,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       ImmutableList<Object> defaultValues,
       Location location,
       BaseFunction implementation,
-      ImmutableMap<String, Attribute<?>> attrs,
-      Set<String> hiddenImplicitAttributes,
+      ImmutableMap<ParamName, Attribute<?>> attrs,
+      Set<ParamName> hiddenImplicitAttributes,
       boolean shouldInferRunInfo,
       boolean shouldBeTestRule) {
     /**
@@ -152,16 +151,16 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   public static SkylarkUserDefinedRule of(
       Location location,
       BaseFunction implementation,
-      ImmutableMap<String, Attribute<?>> implicitAttributes,
-      Set<String> hiddenImplicitAttributes,
-      Map<String, AttributeHolder> attrs,
+      ImmutableMap<ParamName, Attribute<?>> implicitAttributes,
+      Set<ParamName> hiddenImplicitAttributes,
+      Map<ParamName, AttributeHolder> attrs,
       boolean inferRunInfo,
       boolean test)
       throws EvalException {
 
     validateImplementation(location, implementation);
 
-    ImmutableMap<String, Attribute<?>> validatedAttrs =
+    ImmutableMap<ParamName, Attribute<?>> validatedAttrs =
         validateAttrs(location, implicitAttributes, attrs);
 
     Pair<FunctionSignature, ImmutableList<Object>> signature =
@@ -190,17 +189,17 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     }
   }
 
-  private static ImmutableMap<String, Attribute<?>> validateAttrs(
+  private static ImmutableMap<ParamName, Attribute<?>> validateAttrs(
       Location location,
-      Map<String, Attribute<?>> implicitAttributes,
-      Map<String, AttributeHolder> attrs)
+      Map<ParamName, Attribute<?>> implicitAttributes,
+      Map<ParamName, AttributeHolder> attrs)
       throws EvalException {
     /**
      * Make sure no one is trying to override built-in names. Ensuring that names are valid
      * identifiers happens when the {@link SkylarkUserDefinedRule} is created, in {@link
      * #createSignature(ImmutableMap, Location)}
      */
-    for (String implicitAttribute : implicitAttributes.keySet()) {
+    for (ParamName implicitAttribute : implicitAttributes.keySet()) {
       if (attrs.containsKey(implicitAttribute)) {
         throw new EvalException(
             location,
@@ -210,19 +209,19 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       }
     }
 
-    ImmutableMap<String, Attribute<?>> attrsWithoutHolder =
+    ImmutableMap<ParamName, Attribute<?>> attrsWithoutHolder =
         attrs.entrySet().stream()
             .collect(
                 ImmutableMap.toImmutableMap(Map.Entry::getKey, v -> v.getValue().getAttribute()));
 
-    return ImmutableMap.<String, Attribute<?>>builder()
+    return ImmutableMap.<ParamName, Attribute<?>>builder()
         .putAll(implicitAttributes)
         .putAll(attrsWithoutHolder)
         .build();
   }
 
   private static Pair<FunctionSignature, ImmutableList<Object>> createSignature(
-      ImmutableMap<String, Attribute<?>> parameters, Location location) throws EvalException {
+      ImmutableMap<ParamName, Attribute<?>> parameters, Location location) throws EvalException {
     /**
      * See {@link FunctionSignature} for details on how argument ordering works. We make all
      * arguments kwargs, so ignore the "positional" arguments
@@ -233,13 +232,13 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     ImmutableList.Builder<Object> defaultValues =
         ImmutableList.builderWithExpectedSize(parameters.size());
 
-    Stream<Map.Entry<String, Attribute<?>>> sortedStream =
+    Stream<Map.Entry<ParamName, Attribute<?>>> sortedStream =
         parameters.entrySet().stream()
-            .filter(e -> !e.getKey().startsWith("_"))
+            .filter(e -> !e.getKey().getSnakeCase().startsWith("_"))
             .sorted(MandatoryComparator.INSTANCE);
     int i = 0;
-    for (Map.Entry<String, Attribute<?>> entry :
-        (Iterable<Map.Entry<String, Attribute<?>>>) sortedStream::iterator) {
+    for (Map.Entry<ParamName, Attribute<?>> entry :
+        (Iterable<Map.Entry<ParamName, Attribute<?>>>) sortedStream::iterator) {
 
       Attribute<?> param = entry.getValue();
       if (param.getMandatory()) {
@@ -248,9 +247,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
         defaultValues.add(param.getPreCoercionDefaultValue());
       }
 
-      String name = entry.getKey();
-      BuckSkylarkTypes.validateKwargName(location, name);
-      names[i] = name;
+      ParamName name = entry.getKey();
+      names[i] = name.getSnakeCase();
       i++;
     }
 
@@ -336,7 +334,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   /** The attributes that this function accepts */
-  public ImmutableMap<String, Attribute<?>> getAttrs() {
+  public ImmutableMap<ParamName, Attribute<?>> getAttrs() {
     return attrs;
   }
 
@@ -350,26 +348,27 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     return params;
   }
 
-  public Set<String> getHiddenImplicitAttributes() {
+  public Set<ParamName> getHiddenImplicitAttributes() {
     return hiddenImplicitAttributes;
   }
 
-  private static class MandatoryComparator implements Comparator<Map.Entry<String, Attribute<?>>> {
+  private static class MandatoryComparator
+      implements Comparator<Map.Entry<ParamName, Attribute<?>>> {
     static final MandatoryComparator INSTANCE = new MandatoryComparator();
 
     @Override
     public int compare(
-        Map.Entry<String, Attribute<?>> left, Map.Entry<String, Attribute<?>> right) {
+        Map.Entry<ParamName, Attribute<?>> left, Map.Entry<ParamName, Attribute<?>> right) {
       Attribute<?> leftAttr = left.getValue();
       Attribute<?> rightAttr = right.getValue();
 
       if (left.getKey().equals(right.getKey())) {
         return 0;
       }
-      if ("name".equals(left.getKey())) {
+      if ("name".equals(left.getKey().getSnakeCase())) {
         return -1;
       }
-      if ("name".equals(right.getKey())) {
+      if ("name".equals(right.getKey().getSnakeCase())) {
         return 1;
       }
       if (leftAttr.getMandatory() == rightAttr.getMandatory()) {

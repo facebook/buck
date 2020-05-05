@@ -30,6 +30,7 @@ import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
@@ -114,13 +115,13 @@ public class HybridKnownRuleTypesTest {
             .dataTransferObjectDescriptor(factory);
     SkylarkDescriptionArgBuilder builder =
         (SkylarkDescriptionArgBuilder) argDescriptor.getBuilderFactory().get();
-    builder.setPostCoercionValue("baz", "value");
-    builder.setPostCoercionValue("name", "thename");
+    builder.setPostCoercionValue(ParamName.bySnakeCase("baz"), "value");
+    builder.setPostCoercionValue(ParamName.bySnakeCase("name"), "thename");
 
     // Ensure that we can cast back properly
     SkylarkDescriptionArg built = argDescriptor.build(builder, target);
 
-    assertEquals("value", built.getPostCoercionValue("baz"));
+    assertEquals("value", built.getPostCoercionValue(ParamName.bySnakeCase("baz")));
   }
 
   @Test

@@ -23,6 +23,7 @@ import com.facebook.buck.core.starlark.rule.SkylarkRuleContext;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringAttribute;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -116,7 +117,9 @@ public class FakeSkylarkUserDefinedRuleFactory {
             IMPLICIT_ATTRIBUTES,
             HIDDEN_IMPLICIT_ATTRIBUTES,
             attrs.entrySet().stream()
-                .collect(ImmutableMap.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue)),
+                .collect(
+                    ImmutableMap.toImmutableMap(
+                        e -> ParamName.bySnakeCase(e.getKey()), Map.Entry::getValue)),
             false,
             false);
     ret.export(Label.parseAbsolute(label, ImmutableMap.of()), exportedName);

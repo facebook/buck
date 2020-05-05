@@ -39,8 +39,8 @@ public class SkylarkParamInfo<T> extends AbstractParamInfo<T> {
    * @param name the user facing name of this attribute
    * @param attr the attribute used to get coercion information, constraints, etc for this param
    */
-  public SkylarkParamInfo(String name, Attribute<T> attr) {
-    super(ParamName.bySnakeCase(name), attr.getTypeCoercer());
+  public SkylarkParamInfo(ParamName name, Attribute<T> attr) {
+    super(name, attr.getTypeCoercer());
     this.attr = attr;
   }
 
@@ -69,12 +69,12 @@ public class SkylarkParamInfo<T> extends AbstractParamInfo<T> {
   @SuppressWarnings("unchecked")
   public T get(Object dto) {
     Preconditions.checkArgument(dto instanceof SkylarkDescriptionArgBuilder);
-    return (T) ((SkylarkDescriptionArgBuilder) dto).getPostCoercionValue(getName().getSnakeCase());
+    return (T) ((SkylarkDescriptionArgBuilder) dto).getPostCoercionValue(getName());
   }
 
   @Override
   public void setCoercedValue(Object dto, Object value) {
     Preconditions.checkArgument(dto instanceof SkylarkDescriptionArgBuilder);
-    ((SkylarkDescriptionArgBuilder) dto).setPostCoercionValue(getName().getSnakeCase(), value);
+    ((SkylarkDescriptionArgBuilder) dto).setPostCoercionValue(getName(), value);
   }
 }

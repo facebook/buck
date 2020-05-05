@@ -59,13 +59,14 @@ import org.junit.rules.ExpectedException;
 
 public class SkylarkUserDefinedRuleTest {
 
-  private static final Set<String> HIDDEN_IMPLICIT_ATTRIBUTES = ImmutableSet.of();
+  private static final Set<ParamName> HIDDEN_IMPLICIT_ATTRIBUTES = ImmutableSet.of();
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   final Location location = Location.BUILTIN;
 
-  private static final ImmutableMap<String, Attribute<?>> TEST_IMPLICIT_ATTRIBUTES =
-      ImmutableMap.of("name", IMPLICIT_ATTRIBUTES.get("name"));
+  private static final ImmutableMap<ParamName, Attribute<?>> TEST_IMPLICIT_ATTRIBUTES =
+      ImmutableMap.of(
+          ParamName.bySnakeCase("name"), IMPLICIT_ATTRIBUTES.get(ParamName.bySnakeCase("name")));
 
   public static class SimpleFunction extends BaseFunction {
 
@@ -137,10 +138,12 @@ public class SkylarkUserDefinedRuleTest {
 
   @Test
   public void getsCorrectName() throws LabelSyntaxException, EvalException {
-    ImmutableMap<String, AttributeHolder> params =
+    ImmutableMap<ParamName, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
-            "_arg2", StringAttribute.of("some string", "", true, ImmutableList.of()));
+            ParamName.bySnakeCase("arg1"),
+                StringAttribute.of("some string", "", false, ImmutableList.of()),
+            ParamName.bySnakeCase("_arg2"),
+                StringAttribute.of("some string", "", true, ImmutableList.of()));
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
@@ -162,13 +165,19 @@ public class SkylarkUserDefinedRuleTest {
   @Test
   public void filtersOutArgumentsStartingWithUnderscore()
       throws EvalException, LabelSyntaxException {
-    ImmutableMap<String, AttributeHolder> params =
+    ImmutableMap<ParamName, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
-            "_arg2", StringAttribute.of("some string", "", true, ImmutableList.of()));
+            ParamName.bySnakeCase("arg1"),
+                StringAttribute.of("some string", "", false, ImmutableList.of()),
+            ParamName.bySnakeCase("_arg2"),
+                StringAttribute.of("some string", "", true, ImmutableList.of()));
 
     ImmutableList<String> expectedOrder = ImmutableList.of("name", "arg1");
-    ImmutableList<String> expectedRawArgs = ImmutableList.of("name", "arg1", "_arg2");
+    ImmutableList<ParamName> expectedRawArgs =
+        ImmutableList.of(
+            ParamName.bySnakeCase("name"),
+            ParamName.bySnakeCase("arg1"),
+            ParamName.bySnakeCase("_arg2"));
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
@@ -188,14 +197,20 @@ public class SkylarkUserDefinedRuleTest {
   @Test
   public void movesNameToFirstArgAndPutsMandatoryArgsAheadOfOptionalOnesAndSorts()
       throws EvalException, LabelSyntaxException {
-    ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.<String, AttributeHolder>builder()
-            .put("arg1", StringAttribute.of("some string", "", false, ImmutableList.of()))
-            .put("arg9", StringAttribute.of("some string", "", true, ImmutableList.of()))
-            .put("arg2", StringAttribute.of("some string", "", true, ImmutableList.of()))
-            .put("arg3", IntAttribute.of(5, "", false, ImmutableList.of()))
-            .put("arg8", IntAttribute.of(5, "", false, ImmutableList.of()))
-            .put("arg4", IntAttribute.of(5, "", true, ImmutableList.of()))
+    ImmutableMap<ParamName, AttributeHolder> params =
+        ImmutableMap.<ParamName, AttributeHolder>builder()
+            .put(
+                ParamName.bySnakeCase("arg1"),
+                StringAttribute.of("some string", "", false, ImmutableList.of()))
+            .put(
+                ParamName.bySnakeCase("arg9"),
+                StringAttribute.of("some string", "", true, ImmutableList.of()))
+            .put(
+                ParamName.bySnakeCase("arg2"),
+                StringAttribute.of("some string", "", true, ImmutableList.of()))
+            .put(ParamName.bySnakeCase("arg3"), IntAttribute.of(5, "", false, ImmutableList.of()))
+            .put(ParamName.bySnakeCase("arg8"), IntAttribute.of(5, "", false, ImmutableList.of()))
+            .put(ParamName.bySnakeCase("arg4"), IntAttribute.of(5, "", true, ImmutableList.of()))
             .build();
 
     ImmutableList<String> expectedOrder =
@@ -217,7 +232,7 @@ public class SkylarkUserDefinedRuleTest {
 
   @Test
   public void raisesErrorIfImplementationTakesZeroArgs() throws EvalException {
-    ImmutableMap<String, AttributeHolder> params = ImmutableMap.of();
+    ImmutableMap<ParamName, AttributeHolder> params = ImmutableMap.of();
 
     expectedException.expect(EvalException.class);
     expectedException.expectMessage(
@@ -235,7 +250,7 @@ public class SkylarkUserDefinedRuleTest {
 
   @Test
   public void raisesErrorIfImplementationTakesMoreThanOneArg() throws EvalException {
-    ImmutableMap<String, AttributeHolder> params = ImmutableMap.of();
+    ImmutableMap<ParamName, AttributeHolder> params = ImmutableMap.of();
 
     expectedException.expect(EvalException.class);
     expectedException.expectMessage(
@@ -253,8 +268,10 @@ public class SkylarkUserDefinedRuleTest {
 
   @Test
   public void raisesErrorIfArgumentDuplicatesBuiltInName() throws EvalException {
-    ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of("name", StringAttribute.of("some string", "", false, ImmutableList.of()));
+    ImmutableMap<ParamName, AttributeHolder> params =
+        ImmutableMap.of(
+            ParamName.bySnakeCase("name"),
+            StringAttribute.of("some string", "", false, ImmutableList.of()));
 
     expectedException.expect(EvalException.class);
     expectedException.expectMessage(
@@ -274,7 +291,7 @@ public class SkylarkUserDefinedRuleTest {
   public void acceptsAutomaticallyAddedParameters()
       throws EvalException, LabelSyntaxException, InterruptedException {
     // TODO: Add visibility when that's added to implicit params
-    ImmutableMap<String, AttributeHolder> params = ImmutableMap.of();
+    ImmutableMap<ParamName, AttributeHolder> params = ImmutableMap.of();
     ImmutableMap<ParamName, Object> expected =
         ImmutableMap.of(ParamName.bySnakeCase("name"), "some_rule_name");
 
@@ -311,12 +328,14 @@ public class SkylarkUserDefinedRuleTest {
   @Test
   public void usesDefaultValuesIfMissingParameter()
       throws LabelSyntaxException, InterruptedException, EvalException {
-    ImmutableMap<String, AttributeHolder> params =
+    ImmutableMap<ParamName, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
-            "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
-            "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
-            "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
+            ParamName.bySnakeCase("arg1"),
+                StringAttribute.of("some string", "", false, ImmutableList.of()),
+            ParamName.bySnakeCase("arg2"),
+                StringAttribute.of("some string", "", true, ImmutableList.of()),
+            ParamName.bySnakeCase("arg3"), IntAttribute.of(5, "", false, ImmutableList.of()),
+            ParamName.bySnakeCase("arg4"), IntAttribute.of(5, "", true, ImmutableList.of()));
     ImmutableMap<ParamName, Object> expected =
         ImmutableMap.<ParamName, Object>builder()
             .put(ParamName.bySnakeCase("name"), "some_rule_name")
@@ -362,12 +381,14 @@ public class SkylarkUserDefinedRuleTest {
   @Test
   public void raisesErrorIfMandatoryParameterMissing()
       throws LabelSyntaxException, InterruptedException, EvalException {
-    ImmutableMap<String, AttributeHolder> params =
+    ImmutableMap<ParamName, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
-            "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
-            "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
-            "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
+            ParamName.bySnakeCase("arg1"),
+                StringAttribute.of("some string", "", false, ImmutableList.of()),
+            ParamName.bySnakeCase("arg2"),
+                StringAttribute.of("some string", "", true, ImmutableList.of()),
+            ParamName.bySnakeCase("arg3"), IntAttribute.of(5, "", false, ImmutableList.of()),
+            ParamName.bySnakeCase("arg4"), IntAttribute.of(5, "", true, ImmutableList.of()));
 
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
@@ -396,49 +417,16 @@ public class SkylarkUserDefinedRuleTest {
   }
 
   @Test
-  public void raisesErrorIfInvalidCharsInArgumentNameAreProvided() throws EvalException {
-    ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of(
-            "invalid-name", StringAttribute.of("some string", "", false, ImmutableList.of()));
-
-    expectedException.expect(EvalException.class);
-    expectedException.expectMessage("Attribute name 'invalid-name' is not a valid identifier");
-    SkylarkUserDefinedRule.of(
-        location,
-        SimpleFunction.of(1),
-        TEST_IMPLICIT_ATTRIBUTES,
-        HIDDEN_IMPLICIT_ATTRIBUTES,
-        params,
-        false,
-        false);
-  }
-
-  @Test
-  public void raisesErrorIfEmptyArgumentNameIsProvided() throws EvalException {
-    ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of("", StringAttribute.of("some string", "", false, ImmutableList.of()));
-
-    expectedException.expect(EvalException.class);
-    expectedException.expectMessage("Attribute name '' is not a valid identifier");
-    SkylarkUserDefinedRule.of(
-        location,
-        SimpleFunction.of(1),
-        TEST_IMPLICIT_ATTRIBUTES,
-        HIDDEN_IMPLICIT_ATTRIBUTES,
-        params,
-        false,
-        false);
-  }
-
-  @Test
   public void createsCorrectCallable()
       throws EvalException, InterruptedException, LabelSyntaxException {
-    ImmutableMap<String, AttributeHolder> params =
+    ImmutableMap<ParamName, AttributeHolder> params =
         ImmutableMap.of(
-            "arg1", StringAttribute.of("some string", "", false, ImmutableList.of()),
-            "arg2", StringAttribute.of("some string", "", true, ImmutableList.of()),
-            "arg3", IntAttribute.of(5, "", false, ImmutableList.of()),
-            "arg4", IntAttribute.of(5, "", true, ImmutableList.of()));
+            ParamName.bySnakeCase("arg1"),
+                StringAttribute.of("some string", "", false, ImmutableList.of()),
+            ParamName.bySnakeCase("arg2"),
+                StringAttribute.of("some string", "", true, ImmutableList.of()),
+            ParamName.bySnakeCase("arg3"), IntAttribute.of(5, "", false, ImmutableList.of()),
+            ParamName.bySnakeCase("arg4"), IntAttribute.of(5, "", true, ImmutableList.of()));
     ImmutableMap<ParamName, Object> expected =
         ImmutableMap.<ParamName, Object>builder()
             .put(ParamName.bySnakeCase("name"), "some_rule_name")
@@ -494,8 +482,10 @@ public class SkylarkUserDefinedRuleTest {
   @Test
   public void returnsParamInfos() throws EvalException {
 
-    ImmutableMap<String, AttributeHolder> params =
-        ImmutableMap.of("arg1", StringAttribute.of("some string", "", false, ImmutableList.of()));
+    ImmutableMap<ParamName, AttributeHolder> params =
+        ImmutableMap.of(
+            ParamName.bySnakeCase("arg1"),
+            StringAttribute.of("some string", "", false, ImmutableList.of()));
     SkylarkUserDefinedRule rule =
         SkylarkUserDefinedRule.of(
             Location.BUILTIN,
@@ -519,6 +509,6 @@ public class SkylarkUserDefinedRuleTest {
         StringAttribute.of("", "The name of the target", true, ImmutableList.of()), name.getAttr());
 
     assertEquals("arg1", arg1.getName().getSnakeCase());
-    assertEquals(params.get("arg1").getAttribute(), arg1.getAttr());
+    assertEquals(params.get(ParamName.bySnakeCase("arg1")).getAttribute(), arg1.getAttr());
   }
 }

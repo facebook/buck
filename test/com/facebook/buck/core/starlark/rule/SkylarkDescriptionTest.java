@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.event.DefaultBuckEventBus;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.skylark.function.FakeSkylarkUserDefinedRuleFactory;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.util.timing.FakeClock;
@@ -84,10 +85,10 @@ public class SkylarkDescriptionTest {
             });
 
     SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
-    args.setPostCoercionValue("name", "a");
-    args.setPostCoercionValue("baz", "");
-    args.setPostCoercionValue("labels", ImmutableSortedSet.of());
-    args.setPostCoercionValue("licenses", ImmutableSortedSet.of());
+    args.setPostCoercionValue(ParamName.bySnakeCase("name"), "a");
+    args.setPostCoercionValue(ParamName.bySnakeCase("baz"), "");
+    args.setPostCoercionValue(ParamName.bySnakeCase("labels"), ImmutableSortedSet.of());
+    args.setPostCoercionValue(ParamName.bySnakeCase("licenses"), ImmutableSortedSet.of());
     args.build();
     ProviderInfoCollection infos = description.ruleImpl(context, target, args);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -124,10 +125,10 @@ public class SkylarkDescriptionTest {
             });
 
     SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
-    args.setPostCoercionValue("name", "a");
-    args.setPostCoercionValue("baz", "");
-    args.setPostCoercionValue("labels", ImmutableSortedSet.of());
-    args.setPostCoercionValue("licenses", ImmutableSortedSet.of());
+    args.setPostCoercionValue(ParamName.bySnakeCase("name"), "a");
+    args.setPostCoercionValue(ParamName.bySnakeCase("baz"), "");
+    args.setPostCoercionValue(ParamName.bySnakeCase("labels"), ImmutableSortedSet.of());
+    args.setPostCoercionValue(ParamName.bySnakeCase("licenses"), ImmutableSortedSet.of());
     args.build();
     ProviderInfoCollection infos = description.ruleImpl(context, target, args);
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
@@ -158,10 +159,10 @@ public class SkylarkDescriptionTest {
             });
 
     SkylarkDescriptionArg args = new SkylarkDescriptionArg(rule);
-    args.setPostCoercionValue("name", "a");
-    args.setPostCoercionValue("baz", "");
-    args.setPostCoercionValue("labels", ImmutableSortedSet.of());
-    args.setPostCoercionValue("licenses", ImmutableSortedSet.of());
+    args.setPostCoercionValue(ParamName.bySnakeCase("name"), "a");
+    args.setPostCoercionValue(ParamName.bySnakeCase("baz"), "");
+    args.setPostCoercionValue(ParamName.bySnakeCase("labels"), ImmutableSortedSet.of());
+    args.setPostCoercionValue(ParamName.bySnakeCase("licenses"), ImmutableSortedSet.of());
     args.build();
 
     assertEquals("//foo:bar.bzl:some_rule", description.getRuleName(args));

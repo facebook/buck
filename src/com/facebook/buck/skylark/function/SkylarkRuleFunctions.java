@@ -21,6 +21,7 @@ import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -48,19 +49,22 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
 
   /** The attributes that are applicable to all rules. This will expand over time. */
   // TODO: Once list attributes are added, ensure visibility exists
-  public static final ImmutableMap<String, Attribute<?>> IMPLICIT_ATTRIBUTES =
+  public static final ImmutableMap<ParamName, Attribute<?>> IMPLICIT_ATTRIBUTES =
       SkylarkRuleFunctionImplicitAttributes.compute();
 
-  public static final ImmutableMap<String, Attribute<?>> IMPLICIT_TEST_ATTRIBUTES =
+  public static final ImmutableMap<ParamName, Attribute<?>> IMPLICIT_TEST_ATTRIBUTES =
       SkylarkRuleFunctionImplicitAttributes.computeTest();
 
-  private static final ImmutableSet<String> USER_VISIBLE_IMPLICIT_ATTRIBUTES =
-      ImmutableSet.of("name", "licenses", "labels");
+  private static final ImmutableSet<ParamName> USER_VISIBLE_IMPLICIT_ATTRIBUTES =
+      ImmutableSet.of(
+          ParamName.bySnakeCase("name"),
+          ParamName.bySnakeCase("licenses"),
+          ParamName.bySnakeCase("labels"));
   /**
    * The hidden attributes from IMPLICIT_ATTRIBUTES that are hidden from user's for user defined
    * rules
    */
-  public static final Set<String> HIDDEN_IMPLICIT_ATTRIBUTES =
+  public static final Set<ParamName> HIDDEN_IMPLICIT_ATTRIBUTES =
       Sets.filter(
           IMPLICIT_ATTRIBUTES.keySet(), attr -> !USER_VISIBLE_IMPLICIT_ATTRIBUTES.contains(attr));
 
@@ -101,15 +105,22 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
       throws EvalException {
     SkylarkUtils.checkLoadingOrWorkspacePhase(env, "rule", ast.getLocation());
 
-    Map<String, AttributeHolder> checkedAttributes =
+    Map<String, AttributeHolder> attributesByString =
         attrs.getContents(String.class, AttributeHolder.class, "attrs keyword of rule()");
+    ImmutableMap.Builder<ParamName, AttributeHolder> checkedAttributes =
+        ImmutableMap.builderWithExpectedSize(attrs.size());
+
+    for (Map.Entry<String, AttributeHolder> entry : attributesByString.entrySet()) {
+      checkedAttributes.put(
+          BuckSkylarkTypes.validateKwargName(loc, entry.getKey()), entry.getValue());
+    }
 
     return SkylarkUserDefinedRule.of(
         loc,
         implementation,
         test ? IMPLICIT_TEST_ATTRIBUTES : IMPLICIT_ATTRIBUTES,
         HIDDEN_IMPLICIT_ATTRIBUTES,
-        checkedAttributes,
+        checkedAttributes.build(),
         inferRunInfo,
         test);
   }

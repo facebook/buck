@@ -27,8 +27,8 @@ import com.facebook.buck.core.starlark.rule.attr.impl.StringListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.StringSortedSetAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.UnflavoredDepListAttribute;
 import com.facebook.buck.core.starlark.rule.attr.impl.UnflavoredOptionalDepAttribute;
+import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.util.types.Pair;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -46,29 +46,29 @@ class SkylarkRuleFunctionImplicitAttributes {
 
   private SkylarkRuleFunctionImplicitAttributes() {}
 
-  private static void addCommon(ImmutableMap.Builder<String, Attribute<?>> builder) {
+  private static void addCommon(ImmutableMap.Builder<ParamName, Attribute<?>> builder) {
     // BuildRuleArg defines attributes of all build rules, native or user defined
     for (Method method : BuildRuleArg.class.getMethods()) {
-      Optional<Pair<String, Attribute<?>>> pair = methodToAttribute(method);
+      Optional<Pair<ParamName, Attribute<?>>> pair = methodToAttribute(method);
       if (pair.isPresent()) {
         builder.put(pair.get().getFirst(), pair.get().getSecond());
       }
     }
   }
 
-  static ImmutableMap<String, Attribute<?>> compute() {
-    ImmutableMap.Builder<String, Attribute<?>> attrs = ImmutableMap.builder();
+  static ImmutableMap<ParamName, Attribute<?>> compute() {
+    ImmutableMap.Builder<ParamName, Attribute<?>> attrs = ImmutableMap.builder();
     addCommon(attrs);
     return attrs.build();
   }
 
-  static ImmutableMap<String, Attribute<?>> computeTest() {
-    ImmutableMap.Builder<String, Attribute<?>> attrs = ImmutableMap.builder();
+  static ImmutableMap<ParamName, Attribute<?>> computeTest() {
+    ImmutableMap.Builder<ParamName, Attribute<?>> attrs = ImmutableMap.builder();
     addCommon(attrs);
     return attrs.build();
   }
 
-  private static Optional<Pair<String, Attribute<?>>> methodToAttribute(Method method) {
+  private static Optional<Pair<ParamName, Attribute<?>>> methodToAttribute(Method method) {
     if (method.getDeclaringClass() == Object.class) {
       // Ignore `Object` methods
       return Optional.empty();
@@ -81,14 +81,13 @@ class SkylarkRuleFunctionImplicitAttributes {
       // Not getters
       return Optional.empty();
     }
-    String name = attrName(method);
+    ParamName name = attrName(method);
     return Optional.of(new Pair<>(name, attributeFromMethodReturn(method)));
   }
 
-  private static String attrName(Method method) {
+  private static ParamName attrName(Method method) {
     Preconditions.checkState(method.getName().startsWith("get"));
-    return CaseFormat.LOWER_CAMEL.to(
-        CaseFormat.LOWER_UNDERSCORE, method.getName().substring("get".length()));
+    return ParamName.byUpperCamelCase(method.getName().substring("get".length()));
   }
 
   private static Attribute<?> attributeFromMethodReturn(Method method) {

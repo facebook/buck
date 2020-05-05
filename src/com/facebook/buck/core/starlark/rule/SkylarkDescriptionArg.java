@@ -26,6 +26,7 @@ import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgFactory;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ParamsInfo;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
 import com.google.common.base.Verify;
@@ -49,7 +50,7 @@ public class SkylarkDescriptionArg
 
   private boolean attrValuesAreMutable = true;
   private final SkylarkUserDefinedRule rule;
-  private final Map<String, Object> coercedAttrValues;
+  private final Map<ParamName, Object> coercedAttrValues;
   @Nullable private String name;
   @Nullable private ImmutableList<UnflavoredBuildTarget> compatibleWith;
   @Nullable private Optional<UnflavoredBuildTarget> defaultTargetPlatform;
@@ -66,7 +67,7 @@ public class SkylarkDescriptionArg
   }
 
   @Override
-  public void setPostCoercionValue(String attr, Object value) {
+  public void setPostCoercionValue(ParamName attr, Object value) {
     Preconditions.checkState(
         rule.getAttrs().containsKey(attr),
         "Tried to set attribute %s, but it was not one of the attributes for %s",
@@ -81,7 +82,7 @@ public class SkylarkDescriptionArg
   }
 
   @Override
-  public Object getPostCoercionValue(String attr) {
+  public Object getPostCoercionValue(ParamName attr) {
     return Preconditions.checkNotNull(
         coercedAttrValues.get(attr),
         "Tried to get value of an attribute '%s' that did not have a value set yet",
@@ -90,19 +91,22 @@ public class SkylarkDescriptionArg
 
   /**
    * 'Build' the {@link SkylarkDescriptionArg}. After this has been called, {@link
-   * #setPostCoercionValue(String, Object)} may not be called.
+   * SkylarkDescriptionArgBuilder#setPostCoercionValue(ParamName, Object)} may not be called.
    */
   @SuppressWarnings("unchecked")
   public SkylarkDescriptionArg build() {
     attrValuesAreMutable = false;
-    name = (String) Preconditions.checkNotNull(coercedAttrValues.get("name"));
+    name =
+        (String) Preconditions.checkNotNull(coercedAttrValues.get(ParamName.bySnakeCase("name")));
     compatibleWith =
         (ImmutableList<UnflavoredBuildTarget>)
             Preconditions.checkNotNull(
-                coercedAttrValues.getOrDefault("compatible_with", ImmutableList.of()));
+                coercedAttrValues.getOrDefault(
+                    ParamName.bySnakeCase("compatible_with"), ImmutableList.of()));
     defaultTargetPlatform =
         (Optional<UnflavoredBuildTarget>)
-            coercedAttrValues.getOrDefault("default_target_platform", Optional.empty());
+            coercedAttrValues.getOrDefault(
+                ParamName.bySnakeCase("default_target_platform"), Optional.empty());
     return this;
   }
 
@@ -119,10 +123,10 @@ public class SkylarkDescriptionArg
         !attrValuesAreMutable,
         "Should not get Coerced Attrs until after the DescriptionArg is frozen.");
 
-    Map<String, Object> filteredCoercedAttrs =
+    Map<ParamName, Object> filteredCoercedAttrs =
         Maps.filterKeys(
             coercedAttrValues, Predicates.not(rule.getHiddenImplicitAttributes()::contains));
-    Map<String, Attribute<?>> filteredAttrs =
+    Map<ParamName, Attribute<?>> filteredAttrs =
         Maps.filterKeys(
             rule.getAttrs(), Predicates.not(rule.getHiddenImplicitAttributes()::contains));
 
@@ -153,14 +157,15 @@ public class SkylarkDescriptionArg
   @SuppressWarnings("unchecked")
   public ImmutableSet<SourcePath> getLicenses() {
     // Unchecked as we validate this type with the Attribute
-    return ((ImmutableSortedSet<SourcePath>) getPostCoercionValue("licenses"));
+    return ((ImmutableSortedSet<SourcePath>)
+        getPostCoercionValue(ParamName.bySnakeCase("licenses")));
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public ImmutableSortedSet<String> getLabels() {
     // Unchecked as we validate this type with the Attribute
-    return (ImmutableSortedSet<String>) getPostCoercionValue("labels");
+    return (ImmutableSortedSet<String>) getPostCoercionValue(ParamName.bySnakeCase("labels"));
   }
 
   /** @return contacts for this rule, or an empty set of `contacts` was not set */
@@ -168,7 +173,7 @@ public class SkylarkDescriptionArg
   @SuppressWarnings("unchecked")
   public ImmutableSortedSet<String> getContacts() {
     // Unchecked as we validate this type with the Attribute
-    Object rawValue = getPostCoercionValue("contacts");
+    Object rawValue = getPostCoercionValue(ParamName.bySnakeCase("contacts"));
     if (rawValue == null) {
       return ImmutableSortedSet.of();
     } else {

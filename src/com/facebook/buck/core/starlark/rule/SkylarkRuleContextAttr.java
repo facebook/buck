@@ -20,12 +20,13 @@ import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
-import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
+import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableCollection;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.Printer;
@@ -54,11 +55,18 @@ public class SkylarkRuleContextAttr implements ClassObject, StarlarkValue {
    */
   private SkylarkRuleContextAttr(
       String methodName,
-      Map<String, Object> methodParameters,
-      Map<String, Attribute<?>> attributes,
+      Map<ParamName, Object> methodParameters,
+      Map<ParamName, Attribute<?>> attributes,
       RuleAnalysisContext context) {
     this.methodName = methodName;
-    this.attributes = attributes;
+    this.attributes =
+        attributes.entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(e -> e.getKey().getSnakeCase(), Map.Entry::getValue));
+    ImmutableMap<String, Object> methodParametersByString =
+        methodParameters.entrySet().stream()
+            .collect(
+                ImmutableMap.toImmutableMap(e -> e.getKey().getSnakeCase(), Map.Entry::getValue));
     this.postCoercionTransformValues =
         CacheBuilder.newBuilder()
             .build(
@@ -66,20 +74,19 @@ public class SkylarkRuleContextAttr implements ClassObject, StarlarkValue {
                   @Override
                   public Object load(String paramName) {
                     Object coercedValue =
-                        Preconditions.checkNotNull(methodParameters.get(paramName));
-                    PostCoercionTransform<RuleAnalysisContext, ?, ?> postCoercionTransform =
-                        Preconditions.checkNotNull(attributes.get(paramName))
-                            .getPostCoercionTransform();
-                    return postCoercionTransform.postCoercionTransformUnchecked(
-                        coercedValue, context);
+                        Preconditions.checkNotNull(methodParametersByString.get(paramName));
+                    return Preconditions.checkNotNull(
+                            SkylarkRuleContextAttr.this.attributes.get(paramName))
+                        .getPostCoercionTransform()
+                        .postCoercionTransformUnchecked(coercedValue, context);
                   }
                 });
   }
 
   static SkylarkRuleContextAttr of(
       String methodName,
-      Map<String, Object> methodParameters,
-      Map<String, Attribute<?>> attributes,
+      Map<ParamName, Object> methodParameters,
+      Map<ParamName, Attribute<?>> attributes,
       RuleAnalysisContext context) {
     Preconditions.checkState(
         attributes.keySet().equals(methodParameters.keySet()),

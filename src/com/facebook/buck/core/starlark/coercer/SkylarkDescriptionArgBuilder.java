@@ -16,6 +16,8 @@
 
 package com.facebook.buck.core.starlark.coercer;
 
+import com.facebook.buck.rules.param.ParamName;
+
 /**
  * Simple interface used to get and set values after they are coerced on a {@link
  * com.facebook.buck.core.starlark.rule.SkylarkDescriptionArg}.
@@ -51,15 +53,15 @@ public interface SkylarkDescriptionArgBuilder {
    * @param attr The attribute to set the value for
    * @param value The value to set. Must not be null.
    */
-  void setPostCoercionValue(String attr, Object value);
+  void setPostCoercionValue(ParamName attr, Object value);
 
   /**
-   * Get an attribute's value after it was set in {@link #setPostCoercionValue(String, Object)}
+   * Get an attribute's value after it was set in {@link #setPostCoercionValue(ParamName, Object)}
    *
    * <p>It is an error to get an attribute that has not been set.
    *
    * @param attr The attribute to get the value for
    * @return The value
    */
-  Object getPostCoercionValue(String attr);
+  Object getPostCoercionValue(ParamName attr);
 }

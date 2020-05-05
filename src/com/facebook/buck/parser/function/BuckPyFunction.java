@@ -119,17 +119,17 @@ public class BuckPyFunction {
     return stringWriter.toString();
   }
 
-  private static final ImmutableList<String> UDR_IMPLICIT_REQUIRED_ATTRIBUTES =
+  private static final ImmutableList<ParamName> UDR_IMPLICIT_REQUIRED_ATTRIBUTES =
       getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES, true);
-  private static final ImmutableList<String> UDR_IMPLICIT_OPTIONAL_ATTRIBUTES =
+  private static final ImmutableList<ParamName> UDR_IMPLICIT_OPTIONAL_ATTRIBUTES =
       getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_ATTRIBUTES, false);
-  private static final ImmutableList<String> UDR_IMPLICIT_REQUIRED_TEST_ATTRIBUTES =
+  private static final ImmutableList<ParamName> UDR_IMPLICIT_REQUIRED_TEST_ATTRIBUTES =
       getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_TEST_ATTRIBUTES, true);
-  private static final ImmutableList<String> UDR_IMPLICIT_OPTIONAL_TEST_ATTRIBUTES =
+  private static final ImmutableList<ParamName> UDR_IMPLICIT_OPTIONAL_TEST_ATTRIBUTES =
       getUdrImplicits(SkylarkRuleFunctions.IMPLICIT_TEST_ATTRIBUTES, false);
 
-  private static ImmutableList<String> getUdrImplicits(
-      ImmutableMap<String, Attribute<?>> implicitAttributes, boolean requiredParams) {
+  private static ImmutableList<ParamName> getUdrImplicits(
+      ImmutableMap<ParamName, Attribute<?>> implicitAttributes, boolean requiredParams) {
     return implicitAttributes.entrySet().stream()
         .filter(e -> e.getValue().getMandatory() == requiredParams)
         .map(Map.Entry::getKey)
