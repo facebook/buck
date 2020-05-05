@@ -27,16 +27,14 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /** Downward API event handler for {@code StepEvent} */
 enum StepEventHandler implements EventHandler<StepEvent> {
   INSTANCE;
 
-  private final Map<Integer, Started> startedEvents = new ConcurrentHashMap<>();
-
   @Override
   public void handleEvent(DownwardApiExecutionContext context, StepEvent event) {
+    Map<Integer, Started> stepStartedEvents = context.getStepStartedEvents();
     Instant timestamp = EventHandler.getTimestamp(context, event.getDuration());
     int eventId = event.getEventId();
 
@@ -44,14 +42,14 @@ enum StepEventHandler implements EventHandler<StepEvent> {
       case STARTED:
         Started startedEvent =
             started(event.getStepType(), event.getDescription(), UUID.randomUUID());
-        startedEvents.put(eventId, startedEvent);
+        stepStartedEvents.put(eventId, startedEvent);
         context.postEvent(startedEvent, timestamp);
         break;
 
       case FINISHED:
         Started started =
             Objects.requireNonNull(
-                startedEvents.remove(eventId),
+                stepStartedEvents.remove(eventId),
                 "Started step with event id: " + eventId + " is not found");
         context.postEvent(finished(started, StepExecutionResults.SUCCESS_EXIT_CODE), timestamp);
         break;

@@ -19,11 +19,19 @@ package com.facebook.buck.downwardapi.processexecutor;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
+import com.facebook.buck.event.SimplePerfEvent;
+import com.facebook.buck.step.StepEvent;
 import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Downward API execution context. */
 @BuckStyleValue
 public abstract class DownwardApiExecutionContext {
+
+  private final ConcurrentHashMap<Integer, StepEvent.Started> stepStartedEvents =
+      new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<Integer, SimplePerfEvent.Started> chromeTraceStartedEvents =
+      new ConcurrentHashMap<>();
 
   /** Returns {@code Instant} when execution started. */
   public abstract Instant getStartExecutionInstant();
@@ -31,6 +39,14 @@ public abstract class DownwardApiExecutionContext {
   abstract BuckEventBus getBuckEventBus();
 
   abstract long getInvokingThreadId();
+
+  public ConcurrentHashMap<Integer, SimplePerfEvent.Started> getChromeTraceStartedEvents() {
+    return chromeTraceStartedEvents;
+  }
+
+  public ConcurrentHashMap<Integer, StepEvent.Started> getStepStartedEvents() {
+    return stepStartedEvents;
+  }
 
   /** Posts events into buck event bus. */
   public final void postEvent(BuckEvent event) {

@@ -25,17 +25,16 @@ import com.google.common.collect.ImmutableMap;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 /** Downward API event handler for {@code ChromeTraceEvent} */
 enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
   INSTANCE;
 
-  private final Map<Integer, SimplePerfEvent.Started> startedEvents = new ConcurrentHashMap<>();
-
   @Override
   public void handleEvent(DownwardApiExecutionContext context, ChromeTraceEvent event) {
     Instant timestamp = EventHandler.getTimestamp(context, event.getDuration());
+    Map<Integer, SimplePerfEvent.Started> chromeTraceStartedEvents =
+        context.getChromeTraceStartedEvents();
 
     ImmutableMap<String, Object> attributes =
         ImmutableMap.<String, Object>builder().putAll(event.getDataMap()).build();
@@ -46,14 +45,14 @@ enum ChromeTraceEventHandler implements EventHandler<ChromeTraceEvent> {
       case BEGIN:
         PerfEventId perfEventId = PerfEventId.of(String.valueOf(eventId));
         started = SimplePerfEvent.started(perfEventId, event.getCategory(), attributes);
-        startedEvents.put(eventId, started);
+        chromeTraceStartedEvents.put(eventId, started);
         context.postEvent(started, timestamp);
         break;
 
       case END:
         started =
             Objects.requireNonNull(
-                startedEvents.remove(eventId),
+                chromeTraceStartedEvents.remove(eventId),
                 "Started chrome trace event for event id: " + eventId + " is not found");
         BuckEvent finishedEvent = started.createFinishedEvent(attributes);
         context.postEvent(finishedEvent, timestamp);
