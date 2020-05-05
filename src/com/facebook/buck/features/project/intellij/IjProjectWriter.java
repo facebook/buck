@@ -153,7 +153,7 @@ public class IjProjectWriter {
                         targetInfo.put(INTELLIJ_NAME, module.getName());
                         targetInfo.put(
                             INTELLIJ_FILE_PATH,
-                            projectPaths.getModuleImlFilePath(module).toString());
+                            projectPaths.getModuleImlFilePath(module, projectConfig).toString());
                         targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
                         if (targetsToGeneratedSourcesMap.containsKey(target)) {
                           targetInfo.put(
@@ -181,7 +181,7 @@ public class IjProjectWriter {
                         targetInfo.put(INTELLIJ_NAME, library.getName());
                         targetInfo.put(
                             INTELLIJ_FILE_PATH,
-                            projectPaths.getLibraryXmlFilePath(library).toString());
+                            projectPaths.getLibraryXmlFilePath(library, projectConfig).toString());
                         targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
                         targetInfoMap.put(target.getFullyQualifiedName(), targetInfo);
                       });
@@ -235,7 +235,7 @@ public class IjProjectWriter {
             .map((dir) -> getUrl(projectPaths.getModuleQualifiedPath(dir, module)))
             .orElse(null));
 
-    return writeTemplate(moduleContents, projectPaths.getModuleImlFilePath(module));
+    return writeTemplate(moduleContents, projectPaths.getModuleImlFilePath(module, projectConfig));
   }
 
   private void writeProjectSettings() throws IOException {
@@ -308,7 +308,7 @@ public class IjProjectWriter {
     contents.add("javadocUrls", library.getJavadocUrls());
     // TODO(mkosiba): support res and assets for aar.
 
-    Path path = projectPaths.getLibraryXmlFilePath(library);
+    Path path = projectPaths.getLibraryXmlFilePath(library, projectConfig);
     writeTemplate(contents, path);
   }
 
@@ -394,7 +394,7 @@ public class IjProjectWriter {
             .collect(ImmutableSet.toImmutableSet());
     ImmutableSet<Path> remainingModuleFilepaths =
         modulesEdited.stream()
-            .map(projectPaths::getModuleImlFilePath)
+            .map(module -> projectPaths.getModuleImlFilePath(module, projectConfig))
             .map(PathFormatter::pathWithUnixSeparators)
             .map(Paths::get)
             .filter(modulePath -> !existingModuleFilepaths.contains(modulePath))

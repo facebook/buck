@@ -119,6 +119,10 @@ public abstract class IjProjectConfig {
 
   public abstract boolean isGeneratingDummyRDotJavaEnabled();
 
+  public abstract int getMaxModuleNameLengthBeforeTruncate();
+
+  public abstract int getMaxLibraryNameLengthBeforeTruncate();
+
   public abstract Optional<Path> getKotlinJavaRuntimeLibraryTemplatePath();
 
   public static Builder builder() {

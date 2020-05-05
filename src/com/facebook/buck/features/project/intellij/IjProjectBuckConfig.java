@@ -33,6 +33,10 @@ public class IjProjectBuckConfig {
 
   private static final String PROJECT_BUCK_CONFIG_SECTION = "project";
   private static final String INTELLIJ_BUCK_CONFIG_SECTION = "intellij";
+  // As a default value, 200 is large enough but not so close to file system's limit of the length
+  // of a file name (255) thus we don't have to worry about doing careful boundary checks
+  private static final int DEFAULT_MAX_MODULE_NAME_LENGTH = 200;
+  private static final int DEFAULT_MAX_LIBRARY_NAME_LENGTH = 200;
 
   private IjProjectBuckConfig() {}
 
@@ -165,6 +169,14 @@ public class IjProjectBuckConfig {
         .setGeneratingDummyRDotJavaEnabled(
             buckConfig.getBooleanValue(
                 INTELLIJ_BUCK_CONFIG_SECTION, "generate_dummy_r_dot_java", true))
+        .setMaxModuleNameLengthBeforeTruncate(
+            buckConfig
+                .getInteger(INTELLIJ_BUCK_CONFIG_SECTION, "max_module_name_length_before_truncate")
+                .orElse(DEFAULT_MAX_MODULE_NAME_LENGTH))
+        .setMaxLibraryNameLengthBeforeTruncate(
+            buckConfig
+                .getInteger(INTELLIJ_BUCK_CONFIG_SECTION, "max_library_name_length_before_truncate")
+                .orElse(DEFAULT_MAX_LIBRARY_NAME_LENGTH))
         .setKotlinJavaRuntimeLibraryTemplatePath(
             buckConfig.getPath(
                 INTELLIJ_BUCK_CONFIG_SECTION, "kotlin_java_runtime_library_template_path"));

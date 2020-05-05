@@ -18,12 +18,18 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.features.project.intellij.model.IjLibrary;
 import com.facebook.buck.features.project.intellij.model.IjModule;
+import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.pathformat.PathFormatter;
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class IjProjectPaths {
+  private static final HashFunction hashFunction = Hashing.murmur3_32();
   private final Path projectRootPath;
   private final Path ideaConfigDir;
   private final Path librariesDir;
@@ -49,9 +55,22 @@ public class IjProjectPaths {
     return librariesDir;
   }
 
+  private static String truncateNameWithHash(String name, int length) {
+    length = Math.max(length, 0);
+    if (name.length() > length) {
+      HashCode hashCode = hashFunction.hashString(name, StandardCharsets.UTF_8);
+      return name.substring(0, length) + "_" + hashCode;
+    }
+    return name;
+  }
+
   /** @return path where the XML describing the module to IntelliJ will be written to. */
-  public Path getModuleImlFilePath(IjModule module) {
-    return getModuleDir(module).resolve(module.getName() + ".iml");
+  public Path getModuleImlFilePath(IjModule module, IjProjectConfig projectConfig) {
+    return getModuleDir(module)
+        .resolve(
+            truncateNameWithHash(
+                    module.getName(), projectConfig.getMaxModuleNameLengthBeforeTruncate())
+                + ".iml");
   }
 
   /** @return the directory containing the modules .iml file, $MODULE_DIR$ points to this. */
@@ -75,8 +94,13 @@ public class IjProjectPaths {
   }
 
   /** @return path where the XML describing the IntelliJ library will be written to. */
-  public Path getLibraryXmlFilePath(IjLibrary library) {
-    return getLibrariesDir().resolve(Util.normalizeIntelliJName(library.getName()) + ".xml");
+  public Path getLibraryXmlFilePath(IjLibrary library, IjProjectConfig projectConfig) {
+    return getLibrariesDir()
+        .resolve(
+            truncateNameWithHash(
+                    Util.normalizeIntelliJName(library.getName()),
+                    projectConfig.getMaxLibraryNameLengthBeforeTruncate())
+                + ".xml");
   }
 
   /**

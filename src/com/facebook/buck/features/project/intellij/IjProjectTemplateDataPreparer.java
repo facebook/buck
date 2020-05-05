@@ -327,7 +327,7 @@ public class IjProjectTemplateDataPreparer {
     return modulesToBeWritten.stream()
         .map(
             module -> {
-              Path moduleOutputFilePath = projectPaths.getModuleImlFilePath(module);
+              Path moduleOutputFilePath = projectPaths.getModuleImlFilePath(module, projectConfig);
               String fileUrl = getUrl(projectPaths.getProjectQualifiedPath(moduleOutputFilePath));
               Path moduleOutputFileRelativePath =
                   projectPaths.getProjectRelativePath(moduleOutputFilePath);

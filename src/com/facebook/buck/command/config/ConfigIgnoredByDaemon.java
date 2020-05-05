@@ -73,6 +73,8 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
             "auto_generate_android_facet_sources",
             "multi_cell_module_support",
             "keep_module_files_in_module_dirs",
+            "max_module_name_length_before_truncate",
+            "max_library_name_length_before_truncate",
             "kotlin_java_runtime_library_template_path"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "log",
