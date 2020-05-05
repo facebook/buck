@@ -23,8 +23,8 @@ import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.ParamsInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
-import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
@@ -162,11 +162,11 @@ public class RuleFunctionFactory {
 
     for (Map.Entry<String, Object> kwargEntry : kwargs.entrySet()) {
       ParamName paramName = ParamName.bySnakeCase(kwargEntry.getKey());
-      if (kwargEntry.getKey().equals(VisibilityAttributes.VISIBILITY.getSnakeCase())) {
+      if (kwargEntry.getKey().equals(CommonParamNames.VISIBILITY.getSnakeCase())) {
         visibility = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
         continue;
       }
-      if (kwargEntry.getKey().equals(VisibilityAttributes.WITHIN_VIEW.getSnakeCase())) {
+      if (kwargEntry.getKey().equals(CommonParamNames.WITHIN_VIEW.getSnakeCase())) {
         withinView = toListOfString(kwargEntry.getKey(), kwargEntry.getValue());
         continue;
       }

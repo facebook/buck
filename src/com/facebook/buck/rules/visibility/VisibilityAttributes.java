@@ -16,16 +16,8 @@
 
 package com.facebook.buck.rules.visibility;
 
-import com.facebook.buck.rules.param.ParamName;
-
 /** Attributes pertaining to visibility evaluation. */
 public class VisibilityAttributes {
-
-  public static final String VISIBILITY_NAME = "visibility";
-  public static final String WITHIN_VIEW_NAME = "within_view";
-
-  public static final ParamName VISIBILITY = ParamName.bySnakeCase(VISIBILITY_NAME);
-  public static final ParamName WITHIN_VIEW = ParamName.bySnakeCase(WITHIN_VIEW_NAME);
 
   /** Prevent initialization */
   private VisibilityAttributes() {}

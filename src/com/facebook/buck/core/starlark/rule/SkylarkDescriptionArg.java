@@ -26,6 +26,7 @@ import com.facebook.buck.core.starlark.coercer.SkylarkDescriptionArgFactory;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ParamsInfo;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicates;
@@ -96,17 +97,16 @@ public class SkylarkDescriptionArg
   @SuppressWarnings("unchecked")
   public SkylarkDescriptionArg build() {
     attrValuesAreMutable = false;
-    name =
-        (String) Preconditions.checkNotNull(coercedAttrValues.get(ParamName.bySnakeCase("name")));
+    name = (String) Preconditions.checkNotNull(coercedAttrValues.get(CommonParamNames.NAME));
     compatibleWith =
         (ImmutableList<UnflavoredBuildTarget>)
             Preconditions.checkNotNull(
                 coercedAttrValues.getOrDefault(
-                    ParamName.bySnakeCase("compatible_with"), ImmutableList.of()));
+                    CommonParamNames.COMPATIBLE_WITH, ImmutableList.of()));
     defaultTargetPlatform =
         (Optional<UnflavoredBuildTarget>)
             coercedAttrValues.getOrDefault(
-                ParamName.bySnakeCase("default_target_platform"), Optional.empty());
+                CommonParamNames.DEFAULT_TARGET_PLATFORM, Optional.empty());
     return this;
   }
 
@@ -157,15 +157,14 @@ public class SkylarkDescriptionArg
   @SuppressWarnings("unchecked")
   public ImmutableSet<SourcePath> getLicenses() {
     // Unchecked as we validate this type with the Attribute
-    return ((ImmutableSortedSet<SourcePath>)
-        getPostCoercionValue(ParamName.bySnakeCase("licenses")));
+    return ((ImmutableSortedSet<SourcePath>) getPostCoercionValue(CommonParamNames.LICENSES));
   }
 
   @Override
   @SuppressWarnings("unchecked")
   public ImmutableSortedSet<String> getLabels() {
     // Unchecked as we validate this type with the Attribute
-    return (ImmutableSortedSet<String>) getPostCoercionValue(ParamName.bySnakeCase("labels"));
+    return (ImmutableSortedSet<String>) getPostCoercionValue(CommonParamNames.LABELS);
   }
 
   /** @return contacts for this rule, or an empty set of `contacts` was not set */
@@ -173,7 +172,7 @@ public class SkylarkDescriptionArg
   @SuppressWarnings("unchecked")
   public ImmutableSortedSet<String> getContacts() {
     // Unchecked as we validate this type with the Attribute
-    Object rawValue = getPostCoercionValue(ParamName.bySnakeCase("contacts"));
+    Object rawValue = getPostCoercionValue(CommonParamNames.CONTACTS);
     if (rawValue == null) {
       return ImmutableSortedSet.of();
     } else {

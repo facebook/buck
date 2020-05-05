@@ -21,6 +21,7 @@ import com.facebook.buck.core.starlark.compatible.BuckSkylarkTypes;
 import com.facebook.buck.core.starlark.rule.SkylarkUserDefinedRule;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
@@ -56,10 +57,7 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
       SkylarkRuleFunctionImplicitAttributes.computeTest();
 
   private static final ImmutableSet<ParamName> USER_VISIBLE_IMPLICIT_ATTRIBUTES =
-      ImmutableSet.of(
-          ParamName.bySnakeCase("name"),
-          ParamName.bySnakeCase("licenses"),
-          ParamName.bySnakeCase("labels"));
+      ImmutableSet.of(CommonParamNames.NAME, CommonParamNames.LICENSES, CommonParamNames.LABELS);
   /**
    * The hidden attributes from IMPLICIT_ATTRIBUTES that are hidden from user's for user defined
    * rules

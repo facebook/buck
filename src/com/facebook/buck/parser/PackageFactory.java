@@ -19,7 +19,7 @@ package com.facebook.buck.parser;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.model.targetgraph.impl.Package;
 import com.facebook.buck.parser.api.PackageMetadata;
-import com.facebook.buck.rules.visibility.VisibilityAttributes;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.google.common.collect.ImmutableSet;
@@ -53,7 +53,7 @@ public class PackageFactory {
     visibilityBuilder.addAll(
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            VisibilityAttributes.VISIBILITY.getSnakeCase(),
+            CommonParamNames.VISIBILITY.getSnakeCase(),
             rawPackage.getVisibility(),
             packageFile,
             () -> visibilityDefinerDescription));
@@ -61,7 +61,7 @@ public class PackageFactory {
     withinViewBuilder.addAll(
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            VisibilityAttributes.WITHIN_VIEW.getSnakeCase(),
+            CommonParamNames.WITHIN_VIEW.getSnakeCase(),
             rawPackage.getWithinView(),
             packageFile,
             () -> visibilityDefinerDescription));

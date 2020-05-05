@@ -22,7 +22,7 @@ import com.facebook.buck.core.model.UnflavoredBuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.parser.api.RawTargetNode;
-import com.facebook.buck.rules.param.ParamName;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.google.common.base.Joiner;
 import java.nio.file.Path;
 import javax.annotation.Nullable;
@@ -40,7 +40,7 @@ public class UnflavoredBuildTargetFactory {
   public static UnflavoredBuildTarget createFromRawNode(
       Path cellRoot, CanonicalCellName cellName, RawTargetNode map, Path buildFilePath) {
     ForwardRelativePath basePath = map.getBasePath();
-    @Nullable String name = (String) map.get(ParamName.bySnakeCase("name"));
+    @Nullable String name = (String) map.get(CommonParamNames.NAME);
     if (name == null) {
       throw new IllegalStateException(
           String.format(

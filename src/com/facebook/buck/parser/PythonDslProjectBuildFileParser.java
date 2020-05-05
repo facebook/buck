@@ -46,8 +46,8 @@ import com.facebook.buck.parser.options.UserDefinedRulesState;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
-import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.io.GlobSpecWithResult;
 import com.facebook.buck.util.InputStreamConsumer;
 import com.facebook.buck.util.MoreSuppliers;
@@ -558,10 +558,10 @@ public class PythonDslProjectBuildFileParser implements ProjectBuildFileParser {
         case InternalTargetAttributeNames.BUCK_TYPE:
           type = (String) entry.getValue();
           break;
-        case VisibilityAttributes.VISIBILITY_NAME:
+        case CommonParamNames.VISIBILITY_NAME:
           visibility = (ImmutableList<String>) entry.getValue();
           break;
-        case VisibilityAttributes.WITHIN_VIEW_NAME:
+        case CommonParamNames.WITHIN_VIEW_NAME:
           withinView = (ImmutableList<String>) entry.getValue();
           break;
         default:

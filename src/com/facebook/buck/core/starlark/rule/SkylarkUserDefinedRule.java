@@ -22,8 +22,8 @@ import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.core.starlark.rule.attr.AttributeHolder;
 import com.facebook.buck.core.starlark.rule.names.UserDefinedRuleNames;
 import com.facebook.buck.rules.coercer.ParamsInfo;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
-import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
@@ -127,9 +127,9 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
      */
     int i = 0;
     for (String name : names) {
-      if (name.equals(VisibilityAttributes.VISIBILITY.getSnakeCase())) {
+      if (name.equals(CommonParamNames.VISIBILITY.getSnakeCase())) {
         visibility = (ImmutableList<String>) args[i];
-      } else if (name.equals(VisibilityAttributes.WITHIN_VIEW.getSnakeCase())) {
+      } else if (name.equals(CommonParamNames.WITHIN_VIEW.getSnakeCase())) {
         withinView = (ImmutableList<String>) args[i];
       } else {
         builder.put(ParamName.bySnakeCase(name), args[i]);

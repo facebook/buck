@@ -26,8 +26,8 @@ import com.facebook.buck.parser.api.RawTargetNode;
 import com.facebook.buck.parser.syntax.ListWithSelects;
 import com.facebook.buck.parser.syntax.SelectorValue;
 import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
-import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.Escaper;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
@@ -68,9 +68,7 @@ public class AuditRulesCommand extends AbstractCommand {
   /** Properties that should be listed last in the declaration of a build rule. */
   private static final ImmutableSet<ParamName> LAST_PROPERTIES =
       ImmutableSet.of(
-          ParamName.bySnakeCase("deps"),
-          VisibilityAttributes.VISIBILITY,
-          VisibilityAttributes.WITHIN_VIEW);
+          CommonParamNames.DEPS, CommonParamNames.VISIBILITY, CommonParamNames.WITHIN_VIEW);
 
   @Option(
       name = "--type",
@@ -176,7 +174,7 @@ public class AuditRulesCommand extends AbstractCommand {
     LinkedHashSet<ParamName> properties = new LinkedHashSet<>();
 
     // Always display the "name" property first.
-    properties.add(ParamName.bySnakeCase("name"));
+    properties.add(CommonParamNames.NAME);
 
     // Add the properties specific to the rule.
     SortedSet<ParamName> customProperties = new TreeSet<>();

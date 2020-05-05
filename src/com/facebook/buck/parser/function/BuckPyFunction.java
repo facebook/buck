@@ -22,8 +22,8 @@ import com.facebook.buck.core.model.RuleType;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
-import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.facebook.buck.util.MoreSuppliers;
 import com.google.common.collect.ImmutableList;
@@ -94,8 +94,8 @@ public class BuckPyFunction {
       }
     }
 
-    optional.add(StParamInfo.ofOptionalValue(VisibilityAttributes.VISIBILITY));
-    optional.add(StParamInfo.ofOptionalValue(VisibilityAttributes.WITHIN_VIEW));
+    optional.add(StParamInfo.ofOptionalValue(CommonParamNames.VISIBILITY));
+    optional.add(StParamInfo.ofOptionalValue(CommonParamNames.WITHIN_VIEW));
 
     STGroup group = buckPyFunctionTemplate.get();
     ST st;
@@ -172,12 +172,12 @@ public class BuckPyFunction {
       return true;
     }
 
-    if (VisibilityAttributes.VISIBILITY.equals(param.getName())) {
+    if (CommonParamNames.VISIBILITY.equals(param.getName())) {
       throw new HumanReadableException(
           "'visibility' parameter must be omitted. It will be passed to the rule at run time.");
     }
 
-    if (VisibilityAttributes.WITHIN_VIEW.equals(param.getName())) {
+    if (CommonParamNames.WITHIN_VIEW.equals(param.getName())) {
       throw new HumanReadableException(
           "'within_view' parameter must be omitted. It will be passed to the rule at run time.");
     }

@@ -41,8 +41,8 @@ import com.facebook.buck.rules.coercer.DataTransferObjectDescriptor;
 import com.facebook.buck.rules.coercer.ParamInfo;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
-import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.rules.visibility.parser.VisibilityPatterns;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
@@ -179,7 +179,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     ImmutableSet<VisibilityPattern> visibilityPatterns =
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            VisibilityAttributes.VISIBILITY.getSnakeCase(),
+            CommonParamNames.VISIBILITY.getSnakeCase(),
             rawAttributes.getVisibility(),
             buildFile.getPath(),
             target::getFullyQualifiedName);
@@ -191,7 +191,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
     ImmutableSet<VisibilityPattern> withinViewPatterns =
         VisibilityPatterns.createFromStringList(
             cell.getCellPathResolver(),
-            VisibilityAttributes.WITHIN_VIEW.getSnakeCase(),
+            CommonParamNames.WITHIN_VIEW.getSnakeCase(),
             rawAttributes.getWithinView(),
             buildFile.getPath(),
             target::getFullyQualifiedName);
@@ -210,8 +210,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
             dependencyStack);
 
     Optional<UnflavoredBuildTarget> defaultTargetPlatform = Optional.empty();
-    Object rawDefaultTargetPlatform =
-        rawAttributes.get(ParamName.bySnakeCase("default_target_platform"));
+    Object rawDefaultTargetPlatform = rawAttributes.get(CommonParamNames.DEFAULT_TARGET_PLATFORM);
     // TODO(nga): old rules vs UDR rules mess
     if (rawDefaultTargetPlatform != null
         && !rawDefaultTargetPlatform.equals("")
@@ -235,8 +234,7 @@ public class DefaultUnconfiguredTargetNodeFactory implements UnconfiguredTargetN
 
     ImmutableList<UnflavoredBuildTarget> compatibleWith = ImmutableList.of();
 
-    Object rawCompatibleWith =
-        rawAttributes.getAttrs().get(ParamName.bySnakeCase("compatible_with"));
+    Object rawCompatibleWith = rawAttributes.getAttrs().get(CommonParamNames.COMPATIBLE_WITH);
     if (rawCompatibleWith != null) {
       try {
         compatibleWith =

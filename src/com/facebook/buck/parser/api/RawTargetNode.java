@@ -18,8 +18,8 @@ package com.facebook.buck.parser.api;
 
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
-import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -47,10 +47,10 @@ public abstract class RawTargetNode {
       builder.put(attr.getKey(), attr.getValue());
     }
     if (!getVisibility().isEmpty()) {
-      builder.put(VisibilityAttributes.VISIBILITY, getVisibility());
+      builder.put(CommonParamNames.VISIBILITY, getVisibility());
     }
     if (!getWithinView().isEmpty()) {
-      builder.put(VisibilityAttributes.WITHIN_VIEW, getWithinView());
+      builder.put(CommonParamNames.WITHIN_VIEW, getWithinView());
     }
     return builder.build();
   }

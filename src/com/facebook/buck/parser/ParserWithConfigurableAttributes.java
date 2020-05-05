@@ -47,10 +47,10 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercer;
 import com.facebook.buck.rules.coercer.concat.JsonTypeConcatenatingCoercerFactory;
 import com.facebook.buck.rules.coercer.concat.SingleElementJsonTypeConcatenatingCoercer;
+import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.rules.param.SpecialAttr;
-import com.facebook.buck.rules.visibility.VisibilityAttributes;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -208,7 +208,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             .map(visibilityPattern -> visibilityPattern.getRepresentation())
             .collect(ImmutableList.toImmutableList());
     if (!computedVisibility.isEmpty()) {
-      convertedAttributes.put(VisibilityAttributes.VISIBILITY, computedVisibility);
+      convertedAttributes.put(CommonParamNames.VISIBILITY, computedVisibility);
     }
 
     List<String> computedWithinView =
@@ -216,7 +216,7 @@ class ParserWithConfigurableAttributes extends AbstractParser {
             .map(visibilityPattern -> visibilityPattern.getRepresentation())
             .collect(ImmutableList.toImmutableList());
     if (!computedWithinView.isEmpty()) {
-      convertedAttributes.put(VisibilityAttributes.WITHIN_VIEW, computedWithinView);
+      convertedAttributes.put(CommonParamNames.WITHIN_VIEW, computedWithinView);
     }
 
     return convertedAttributes;
