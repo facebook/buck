@@ -106,7 +106,7 @@ class StubJarClassEntry extends StubJarEntry {
 
     // The synthetic package-info class is how package annotations are recorded; that one is
     // actually used by the compiler
-    if (!isAnonymousOrLocalOrSyntheticClass(stub)
+    if (!((isSyntheticClass(stub) && !isKotlinModule) || isAnonymousOrLocalClass(stub))
         || retainAllMethodBodies
         || stub.name.endsWith("/package-info")) {
       return new StubJarClassEntry(
@@ -152,11 +152,14 @@ class StubJarClassEntry extends StubJarEntry {
     return new ByteArrayInputStream(writer.toByteArray());
   }
 
-  private static boolean isAnonymousOrLocalOrSyntheticClass(ClassNode node) {
+  private static boolean isSyntheticClass(ClassNode node) {
     if ((node.access & Opcodes.ACC_SYNTHETIC) == Opcodes.ACC_SYNTHETIC) {
       return true;
     }
+    return false;
+  }
 
+  private static boolean isAnonymousOrLocalClass(ClassNode node) {
     InnerClassNode innerClass = getInnerClassMetadata(node);
     while (innerClass != null) {
       if (innerClass.outerName == null) {
