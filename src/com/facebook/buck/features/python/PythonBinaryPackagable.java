@@ -63,8 +63,7 @@ abstract class PythonBinaryPackagable implements PythonPackagable {
                                 Maps.filterKeys(
                                     components.getComponents(),
                                     dst ->
-                                        MorePaths.getFileExtension(dst)
-                                            .equals(PythonUtil.SOURCE_EXT))))))
+                                        PythonUtil.isSourceExt(MorePaths.getFileExtension(dst)))))))
         .orElseGet(Optional::empty);
   }
 

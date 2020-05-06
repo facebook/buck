@@ -78,7 +78,6 @@ import java.util.stream.Collectors;
 public class PythonUtil {
 
   static final String SOURCE_EXT = "py";
-  static final String NATIVE_EXTENSION_EXT = "so";
 
   static final String INIT_PY = "__init__.py";
 
@@ -92,8 +91,16 @@ public class PythonUtil {
 
   private PythonUtil() {}
 
+  public static boolean isNativeExt(String ext) {
+    return ext.equals("so") || ext.equals("dll") || ext.equals("pyd");
+  }
+
+  public static boolean isSourceExt(String ext) {
+    return ext.equals(SOURCE_EXT);
+  }
+
   public static boolean isModuleExt(String ext) {
-    return ext.equals(NATIVE_EXTENSION_EXT) || ext.equals(SOURCE_EXT);
+    return isNativeExt(ext) || isSourceExt(ext);
   }
 
   public static ImmutableList<BuildTarget> getDeps(
@@ -191,7 +198,7 @@ public class PythonUtil {
         versions,
         args,
         (name, src) -> {
-          if (MorePaths.getFileExtension(name).equals(SOURCE_EXT)) {
+          if (isSourceExt(MorePaths.getFileExtension(name))) {
             builder.put(name, src);
           }
         });

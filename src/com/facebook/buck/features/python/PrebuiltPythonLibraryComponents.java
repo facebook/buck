@@ -59,13 +59,11 @@ abstract class PrebuiltPythonLibraryComponents implements PythonComponents {
     String extension = MorePaths.getFileExtension(path);
     switch (type) {
       case MODULES:
-        return extension.equals(PythonUtil.SOURCE_EXT)
-            || extension.equals(PythonUtil.NATIVE_EXTENSION_EXT);
+        return PythonUtil.isModuleExt(extension);
       case SOURCES:
-        return extension.equals(PythonUtil.SOURCE_EXT);
+        return PythonUtil.isSourceExt(extension);
       case RESOURCES:
-        return !extension.equals(PythonUtil.SOURCE_EXT)
-            && !extension.equals(PythonUtil.NATIVE_EXTENSION_EXT);
+        return !PythonUtil.isModuleExt(extension);
     }
     throw new IllegalStateException();
   }

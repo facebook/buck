@@ -154,7 +154,7 @@ public class PythonLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps
             .map(PythonMappedComponents::getComponents)
             .orElse(ImmutableSortedMap.of())
             .keySet()) {
-      if (MorePaths.getFileExtension(module).equals(PythonUtil.NATIVE_EXTENSION_EXT)) {
+      if (PythonUtil.isNativeExt(MorePaths.getFileExtension(module))) {
         return true;
       }
     }
