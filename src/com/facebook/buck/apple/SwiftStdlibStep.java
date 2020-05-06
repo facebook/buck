@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -58,6 +59,7 @@ class SwiftStdlibStep implements Step {
   private final Iterable<Path> additionalFoldersToScan;
 
   private final Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier;
+  private final boolean sliceArchitectures;
 
   public SwiftStdlibStep(
       AbsPath workingDirectory,
@@ -68,7 +70,8 @@ class SwiftStdlibStep implements Step {
       Iterable<String> lipoCommandPrefix,
       Path binaryPathToScan,
       Iterable<Path> additionalFoldersToScan,
-      Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier) {
+      Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
+      boolean sliceArchitectures) {
     this.workingDirectory = workingDirectory;
     this.sdkPath = sdkPath;
     this.destinationDirectory = workingDirectory.resolve(destinationDirectory);
@@ -78,6 +81,7 @@ class SwiftStdlibStep implements Step {
     this.binaryPathToScan = binaryPathToScan;
     this.additionalFoldersToScan = additionalFoldersToScan;
     this.codeSignIdentitySupplier = codeSignIdentitySupplier;
+    this.sliceArchitectures = sliceArchitectures;
   }
 
   @Override
@@ -171,8 +175,22 @@ class SwiftStdlibStep implements Step {
 
       Files.createDirectories(destinationDirectory.getPath());
 
-      return sliceAndCopyRuntimeDylibs(context, executor, libs);
+      if (sliceArchitectures) {
+        return sliceAndCopyRuntimeDylibs(context, executor, libs);
+      }
+      return copyUnmodifiedRuntimeDylibs(libs);
     }
+  }
+
+  private StepExecutionResult copyUnmodifiedRuntimeDylibs(ImmutableList<Path> libs)
+      throws IOException {
+    Path destDir = destinationDirectory.getPath();
+    for (Path libPath : libs) {
+      Path destLibpath = destDir.resolve(libPath.getFileName());
+      Files.move(libPath, destLibpath, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    return StepExecutionResults.SUCCESS;
   }
 
   private StepExecutionResult sliceAndCopyRuntimeDylibs(

@@ -249,7 +249,8 @@ public class AppleResourceProcessing {
               ImmutableSet.of(
                   bundleRoot.resolve(destinations.getFrameworksPath()),
                   bundleRoot.resolve(destinations.getPlugInsPath())),
-              codeSignIdentitySupplier));
+              codeSignIdentitySupplier,
+              true));
     }
   }
 
