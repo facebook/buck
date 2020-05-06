@@ -650,10 +650,13 @@ public class AppleCxxPlatforms {
     // with -sdk_version (which Buck passes), we should only be passing -sdk_version if we
     // believe the driver will not pass it.
     // https://reviews.llvm.org/rG25ce33a6e4f3b13732c0f851e68390dc2acb9123
+    // However, Xcode 11.3.1's toolchain (with linker version ld64-530) does not handle not having
+    // the sdk_version properly (determining the target SDK improperly, etc) so we do this for
+    // 11.4.1 where it is warning that is treated as an error when fatal_warnings is enabled.
     Optional<Double> ldVersion =
         getLdVersion(filesystem, xcodeToolFinder, toolSearchPaths, version);
     if (ldVersion.isPresent()) {
-      return ldVersion.get() < 520;
+      return ldVersion.get() < 556.6;
     }
     return true;
   }
