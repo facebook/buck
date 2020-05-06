@@ -171,69 +171,77 @@ class SwiftStdlibStep implements Step {
 
       Files.createDirectories(destinationDirectory.getPath());
 
-      // Get needed archs from the binary.
-      params = makeProcessExecutorParams(context, getArchsCommand(binaryPathToScan));
-      LOG.debug("%s", params.getCommand());
+      return sliceAndCopyRuntimeDylibs(context, executor, libs);
+    }
+  }
+
+  private StepExecutionResult sliceAndCopyRuntimeDylibs(
+      ExecutionContext context, ProcessExecutor executor, ImmutableList<Path> libs)
+      throws IOException, InterruptedException {
+    // Get needed archs from the binary.
+    ProcessExecutorParams params =
+        makeProcessExecutorParams(context, getArchsCommand(binaryPathToScan));
+    LOG.debug("%s", params.getCommand());
+    Result result = executor.launchAndExecute(params);
+    if (result.getExitCode() != 0) {
+      LOG.error("Error running %s: %s", params.getCommand(), result.getStderr());
+      return StepExecutionResult.of(result);
+    }
+
+    String[] archs = result.getStdout().orElse("").trim().split(" ");
+    LOG.debug("Binary archs are %s", archs.toString());
+
+    if (archs.length < 1) {
+      LOG.error("Unable to get binary archs");
+      return StepExecutionResults.ERROR;
+    }
+
+    // For each library, copy only the needed arch slices to the destination.
+    // This is done by:
+    // 1. Extract the needed slices into the temp path
+    // 2. Combine them into a new library in the destination path
+    ImmutableList.Builder<ProcessExecutorParams> lipoCommands = ImmutableList.builder();
+    for (Path lib : libs) {
+      // For each lib, check to see if it's a universal binary and can actually extract slices.
+      // Attempting to extract from a binary with only one arch will error,
+      // so we just copy it instead.
+      params = makeProcessExecutorParams(context, getArchsCommand(lib));
       result = executor.launchAndExecute(params);
       if (result.getExitCode() != 0) {
         LOG.error("Error running %s: %s", params.getCommand(), result.getStderr());
         return StepExecutionResult.of(result);
       }
 
-      String[] archs = result.getStdout().orElse("").trim().split(" ");
-      LOG.debug("Binary archs are %s", archs.toString());
+      String[] libArchs = result.getStdout().orElse("").trim().split(" ");
+      LOG.debug("Library %s archs are %s", lib, libArchs.toString());
 
-      if (archs.length < 1) {
+      if (libArchs.length < 1) {
         LOG.error("Unable to get binary archs");
         return StepExecutionResults.ERROR;
       }
 
-      // For each library, copy only the needed arch slices to the destination.
-      // This is done by:
-      // 1. Extract the needed slices into the temp path
-      // 2. Combine them into a new library in the destination path
-      ImmutableList.Builder<ProcessExecutorParams> lipoCommands = ImmutableList.builder();
-      for (Path lib : libs) {
-        // For each lib, check to see if it's a universal binary and can actually extract slices.
-        // Attempting to extract from a binary with only one arch will error,
-        // so we just copy it instead.
-        params = makeProcessExecutorParams(context, getArchsCommand(lib));
-        result = executor.launchAndExecute(params);
-        if (result.getExitCode() != 0) {
-          LOG.error("Error running %s: %s", params.getCommand(), result.getStderr());
-          return StepExecutionResult.of(result);
+      boolean shouldExtractArch = (libArchs.length > 1);
+
+      if (shouldExtractArch) {
+        for (String arch : archs) {
+          lipoCommands.add(makeProcessExecutorParams(context, getLipoThinCommand(lib, arch)));
         }
-
-        String[] libArchs = result.getStdout().orElse("").trim().split(" ");
-        LOG.debug("Library %s archs are %s", lib, libArchs.toString());
-
-        if (libArchs.length < 1) {
-          LOG.error("Unable to get binary archs");
-          return StepExecutionResults.ERROR;
-        }
-
-        boolean shouldExtractArch = (libArchs.length > 1);
-
-        if (shouldExtractArch) {
-          for (String arch : archs) {
-            lipoCommands.add(makeProcessExecutorParams(context, getLipoThinCommand(lib, arch)));
-          }
-          lipoCommands.add(makeProcessExecutorParams(context, getLipoCreateCommand(lib, archs)));
-        } else {
-          lipoCommands.add(makeProcessExecutorParams(context, getCopyLibCommand(lib)));
-        }
-      }
-
-      // Actually run the lipo commands
-      for (ProcessExecutorParams p : lipoCommands.build()) {
-        LOG.debug("%s", p.getCommand());
-        result = executor.launchAndExecute(p);
-        if (result.getExitCode() != 0) {
-          LOG.error("Error running %s: %s", p.getCommand(), result.getStderr());
-          return StepExecutionResult.of(result);
-        }
+        lipoCommands.add(makeProcessExecutorParams(context, getLipoCreateCommand(lib, archs)));
+      } else {
+        lipoCommands.add(makeProcessExecutorParams(context, getCopyLibCommand(lib)));
       }
     }
+
+    // Actually run the lipo commands
+    for (ProcessExecutorParams p : lipoCommands.build()) {
+      LOG.debug("%s", p.getCommand());
+      result = executor.launchAndExecute(p);
+      if (result.getExitCode() != 0) {
+        LOG.error("Error running %s: %s", p.getCommand(), result.getStderr());
+        return StepExecutionResult.of(result);
+      }
+    }
+
     return StepExecutionResults.SUCCESS;
   }
 
