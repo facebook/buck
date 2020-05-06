@@ -223,7 +223,8 @@ public class AuditClasspathCommandTest {
             .addDep(javaTarget)
             .build();
 
-    auditClasspathCommand.printJsonClasspath(
+    auditClasspathCommand.generateJsonOutput = true;
+    auditClasspathCommand.printClasspath(
         params,
         TargetGraphCreationResult.of(
             TargetGraphFactory.newInstance(ImmutableSet.of(androidNode, javaNode)),
@@ -345,7 +346,8 @@ public class AuditClasspathCommandTest {
     // Run the command.
     ImmutableSet<BuildTarget> targets =
         ImmutableSet.of(androidLibrary.getBuildTarget(), javaLibrary.getBuildTarget());
-    auditClasspathCommand.printJsonClasspath(
+    auditClasspathCommand.generateJsonOutput = true;
+    auditClasspathCommand.printClasspath(
         params.withBuckConfig(
             FakeBuckConfig.builder()
                 .setSections(ImmutableMap.of("build", ImmutableMap.of("versions", "true")))

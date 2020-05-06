@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -68,7 +67,8 @@ public class AuditClasspathCommand extends AbstractCommand {
   }
 
   @Option(name = "--json", usage = "Output in JSON format")
-  private boolean generateJsonOutput;
+  @VisibleForTesting
+  boolean generateJsonOutput;
 
   public boolean shouldGenerateJsonOutput() {
     return generateJsonOutput;
@@ -111,8 +111,6 @@ public class AuditClasspathCommand extends AbstractCommand {
     try {
       if (shouldGenerateDotOutput()) {
         return printDotOutput(params, targetGraph);
-      } else if (shouldGenerateJsonOutput()) {
-        return printJsonClasspath(params, targetGraph);
       } else {
         return printClasspath(params, targetGraph);
       }
@@ -144,7 +142,7 @@ public class AuditClasspathCommand extends AbstractCommand {
   @VisibleForTesting
   ExitCode printClasspath(
       CommandRunnerParams params, TargetGraphCreationResult targetGraphCreationResult)
-      throws InterruptedException, VersionException {
+      throws InterruptedException, IOException, VersionException {
 
     if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
       targetGraphCreationResult = toVersionedTargetGraph(params, targetGraphCreationResult);
@@ -169,75 +167,34 @@ public class AuditClasspathCommand extends AbstractCommand {
                         params.getBuckConfig())
                     .getFreshActionGraph(targetGraphCreationResult))
             .getActionGraphBuilder();
-    SortedSet<Path> classpathEntries = new TreeSet<>();
+
+    Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
 
     for (BuildTarget target : targetGraphCreationResult.getBuildTargets()) {
       BuildRule rule = Objects.requireNonNull(graphBuilder.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
-        classpathEntries.addAll(
-            graphBuilder
-                .getSourcePathResolver()
-                .getAllAbsolutePaths(hasClasspathEntries.getTransitiveClasspaths()));
+        targetClasspaths.putAll(
+            target.getFullyQualifiedName(),
+            hasClasspathEntries.getTransitiveClasspaths().stream()
+                .map(graphBuilder.getSourcePathResolver()::getAbsolutePath)
+                .map(Objects::toString)
+                .collect(ImmutableList.toImmutableList()));
       } else {
         throw new HumanReadableException(
             rule.getFullyQualifiedName() + " is not a java-based" + " build target");
       }
     }
 
-    for (Path path : classpathEntries) {
-      params.getConsole().getStdOut().println(path);
-    }
-
-    return ExitCode.SUCCESS;
-  }
-
-  @VisibleForTesting
-  ExitCode printJsonClasspath(
-      CommandRunnerParams params, TargetGraphCreationResult targetGraphCreationResult)
-      throws IOException, InterruptedException, VersionException {
-
-    if (params.getBuckConfig().getView(BuildBuckConfig.class).getBuildVersions()) {
-      targetGraphCreationResult = toVersionedTargetGraph(params, targetGraphCreationResult);
-    }
-
-    ActionGraphBuilder graphBuilder =
-        Objects.requireNonNull(
-                new ActionGraphProvider(
-                        params.getBuckEventBus(),
-                        ActionGraphFactory.create(
-                            params.getBuckEventBus(),
-                            params.getCells().getRootCell().getCellProvider(),
-                            params.getExecutors(),
-                            params.getDepsAwareExecutorSupplier(),
-                            params.getBuckConfig()),
-                        new ActionGraphCache(
-                            params
-                                .getBuckConfig()
-                                .getView(BuildBuckConfig.class)
-                                .getMaxActionGraphCacheEntries()),
-                        params.getRuleKeyConfiguration(),
-                        params.getBuckConfig())
-                    .getFreshActionGraph(targetGraphCreationResult))
-            .getActionGraphBuilder();
-    Multimap<String, String> targetClasspaths = LinkedHashMultimap.create();
-
-    for (BuildTarget target : targetGraphCreationResult.getBuildTargets()) {
-      BuildRule rule = Objects.requireNonNull(graphBuilder.requireRule(target));
-      HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
-      if (hasClasspathEntries == null) {
-        continue;
+    if (shouldGenerateJsonOutput()) {
+      // Note: using `asMap` here ensures that the keys are sorted
+      ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetClasspaths.asMap());
+    } else {
+      SortedSet<String> paths = new TreeSet<>(targetClasspaths.values());
+      for (String path : paths) {
+        params.getConsole().getStdOut().println(path);
       }
-      targetClasspaths.putAll(
-          target.getFullyQualifiedName(),
-          hasClasspathEntries.getTransitiveClasspaths().stream()
-              .map(graphBuilder.getSourcePathResolver()::getAbsolutePath)
-              .map(Object::toString)
-              .collect(ImmutableList.toImmutableList()));
     }
-
-    // Note: using `asMap` here ensures that the keys are sorted
-    ObjectMappers.WRITER.writeValue(params.getConsole().getStdOut(), targetClasspaths.asMap());
 
     return ExitCode.SUCCESS;
   }
