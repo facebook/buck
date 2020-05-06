@@ -47,15 +47,20 @@ public class ModuleMapFactory {
       Path symlinkRoot) {
     switch (moduleMapMode) {
       case HEADERS:
-        String stripPrefix = symlinkRoot.toString() + "/" + moduleName + "/";
+        String moduleStrip = moduleName + "/";
+        String fullStrip = symlinkRoot.toString() + "/" + moduleName;
         List<String> headerNames =
             headerPaths.stream()
                 .map(
                     path -> {
                       String relativePath = path.toString();
-                      return relativePath.startsWith(stripPrefix)
-                          ? relativePath.substring(stripPrefix.length())
-                          : relativePath;
+                      if (relativePath.startsWith(fullStrip)) {
+                        return relativePath.substring(fullStrip.length());
+                      } else if (relativePath.startsWith(moduleStrip)) {
+                        return relativePath.substring(moduleStrip.length());
+                      } else {
+                        return relativePath;
+                      }
                     })
                 .sorted()
                 .collect(ImmutableList.toImmutableList());
