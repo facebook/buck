@@ -1,0 +1,28 @@
+#!/usr/bin/env dotslash
+{
+  "name": "buck",
+  "oncall": "oncall+build_infra@xmail.facebook.com",
+  "platforms": {
+    "linux": {
+      "scheme": "manifold",
+      "bucket": "buck_cli",
+      "path": "tree/buckv1-cli/c928ff1564bb087046651df2d23398fc5b6cfb5e/java11:linux",
+      "api_key": "buck_cli-key",
+      "etag": "-7055766779860318965"
+    },
+    "macos": {
+      "scheme": "manifold",
+      "bucket": "buck_cli",
+      "path": "tree/buckv1-cli/c928ff1564bb087046651df2d23398fc5b6cfb5e/java11:macos",
+      "api_key": "buck_cli-key",
+      "etag": "-7055766779860318965"
+    },
+    "windows": {
+      "scheme": "manifold",
+      "bucket": "buck_cli",
+      "path": "tree/buckv1-cli/c928ff1564bb087046651df2d23398fc5b6cfb5e/java11:windows",
+      "api_key": "buck_cli-key",
+      "etag": "-7055766779860318965"
+    }
+  }
+}
