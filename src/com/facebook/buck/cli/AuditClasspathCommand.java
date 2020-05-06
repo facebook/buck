@@ -74,6 +74,14 @@ public class AuditClasspathCommand extends AbstractCommand {
     return generateJsonOutput;
   }
 
+  @Option(name = "--show-targets", usage = "Output targets")
+  @VisibleForTesting
+  boolean showTargets;
+
+  public boolean shouldShowTargets() {
+    return showTargets;
+  }
+
   @Argument private List<String> arguments = new ArrayList<>();
 
   public List<String> getArguments() {
@@ -174,12 +182,21 @@ public class AuditClasspathCommand extends AbstractCommand {
       BuildRule rule = Objects.requireNonNull(graphBuilder.requireRule(target));
       HasClasspathEntries hasClasspathEntries = getHasClasspathEntriesFrom(rule);
       if (hasClasspathEntries != null) {
-        targetClasspaths.putAll(
-            target.getFullyQualifiedName(),
-            hasClasspathEntries.getTransitiveClasspaths().stream()
-                .map(graphBuilder.getSourcePathResolver()::getAbsolutePath)
-                .map(Objects::toString)
-                .collect(ImmutableList.toImmutableList()));
+        if (shouldShowTargets()) {
+          targetClasspaths.putAll(
+              target.getFullyQualifiedName(),
+              hasClasspathEntries.getTransitiveClasspathDeps().stream()
+                  .map(lib -> lib.getBuildTarget().toString())
+                  .collect(ImmutableList.toImmutableList()));
+        } else {
+          targetClasspaths.putAll(
+              target.getFullyQualifiedName(),
+              hasClasspathEntries.getTransitiveClasspaths().stream()
+                  .map(graphBuilder.getSourcePathResolver()::getAbsolutePath)
+                  .map(Objects::toString)
+                  .collect(ImmutableList.toImmutableList()));
+        }
+
       } else {
         throw new HumanReadableException(
             rule.getFullyQualifiedName() + " is not a java-based" + " build target");

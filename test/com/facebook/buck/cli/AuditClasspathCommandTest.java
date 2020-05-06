@@ -191,6 +191,106 @@ public class AuditClasspathCommandTest {
     assertEquals("", console.getTextWrittenToStdErr());
   }
 
+  @Test
+  public void testClassPathOutputWithShowTargets() throws Exception {
+    // Test that no output is created.
+    auditClasspathCommand.showTargets = true;
+    auditClasspathCommand.printClasspath(
+        params,
+        TestTargetGraphCreationResultFactory.create(
+            TargetGraphFactory.newInstance(ImmutableSet.of())));
+    assertEquals("", console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
+
+    // Add build rules such that all implementations of HasClasspathEntries are tested.
+    BuildTarget javaLibraryTarget = BuildTargetFactory.newInstance("//:test-java-library");
+    BuildTarget testJavaTarget = BuildTargetFactory.newInstance("//:project-tests");
+    BuildTarget androidLibraryTarget = BuildTargetFactory.newInstance("//:test-android-library");
+    BuildTarget keystoreTarget = BuildTargetFactory.newInstance("//:keystore");
+    BuildTarget testAndroidTarget = BuildTargetFactory.newInstance("//:test-android-binary");
+
+    TargetNode<?> javaLibraryNode =
+        JavaLibraryBuilder.createBuilder(javaLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestJavaLibrary.java"))
+            .addTest(testJavaTarget)
+            .build();
+    TargetNode<?> androidLibraryNode =
+        AndroidLibraryBuilder.createBuilder(androidLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/TestAndroidLibrary.java"))
+            .addDep(javaLibraryTarget)
+            .build();
+    TargetNode<?> keystoreNode =
+        KeystoreBuilder.createBuilder(keystoreTarget)
+            .setStore(FakeSourcePath.of("debug.keystore"))
+            .setProperties(FakeSourcePath.of("keystore.properties"))
+            .build();
+    TargetNode<?> testAndroidNode =
+        AndroidBinaryBuilder.createBuilder(testAndroidTarget)
+            .setManifest(FakeSourcePath.of("AndroidManifest.xml"))
+            .setKeystore(keystoreTarget)
+            .setOriginalDeps(ImmutableSortedSet.of(androidLibraryTarget, javaLibraryTarget))
+            .build();
+    TargetNode<?> testJavaNode =
+        JavaTestBuilder.createBuilder(testJavaTarget)
+            .addDep(javaLibraryTarget)
+            .addSrc(Paths.get("src/com/facebook/test/ProjectTests.java"))
+            .build();
+
+    TargetGraph targetGraph =
+        TargetGraphFactory.newInstance(
+            ImmutableSet.of(
+                javaLibraryNode, androidLibraryNode, keystoreNode, testAndroidNode, testJavaNode));
+    auditClasspathCommand.printClasspath(
+        params, TestTargetGraphCreationResultFactory.create(targetGraph));
+
+    // Still empty.
+    assertEquals("", console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
+
+    // Request the top build target. This will test the following:
+    // - paths don't appear multiple times when dependencies are referenced multiple times.
+    // - dependencies are walked
+    // - independent targets in the same BUCK file are not included in the output
+    auditClasspathCommand.printClasspath(
+        params, TargetGraphCreationResult.of(targetGraph, ImmutableSet.of(testAndroidTarget)));
+
+    SortedSet<String> expectedTargets =
+        Sets.newTreeSet(
+            Arrays.asList(androidLibraryTarget.toString(), javaLibraryTarget.toString()));
+    String expectedClasspath =
+        String.join(System.lineSeparator(), expectedTargets) + System.lineSeparator();
+
+    assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
+
+    // Add independent test target. This will test:
+    // - the union of the classpath is output.
+    // - all rules have implemented HasClasspathEntries.
+    // Note that the output streams are reset.
+    setUp();
+    auditClasspathCommand.showTargets = true;
+    auditClasspathCommand.printClasspath(
+        params,
+        TargetGraphCreationResult.of(
+            TargetGraphFactory.newInstance(
+                ImmutableSet.of(
+                    javaLibraryNode,
+                    androidLibraryNode,
+                    keystoreNode,
+                    testAndroidNode,
+                    testJavaNode)),
+            ImmutableSet.of(
+                testAndroidTarget, javaLibraryTarget, androidLibraryTarget, testJavaTarget)));
+
+    BuildTarget testJavaCompiledJar = testJavaTarget.withFlavors(COMPILED_TESTS_LIBRARY_FLAVOR);
+
+    expectedTargets.add(testJavaCompiledJar.toString());
+    expectedClasspath =
+        String.join(System.lineSeparator(), expectedTargets) + System.lineSeparator();
+    assertEquals(expectedClasspath, console.getTextWrittenToStdOut());
+    assertEquals("", console.getTextWrittenToStdErr());
+  }
+
   private static final String EXPECTED_JSON =
       Joiner.on("")
           .join(
