@@ -48,7 +48,7 @@ public class ModuleMapFactory {
     switch (moduleMapMode) {
       case HEADERS:
         String moduleStrip = moduleName + "/";
-        String fullStrip = symlinkRoot.toString() + "/" + moduleName;
+        String fullStrip = symlinkRoot.toString() + "/" + moduleStrip;
         List<String> headerNames =
             headerPaths.stream()
                 .map(
