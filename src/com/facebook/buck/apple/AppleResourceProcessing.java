@@ -30,6 +30,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.CopyStep;
+import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.step.fs.MkdirStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -231,10 +232,15 @@ public class AppleResourceProcessing {
 
     if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {
       String tempDirPattern = isForPackaging ? "__swift_packaging_temp__%s" : "__swift_temp__%s";
+      Path tempPath =
+          BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, tempDirPattern);
+
+      stepsBuilder.addAll(MakeCleanDirectoryStep.of(BuildCellRelativePath.of(tempPath)));
+
       stepsBuilder.add(
           new SwiftStdlibStep(
               projectFilesystem.getRootPath(),
-              BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, tempDirPattern),
+              tempPath,
               sdkPath,
               destinationPath,
               swiftStdlibTool.get().getCommandPrefix(resolver),
