@@ -43,10 +43,11 @@ public class ModuleMapFactory {
       String moduleName,
       ModuleMapMode moduleMapMode,
       UmbrellaHeaderModuleMap.SwiftMode swiftMode,
-      Set<Path> headerPaths) {
+      Set<Path> headerPaths,
+      Path symlinkRoot) {
     switch (moduleMapMode) {
       case HEADERS:
-        String stripPrefix = moduleName + "/";
+        String stripPrefix = symlinkRoot.toString() + "/" + moduleName + "/";
         List<String> headerNames =
             headerPaths.stream()
                 .map(
