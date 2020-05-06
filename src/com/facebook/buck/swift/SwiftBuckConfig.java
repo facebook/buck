@@ -34,6 +34,8 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
   public static final String PROJECT_ADD_AST_PATHS = "project_add_ast_paths";
   public static final String COPY_STDLIB_TO_FRAMEWORKS = "copy_stdlib_to_frameworks";
   public static final String EMIT_SWIFTDOCS = "emit_swiftdocs";
+  public static final String SLICE_APP_PACKAGE_RUNTIME = "slice_app_package_runtime";
+  public static final String SLICE_APP_BUNDLE_RUNTIME = "slice_app_bundle_runtime";
   private final BuckConfig delegate;
 
   @Override
@@ -113,5 +115,23 @@ public class SwiftBuckConfig implements ConfigView<BuckConfig> {
    */
   public boolean getEmitSwiftdocs() {
     return delegate.getBooleanValue(SECTION_NAME, EMIT_SWIFTDOCS, false);
+  }
+
+  /**
+   * If true, after running swift-stdlib-tool to copy the Swift runtime into the "SwiftSupport"
+   * directory in the .ipa, unused architectures will be removed using lipo. If false, the dylibs
+   * will be left untouched.
+   */
+  public boolean getSliceAppPackageSwiftRuntime() {
+    return delegate.getBooleanValue(SECTION_NAME, SLICE_APP_PACKAGE_RUNTIME, false);
+  }
+
+  /**
+   * If true, after running swift-stdlib-tool to copy the Swift runtime into the Frameworks
+   * directory, unused architectures will be removed using lipo. If false, the dylibs will be left
+   * untouched.
+   */
+  public boolean getSliceAppBundleSwiftRuntime() {
+    return delegate.getBooleanValue(SECTION_NAME, SLICE_APP_BUNDLE_RUNTIME, false);
   }
 }

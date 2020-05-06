@@ -424,7 +424,9 @@ public class AppleBinaryDescription
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
-        Predicates.alwaysTrue());
+        Predicates.alwaysTrue(),
+        swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
+        swiftBuckConfig.getSliceAppBundleSwiftRuntime());
   }
 
   private BuildRule createBinary(

@@ -467,7 +467,9 @@ public class AppleLibraryDescription
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
-        Predicates.alwaysTrue());
+        Predicates.alwaysTrue(),
+        swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
+        swiftBuckConfig.getSliceAppBundleSwiftRuntime());
   }
 
   /**

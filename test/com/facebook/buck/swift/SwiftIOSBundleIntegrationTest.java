@@ -88,6 +88,7 @@ public class SwiftIOSBundleIntegrationTest {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(
             this, "simple_swift_application_bundle", tmp);
+    workspace.addBuckConfigLocalOption("swift", "slice_app_bundle_runtime", "true");
     workspace.setUp();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());

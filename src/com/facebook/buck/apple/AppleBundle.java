@@ -166,6 +166,9 @@ public class AppleBundle extends AbstractBuildRule
 
   @AddToRuleKey private final boolean useEntitlementsWhenAdhocCodeSigning;
 
+  @AddToRuleKey private final boolean sliceAppPackageSwiftRuntime;
+  @AddToRuleKey private final boolean sliceAppBundleSwiftRuntime;
+
   private final Optional<AppleAssetCatalog> assetCatalog;
   private final Optional<CoreDataModel> coreDataModel;
   private final Optional<SceneKitAssets> sceneKitAssets;
@@ -223,7 +226,9 @@ public class AppleBundle extends AbstractBuildRule
       ImmutableList<String> ibtoolFlags,
       Duration codesignTimeout,
       boolean copySwiftStdlibToFrameworks,
-      boolean useEntitlementsWhenAdhocCodeSigning) {
+      boolean useEntitlementsWhenAdhocCodeSigning,
+      boolean sliceAppPackageSwiftRuntime,
+      boolean sliceAppBundleSwiftRuntime) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
     this.extension =
@@ -299,6 +304,9 @@ public class AppleBundle extends AbstractBuildRule
     this.copySwiftStdlibToFrameworks = copySwiftStdlibToFrameworks;
     this.useEntitlementsWhenAdhocCodeSigning = useEntitlementsWhenAdhocCodeSigning;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, graphBuilder);
+
+    this.sliceAppPackageSwiftRuntime = sliceAppPackageSwiftRuntime;
+    this.sliceAppBundleSwiftRuntime = sliceAppBundleSwiftRuntime;
   }
 
   public static String getBinaryName(BuildTarget buildTarget, Optional<String> productName) {
@@ -606,7 +614,9 @@ public class AppleBundle extends AbstractBuildRule
           sdkPath,
           lipo,
           bundleBinaryPath,
-          destinations);
+          destinations,
+          sliceAppPackageSwiftRuntime,
+          sliceAppBundleSwiftRuntime);
 
       for (BuildRule extraBinary : extraBinaries) {
         Path outputPath = getBundleBinaryPathForBuildRule(extraBinary);
@@ -679,7 +689,9 @@ public class AppleBundle extends AbstractBuildRule
           sdkPath,
           lipo,
           bundleBinaryPath,
-          destinations);
+          destinations,
+          sliceAppPackageSwiftRuntime,
+          sliceAppBundleSwiftRuntime);
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.
@@ -823,7 +835,9 @@ public class AppleBundle extends AbstractBuildRule
         sdkPath,
         lipo,
         bundleBinaryPath,
-        destinations);
+        destinations,
+        sliceAppPackageSwiftRuntime,
+        sliceAppBundleSwiftRuntime);
   }
 
   private void copyAnotherCopyOfWatchKitStub(

@@ -690,7 +690,9 @@ public class AppleDescriptions {
       boolean copySwiftStdlibToFrameworks,
       boolean cacheStrips,
       boolean useEntitlementsWhenAdhocCodeSigning,
-      Predicate<BuildTarget> filter) {
+      Predicate<BuildTarget> filter,
+      boolean sliceAppPackageSwiftRuntime,
+      boolean sliceAppBundleSwiftRuntime) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -931,7 +933,9 @@ public class AppleDescriptions {
         ibtoolFlagsUnwrapped,
         codesignTimeout,
         copySwiftStdlibToFrameworks,
-        useEntitlementsWhenAdhocCodeSigning);
+        useEntitlementsWhenAdhocCodeSigning,
+        sliceAppPackageSwiftRuntime,
+        sliceAppBundleSwiftRuntime);
   }
 
   /**

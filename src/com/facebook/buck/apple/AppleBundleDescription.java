@@ -219,7 +219,9 @@ public class AppleBundleDescription
         swiftBuckConfig.getCopyStdlibToFrameworks(),
         cxxBuckConfig.shouldCacheStrip(),
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
-        resourceFilter);
+        resourceFilter,
+        swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
+        swiftBuckConfig.getSliceAppBundleSwiftRuntime());
   }
 
   /**

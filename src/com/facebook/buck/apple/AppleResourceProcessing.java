@@ -222,7 +222,9 @@ public class AppleResourceProcessing {
       Path sdkPath,
       Tool lipo,
       Path bundleBinaryPath,
-      AppleBundleDestinations destinations) {
+      AppleBundleDestinations destinations,
+      boolean sliceAppPackageSwiftRuntime,
+      boolean sliceAppBundleSwiftRuntime) {
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
     boolean shouldCopySwiftStdlib =
@@ -237,6 +239,8 @@ public class AppleResourceProcessing {
 
       stepsBuilder.addAll(MakeCleanDirectoryStep.of(BuildCellRelativePath.of(tempPath)));
 
+      boolean sliceArchitectures =
+          (isForPackaging ? sliceAppPackageSwiftRuntime : sliceAppBundleSwiftRuntime);
       stepsBuilder.add(
           new SwiftStdlibStep(
               projectFilesystem.getRootPath(),
@@ -250,7 +254,7 @@ public class AppleResourceProcessing {
                   bundleRoot.resolve(destinations.getFrameworksPath()),
                   bundleRoot.resolve(destinations.getPlugInsPath())),
               codeSignIdentitySupplier,
-              true));
+              sliceArchitectures));
     }
   }
 

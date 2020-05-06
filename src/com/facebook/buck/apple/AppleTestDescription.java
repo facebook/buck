@@ -371,7 +371,9 @@ public class AppleTestDescription
                         swiftBuckConfig.getCopyStdlibToFrameworks(),
                         cxxBuckConfig.shouldCacheStrip(),
                         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
-                        Predicates.alwaysTrue()));
+                        Predicates.alwaysTrue(),
+                        swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
+                        swiftBuckConfig.getSliceAppBundleSwiftRuntime()));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);
