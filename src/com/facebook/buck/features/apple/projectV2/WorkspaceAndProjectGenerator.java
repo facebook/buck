@@ -175,7 +175,14 @@ public class WorkspaceAndProjectGenerator {
     // Add the workspace target to the focused target matcher.
     workspaceArguments
         .getSrcTarget()
-        .ifPresent(buildTarget -> this.focusedTargetMatcher.addTarget(buildTarget));
+        .ifPresent(
+            buildTarget -> {
+              focusedTargetMatcher.addTarget(buildTarget);
+              projectGraph.get(buildTarget).getBuildDeps().stream()
+                  .filter(
+                      t -> shouldIncludeImplicitExtensionSchemeForTargetNode(projectGraph.get(t)))
+                  .forEach(focusedTargetMatcher::addTarget);
+            });
   }
 
   @VisibleForTesting
