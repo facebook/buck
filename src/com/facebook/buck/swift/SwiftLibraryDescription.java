@@ -501,11 +501,11 @@ public class SwiftLibraryDescription
   }
 
   public ImmutableSet<Flavor> getSupportedFlavors(
-    ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
+      ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
     ImmutableSet<Flavor> currentSupportedFlavors =
-      ImmutableSet.copyOf(Sets.filter(flavors, SUPPORTED_FLAVORS::contains));
+        ImmutableSet.copyOf(Sets.filter(flavors, SUPPORTED_FLAVORS::contains));
     ImmutableSet<Flavor> supportedCxxPlatformsFlavors =
-      ImmutableSet.copyOf(Sets.filter(flavors, getCxxPlatforms(toolchainTargetConfiguration)::contains));
+        ImmutableSet.copyOf(Sets.filter(flavors, getCxxPlatforms(toolchainTargetConfiguration)::contains));
 
     return ImmutableSet.copyOf(Sets.union(currentSupportedFlavors, supportedCxxPlatformsFlavors));
   }
