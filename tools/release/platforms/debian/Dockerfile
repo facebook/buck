@@ -9,7 +9,7 @@ RUN apt-get install -y --no-install-recommends curl ca-certificates \
       zlib1g-dev libarchive-dev \
       ca-certificates-java \
       ant \
-      python \
+      python3 \
       groovy \
       ghc \
       equivs && \
