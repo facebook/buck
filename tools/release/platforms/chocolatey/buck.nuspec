@@ -18,7 +18,7 @@
     <description>A fast build system that encourages the creation of small, reusable modules over a variety of platforms and languages including iOS, Android, C++, Java, and more.</description>
     <releaseNotes></releaseNotes>
     <dependencies>
-      <dependency id="python2" version="[2.7.15, 3.0)" />
+      <dependency id="python3" version="[3.6.2, 4.0)" />
       <dependency id="jdk8" version="8.0.172" />
     </dependencies>
   </metadata>
