@@ -89,6 +89,11 @@ public class DylibStubContentsScrubber implements FileContentsScrubber {
 
   private static void resetSymbolAddressesInExportInfo(
       ByteBuffer machoBuffer, MachoDyldInfoCommand dyldInfoCommand) {
+    // skip scrubbing if there is no export info.
+    if (dyldInfoCommand.getExportInfoSize() == 0) {
+      return;
+    }
+
     machoBuffer.position(dyldInfoCommand.getExportInfoOffset());
     machoBuffer.limit(dyldInfoCommand.getExportInfoOffset() + dyldInfoCommand.getExportInfoSize());
 

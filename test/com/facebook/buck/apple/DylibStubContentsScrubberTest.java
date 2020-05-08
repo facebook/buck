@@ -56,6 +56,10 @@ public class DylibStubContentsScrubberTest {
     return testDataDir.resolve("dylib_stub_scrubber").resolve("libHelloLib.dylib");
   }
 
+  private Path getFrameworkDylibPath() {
+    return testDataDir.resolve("dylib_stub_scrubber").resolve("WellbeingFramework");
+  }
+
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
   private ProjectWorkspace workspace;
@@ -112,5 +116,28 @@ public class DylibStubContentsScrubberTest {
     assertFalse(nmOutput.isEmpty());
     assertThat(nmOutput, containsString("0000000000000000 T _goodbye"));
     assertThat(nmOutput, containsString("0000000000000000 T _hello"));
+  }
+
+  @Test
+  public void testScrubberOnFrameworkWithNoExportedSymbol()
+      throws IOException, FileScrubber.ScrubException, InterruptedException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    // Copy the source dylib, so we can scrub the temporary copy
+    Path srcDylibPath = getFrameworkDylibPath();
+    AbsPath destFolder = tmp.newFolder();
+    AbsPath destDylibPath = destFolder.resolve(srcDylibPath.getFileName());
+    Files.copy(srcDylibPath, destDylibPath.getPath());
+
+    FileChannel dylibChannel =
+        FileChannel.open(
+            destDylibPath.getPath(), StandardOpenOption.READ, StandardOpenOption.WRITE);
+    DylibStubContentsScrubber scrubber = new DylibStubContentsScrubber();
+    scrubber.scrubFile(dylibChannel);
+
+    String nmOutput = workspace.runCommand("nm", destDylibPath.toString()).getStdout().get();
+    assertFalse(nmOutput.isEmpty());
+    assertThat(nmOutput, containsString("0000000000000000 s ___cpu_model"));
   }
 }
