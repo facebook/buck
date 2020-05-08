@@ -48,6 +48,10 @@ public class FakeBuckConfig {
     return new Builder();
   }
 
+  public static BuckConfig empty() {
+    return builder().build();
+  }
+
   public static class Builder {
     @Nullable private ProjectFilesystem filesystem = null;
     private ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();

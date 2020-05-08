@@ -38,14 +38,14 @@ public class BuildBuckConfigTest {
 
   @Test
   public void testDefaultsNumberOfBuildThreadsToOneAndAQuarterTheNumberOfAvailableProcessors() {
-    BuildBuckConfig buckConfig = FakeBuckConfig.builder().build().getView(BuildBuckConfig.class);
+    BuildBuckConfig buckConfig = FakeBuckConfig.empty().getView(BuildBuckConfig.class);
     assertThat(
         buckConfig.getNumThreads(), Matchers.equalTo(Runtime.getRuntime().availableProcessors()));
   }
 
   @Test
   public void testDefaultsNumberOfBuildThreadsSpecified() {
-    BuildBuckConfig buckConfig = FakeBuckConfig.builder().build().getView(BuildBuckConfig.class);
+    BuildBuckConfig buckConfig = FakeBuckConfig.empty().getView(BuildBuckConfig.class);
     assertThat(buckConfig.getNumThreads(42), Matchers.equalTo(42));
   }
 

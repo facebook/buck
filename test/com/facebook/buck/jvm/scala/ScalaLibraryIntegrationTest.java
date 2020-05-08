@@ -63,7 +63,7 @@ public class ScalaLibraryIntegrationTest {
   @Test(timeout = (2 * 60 * 1000))
   public void shouldWorkWithLocalCompiler() {
     try {
-      new ScalaBuckConfig(FakeBuckConfig.builder().build())
+      new ScalaBuckConfig(FakeBuckConfig.empty())
           .getScalac(new TestActionGraphBuilder(), UnconfiguredTargetConfiguration.INSTANCE);
     } catch (HumanReadableException e) {
       assumeNoException("Could not find local scalac", e);

@@ -29,7 +29,7 @@ public class ChromeTraceBuckConfigTest {
 
   @Test
   public void testGetMaxTraces() {
-    assertEquals(25, ChromeTraceBuckConfig.of(FakeBuckConfig.builder().build()).getMaxTraces());
+    assertEquals(25, ChromeTraceBuckConfig.of(FakeBuckConfig.empty()).getMaxTraces());
 
     ChromeTraceBuckConfig config =
         ChromeTraceBuckConfig.of(

@@ -42,7 +42,7 @@ public class JsFlavorsTest {
     bundleDescription =
         new JsBundleDescription(
             new ToolchainProviderBuilder().build(),
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()));
+            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()));
     libraryDescription = new JsLibraryDescription();
   }
 

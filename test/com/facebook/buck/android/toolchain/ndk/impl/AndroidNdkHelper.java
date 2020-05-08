@@ -76,7 +76,7 @@ public class AndroidNdkHelper {
   private AndroidNdkHelper() {}
 
   public static final AndroidBuckConfig DEFAULT_CONFIG =
-      new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect());
+      new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect());
 
   public static Optional<AndroidNdk> detectAndroidNdk(ProjectFilesystem filesystem) {
     try {

@@ -513,8 +513,7 @@ public class ConstructorArgMarshallerImmutableTest {
     TargetPlatformResolver targetPlatformResolver =
         (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =
-        SelectableConfigurationContext.of(
-            FakeBuckConfig.builder().build(), UnconfiguredPlatform.INSTANCE);
+        SelectableConfigurationContext.of(FakeBuckConfig.empty(), UnconfiguredPlatform.INSTANCE);
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();
@@ -654,7 +653,7 @@ public class ConstructorArgMarshallerImmutableTest {
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
     SelectableConfigurationContext selectableConfigurationContext =
         SelectableConfigurationContext.of(
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             targetPlatformResolver.getTargetPlatform(
                 RuleBasedTargetConfiguration.of(multiPlatformTarget), DependencyStack.root()));
 

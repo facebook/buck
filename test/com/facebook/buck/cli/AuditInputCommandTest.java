@@ -84,7 +84,7 @@ public class AuditInputCommandTest {
             cell,
             artifactCache,
             eventBus,
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             Platform.detect(),
             EnvVariablesProvider.getSystemEnv(),
             Optional.empty());

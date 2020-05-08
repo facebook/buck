@@ -46,11 +46,11 @@ public class AndroidInstrumentationApkBuilder
     super(
         new AndroidInstrumentationApkDescription(
             DEFAULT_JAVA_CONFIG,
-            new ProGuardConfig(FakeBuckConfig.builder().build()),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
-            new DxConfig(FakeBuckConfig.builder().build()),
+            new ProGuardConfig(FakeBuckConfig.empty()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
+            new DxConfig(FakeBuckConfig.empty()),
             createToolchainProviderForAndroidInstrumentationApk(),
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect())),
+            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect())),
         target,
         new FakeProjectFilesystem(),
         createToolchainProviderForAndroidInstrumentationApk());

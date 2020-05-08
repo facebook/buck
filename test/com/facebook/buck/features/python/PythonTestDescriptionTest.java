@@ -404,7 +404,7 @@ public class PythonTestDescriptionTest {
   public void pexBuilderAddedToParseTimeDeps() {
     BuildTarget pexBuilder = BuildTargetFactory.newInstance("//:pex_builder");
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
+        new PythonBuckConfig(FakeBuckConfig.empty()) {
           @Override
           public Optional<BuildTarget> getPexExecutorTarget(
               TargetConfiguration targetConfiguration) {

@@ -36,7 +36,7 @@ public class DTestDescriptionTest {
     DTestBuilder builder =
         new DTestBuilder(
             BuildTargetFactory.newInstance("//:rule"),
-            new DBuckConfig(FakeBuckConfig.builder().build()),
+            new DBuckConfig(FakeBuckConfig.empty()),
             cxxPlatform);
     ImmutableSortedSet<BuildTarget> implicitDeps = builder.findImplicitDeps();
     for (BuildTarget target :

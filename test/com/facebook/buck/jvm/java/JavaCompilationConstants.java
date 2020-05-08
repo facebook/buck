@@ -24,7 +24,7 @@ import com.google.common.collect.ImmutableList;
 public class JavaCompilationConstants {
 
   public static final JavaBuckConfig DEFAULT_JAVA_CONFIG =
-      JavaBuckConfig.of(FakeBuckConfig.builder().build());
+      JavaBuckConfig.of(FakeBuckConfig.empty());
 
   public static final ImmutableList<String> DEFAULT_JAVA_COMMAND_PREFIX = ImmutableList.of("java");
 

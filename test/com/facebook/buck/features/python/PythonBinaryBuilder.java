@@ -88,7 +88,7 @@ public class PythonBinaryBuilder
 
   public static PythonBinaryBuilder create(
       BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
-    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(FakeBuckConfig.builder().build());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(FakeBuckConfig.empty());
     return new PythonBinaryBuilder(
         target,
         pythonBuckConfig,

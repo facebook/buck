@@ -21,6 +21,5 @@ import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 
 public class SelectableConfigurationContextFactory {
   public static final SelectableConfigurationContext UNCONFIGURED =
-      SelectableConfigurationContext.of(
-          FakeBuckConfig.builder().build(), UnconfiguredPlatform.INSTANCE);
+      SelectableConfigurationContext.of(FakeBuckConfig.empty(), UnconfiguredPlatform.INSTANCE);
 }

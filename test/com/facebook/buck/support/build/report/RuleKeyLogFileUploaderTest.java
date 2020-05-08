@@ -78,7 +78,7 @@ public class RuleKeyLogFileUploaderTest {
     TemporaryFolder tempDirectory = new TemporaryFolder();
     tempDirectory.create();
     filesystem = TestProjectFilesystems.createProjectFilesystem(tempDirectory.getRoot().toPath());
-    buildReportConfig = FakeBuckConfig.builder().build().getView(BuildReportConfig.class);
+    buildReportConfig = FakeBuckConfig.empty().getView(BuildReportConfig.class);
     clock = new DefaultClock();
 
     ruleKeyLogFile = tempDirectory.newFile(BuckConstant.RULE_KEY_LOGGER_FILE_NAME).toPath();

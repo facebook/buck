@@ -48,7 +48,7 @@ public class BuildCommandOptionsTest {
 
   @Test
   public void testCreateJavaPackageFinderFromEmptyBuckConfig() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     DefaultJavaPackageFinder javaPackageFinder =
         buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
     assertEquals(ImmutableSortedSet.<String>of(), javaPackageFinder.getPathsFromRoot());

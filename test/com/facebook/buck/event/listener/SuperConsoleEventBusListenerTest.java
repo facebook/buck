@@ -134,7 +134,7 @@ public class SuperConsoleEventBusListenerTest {
   private Path logPath;
   private BuildRuleDurationTracker durationTracker;
   private final SuperConsoleConfig emptySuperConsoleConfig =
-      new SuperConsoleConfig(FakeBuckConfig.builder().build());
+      new SuperConsoleConfig(FakeBuckConfig.empty());
 
   private String formatCacheStatsLine(boolean running, int artifacts, float size, float ratio) {
     String operationString = running ? "Downloading..." : "Downloaded";

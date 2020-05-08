@@ -66,8 +66,7 @@ public class PythonTestBuilder
 
   public static PythonTestBuilder create(
       BuildTarget target, FlavorDomain<PythonPlatform> pythonPlatforms) {
-    return create(
-        target, FakeBuckConfig.builder().build(), new ExecutableFinder(), pythonPlatforms);
+    return create(target, FakeBuckConfig.empty(), new ExecutableFinder(), pythonPlatforms);
   }
 
   public static PythonTestBuilder create(

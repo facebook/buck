@@ -58,7 +58,7 @@ public class WorkspaceGeneratorTest {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     clock = SettableFakeClock.DO_NOT_CARE;
     projectFilesystem = new FakeProjectFilesystem(clock);
-    appleConfig = FakeBuckConfig.builder().build().getView(AppleConfig.class);
+    appleConfig = FakeBuckConfig.empty().getView(AppleConfig.class);
     generator = new WorkspaceGenerator(projectFilesystem, "ws", Paths.get("."), appleConfig);
   }
 

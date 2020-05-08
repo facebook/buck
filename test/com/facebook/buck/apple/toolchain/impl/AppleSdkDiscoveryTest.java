@@ -75,7 +75,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(path),
             ImmutableList.of(),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class));
+            FakeBuckConfig.empty().getView(AppleConfig.class));
 
     assertEquals(0, sdks.size());
   }
@@ -139,7 +139,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(path),
             ImmutableList.of(root),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -187,7 +187,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(path),
             ImmutableList.of(root),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -230,7 +230,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(path),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -249,7 +249,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class));
+            FakeBuckConfig.empty().getView(AppleConfig.class));
 
     assertEquals(2, sdks.size());
   }
@@ -304,7 +304,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class));
+            FakeBuckConfig.empty().getView(AppleConfig.class));
 
     assertThat(discoveredSdks, equalTo(expected));
   }
@@ -462,7 +462,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -480,7 +480,7 @@ public class AppleSdkDiscoveryTest {
                 Optional.of(root),
                 ImmutableList.of(),
                 toolchains,
-                FakeBuckConfig.builder().build().getView(AppleConfig.class))
+                FakeBuckConfig.empty().getView(AppleConfig.class))
             .entrySet(),
         empty());
   }
@@ -598,7 +598,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -645,7 +645,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(root),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class)),
+            FakeBuckConfig.empty().getView(AppleConfig.class)),
         equalTo(expected));
   }
 
@@ -677,7 +677,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(root),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class));
+            FakeBuckConfig.empty().getView(AppleConfig.class));
 
     // if both symlinks were to be visited, exception would have been thrown during discovery
     assertThat(actual.size(), is(2));
@@ -704,7 +704,7 @@ public class AppleSdkDiscoveryTest {
             Optional.of(root),
             ImmutableList.of(root),
             toolchains,
-            FakeBuckConfig.builder().build().getView(AppleConfig.class));
+            FakeBuckConfig.empty().getView(AppleConfig.class));
 
     assertThat(actual.size(), is(0));
   }

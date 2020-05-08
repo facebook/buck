@@ -113,7 +113,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         BuildTargetFactory.newInstance("//target:short")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
+    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
 
     CxxInferCapture captureRule = createCaptureRule(testBuildTarget, filesystem, inferBuckConfig);
     CxxInferCaptureTransitive captureTransRule =
@@ -147,7 +147,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         BuildTargetFactory.newInstance("cellname//target:short")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_ALL.getFlavor());
 
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
+    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
 
     CxxInferCapture captureRule = createCaptureRule(testBuildTarget, filesystem, inferBuckConfig);
     CxxInferCaptureTransitive captureTransRule =
@@ -189,7 +189,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         BuildTargetFactory.newInstance("cell2//target/in_cell_two:short2")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_NO_DEPS.getFlavor());
 
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
+    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
 
     CxxInferCapture captureRule2 = createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
 
@@ -234,7 +234,7 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         BuildTargetFactory.newInstance("cell2//target/in_cell_two:short2")
             .withFlavors(CxxInferEnhancer.InferFlavors.INFER_CAPTURE_NO_DEPS.getFlavor());
 
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.builder().build());
+    InferBuckConfig inferBuckConfig = new InferBuckConfig(FakeBuckConfig.empty());
 
     CxxInferCapture captureRule2 = createCaptureRule(buildTarget2, filesystem2, inferBuckConfig);
 

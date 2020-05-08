@@ -86,7 +86,7 @@ public class CxxLinkableEnhancerTest {
           FakeSourcePath.of("a.o"), FakeSourcePath.of("b.o"), FakeSourcePath.of("c.o"));
   private static final ImmutableSortedSet<NativeLinkable> EMPTY_DEPS = ImmutableSortedSet.of();
   private static final CxxPlatform CXX_PLATFORM =
-      CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+      CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
   private static class FakeNativeLinkableGroup extends FakeBuildRule
       implements LegacyNativeLinkableGroup {
@@ -482,8 +482,7 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
-    CxxPlatform cxxPlatform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     // Create a native linkable that sits at the bottom of the dep chain.

@@ -37,7 +37,7 @@ public class JsBundleBuilder
   private static final JsBundleDescription bundleDescription =
       new JsBundleDescription(
           new ToolchainProviderBuilder().build(),
-          new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()));
+          new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()));
 
   JsBundleBuilder(
       BuildTarget target,

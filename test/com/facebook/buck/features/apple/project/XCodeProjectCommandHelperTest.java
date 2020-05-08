@@ -498,7 +498,7 @@ public class XCodeProjectCommandHelperTest {
         BuckEventBusForTests.newInstance(),
         BuckPluginManagerFactory.createPluginManager(),
         cell.getRootCell(),
-        FakeBuckConfig.builder().build(),
+        FakeBuckConfig.empty(),
         TestRuleKeyConfigurationFactory.create(),
         MoreExecutors.newDirectExecutorService(),
         TestTargetGraphCreationResultFactory.create(targetGraph, passedInTargetsSet),

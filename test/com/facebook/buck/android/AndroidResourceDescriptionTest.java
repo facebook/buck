@@ -104,7 +104,7 @@ public class AndroidResourceDescriptionTest {
     AndroidResourceDescription description =
         new AndroidResourceDescription(
             createToolchainProviderForAndroidResource(),
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()));
+            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());
     Map<Path, SourcePath> inputs = description.collectInputFiles(filesystem, Paths.get("res"));

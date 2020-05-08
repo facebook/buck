@@ -117,7 +117,7 @@ public class ResolverIntegrationTest {
 
     ProjectFilesystem filesystem =
         new FakeProjectFilesystem(CanonicalCellName.rootCell(), buckRepoRoot);
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     ParserConfig parserConfig = buckConfig.getView(ParserConfig.class);
     PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(buckConfig);
 

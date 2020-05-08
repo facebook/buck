@@ -131,7 +131,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             target,
             FlavorDomain.of("Python Platform", PY2, PY3),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
@@ -160,7 +160,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
                 target2,
                 FlavorDomain.of("Python Platform", PY2, PY3),
-                new CxxBuckConfig(FakeBuckConfig.builder().build()),
+                new CxxBuckConfig(FakeBuckConfig.empty()),
                 CxxTestUtils.createDefaultPlatforms())
             .setBaseModule(name);
     targetGraph = TargetGraphFactory.newInstance(baseModuleBuilder.build());
@@ -194,7 +194,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
                 target,
                 FlavorDomain.of("Python Platform", PY2, PY3),
-                new CxxBuckConfig(FakeBuckConfig.builder().build()),
+                new CxxBuckConfig(FakeBuckConfig.empty()),
                 CxxTestUtils.createDefaultPlatforms())
             .setDeps(ImmutableSortedSet.of(cxxLibraryTarget));
 
@@ -236,7 +236,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             target,
             FlavorDomain.of("Python Platform", PY2, PY3),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
 
     TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
@@ -281,7 +281,7 @@ public class CxxPythonExtensionDescriptionTest {
                         "Python Platform",
                         createPy2Platform(Optional.of(PYTHON2_DEP_TARGET)),
                         createPy3Platform(Optional.of(PYTHON3_DEP_TARGET))),
-                    new CxxBuckConfig(FakeBuckConfig.builder().build()),
+                    new CxxBuckConfig(FakeBuckConfig.empty()),
                     CxxTestUtils.createDefaultPlatforms())
                 .build()
                 .getDescription();
@@ -318,7 +318,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             target,
             FlavorDomain.of("Python Platform", py2, py3),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
 
     TargetGraph targetGraph =
@@ -353,7 +353,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
     CxxPythonExtension rule = builder.build(graphBuilder);
     NativeLinkTarget nativeLinkTarget =
@@ -377,7 +377,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
     CxxPythonExtension rule =
         builder.setDeps(ImmutableSortedSet.of(dep.getBuildTarget())).build(graphBuilder);
@@ -403,7 +403,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
     CxxPythonExtension rule =
         builder
@@ -427,7 +427,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", platform),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
     TargetGraph targetGraph =
         TargetGraphFactory.newInstance(python2Builder.build(), builder.build());
@@ -448,7 +448,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
     builder.setLinkerFlags(ImmutableList.of(StringWithMacrosUtils.format("--flag")));
     ActionGraphBuilder graphBuilder =
@@ -484,7 +484,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:rule"),
             FlavorDomain.of("Python Platform", PY2, PY3),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
     CxxPythonExtension rule =
         builder
@@ -511,7 +511,7 @@ public class CxxPythonExtensionDescriptionTest {
 
   @Test
   public void platformDepsSeparateLinkage() throws IOException {
-    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(FakeBuckConfig.builder().build());
+    PythonBuckConfig pythonBuckConfig = new PythonBuckConfig(FakeBuckConfig.empty());
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);
 
     CxxLibraryBuilder depBuilder =
@@ -521,7 +521,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
                 BuildTargetFactory.newInstance("//:rule"),
                 pythonPlatforms,
-                new CxxBuckConfig(FakeBuckConfig.builder().build()),
+                new CxxBuckConfig(FakeBuckConfig.empty()),
                 CxxTestUtils.createDefaultPlatforms())
             .setPlatformDeps(
                 PatternMatchedCollection.<ImmutableSortedSet<BuildTarget>>builder()
@@ -579,7 +579,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
                 BuildTargetFactory.newInstance("//:ext"),
                 FlavorDomain.of("Python Platform", PY2, PY3),
-                new CxxBuckConfig(FakeBuckConfig.builder().build()),
+                new CxxBuckConfig(FakeBuckConfig.empty()),
                 CxxTestUtils.createDefaultPlatforms())
             .setDeps(ImmutableSortedSet.of(cxxBinary.getBuildTarget()))
             .build(graphBuilder);
@@ -595,7 +595,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
                 BuildTargetFactory.newInstance("//:ext"),
                 FlavorDomain.of("Python Platform", PY2, PY3),
-                new CxxBuckConfig(FakeBuckConfig.builder().build()),
+                new CxxBuckConfig(FakeBuckConfig.empty()),
                 CxxTestUtils.createDefaultPlatforms())
             .setModuleName("blah")
             .build(graphBuilder);
@@ -617,7 +617,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
                 BuildTargetFactory.newInstance("//:ext"),
                 FlavorDomain.of("Python Platform", PY2, PY3),
-                new CxxBuckConfig(FakeBuckConfig.builder().build()),
+                new CxxBuckConfig(FakeBuckConfig.empty()),
                 CxxTestUtils.createDefaultPlatforms())
             .setModuleName("blah")
             .build(graphBuilder);
@@ -633,7 +633,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:ext"),
             FlavorDomain.of("Python Platform", PY2, PY3),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
     builder.setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.c"))));
     ActionGraphBuilder graphBuilder =
@@ -655,7 +655,7 @@ public class CxxPythonExtensionDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:ext"),
             FlavorDomain.of("Python Platform", PY_DEFAULT, PY2, PY3),
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxTestUtils.createDefaultPlatforms());
 
     builder.setSrcs(ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of("test.cpp"))));

@@ -155,7 +155,7 @@ public class GoDescriptorsTest {
         .build(graphBuilder);
 
     BuildRuleParams params = TestBuildRuleParams.create();
-    GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.builder().build());
+    GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.empty());
 
     GoCompile compile =
         GoDescriptors.createGoCompileRule(
@@ -199,7 +199,7 @@ public class GoDescriptorsTest {
         .build(graphBuilder);
 
     BuildRuleParams params = TestBuildRuleParams.create();
-    GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.builder().build());
+    GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.empty());
 
     GoBinary binary =
         GoDescriptors.createGoBinaryRule(
@@ -249,7 +249,7 @@ public class GoDescriptorsTest {
         TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());
 
     BuildRuleParams params = TestBuildRuleParams.create();
-    GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.builder().build());
+    GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.empty());
 
     ImmutableMap<Optional<GoLinkStep.LinkMode>, Matcher> modes =
         ImmutableMap.of(

@@ -237,7 +237,7 @@ public class LuaBinaryDescriptionTest {
   @Test
   public void cxxPythonExtensionPlatformDeps() {
     FlavorDomain<PythonPlatform> pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.builder().build());
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.empty());
 
     CxxLibraryBuilder py2LibBuilder = new CxxLibraryBuilder(PYTHON2_DEP_TARGET);
     CxxLibraryBuilder py3LibBuilder = new CxxLibraryBuilder(PYTHON3_DEP_TARGET);
@@ -462,7 +462,7 @@ public class LuaBinaryDescriptionTest {
         new CxxPythonExtensionBuilder(
             BuildTargetFactory.newInstance("//:extension"),
             pythonPlatforms,
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             CxxPlatformUtils.DEFAULT_PLATFORMS);
     extensionBuilder.setBaseModule("hello");
 

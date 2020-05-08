@@ -209,7 +209,7 @@ public class HaskellLibraryDescriptionTest {
                 target,
                 haskellPlatform,
                 haskellPlatforms,
-                new CxxBuckConfig(FakeBuckConfig.builder().build()))
+                new CxxBuckConfig(FakeBuckConfig.empty()))
             .setSrcs(
                 SourceSortedSet.ofUnnamedSources(
                     ImmutableSortedSet.of(FakeSourcePath.of("Test.hs"))))

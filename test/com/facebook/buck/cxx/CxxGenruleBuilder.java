@@ -48,7 +48,7 @@ public class CxxGenruleBuilder
                         CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
                 .build(),
             config,
-            new CxxBuckConfig(FakeBuckConfig.builder().build()),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
             new NoSandboxExecutionStrategy()),
         target);
   }
@@ -58,7 +58,7 @@ public class CxxGenruleBuilder
   }
 
   public CxxGenruleBuilder(BuildTarget target, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
-    this(target, cxxPlatforms, FakeBuckConfig.builder().build());
+    this(target, cxxPlatforms, FakeBuckConfig.empty());
   }
 
   public CxxGenruleBuilder(BuildTarget target) {

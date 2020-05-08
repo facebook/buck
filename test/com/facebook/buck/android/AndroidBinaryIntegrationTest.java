@@ -1033,8 +1033,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
     AndroidSdkLocation androidSdkLocation = TestAndroidSdkLocationFactory.create(filesystem);
     AndroidBuildToolsResolver buildToolsResolver =
         new AndroidBuildToolsResolver(
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
-            androidSdkLocation);
+            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()), androidSdkLocation);
     AndroidBuildToolsLocation buildToolsLocation =
         AndroidBuildToolsLocation.of(buildToolsResolver.getBuildToolsPath());
     Path dexdumpLocation = buildToolsLocation.getBuildToolsPath().resolve("dexdump");

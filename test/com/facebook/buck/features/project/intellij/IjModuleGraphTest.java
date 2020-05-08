@@ -694,7 +694,7 @@ public class IjModuleGraphTest {
             return Optional.ofNullable(javaLibraryPaths.get(targetNode));
           }
         };
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     IjProjectConfig projectConfig =
         IjTestProjectConfig.createBuilder(buckConfig)
             .setAggregationMode(aggregationMode)

@@ -346,7 +346,7 @@ public class KotlinBuckConfigTest {
 
   @Test
   public void generateClassAbisByDefault() {
-    KotlinBuckConfig config = FakeBuckConfig.builder().build().getView(KotlinBuckConfig.class);
+    KotlinBuckConfig config = FakeBuckConfig.empty().getView(KotlinBuckConfig.class);
 
     assertEquals(AbiGenerationMode.CLASS, config.getAbiGenerationMode());
   }

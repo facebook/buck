@@ -56,7 +56,7 @@ public class SuperConsoleConfigTest {
     assertFalse(autoConfig.isEnabled(nonAnsiConsole.getAnsi(), nonAnsiConsole.getVerbosity()));
     assertTrue(autoConfig.isEnabled(ansiConsole.getAnsi(), ansiConsole.getVerbosity()));
 
-    SuperConsoleConfig emptyConfig = new SuperConsoleConfig(FakeBuckConfig.builder().build());
+    SuperConsoleConfig emptyConfig = new SuperConsoleConfig(FakeBuckConfig.empty());
     assertTrue(emptyConfig.isEnabled(ansiConsole.getAnsi(), ansiConsole.getVerbosity()));
     assertFalse(emptyConfig.isEnabled(nonAnsiConsole.getAnsi(), nonAnsiConsole.getVerbosity()));
     assertTrue(emptyConfig.isEnabled(ansiConsole.getAnsi(), ansiConsole.getVerbosity()));

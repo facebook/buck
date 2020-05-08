@@ -42,25 +42,21 @@ public class GenruleBuilder
   private GenruleBuilder(BuildTarget target) {
     super(
         new GenruleDescription(
-            createToolchainProvider(),
-            FakeBuckConfig.builder().build(),
-            new NoSandboxExecutionStrategy()),
+            createToolchainProvider(), FakeBuckConfig.empty(), new NoSandboxExecutionStrategy()),
         target);
   }
 
   private GenruleBuilder(BuildTarget target, ToolchainProvider toolchainProvider) {
     super(
         new GenruleDescription(
-            toolchainProvider, FakeBuckConfig.builder().build(), new NoSandboxExecutionStrategy()),
+            toolchainProvider, FakeBuckConfig.empty(), new NoSandboxExecutionStrategy()),
         target);
   }
 
   private GenruleBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(
         new GenruleDescription(
-            createToolchainProvider(),
-            FakeBuckConfig.builder().build(),
-            new NoSandboxExecutionStrategy()),
+            createToolchainProvider(), FakeBuckConfig.empty(), new NoSandboxExecutionStrategy()),
         target,
         filesystem);
   }

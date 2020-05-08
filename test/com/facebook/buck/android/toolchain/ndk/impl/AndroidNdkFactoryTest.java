@@ -72,7 +72,7 @@ public class AndroidNdkFactoryTest {
         new DefaultToolchainProvider(
             BuckPluginManagerFactory.createPluginManager(),
             ImmutableMap.of(),
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             projectFilesystem,
             processExecutor,
             executableFinder,
@@ -92,7 +92,7 @@ public class AndroidNdkFactoryTest {
         new DefaultToolchainProvider(
             BuckPluginManagerFactory.createPluginManager(),
             ImmutableMap.of(),
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             projectFilesystem,
             processExecutor,
             executableFinder,
@@ -112,7 +112,7 @@ public class AndroidNdkFactoryTest {
 
   @Test
   public void testEscapeCFlagsWithNdk15() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     TestAndroidNdkFactory factory =
         new TestAndroidNdkFactory(
             new TestAndroidNdkResolver(
@@ -141,7 +141,7 @@ public class AndroidNdkFactoryTest {
 
   @Test
   public void testEscapeCFlagsWithNdk16() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     TestAndroidNdkFactory factory =
         new TestAndroidNdkFactory(
             new TestAndroidNdkResolver(

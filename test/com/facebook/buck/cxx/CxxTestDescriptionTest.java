@@ -74,7 +74,7 @@ import org.junit.Test;
 
 public class CxxTestDescriptionTest {
 
-  private final CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.builder().build());
+  private final CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(FakeBuckConfig.empty());
 
   private void addFramework(ActionGraphBuilder graphBuilder, ProjectFilesystem filesystem)
       throws NoSuchBuildTargetException {

@@ -114,7 +114,7 @@ public class IjProjectSourcePathResolverTest {
                 JarGenrule>(
                 new JarGenruleDescription(
                     JavaLibraryBuilder.createToolchainProviderForJavaLibrary(),
-                    FakeBuckConfig.builder().build(),
+                    FakeBuckConfig.empty(),
                     new NoSandboxExecutionStrategy()),
                 target) {};
     TargetNode<JarGenruleDescriptionArg> node = builder.build(filesystem);

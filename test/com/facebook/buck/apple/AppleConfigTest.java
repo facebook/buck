@@ -59,7 +59,7 @@ public class AppleConfigTest {
 
   @Test
   public void getUnspecifiedAppleDeveloperDirectorySupplier() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleConfig config = buckConfig.getView(AppleConfig.class);
     assertNotNull(config.getAppleDeveloperDirectorySupplier(new FakeProcessExecutor()));
   }
@@ -84,7 +84,7 @@ public class AppleConfigTest {
 
   @Test
   public void getXcodeSelectDetectedAppleDeveloperDirectorySupplier() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleConfig config = buckConfig.getView(AppleConfig.class);
     ProcessExecutorParams xcodeSelectParams =
         ProcessExecutorParams.builder()
@@ -195,7 +195,7 @@ public class AppleConfigTest {
   @Test
   public void testDefaultCodesignTimeout() {
     /* make sure that we have a sane default of 300s when the value is not specified */
-    AppleConfig config = FakeBuckConfig.builder().build().getView(AppleConfig.class);
+    AppleConfig config = FakeBuckConfig.empty().getView(AppleConfig.class);
     assertThat(config.getCodesignTimeout(), equalTo(Duration.ofSeconds(300)));
   }
 
@@ -215,7 +215,7 @@ public class AppleConfigTest {
             .getView(AppleConfig.class);
     assertFalse(configExplicitFalse.shouldWorkAroundDsymutilLTOStackOverflowBug());
 
-    AppleConfig configUnset = FakeBuckConfig.builder().build().getView(AppleConfig.class);
+    AppleConfig configUnset = FakeBuckConfig.empty().getView(AppleConfig.class);
     assertFalse(configUnset.shouldWorkAroundDsymutilLTOStackOverflowBug());
   }
 }

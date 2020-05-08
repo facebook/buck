@@ -60,7 +60,7 @@ public class CxxSharedLibraryInterfaceIntegrationTest {
     }
 
     // If the NDK is present, test its platforms.
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     Optional<CxxPlatform> testPlatform =
         SharedLibraryInterfacePlatforms.getTestPlatform(
             TestProjectFilesystems.createProjectFilesystem(Paths.get(".").toAbsolutePath()),

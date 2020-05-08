@@ -67,9 +67,7 @@ public class CxxLibraryBuilder
         new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     CxxLibraryFactory cxxLibraryFactory =
         new CxxLibraryFactory(
-            toolchainProvider,
-            cxxBuckConfig,
-            new InferBuckConfig(FakeBuckConfig.builder().build()));
+            toolchainProvider, cxxBuckConfig, new InferBuckConfig(FakeBuckConfig.empty()));
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(
             toolchainProvider, cxxBuckConfig.getDelegate().getFilesystem());

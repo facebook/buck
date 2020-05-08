@@ -65,12 +65,12 @@ public class AppleNativeIntegrationTestUtils {
   }
 
   public static boolean isApplePlatformAvailable(ApplePlatform platform) {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     return anySdkForPlatform(platform, discoverSystemSdkPaths(buckConfig)).isPresent();
   }
 
   public static boolean isSwiftAvailable(ApplePlatform platform) {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     ImmutableMap<AppleSdk, AppleSdkPaths> sdkPaths = discoverSystemSdkPaths(buckConfig);
     Optional<AppleSdk> anySdkOptional = anySdkForPlatform(platform, sdkPaths);
     if (!anySdkOptional.isPresent()) {

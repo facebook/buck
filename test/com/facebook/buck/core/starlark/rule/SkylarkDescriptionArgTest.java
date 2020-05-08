@@ -123,8 +123,7 @@ public class SkylarkDescriptionArgTest {
     DefaultConstructorArgMarshaller marshaller = new DefaultConstructorArgMarshaller();
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CellNameResolver cellNameResolver =
-        DefaultCellPathResolver.create(
-                filesystem.getRootPath(), FakeBuckConfig.builder().build().getConfig())
+        DefaultCellPathResolver.create(filesystem.getRootPath(), FakeBuckConfig.empty().getConfig())
             .getCellNameResolver();
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(new TestSelectableResolver());

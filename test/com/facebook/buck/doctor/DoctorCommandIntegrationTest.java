@@ -142,9 +142,7 @@ public class DoctorCommandIntegrationTest {
   public void testEndpointUrl() throws Exception {
     DoctorReportHelper helper =
         createDoctorHelper(
-            workspace,
-            userInputFixture.getUserInput(),
-            DoctorConfig.of(FakeBuckConfig.builder().build()));
+            workspace, userInputFixture.getUserInput(), DoctorConfig.of(FakeBuckConfig.empty()));
     BuildLogHelper buildLogHelper = new BuildLogHelper(filesystem);
     Optional<BuildLogEntry> entry =
         helper.promptForBuild(new ArrayList<>(buildLogHelper.getBuildLogs()));

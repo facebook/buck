@@ -386,7 +386,7 @@ public class ExportFileTest {
     Path sourceDir = Paths.get("dir");
     projectFilesystem.mkdirs(sourceDir);
     ExportFile exportFile =
-        new ExportFileBuilder(FakeBuckConfig.builder().build(), target)
+        new ExportFileBuilder(FakeBuckConfig.empty(), target)
             .setOut("out")
             .setSrc(FakeSourcePath.of(projectFilesystem, sourceDir))
             .build(graphBuilder, projectFilesystem);

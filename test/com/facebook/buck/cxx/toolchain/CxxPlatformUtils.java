@@ -48,8 +48,7 @@ public class CxxPlatformUtils {
 
   private CxxPlatformUtils() {}
 
-  public static final CxxBuckConfig DEFAULT_CONFIG =
-      new CxxBuckConfig(new FakeBuckConfig.Builder().build());
+  public static final CxxBuckConfig DEFAULT_CONFIG = new CxxBuckConfig(FakeBuckConfig.empty());
 
   public static final Tool DEFAULT_TOOL = new CommandTool.Builder().build();
 

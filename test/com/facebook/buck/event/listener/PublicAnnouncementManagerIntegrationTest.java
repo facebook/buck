@@ -137,7 +137,7 @@ public class PublicAnnouncementManagerIntegrationTest {
       TestConsole console = new TestConsole();
       SuperConsoleEventBusListener listener =
           new SuperConsoleEventBusListener(
-              new SuperConsoleConfig(FakeBuckConfig.builder().build()),
+              new SuperConsoleConfig(FakeBuckConfig.empty()),
               new RenderingConsole(clock, console),
               clock,
               /* verbosity */ TestResultSummaryVerbosity.of(false, false),

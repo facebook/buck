@@ -1257,8 +1257,7 @@ public class CxxLibraryDescriptionTest {
         BuildTargetFactory.newInstance("//:rule")
             .withFlavors(CxxDescriptionEnhancer.STATIC_FLAVOR, cxxPlatform.getFlavor());
     CxxLibraryBuilder libBuilder =
-        new CxxLibraryBuilder(
-            target, new CxxBuckConfig(FakeBuckConfig.builder().build()), cxxPlatforms);
+        new CxxLibraryBuilder(target, new CxxBuckConfig(FakeBuckConfig.empty()), cxxPlatforms);
     libBuilder.setSrcs(
         ImmutableSortedSet.of(SourceWithFlags.of(FakeSourcePath.of(filesystem, "test.cpp"))));
     TargetGraph targetGraph = TargetGraphFactory.newInstance(libBuilder.build());

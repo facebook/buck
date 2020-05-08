@@ -31,7 +31,7 @@ public class WorkerToolBuilder
         WorkerToolDescription,
         DefaultWorkerToolRule> {
   private WorkerToolBuilder(BuildTarget target) {
-    super(new WorkerToolDescription(FakeBuckConfig.builder().build()), target);
+    super(new WorkerToolDescription(FakeBuckConfig.empty()), target);
   }
 
   public static WorkerToolBuilder newWorkerToolBuilder(BuildTarget target) {

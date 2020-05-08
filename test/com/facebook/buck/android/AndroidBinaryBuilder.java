@@ -57,7 +57,7 @@ public class AndroidBinaryBuilder
         AndroidBinary> {
 
   private AndroidBinaryBuilder(BuildTarget target) {
-    this(FakeBuckConfig.builder().build(), target);
+    this(FakeBuckConfig.empty(), target);
   }
 
   private AndroidBinaryBuilder(BuckConfig buckConfig, BuildTarget target) {

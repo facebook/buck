@@ -38,7 +38,7 @@ public class ApkGenruleBuilder
   private ApkGenruleBuilder(BuildTarget target, ToolchainProvider toolchainProvider) {
     super(
         new ApkGenruleDescription(
-            toolchainProvider, FakeBuckConfig.builder().build(), new NoSandboxExecutionStrategy()),
+            toolchainProvider, FakeBuckConfig.empty(), new NoSandboxExecutionStrategy()),
         target);
   }
 

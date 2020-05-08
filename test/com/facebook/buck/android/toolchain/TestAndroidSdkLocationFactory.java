@@ -33,7 +33,7 @@ public class TestAndroidSdkLocationFactory {
     ToolchainCreationContext toolchainCreationContext =
         ToolchainCreationContext.of(
             EnvVariablesProvider.getSystemEnv(),
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             filesystem,
             new DefaultProcessExecutor(new TestConsole()),
             new ExecutableFinder(),

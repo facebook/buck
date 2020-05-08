@@ -47,7 +47,7 @@ public class GroovyLibraryBuilder
                     JavacOptionsProvider.DEFAULT_NAME,
                     JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
                 .build(),
-            new GroovyBuckConfig(FakeBuckConfig.builder().build()),
+            new GroovyBuckConfig(FakeBuckConfig.empty()),
             null),
         target,
         projectFilesystem);

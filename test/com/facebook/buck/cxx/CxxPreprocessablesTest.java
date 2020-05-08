@@ -224,8 +224,7 @@ public class CxxPreprocessablesTest {
 
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
-    CxxPlatform cxxPlatform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
     // Create a native linkable that sits at the bottom of the dep chain.
     StringArg sentinal = StringArg.of("bottom");

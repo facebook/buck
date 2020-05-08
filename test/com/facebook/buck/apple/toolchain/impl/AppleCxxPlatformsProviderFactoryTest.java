@@ -70,7 +70,7 @@ public class AppleCxxPlatformsProviderFactoryTest {
     workspace.setUp();
     Path root = workspace.getPath("Platforms");
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
 
     ToolchainProviderBuilder toolchainProviderBuilder = new ToolchainProviderBuilder();
 

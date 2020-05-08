@@ -43,7 +43,7 @@ public class AndroidResourceBuilder
     super(
         new AndroidResourceDescription(
             createToolchainProviderForAndroidResource(),
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect())),
+            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect())),
         target,
         filesystem);
   }

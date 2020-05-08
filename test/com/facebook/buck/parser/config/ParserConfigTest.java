@@ -331,7 +331,7 @@ public class ParserConfigTest {
   }
 
   private ParserConfig getDefaultConfig() {
-    return FakeBuckConfig.builder().build().getView(ParserConfig.class);
+    return FakeBuckConfig.empty().getView(ParserConfig.class);
   }
 
   private ParserConfig parseConfig(String... configStrings) throws IOException {

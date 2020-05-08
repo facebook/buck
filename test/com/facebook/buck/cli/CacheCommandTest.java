@@ -254,8 +254,7 @@ public class CacheCommandTest {
       Console console, Clock clock, BuckEventBus eventBus) {
     FileSystem vfs = Jimfs.newFileSystem(Configuration.unix());
     Path logPath = vfs.getPath("log.txt");
-    SuperConsoleConfig emptySuperConsoleConfig =
-        new SuperConsoleConfig(FakeBuckConfig.builder().build());
+    SuperConsoleConfig emptySuperConsoleConfig = new SuperConsoleConfig(FakeBuckConfig.empty());
     TestResultSummaryVerbosity silentSummaryVerbosity = TestResultSummaryVerbosity.of(false, false);
     SuperConsoleEventBusListener listener =
         new SuperConsoleEventBusListener(

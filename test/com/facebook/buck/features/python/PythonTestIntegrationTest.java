@@ -331,7 +331,7 @@ public class PythonTestIntegrationTest {
   private void assumePythonVersionIsAtLeast(String expectedVersion, String message) {
     PythonVersion actualVersion =
         PythonPlatformsProviderFactoryUtils.getPythonEnvironment(
-                FakeBuckConfig.builder().build(),
+                FakeBuckConfig.empty(),
                 new DefaultProcessExecutor(new TestConsole()),
                 new ExecutableFinder())
             .getPythonVersion();

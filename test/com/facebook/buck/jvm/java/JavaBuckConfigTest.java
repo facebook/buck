@@ -313,7 +313,7 @@ public class JavaBuckConfigTest {
   @Test
   public void whenJavacIsNotSetInBuckConfigConfiguredRulesCreateJavaLibraryRuleWithJsr199Javac()
       throws NoSuchBuildTargetException {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
 
     Javac javac =
@@ -426,7 +426,7 @@ public class JavaBuckConfigTest {
 
   @Test
   public void trackClassUsageByDefaultForJavacFromJDK() {
-    JavaBuckConfig config = FakeBuckConfig.builder().build().getView(JavaBuckConfig.class);
+    JavaBuckConfig config = FakeBuckConfig.empty().getView(JavaBuckConfig.class);
 
     assumeThat(
         config.getJavacSpec(UnconfiguredTargetConfiguration.INSTANCE).getJavacSource(),

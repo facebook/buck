@@ -107,7 +107,7 @@ public class AliasConfigTest {
   /** Ensures that all public methods of BuckConfig return reasonable values for an empty config. */
   @Test
   public void testEmptyConfig() {
-    AliasConfig emptyConfig = AliasConfig.from(FakeBuckConfig.builder().build());
+    AliasConfig emptyConfig = AliasConfig.from(FakeBuckConfig.empty());
     assertEquals(ImmutableMap.<String, String>of(), emptyConfig.getEntries());
     assertEquals(ImmutableSet.of(), emptyConfig.getBuildTargetForAliasAsString("fb4a"));
   }

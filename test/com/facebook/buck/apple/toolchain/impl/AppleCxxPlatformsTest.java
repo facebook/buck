@@ -209,7 +209,7 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void iphoneOSSdkPathsBuiltFromDirectory() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatformWithConfig(buckConfig);
 
     CxxPlatform cxxPlatform = appleCxxPlatform.getCxxPlatform();
@@ -285,7 +285,7 @@ public class AppleCxxPlatformsTest {
 
   @Test
   public void linkerFlagsDetermineSDKVersionForDefaultAuto() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleCxxPlatform appleCxxPlatform = buildAppleCxxPlatformWithConfig(buckConfig);
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
@@ -360,7 +360,7 @@ public class AppleCxxPlatformsTest {
             .build();
     paths.forEach(this::touchFile);
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
@@ -472,7 +472,7 @@ public class AppleCxxPlatformsTest {
             .build();
     paths.forEach(this::touchFile);
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
@@ -599,7 +599,7 @@ public class AppleCxxPlatformsTest {
             .setToolchains(ImmutableList.of(toolchain))
             .build();
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
@@ -711,7 +711,7 @@ public class AppleCxxPlatformsTest {
             .setToolchains(ImmutableList.of(toolchain))
             .build();
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleCxxPlatforms.buildWithXcodeToolFinder(
         projectFilesystem,
         targetSdk,
@@ -759,7 +759,7 @@ public class AppleCxxPlatformsTest {
             .setToolchains(ImmutableList.of(toolchain))
             .build();
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
@@ -819,7 +819,7 @@ public class AppleCxxPlatformsTest {
             .setToolchains(ImmutableList.of(toolchain))
             .build();
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
@@ -880,7 +880,7 @@ public class AppleCxxPlatformsTest {
             .setToolchains(ImmutableList.of(toolchain))
             .build();
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AppleCxxPlatform appleCxxPlatform =
         AppleCxxPlatforms.buildWithXcodeToolFinder(
             projectFilesystem,
@@ -1270,8 +1270,7 @@ public class AppleCxxPlatformsTest {
   @Test
   public void testXcodeToolVersionOverride() {
     AppleCxxPlatform appleCxxPlatform1 =
-        buildAppleCxxPlatform(
-            projectFilesystem.getPath("/Developer1"), FakeBuckConfig.builder().build());
+        buildAppleCxxPlatform(projectFilesystem.getPath("/Developer1"), FakeBuckConfig.empty());
 
     AppleCxxPlatform appleCxxPlatform2 =
         buildAppleCxxPlatform(
@@ -1341,7 +1340,7 @@ public class AppleCxxPlatformsTest {
                     "Toolchains/XcodeDefault.xctoolchain/usr/bin/swift-stdlib-tool"))
             .build();
     knownPaths.forEach(this::touchFile);
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     return AppleCxxPlatforms.buildWithXcodeToolFinder(
         projectFilesystem,
         FakeAppleRuleDescriptions.DEFAULT_IPHONEOS_SDK,

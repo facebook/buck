@@ -85,7 +85,7 @@ public class GenruleDescriptionTest {
     GenruleDescription genruleDescription =
         new GenruleDescription(
             new ToolchainProviderBuilder().build(),
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             new NoSandboxExecutionStrategy());
     KnownNativeRuleTypes knownRuleTypes =
         KnownNativeRuleTypes.of(

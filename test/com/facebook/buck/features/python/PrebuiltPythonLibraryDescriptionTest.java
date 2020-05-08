@@ -53,7 +53,7 @@ public class PrebuiltPythonLibraryDescriptionTest {
             .setExcludeDepsFromMergedLinking(true);
 
     PythonBuckConfig config =
-        new PythonBuckConfig(FakeBuckConfig.builder().build()) {
+        new PythonBuckConfig(FakeBuckConfig.empty()) {
           @Override
           public NativeLinkStrategy getNativeLinkStrategy() {
             return NativeLinkStrategy.MERGED;

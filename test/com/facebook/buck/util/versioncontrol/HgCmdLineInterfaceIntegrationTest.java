@@ -234,7 +234,7 @@ public class HgCmdLineInterfaceIntegrationTest {
     return new DelegatingVersionControlCmdLineInterface(
         repoRootDir,
         new TestProcessExecutorFactory(),
-        new VersionControlBuckConfig(FakeBuckConfig.builder().build()).getHgCmd(),
+        new VersionControlBuckConfig(FakeBuckConfig.empty()).getHgCmd(),
         ImmutableMap.of("PATH", EnvVariablesProvider.getSystemEnv().get("PATH")));
   }
 }

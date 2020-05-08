@@ -78,7 +78,7 @@ public class JavaBinaryRuleBuilder
         target,
         DEFAULT_JAVA_OPTIONS,
         DEFAULT_JAVAC_OPTIONS,
-        JavaBuckConfig.of(FakeBuckConfig.builder().build()),
+        JavaBuckConfig.of(FakeBuckConfig.empty()),
         defaultCxxPlatform,
         cxxPlatforms);
   }

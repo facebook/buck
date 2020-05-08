@@ -335,7 +335,7 @@ public class JsBundleGenruleDescriptionTest {
     AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
     new JsBundleGenruleDescription(
             new ToolchainProviderBuilder().build(),
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             genruleBuilder,
@@ -361,7 +361,7 @@ public class JsBundleGenruleDescriptionTest {
     AppleBundleResources.Builder resourcesBuilder = AppleBundleResources.builder();
     new JsBundleGenruleDescription(
             new ToolchainProviderBuilder().build(),
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             resourcesBuilder,

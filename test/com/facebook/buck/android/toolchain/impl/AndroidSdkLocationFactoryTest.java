@@ -66,7 +66,7 @@ public class AndroidSdkLocationFactoryTest {
         toolchainProvider,
         ToolchainCreationContext.of(
             ImmutableMap.of(),
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             projectFilesystem,
             new DefaultProcessExecutor(new TestConsole()),
             new ExecutableFinder(),

@@ -40,8 +40,7 @@ public class PythonTestUtils {
 
   private PythonTestUtils() {}
 
-  public static final PythonBuckConfig PYTHON_CONFIG =
-      new PythonBuckConfig(FakeBuckConfig.builder().build());
+  public static final PythonBuckConfig PYTHON_CONFIG = new PythonBuckConfig(FakeBuckConfig.empty());
 
   public static final PythonPlatform PYTHON_PLATFORM =
       new TestPythonPlatform(

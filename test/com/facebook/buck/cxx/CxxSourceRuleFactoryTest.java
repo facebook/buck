@@ -82,7 +82,7 @@ public class CxxSourceRuleFactoryTest {
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
 
   private static final CxxPlatform CXX_PLATFORM =
-      CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+      CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {

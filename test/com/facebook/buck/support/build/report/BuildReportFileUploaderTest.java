@@ -45,7 +45,7 @@ public class BuildReportFileUploaderTest {
   private final String TEST_FILE_NAME = "test_file";
   private final String TEST_CONTENT = "rjcgtchjbhhhnjfbjdfjgilbehfvebue";
 
-  private final BuckConfig buckConfig = FakeBuckConfig.builder().build();
+  private final BuckConfig buckConfig = FakeBuckConfig.empty();
 
   private class BuildReportFileHandler extends AbstractHandler {
     @Override

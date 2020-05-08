@@ -63,8 +63,7 @@ public class ArchiveStepIntegrationTest {
   public void thatGeneratedArchivesAreDeterministic() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
@@ -165,8 +164,7 @@ public class ArchiveStepIntegrationTest {
   public void inputDirs() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
@@ -209,8 +207,7 @@ public class ArchiveStepIntegrationTest {
   public void thinArchives() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();

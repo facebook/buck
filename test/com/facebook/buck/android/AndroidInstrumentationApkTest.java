@@ -122,11 +122,11 @@ public class AndroidInstrumentationApkTest {
         (AndroidInstrumentationApk)
             new AndroidInstrumentationApkDescription(
                     DEFAULT_JAVA_CONFIG,
-                    new ProGuardConfig(FakeBuckConfig.builder().build()),
+                    new ProGuardConfig(FakeBuckConfig.empty()),
                     CxxPlatformUtils.DEFAULT_CONFIG,
-                    new DxConfig(FakeBuckConfig.builder().build()),
+                    new DxConfig(FakeBuckConfig.empty()),
                     toolchainProvider,
-                    new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()))
+                    new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()))
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(
                         graphBuilder, projectFilesystem, toolchainProvider),

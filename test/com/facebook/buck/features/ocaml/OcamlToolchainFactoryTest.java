@@ -71,7 +71,7 @@ public class OcamlToolchainFactoryTest {
 
     ProcessExecutor processExecutor = new FakeProcessExecutor();
     ExecutableFinder executableFinder = new FakeExecutableFinder();
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     ToolchainCreationContext toolchainCreationContext =
         ToolchainCreationContext.of(
             ImmutableMap.of(),

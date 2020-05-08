@@ -37,9 +37,7 @@ public class JsBundleGenruleBuilder
         JsBundleGenrule> {
   private static final JsBundleGenruleDescription genruleDescription =
       new JsBundleGenruleDescription(
-          createToolchainProvider(),
-          FakeBuckConfig.builder().build(),
-          new NoSandboxExecutionStrategy());
+          createToolchainProvider(), FakeBuckConfig.empty(), new NoSandboxExecutionStrategy());
 
   private static ToolchainProvider createToolchainProvider() {
     return new ToolchainProviderBuilder().build();

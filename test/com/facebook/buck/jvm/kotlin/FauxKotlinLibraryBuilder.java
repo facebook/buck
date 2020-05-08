@@ -52,7 +52,7 @@ public class FauxKotlinLibraryBuilder
                     JavaToolchain.DEFAULT_NAME,
                     JavaToolchain.of(JavacSpec.builder().build().getJavacProvider()))
                 .build(),
-            new KotlinBuckConfig(FakeBuckConfig.builder().build()),
+            new KotlinBuckConfig(FakeBuckConfig.empty()),
             null),
         target,
         projectFilesystem);

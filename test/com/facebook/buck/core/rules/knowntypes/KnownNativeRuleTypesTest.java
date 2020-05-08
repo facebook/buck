@@ -71,7 +71,7 @@ public class KnownNativeRuleTypesTest {
     PluginManager pluginManager = BuckPluginManagerFactory.createPluginManager();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     DefaultToolchainProvider toolchainProvider =
         new DefaultToolchainProvider(
             pluginManager,
@@ -112,7 +112,7 @@ public class KnownNativeRuleTypesTest {
   public void toolchainAreNotCreated() throws Exception {
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     DefaultToolchainProvider toolchainProvider =
         new DefaultToolchainProvider(
             BuckPluginManagerFactory.createPluginManager(),

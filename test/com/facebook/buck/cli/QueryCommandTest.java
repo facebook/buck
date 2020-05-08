@@ -106,7 +106,7 @@ public class QueryCommandTest {
             cell,
             artifactCache,
             eventBus,
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             Platform.detect(),
             EnvVariablesProvider.getSystemEnv(),
             Optional.empty());

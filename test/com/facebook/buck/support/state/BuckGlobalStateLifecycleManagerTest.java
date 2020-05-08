@@ -97,7 +97,7 @@ public class BuckGlobalStateLifecycleManagerTest {
   @Before
   public void setUp() {
     filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    buckConfig = FakeBuckConfig.builder().build();
+    buckConfig = FakeBuckConfig.empty();
     buckGlobalStateLifecycleManager = new BuckGlobalStateLifecycleManager();
     pluginManager = BuckPluginManagerFactory.createPluginManager();
     knownRuleTypesProvider = TestKnownRuleTypesProvider.create(pluginManager);
@@ -229,7 +229,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     assumeThat(Platform.detect(), is(Platform.MACOS));
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
 
     Object buckGlobalState1 =
         buckGlobalStateLifecycleManager
@@ -302,7 +302,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     // Disable the test on Windows for now since it's failing to find python.
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     Builder<Entry<ProcessExecutorParams, FakeProcess>> fakeProcessesBuilder =
         ImmutableList.builder();
     ProcessExecutorParams processExecutorParams =
@@ -388,7 +388,7 @@ public class BuckGlobalStateLifecycleManagerTest {
     // Disable the test on Windows for now since it's failing to find python.
     assumeThat(Platform.detect(), not(Platform.WINDOWS));
 
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     Builder<Entry<ProcessExecutorParams, FakeProcess>> fakeProcessesBuilder =
         ImmutableList.builder();
     ProcessExecutorParams processExecutorParams =
@@ -778,7 +778,7 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Cells cells1 =
         new TestCellBuilder()
-            .setBuckConfig(FakeBuckConfig.builder().build())
+            .setBuckConfig(FakeBuckConfig.empty())
             .setFilesystem(filesystem)
             .build();
     Cells cells2 =
@@ -836,7 +836,7 @@ public class BuckGlobalStateLifecycleManagerTest {
 
     Cells cells =
         new TestCellBuilder()
-            .setBuckConfig(FakeBuckConfig.builder().build())
+            .setBuckConfig(FakeBuckConfig.empty())
             .setFilesystem(filesystem)
             .build();
     SkylarkUserDefinedRule rule = FakeSkylarkUserDefinedRuleFactory.createSimpleRule();

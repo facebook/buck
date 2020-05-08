@@ -32,7 +32,7 @@ public class ExportFileBuilder
         ExportFileDescription,
         ExportFile> {
   public ExportFileBuilder(BuildTarget target) {
-    super(new ExportFileDescription(FakeBuckConfig.builder().build()), target);
+    super(new ExportFileDescription(FakeBuckConfig.empty()), target);
   }
 
   public ExportFileBuilder(BuildTarget target, ProjectFilesystem filesystem) {

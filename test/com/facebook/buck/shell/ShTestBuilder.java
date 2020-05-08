@@ -29,7 +29,7 @@ public class ShTestBuilder
         ShTestDescriptionArg.Builder, ShTestDescriptionArg, ShTestDescription, ShTest> {
 
   public ShTestBuilder(BuildTarget target) {
-    super(new ShTestDescription(FakeBuckConfig.builder().build()), target);
+    super(new ShTestDescription(FakeBuckConfig.empty()), target);
   }
 
   public ShTestBuilder setTest(SourcePath path) {

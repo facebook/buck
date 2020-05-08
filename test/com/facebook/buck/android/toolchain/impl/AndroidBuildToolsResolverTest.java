@@ -45,7 +45,7 @@ public class AndroidBuildToolsResolverTest {
 
   @Before
   public void setUp() {
-    androidBuckConfig = new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect());
+    androidBuckConfig = new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect());
   }
 
   @Test

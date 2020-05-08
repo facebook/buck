@@ -246,7 +246,7 @@ public class PythonBinaryIntegrationTest {
     assumeThatNativeLibsAreSupported();
 
     String nativeLibsEnvVarName =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()))
+        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()))
             .getLd()
             .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .searchPathEnvVar();

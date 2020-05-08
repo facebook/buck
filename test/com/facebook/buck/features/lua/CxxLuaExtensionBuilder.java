@@ -53,7 +53,7 @@ public class CxxLuaExtensionBuilder
                     ImmutableLuaPlatformsProvider.ofImpl(
                         luaPlatform, FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, luaPlatform)))
                 .build(),
-            new CxxBuckConfig(FakeBuckConfig.builder().build())),
+            new CxxBuckConfig(FakeBuckConfig.empty())),
         target);
   }
 

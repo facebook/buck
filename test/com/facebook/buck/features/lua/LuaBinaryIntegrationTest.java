@@ -105,8 +105,7 @@ public class LuaBinaryIntegrationTest {
     // Try to detect if a Lua devel package is available, which is needed to C/C++ support.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
     CxxPlatform cxxPlatform =
-        DefaultCxxPlatforms.build(
-            Platform.detect(), new CxxBuckConfig(FakeBuckConfig.builder().build()));
+        DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(FakeBuckConfig.empty()));
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
             .setCommand(

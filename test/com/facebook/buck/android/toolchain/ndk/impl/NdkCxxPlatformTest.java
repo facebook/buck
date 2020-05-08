@@ -258,14 +258,14 @@ public class NdkCxxPlatformTest {
   @Test
   public void testGetUseUnifiedHeadersIsFalseWhenConfigNotSetWithOldNDK() {
     AndroidBuckConfig androidBuckConfig =
-        new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect());
+        new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect());
     assertFalse(NdkCxxPlatforms.getUseUnifiedHeaders(androidBuckConfig, "15"));
   }
 
   @Test
   public void testGetUseUnifiedHeadersIsFalseWhenConfigNotSetWithNewNDK() {
     AndroidBuckConfig androidBuckConfig =
-        new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect());
+        new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect());
     assertTrue(NdkCxxPlatforms.getUseUnifiedHeaders(androidBuckConfig, "16"));
   }
 
@@ -332,7 +332,7 @@ public class NdkCxxPlatformTest {
     UnresolvedNdkCxxPlatform platform =
         NdkCxxPlatforms.build(
             CxxPlatformUtils.DEFAULT_CONFIG,
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
+            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()),
             filesystem,
             InternalFlavor.of("android-x86"),
             Platform.detect(),
@@ -570,7 +570,7 @@ public class NdkCxxPlatformTest {
           ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> platforms =
               NdkCxxPlatforms.getPlatforms(
                   CxxPlatformUtils.DEFAULT_CONFIG,
-                  new AndroidBuckConfig(FakeBuckConfig.builder().build(), platform),
+                  new AndroidBuckConfig(FakeBuckConfig.empty(), platform),
                   filesystem,
                   root.getPath(),
                   NdkCxxPlatformCompiler.of(config.getFirst(), "gcc-version", "clang-version"),
@@ -619,7 +619,7 @@ public class NdkCxxPlatformTest {
     ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> platforms =
         NdkCxxPlatforms.getPlatforms(
             CxxPlatformUtils.DEFAULT_CONFIG,
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()),
+            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()),
             filesystem,
             root.getPath(),
             NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),

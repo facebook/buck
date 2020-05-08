@@ -73,7 +73,7 @@ public class InstallTriggerIntegrationTest {
                 KnownNativeRuleTypes.of(
                     ImmutableList.of(
                         new InstallTriggerDescription(),
-                        new ExportFileDescription(FakeBuckConfig.builder().build())),
+                        new ExportFileDescription(FakeBuckConfig.empty())),
                     knownConfigurationDescriptions,
                     ImmutableList.of()));
     workspace.setUp();

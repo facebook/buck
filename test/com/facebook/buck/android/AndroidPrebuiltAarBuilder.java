@@ -41,7 +41,7 @@ public class AndroidPrebuiltAarBuilder
     super(
         new AndroidPrebuiltAarDescription(
             createToolchainProviderForAndroidPrebuiltAar(),
-            new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect())),
+            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect())),
         target);
   }
 

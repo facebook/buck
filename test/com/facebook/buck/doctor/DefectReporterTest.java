@@ -72,7 +72,7 @@ public class DefectReporterTest {
   @Before
   public void setUp() throws IOException {
     filesystem = TestProjectFilesystems.createProjectFilesystem(temporaryFolder.getRoot());
-    config = DoctorConfig.of(FakeBuckConfig.builder().build());
+    config = DoctorConfig.of(FakeBuckConfig.empty());
     clock = new DefaultClock();
     reporter =
         new DefaultDefectReporter(

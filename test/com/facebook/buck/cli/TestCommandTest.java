@@ -72,7 +72,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule1, rule2, rule3);
 
     Iterable<TestRule> result =
-        command.filterTestRules(FakeBuckConfig.builder().build(), ImmutableSet.of(), testRules);
+        command.filterTestRules(FakeBuckConfig.empty(), ImmutableSet.of(), testRules);
     assertThat(result, contains(rule2));
   }
 
@@ -95,7 +95,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
     Iterable<TestRule> result =
-        command.filterTestRules(FakeBuckConfig.builder().build(), ImmutableSet.of(), testRules);
+        command.filterTestRules(FakeBuckConfig.empty(), ImmutableSet.of(), testRules);
     assertEquals(ImmutableSet.of(rule1), result);
   }
 
@@ -118,7 +118,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
 
     Iterable<TestRule> result =
-        command.filterTestRules(FakeBuckConfig.builder().build(), ImmutableSet.of(), testRules);
+        command.filterTestRules(FakeBuckConfig.empty(), ImmutableSet.of(), testRules);
     assertEquals(ImmutableSet.of(rule2), result);
   }
 
@@ -135,7 +135,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule);
 
     Iterable<TestRule> result =
-        command.filterTestRules(FakeBuckConfig.builder().build(), ImmutableSet.of(), testRules);
+        command.filterTestRules(FakeBuckConfig.empty(), ImmutableSet.of(), testRules);
     assertEquals(ImmutableSet.of(), result);
   }
 
@@ -152,7 +152,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule);
 
     Iterable<TestRule> result =
-        command.filterTestRules(FakeBuckConfig.builder().build(), ImmutableSet.of(), testRules);
+        command.filterTestRules(FakeBuckConfig.empty(), ImmutableSet.of(), testRules);
     assertEquals(ImmutableSet.of(), result);
   }
 
@@ -181,7 +181,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule1, rule2, rule3);
     Iterable<TestRule> filtered =
         command.filterTestRules(
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             ImmutableSet.of(BuildTargetFactory.newInstance("//:wow")),
             testRules);
 
@@ -214,7 +214,7 @@ public class TestCommandTest {
     List<TestRule> testRules = ImmutableList.of(rule1, rule2);
     Iterable<TestRule> filtered =
         command.filterTestRules(
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             ImmutableSet.of(
                 BuildTargetFactory.newInstance("//:for"),
                 BuildTargetFactory.newInstance("//:lulz")),

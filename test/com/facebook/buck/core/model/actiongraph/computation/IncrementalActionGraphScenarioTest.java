@@ -141,7 +141,7 @@ public class IncrementalActionGraphScenarioTest {
   @Before
   public void setUp() {
     filesystem = new FakeProjectFilesystem();
-    buckConfig = FakeBuckConfig.builder().build();
+    buckConfig = FakeBuckConfig.empty();
     cxxBuckConfig = new CxxBuckConfig(buckConfig);
     pythonBuckConfig = new PythonBuckConfig(buckConfig);
     pythonPlatforms = FlavorDomain.of("Python Platform", PY2, PY3);

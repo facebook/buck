@@ -63,7 +63,7 @@ public class StackedDownloaderTest {
   public void shouldCreateADownloaderEvenWithAnEmptyStack() {
     Downloader downloader =
         StackedDownloader.createFromConfig(
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             new ToolchainProviderBuilder().build(),
             UnconfiguredTargetConfiguration.INSTANCE);
 
@@ -77,7 +77,7 @@ public class StackedDownloaderTest {
   public void shouldAddOnDiskAndroidReposIfPresentInSdk() throws IOException {
     Downloader downloader =
         StackedDownloader.createFromConfig(
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             new ToolchainProviderBuilder().build(),
             UnconfiguredTargetConfiguration.INSTANCE);
 
@@ -99,9 +99,7 @@ public class StackedDownloaderTest {
             .build();
     downloader =
         StackedDownloader.createFromConfig(
-            FakeBuckConfig.builder().build(),
-            toolchainProvider,
-            UnconfiguredTargetConfiguration.INSTANCE);
+            FakeBuckConfig.empty(), toolchainProvider, UnconfiguredTargetConfiguration.INSTANCE);
     downloaders = unpackDownloaders(downloader);
 
     int count = 0;
@@ -272,7 +270,7 @@ public class StackedDownloaderTest {
 
   @Test
   public void shouldNotUseRetryingDownloaderIfMaxNumberOfRetriesIsSet() {
-    BuckConfig config = FakeBuckConfig.builder().build();
+    BuckConfig config = FakeBuckConfig.empty();
     Downloader downloader =
         StackedDownloader.createFromConfig(
             config,

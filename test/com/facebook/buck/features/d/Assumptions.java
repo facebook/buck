@@ -27,7 +27,7 @@ abstract class Assumptions {
     // the compiler should be usable. So we check that none of them throw.
     Throwable exception = null;
     try {
-      DBuckConfig dBuckConfig = new DBuckConfig(FakeBuckConfig.builder().build());
+      DBuckConfig dBuckConfig = new DBuckConfig(FakeBuckConfig.empty());
       dBuckConfig.getDCompiler();
       dBuckConfig.getBaseCompilerFlags();
       dBuckConfig.getLinkerFlags();

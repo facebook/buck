@@ -678,7 +678,7 @@ public class DefaultIjModuleFactoryTest {
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     IjProjectConfig.Builder builder =
         buckConfig == null
-            ? IjTestProjectConfig.createBuilder(FakeBuckConfig.builder().build())
+            ? IjTestProjectConfig.createBuilder(FakeBuckConfig.empty())
             : IjTestProjectConfig.createBuilder(buckConfig);
     IjProjectConfig projectConfig =
         builder

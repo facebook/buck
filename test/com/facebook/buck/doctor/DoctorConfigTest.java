@@ -44,7 +44,7 @@ public class DoctorConfigTest {
 
   @Test
   public void testEmpty() {
-    BuckConfig buckConfig = FakeBuckConfig.builder().build();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     DoctorConfig config = DoctorConfig.of(buckConfig);
     assertThat(
         config.getReportUploadPath(), Matchers.equalTo(DoctorConfig.DEFAULT_REPORT_UPLOAD_PATH));

@@ -27,7 +27,7 @@ public class InferAssumptions {
   public static void assumeInferIsConfigured() {
     Optional<UnresolvedInferPlatform> unresolvedPlatform =
         InferPlatformFactory.getBasedOnConfigAndPath(
-            FakeBuckConfig.builder().build(), new ExecutableFinder());
+            FakeBuckConfig.empty(), new ExecutableFinder());
 
     assumeTrue("infer is not available", unresolvedPlatform.isPresent());
   }

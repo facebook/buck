@@ -62,7 +62,7 @@ public class LuaBinaryBuilder
         target,
         luaPlatform,
         FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, luaPlatform),
-        new CxxBuckConfig(FakeBuckConfig.builder().build()),
+        new CxxBuckConfig(FakeBuckConfig.empty()),
         PythonTestUtils.PYTHON_PLATFORMS);
   }
 

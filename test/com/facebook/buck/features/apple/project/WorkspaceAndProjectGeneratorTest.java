@@ -128,7 +128,7 @@ public class WorkspaceAndProjectGeneratorTest {
         XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
     rootCell = (new TestCellBuilder()).build().getRootCell();
     ProjectFilesystem projectFilesystem = rootCell.getFilesystem();
-    BuckConfig fakeBuckConfig = FakeBuckConfig.builder().build();
+    BuckConfig fakeBuckConfig = FakeBuckConfig.empty();
     halideBuckConfig = HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem);
     cxxBuckConfig = new CxxBuckConfig(fakeBuckConfig);
     appleConfig = fakeBuckConfig.getView(AppleConfig.class);

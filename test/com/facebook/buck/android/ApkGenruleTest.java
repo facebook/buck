@@ -108,7 +108,7 @@ public class ApkGenruleTest {
     ApkGenruleDescription description =
         new ApkGenruleDescription(
             ApkGenruleBuilder.getToolchainProvider(),
-            FakeBuckConfig.builder().build(),
+            FakeBuckConfig.empty(),
             new NoSandboxExecutionStrategy());
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()

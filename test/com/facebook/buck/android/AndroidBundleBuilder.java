@@ -57,7 +57,7 @@ public class AndroidBundleBuilder
         AndroidBundle> {
 
   private AndroidBundleBuilder(BuildTarget target) {
-    this(FakeBuckConfig.builder().build(), target);
+    this(FakeBuckConfig.empty(), target);
   }
 
   private AndroidBundleBuilder(BuckConfig buckConfig, BuildTarget target) {

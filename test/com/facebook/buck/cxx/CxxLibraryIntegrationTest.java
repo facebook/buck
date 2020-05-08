@@ -183,8 +183,7 @@ public class CxxLibraryIntegrationTest {
 
   @Test
   public void thinArchivesDoNotContainAbsolutePaths() throws IOException {
-    CxxPlatform cxxPlatform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     assumeTrue(
         cxxPlatform

@@ -49,7 +49,7 @@ public class FakeRustConfig extends RustBuckConfig {
   private Optional<ImmutableList<String>> linkerFlags = Optional.empty();
 
   public FakeRustConfig() {
-    super(FakeBuckConfig.builder().build());
+    super(FakeBuckConfig.empty());
   }
 
   FakeRustConfig setCompiler(ToolProvider compiler) {

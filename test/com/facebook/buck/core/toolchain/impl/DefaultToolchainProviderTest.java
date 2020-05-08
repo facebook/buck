@@ -112,7 +112,7 @@ public class DefaultToolchainProviderTest {
           }
         },
         ImmutableMap.of(),
-        FakeBuckConfig.builder().build(),
+        FakeBuckConfig.empty(),
         new FakeProjectFilesystem(),
         new FakeProcessExecutor(),
         new ExecutableFinder(),

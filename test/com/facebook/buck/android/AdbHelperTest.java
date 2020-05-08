@@ -431,6 +431,6 @@ public class AdbHelperTest {
     return new AdbOptions(
         0,
         multiInstallMode,
-        new AndroidBuckConfig(FakeBuckConfig.builder().build(), Platform.detect()).getAdbTimeout());
+        new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()).getAdbTimeout());
   }
 }

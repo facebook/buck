@@ -66,7 +66,7 @@ public class PrebuiltPythonLibraryIntegrationTest {
     // doesn't actually matter.
     String version =
         PythonPlatformsProviderFactoryUtils.getPythonEnvironment(
-                FakeBuckConfig.builder().build(),
+                FakeBuckConfig.empty(),
                 new DefaultProcessExecutor(new TestConsole(Verbosity.SILENT)),
                 new ExecutableFinder())
             .getPythonVersion()

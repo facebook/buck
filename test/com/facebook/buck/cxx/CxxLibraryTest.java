@@ -60,8 +60,7 @@ public class CxxLibraryTest {
   public void cxxLibraryInterfaces() {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params = TestBuildRuleParams.create();
-    CxxPlatform cxxPlatform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
     // Setup some dummy values for the header info.
     BuildTarget publicHeaderTarget = BuildTargetFactory.newInstance("//:header");
@@ -171,8 +170,7 @@ public class CxxLibraryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
-    CxxPlatform cxxPlatform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
     BuildTarget staticPicLibraryTarget =
         target.withAppendedFlavors(
@@ -231,8 +229,7 @@ public class CxxLibraryTest {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
     BuildRuleParams params = TestBuildRuleParams.create();
-    CxxPlatform cxxPlatform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
     BuildTarget staticPicLibraryTarget =
         target.withAppendedFlavors(

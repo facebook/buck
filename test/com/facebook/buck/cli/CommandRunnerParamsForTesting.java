@@ -219,7 +219,7 @@ public class CommandRunnerParamsForTesting {
     private DepsAwareExecutor<? super ComputeResult, ?> executor;
     private ArtifactCache artifactCache = new NoopArtifactCache();
     private Console console = new TestConsole();
-    private final BuckConfig config = FakeBuckConfig.builder().build();
+    private final BuckConfig config = FakeBuckConfig.empty();
     private final BuckEventBus eventBus = BuckEventBusForTests.newInstance();
     private final Platform platform = Platform.detect();
     private final ImmutableMap<String, String> environment = EnvVariablesProvider.getSystemEnv();

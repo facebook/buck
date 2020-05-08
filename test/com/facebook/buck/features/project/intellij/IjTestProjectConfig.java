@@ -24,7 +24,7 @@ import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 public class IjTestProjectConfig {
 
   public static IjProjectConfig create() {
-    return createBuilder(FakeBuckConfig.builder().build()).build();
+    return createBuilder(FakeBuckConfig.empty()).build();
   }
 
   static IjProjectConfig.Builder createBuilder(BuckConfig buckConfig) {

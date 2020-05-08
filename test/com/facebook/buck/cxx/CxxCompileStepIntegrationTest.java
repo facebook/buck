@@ -57,8 +57,7 @@ public class CxxCompileStepIntegrationTest {
 
   private void assertCompDir(Optional<String> failure) throws Exception {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
@@ -129,8 +128,7 @@ public class CxxCompileStepIntegrationTest {
   @Test
   public void createsAnArgfile() throws Exception {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.builder().build()));
+    CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
