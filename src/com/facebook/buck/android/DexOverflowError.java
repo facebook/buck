@@ -143,15 +143,22 @@ public class DexOverflowError {
     int count = 0;
     if (dexFiles != null) {
       for (RandomAccessFile file : dexFiles) {
-        DexData dexData = new DexData(file);
-        dexData.load();
-        switch (type) {
-          case FIELD:
-            count += dexData.getFieldRefs().length;
-            break;
-          case METHOD:
-            count += dexData.getMethodRefs().length;
-            break;
+        DexData dexData = null;
+        try {
+          dexData = new DexData(file);
+          dexData.load();
+        } catch (com.android.dexdeps.DexDataException e) {
+          log.debug("Failed to load dex file at " + dexFile);
+        }
+        if (dexData != null) {
+          switch (type) {
+            case FIELD:
+              count += dexData.getFieldRefs().length;
+              break;
+            case METHOD:
+              count += dexData.getMethodRefs().length;
+              break;
+          }
         }
       }
     }
