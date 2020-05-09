@@ -18,10 +18,10 @@ package com.facebook.buck.core.rules.configsetting;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
-import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.select.Selectable;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -33,31 +33,24 @@ import java.util.Optional;
  * {@code Selectable} created by {@link ConfigSettingRule} for integration with {@link
  * com.facebook.buck.core.select.SelectableResolver}.
  */
-public class ConfigSettingSelectable implements Selectable {
+@BuckStyleValue
+public abstract class ConfigSettingSelectable implements Selectable {
 
-  private final BuildTarget buildTarget;
-  private final ImmutableMap<BuckConfigKey, String> values;
-  private final ImmutableSet<ConstraintValue> constraintValues;
+  public abstract ImmutableMap<BuckConfigKey, String> getValues();
 
-  public ConfigSettingSelectable(
-      BuildTarget buildTarget,
-      ImmutableMap<BuckConfigKey, String> values,
-      ImmutableSet<ConstraintValue> constraintValues) {
-    this.buildTarget = buildTarget;
-    this.values = values;
-    this.constraintValues = constraintValues;
-  }
+  public abstract ImmutableSet<ConstraintValue> getConstraintValues();
 
   @Override
   public boolean matchesPlatform(
       Platform platform, BuckConfig buckConfig, DependencyStack dependencyStack) {
-    return calculateMatches(buckConfig, platform, dependencyStack, constraintValues, values);
+    return calculateMatches(
+        buckConfig, platform, dependencyStack, getConstraintValues(), getValues());
   }
 
   /**
    * A {@link ConfigSettingSelectable} refines another {@link ConfigSettingSelectable} when {@link
-   * #values} or {@link #constraintValues} or both are strict supersets of corresponding sets of the
-   * other selectable.
+   * #getValues()} or {@link #getConstraintValues()} or both are strict supersets of corresponding
+   * sets of the other selectable.
    *
    * @return {@code true} for given {@code this} selectable and {@code other} selectable when one of
    *     this conditions is true:
@@ -75,23 +68,18 @@ public class ConfigSettingSelectable implements Selectable {
     Preconditions.checkState(other instanceof ConfigSettingSelectable);
     ConfigSettingSelectable otherSelectable = (ConfigSettingSelectable) other;
 
-    if (values.equals(otherSelectable.values)) {
-      return refines(constraintValues, otherSelectable.constraintValues);
-    } else if (constraintValues.equals(otherSelectable.constraintValues)) {
-      return refines(values.entrySet(), otherSelectable.values.entrySet());
+    if (getValues().equals(otherSelectable.getValues())) {
+      return refines(getConstraintValues(), otherSelectable.getConstraintValues());
+    } else if (getConstraintValues().equals(otherSelectable.getConstraintValues())) {
+      return refines(getValues().entrySet(), otherSelectable.getValues().entrySet());
     } else {
-      return refines(values.entrySet(), otherSelectable.values.entrySet())
-          && refines(constraintValues, otherSelectable.constraintValues);
+      return refines(getValues().entrySet(), otherSelectable.getValues().entrySet())
+          && refines(getConstraintValues(), otherSelectable.getConstraintValues());
     }
   }
 
   private <T> boolean refines(ImmutableSet<T> values, ImmutableSet<T> otherValues) {
     return (values.size() > otherValues.size() && values.containsAll(otherValues));
-  }
-
-  @Override
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   private static boolean calculateMatches(
@@ -120,6 +108,25 @@ public class ConfigSettingSelectable implements Selectable {
 
   @Override
   public String toString() {
-    return buildTarget.toString();
+    StringBuilder sb = new StringBuilder();
+    sb.append("config_setting(");
+    boolean first = true;
+    if (!getValues().isEmpty()) {
+      sb.append("values=").append(getValues());
+      first = false;
+    }
+    if (!getConstraintValues().isEmpty()) {
+      if (!first) {
+        sb.append(", ");
+      }
+      sb.append("constraint_values=").append(getConstraintValues());
+    }
+    sb.append(")");
+    return sb.toString();
+  }
+
+  public static ConfigSettingSelectable of(
+      ImmutableMap<BuckConfigKey, String> values, ImmutableSet<ConstraintValue> constraintValues) {
+    return ImmutableConfigSettingSelectable.ofImpl(values, constraintValues);
   }
 }

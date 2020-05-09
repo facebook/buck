@@ -21,6 +21,7 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -73,11 +74,11 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
    * Returns the value for which the current configuration matches the key inside the select
    * dictionary
    */
-  protected <T> Map<Selectable, Object> findMatchingConditions(
+  protected <T> Map<NamedSelectable, Object> findMatchingConditions(
       SelectableConfigurationContext configurationContext,
       Selector<T> selector,
       DependencyStack dependencyStack) {
-    Map<Selectable, Object> matchingConditions = new LinkedHashMap<>();
+    Map<NamedSelectable, Object> matchingConditions = new LinkedHashMap<>();
 
     for (Map.Entry<SelectorKey, T> entry : selector.getConditions().entrySet()) {
       handleSelector(
@@ -96,7 +97,7 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
 
   private void handleSelector(
       SelectableConfigurationContext configurationContext,
-      Map<Selectable, Object> matchingConditions,
+      Map<NamedSelectable, Object> matchingConditions,
       SelectorKey selectorKey,
       Object value,
       DependencyStack dependencyStack) {
@@ -104,26 +105,32 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
       return;
     }
 
-    Selectable selectable =
-        selectableResolver.getSelectable(selectorKey.getBuildTarget(), dependencyStack);
+    NamedSelectable selectable =
+        NamedSelectable.of(
+            selectorKey.getBuildTarget(),
+            selectableResolver.getSelectable(selectorKey.getBuildTarget(), dependencyStack));
 
-    if (selectable.matchesPlatform(
-        configurationContext.getPlatform(),
-        configurationContext.getBuckConfig(),
-        dependencyStack)) {
+    if (selectable
+        .getSelectable()
+        .matchesPlatform(
+            configurationContext.getPlatform(),
+            configurationContext.getBuckConfig(),
+            dependencyStack)) {
       updateConditions(matchingConditions, selectable, value);
     }
   }
 
   private static void updateConditions(
-      Map<Selectable, Object> matchingConditions, Selectable newCondition, Object value) {
+      Map<NamedSelectable, Object> matchingConditions, NamedSelectable newCondition, Object value) {
     // Skip the new condition if some existing condition refines it
     if (matchingConditions.keySet().stream()
-        .anyMatch(condition -> condition.refines(newCondition))) {
+        .anyMatch(condition -> condition.getSelectable().refines(newCondition.getSelectable()))) {
       return;
     }
     // Remove existing conditions that are refined by the new condition
-    matchingConditions.keySet().removeIf(newCondition::refines);
+    matchingConditions
+        .keySet()
+        .removeIf(s -> newCondition.getSelectable().refines(s.getSelectable()));
     matchingConditions.put(newCondition, value);
   }
 
@@ -132,12 +139,18 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
    * keys
    */
   protected static void assertNotMultipleMatches(
-      Map<Selectable, ?> matchingConditions, String attributeName, BuildTarget buildTarget) {
+      Map<NamedSelectable, ?> matchingConditions, String attributeName, BuildTarget buildTarget) {
     if (matchingConditions.size() > 1) {
       throw new HumanReadableException(
           "Multiple matches found when resolving configurable attribute \"%s\" in %s:\n%s"
               + "\nMultiple matches are not allowed unless one is unambiguously more specialized.",
-          attributeName, buildTarget, Joiner.on("\n").join(matchingConditions.keySet()));
+          attributeName,
+          buildTarget,
+          Joiner.on("\n")
+              .join(
+                  matchingConditions.keySet().stream()
+                      .map(NamedSelectable::getBuildTarget)
+                      .collect(ImmutableList.toImmutableList())));
     }
   }
 

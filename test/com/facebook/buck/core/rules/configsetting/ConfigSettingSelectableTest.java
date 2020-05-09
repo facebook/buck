@@ -40,17 +40,14 @@ public class ConfigSettingSelectableTest {
   @Test
   public void refinesReturnsTrueWithEmptyValues() {
     ConfigSettingSelectable configSetting1 =
-        new ConfigSettingSelectable(
-            buildTarget("//a:b"),
+        ConfigSettingSelectable.of(
             ImmutableMap.of(),
             ImmutableSet.of(
                 constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
 
     ConfigSettingSelectable configSetting2 =
-        new ConfigSettingSelectable(
-            buildTarget("//a:c"),
-            ImmutableMap.of(),
-            ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
+        ConfigSettingSelectable.of(
+            ImmutableMap.of(), ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
 
     assertTrue(configSetting1.refines(configSetting2));
   }
@@ -60,15 +57,13 @@ public class ConfigSettingSelectableTest {
     ImmutableMap<BuckConfigKey, String> values = ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b");
 
     ConfigSettingSelectable configSetting1 =
-        new ConfigSettingSelectable(
-            buildTarget("//a:b"),
+        ConfigSettingSelectable.of(
             values,
             ImmutableSet.of(
                 constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
 
     ConfigSettingSelectable configSetting2 =
-        new ConfigSettingSelectable(
-            buildTarget("//a:c"), values, ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
+        ConfigSettingSelectable.of(values, ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
 
     assertTrue(configSetting1.refines(configSetting2));
   }
@@ -76,15 +71,13 @@ public class ConfigSettingSelectableTest {
   @Test
   public void refinesReturnsTrueWithSpecializedValues() {
     ConfigSettingSelectable configSetting1 =
-        new ConfigSettingSelectable(
-            buildTarget("//a:b"),
+        ConfigSettingSelectable.of(
             ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b", BuckConfigKey.parse("c.cc"), "d"),
             ImmutableSet.of(
                 constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
 
     ConfigSettingSelectable configSetting2 =
-        new ConfigSettingSelectable(
-            buildTarget("//a:c"),
+        ConfigSettingSelectable.of(
             ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b"),
             ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
 
@@ -94,15 +87,13 @@ public class ConfigSettingSelectableTest {
   @Test
   public void refinesReturnsFalseWithNonSpecializedValues() {
     ConfigSettingSelectable configSetting1 =
-        new ConfigSettingSelectable(
-            buildTarget("//a:b"),
+        ConfigSettingSelectable.of(
             ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b"),
             ImmutableSet.of(
                 constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
 
     ConfigSettingSelectable configSetting2 =
-        new ConfigSettingSelectable(
-            buildTarget("//a:c"),
+        ConfigSettingSelectable.of(
             ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b", BuckConfigKey.parse("c.cc"), "d"),
             ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
 
@@ -114,12 +105,10 @@ public class ConfigSettingSelectableTest {
     ImmutableMap<BuckConfigKey, String> values = ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b");
 
     ConfigSettingSelectable configSetting1 =
-        new ConfigSettingSelectable(
-            buildTarget("//a:b"), values, ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
+        ConfigSettingSelectable.of(values, ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
 
     ConfigSettingSelectable configSetting2 =
-        new ConfigSettingSelectable(
-            buildTarget("//a:c"),
+        ConfigSettingSelectable.of(
             values,
             ImmutableSet.of(
                 constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));

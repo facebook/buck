@@ -48,15 +48,11 @@ public class TestSelectable implements Selectable {
 
   @Override
   public boolean refines(Selectable other) {
-    if (refinedTargets.containsKey(other.getBuildTarget())) {
-      return refinedTargets.get(other.getBuildTarget());
+    TestSelectable testSelectable = (TestSelectable) other;
+    if (refinedTargets.containsKey(testSelectable.buildTarget)) {
+      return refinedTargets.get(testSelectable.buildTarget);
     }
     return false;
-  }
-
-  @Override
-  public BuildTarget getBuildTarget() {
-    return buildTarget;
   }
 
   @Override

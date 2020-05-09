@@ -36,7 +36,4 @@ public interface Selectable {
 
   /** @return <code>true</code> if this condition is more specialized than the given one */
   boolean refines(Selectable other);
-
-  /** @return build target of this condition */
-  BuildTarget getBuildTarget();
 }

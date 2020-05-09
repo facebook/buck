@@ -35,8 +35,7 @@ public class ConfigSettingRule extends AbstractConfigurationRule implements Prov
       ImmutableSet<ConstraintValueRule> constraintValueRules) {
     super(buildTarget);
     this.configSettingSelectable =
-        new ConfigSettingSelectable(
-            buildTarget,
+        ConfigSettingSelectable.of(
             values,
             constraintValueRules.stream()
                 .map(ConstraintValueRule::getConstraintValue)

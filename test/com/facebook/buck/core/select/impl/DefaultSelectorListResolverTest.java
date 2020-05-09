@@ -85,7 +85,7 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableList.of(new TestSelectable(selectableTarget, true))));
+                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, true))));
 
     Flavor flavor =
         resolver.resolveList(
@@ -107,7 +107,7 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableList.of(new TestSelectable(selectableTarget, true))));
+                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, true))));
     SelectorList<Flavor> selectorList =
         createSelectorListForFlavors(
             ImmutableMap.of("DEFAULT", "flavor1", "//x:y", "flavor2"),
@@ -133,7 +133,7 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableList.of(new TestSelectable(selectableTarget, true))));
+                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, true))));
     SelectorList<ImmutableList<Flavor>> selectorList =
         createSelectorListForListsOfFlavors(
             ImmutableMap.of(
@@ -169,7 +169,7 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableList.of(new TestSelectable(selectableTarget, false))));
+                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, false))));
     SelectorList<ImmutableList<Flavor>> selectorList =
         createSelectorListForListsOfFlavors(
             ImmutableMap.of(
@@ -206,8 +206,10 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableList.of(
+                ImmutableMap.of(
+                    selectableTarget1,
                     new TestSelectable(selectableTarget1, true),
+                    selectableTarget2,
                     new TestSelectable(
                         selectableTarget2, true, ImmutableMap.of(selectableTarget1, true)))));
     SelectorList<ImmutableList<Flavor>> selectorList =
@@ -241,8 +243,10 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableList.of(
+                ImmutableMap.of(
+                    selectableTarget1,
                     new TestSelectable(selectableTarget1, true),
+                    selectableTarget2,
                     new TestSelectable(selectableTarget2, true))));
     SelectorList<ImmutableList<Flavor>> selectorList =
         createSelectorListForListsOfFlavors(
@@ -277,7 +281,7 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableList.of(new TestSelectable(selectableTarget, false))));
+                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, false))));
     SelectorList<ImmutableList<Flavor>> selectorList =
         createSelectorListForListsOfFlavors(
             ImmutableMap.of("//x:y", Lists.newArrayList("flavor11", "flavor12")));
@@ -313,7 +317,7 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableList.of(new TestSelectable(selectableTarget, false))));
+                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, false))));
     SelectorList<ImmutableList<Flavor>> selectorList =
         new SelectorList<>(ImmutableList.of(selector));
 

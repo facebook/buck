@@ -488,7 +488,7 @@ public class ConstructorArgMarshallerImmutableTest {
     SelectorListResolver selectorListResolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableList.of(new TestSelectable(selectableTarget, true))));
+                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, true))));
     SelectorList<?> selectorList =
         new SelectorList<>(
             ImmutableList.of(

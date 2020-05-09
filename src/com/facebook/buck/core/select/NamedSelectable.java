@@ -16,24 +16,24 @@
 
 package com.facebook.buck.core.select;
 
-import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
-import com.google.common.collect.ImmutableMap;
+import com.facebook.buck.core.model.ConfigurationBuildTargets;
+import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import org.immutables.value.Value;
 
-public class TestSelectableResolver implements SelectableResolver {
+/** A pair of selectable and a build target. */
+@BuckStyleValue
+public abstract class NamedSelectable {
+  public abstract BuildTarget getBuildTarget();
 
-  private final ImmutableMap<BuildTarget, Selectable> selectables;
+  public abstract Selectable getSelectable();
 
-  public TestSelectableResolver(ImmutableMap<BuildTarget, Selectable> selectables) {
-    this.selectables = selectables;
+  @Value.Check
+  protected void check() {
+    ConfigurationBuildTargets.validateTarget(getBuildTarget());
   }
 
-  public TestSelectableResolver() {
-    this(ImmutableMap.of());
-  }
-
-  @Override
-  public Selectable getSelectable(BuildTarget target, DependencyStack dependencyStack) {
-    return selectables.get(target);
+  public static NamedSelectable of(BuildTarget buildTarget, Selectable selectable) {
+    return ImmutableNamedSelectable.ofImpl(buildTarget, selectable);
   }
 }
