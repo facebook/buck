@@ -84,7 +84,6 @@ public class SwiftCompile extends AbstractBuildRule {
 
   private final Path objectFilePath;
   private final Path modulePath;
-  private final Path moduleObjectPath;
   private final ImmutableList<Path> objectPaths;
   private final Optional<AbsPath> swiftFileListPath;
 
@@ -145,11 +144,7 @@ public class SwiftCompile extends AbstractBuildRule {
     this.moduleName = escapedModuleName;
     this.objectFilePath = outputPath.resolve(escapedModuleName + ".o");
     this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
-    this.moduleObjectPath = outputPath.resolve(escapedModuleName + ".swiftmodule.o");
-    this.objectPaths =
-        swiftBuckConfig.getUseModulewrap()
-            ? ImmutableList.of(objectFilePath, moduleObjectPath)
-            : ImmutableList.of(objectFilePath);
+    this.objectPaths = ImmutableList.of(objectFilePath);
     this.swiftFileListPath =
         swiftBuckConfig.getUseFileList()
             ? Optional.of(
@@ -294,20 +289,6 @@ public class SwiftCompile extends AbstractBuildRule {
     }
   }
 
-  private SwiftCompileStep makeModulewrapStep(SourcePathResolverAdapter resolver) {
-    ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
-    ImmutableList<String> commandPrefix = swiftCompiler.getCommandPrefix(resolver);
-
-    // The swift compiler path will be the first element of the command prefix
-    compilerCommand.add(commandPrefix.get(0));
-    compilerCommand.add("-modulewrap", modulePath.toString(), "-o", moduleObjectPath.toString());
-    compilerCommand.add("-target", swiftTarget.getTriple());
-
-    ProjectFilesystem projectFilesystem = getProjectFilesystem();
-    return new SwiftCompileStep(
-        projectFilesystem.getRootPath(), ImmutableMap.of(), compilerCommand.build());
-  }
-
   @Override
   public boolean isCacheable() {
     // .swiftmodule artifacts are not cacheable because they can contain machine-specific
@@ -344,10 +325,6 @@ public class SwiftCompile extends AbstractBuildRule {
     swiftFileListPath.map(
         path -> steps.add(makeFileListStep(context.getSourcePathResolver(), path)));
     steps.add(makeCompileStep(context.getSourcePathResolver()));
-
-    if (swiftBuckConfig.getUseModulewrap()) {
-      steps.add(makeModulewrapStep(context.getSourcePathResolver()));
-    }
 
     return steps.build();
   }
@@ -425,18 +402,14 @@ public class SwiftCompile extends AbstractBuildRule {
   }
 
   public ImmutableList<Arg> getAstLinkArgs() {
-    if (!swiftBuckConfig.getUseModulewrap()) {
-      return ImmutableList.<Arg>builder()
-          .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
-          .add(StringArg.of("-Xlinker"))
-          // NB: The paths to the .swiftmodule files will be relative to the cell, not absolute.
-          //     This makes it non-machine specific but if we change the behavior, the OSO
-          //     rewriting code needs to adjusted to also fix-up N_AST entries.
-          .add(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath)))
-          .build();
-    } else {
-      return ImmutableList.<Arg>builder().build();
-    }
+    return ImmutableList.<Arg>builder()
+        .addAll(StringArg.from("-Xlinker", "-add_ast_path"))
+        .add(StringArg.of("-Xlinker"))
+        // NB: The paths to the .swiftmodule files will be relative to the cell, not absolute.
+        //     This makes it non-machine specific but if we change the behavior, the OSO
+        //     rewriting code needs to adjusted to also fix-up N_AST entries.
+        .add(SourcePathArg.of(ExplicitBuildTargetSourcePath.of(getBuildTarget(), modulePath)))
+        .build();
   }
 
   ImmutableList<Arg> getFileListLinkArg() {
