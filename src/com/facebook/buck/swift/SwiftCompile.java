@@ -102,8 +102,6 @@ public class SwiftCompile extends AbstractBuildRule {
   private final boolean enableObjcInterop;
   @AddToRuleKey private final Optional<SourcePath> bridgingHeader;
 
-  private final SwiftBuckConfig swiftBuckConfig;
-
   @AddToRuleKey private final Preprocessor cPreprocessor;
 
   @AddToRuleKey private final PreprocessorFlags cxxDeps;
@@ -134,7 +132,6 @@ public class SwiftCompile extends AbstractBuildRule {
     super(buildTarget, projectFilesystem);
     this.cxxPlatform = cxxPlatform;
     this.frameworks = frameworks;
-    this.swiftBuckConfig = swiftBuckConfig;
     this.swiftCompiler = swiftCompiler;
     this.outputPath = outputPath;
     this.importUnderlyingModule = importUnderlyingModule;
@@ -299,7 +296,7 @@ public class SwiftCompile extends AbstractBuildRule {
     // means that Obj-C headers can be included multiple times if the machines which
     // populated the cache and the machine which is building have placed the source
     // repository at different paths (usually the case with CI and developer machines).
-    return !bridgingHeader.isPresent() || swiftBuckConfig.getCompileForceCache();
+    return !bridgingHeader.isPresent();
   }
 
   @Override
