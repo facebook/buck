@@ -10,6 +10,7 @@ RUN apt-get install -y --no-install-recommends curl ca-certificates \
       ca-certificates-java \
       ant \
       python3 \
+      python3-distutils \
       groovy \
       ghc \
       equivs && \
