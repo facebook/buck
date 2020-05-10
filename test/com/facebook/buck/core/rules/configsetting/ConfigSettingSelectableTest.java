@@ -19,23 +19,12 @@ package com.facebook.buck.core.rules.configsetting;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
-import com.facebook.buck.core.model.platform.ConstraintSetting;
-import com.facebook.buck.core.model.platform.ConstraintValue;
+import com.facebook.buck.core.select.TestSelectables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Test;
 
 public class ConfigSettingSelectableTest {
-
-  private static BuildTarget buildTarget(String t) {
-    return ConfigurationBuildTargetFactoryForTests.newInstance(t);
-  }
-
-  private static ConstraintValue constraintValue(String t, String c) {
-    return ConstraintValue.of(buildTarget(t), ConstraintSetting.of(buildTarget(c)));
-  }
 
   @Test
   public void refinesReturnsTrueWithEmptyValues() {
@@ -43,11 +32,12 @@ public class ConfigSettingSelectableTest {
         ConfigSettingSelectable.of(
             ImmutableMap.of(),
             ImmutableSet.of(
-                constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
+                TestSelectables.constraintValue("//a:x", "//a:xc"),
+                TestSelectables.constraintValue("//a:y", "//a:yc")));
 
     ConfigSettingSelectable configSetting2 =
         ConfigSettingSelectable.of(
-            ImmutableMap.of(), ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
+            ImmutableMap.of(), ImmutableSet.of(TestSelectables.constraintValue("//a:x", "//a:xc")));
 
     assertTrue(configSetting1.refines(configSetting2));
   }
@@ -60,10 +50,12 @@ public class ConfigSettingSelectableTest {
         ConfigSettingSelectable.of(
             values,
             ImmutableSet.of(
-                constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
+                TestSelectables.constraintValue("//a:x", "//a:xc"),
+                TestSelectables.constraintValue("//a:y", "//a:yc")));
 
     ConfigSettingSelectable configSetting2 =
-        ConfigSettingSelectable.of(values, ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
+        ConfigSettingSelectable.of(
+            values, ImmutableSet.of(TestSelectables.constraintValue("//a:x", "//a:xc")));
 
     assertTrue(configSetting1.refines(configSetting2));
   }
@@ -74,12 +66,13 @@ public class ConfigSettingSelectableTest {
         ConfigSettingSelectable.of(
             ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b", BuckConfigKey.parse("c.cc"), "d"),
             ImmutableSet.of(
-                constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
+                TestSelectables.constraintValue("//a:x", "//a:xc"),
+                TestSelectables.constraintValue("//a:y", "//a:yc")));
 
     ConfigSettingSelectable configSetting2 =
         ConfigSettingSelectable.of(
             ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b"),
-            ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
+            ImmutableSet.of(TestSelectables.constraintValue("//a:x", "//a:xc")));
 
     assertTrue(configSetting1.refines(configSetting2));
   }
@@ -90,12 +83,13 @@ public class ConfigSettingSelectableTest {
         ConfigSettingSelectable.of(
             ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b"),
             ImmutableSet.of(
-                constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
+                TestSelectables.constraintValue("//a:x", "//a:xc"),
+                TestSelectables.constraintValue("//a:y", "//a:yc")));
 
     ConfigSettingSelectable configSetting2 =
         ConfigSettingSelectable.of(
             ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b", BuckConfigKey.parse("c.cc"), "d"),
-            ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
+            ImmutableSet.of(TestSelectables.constraintValue("//a:x", "//a:xc")));
 
     assertFalse(configSetting1.refines(configSetting2));
   }
@@ -105,13 +99,15 @@ public class ConfigSettingSelectableTest {
     ImmutableMap<BuckConfigKey, String> values = ImmutableMap.of(BuckConfigKey.parse("a.aa"), "b");
 
     ConfigSettingSelectable configSetting1 =
-        ConfigSettingSelectable.of(values, ImmutableSet.of(constraintValue("//a:x", "//a:xc")));
+        ConfigSettingSelectable.of(
+            values, ImmutableSet.of(TestSelectables.constraintValue("//a:x", "//a:xc")));
 
     ConfigSettingSelectable configSetting2 =
         ConfigSettingSelectable.of(
             values,
             ImmutableSet.of(
-                constraintValue("//a:x", "//a:xc"), constraintValue("//a:y", "//a:yc")));
+                TestSelectables.constraintValue("//a:x", "//a:xc"),
+                TestSelectables.constraintValue("//a:y", "//a:yc")));
 
     assertFalse(configSetting1.refines(configSetting2));
   }

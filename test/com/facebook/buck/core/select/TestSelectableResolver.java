@@ -18,6 +18,7 @@ package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.BuildTarget;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 
 public class TestSelectableResolver implements SelectableResolver {
@@ -34,6 +35,6 @@ public class TestSelectableResolver implements SelectableResolver {
 
   @Override
   public Selectable getSelectable(BuildTarget target, DependencyStack dependencyStack) {
-    return selectables.get(target);
+    return Preconditions.checkNotNull(selectables.get(target), "selectable not found: " + target);
   }
 }

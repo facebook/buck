@@ -4,6 +4,8 @@ java_test(
     name = "impl",
     srcs = glob(["*Test.java"]),
     deps = [
+        "//src/com/facebook/buck/core/model/platform/impl:impl",
+        "//src/com/facebook/buck/core/rules/configsetting:configsetting",
         "//src/com/facebook/buck/core/select/impl:impl",
         "//src/com/facebook/buck/parser/syntax:syntax",
         "//src/com/facebook/buck/rules/coercer:coercer",

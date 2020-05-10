@@ -27,13 +27,16 @@ import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
+import com.facebook.buck.core.model.platform.ConstraintSetting;
+import com.facebook.buck.core.model.platform.ConstraintValue;
+import com.facebook.buck.core.rules.configsetting.ConfigSettingSelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
-import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
+import com.facebook.buck.core.select.TestSelectables;
 import com.facebook.buck.core.select.TestSelectorListFactory;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.FlavorTypeCoercer;
@@ -78,6 +81,9 @@ public class DefaultSelectorListResolverTest {
   @Test
   public void testResolvingListWithSingleElementReturnsSingleElement()
       throws CoerceFailedException {
+    ConstraintSetting constraintSetting = TestSelectables.constraintSetting("//x:c");
+    ConstraintValue constraintValue = TestSelectables.constraintValue("//x:y", constraintSetting);
+
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     SelectorList<Flavor> selectorList =
@@ -85,11 +91,11 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, true))));
+                ImmutableMap.of(selectableTarget, TestSelectables.configSetting(constraintValue))));
 
     Flavor flavor =
         resolver.resolveList(
-            configurationContext,
+            TestSelectables.selectableConfigurationContext(constraintValue),
             keyTarget,
             "some_attribute",
             selectorList,
@@ -103,11 +109,16 @@ public class DefaultSelectorListResolverTest {
   public void testResolvingListWithMultipleElementsNotSupportingConcatReturnsNull()
       throws CoerceFailedException {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
-    BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
+
+    ConstraintSetting constraintSetting = TestSelectables.constraintSetting("//x:c");
+    ConstraintValue constraintValue = TestSelectables.constraintValue("//x:v", constraintSetting);
+    ConfigSettingSelectable configSetting = TestSelectables.configSetting(constraintValue);
+
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, true))));
+                ImmutableMap.of(
+                    ConfigurationBuildTargetFactoryForTests.newInstance("//x:y"), configSetting)));
     SelectorList<Flavor> selectorList =
         createSelectorListForFlavors(
             ImmutableMap.of("DEFAULT", "flavor1", "//x:y", "flavor2"),
@@ -115,7 +126,7 @@ public class DefaultSelectorListResolverTest {
 
     Flavor flavor =
         resolver.resolveList(
-            configurationContext,
+            TestSelectables.selectableConfigurationContext(),
             keyTarget,
             "some_attribute",
             selectorList,
@@ -129,11 +140,16 @@ public class DefaultSelectorListResolverTest {
   public void testResolvingListWithMultipleElementsSupportingConcatReturnsCompleteList()
       throws CoerceFailedException {
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
+
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
+
+    ConstraintSetting constraintSetting = TestSelectables.constraintSetting("//x:c");
+    ConstraintValue constraintValue = TestSelectables.constraintValue("//x:v", constraintSetting);
+    ConfigSettingSelectable configSetting = TestSelectables.configSetting(constraintValue);
+
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
-            new TestSelectableResolver(
-                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, true))));
+            new TestSelectableResolver(ImmutableMap.of(selectableTarget, configSetting)));
     SelectorList<ImmutableList<Flavor>> selectorList =
         createSelectorListForListsOfFlavors(
             ImmutableMap.of(
@@ -149,7 +165,7 @@ public class DefaultSelectorListResolverTest {
 
     ImmutableList<Flavor> flavors =
         resolver.resolveList(
-            configurationContext,
+            TestSelectables.selectableConfigurationContext(constraintValue),
             keyTarget,
             "some_attribute",
             selectorList,
@@ -164,12 +180,16 @@ public class DefaultSelectorListResolverTest {
   @Test
   public void testResolvingListWithMultipleDefaultMatchesReturnsList()
       throws CoerceFailedException {
+    ConstraintSetting os = TestSelectables.constraintSetting("//c:os");
+    ConstraintValue linux = TestSelectables.constraintValue("//c:linux", os);
+    ConstraintValue windows = TestSelectables.constraintValue("//c:windows", os);
+
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, false))));
+                ImmutableMap.of(selectableTarget, TestSelectables.configSetting(linux))));
     SelectorList<ImmutableList<Flavor>> selectorList =
         createSelectorListForListsOfFlavors(
             ImmutableMap.of(
@@ -185,7 +205,7 @@ public class DefaultSelectorListResolverTest {
 
     ImmutableList<Flavor> flavors =
         resolver.resolveList(
-            configurationContext,
+            TestSelectables.selectableConfigurationContext(windows),
             keyTarget,
             "some_attribute",
             selectorList,
@@ -200,6 +220,11 @@ public class DefaultSelectorListResolverTest {
   @Test
   public void testResolvingListWithRefinedConditionsPicksMostSpecializedCondition()
       throws CoerceFailedException {
+    ConstraintSetting os = TestSelectables.constraintSetting("//c:os");
+    ConstraintValue linux = TestSelectables.constraintValue("//c:linux", os);
+    ConstraintSetting cpu = TestSelectables.constraintSetting("//c:cpu");
+    ConstraintValue arm64 = TestSelectables.constraintValue("//c:arm64", cpu);
+
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget1 = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     BuildTarget selectableTarget2 = ConfigurationBuildTargetFactoryForTests.newInstance("//x:z");
@@ -208,10 +233,9 @@ public class DefaultSelectorListResolverTest {
             new TestSelectableResolver(
                 ImmutableMap.of(
                     selectableTarget1,
-                    new TestSelectable(selectableTarget1, true),
+                    TestSelectables.configSetting(linux),
                     selectableTarget2,
-                    new TestSelectable(
-                        selectableTarget2, true, ImmutableMap.of(selectableTarget1, true)))));
+                    TestSelectables.configSetting(linux, arm64))));
     SelectorList<ImmutableList<Flavor>> selectorList =
         createSelectorListForListsOfFlavors(
             ImmutableMap.of(
@@ -222,7 +246,7 @@ public class DefaultSelectorListResolverTest {
 
     ImmutableList<Flavor> flavors =
         resolver.resolveList(
-            configurationContext,
+            TestSelectables.selectableConfigurationContext(linux, arm64),
             keyTarget,
             "some_attribute",
             selectorList,
@@ -237,6 +261,11 @@ public class DefaultSelectorListResolverTest {
   @Test
   public void testResolvingListWithMultipleMatchingConditionsThrowsException()
       throws CoerceFailedException {
+    ConstraintSetting os = TestSelectables.constraintSetting("//c:os");
+    ConstraintValue linux = TestSelectables.constraintValue("//c:linux", os);
+    ConstraintSetting cpu = TestSelectables.constraintSetting("//c:cpu");
+    ConstraintValue arm64 = TestSelectables.constraintValue("//c:arm64", cpu);
+
     BuildTarget keyTarget = BuildTargetFactory.newInstance("//a:b");
     BuildTarget selectableTarget1 = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     BuildTarget selectableTarget2 = ConfigurationBuildTargetFactoryForTests.newInstance("//x:z");
@@ -245,9 +274,9 @@ public class DefaultSelectorListResolverTest {
             new TestSelectableResolver(
                 ImmutableMap.of(
                     selectableTarget1,
-                    new TestSelectable(selectableTarget1, true),
+                    TestSelectables.configSetting(linux),
                     selectableTarget2,
-                    new TestSelectable(selectableTarget2, true))));
+                    TestSelectables.configSetting(arm64))));
     SelectorList<ImmutableList<Flavor>> selectorList =
         createSelectorListForListsOfFlavors(
             ImmutableMap.of(
@@ -258,7 +287,7 @@ public class DefaultSelectorListResolverTest {
 
     try {
       resolver.resolveList(
-          configurationContext,
+          TestSelectables.selectableConfigurationContext(linux, arm64),
           keyTarget,
           "some_attribute",
           selectorList,
@@ -281,14 +310,18 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, false))));
+                ImmutableMap.of(
+                    selectableTarget,
+                    TestSelectables.configSetting(
+                        TestSelectables.constraintValue("//c:linux", "//c:os")))));
     SelectorList<ImmutableList<Flavor>> selectorList =
         createSelectorListForListsOfFlavors(
             ImmutableMap.of("//x:y", Lists.newArrayList("flavor11", "flavor12")));
 
     try {
       resolver.resolveList(
-          configurationContext,
+          TestSelectables.selectableConfigurationContext(
+              TestSelectables.constraintValue("//c:windows", "//c:os")),
           keyTarget,
           "some_attribute",
           selectorList,
@@ -317,13 +350,17 @@ public class DefaultSelectorListResolverTest {
     DefaultSelectorListResolver resolver =
         new DefaultSelectorListResolver(
             new TestSelectableResolver(
-                ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, false))));
+                ImmutableMap.of(
+                    selectableTarget,
+                    TestSelectables.configSetting(
+                        TestSelectables.constraintValue("//c:linux", "//c:os")))));
     SelectorList<ImmutableList<Flavor>> selectorList =
         new SelectorList<>(ImmutableList.of(selector));
 
     try {
       resolver.resolveList(
-          configurationContext,
+          TestSelectables.selectableConfigurationContext(
+              TestSelectables.constraintValue("//c:windows", "//c:os")),
           keyTarget,
           "some_attribute",
           selectorList,

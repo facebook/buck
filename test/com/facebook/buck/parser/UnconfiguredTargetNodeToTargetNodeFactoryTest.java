@@ -38,11 +38,11 @@ import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTarget
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
+import com.facebook.buck.core.rules.configsetting.ConfigSettingSelectable;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
-import com.facebook.buck.core.select.TestSelectable;
 import com.facebook.buck.core.select.TestSelectableResolver;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
@@ -138,7 +138,9 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
             (file, targetNode) -> {},
             new DefaultSelectorListResolver(
                 new TestSelectableResolver(
-                    ImmutableMap.of(selectableTarget, new TestSelectable(selectableTarget, true)))),
+                    ImmutableMap.of(
+                        selectableTarget,
+                        ConfigSettingSelectable.of(ImmutableMap.of(), ImmutableSet.of())))),
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
             UnconfiguredTargetConfiguration.INSTANCE,
