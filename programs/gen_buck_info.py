@@ -52,8 +52,6 @@ def main(argv):
     candidate_paths = []
     vcs_module = None
     while vcs_module is None and os.path.dirname(path) != path:
-        while not os.path.exists(os.path.join(path, ".buckconfig")):
-            path = os.path.dirname(path)
         for vcs_dir, module in SUPPORTED_VCS.items():
             if os.path.exists(os.path.join(path, vcs_dir)):
                 vcs_module = module
