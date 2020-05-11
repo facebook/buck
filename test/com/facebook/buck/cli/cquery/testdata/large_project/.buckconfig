@@ -1,2 +1,9 @@
 [alias]
   appletv-app-prod = //apps/apple:TVAppBinary-Release
+
+[apple]
+  # It doesn't matter what this file is, but creating TargetNode's for
+  # apple_test targets requires a codesign tool and the default
+  # (/usr/bin/codesign) will cause an error on Windows. Give _something_, but
+  # we don't care what since it will never be invoked.
+  codesign = dummy.sh

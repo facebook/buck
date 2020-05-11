@@ -311,8 +311,11 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
       return ImmutableSet.of();
     }
 
-    TargetNode<?> node = maybeNode.get();
-    return ImmutableSet.copyOf(getTargetsFromBuildTargets(TargetNodes.getTestTargetsForNode(node)));
+    return TargetNodes.getTestTargetsForNode(maybeNode.get()).stream()
+        .map(targetUniverse::getNode)
+        .filter(Optional::isPresent)
+        .map(nodeOptional -> getOrCreateQueryBuildTarget(nodeOptional.get().getBuildTarget()))
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   // TODO: This should be moved closer to QueryTarget itself, not a helper on BuckQueryEnvironment.

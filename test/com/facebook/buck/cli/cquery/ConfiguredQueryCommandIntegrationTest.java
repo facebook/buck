@@ -523,6 +523,21 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void testsofFunctionReturnsNothingWhenNodeNotInUniverse() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "large_project", tmp);
+    workspace.setUp();
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "testsof(//libraries/apple:DatabaseKit)",
+            "--target-universe",
+            "//libraries/...");
+
+    assertOutputMatchesExactly("", result);
+  }
+
+  @Test
   public void
       twoTargetsWithDifferentConfigurationsInTargetUniverseBothGetPrintedWithRecursiveTargetSpec()
           throws IOException {
@@ -712,7 +727,10 @@ public class ConfiguredQueryCommandIntegrationTest {
     workspace.setUp();
     ProcessResult result =
         workspace.runBuckCommand(
-            "cquery", "testsof(deps(set(//apps/android/... //apps/apple/...)))");
+            "cquery",
+            "testsof(deps(set(//apps/android/... //apps/apple/...)))",
+            "--target-universe",
+            "//...");
 
     result.assertSuccess();
     assertOutputMatchesFileContents(
