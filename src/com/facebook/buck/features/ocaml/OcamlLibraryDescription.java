@@ -119,7 +119,11 @@ public class OcamlLibraryDescription
             buildTarget,
             context.getProjectFilesystem(),
             params,
-            args.getLinkerFlags(),
+            OcamlDescriptionEnhancer.toStringWithMacrosArgs(
+                buildTarget,
+                context.getCellPathResolver(),
+                context.getActionGraphBuilder(),
+                args.getLinkerFlags()),
             result.getObjectFiles(),
             result.getOcamlContext(),
             result.getRules().get(0),
@@ -153,7 +157,11 @@ public class OcamlLibraryDescription
             buildTarget,
             context.getProjectFilesystem(),
             params,
-            args.getLinkerFlags(),
+            OcamlDescriptionEnhancer.toStringWithMacrosArgs(
+                buildTarget,
+                context.getCellPathResolver(),
+                context.getActionGraphBuilder(),
+                args.getLinkerFlags()),
             srcs.stream()
                 .map(context.getActionGraphBuilder().getSourcePathResolver()::getAbsolutePath)
                 .filter(OcamlUtil.ext(OcamlCompilables.OCAML_C))
@@ -264,7 +272,7 @@ public class OcamlLibraryDescription
 
     ImmutableList<String> getOcamldepFlags();
 
-    ImmutableList<String> getLinkerFlags();
+    ImmutableList<StringWithMacros> getLinkerFlags();
 
     Optional<String> getWarningsFlags();
 

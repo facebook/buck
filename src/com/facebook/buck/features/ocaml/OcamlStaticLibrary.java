@@ -25,8 +25,8 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
-import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
@@ -34,7 +34,7 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 
 class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
-  private final ImmutableList<String> linkerFlags;
+  private final ImmutableList<Arg> linkerFlags;
   private final ImmutableList<? extends SourcePath> objFiles;
   private final OcamlBuildContext ocamlContext;
   private final BuildRule ocamlLibraryBuild;
@@ -47,7 +47,7 @@ class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      ImmutableList<String> linkerFlags,
+      ImmutableList<Arg> linkerFlags,
       ImmutableList<? extends SourcePath> objFiles,
       OcamlBuildContext ocamlContext,
       BuildRule ocamlLibraryBuild,
@@ -70,7 +70,7 @@ class OcamlStaticLibrary extends OcamlLibrary implements HasRuntimeDeps {
     NativeLinkableInput.Builder inputBuilder = NativeLinkableInput.builder();
 
     // Add linker flags.
-    inputBuilder.addAllArgs(StringArg.from(linkerFlags));
+    inputBuilder.addAllArgs(linkerFlags);
 
     // Add arg and input for static library.
     inputBuilder.addArgs(
