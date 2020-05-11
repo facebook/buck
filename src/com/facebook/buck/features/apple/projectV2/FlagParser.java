@@ -182,7 +182,6 @@ class FlagParser {
             .map(path -> "-isystem" + path)
             .collect(Collectors.toList());
 
-    ImmutableList<String> testingOverlay = getFlagsForExcludesForModulesUnderTests(targetNode);
     Iterable<String> otherSwiftFlags =
         Utils.distinctUntilChanged(
             Iterables.concat(
@@ -213,7 +212,6 @@ class FlagParser {
                         collectRecursiveSystemPreprocessorFlags(targetNode),
                         requiredBuildTargetsBuilder))
                 .addAll(systemIncludeDirectoryFlags)
-                .addAll(testingOverlay)
                 .build());
 
     Iterable<String> targetCxxFlags =
@@ -240,7 +238,6 @@ class FlagParser {
                         collectRecursiveSystemPreprocessorFlags(targetNode),
                         requiredBuildTargetsBuilder))
                 .addAll(systemIncludeDirectoryFlags)
-                .addAll(testingOverlay)
                 .build());
 
     flagsBuilder
@@ -413,28 +410,6 @@ class FlagParser {
       macrosConverter.convert(flag).appendToCommandLine(result::add, defaultPathResolver);
     }
     return result.build();
-  }
-
-  private ImmutableList<String> getFlagsForExcludesForModulesUnderTests(
-      TargetNode<? extends CxxLibraryDescription.CommonArg> testingTarget) {
-    ImmutableList.Builder<String> testingOverlayBuilder = new ImmutableList.Builder<>();
-    headerSearchPaths.visitRecursivePrivateHeaderSymlinkTreesForTests(
-        testingTarget,
-        (targetUnderTest, headerVisibility) -> {
-          // If we are testing a modular apple_library, we expose it non-modular. This allows the
-          // testing target to see both the public and private interfaces of the tested target
-          // without triggering header errors related to modules. We hide the module definition by
-          // using a filesystem overlay that overrides the module.modulemap with an empty file.
-          if (NodeHelper.isModularAppleLibrary(targetUnderTest)) {
-            testingOverlayBuilder.add("-ivfsoverlay");
-            Path vfsOverlay =
-                HeaderSearchPaths.getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(
-                    headerSearchPaths.getPathToHeaderSymlinkTree(
-                        targetUnderTest, HeaderVisibility.PUBLIC));
-            testingOverlayBuilder.add("$REPO_ROOT/" + vfsOverlay);
-          }
-        });
-    return testingOverlayBuilder.build();
   }
 
   private Iterable<StringWithMacros> collectRecursiveExportedPreprocessorFlags(

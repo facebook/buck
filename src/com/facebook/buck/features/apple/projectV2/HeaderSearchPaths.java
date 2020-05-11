@@ -265,10 +265,6 @@ class HeaderSearchPaths {
     return headerSymlinkTreeRoot.resolve("objc-module-overlay.yaml");
   }
 
-  static Path getTestingModulemapVFSOverlayLocationFromSymlinkTreeRoot(Path headerSymlinkTreeRoot) {
-    return headerSymlinkTreeRoot.resolve("testing-overlay.yaml");
-  }
-
   private ImmutableSortedMap<Path, SourcePath> getPublicCxxHeaders(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
     CxxLibraryDescription.CommonArg arg = targetNode.getConstructorArg();
