@@ -495,7 +495,7 @@ public class QueryCommand extends AbstractQueryCommand {
       }
 
       QueryBuildTarget queryBuildTarget = (QueryBuildTarget) target;
-      builder.add(env.getTargetUniverse().getNode(queryBuildTarget.getBuildTarget()));
+      env.getTargetUniverse().getNode(queryBuildTarget.getBuildTarget()).ifPresent(builder::add);
     }
     return builder.build();
   }

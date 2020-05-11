@@ -52,10 +52,10 @@ public interface TargetUniverse {
       throws BuildFileParseException, InterruptedException;
 
   /**
-   * Returns the {@code TargetNode} in the universe for {@code buildTarget}. Throws a {@code
-   * QueryException} if no node exists for the target.
+   * Returns an Optional containing the {@code TargetNode} in the universe for {@code buildTarget},
+   * or {@code Optional.EMPTY} if the target doesn't exist in the universe.
    */
-  TargetNode<?> getNode(BuildTarget buildTarget) throws QueryException;
+  Optional<TargetNode<?>> getNode(BuildTarget buildTarget);
 
   ImmutableList<TargetNode<?>> getAllTargetNodesWithTargetCompatibilityFiltering(
       Cell cell, AbsPath buildFile, Optional<TargetConfiguration> targetConfiguration);

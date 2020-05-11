@@ -113,22 +113,18 @@ public class LegacyQueryUniverse implements TargetUniverse {
     return parser.resolveTargetSpecs(parsingContext, specs, targetConfiguration);
   }
 
-  // TODO(srice): This should return an optional, in case the build target doesn't exist in the
-  // universe.
   @Override
-  public TargetNode<?> getNode(BuildTarget buildTarget) throws QueryException {
+  public Optional<TargetNode<?>> getNode(BuildTarget buildTarget) {
     TargetNode<?> node = targetsToNodes.get(buildTarget);
     if (node != null) {
-      return node;
+      return Optional.of(node);
     }
 
-    try {
-      return parser.getTargetNodeAssertCompatible(
-          parserState, buildTarget, DependencyStack.top(buildTarget));
-    } catch (BuildFileParseException e) {
-      throw new QueryException(
-          e, "Error getting target node for %s\n%s", buildTarget, e.getMessage());
-    }
+    // TODO(srice): `getTargetNodeAssertCompatible` appears to return a nonnull value, but it's hard
+    // to be sure. We have little to lose by using `ofNullable`, but it may not be necessary.
+    return Optional.ofNullable(
+        parser.getTargetNodeAssertCompatible(
+            parserState, buildTarget, DependencyStack.top(buildTarget)));
   }
 
   @Override
@@ -143,11 +139,10 @@ public class LegacyQueryUniverse implements TargetUniverse {
   }
 
   @Override
-  public ImmutableSet<BuildTarget> getTransitiveClosure(Set<BuildTarget> targets)
-      throws QueryException {
+  public ImmutableSet<BuildTarget> getTransitiveClosure(Set<BuildTarget> targets) {
     Set<TargetNode<?>> nodes = new LinkedHashSet<>(targets.size());
     for (BuildTarget target : targets) {
-      nodes.add(getNode(target));
+      getNode(target).ifPresent(nodes::add);
     }
 
     ImmutableSet.Builder<BuildTarget> result = ImmutableSet.builder();
@@ -238,39 +233,35 @@ public class LegacyQueryUniverse implements TargetUniverse {
 
   @Override
   public ImmutableSet<BuildTarget> getAllTargetsFromOutgoingEdgesOf(BuildTarget target) {
-    TargetNode<?> node;
-    try {
-      node = getNode(target);
-    } catch (QueryException e) {
-      // TODO(srice): Right now `getNode` throws an exception if it can't find the node. Ideally
-      // we would return an optional and handle it gracefully. In this case, we give an empty result
-      // if the node doesn't exist.
+    Optional<TargetNode<?>> maybeNode = getNode(target);
+    if (!maybeNode.isPresent()) {
       return ImmutableSet.of();
     }
 
+    TargetNode<?> node = maybeNode.get();
     ImmutableSet.Builder<BuildTarget> result = ImmutableSet.builder();
+
     for (TargetNode<?> parentNode : graph.getOutgoingNodesFor(node)) {
       result.add(parentNode.getBuildTarget());
     }
+
     return result.build();
   }
 
   @Override
   public ImmutableSet<BuildTarget> getAllTargetsFromIncomingEdgesOf(BuildTarget target) {
-    TargetNode<?> node;
-    try {
-      node = getNode(target);
-    } catch (QueryException e) {
-      // TODO(srice): Right now `getNode` throws an exception if it can't find the node. Ideally
-      // we would return an optional and handle it gracefully. In this case, we give an empty result
-      // if the node doesn't exist.
+    Optional<TargetNode<?>> maybeNode = getNode(target);
+    if (!maybeNode.isPresent()) {
       return ImmutableSet.of();
     }
 
+    TargetNode<?> node = maybeNode.get();
     ImmutableSet.Builder<BuildTarget> result = ImmutableSet.builder();
+
     for (TargetNode<?> parentNode : graph.getIncomingNodesFor(node)) {
       result.add(parentNode.getBuildTarget());
     }
+
     return result.build();
   }
 

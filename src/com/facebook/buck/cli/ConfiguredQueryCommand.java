@@ -386,16 +386,11 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   private Optional<TargetNode<?>> nodeForQueryTarget(
       ConfiguredQueryEnvironment env, QueryTarget target) {
-    if (target instanceof QueryFileTarget) {
+    if (!(target instanceof QueryBuildTarget)) {
       return Optional.empty();
     }
     QueryBuildTarget queryBuildTarget = (QueryBuildTarget) target;
-    try {
-      TargetNode<?> node = env.getTargetUniverse().getNode(queryBuildTarget.getBuildTarget());
-      return Optional.of(node);
-    } catch (QueryException e) {
-      throw new IllegalStateException("Unable to find TargetNode for query result", e);
-    }
+    return env.getTargetUniverse().getNode(queryBuildTarget.getBuildTarget());
   }
 
   private Optional<ImmutableMap<ParamNameOrSpecial, Object>> getAllAttributes(

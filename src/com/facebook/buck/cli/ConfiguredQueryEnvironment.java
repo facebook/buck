@@ -231,7 +231,7 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
     ImmutableSet.Builder<TargetNode<?>> builder =
         ImmutableSet.builderWithExpectedSize(input.size());
     for (QueryBuildTarget target : input) {
-      builder.add(targetUniverse.getNode(target.getBuildTarget()));
+      targetUniverse.getNode(target.getBuildTarget()).ifPresent(builder::add);
     }
     return builder.build();
   }
@@ -258,7 +258,12 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
   public Set<QueryTarget> getInputs(QueryTarget target) throws QueryException {
     // TODO: Give an error message if this cast fails.
     QueryBuildTarget queryBuildTarget = (QueryBuildTarget) target;
-    TargetNode<?> node = targetUniverse.getNode(queryBuildTarget.getBuildTarget());
+    Optional<TargetNode<?>> maybeNode = targetUniverse.getNode(queryBuildTarget.getBuildTarget());
+    if (!maybeNode.isPresent()) {
+      return ImmutableSet.of();
+    }
+
+    TargetNode<?> node = maybeNode.get();
     BuildTarget buildTarget = queryBuildTarget.getBuildTarget();
     Cell cell = rootCell.getCell(buildTarget.getCell());
     return node.getInputs().stream()
@@ -301,9 +306,13 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
   @Override
   public ImmutableSet<QueryTarget> getTestsForTarget(QueryTarget target) throws QueryException {
     BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
-    return ImmutableSet.copyOf(
-        getTargetsFromBuildTargets(
-            TargetNodes.getTestTargetsForNode(targetUniverse.getNode(buildTarget))));
+    Optional<TargetNode<?>> maybeNode = targetUniverse.getNode(buildTarget);
+    if (!maybeNode.isPresent()) {
+      return ImmutableSet.of();
+    }
+
+    TargetNode<?> node = maybeNode.get();
+    return ImmutableSet.copyOf(getTargetsFromBuildTargets(TargetNodes.getTestTargetsForNode(node)));
   }
 
   // TODO: This should be moved closer to QueryTarget itself, not a helper on BuckQueryEnvironment.
@@ -386,7 +395,10 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
 
   private TargetConfiguration defaultTargetConfigurationForTarget(BuildTarget target)
       throws QueryException {
-    TargetNode<?> node = targetUniverse.getNode(target);
+    TargetNode<?> node =
+        targetUniverse
+            .getNode(target)
+            .orElseThrow(() -> new QueryException("Unable to find existing node for " + target));
     ConstructorArg arg = node.getConstructorArg();
     if (!(arg instanceof BuildRuleArg)) {
       throw new QueryException("Cannot configure configuration rule (eg `platform()`): " + target);
@@ -402,30 +414,35 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
   @Override
   public String getTargetKind(QueryTarget target) throws QueryException {
     BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
-    return targetUniverse.getNode(buildTarget).getRuleType().getName();
+    return targetUniverse
+        .getNode(buildTarget)
+        .orElseThrow(() -> new QueryException("Unable to find node for " + buildTarget))
+        .getRuleType()
+        .getName();
   }
 
   @Override
   public ImmutableSet<QueryTarget> getTargetsInAttribute(QueryTarget target, ParamName attribute)
       throws QueryException {
     BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+    TargetNode<?> node =
+        targetUniverse
+            .getNode(buildTarget)
+            .orElseThrow(() -> new QueryException("Unable to find node for " + buildTarget));
     return QueryTargetAccessor.getTargetsInAttribute(
-        typeCoercerFactory,
-        targetUniverse.getNode(buildTarget),
-        attribute,
-        rootCell.getCellNameResolver());
+        typeCoercerFactory, node, attribute, rootCell.getCellNameResolver());
   }
 
   @Override
   public ImmutableSet<Object> filterAttributeContents(
       QueryTarget target, ParamName attribute, Predicate<Object> predicate) throws QueryException {
     BuildTarget buildTarget = ((QueryBuildTarget) target).getBuildTarget();
+    TargetNode<?> node =
+        targetUniverse
+            .getNode(buildTarget)
+            .orElseThrow(() -> new QueryException("Unable to find node for " + buildTarget));
     return QueryTargetAccessor.filterAttributeContents(
-        typeCoercerFactory,
-        targetUniverse.getNode(buildTarget),
-        attribute,
-        predicate,
-        rootCell.getCellNameResolver());
+        typeCoercerFactory, node, attribute, predicate, rootCell.getCellNameResolver());
   }
 
   /** The (genericized) set of functions available to this query environment */
