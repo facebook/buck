@@ -106,7 +106,9 @@ class StubJarClassEntry extends StubJarEntry {
 
     // The synthetic package-info class is how package annotations are recorded; that one is
     // actually used by the compiler
-    if (!((isSyntheticClass(stub) && !isKotlinModule) || isAnonymousOrLocalClass(stub))
+    // Kotlin top functions reside in synthetic classes, we should output ABIs for them.
+    if ((isSyntheticClass(stub) && isKotlinModule)
+        || !(isSyntheticClass(stub) || isAnonymousOrLocalClass(stub))
         || retainAllMethodBodies
         || stub.name.endsWith("/package-info")) {
       return new StubJarClassEntry(
@@ -153,10 +155,7 @@ class StubJarClassEntry extends StubJarEntry {
   }
 
   private static boolean isSyntheticClass(ClassNode node) {
-    if ((node.access & Opcodes.ACC_SYNTHETIC) == Opcodes.ACC_SYNTHETIC) {
-      return true;
-    }
-    return false;
+    return ((node.access & Opcodes.ACC_SYNTHETIC) == Opcodes.ACC_SYNTHETIC);
   }
 
   private static boolean isAnonymousOrLocalClass(ClassNode node) {
