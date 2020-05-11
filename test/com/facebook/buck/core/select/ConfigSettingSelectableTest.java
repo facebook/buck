@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.rules.configsetting;
+package com.facebook.buck.core.select;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import com.facebook.buck.core.select.TestSelectables;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.junit.Test;

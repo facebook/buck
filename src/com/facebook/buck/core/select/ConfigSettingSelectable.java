@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.rules.configsetting;
+package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
-import com.facebook.buck.core.select.Selectable;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -30,7 +29,8 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * {@code Selectable} created by {@link ConfigSettingRule} for integration with {@link
+ * {@code Selectable} created by {@link
+ * com.facebook.buck.core.rules.configsetting.ConfigSettingRule} for integration with {@link
  * com.facebook.buck.core.select.SelectableResolver}.
  */
 @BuckStyleValue
@@ -128,5 +128,14 @@ public abstract class ConfigSettingSelectable implements Selectable {
   public static ConfigSettingSelectable of(
       ImmutableMap<BuckConfigKey, String> values, ImmutableSet<ConstraintValue> constraintValues) {
     return ImmutableConfigSettingSelectable.ofImpl(values, constraintValues);
+  }
+
+  private static class AnyHolder {
+    private static final ConfigSettingSelectable ANY = of(ImmutableMap.of(), ImmutableSet.of());
+  }
+
+  /** Selector which matches any configured platform. */
+  public static ConfigSettingSelectable any() {
+    return AnyHolder.ANY;
   }
 }

@@ -19,6 +19,8 @@ package com.facebook.buck.core.rules.configsetting;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.config.AbstractConfigurationRule;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
+import com.facebook.buck.core.select.BuckConfigKey;
+import com.facebook.buck.core.select.ConfigSettingSelectable;
 import com.facebook.buck.core.select.ProvidesSelectable;
 import com.facebook.buck.core.select.Selectable;
 import com.google.common.collect.ImmutableMap;

@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.platform.TargetPlatformResolver;
 import com.facebook.buck.core.rules.config.ConfigurationRuleArg;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.Selector;
-import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -332,8 +331,7 @@ public class DefaultConstructorArgMarshaller implements ConstructorArgMarshaller
     for (Selector<T> selector : selectorList.getSelectors()) {
       selector.getConditions().keySet().stream()
           .filter(selectorKey -> !selectorKey.isReserved())
-          .map(SelectorKey::getBuildTarget)
-          .forEach(configurationDeps::add);
+          .forEach(s -> s.getBuildTarget().ifPresent(configurationDeps::add));
     }
   }
 }

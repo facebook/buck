@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.rules.configsetting;
+package com.facebook.buck.core.select;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Rule;
 import org.junit.Test;

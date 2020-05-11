@@ -27,6 +27,9 @@ java_test(
     name = "select",
     srcs = glob(["*Test.java"]),
     deps = [
+        ":testutil",
+        "//src/com/facebook/buck/core/select:select",
+        "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
         "//test/com/facebook/buck/util:testutil",

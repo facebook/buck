@@ -70,7 +70,7 @@ public class SelectorFactoryTest {
     List<SelectorKey> keys = Lists.newArrayList(conditions.keySet());
     assertEquals(SelectorKey.DEFAULT, keys.get(0));
     assertEquals("flavor1", conditions.get(keys.get(0)));
-    assertEquals("//:a", keys.get(1).getBuildTarget().getFullyQualifiedName());
+    assertEquals("//:a", keys.get(1).getBuildTarget().get().getFullyQualifiedName());
     assertEquals("flavor2", conditions.get(keys.get(1)));
     assertNotNull(selector.getDefaultConditionValue());
   }
@@ -86,9 +86,9 @@ public class SelectorFactoryTest {
     assertEquals(2, selector.getConditions().size());
     ImmutableMap<SelectorKey, Object> conditions = selector.getConditions();
     List<SelectorKey> keys = Lists.newArrayList(conditions.keySet());
-    assertEquals("//:z", keys.get(0).getBuildTarget().getFullyQualifiedName());
+    assertEquals("//:z", keys.get(0).getBuildTarget().get().getFullyQualifiedName());
     assertEquals("flavor1", conditions.get(keys.get(0)));
-    assertEquals("//:a", keys.get(1).getBuildTarget().getFullyQualifiedName());
+    assertEquals("//:a", keys.get(1).getBuildTarget().get().getFullyQualifiedName());
     assertEquals("flavor2", conditions.get(keys.get(1)));
     assertNull(selector.getDefaultConditionValue());
   }
@@ -120,7 +120,7 @@ public class SelectorFactoryTest {
     assertEquals(1, selector.getConditions().size());
     ImmutableMap<SelectorKey, Object> conditions = selector.getConditions();
     List<SelectorKey> keys = Lists.newArrayList(conditions.keySet());
-    assertEquals("//:a", keys.get(0).getBuildTarget().getFullyQualifiedName());
+    assertEquals("//:a", keys.get(0).getBuildTarget().get().getFullyQualifiedName());
     assertEquals("flavor2", conditions.get(keys.get(0)));
     assertNull(selector.getDefaultConditionValue());
   }

@@ -101,14 +101,13 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
       SelectorKey selectorKey,
       Object value,
       DependencyStack dependencyStack) {
-    if (selectorKey.isReserved()) {
-      return;
-    }
-
     NamedSelectable selectable =
         NamedSelectable.of(
             selectorKey.getBuildTarget(),
-            selectableResolver.getSelectable(selectorKey.getBuildTarget(), dependencyStack));
+            selectorKey
+                .getBuildTarget()
+                .map(t -> selectableResolver.getSelectable(t, dependencyStack))
+                .orElse(ConfigSettingSelectable.any()));
 
     if (selectable
         .getSelectable()
@@ -149,7 +148,11 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
           Joiner.on("\n")
               .join(
                   matchingConditions.keySet().stream()
-                      .map(NamedSelectable::getBuildTarget)
+                      .map(
+                          s ->
+                              s.getBuildTarget()
+                                  .map(BuildTarget::getFullyQualifiedName)
+                                  .orElse("DEFAULT"))
                       .collect(ImmutableList.toImmutableList())));
     }
   }
@@ -174,7 +177,6 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
       Iterable<?> keys =
           selector.getConditions().keySet().stream()
               .filter(key -> !key.isReserved())
-              .map(SelectorKey::getBuildTarget)
               .sorted()
               .collect(Collectors.toList());
       noMatchMessage += ".\nChecked conditions:\n " + Joiner.on("\n ").join(keys);

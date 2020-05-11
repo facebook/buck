@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.config.ConfigurationRuleDescription;
 import com.facebook.buck.core.rules.config.ConfigurationRuleResolver;
 import com.facebook.buck.core.rules.config.graph.ConfigurationGraphDependencyStack;
 import com.facebook.buck.core.rules.platform.ConstraintValueRule;
+import com.facebook.buck.core.select.BuckConfigKey;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;

@@ -18,7 +18,7 @@ package com.facebook.buck.core.select;
 
 /**
  * Interface indicating that a class can provide a {@link Selectable} and its instances can be used
- * as keys in {@link Selector}.
+ * as keys in {@link com.facebook.buck.core.select.Selector}.
  */
 public interface ProvidesSelectable {
 

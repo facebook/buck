@@ -19,21 +19,24 @@ package com.facebook.buck.core.select;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
+import java.util.Optional;
 import org.immutables.value.Value;
 
 /** A pair of selectable and a build target. */
 @BuckStyleValue
 public abstract class NamedSelectable {
-  public abstract BuildTarget getBuildTarget();
+  public abstract Optional<BuildTarget> getBuildTarget();
 
   public abstract Selectable getSelectable();
 
   @Value.Check
   protected void check() {
-    ConfigurationBuildTargets.validateTarget(getBuildTarget());
+    if (getBuildTarget().isPresent()) {
+      ConfigurationBuildTargets.validateTarget(getBuildTarget().get());
+    }
   }
 
-  public static NamedSelectable of(BuildTarget buildTarget, Selectable selectable) {
+  public static NamedSelectable of(Optional<BuildTarget> buildTarget, Selectable selectable) {
     return ImmutableNamedSelectable.ofImpl(buildTarget, selectable);
   }
 }

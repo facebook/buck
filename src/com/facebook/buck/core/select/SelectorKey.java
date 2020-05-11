@@ -19,6 +19,7 @@ package com.facebook.buck.core.select;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.ConfigurationBuildTargets;
 import java.util.Objects;
+import java.util.Optional;
 import javax.annotation.Nullable;
 
 /**
@@ -26,7 +27,7 @@ import javax.annotation.Nullable;
  *
  * <p>Can be a build target or a default condition (represented by the "DEFAULT" keyword)
  */
-public class SelectorKey {
+public class SelectorKey implements Comparable<SelectorKey> {
 
   public static final String DEFAULT_KEYWORD = "DEFAULT";
 
@@ -47,9 +48,8 @@ public class SelectorKey {
     return buildTarget == null;
   }
 
-  public BuildTarget getBuildTarget() {
-    Objects.requireNonNull(buildTarget, "Default condition has no build target");
-    return buildTarget;
+  public Optional<BuildTarget> getBuildTarget() {
+    return Optional.ofNullable(buildTarget);
   }
 
   /** @return <code>true</code> for keys that are not the actual targets. */
@@ -77,5 +77,13 @@ public class SelectorKey {
   @Override
   public int hashCode() {
     return Objects.hash(buildTarget);
+  }
+
+  @Override
+  public int compareTo(SelectorKey that) {
+    if (this.buildTarget == null || that.buildTarget == null) {
+      return Boolean.compare(this.buildTarget != null, that.buildTarget != null);
+    }
+    return this.buildTarget.compareTo(that.buildTarget);
   }
 }

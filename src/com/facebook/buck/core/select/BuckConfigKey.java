@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.facebook.buck.core.rules.configsetting;
+package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.util.immutables.BuckStylePrehashedValue;
 import com.google.common.base.Preconditions;

@@ -5,6 +5,7 @@ java_library(
         "PUBLIC",
     ],
     deps = [
+        "//src/com/facebook/buck/core/rules/configsetting:configsetting",
         "//src/com/facebook/buck/util/string:string",
         "//third-party/java/jsr:jsr305",
     ],
