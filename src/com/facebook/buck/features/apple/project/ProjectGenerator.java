@@ -3703,10 +3703,7 @@ public class ProjectGenerator {
   private ImmutableSet<Path> collectRecursiveHeaderSearchPaths(
       TargetNode<? extends CxxLibraryDescription.CommonArg> targetNode) {
     ImmutableSet.Builder<Path> builder = ImmutableSet.builder();
-
-    if (options.shouldAvoidHeaderMapsForModularLibraries()) {
-      builder.addAll(collectRecursiveModularSearchPaths(targetNode));
-    }
+    builder.addAll(collectRecursiveModularSearchPaths(targetNode));
 
     if (shouldMergeHeaderMaps()) {
       builder.add(

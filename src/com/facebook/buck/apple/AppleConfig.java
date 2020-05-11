@@ -316,11 +316,6 @@ public class AppleConfig implements ConfigView<BuckConfig> {
     return delegate.getBooleanValue(APPLE_SECTION, "merge_header_maps_in_xcode", false);
   }
 
-  public boolean shouldAvoidHeaderMapsForModularLibrariesInXcodeProject() {
-    return delegate.getBooleanValue(
-        APPLE_SECTION, "avoid_header_maps_for_modular_libraries_in_xcode", false);
-  }
-
   public boolean shouldUseSwiftDelegate() {
     // TODO(mgd): Remove Swift delegation from Apple rules
     return delegate.getBooleanValue(APPLE_SECTION, "use_swift_delegate", true);

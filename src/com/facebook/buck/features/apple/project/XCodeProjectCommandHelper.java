@@ -362,8 +362,6 @@ public class XCodeProjectCommandHelper {
             .setShouldIncludeTests(isWithTests(buckConfig))
             .setShouldIncludeDependenciesTests(isWithDependenciesTests(buckConfig))
             .setShouldMergeHeaderMaps(appleConfig.shouldMergeHeaderMapsInXcodeProject())
-            .setShouldAvoidHeaderMapsForModularLibraries(
-                appleConfig.shouldAvoidHeaderMapsForModularLibrariesInXcodeProject())
             .setShouldAddLinkedLibrariesAsFlags(appleConfig.shouldAddLinkedLibrariesAsFlags())
             .setShouldLinkSystemSwift(appleConfig.shouldLinkSystemSwift())
             .setShouldForceLoadLinkWholeLibraries(
