@@ -168,6 +168,11 @@ public class OcamlBinaryDescription
 
     ImmutableList<String> getLinkerFlags();
 
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<String>> getPlatformLinkerFlags() {
+      return PatternMatchedCollection.of();
+    }
+
     ImmutableList<String> getOcamldepFlags();
 
     Optional<String> getWarningsFlags();

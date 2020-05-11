@@ -45,6 +45,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -94,7 +95,12 @@ public class OcamlLibraryDescription
               context.getCellPathResolver(),
               context.getActionGraphBuilder(),
               ocamlPlatform.get(),
-              args.getCompilerFlags(),
+              ImmutableList.copyOf(
+                  Iterables.concat(
+                      args.getCompilerFlags(),
+                      Iterables.concat(
+                          args.getPlatformCompilerFlags()
+                              .getMatchingValues(ocamlPlatform.get().getFlavor().toString())))),
               args.getWarningsFlags());
 
       BuildTarget compileBuildTarget = OcamlRuleBuilder.createStaticLibraryBuildTarget(buildTarget);
@@ -269,6 +275,11 @@ public class OcamlLibraryDescription
     Optional<SourceSet> getSrcs();
 
     ImmutableList<StringWithMacros> getCompilerFlags();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformCompilerFlags() {
+      return PatternMatchedCollection.of();
+    }
 
     ImmutableList<String> getOcamldepFlags();
 
