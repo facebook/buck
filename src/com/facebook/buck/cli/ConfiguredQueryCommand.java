@@ -33,6 +33,7 @@ import com.facebook.buck.query.QueryEnvironment;
 import com.facebook.buck.query.QueryException;
 import com.facebook.buck.query.QueryExpression;
 import com.facebook.buck.query.QueryFileTarget;
+import com.facebook.buck.query.QueryNormalizer;
 import com.facebook.buck.query.QueryParserEnv;
 import com.facebook.buck.query.QueryTarget;
 import com.facebook.buck.rules.coercer.DefaultConstructorArgMarshaller;
@@ -201,9 +202,14 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
     // Less happy path - parse the query and try to infer the roots of the target universe.
     RepeatingTargetEvaluator evaluator = new RepeatingTargetEvaluator();
+    String queryFormat = arguments.get(0);
+    List<String> formatArgs = arguments.subList(1, arguments.size());
+    if (queryFormat.contains(QueryNormalizer.SET_SUBSTITUTOR)) {
+      queryFormat = QueryNormalizer.normalizePattern(queryFormat, formatArgs);
+    }
     QueryExpression<String> expression =
         QueryExpression.parse(
-            arguments.get(0),
+            queryFormat,
             QueryParserEnv.of(ConfiguredQueryEnvironment.defaultFunctions(), evaluator));
     // TODO: Right now we use `expression.getTargets`, which gets all target literals referenced in
     // the query. We don't want all literals, for example with `rdeps(//my:binary, //some:library)`

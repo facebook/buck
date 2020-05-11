@@ -436,6 +436,20 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void implicitTargetUniverseWithSetSubstitution() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    // `%Ss` is short hand for `set(<args>)`, which means we should create a universe with the union
+    // of all of the configs
+    ProcessResult result = workspace.runBuckCommand("cquery", "%Ss", "//lib:bar", "//lib:foo");
+    assertOutputMatches(
+        "//lib:bar (//config/platform:ios)\n//lib:bar (//config/platform:tvos)\n//lib:foo (//config/platform:ios)",
+        result);
+  }
+
+  @Test
   public void configFunctionConfiguresTargetForDefaultTargetPlatformIfNoSecondArgumentGiven()
       throws IOException {
     ProjectWorkspace workspace =
