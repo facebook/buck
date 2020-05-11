@@ -40,6 +40,7 @@ import com.facebook.buck.features.rust.RustBinaryDescription.Type;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.versions.HasVersionUniverse;
@@ -48,6 +49,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -128,7 +130,13 @@ public class RustTestDescription
                                 args.getRustcFlags().stream().map(converter::convert))
                             .flatMap(x -> x)
                             .iterator(),
-                        args.getLinkerFlags().stream().map(converter::convert).iterator(),
+                        Iterators.concat(
+                            args.getLinkerFlags().stream().map(converter::convert).iterator(),
+                            Iterators.concat(
+                                args.getPlatformLinkerFlags()
+                                    .getMatchingValues(rustPlatform.getFlavor().toString()).stream()
+                                    .map(l -> l.stream().map(converter::convert).iterator())
+                                    .iterator())),
                         RustCompileUtils.getLinkStyle(buildTarget, args.getLinkStyle()),
                         args.isRpath(),
                         args.getSrcs(),
@@ -183,6 +191,11 @@ public class RustTestDescription
   interface AbstractRustTestDescriptionArg extends RustCommonArgs, HasVersionUniverse {
 
     ImmutableList<StringWithMacros> getLinkerFlags();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformLinkerFlags() {
+      return PatternMatchedCollection.of();
+    }
 
     Optional<Linker.LinkableDepType> getLinkStyle();
 

@@ -35,6 +35,7 @@ import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.versions.HasVersionUniverse;
@@ -43,6 +44,7 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -114,7 +116,13 @@ public class RustBinaryDescription
             .flatMap(x -> x)
             .map(x -> (Arg) x)
             .iterator(),
-        args.getLinkerFlags().stream().map(converter::convert).iterator(),
+        Iterators.concat(
+            args.getLinkerFlags().stream().map(converter::convert).iterator(),
+            Iterators.concat(
+                args.getPlatformLinkerFlags().getMatchingValues(rustPlatform.getFlavor().toString())
+                    .stream()
+                    .map(l -> l.stream().map(converter::convert).iterator())
+                    .iterator())),
         linkStyle,
         args.isRpath(),
         args.getSrcs(),
@@ -199,6 +207,11 @@ public class RustBinaryDescription
   interface AbstractRustBinaryDescriptionArg extends RustCommonArgs, HasTests, HasVersionUniverse {
 
     ImmutableList<StringWithMacros> getLinkerFlags();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformLinkerFlags() {
+      return PatternMatchedCollection.of();
+    }
 
     Optional<Linker.LinkableDepType> getLinkStyle();
 
