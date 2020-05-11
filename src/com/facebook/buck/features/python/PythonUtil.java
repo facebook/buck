@@ -103,17 +103,21 @@ public class PythonUtil {
     return isNativeExt(ext) || isSourceExt(ext);
   }
 
-  public static ImmutableList<BuildTarget> getDeps(
+  /**
+   * @return the merged list of all items for the given platform, from the given platform-agnostic
+   *     and platform-specific params.
+   */
+  public static <T, C extends Collection<T>> ImmutableList<T> getParamForPlatform(
       PythonPlatform pythonPlatform,
       CxxPlatform cxxPlatform,
-      ImmutableSortedSet<BuildTarget> deps,
-      PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> platformDeps) {
-    return RichStream.from(deps)
+      C param,
+      PatternMatchedCollection<C> platformParam) {
+    return RichStream.from(param)
         .concat(
-            platformDeps.getMatchingValues(pythonPlatform.getFlavor().toString()).stream()
+            platformParam.getMatchingValues(pythonPlatform.getFlavor().toString()).stream()
                 .flatMap(Collection::stream))
         .concat(
-            platformDeps.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
+            platformParam.getMatchingValues(cxxPlatform.getFlavor().toString()).stream()
                 .flatMap(Collection::stream))
         .toImmutableList();
   }

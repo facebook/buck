@@ -263,7 +263,7 @@ public class PythonLibraryDescription
       case PACKAGE_DEPS:
         {
           ImmutableList<BuildTarget> depTargets =
-              PythonUtil.getDeps(
+              PythonUtil.getParamForPlatform(
                   pythonPlatform.getValue(),
                   cxxPlatform
                       .getValue()

@@ -58,6 +58,7 @@ import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.NeededCoverageSpec;
+import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.step.Step;
@@ -87,6 +88,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedSet;
 import java.util.function.Function;
+import org.immutables.value.Value;
 
 public class PythonTestDescription
     implements DescriptionWithTargetGraph<PythonTestDescriptionArg>,
@@ -332,7 +334,7 @@ public class PythonTestDescription
 
     ImmutableList<BuildRule> deps =
         RichStream.from(
-                PythonUtil.getDeps(
+                PythonUtil.getParamForPlatform(
                     pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps()))
             .concat(args.getNeededCoverage().stream().map(NeededCoverageSpec::getBuildTarget))
             .map(graphBuilder::getRule)
@@ -366,7 +368,12 @@ public class PythonTestDescription
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,
-            args.getLinkerFlags().stream()
+            PythonUtil.getParamForPlatform(
+                    pythonPlatform,
+                    cxxPlatform,
+                    args.getLinkerFlags(),
+                    args.getPlatformLinkerFlags())
+                .stream()
                 .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
@@ -542,6 +549,11 @@ public class PythonTestDescription
     ImmutableSet<BuildTarget> getPreloadDeps();
 
     ImmutableList<StringWithMacros> getLinkerFlags();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformLinkerFlags() {
+      return PatternMatchedCollection.of();
+    }
 
     ImmutableList<NeededCoverageSpec> getNeededCoverage();
 

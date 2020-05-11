@@ -484,7 +484,7 @@ public class CxxPythonExtensionDescription
       @Override
       public Iterable<BuildRule> getPythonPackageDeps(
           PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-        return PythonUtil.getDeps(
+        return PythonUtil.getParamForPlatform(
                 pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
             .stream()
             .map(graphBuilder::getRule)

@@ -351,7 +351,8 @@ public class PythonBinaryDescription
         ImmutablePythonBinaryPackagable.ofImpl(
             buildTarget,
             projectFilesystem,
-            PythonUtil.getDeps(pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
+            PythonUtil.getParamForPlatform(
+                    pythonPlatform, cxxPlatform, args.getDeps(), args.getPlatformDeps())
                 .stream()
                 .map(graphBuilder::getRule)
                 .collect(ImmutableList.toImmutableList()),
@@ -377,7 +378,12 @@ public class PythonBinaryDescription
             pythonPlatform,
             cxxBuckConfig,
             cxxPlatform,
-            args.getLinkerFlags().stream()
+            PythonUtil.getParamForPlatform(
+                    pythonPlatform,
+                    cxxPlatform,
+                    args.getLinkerFlags(),
+                    args.getPlatformLinkerFlags())
+                .stream()
                 .map(macrosConverter::convert)
                 .collect(ImmutableList.toImmutableList()),
             pythonBuckConfig.getNativeLinkStrategy(),
@@ -453,6 +459,11 @@ public class PythonBinaryDescription
     ImmutableSet<BuildTarget> getPreloadDeps();
 
     ImmutableList<StringWithMacros> getLinkerFlags();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformLinkerFlags() {
+      return PatternMatchedCollection.of();
+    }
 
     Optional<String> getExtension();
 
