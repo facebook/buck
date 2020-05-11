@@ -46,7 +46,6 @@ import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.parser.buildtargetpattern.UnconfiguredBuildTargetParser;
 import com.facebook.buck.core.path.ForwardRelativePath;
-import com.facebook.buck.core.rules.configsetting.ConfigSettingSelectable;
 import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.Selector;
@@ -54,6 +53,7 @@ import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.SelectorListResolver;
 import com.facebook.buck.core.select.TestSelectableResolver;
+import com.facebook.buck.core.select.TestSelectables;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -490,7 +490,8 @@ public class ConstructorArgMarshallerImmutableTest {
             new TestSelectableResolver(
                 ImmutableMap.of(
                     selectableTarget,
-                    ConfigSettingSelectable.of(ImmutableMap.of(), ImmutableSet.of()))));
+                    TestSelectables.configSetting(
+                        TestSelectables.constraintValue("//:linux", "//:os")))));
     SelectorList<?> selectorList =
         new SelectorList<>(
             ImmutableList.of(
@@ -515,7 +516,8 @@ public class ConstructorArgMarshallerImmutableTest {
     TargetPlatformResolver targetPlatformResolver =
         (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
     SelectableConfigurationContext selectableConfigurationContext =
-        SelectableConfigurationContext.of(FakeBuckConfig.empty(), UnconfiguredPlatform.INSTANCE);
+        TestSelectables.selectableConfigurationContext(
+            TestSelectables.constraintValue("//:linux", "//:os"));
     TargetConfigurationTransformer targetConfigurationTransformer =
         new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver);
     ImmutableSet.Builder<BuildTarget> declaredDeps = ImmutableSet.builder();

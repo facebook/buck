@@ -20,6 +20,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
+import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.model.platform.impl.ConstraintBasedPlatform;
 import com.facebook.buck.core.rules.configsetting.ConfigSettingSelectable;
 import com.google.common.collect.ImmutableMap;
@@ -47,10 +48,13 @@ public class TestSelectables {
 
   public static SelectableConfigurationContext selectableConfigurationContext(
       ConstraintValue... constraintValues) {
-    ConstraintBasedPlatform platform =
-        new ConstraintBasedPlatform(
-            ConfigurationBuildTargetFactoryForTests.newInstance("//:p"),
-            ImmutableSet.copyOf(constraintValues));
+    Platform platform = platform(constraintValues);
     return SelectableConfigurationContext.of(FakeBuckConfig.empty(), platform);
+  }
+
+  public static Platform platform(ConstraintValue... constraintValues) {
+    return new ConstraintBasedPlatform(
+        ConfigurationBuildTargetFactoryForTests.newInstance("//:p"),
+        ImmutableSet.copyOf(constraintValues));
   }
 }

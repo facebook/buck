@@ -640,7 +640,7 @@ public class ParserWithConfigurableAttributesTest {
     AbsPath configBuckFile = tempDir.newFile("config/BUCK");
     Files.write(
         configBuckFile.getPath(),
-        ("config_setting(name = 'config', values = {})").getBytes(UTF_8),
+        ("config_setting(name = 'config', values = {'a.c': 'c'})").getBytes(UTF_8),
         StandardOpenOption.APPEND);
 
     AbsPath buckFile = tempDir.newFile("BUCK");
@@ -682,7 +682,8 @@ public class ParserWithConfigurableAttributesTest {
     AbsPath configBuckFile = tempDir.newFile("config/BUCK");
     Files.write(
         configBuckFile.getPath(),
-        ("load('//config:defs.bzl', 'java_lib')\nconfig_setting(name = 'config', values = {})")
+        ("load('//config:defs.bzl', 'java_lib')\n"
+                + "config_setting(name = 'config', values = {'a.c': 'c'})")
             .getBytes(UTF_8),
         StandardOpenOption.APPEND);
     AbsPath defsFile = tempDir.newFile("config/defs.bzl");

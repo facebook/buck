@@ -32,18 +32,17 @@ import com.facebook.buck.core.model.UnconfiguredBuildTargetFactoryForTests;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.model.impl.MultiPlatformTargetConfigurationTransformer;
 import com.facebook.buck.core.model.platform.TargetPlatformResolver;
-import com.facebook.buck.core.model.platform.impl.UnconfiguredPlatform;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.ImmutableUnconfiguredTargetNode;
 import com.facebook.buck.core.model.targetgraph.impl.TargetNodeFactory;
 import com.facebook.buck.core.model.targetgraph.raw.UnconfiguredTargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
-import com.facebook.buck.core.rules.configsetting.ConfigSettingSelectable;
 import com.facebook.buck.core.rules.knowntypes.TestKnownRuleTypesProvider;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorKey;
 import com.facebook.buck.core.select.SelectorList;
 import com.facebook.buck.core.select.TestSelectableResolver;
+import com.facebook.buck.core.select.TestSelectables;
 import com.facebook.buck.core.select.impl.DefaultSelectorListResolver;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePathFactoryForTests;
@@ -127,7 +126,7 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
     TypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
     BuildTarget selectableTarget = ConfigurationBuildTargetFactoryForTests.newInstance("//x:y");
     TargetPlatformResolver targetPlatformResolver =
-        (configuration, dependencyStack) -> UnconfiguredPlatform.INSTANCE;
+        (configuration, dependencyStack) -> TestSelectables.platform();
     UnconfiguredTargetNodeToTargetNodeFactory factory =
         new UnconfiguredTargetNodeToTargetNodeFactory(
             typeCoercerFactory,
@@ -140,7 +139,8 @@ public class UnconfiguredTargetNodeToTargetNodeFactoryTest {
                 new TestSelectableResolver(
                     ImmutableMap.of(
                         selectableTarget,
-                        ConfigSettingSelectable.of(ImmutableMap.of(), ImmutableSet.of())))),
+                        TestSelectables.configSetting(
+                            TestSelectables.constraintValue("//:linux", "//:os"))))),
             targetPlatformResolver,
             new MultiPlatformTargetConfigurationTransformer(targetPlatformResolver),
             UnconfiguredTargetConfiguration.INSTANCE,
