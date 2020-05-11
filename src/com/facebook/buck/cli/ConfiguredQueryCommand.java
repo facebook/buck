@@ -40,7 +40,6 @@ import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
-import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -252,7 +251,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
               .collect(ImmutableSet.toImmutableSet());
     }
 
-    ObjectMappers.WRITER.writeValue(printStream, printableObject);
+    prettyPrintJsonObject(printableObject, printStream);
   }
 
   private void printJsonOutput(
@@ -260,7 +259,7 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
     Multimap<String, String> targetsAndResultsNames =
         Multimaps.transformValues(
             queryResultMap, input -> toPresentationForm(Objects.requireNonNull(input)));
-    ObjectMappers.WRITER.writeValue(printStream, targetsAndResultsNames.asMap());
+    prettyPrintJsonObject(targetsAndResultsNames.asMap(), printStream);
   }
 
   private void printDotOutput(

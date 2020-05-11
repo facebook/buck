@@ -42,9 +42,6 @@ import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.json.ObjectMappers;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.util.DefaultIndenter;
-import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
@@ -430,23 +427,9 @@ public class QueryCommand extends AbstractQueryCommand {
       ImmutableSet<String> attributes,
       PrintStream printStream)
       throws QueryException, IOException {
-    printAttributesAsJson(collectAttributes(params, env, queryResult, attributes), printStream);
-  }
-
-  private void printAttributesAsJson(
-      ImmutableSortedMap<String, ImmutableSortedMap<ParamNameOrSpecial, Object>> result,
-      PrintStream printStream)
-      throws IOException {
-    ObjectMappers.WRITER
-        .with(
-            new DefaultPrettyPrinter().withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))
-        // Jackson closes stream by default - we do not want it
-        .without(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
-        .writeValue(printStream, result);
-
-    // Jackson does not append a newline after final closing bracket. Do it to make JSON look
-    // nice on console.
-    printStream.println();
+    ImmutableSortedMap<String, ImmutableSortedMap<ParamNameOrSpecial, Object>>
+        resultWithAttributes = collectAttributes(params, env, queryResult, attributes);
+    prettyPrintJsonObject(resultWithAttributes, printStream);
   }
 
   private ImmutableSortedMap<String, ImmutableSortedMap<ParamNameOrSpecial, Object>>

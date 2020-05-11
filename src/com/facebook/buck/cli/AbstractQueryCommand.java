@@ -25,6 +25,10 @@ import com.facebook.buck.rules.param.ParamNameOrSpecial;
 import com.facebook.buck.util.CloseableWrapper;
 import com.facebook.buck.util.CommandLineException;
 import com.facebook.buck.util.PatternsMatcher;
+import com.facebook.buck.util.json.ObjectMappers;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableMap;
@@ -252,6 +256,21 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       }
     }
     return result.build();
+  }
+
+  /** Takes a json-serializable object and pretty-prints it to {@code printStream} */
+  protected void prettyPrintJsonObject(Object jsonObject, PrintStream printStream)
+      throws IOException {
+    ObjectMappers.WRITER
+        .with(
+            new DefaultPrettyPrinter().withArrayIndenter(DefaultIndenter.SYSTEM_LINEFEED_INSTANCE))
+        // Jackson closes stream by default - we do not want it
+        .without(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
+        .writeValue(printStream, jsonObject);
+
+    // Jackson does not append a newline after final closing bracket. Do it to make JSON look
+    // nice on console.
+    printStream.println();
   }
 
   /**
