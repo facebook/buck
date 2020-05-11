@@ -70,6 +70,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /** Generates an Xcode project and writes the output to disk. */
 public class ProjectGenerator {
@@ -411,8 +412,21 @@ public class ProjectGenerator {
 
       buckEventBus.post(ProjectGenerationEvent.processed());
 
+      ImmutableSet<BuildTarget> headerMapTargets =
+          ImmutableSet.<BuildTarget>builder()
+              .addAll(targetsInRequiredProjects)
+              .addAll(
+                  StreamSupport.stream(targetGraph.getAll(projectTargets).spliterator(), false)
+                      .filter(
+                          targetNode ->
+                              // Generate header maps for headers included in any Apple targets
+                              NodeHelper.getAppleNativeNode(targetGraph, targetNode).isPresent())
+                      .map(targetNode -> targetNode.getBuildTarget())
+                      .collect(Collectors.toSet()))
+              .build();
+
       ImmutableList<SourcePath> sourcePathsToBuild =
-          headerSearchPaths.createMergedHeaderMap(targetsInRequiredProjects);
+          headerSearchPaths.createMergedHeaderMap(headerMapTargets);
 
       buildTargetSourcePathsBuilder.addAll(
           sourcePathsToBuild.stream()

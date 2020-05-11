@@ -161,14 +161,14 @@ class HeaderSearchPaths {
   }
 
   /** Generates the merged header map and writes it to the public header symlink tree location. */
-  ImmutableList<SourcePath> createMergedHeaderMap(
-      ImmutableSet<BuildTarget> targetsInRequiredProjects) throws IOException {
+  ImmutableList<SourcePath> createMergedHeaderMap(ImmutableSet<BuildTarget> targets)
+      throws IOException {
     HeaderMap.Builder headerMapBuilder = new HeaderMap.Builder();
     ImmutableList.Builder<SourcePath> sourcePathsToBuildBuilder = ImmutableList.builder();
 
     Set<TargetNode<? extends CxxLibraryDescription.CommonArg>> processedNodes = new HashSet<>();
 
-    for (TargetNode<?> targetNode : targetGraph.getAll(targetsInRequiredProjects)) {
+    for (TargetNode<?> targetNode : targetGraph.getAll(targets)) {
       // Includes the public headers of the dependencies in the merged header map.
       NodeHelper.getAppleNativeNode(targetGraph, targetNode)
           .ifPresent(
