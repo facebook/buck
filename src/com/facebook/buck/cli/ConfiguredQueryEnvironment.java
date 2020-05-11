@@ -373,7 +373,7 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
   @Override
   public ImmutableSet<QueryTarget> getConfiguredTargets(
       Set<QueryTarget> targets, Optional<String> configurationName) throws QueryException {
-    ImmutableSet.Builder<QueryTarget> builder = ImmutableSet.builder();
+    ImmutableSet.Builder<BuildTarget> builder = ImmutableSet.builder();
     Optional<TargetConfiguration> explicitlyRequestedConfiguration =
         configurationName.map(targetConfigurationFactory::create);
     for (QueryTarget target : targets) {
@@ -388,9 +388,16 @@ public class ConfiguredQueryEnvironment implements QueryEnvironment<QueryTarget>
               : defaultTargetConfigurationForTarget(buildTarget);
       BuildTarget reconfiguredBuildTarget =
           buildTarget.getUnconfiguredBuildTarget().configure(configuration);
-      builder.add(getOrCreateQueryBuildTarget(reconfiguredBuildTarget));
+      builder.add(reconfiguredBuildTarget);
     }
-    return builder.build();
+    // NOTE: We only want to return the newly configured target if that target exists in the
+    // universe. Otherwise, we can run into issues down the line when people ask for totally
+    // reasonable things like "please print the attributes of this target".
+    return builder.build().stream()
+        .map(targetUniverse::getNode)
+        .filter(Optional::isPresent)
+        .map(nodeOptional -> getOrCreateQueryBuildTarget(nodeOptional.get().getBuildTarget()))
+        .collect(ImmutableSet.toImmutableSet());
   }
 
   private TargetConfiguration defaultTargetConfigurationForTarget(BuildTarget target)

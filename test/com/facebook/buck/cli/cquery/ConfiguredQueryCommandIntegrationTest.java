@@ -90,6 +90,12 @@ public class ConfiguredQueryCommandIntegrationTest {
         OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())).trim());
   }
 
+  private void assertOutputMatchesExactly(String expectedOutput, ProcessResult result) {
+    result.assertSuccess();
+
+    assertEquals(normalizeNewlines(expectedOutput), normalizeNewlines(result.getStdout()));
+  }
+
   @Test
   public void basicTargetPrinting() throws IOException {
     ProjectWorkspace workspace =
@@ -409,7 +415,11 @@ public class ConfiguredQueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result =
-        workspace.runBuckCommand("cquery", "config(//lib:foo, //config/platform:tvos)");
+        workspace.runBuckCommand(
+            "cquery",
+            "config(//lib:foo, //config/platform:tvos)",
+            "--target-universe",
+            "//bin:ios-bin,//bin:tvos-bin");
     assertOutputMatches("//lib:foo (//config/platform:tvos)", result);
   }
 
@@ -488,12 +498,28 @@ public class ConfiguredQueryCommandIntegrationTest {
 
     ProcessResult result =
         workspace.runBuckCommand(
-            "cquery",
-            "config(//lib:foo, //config/platform:ios) + config(//lib:foo, //config/platform:macos)");
+            "cquery", "//lib:foo", "--target-universe", "//bin:ios-bin,//bin:mac-bin");
     assertOutputMatchesFileContents(
         "stdout-multiple-lines-printed-for-one-target-in-multiple-configurations",
         result,
         workspace);
+  }
+
+  @Test
+  public void configFunctionReturnsNothingWhenNodeNotInUniverse() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "config(//lib:foo, //config/platform:tvos)",
+            "--target-universe",
+            "//bin:ios-bin",
+            "--output-attribute",
+            "buck.type");
+    assertOutputMatchesExactly("{}", result);
   }
 
   @Test
@@ -554,23 +580,6 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result = workspace.runBuckCommand("cquery", "//...");
     assertOutputMatchesFileContents(
         "stdout-root-recursive-target-spec-prints-every-target", result, workspace);
-  }
-
-  @Test
-  public void configFunctionCanCreateTargetsOtherThanTargetPlatform() throws IOException {
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
-    workspace.setUp();
-
-    ProcessResult result =
-        workspace.runBuckCommand(
-            "cquery",
-            "config(//lib:foo, //config/platform:macos)",
-            "--target-universe",
-            "//bin:tvos-bin",
-            "--target-platforms",
-            "//config/platform:ios");
-    assertOutputMatches("//lib:foo (//config/platform:macos)", result);
   }
 
   @Test
