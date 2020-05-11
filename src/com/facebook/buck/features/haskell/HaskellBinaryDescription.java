@@ -244,7 +244,11 @@ public class HaskellBinaryDescription
     linkFlagsBuilder.addAll(
         ImmutableList.copyOf(
             Iterables.transform(
-                args.getLinkerFlags(),
+                Iterables.concat(
+                    args.getLinkerFlags(),
+                    Iterables.concat(
+                        args.getPlatformLinkerFlags()
+                            .getMatchingValues(platform.getFlavor().toString()))),
                 CxxDescriptionEnhancer.getStringWithMacrosArgsConverter(
                         buildTarget, cellRoots, graphBuilder, platform.getCxxPlatform())
                     ::convert)));
@@ -385,6 +389,11 @@ public class HaskellBinaryDescription
     ImmutableList<String> getCompilerFlags();
 
     ImmutableList<StringWithMacros> getLinkerFlags();
+
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformLinkerFlags() {
+      return PatternMatchedCollection.of();
+    }
 
     @Value.Default
     default PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> getPlatformDeps() {

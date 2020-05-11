@@ -949,6 +949,11 @@ public class HaskellLibraryDescription
 
     ImmutableList<StringWithMacros> getLinkerFlags();
 
+    @Value.Default
+    default PatternMatchedCollection<ImmutableList<StringWithMacros>> getPlatformLinkerFlags() {
+      return PatternMatchedCollection.of();
+    }
+
     ImmutableList<String> getCompilerFlags();
 
     @Value.Default
