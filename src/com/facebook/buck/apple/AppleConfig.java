@@ -185,9 +185,11 @@ public class AppleConfig implements ConfigView<BuckConfig> {
               ProcessExecutorParams.builder()
                   .setCommand(ImmutableList.of("xcode-select", "--print-path"))
                   .build();
-          // Must specify that stdout is expected or else output may be wrapped in Ansi escape
-          // chars.
-          Set<Option> options = EnumSet.of(Option.EXPECTING_STD_OUT);
+          // Must specify EXPECTING_STD_OUT or else output path may be wrapped in Ansi
+          // escape chars.
+          // Must specify IS_SILENT or else Ansi escape characters may be written to
+          // stderr and block buck output.
+          Set<Option> options = EnumSet.of(Option.EXPECTING_STD_OUT, Option.IS_SILENT);
           Result result;
           try {
             result =
@@ -203,8 +205,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
           }
 
           if (result.getExitCode() != 0) {
-            throw new RuntimeException(
-                result.getMessageForUnexpectedResult("xcode-select --print-path"));
+            LOG.warn("Error executing xcode-select, continuing without developer dir.");
+            return Optional.empty();
           }
 
           return Optional.of(normalizePath(Paths.get(result.getStdout().get().trim())));
