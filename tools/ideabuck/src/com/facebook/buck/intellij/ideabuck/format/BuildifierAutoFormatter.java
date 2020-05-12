@@ -19,9 +19,10 @@ package com.facebook.buck.intellij.ideabuck.format;
 import com.facebook.buck.intellij.ideabuck.config.BuckProjectSettingsProvider;
 import com.facebook.buck.intellij.ideabuck.lang.BuckFileType;
 import com.intellij.AppTopics;
-import com.intellij.codeInsight.actions.ReformatCodeProcessor;
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.WriteAction;
+import com.intellij.openapi.command.CommandProcessor;
+import com.intellij.openapi.command.UndoConfirmationPolicy;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -35,13 +36,16 @@ import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.util.messages.MessageBusConnection;
+import java.util.Collections;
 import org.jetbrains.annotations.NotNull;
 
 /** Reformats build files using {@code buildifier} before saving. */
 public class BuildifierAutoFormatter implements StartupActivity, Disposable {
 
   private static final Logger LOGGER = Logger.getInstance(BuildifierAutoFormatter.class);
+  private static final String COMMAND_NAME = "Reformat BUCK file";
 
   private MessageBusConnection mMessageBusConnection;
 
@@ -51,8 +55,19 @@ public class BuildifierAutoFormatter implements StartupActivity, Disposable {
       return; // file type isn't a Buck file
     }
     LOGGER.info("Autoformatting " + psiFile.getVirtualFile().getPath());
-    WriteAction.run(
-        () -> new ReformatCodeProcessor(project, psiFile, psiFile.getTextRange(), false).run());
+    CommandProcessor.getInstance()
+        .executeCommand(
+            project,
+            () ->
+                WriteAction.run(
+                    () ->
+                        CodeStyleManager.getInstance(project)
+                            .reformatText(
+                                psiFile, Collections.singletonList(psiFile.getTextRange()))),
+            COMMAND_NAME,
+            null,
+            UndoConfirmationPolicy.DO_NOT_REQUEST_CONFIRMATION,
+            document);
   }
 
   @Override
@@ -84,11 +99,13 @@ public class BuildifierAutoFormatter implements StartupActivity, Disposable {
         AppTopics.FILE_DOCUMENT_SYNC,
         new FileDocumentManagerListener() {
           @Override
-          public void beforeDocumentSaving(@NotNull Document document) {
+          public void beforeAllDocumentsSaving() {
             if (!BuckProjectSettingsProvider.getInstance(project).isAutoFormatOnSave()) {
               return;
             }
-            reformatBuckFileDocument(project, document);
+            for (Document document : FileDocumentManager.getInstance().getUnsavedDocuments()) {
+              reformatBuckFileDocument(project, document);
+            }
           }
         });
     Disposer.register(project, this::dispose);
