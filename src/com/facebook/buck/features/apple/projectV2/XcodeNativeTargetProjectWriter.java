@@ -236,9 +236,7 @@ class XcodeNativeTargetProjectWriter {
 
     targetAttributes
         .genruleFiles()
-        .forEach(
-            sourcePath ->
-                projectFileWriter.writeSourcePath(sourcePath, targetAttributes.packagePath()));
+        .forEach(sourcePath -> projectFileWriter.writeSourcePath(sourcePath));
 
     PBXGroup targetGroup = project.getMainGroup();
 
@@ -254,7 +252,6 @@ class XcodeNativeTargetProjectWriter {
         projectFileWriter,
         sourcesBuildPhase,
         headersBuildPhase,
-        targetAttributes.packagePath(),
         targetAttributes.langPreprocessorFlags(),
         targetAttributes.frameworkHeadersEnabled(),
         targetAttributes.product().map(product -> product.getType()),
@@ -268,17 +265,17 @@ class XcodeNativeTargetProjectWriter {
 
     Optional<SourcePath> prefixHeader = targetAttributes.prefixHeader();
     if (prefixHeader.isPresent()) {
-      projectFileWriter.writeSourcePath(prefixHeader.get(), targetAttributes.packagePath());
+      projectFileWriter.writeSourcePath(prefixHeader.get());
     }
 
     Optional<SourcePath> infoPlist = targetAttributes.infoPlist();
     if (infoPlist.isPresent()) {
-      projectFileWriter.writeSourcePath(infoPlist.get(), targetAttributes.packagePath());
+      projectFileWriter.writeSourcePath(infoPlist.get());
     }
 
     Optional<SourcePath> bridgingHeader = targetAttributes.bridgingHeader();
     if (bridgingHeader.isPresent()) {
-      projectFileWriter.writeSourcePath(bridgingHeader.get(), targetAttributes.packagePath());
+      projectFileWriter.writeSourcePath(bridgingHeader.get());
     }
 
     Optional<Path> buckFilePath = targetAttributes.buckFilePath();
@@ -297,7 +294,6 @@ class XcodeNativeTargetProjectWriter {
       ProjectFileWriter projectFileWriter,
       PBXSourcesBuildPhase sourcesBuildPhase,
       PBXHeadersBuildPhase headersBuildPhase,
-      Optional<Path> packagePath,
       ImmutableMap<CxxSource.Type, ImmutableList<String>> langPreprocessorFlags,
       boolean frameworkHeadersEnabled,
       Optional<ProductType> productType,
@@ -307,20 +303,20 @@ class XcodeNativeTargetProjectWriter {
           @Override
           public void visitSourceWithFlags(SourceWithFlags sourceWithFlags) {
             ProjectFileWriter.Result result =
-                projectFileWriter.writeSourcePath(sourceWithFlags.getSourcePath(), packagePath);
+                projectFileWriter.writeSourcePath(sourceWithFlags.getSourcePath());
             addFileReferenceToSourcesBuildPhase(
                 result, sourceWithFlags, sourcesBuildPhase, langPreprocessorFlags);
           }
 
           @Override
           public void visitIgnoredSource(SourcePath source) {
-            projectFileWriter.writeSourcePath(source, packagePath);
+            projectFileWriter.writeSourcePath(source);
           }
 
           @Override
           public void visitPublicHeader(SourcePath publicHeader) {
             PBXFileReference fileReference =
-                projectFileWriter.writeSourcePath(publicHeader, packagePath).getFileReference();
+                projectFileWriter.writeSourcePath(publicHeader).getFileReference();
             addFileReferenceToHeadersBuildPhase(
                 fileReference,
                 headersBuildPhase,
@@ -332,7 +328,7 @@ class XcodeNativeTargetProjectWriter {
           @Override
           public void visitPrivateHeader(SourcePath privateHeader) {
             PBXFileReference fileReference =
-                projectFileWriter.writeSourcePath(privateHeader, packagePath).getFileReference();
+                projectFileWriter.writeSourcePath(privateHeader).getFileReference();
             addFileReferenceToHeadersBuildPhase(
                 fileReference,
                 headersBuildPhase,
@@ -350,7 +346,6 @@ class XcodeNativeTargetProjectWriter {
                 projectFileWriter,
                 sourcesBuildPhase,
                 headersBuildPhase,
-                packagePath,
                 langPreprocessorFlags,
                 frameworkHeadersEnabled,
                 productType,

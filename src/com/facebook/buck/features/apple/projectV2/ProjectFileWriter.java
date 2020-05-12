@@ -74,22 +74,20 @@ public class ProjectFileWriter {
    * <p>Thus, if a file is absolutely located at: /Users/me/dev/MyProject/Header.h And the cell is:
    * /Users/me/dev/ Then this will create a path in the PBXProject mainGroup as: /MyProject/Header.h
    */
-  public ProjectFileWriter.Result writeSourcePath(
-      SourcePath sourcePath, Optional<Path> packagePath) {
+  public ProjectFileWriter.Result writeSourcePath(SourcePath sourcePath) {
     Path path = sourcePathResolver.apply(sourcePath);
 
     // BuildTargetSourcePath indicates it's not a file but a build target (meaning it is generated)
     // As a result, we want to move these from `buck-out` into a __generated__ workspace
     // in order to make it easier for engineers to see which source files are generated.
     if (sourcePath instanceof BuildTargetSourcePath) {
+      BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
       Path fullPackagePath =
-          packagePath.orElseGet(
-              () ->
-                  ((BuildTargetSourcePath) sourcePath)
-                      .getTarget()
-                      .getCellRelativeBasePath()
-                      .getPath()
-                      .toPathDefaultFileSystem());
+          buildTargetSourcePath
+              .getTarget()
+              .getCellRelativeBasePath()
+              .getPath()
+              .toPathDefaultFileSystem();
       path =
           fullPackagePath
               .resolve("GENERATED-" + fullPackagePath.getFileName())

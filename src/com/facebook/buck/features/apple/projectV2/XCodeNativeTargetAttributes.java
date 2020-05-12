@@ -102,11 +102,6 @@ abstract class XCodeNativeTargetAttributes {
 
   public abstract Optional<Path> buckFilePath();
 
-  @Value.Lazy
-  public Optional<Path> packagePath() {
-    return buckFilePath().map(buckFilePath -> buckFilePath.getParent());
-  }
-
   @Value.Default
   public ImmutableSet<AppleResourceDescriptionArg> directResources() {
     return ImmutableSet.of();
