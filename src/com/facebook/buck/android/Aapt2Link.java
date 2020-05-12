@@ -50,6 +50,7 @@ import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -74,6 +75,7 @@ public class Aapt2Link extends AbstractBuildRule {
   @AddToRuleKey private final boolean filterLocales;
   @AddToRuleKey private final ImmutableSet<String> locales;
   @AddToRuleKey private final ImmutableSet<String> extraFilteredResources;
+  @AddToRuleKey private final Optional<SourcePath> resourceStableIds;
   private final Path androidJar;
   private final BuildableSupport.DepsSupplier depsSupplier;
 
@@ -99,7 +101,8 @@ public class Aapt2Link extends AbstractBuildRule {
       Path androidJar,
       boolean filterLocales,
       ImmutableSet<String> locales,
-      ImmutableSet<String> extraFilteredResources) {
+      ImmutableSet<String> extraFilteredResources,
+      Optional<SourcePath> resourceStableIds) {
     super(buildTarget, projectFilesystem);
     this.compileRules = compileRules;
     this.manifest = manifest;
@@ -119,6 +122,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.filterLocales = filterLocales;
     this.locales = locales;
     this.extraFilteredResources = extraFilteredResources;
+    this.resourceStableIds = resourceStableIds;
   }
 
   @Override
@@ -333,6 +337,11 @@ public class Aapt2Link extends AbstractBuildRule {
 
       if (packageIdOffset != 0) {
         builder.add("--package-id", String.format("0x%x", BASE_PACKAGE_ID + packageIdOffset));
+      }
+
+      if (resourceStableIds.isPresent()) {
+        builder.add(
+            "--stable-ids", pathResolver.getAbsolutePath(resourceStableIds.get()).toString());
       }
 
       if (filterLocales && !locales.isEmpty()) {

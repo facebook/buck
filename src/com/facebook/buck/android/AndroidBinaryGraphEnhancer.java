@@ -219,6 +219,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean failOnLegacyAapt2Errors,
       boolean useAapt2LocaleFiltering,
       ImmutableSet<String> extraFilteredResources,
+      Optional<SourcePath> resourceStableIds,
       int rDotJavaWeightFactor,
       int secondaryDexWeightLimit,
       ImmutableSet<String> resourcePackagesToExclude) {
@@ -300,7 +301,8 @@ public class AndroidBinaryGraphEnhancer {
             useProtoFormat,
             failOnLegacyAapt2Errors,
             useAapt2LocaleFiltering,
-            extraFilteredResources);
+            extraFilteredResources,
+            resourceStableIds);
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;

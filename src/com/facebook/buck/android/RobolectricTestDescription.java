@@ -274,7 +274,8 @@ public class RobolectricTestDescription
                 androidPlatformTarget.getAndroidJar(),
                 false,
                 ImmutableSet.of(),
-                ImmutableSet.of());
+                ImmutableSet.of(),
+                Optional.empty());
 
         graphBuilder.addToIndex(aapt2Link);
         AaptOutputInfo aaptOutputInfo = aapt2Link.getAaptOutputInfo();

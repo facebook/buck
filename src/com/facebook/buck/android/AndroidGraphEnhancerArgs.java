@@ -209,4 +209,6 @@ public interface AndroidGraphEnhancerArgs
   default ImmutableSet<String> getExtraFilteredResources() {
     return ImmutableSet.of();
   }
+
+  Optional<SourcePath> getResourceStableIds();
 }

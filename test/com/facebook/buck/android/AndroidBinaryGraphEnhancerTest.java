@@ -1083,11 +1083,12 @@ public class AndroidBinaryGraphEnhancerTest {
         /* useProtoFormat */ false,
         new NoopAndroidNativeTargetConfigurationMatcher(),
         /* failOnLegacyAapt2Errors */ false,
-        false,
-        ImmutableSet.of(),
-        8,
-        4 * 1024 * 1024,
-        ImmutableSet.of());
+        /* useAapt2LocaleFiltering */ false,
+        /* extraFilteredResources */ ImmutableSet.of(),
+        /* resourceStableIds */ Optional.empty(),
+        /* rDotJavaWeightFactor */ 8,
+        /* secondaryDexWeightLimit */ 4 * 1024 * 1024,
+        /* resourcePackagesToExclude */ ImmutableSet.of());
   }
 
   private NonPreDexedDexBuildable.NonPredexedDexBuildableArgs defaultNonPredexedArgs() {
