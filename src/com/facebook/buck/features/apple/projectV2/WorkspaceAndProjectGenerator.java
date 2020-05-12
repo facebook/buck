@@ -31,6 +31,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXTarget;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.core.cell.Cell;
+import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -362,22 +363,19 @@ public class WorkspaceAndProjectGenerator {
 
     HashSet<BuildTarget> unflavoredTargetsToGenerate = new HashSet<>();
 
+    ImmutableList<String> excludedLabels = appleConfig.getProjectExcludeLabels();
     for (TargetNode<?> targetNode : projectGraph.getNodes()) {
       BuildTarget buildTarget = targetNode.getBuildTarget();
-
-      BuildTarget targetWithoutAppleCxxFlavors =
-          targetNode.getBuildTarget().withoutFlavors(appleCxxFlavors);
+      BuildTarget targetWithoutAppleCxxFlavors = buildTarget.withoutFlavors(appleCxxFlavors);
       BuildTarget targetWithoutSpecificFlavors =
           targetWithoutAppleCxxFlavors.withoutFlavors(CxxDescriptionEnhancer.STATIC_FLAVOR);
 
-      // Filter out targets that are not part of our focus set as well as
-      // ignore certain flavors when considering a target previously generated:
-      //  - AppleCxx  : Differing platforms should be generated as one target.
-      //  - static    : Static is the default. This avoids duplication when `static` is passed
-      // directly.
-      // This allows us to dedupe targets with different flavors, if any.
-      if (focusedTargetMatcher.matches(targetNode.getBuildTarget())
-          && !unflavoredTargetsToGenerate.contains(targetWithoutSpecificFlavors)) {
+      if (includeTargetInProject(
+          targetNode,
+          buildTarget,
+          targetWithoutSpecificFlavors,
+          excludedLabels,
+          unflavoredTargetsToGenerate)) {
         buildTargets.add(buildTarget);
         unflavoredTargetsToGenerate.add(targetWithoutSpecificFlavors);
       }
@@ -394,6 +392,45 @@ public class WorkspaceAndProjectGenerator {
     processGenerationResult(
         buildTargetToPbxTargetMapBuilder, targetToProjectPathMapBuilder, generationResult);
     workspaceGenerator.addFilePath(xcodeProjectWriteOptions.xcodeProjPath(), Optional.empty());
+  }
+
+  /**
+   * Determine whether we want to include the target node in the generated project, based on,
+   *
+   * <ul>
+   *   <li>whether the target is specifically excluded based on any labels.
+   *   <li>included in the focus set.
+   *   <li>contains flavors that have been previously generated:
+   *       <ul>
+   *         <li>AppleCxx : Differing platforms should be generated as one target.
+   *         <li>static : Static is the default. This avoids duplication when `static` is passed
+   *             directly.
+   *       </ul>
+   *       This allows us to dedupe targets with different flavors, if any.
+   * </ul>
+   *
+   * @return Whether to include the target in the generated project.
+   */
+  private boolean includeTargetInProject(
+      TargetNode<?> node,
+      BuildTarget buildTarget,
+      BuildTarget targetWithoutSpecificFlavors,
+      ImmutableList<String> excludedLabels,
+      Set<BuildTarget> unflavoredTargetsToGenerate) {
+    if (node.getConstructorArg() instanceof BuildRuleArg) {
+      BuildRuleArg buildRuleArg = (BuildRuleArg) node.getConstructorArg();
+      boolean excluded =
+          excludedLabels.stream().anyMatch(label -> buildRuleArg.getLabels().contains(label));
+      if (excluded) {
+        return false;
+      }
+    }
+
+    if (!focusedTargetMatcher.matches(buildTarget)) {
+      return false;
+    }
+
+    return !unflavoredTargetsToGenerate.contains(targetWithoutSpecificFlavors);
   }
 
   private void processGenerationResult(

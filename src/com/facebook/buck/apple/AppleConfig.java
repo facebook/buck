@@ -72,6 +72,8 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public static final String LINK_SCRUB_CONCURRENTLY = "link_scrub_concurrently";
 
+  private static final String PROJECT_EXCLUDE_LABEL = "exclude_from_project";
+
   private final BuckConfig delegate;
 
   // Reflection-based factory for ConfigView
@@ -513,6 +515,12 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public boolean shouldLinkScrubConcurrently() {
     return delegate.getBooleanValue(APPLE_SECTION, LINK_SCRUB_CONCURRENTLY, false);
+  }
+
+  public ImmutableList<String> getProjectExcludeLabels() {
+    return delegate
+        .getOptionalListWithoutComments(APPLE_SECTION, "project_exclude_labels")
+        .orElse(ImmutableList.of(PROJECT_EXCLUDE_LABEL));
   }
 
   @BuckStyleValue
