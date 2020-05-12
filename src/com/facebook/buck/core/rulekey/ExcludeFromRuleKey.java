@@ -53,8 +53,9 @@ public @interface ExcludeFromRuleKey {
 
   /**
    * Indicates how deps should be derived from this field. For default deps derivation, use {@link
-   * DefaultFieldDeps}. If this field should not contribute to deps, use {@link IgnoredFieldDeps}.
-   * If you would like to provide custom logic, see {@link CustomFieldDeps}.
+   * IgnoredFieldDeps}. If this field should not contribute to deps, use {@link IgnoredFieldDeps}.
+   * If you would like to provide custom logic, see {@link
+   * com.facebook.buck.rules.modern.CustomFieldDeps}.
    */
   Class<? extends CustomFieldDepsTag> deps() default IgnoredFieldDeps.class;
 
