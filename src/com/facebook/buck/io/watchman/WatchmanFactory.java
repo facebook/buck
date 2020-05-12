@@ -73,6 +73,7 @@ public class WatchmanFactory {
   private static final int WATCHMAN_CLOCK_SYNC_TIMEOUT = 100;
   private static final Logger LOG = Logger.get(WatchmanFactory.class);
   private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
+  private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
   // Crawling a large repo in `watch-project` might take a long time on a slow disk.
   private static final long DEFAULT_COMMAND_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(45);
   private final InitialWatchmanClientFactory initialWatchmanClientFactory;
@@ -209,6 +210,7 @@ public class WatchmanFactory {
     Optional<? extends Map<String, ?>> result =
         client.queryWithTimeout(
             endTimeNanos - versionQueryStartTimeNanos,
+            WARN_TIMEOUT_NANOS,
             "version",
             ImmutableMap.of(
                 "required", REQUIRED_CAPABILITIES, "optional", ALL_CAPABILITIES.keySet()));
@@ -341,7 +343,8 @@ public class WatchmanFactory {
     LOG.info("Adding watchman root: %s", absoluteRootPath);
 
     long projectWatchTimeNanos = clock.nanoTime();
-    watchmanClient.queryWithTimeout(timeoutNanos, "watch-project", absoluteRootPath.toString());
+    watchmanClient.queryWithTimeout(
+        timeoutNanos, WARN_TIMEOUT_NANOS, "watch-project", absoluteRootPath.toString());
 
     // TODO(mzlee): There is a bug in watchman (that will be fixed
     // in a later watchman release) where watch-project returns
@@ -351,6 +354,7 @@ public class WatchmanFactory {
     Optional<? extends Map<String, ?>> result =
         watchmanClient.queryWithTimeout(
             timeoutNanos - (clock.nanoTime() - projectWatchTimeNanos),
+            WARN_TIMEOUT_NANOS,
             "watch-project",
             absoluteRootPath.toString());
     LOG.info(
@@ -406,7 +410,7 @@ public class WatchmanFactory {
             : ImmutableMap.of();
 
     Optional<? extends Map<String, ?>> result =
-        watchmanClient.queryWithTimeout(timeoutNanos, "clock", watchRoot, args);
+        watchmanClient.queryWithTimeout(timeoutNanos, WARN_TIMEOUT_NANOS, "clock", watchRoot, args);
     if (result.isPresent()) {
       Map<String, ?> clockResult = result.get();
       clockId = Optional.ofNullable((String) clockResult.get("clock"));

@@ -21,7 +21,7 @@ import java.io.IOException;
 /**
  * Watchman took too long to respond to a query.
  *
- * <p>At the time of writing, {@link WatchmanClient#queryWithTimeout(long, Object...)} does not
- * throw this exception itself.
+ * <p>At the time of writing, {@link WatchmanClient#queryWithTimeout(long, long, Object...)} does
+ * not throw this exception itself.
  */
 public class WatchmanQueryTimedOutException extends IOException {}

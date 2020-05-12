@@ -50,7 +50,7 @@ public class WatchmanGlobber {
   /**
    * Watchman options to use when globbing.
    *
-   * @see WatchmanGlobber#run(Collection, Collection, EnumSet)
+   * @see WatchmanGlobber#run(Collection, Collection, EnumSet, long, long)
    */
   public enum Option {
     /**
@@ -98,7 +98,8 @@ public class WatchmanGlobber {
     FORCE_CASE_SENSITIVE,
   }
 
-  private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
+  private static final long DEFAULT_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
+  private static final long DEFAULT_WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
   private static final ImmutableList<String> FIELDS_TO_INCLUDE = ImmutableList.of("name");
   private final WatchmanClient watchmanClient;
   /** Path used as a root when resolving patterns. */
@@ -124,7 +125,7 @@ public class WatchmanGlobber {
    * @param excludeDirectories Whether directories should be excluded from the resulting set.
    * @return The set of paths resolved using include patterns minus paths excluded by exclude
    *     patterns.
-   * @see WatchmanGlobber#run(Collection, Collection, EnumSet)
+   * @see WatchmanGlobber#run(Collection, Collection, EnumSet, long, long)
    */
   public Optional<ImmutableSet<String>> run(
       Collection<String> include, Collection<String> exclude, boolean excludeDirectories)
@@ -132,30 +133,46 @@ public class WatchmanGlobber {
     return run(
         include,
         exclude,
-        excludeDirectories ? EnumSet.of(Option.EXCLUDE_DIRECTORIES) : EnumSet.noneOf(Option.class));
+        excludeDirectories ? EnumSet.of(Option.EXCLUDE_DIRECTORIES) : EnumSet.noneOf(Option.class),
+        DEFAULT_TIMEOUT_NANOS,
+        DEFAULT_WARN_TIMEOUT_NANOS);
   }
 
   public Optional<ImmutableSet<String>> run(
       Collection<String> include, Collection<String> exclude, Option option)
       throws IOException, InterruptedException {
-    return run(include, exclude, EnumSet.of(option));
+    return run(
+        include, exclude, EnumSet.of(option), DEFAULT_TIMEOUT_NANOS, DEFAULT_WARN_TIMEOUT_NANOS);
+  }
+
+  public Optional<ImmutableSet<String>> run(
+      Collection<String> include, Collection<String> exclude, EnumSet<Option> options)
+      throws IOException, InterruptedException {
+    return run(include, exclude, options, DEFAULT_TIMEOUT_NANOS, DEFAULT_WARN_TIMEOUT_NANOS);
   }
 
   /**
    * @param include File patterns that should be included in the resulting set.
    * @param exclude File patterns that should be excluded from the resulting set.
    * @param options Customizations for matching behavior.
+   * @param timeoutNanos timeout in nanoseconds
+   * @param pollingTimeNanos time to polling results if query is slow
    * @return The set of paths resolved using include patterns minus paths excluded by exclude
    *     patterns.
    * @throws WatchmanQueryFailedException Watchman returned an error response.
    */
   public Optional<ImmutableSet<String>> run(
-      Collection<String> include, Collection<String> exclude, EnumSet<Option> options)
+      Collection<String> include,
+      Collection<String> exclude,
+      EnumSet<Option> options,
+      long timeoutNanos,
+      long pollingTimeNanos)
       throws IOException, InterruptedException {
     ImmutableMap<String, ?> watchmanQuery = createWatchmanQuery(include, exclude, options);
 
     Optional<? extends Map<String, ?>> result =
-        watchmanClient.queryWithTimeout(TIMEOUT_NANOS, "query", watchmanWatchRoot, watchmanQuery);
+        watchmanClient.queryWithTimeout(
+            timeoutNanos, pollingTimeNanos, "query", watchmanWatchRoot, watchmanQuery);
     if (!result.isPresent()) {
       return Optional.empty();
     }

@@ -49,6 +49,7 @@ public class WatchmanTestDaemon implements Closeable {
 
   private static final long timeoutMillis = 5000L;
   private static final long timeoutNanos = TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
+  private static final long warnTimeoutNanos = TimeUnit.MILLISECONDS.toNanos(1);
 
   private final ListeningProcessExecutor executor;
   @Nullable private ListeningProcessExecutor.LaunchedProcess watchmanProcess;
@@ -144,7 +145,7 @@ public class WatchmanTestDaemon implements Closeable {
       try (WatchmanClient client =
           WatchmanFactory.createWatchmanClient(
               watchmanSockFile, new TestConsole(), new DefaultClock())) {
-        Optional<?> response = client.queryWithTimeout(timeoutNanos, "get-pid");
+        Optional<?> response = client.queryWithTimeout(timeoutNanos, warnTimeoutNanos, "get-pid");
         return response.isPresent();
       }
     } catch (IOException e) {

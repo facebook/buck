@@ -32,7 +32,8 @@ public class StubWatchmanClient implements WatchmanClient {
   }
 
   @Override
-  public Optional<? extends Map<String, ?>> queryWithTimeout(long timeoutNanos, Object... query) {
+  public Optional<? extends Map<String, ?>> queryWithTimeout(
+      long timeoutNanos, long warnTimeoutNanos, Object... query) {
     return result;
   }
 

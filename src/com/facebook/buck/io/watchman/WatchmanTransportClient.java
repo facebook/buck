@@ -38,7 +38,6 @@ import java.util.concurrent.TimeoutException;
 class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
 
   private static final Logger LOG = Logger.get(WatchmanTransportClient.class);
-  private static final long POLL_TIME_NANOS = TimeUnit.SECONDS.toNanos(1);
 
   private final ListeningExecutorService listeningExecutorService;
   private final Clock clock;
@@ -59,19 +58,22 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   }
 
   @Override
-  public Optional<Map<String, Object>> queryWithTimeout(long timeoutNanos, Object... query)
+  public Optional<Map<String, Object>> queryWithTimeout(
+      long timeoutNanos, long warnTimeoutNanos, Object... query)
       throws IOException, InterruptedException {
-    return queryListWithTimeout(timeoutNanos, ImmutableList.copyOf(query));
+    return queryListWithTimeoutAndPolling(
+        timeoutNanos, warnTimeoutNanos, ImmutableList.copyOf(query));
   }
 
-  private Optional<Map<String, Object>> queryListWithTimeout(long timeoutNanos, List<Object> query)
+  private Optional<Map<String, Object>> queryListWithTimeoutAndPolling(
+      long timeoutNanos, long warnTimeoutNanos, List<Object> query)
       throws IOException, InterruptedException {
     ListenableFuture<Optional<Map<String, Object>>> future =
         listeningExecutorService.submit(() -> sendWatchmanQuery(query));
     try {
       long startTimeNanos = clock.nanoTime();
       Optional<Map<String, Object>> result =
-          waitForQueryNotifyingUserIfSlow(future, timeoutNanos, query);
+          waitForQueryNotifyingUserIfSlow(future, timeoutNanos, warnTimeoutNanos, query);
       long elapsedNanos = clock.nanoTime() - startTimeNanos;
       LOG.debug("Query %s returned in %d ms", query, TimeUnit.NANOSECONDS.toMillis(elapsedNanos));
       return result;
@@ -108,11 +110,14 @@ class WatchmanTransportClient implements WatchmanClient, AutoCloseable {
   }
 
   private Optional<Map<String, Object>> waitForQueryNotifyingUserIfSlow(
-      ListenableFuture<Optional<Map<String, Object>>> future, long timeoutNanos, List<Object> query)
+      ListenableFuture<Optional<Map<String, Object>>> future,
+      long timeoutNanos,
+      long warnTimeNanos,
+      List<Object> query)
       throws InterruptedException, ExecutionException {
     long queryStartNanos = clock.nanoTime();
     try {
-      return future.get(Math.min(timeoutNanos, POLL_TIME_NANOS), TimeUnit.NANOSECONDS);
+      return future.get(Math.min(timeoutNanos, warnTimeNanos), TimeUnit.NANOSECONDS);
     } catch (TimeoutException e) {
       long remainingNanos = timeoutNanos - (clock.nanoTime() - queryStartNanos);
       if (remainingNanos > 0) {

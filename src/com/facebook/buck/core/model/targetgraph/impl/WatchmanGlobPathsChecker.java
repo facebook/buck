@@ -42,6 +42,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Checks that paths exist and throw an exception if at least one path doesn't exist. This path
@@ -51,6 +52,8 @@ import java.util.Set;
 class WatchmanPathsChecker implements PathsChecker {
 
   private static final Logger LOG = Logger.get(WatchmanPathsChecker.class);
+  private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(3);
+  private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(20);
 
   // Caches by filesystem root
   private final LoadingCache<AbsPath, Set<ForwardRelativePath>> pathsCache = initCache();
@@ -138,7 +141,7 @@ class WatchmanPathsChecker implements PathsChecker {
 
       WatchmanGlobber globber =
           WatchmanGlobber.create(watchmanClient, syncCookieState, "", watch.getWatchRoot());
-      return globber.run(patterns, ImmutableList.of(), options);
+      return globber.run(patterns, ImmutableList.of(), options, TIMEOUT_NANOS, WARN_TIMEOUT_NANOS);
     }
   }
 

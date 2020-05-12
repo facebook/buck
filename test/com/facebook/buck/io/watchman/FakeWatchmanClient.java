@@ -43,7 +43,8 @@ public class FakeWatchmanClient implements WatchmanClient {
   }
 
   @Override
-  public Optional<? extends Map<String, ?>> queryWithTimeout(long timeoutNanos, Object... query)
+  public Optional<? extends Map<String, ?>> queryWithTimeout(
+      long timeoutNanos, long warnTimeoutNanos, Object... query)
       throws InterruptedException, IOException {
     Map<String, ?> result = queryResults.get(Arrays.asList(query));
     if (result == null) {

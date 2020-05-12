@@ -98,7 +98,9 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
     try (WatchmanClient client = createWatchmanClient()) {
       long watchTimeoutNanos = TimeUnit.SECONDS.toNanos(5);
-      client.queryWithTimeout(watchTimeoutNanos, "watch", filesystem.getRootPath().toString());
+      long warnTimeoutNanos = TimeUnit.SECONDS.toNanos(1);
+      client.queryWithTimeout(
+          watchTimeoutNanos, warnTimeoutNanos, "watch", filesystem.getRootPath().toString());
     }
     ProjectFilesystemView projectFilesystemView =
         filesystem.asView().withView(Paths.get("project"), ImmutableSet.of());
@@ -134,7 +136,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
   @Test
   public void throwsIfWatchmanTimesOut() throws ExecutionException, InterruptedException {
     Watchman stubWatchmanFactory =
-        createMockWatchmanFactory((long timeoutNanos, Object... query) -> Optional.empty());
+        createMockWatchmanFactory(
+            (long timeoutNanos, long warnTimeoutNanos, Object... query) -> Optional.empty());
 
     thrown.expect(ExecutionException.class);
     thrown.expectCause(IsInstanceOf.instanceOf(WatchmanQueryTimedOutException.class));
@@ -147,7 +150,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
   public void throwsIfWatchmanQueryFails() throws ExecutionException, InterruptedException {
     Watchman stubWatchmanFactory =
         createMockWatchmanFactory(
-            (long timeoutNanos, Object... query) -> {
+            (long timeoutNanos, long warnTimeoutNanos, Object... query) -> {
               LOG.info("Processing query: %s", query);
               if (query.length >= 2 && query[0].equals("query")) {
                 return Optional.of(
@@ -223,8 +226,8 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
           @Override
           public Optional<? extends Map<String, ?>> queryWithTimeout(
-              long timeoutNanos, Object... query) {
-            return mockQueryWithTimeout.apply(timeoutNanos, query);
+              long timeoutNanos, long warnTimeoutNanos, Object... query) {
+            return mockQueryWithTimeout.apply(timeoutNanos, warnTimeoutNanos, query);
           }
         };
       }
@@ -245,6 +248,7 @@ public class WatchmanBuildPackageComputationTest extends AbstractBuildPackageCom
 
   @FunctionalInterface
   interface QueryWithTimeoutFunction {
-    Optional<? extends Map<String, ?>> apply(long timeoutNanos, Object... query);
+    Optional<? extends Map<String, ?>> apply(
+        long timeoutNanos, long warnTimeoutNanos, Object... query);
   }
 }

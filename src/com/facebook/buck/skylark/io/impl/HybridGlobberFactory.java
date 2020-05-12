@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
 /** Provides instances of {@link com.facebook.buck.skylark.io.impl.HybridGlobber}. */
 public class HybridGlobberFactory implements GlobberFactory {
   private static final long TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(10);
+  private static final long WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
 
   private final WatchmanClient watchmanClient;
   private final java.nio.file.Path projectRoot;
@@ -73,7 +74,7 @@ public class HybridGlobberFactory implements GlobberFactory {
   public Optional<WatchProjectResult> getWatchmanRelativizedFinalPath(Path filePath)
       throws IOException, InterruptedException {
     return watchmanClient
-        .queryWithTimeout(TIMEOUT_NANOS, "watch-project", filePath.toString())
+        .queryWithTimeout(TIMEOUT_NANOS, WARN_TIMEOUT_NANOS, "watch-project", filePath.toString())
         .map(
             result -> {
               String watchRoot = (String) result.get("watch");

@@ -23,7 +23,8 @@ import java.util.Optional;
 /** Testable interface for a Watchman client. */
 public interface WatchmanClient extends AutoCloseable {
   Optional<? extends Map<String, ? extends Object>> queryWithTimeout(
-      long timeoutNanos, Object... query) throws IOException, InterruptedException;
+      long timeoutNanos, long pollingTimeNanos, Object... query)
+      throws IOException, InterruptedException;
 
   @Override
   void close() throws IOException;

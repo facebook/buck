@@ -309,7 +309,7 @@ public class WatchmanGlobberTest {
         new WatchmanClient() {
           @Override
           public Optional<? extends Map<String, ?>> queryWithTimeout(
-              long timeoutNanos, Object... query) {
+              long timeoutNanos, long warnTimeoutNanos, Object... query) {
             LOG.info("Processing query: %s", query);
             if (query.length >= 2 && query[0].equals("query")) {
               return Optional.of(
@@ -349,7 +349,8 @@ public class WatchmanGlobberTest {
     private ImmutableList<Object> query;
 
     @Override
-    public Optional<? extends Map<String, ?>> queryWithTimeout(long timeoutNanos, Object... query) {
+    public Optional<? extends Map<String, ?>> queryWithTimeout(
+        long timeoutNanos, long warnTimeoutNanos, Object... query) {
       this.query = ImmutableList.copyOf(query);
       return Optional.empty();
     }

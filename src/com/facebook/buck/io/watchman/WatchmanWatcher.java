@@ -81,6 +81,7 @@ public class WatchmanWatcher {
   private static final int TRACE_CHANGES_THRESHOLD = 10;
 
   private static final long DEFAULT_TIMEOUT_MILLIS = TimeUnit.SECONDS.toMillis(10);
+  private static final long DEFAULT_WARN_TIMEOUT_NANOS = TimeUnit.SECONDS.toNanos(1);
 
   private final EventBus fileChangeEventBus;
   private final WatchmanClientFactory watchmanClientFactory;
@@ -276,7 +277,9 @@ public class WatchmanWatcher {
       try (SimplePerfEvent.Scope ignored = SimplePerfEvent.scope(buckEventBus, "query")) {
         queryResponse =
             client.queryWithTimeout(
-                TimeUnit.MILLISECONDS.toNanos(timeoutMillis), query.toList(cursor.get()).toArray());
+                TimeUnit.MILLISECONDS.toNanos(timeoutMillis),
+                DEFAULT_WARN_TIMEOUT_NANOS,
+                query.toList(cursor.get()).toArray());
       }
 
       try (SimplePerfEvent.Scope ignored =

@@ -46,6 +46,7 @@ public class WatchmanClientIntegrationTest {
 
   private static final long timeoutMillis = 5000L;
   private static final long timeoutNanos = TimeUnit.MILLISECONDS.toNanos(timeoutMillis);
+  private static final long pollingTimeNanos = TimeUnit.MILLISECONDS.toNanos(1);
   private ProjectWorkspace workspace;
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
@@ -88,6 +89,7 @@ public class WatchmanClientIntegrationTest {
     Optional<? extends Map<String, ?>> versionResponse =
         client.queryWithTimeout(
             timeoutNanos,
+            pollingTimeNanos,
             "version",
             ImmutableMap.of(
                 "required",
@@ -99,7 +101,8 @@ public class WatchmanClientIntegrationTest {
     Path rootPath = workspace.getDestPath();
 
     Optional<? extends Map<String, ?>> watch =
-        client.queryWithTimeout(timeoutNanos, "watch-project", rootPath.toString());
+        client.queryWithTimeout(
+            timeoutNanos, pollingTimeNanos, "watch-project", rootPath.toString());
 
     assertTrue(watch.isPresent());
 
@@ -109,6 +112,7 @@ public class WatchmanClientIntegrationTest {
     Optional<? extends Map<String, ?>> queryResponse =
         client.queryWithTimeout(
             timeoutNanos,
+            pollingTimeNanos,
             "query",
             watchRoot,
             ImmutableMap.<String, Object>of(
