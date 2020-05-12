@@ -48,7 +48,14 @@ class PEXEnvironment(Environment):
           safe_rmtree(explode_tmp)
           raise
       TRACER.log('Renaming %s to %s' % (explode_tmp, explode_dir))
-      os.rename(explode_tmp, explode_dir)
+      try:
+        os.rename(explode_tmp, explode_dir)
+      except OSError as e:
+        if os.path.exists(explode_dir):
+          TRACER.log('Seems like another process created %s' % explode_dir)
+          safe_rmtree(explode_tmp)
+        else:
+          raise e
     return explode_dir
 
   @classmethod
