@@ -643,7 +643,7 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand(
             "cquery", "allpaths(//apps/..., //codegen/...)", "--target-universe", "//apps/...");
-    result.assertSuccess();
+
     assertOutputMatchesFileContents(
         "stdout-allpaths-function-returns-subgraph-between-two-nodes", result, workspace);
   }
@@ -660,7 +660,6 @@ public class ConfiguredQueryCommandIntegrationTest {
             "--target-universe",
             "//apps/apple/...");
 
-    result.assertSuccess();
     assertOutputMatchesFileContents(
         "stdout-attrfilter-function-only-returns-targets-with-matching-value", result, workspace);
   }
@@ -674,7 +673,6 @@ public class ConfiguredQueryCommandIntegrationTest {
         workspace.runBuckCommand(
             "cquery", "attrregexfilter(default_target_platform, '.*-opt', //apps/apple/...)");
 
-    result.assertSuccess();
     assertOutputMatchesFileContents(
         "stdout-attrregexfilter-function-applies-regex-matching-to-attribute", result, workspace);
   }
@@ -686,7 +684,6 @@ public class ConfiguredQueryCommandIntegrationTest {
     workspace.setUp();
     ProcessResult result = workspace.runBuckCommand("cquery", "buildfile(appletv-app-prod)");
 
-    result.assertSuccess();
     assertOutputMatches(MorePaths.pathWithPlatformSeparators("apps/apple/BUCK"), result);
   }
 
@@ -702,7 +699,6 @@ public class ConfiguredQueryCommandIntegrationTest {
             "--target-universe",
             "//apps/android/...");
 
-    result.assertSuccess();
     assertOutputMatchesFileContents(
         "stdout-filter-function-returns-targets-whose-names-match-regular-expression",
         result,
@@ -717,7 +713,6 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("cquery", "kind(genrule, deps(//apps/android:foo-binary))");
 
-    result.assertSuccess();
     assertOutputMatches("//codegen:backend-types-android (//config/platform:android)", result);
   }
 
@@ -729,7 +724,6 @@ public class ConfiguredQueryCommandIntegrationTest {
     ProcessResult result =
         workspace.runBuckCommand("cquery", "labels(exported_headers, //libraries/apple/...)");
 
-    result.assertSuccess();
     assertOutputMatches(
         MorePaths.pathWithPlatformSeparators("libraries/apple/LanguageUtilities.h"), result);
   }
@@ -746,7 +740,6 @@ public class ConfiguredQueryCommandIntegrationTest {
             "--target-universe",
             "//...");
 
-    result.assertSuccess();
     assertOutputMatchesFileContents(
         "stdout-testsof-function-returns-value-of-tests-attribute", result, workspace);
   }
