@@ -25,7 +25,6 @@ import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.ImmutableList;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Function;
@@ -82,10 +81,19 @@ public class ProjectFileWriter {
     // BuildTargetSourcePath indicates it's not a file but a build target (meaning it is generated)
     // As a result, we want to move these from `buck-out` into a __generated__ workspace
     // in order to make it easier for engineers to see which source files are generated.
-    if (sourcePath instanceof BuildTargetSourcePath && packagePath.isPresent()) {
-      Path fullPackagePath = packagePath.get();
-      String packageName = "-" + new File(fullPackagePath.toString()).getName();
-      path = fullPackagePath.resolve("GENERATED" + packageName).resolve(path.getFileName());
+    if (sourcePath instanceof BuildTargetSourcePath) {
+      Path fullPackagePath =
+          packagePath.orElseGet(
+              () ->
+                  ((BuildTargetSourcePath) sourcePath)
+                      .getTarget()
+                      .getCellRelativeBasePath()
+                      .getPath()
+                      .toPathDefaultFileSystem());
+      path =
+          fullPackagePath
+              .resolve("GENERATED-" + fullPackagePath.getFileName())
+              .resolve(path.getFileName());
     }
 
     SourceTreePath sourceTreePath =
