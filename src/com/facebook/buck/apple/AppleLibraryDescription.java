@@ -887,7 +887,7 @@ public class AppleLibraryDescription
     BuildTarget swiftCompileTarget = baseTarget.withAppendedFlavors(Type.SWIFT_COMPILE.getFlavor());
     SwiftCompile compile = (SwiftCompile) graphBuilder.requireRule(swiftCompileTarget);
 
-    return CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getOutputPath());
+    return CxxHeadersDir.of(CxxPreprocessables.IncludeType.LOCAL, compile.getSwiftModuleOutputPath());
   }
 
   private static CxxHeaders createSwiftObjcHeaders(
