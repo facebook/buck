@@ -117,6 +117,9 @@
       <isset property="jdk8_or_higher"/>
     </and>
   </condition>
+  <!-- Overridden by ant command line arguments-->
+  <property name="release.version" value=""/>
+  <property name="release.timestamp" value=""/>
 
   <fileset dir="${third-party.dir}/java" id="buck.jars">
     <include name="args4j/args4j-2.0.30.jar" />
@@ -1056,6 +1059,10 @@
       <arg value="programs/gen_buck_info.py"/>
       <arg value="--java-version"/>
       <arg value="${java.version}"/>
+      <arg value="--release-version"/>
+      <arg value="${release.version}"/>
+      <arg value="--release-timestamp"/>
+      <arg value="${release.timestamp}"/>
     </exec>
   </target>
 
