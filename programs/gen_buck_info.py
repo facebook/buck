@@ -29,9 +29,16 @@ SUPPORTED_VCS = {".git": buck_version, ".hg": buck_version_mercurial}
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--release-version", help="The buck release version")
     parser.add_argument(
-        "--release-timestamp", help="The unix timestamp when the release happened"
+        "--release-version",
+        nargs = "?",
+        default = None,
+        help="The buck release version")
+    parser.add_argument(
+        "--release-timestamp",
+        nargs = "?",
+        default = None,
+        help="The unix timestamp when the release happened"
     )
     parser.add_argument(
         "--java-version",
