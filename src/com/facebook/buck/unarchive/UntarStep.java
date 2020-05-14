@@ -27,6 +27,42 @@ import java.util.Optional;
 /** A step that extracts tar archives */
 public class UntarStep extends UnarchiveStep {
 
+  private static void assertFormat(ArchiveFormat format) {
+    switch (format) {
+      case TAR:
+      case TAR_BZ2:
+      case TAR_GZ:
+      case TAR_XZ:
+      case TAR_ZSTD:
+        break;
+      case ZIP:
+      default:
+        throw new RuntimeException("Invalid archive format given to untar step. Got " + format);
+    }
+  }
+
+  /**
+   * Create an instance of UntarStep
+   *
+   * @param filesystem The filesystem that the archive will be extracted into
+   * @param archiveFile The path to the file to extract
+   * @param destinationDirectory The directory to extract files into
+   * @param stripPrefix If present, strip this prefix from paths inside of the archive
+   * @param format The format to extract
+   * @param entriesToExclude entries that match this matcher will not be extracted
+   * @throws RuntimeException if a non-tar format is provided
+   */
+  public UntarStep(
+      ProjectFilesystem filesystem,
+      Path archiveFile,
+      Path destinationDirectory,
+      Optional<Path> stripPrefix,
+      ArchiveFormat format,
+      PatternsMatcher entriesToExclude) {
+    super(format, filesystem, archiveFile, destinationDirectory, stripPrefix, entriesToExclude);
+    assertFormat(format);
+  }
+
   /**
    * Create an instance of UntarStep
    *
@@ -44,18 +80,7 @@ public class UntarStep extends UnarchiveStep {
       Optional<Path> stripPrefix,
       ArchiveFormat format) {
     super(format, filesystem, archiveFile, destinationDirectory, stripPrefix, PatternsMatcher.NONE);
-
-    switch (format) {
-      case TAR:
-      case TAR_BZ2:
-      case TAR_GZ:
-      case TAR_XZ:
-      case TAR_ZSTD:
-        break;
-      case ZIP:
-      default:
-        throw new RuntimeException("Invalid archive format given to untar step. Got " + format);
-    }
+    assertFormat(format);
   }
 
   @Override

@@ -31,11 +31,14 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.unarchive.UnarchiveStep;
 import com.facebook.buck.unarchive.UntarStep;
 import com.facebook.buck.unarchive.UnzipStep;
+import com.facebook.buck.util.PatternsMatcher;
 import com.facebook.buck.util.unarchive.ArchiveFormat;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * Represents a remote file that needs to be downloaded. Optionally, this class can be prevented
@@ -55,6 +58,9 @@ public class HttpArchive extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final HttpFile implicitHttpFile;
 
+  @AddToRuleKey(stringify = true)
+  private final ImmutableList<Pattern> excludes;
+
   public HttpArchive(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -62,12 +68,14 @@ public class HttpArchive extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       HttpFile implicitHttpFile,
       String out,
       ArchiveFormat format,
-      Optional<Path> stripPrefix) {
+      Optional<Path> stripPrefix,
+      ImmutableList<Pattern> excludes) {
     super(buildTarget, projectFilesystem, params);
     this.implicitHttpFile = implicitHttpFile;
     this.format = format;
     this.stripPrefix = stripPrefix;
     this.output = HttpFile.outputPath(projectFilesystem, buildTarget, out);
+    this.excludes = excludes;
   }
 
   @VisibleForTesting
@@ -93,7 +101,8 @@ public class HttpArchive extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 .getAbsolutePath(implicitHttpFile.getSourcePathToOutput()),
             output,
             stripPrefix,
-            format));
+            format,
+            new PatternsMatcher(ImmutableSet.copyOf(excludes))));
 
     buildableContext.recordArtifact(output);
 
@@ -110,16 +119,19 @@ public class HttpArchive extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Path archiveFile,
       Path destinationDirectory,
       Optional<Path> stripPrefix,
-      ArchiveFormat format) {
+      ArchiveFormat format,
+      PatternsMatcher entriesToExclude) {
     switch (format) {
       case TAR:
       case TAR_BZ2:
       case TAR_GZ:
       case TAR_XZ:
       case TAR_ZSTD:
-        return new UntarStep(filesystem, archiveFile, destinationDirectory, stripPrefix, format);
+        return new UntarStep(
+            filesystem, archiveFile, destinationDirectory, stripPrefix, format, entriesToExclude);
       case ZIP:
-        return new UnzipStep(filesystem, archiveFile, destinationDirectory, stripPrefix);
+        return new UnzipStep(
+            filesystem, archiveFile, destinationDirectory, stripPrefix, entriesToExclude);
     }
     throw new RuntimeException("Invalid format type " + format);
   }

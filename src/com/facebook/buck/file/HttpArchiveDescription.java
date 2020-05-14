@@ -45,6 +45,7 @@ import com.google.devtools.build.lib.syntax.Dict;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
  * A description for downloading an archive over http and extracting it (versus the combo logic
@@ -114,7 +115,8 @@ public class HttpArchiveDescription
         httpFile,
         out,
         format,
-        args.getStripPrefix().map(Paths::get));
+        args.getStripPrefix().map(Paths::get),
+        args.getExcludes());
   }
 
   private static String outputName(BuildTarget target, HttpArchiveDescriptionArg args) {
@@ -172,5 +174,7 @@ public class HttpArchiveDescription
     Optional<String> getStripPrefix();
 
     Optional<String> getType();
+
+    ImmutableList<Pattern> getExcludes();
   }
 }

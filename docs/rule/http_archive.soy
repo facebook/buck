@@ -73,6 +73,16 @@ downloaded by running {call buck.cmd_fetch /}, or can be downloaded as part of
 {/call}
 
 {call buck.arg}
+  {param name: 'excludes' /}
+  {param example: '["dir/.*", ".*\\.txt"]' /}
+  {param default: '[]' /}
+  {param desc}
+  An optional list of regex patterns. All file paths in the extracted archive which match
+  any of the given patterns will be omitted.
+  {/param}
+{/call}
+
+{call buck.arg}
   {param name: 'type' /}
   {param example: 'tar.gz' /}
   {param default: 'None' /}

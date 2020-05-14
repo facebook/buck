@@ -159,3 +159,14 @@ http_archive(
         "mvn:package:artifact_name:zip:classifier:version",
     ],
 )
+
+http_archive(
+    name = "test_excludes.tar",
+    sha256 = TAR_SHA256,
+    urls = [
+        "http://<HOST>:<PORT>/foo.tar",
+    ],
+    excludes = [
+        "root/.*\\.sh",
+    ],
+)

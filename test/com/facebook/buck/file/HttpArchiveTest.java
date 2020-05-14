@@ -35,6 +35,7 @@ import com.google.common.hash.HashCode;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +51,11 @@ public class HttpArchiveTest {
 
   // Helper method to get all of our deps setup just so we can do some quick rulekey modification
   // tests
-  private RuleKey getRuleKey(String out, ArchiveFormat format, Optional<String> stripPrefix) {
+  private RuleKey getRuleKey(
+      String out,
+      ArchiveFormat format,
+      Optional<String> stripPrefix,
+      ImmutableList<Pattern> excludes) {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
     BuildRuleParams params =
         new BuildRuleParams(
@@ -69,7 +74,14 @@ public class HttpArchiveTest {
 
     HttpArchive httpArchive =
         new HttpArchive(
-            target, filesystem, params, httpFile, out, format, stripPrefix.map(Paths::get));
+            target,
+            filesystem,
+            params,
+            httpFile,
+            out,
+            format,
+            stripPrefix.map(Paths::get),
+            excludes);
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
     FakeFileHashCache hashCache = FakeFileHashCache.createFromStrings(ImmutableMap.of());
@@ -78,36 +90,109 @@ public class HttpArchiveTest {
 
   @Test
   public void ruleKeyIsDeterministic() {
-    RuleKey originalKey = getRuleKey("foo", ArchiveFormat.TAR, Optional.of("foo-1.2.3"));
+    RuleKey originalKey =
+        getRuleKey(
+            "foo",
+            ArchiveFormat.TAR,
+            Optional.of("foo-1.2.3"),
+            ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar")));
     for (int i = 0; i < 20; i++) {
       Assert.assertEquals(
-          originalKey, getRuleKey("foo", ArchiveFormat.TAR, Optional.of("foo-1.2.3")));
+          originalKey,
+          getRuleKey(
+              "foo",
+              ArchiveFormat.TAR,
+              Optional.of("foo-1.2.3"),
+              ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar"))));
     }
   }
 
   @Test
   public void outputAffectRuleKey() {
-    RuleKey originalKey = getRuleKey("foo", ArchiveFormat.TAR, Optional.of("foo-1.2.3"));
-    RuleKey changedKey = getRuleKey("foo.bar", ArchiveFormat.TAR, Optional.of("foo-1.2.3"));
+    RuleKey originalKey =
+        getRuleKey(
+            "foo",
+            ArchiveFormat.TAR,
+            Optional.of("foo-1.2.3"),
+            ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar")));
+    RuleKey changedKey =
+        getRuleKey(
+            "foo.bar",
+            ArchiveFormat.TAR,
+            Optional.of("foo-1.2.3"),
+            ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar")));
 
     Assert.assertNotEquals(originalKey, changedKey);
   }
 
   @Test
   public void formatAffectRuleKey() {
-    RuleKey originalKey = getRuleKey("foo", ArchiveFormat.TAR, Optional.of("foo-1.2.3"));
-    RuleKey changedKey = getRuleKey("foo", ArchiveFormat.ZIP, Optional.of("foo-1.2.3"));
+    RuleKey originalKey =
+        getRuleKey(
+            "foo",
+            ArchiveFormat.TAR,
+            Optional.of("foo-1.2.3"),
+            ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar")));
+    RuleKey changedKey =
+        getRuleKey(
+            "foo",
+            ArchiveFormat.ZIP,
+            Optional.of("foo-1.2.3"),
+            ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar")));
 
     Assert.assertNotEquals(originalKey, changedKey);
   }
 
   @Test
   public void stripPrefixAffectRuleKey() {
-    RuleKey originalKey = getRuleKey("foo", ArchiveFormat.TAR, Optional.of("foo-1.2.3"));
-    RuleKey changedKey1 = getRuleKey("foo", ArchiveFormat.TAR, Optional.of("bar-2.3.4"));
-    RuleKey changedKey2 = getRuleKey("foo", ArchiveFormat.TAR, Optional.empty());
+    RuleKey originalKey =
+        getRuleKey(
+            "foo",
+            ArchiveFormat.TAR,
+            Optional.of("foo-1.2.3"),
+            ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar")));
+    RuleKey changedKey1 =
+        getRuleKey(
+            "foo",
+            ArchiveFormat.TAR,
+            Optional.of("bar-2.3.4"),
+            ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar")));
+    RuleKey changedKey2 =
+        getRuleKey(
+            "foo",
+            ArchiveFormat.TAR,
+            Optional.empty(),
+            ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar")));
 
     Assert.assertNotEquals(originalKey, changedKey1);
     Assert.assertNotEquals(originalKey, changedKey2);
+  }
+
+  @Test
+  public void excludesAffectRuleKey() {
+    RuleKey originalKey =
+        getRuleKey(
+            "foo",
+            ArchiveFormat.TAR,
+            Optional.of("foo-1.2.3"),
+            ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar")));
+    RuleKey changedKey1 =
+        getRuleKey(
+            "foo",
+            ArchiveFormat.TAR,
+            Optional.of("foo-1.2.3"),
+            ImmutableList.of(Pattern.compile("bar"), Pattern.compile("foo")));
+    RuleKey changedKey2 =
+        getRuleKey(
+            "foo",
+            ArchiveFormat.TAR,
+            Optional.of("foo-1.2.3"),
+            ImmutableList.of(Pattern.compile("foo"), Pattern.compile("bar2")));
+    RuleKey changedKey3 =
+        getRuleKey("foo", ArchiveFormat.TAR, Optional.of("foo-1.2.3"), ImmutableList.of());
+
+    Assert.assertNotEquals(originalKey, changedKey1);
+    Assert.assertNotEquals(originalKey, changedKey2);
+    Assert.assertNotEquals(originalKey, changedKey3);
   }
 }

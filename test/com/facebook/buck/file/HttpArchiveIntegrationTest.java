@@ -336,6 +336,46 @@ public class HttpArchiveIntegrationTest {
   }
 
   @Test
+  public void downloadsTarFileWithExcludesAndValidatesIt() throws IOException {
+    rewriteBuckFileTemplate(workspace);
+
+    Path outputPath =
+        workspace
+            .getGenPath(BuildTargetFactory.newInstance("//:test_excludes.tar"), "%s")
+            .resolve("test_excludes.tar");
+    Path scratchDownloadPath =
+        workspace.getScratchPath(
+            BuildTargetFactory.newInstance("//:test_excludes.tar#archive-download"), "%s");
+    Path downloadPath =
+        workspace
+            .getGenPath(
+                BuildTargetFactory.newInstance("//:test_excludes.tar#archive-download"), "%s")
+            .resolve("test_excludes.tar");
+    Path expectedMainDotJavaPath = outputPath.resolve("root").resolve(mainDotJavaPath);
+    Path expectedEchoDotShPath = outputPath.resolve("root").resolve(echoDotShPath);
+
+    workspace.runBuckCommand("fetch", "//:test_excludes.tar").assertSuccess();
+
+    Assert.assertFalse(
+        Files.exists(workspace.resolve(scratchDownloadPath).resolve("test_excludes.tar")));
+    Assert.assertTrue(Files.exists(workspace.resolve(downloadPath)));
+    Assert.assertArrayEquals(
+        Files.readAllBytes(workspace.resolve("output.tar")),
+        Files.readAllBytes(workspace.resolve(downloadPath)));
+    Assert.assertTrue(Files.isDirectory(workspace.resolve(outputPath)));
+    Assert.assertFalse(Files.exists(workspace.resolve(expectedEchoDotShPath)));
+    Assert.assertTrue(Files.exists(workspace.resolve(expectedMainDotJavaPath)));
+    Assert.assertEquals(mainDotJavaContents, workspace.getFileContents(expectedMainDotJavaPath));
+    if (Platform.detect() != WINDOWS) {
+      Assert.assertFalse(Files.isExecutable(workspace.resolve(expectedMainDotJavaPath)));
+    }
+
+    Assert.assertEquals(ImmutableList.of("/foo.tar"), httpdHandler.getRequestedPaths());
+    Assert.assertEquals(
+        0, Files.walk(workspace.resolve(scratchDownloadPath)).filter(Files::isRegularFile).count());
+  }
+
+  @Test
   public void downloadsTarBz2FileAndValidatesIt() throws IOException {
     rewriteBuckFileTemplate(workspace);
 
