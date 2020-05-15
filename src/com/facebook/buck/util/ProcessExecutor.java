@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.concurrent.MostExecutors;
 import com.facebook.buck.util.string.MoreStrings;
 import com.google.common.collect.ImmutableList;
@@ -133,6 +134,10 @@ public interface ProcessExecutor {
 
   /** Makes a clone of this process executor with the stdout and stderr streams overridden. */
   ProcessExecutor cloneWithOutputStreams(PrintStream stdOutStream, PrintStream stdErrStream);
+
+  /** Creates a {@code ProcessExecutor} that supports Downward API */
+  ProcessExecutor withDownwardAPI(
+      DownwardApiProcessExecutorFactory factory, BuckEventBus buckEventBus);
 
   /**
    * Options for {@link ProcessExecutor#launchAndExecute(ProcessExecutorParams, Set, Optional,

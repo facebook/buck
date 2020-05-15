@@ -86,6 +86,7 @@ import com.facebook.buck.rules.keys.RuleKeyType;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepFailedException;
 import com.facebook.buck.step.StepRunner;
+import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.ContextualProcessExecutor;
 import com.facebook.buck.util.Discardable;
 import com.facebook.buck.util.ErrorLogger;
@@ -314,12 +315,23 @@ class CachingBuildRuleBuilder {
             artifactCache,
             artifactCacheSizeLimit);
     this.customBuildRuleStrategy = customBuildRuleStrategy;
+
+    ConsoleParams consoleParams =
+        ConsoleParams.of(
+            executionContext.getAnsi().isAnsiTerminal(), executionContext.getVerbosity());
+
     this.processExecutorContext =
         ImmutableMap.of(
             CachingBuildEngine.BUILD_RULE_TYPE_CONTEXT_KEY,
             rule.getType(),
             CachingBuildEngine.STEP_TYPE_CONTEXT_KEY,
-            StepType.BUILD_STEP.toString());
+            StepType.BUILD_STEP.toString(),
+            ContextualProcessExecutor.ANSI_ESCAPE_SEQUENCES_ENABLED,
+            consoleParams.isAnsiEscapeSequencesEnabled(),
+            ContextualProcessExecutor.VERBOSITY,
+            consoleParams.getVerbosity(),
+            ContextualProcessExecutor.ACTION_ID,
+            rule.getFullyQualifiedName());
   }
 
   // Return a `BuildResult.Builder` with rule-specific state pre-filled.

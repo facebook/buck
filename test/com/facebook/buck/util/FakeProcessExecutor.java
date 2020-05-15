@@ -77,18 +77,25 @@ public class FakeProcessExecutor extends DefaultProcessExecutor {
 
   public FakeProcessExecutor(
       Function<? super ProcessExecutorParams, FakeProcess> processFunction, Console console) {
-    this(processFunction, console.getStdOut(), console.getStdErr(), console.getAnsi());
+    this(
+        processFunction,
+        console.getStdOut(),
+        console.getStdErr(),
+        console.getAnsi(),
+        console.getVerbosity());
   }
 
   public FakeProcessExecutor(
       Function<? super ProcessExecutorParams, FakeProcess> processFunction,
       PrintStream stdOutStream,
       PrintStream stdErrStream,
-      Ansi ansi) {
+      Ansi ansi,
+      Verbosity verbosity) {
     super(
         stdOutStream,
         stdErrStream,
         ansi,
+        verbosity,
         ProcessHelper.getInstance(),
         ProcessRegistry.getInstance());
     this.processFunction = processFunction;
@@ -122,6 +129,10 @@ public class FakeProcessExecutor extends DefaultProcessExecutor {
   public ProcessExecutor cloneWithOutputStreams(
       PrintStream newStdOutStream, PrintStream newStdErrStream) {
     return new FakeProcessExecutor(
-        processFunction, newStdOutStream, newStdErrStream, Ansi.withoutTty());
+        processFunction,
+        newStdOutStream,
+        newStdErrStream,
+        Ansi.withoutTty(),
+        Verbosity.STANDARD_INFORMATION);
   }
 }

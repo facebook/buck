@@ -18,7 +18,6 @@ package com.facebook.buck.downwardapi.processexecutor;
 
 import static com.google.common.base.Preconditions.checkState;
 
-import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.downward.model.EventTypeMessage;
 import com.facebook.buck.downwardapi.processexecutor.handlers.EventHandler;
@@ -30,6 +29,7 @@ import com.facebook.buck.io.namedpipes.NamedPipeFactory;
 import com.facebook.buck.util.ConsoleParams;
 import com.facebook.buck.util.DelegateLaunchedProcess;
 import com.facebook.buck.util.DelegateProcessExecutor;
+import com.facebook.buck.util.DownwardApiProcessExecutorFactory;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.annotations.VisibleForTesting;
@@ -67,6 +67,22 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
 
   private static final Logger LOG = Logger.get(DownwardApiProcessExecutor.class);
 
+  public static final DownwardApiProcessExecutorFactory FACTORY = Factory.INSTANCE;
+
+  private enum Factory implements DownwardApiProcessExecutorFactory {
+    INSTANCE;
+
+    @Override
+    public DownwardApiProcessExecutor create(
+        ProcessExecutor delegate,
+        ConsoleParams consoleParams,
+        BuckEventBus buckEventBus,
+        String actionId) {
+      return new DownwardApiProcessExecutor(
+          delegate, consoleParams, buckEventBus, actionId, NamedPipeFactory.getFactory());
+    }
+  }
+
   private static final long SHUTDOWN_TIMEOUT = 100;
   private static final TimeUnit SHUTDOWN_TIMEOUT_UNIT = TimeUnit.MILLISECONDS;
 
@@ -89,15 +105,6 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     this.buckEventBus = buckEventBus;
     this.actionId = actionId;
     this.namedPipeFactory = namedPipeFactory;
-  }
-
-  public DownwardApiProcessExecutor(ExecutionContext context, String actionId) {
-    this(
-        context.getProcessExecutor(),
-        ConsoleParams.of(context.getAnsi().isAnsiTerminal(), context.getVerbosity()),
-        context.getBuckEventBus(),
-        actionId,
-        NamedPipeFactory.getFactory());
   }
 
   private static class DownwardApiLaunchedProcess extends DelegateLaunchedProcess {
@@ -246,5 +253,11 @@ public class DownwardApiProcessExecutor extends DelegateProcessExecutor {
     } finally {
       launchedProcess.close();
     }
+  }
+
+  @Override
+  public ProcessExecutor withDownwardAPI(
+      DownwardApiProcessExecutorFactory factory, BuckEventBus buckEventBus) {
+    return this;
   }
 }

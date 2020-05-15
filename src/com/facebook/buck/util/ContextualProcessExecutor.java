@@ -16,6 +16,8 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.event.BuckEventBus;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -25,6 +27,10 @@ import java.util.function.Consumer;
 
 /** ProcessExecutor with an additional context */
 public class ContextualProcessExecutor extends DelegateProcessExecutor {
+
+  public static final String ANSI_ESCAPE_SEQUENCES_ENABLED = "ansi_escape_sequences_enabled";
+  public static final String VERBOSITY = "verbosity";
+  public static final String ACTION_ID = "action_id";
 
   private final ImmutableMap<String, String> context;
 
@@ -92,5 +98,24 @@ public class ContextualProcessExecutor extends DelegateProcessExecutor {
       PrintStream newStdOutStream, PrintStream newStdErrStream) {
     return new ContextualProcessExecutor(
         getDelegate().cloneWithOutputStreams(newStdOutStream, newStdErrStream), context);
+  }
+
+  @Override
+  public ProcessExecutor withDownwardAPI(
+      DownwardApiProcessExecutorFactory factory, BuckEventBus buckEventBus) {
+    String actionId = context.get(ACTION_ID);
+    Preconditions.checkNotNull(actionId, ACTION_ID + " key is not provided");
+    Preconditions.checkState(!actionId.isEmpty(), "Action id can't be empty");
+
+    String ansiEnabled = context.get(ANSI_ESCAPE_SEQUENCES_ENABLED);
+    Preconditions.checkNotNull(actionId, ANSI_ESCAPE_SEQUENCES_ENABLED + " key is not provided");
+    boolean ansiEscapeSequencesEnabled = Boolean.parseBoolean(ansiEnabled);
+
+    String verbosityString = context.get(VERBOSITY);
+    Preconditions.checkNotNull(verbosityString, VERBOSITY + " key is not provided");
+    Verbosity verbosity = Verbosity.valueOf(verbosityString);
+
+    return factory.create(
+        this, ConsoleParams.of(ansiEscapeSequencesEnabled, verbosity), buckEventBus, actionId);
   }
 }

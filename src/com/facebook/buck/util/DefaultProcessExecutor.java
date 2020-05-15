@@ -21,6 +21,7 @@ import static com.google.common.base.Predicates.not;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Unit;
 import com.google.common.annotations.VisibleForTesting;
@@ -47,6 +48,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   private final PrintStream stdOutStream;
   private final PrintStream stdErrStream;
   private final Ansi ansi;
+  private final Verbosity verbosity;
   private final ProcessHelper processHelper;
   private final ProcessRegistry processRegistry;
 
@@ -59,6 +61,7 @@ public class DefaultProcessExecutor implements ProcessExecutor {
         console.getStdOut(),
         console.getStdErr(),
         console.getAnsi(),
+        console.getVerbosity(),
         ProcessHelper.getInstance(),
         ProcessRegistry.getInstance());
   }
@@ -68,11 +71,13 @@ public class DefaultProcessExecutor implements ProcessExecutor {
       PrintStream stdOutStream,
       PrintStream stdErrStream,
       Ansi ansi,
+      Verbosity verbosity,
       ProcessHelper processHelper,
       ProcessRegistry processRegistry) {
     this.stdOutStream = stdOutStream;
     this.stdErrStream = stdErrStream;
     this.ansi = ansi;
+    this.verbosity = verbosity;
     this.processHelper = processHelper;
     this.processRegistry = processRegistry;
   }
@@ -81,7 +86,17 @@ public class DefaultProcessExecutor implements ProcessExecutor {
   public ProcessExecutor cloneWithOutputStreams(
       PrintStream newStdOutStream, PrintStream newStdErrStream) {
     return new DefaultProcessExecutor(
-        newStdOutStream, newStdErrStream, ansi, processHelper, processRegistry);
+        newStdOutStream, newStdErrStream, ansi, verbosity, processHelper, processRegistry);
+  }
+
+  @Override
+  public ProcessExecutor withDownwardAPI(
+      DownwardApiProcessExecutorFactory factory, BuckEventBus buckEventBus) {
+    return factory.create(
+        this,
+        ConsoleParams.of(ansi.isAnsiTerminal(), verbosity),
+        buckEventBus,
+        "UNKNOWN_ACTION_ID");
   }
 
   @Override
