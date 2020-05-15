@@ -36,6 +36,8 @@ import com.facebook.buck.core.cell.NewCellPathResolver;
 import com.facebook.buck.core.cell.impl.CellMappingsFactory;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
+import com.facebook.buck.core.model.targetgraph.TargetGraph;
+import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -63,6 +65,7 @@ public class XcodeNativeTargetProjectWriterTest {
   private PBXProject generatedProject;
   private PathRelativizer pathRelativizer;
   private SourcePathResolverAdapter sourcePathResolverAdapter;
+  private ProjectExcludeResolver projectExcludeResolver;
   private BuildRuleResolver buildRuleResolver;
   private NewCellPathResolver newCellPathResolver;
   private AbstractPBXObjectFactory objectFactory;
@@ -77,6 +80,8 @@ public class XcodeNativeTargetProjectWriterTest {
     appleConfig = AppleProjectHelper.createDefaultAppleConfig(new FakeProjectFilesystem());
     buildRuleResolver = new TestActionGraphBuilder();
     sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
+    TargetGraph targetGraph = TargetGraphFactory.newInstance();
+    projectExcludeResolver = new ProjectExcludeResolver(targetGraph, ImmutableList.of());
     pathRelativizer =
         new PathRelativizer(Paths.get("_output"), sourcePathResolverAdapter::getRelativePath);
     newCellPathResolver =
@@ -104,6 +109,7 @@ public class XcodeNativeTargetProjectWriterTest {
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
+            projectExcludeResolver,
             true,
             newCellPathResolver,
             objectFactory);
@@ -129,6 +135,7 @@ public class XcodeNativeTargetProjectWriterTest {
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
+            projectExcludeResolver,
             false,
             newCellPathResolver,
             objectFactory);
@@ -166,6 +173,7 @@ public class XcodeNativeTargetProjectWriterTest {
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
+            projectExcludeResolver,
             false,
             newCellPathResolver,
             objectFactory);
@@ -199,6 +207,7 @@ public class XcodeNativeTargetProjectWriterTest {
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
+            projectExcludeResolver,
             false,
             newCellPathResolver,
             objectFactory);
@@ -221,6 +230,7 @@ public class XcodeNativeTargetProjectWriterTest {
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
+            projectExcludeResolver,
             false,
             newCellPathResolver,
             objectFactory);
@@ -253,6 +263,7 @@ public class XcodeNativeTargetProjectWriterTest {
         new XcodeNativeTargetProjectWriter(
             pathRelativizer,
             sourcePathResolverAdapter::getRelativePath,
+            projectExcludeResolver,
             false,
             newCellPathResolver,
             objectFactory);

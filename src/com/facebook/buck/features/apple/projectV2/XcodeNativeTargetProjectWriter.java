@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Configures a PBXProject by adding a PBXNativeTarget and its associated dependencies into a
@@ -92,6 +93,7 @@ class XcodeNativeTargetProjectWriter {
 
   private final PathRelativizer pathRelativizer;
   private final Function<SourcePath, Path> sourcePathResolver;
+  private final ProjectExcludeResolver projectExcludeResolver;
   private final boolean shouldUseShortNamesForTargets;
   private final AbstractPBXObjectFactory objectFactory;
   private final NewCellPathResolver newCellPathResolver;
@@ -99,11 +101,13 @@ class XcodeNativeTargetProjectWriter {
   public XcodeNativeTargetProjectWriter(
       PathRelativizer pathRelativizer,
       Function<SourcePath, Path> sourcePathResolver,
+      ProjectExcludeResolver projectExcludeResolver,
       boolean shouldUseShortNamesForTargets,
       NewCellPathResolver newCellPathResolver,
       AbstractPBXObjectFactory objectFactory) {
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
+    this.projectExcludeResolver = projectExcludeResolver;
     this.shouldUseShortNamesForTargets = shouldUseShortNamesForTargets;
     this.newCellPathResolver = newCellPathResolver;
     this.objectFactory = objectFactory;
@@ -112,7 +116,8 @@ class XcodeNativeTargetProjectWriter {
   public Result writeTargetToProject(
       XCodeNativeTargetAttributes targetAttributes, PBXProject project) {
     ProjectFileWriter projectFileWriter =
-        new ProjectFileWriter(project, pathRelativizer, sourcePathResolver);
+        new ProjectFileWriter(
+            project, pathRelativizer, sourcePathResolver, projectExcludeResolver::excludeTarget);
 
     PBXSourcesBuildPhase sourcesBuildPhase = objectFactory.createSourcesBuildPhase();
     PBXHeadersBuildPhase headersBuildPhase = objectFactory.createHeadersBuildPhase();
@@ -302,10 +307,12 @@ class XcodeNativeTargetProjectWriter {
         new GroupedSource.Visitor() {
           @Override
           public void visitSourceWithFlags(SourceWithFlags sourceWithFlags) {
-            ProjectFileWriter.Result result =
+            Optional<ProjectFileWriter.Result> writerResult =
                 projectFileWriter.writeSourcePath(sourceWithFlags.getSourcePath());
-            addFileReferenceToSourcesBuildPhase(
-                result, sourceWithFlags, sourcesBuildPhase, langPreprocessorFlags);
+            writerResult.ifPresent(
+                result ->
+                    addFileReferenceToSourcesBuildPhase(
+                        result, sourceWithFlags, sourcesBuildPhase, langPreprocessorFlags));
           }
 
           @Override
@@ -315,26 +322,30 @@ class XcodeNativeTargetProjectWriter {
 
           @Override
           public void visitPublicHeader(SourcePath publicHeader) {
-            PBXFileReference fileReference =
-                projectFileWriter.writeSourcePath(publicHeader).getFileReference();
-            addFileReferenceToHeadersBuildPhase(
-                fileReference,
-                headersBuildPhase,
-                HeaderVisibility.PUBLIC,
-                frameworkHeadersEnabled,
-                productType);
+            Optional<ProjectFileWriter.Result> writerResult =
+                projectFileWriter.writeSourcePath(publicHeader);
+            writerResult.ifPresent(
+                result ->
+                    addFileReferenceToHeadersBuildPhase(
+                        result.getFileReference(),
+                        headersBuildPhase,
+                        HeaderVisibility.PUBLIC,
+                        frameworkHeadersEnabled,
+                        productType));
           }
 
           @Override
           public void visitPrivateHeader(SourcePath privateHeader) {
-            PBXFileReference fileReference =
-                projectFileWriter.writeSourcePath(privateHeader).getFileReference();
-            addFileReferenceToHeadersBuildPhase(
-                fileReference,
-                headersBuildPhase,
-                HeaderVisibility.PRIVATE,
-                frameworkHeadersEnabled,
-                productType);
+            Optional<ProjectFileWriter.Result> writerResult =
+                projectFileWriter.writeSourcePath(privateHeader);
+            writerResult.ifPresent(
+                result ->
+                    addFileReferenceToHeadersBuildPhase(
+                        result.getFileReference(),
+                        headersBuildPhase,
+                        HeaderVisibility.PRIVATE,
+                        frameworkHeadersEnabled,
+                        productType));
           }
 
           @Override
@@ -464,19 +475,34 @@ class XcodeNativeTargetProjectWriter {
       ImmutableSet.Builder<Path> resourceFilesBuilder,
       ImmutableSet.Builder<Path> resourceDirsBuilder,
       ImmutableSet.Builder<Path> variantResourceFilesBuilder) {
-    for (AppleResourceDescriptionArg arg : resourceArgs) {
-      arg.getFiles().stream().map(sourcePathResolver).forEach(resourceFilesBuilder::add);
-      arg.getDirs().stream().map(sourcePathResolver).forEach(resourceDirsBuilder::add);
-      arg.getVariants().stream().map(sourcePathResolver).forEach(variantResourceFilesBuilder::add);
-    }
+    resourceArgs.stream()
+        .filter(not(projectExcludeResolver::excludeBuildRuleArg))
+        .forEach(
+            arg -> {
+              arg.getFiles().stream().map(sourcePathResolver).forEach(resourceFilesBuilder::add);
+              arg.getDirs().stream().map(sourcePathResolver).forEach(resourceDirsBuilder::add);
+              arg.getVariants().stream()
+                  .map(sourcePathResolver)
+                  .forEach(variantResourceFilesBuilder::add);
+            });
 
-    for (AppleAssetCatalogDescriptionArg arg : assetCatalogArgs) {
-      arg.getDirs().stream().map(sourcePathResolver).forEach(resourceDirsBuilder::add);
-    }
+    assetCatalogArgs.stream()
+        .filter(not(projectExcludeResolver::excludeBuildRuleArg))
+        .forEach(
+            arg -> {
+              arg.getDirs().stream().map(sourcePathResolver).forEach(resourceDirsBuilder::add);
+            });
 
-    for (AppleWrapperResourceArg arg : resourcePathArgs) {
-      resourceDirsBuilder.add(arg.getPath());
-    }
+    resourcePathArgs.stream()
+        .filter(not(projectExcludeResolver::excludeBuildRuleArg))
+        .forEach(
+            arg -> {
+              resourceDirsBuilder.add(arg.getPath());
+            });
+  }
+
+  public static <T> Predicate<T> not(Predicate<T> t) {
+    return t.negate();
   }
 
   private void addResourcesFileReference(
@@ -489,11 +515,11 @@ class XcodeNativeTargetProjectWriter {
     }
 
     for (Path path : resourceFiles) {
-      projectFileWriter.writeFilePath(path, Optional.empty()).getFileReference();
+      projectFileWriter.writeFilePath(path, Optional.empty());
     }
 
     for (Path path : resourceDirs) {
-      projectFileWriter.writeFilePath(path, Optional.of("folder")).getFileReference();
+      projectFileWriter.writeFilePath(path, Optional.of("folder"));
     }
 
     for (Path variantFilePath : variantResourceFiles) {

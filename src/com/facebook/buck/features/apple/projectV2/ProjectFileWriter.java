@@ -21,6 +21,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXGroup;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXProject;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXReference;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.util.stream.RichStream;
@@ -34,14 +35,17 @@ public class ProjectFileWriter {
   private final PBXProject project;
   private final PathRelativizer pathRelativizer;
   private final Function<SourcePath, Path> sourcePathResolver;
+  private final Function<BuildTarget, Boolean> excludeTargetResolver;
 
   public ProjectFileWriter(
       PBXProject project,
       PathRelativizer pathRelativizer,
-      Function<SourcePath, Path> sourcePathResolver) {
+      Function<SourcePath, Path> sourcePathResolver,
+      Function<BuildTarget, Boolean> excludeTargetResolver) {
     this.project = project;
     this.pathRelativizer = pathRelativizer;
     this.sourcePathResolver = sourcePathResolver;
+    this.excludeTargetResolver = excludeTargetResolver;
   }
 
   /**
@@ -73,8 +77,10 @@ public class ProjectFileWriter {
    *
    * <p>Thus, if a file is absolutely located at: /Users/me/dev/MyProject/Header.h And the cell is:
    * /Users/me/dev/ Then this will create a path in the PBXProject mainGroup as: /MyProject/Header.h
+   *
+   * @return
    */
-  public ProjectFileWriter.Result writeSourcePath(SourcePath sourcePath) {
+  public Optional<Result> writeSourcePath(SourcePath sourcePath) {
     Path path = sourcePathResolver.apply(sourcePath);
 
     // BuildTargetSourcePath indicates it's not a file but a build target (meaning it is generated)
@@ -82,12 +88,14 @@ public class ProjectFileWriter {
     // in order to make it easier for engineers to see which source files are generated.
     if (sourcePath instanceof BuildTargetSourcePath) {
       BuildTargetSourcePath buildTargetSourcePath = (BuildTargetSourcePath) sourcePath;
+      BuildTarget buildTarget = buildTargetSourcePath.getTarget();
+
+      if (excludeTargetResolver.apply(buildTarget)) {
+        return Optional.empty();
+      }
+
       Path fullPackagePath =
-          buildTargetSourcePath
-              .getTarget()
-              .getCellRelativeBasePath()
-              .getPath()
-              .toPathDefaultFileSystem();
+          buildTarget.getCellRelativeBasePath().getPath().toPathDefaultFileSystem();
       path =
           fullPackagePath
               .resolve("GENERATED-" + fullPackagePath.getFileName())
@@ -99,11 +107,15 @@ public class ProjectFileWriter {
             PBXReference.SourceTree.SOURCE_ROOT,
             pathRelativizer.outputPathToSourcePath(sourcePath),
             Optional.empty());
-    return writeSourceTreePathAtFullPathToProject(path, sourceTreePath);
+    return Optional.of(writeSourceTreePathAtFullPathToProject(path, sourceTreePath));
   }
 
-  /** Writes a file at a path to a PBXFileReference in the input project. */
-  public ProjectFileWriter.Result writeFilePath(Path path, Optional<String> type) {
+  /**
+   * Writes a file at a path to a PBXFileReference in the input project.
+   *
+   * @return
+   */
+  public Result writeFilePath(Path path, Optional<String> type) {
     SourceTreePath sourceTreePath =
         new SourceTreePath(
             PBXReference.SourceTree.SOURCE_ROOT,
@@ -112,8 +124,7 @@ public class ProjectFileWriter {
     return writeSourceTreePathAtFullPathToProject(path, sourceTreePath);
   }
 
-  private ProjectFileWriter.Result writeSourceTreePathAtFullPathToProject(
-      Path path, SourceTreePath sourceTreePath) {
+  private Result writeSourceTreePathAtFullPathToProject(Path path, SourceTreePath sourceTreePath) {
     PBXGroup filePathGroup;
     // This check exists for files located in the root (e.g. ./foo.m instead of ./MyLibrary/foo.m)
     if (path.getParent() != null) {

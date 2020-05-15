@@ -107,6 +107,8 @@ public class ProjectGenerator {
   private final ProjectSourcePathResolver projectSourcePathResolver;
   private final RuleKeyConfiguration ruleKeyConfiguration;
 
+  private final ProjectExcludeResolver projectExcludeResolver;
+
   /**
    * Mapping from an apple_library target to the associated apple_bundle which names it as its
    * 'binary'
@@ -185,6 +187,9 @@ public class ProjectGenerator {
 
     this.swiftAttributeParser =
         new SwiftAttributeParser(swiftBuckConfig, projGenerationStateCache, projectFilesystem);
+
+    this.projectExcludeResolver =
+        new ProjectExcludeResolver(targetGraph, appleConfig.getProjectExcludeLabels());
   }
 
   /** The output from generating an Xcode project. */
@@ -374,6 +379,7 @@ public class ProjectGenerator {
             new XcodeNativeTargetProjectWriter(
                 pathRelativizer,
                 projectSourcePathResolver::resolveSourcePath,
+                projectExcludeResolver,
                 options.shouldUseShortNamesForTargets(),
                 projectCell.getNewCellPathResolver(),
                 xcodeProjectWriteOptions.objectFactory());
