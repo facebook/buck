@@ -75,7 +75,8 @@ public abstract class ConfigIgnoredByDaemon implements ConfigView<BuckConfig> {
             "keep_module_files_in_module_dirs",
             "max_module_name_length_before_truncate",
             "max_library_name_length_before_truncate",
-            "kotlin_java_runtime_library_template_path"));
+            "kotlin_java_runtime_library_template_path",
+            "buck_out_path_for_generated_files"));
     ignoreFieldsForDaemonRestartBuilder.put(
         "log",
         ImmutableSet.of(

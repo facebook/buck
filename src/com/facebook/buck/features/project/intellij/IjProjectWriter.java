@@ -28,6 +28,7 @@ import com.facebook.buck.features.project.intellij.model.IjModule;
 import com.facebook.buck.features.project.intellij.model.IjProjectConfig;
 import com.facebook.buck.features.project.intellij.model.ModuleIndexEntry;
 import com.facebook.buck.features.project.intellij.model.folders.IjFolder;
+import com.facebook.buck.features.project.intellij.model.folders.IjSourceFolder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.util.json.ObjectMappers;
@@ -70,6 +71,7 @@ public class IjProjectWriter {
   private final IJProjectCleaner cleaner;
   private final ProjectFilesystem outFilesystem;
   private final IjProjectPaths projectPaths;
+  private final BuckOutPathConverter buckOutPathConverter;
 
   public IjProjectWriter(
       TargetGraph targetGraph,
@@ -87,6 +89,7 @@ public class IjProjectWriter {
     this.modulesParser = modulesParser;
     this.cleaner = cleaner;
     this.outFilesystem = outFilesystem;
+    buckOutPathConverter = new BuckOutPathConverter(projectConfig);
   }
 
   /** Write entire project to disk */
@@ -156,11 +159,19 @@ public class IjProjectWriter {
                             projectPaths.getModuleImlFilePath(module, projectConfig).toString());
                         targetInfo.put(BUCK_TYPE, getRuleNameForBuildTarget(target));
                         if (targetsToGeneratedSourcesMap.containsKey(target)) {
-                          targetInfo.put(
-                              GENERATED_SOURCES,
-                              targetsToGeneratedSourcesMap.get(target).stream()
-                                  .map(IjFolder::getPath)
-                                  .collect(Collectors.toList()));
+                          if (buckOutPathConverter.hasBuckOutPathForGeneratedProjectFiles()) {
+                            targetInfo.put(
+                                GENERATED_SOURCES,
+                                targetsToGeneratedSourcesMap.get(target).stream()
+                                    .map(folder -> buckOutPathConverter.convert(folder.getPath()))
+                                    .collect(Collectors.toList()));
+                          } else {
+                            targetInfo.put(
+                                GENERATED_SOURCES,
+                                targetsToGeneratedSourcesMap.get(target).stream()
+                                    .map(IjFolder::getPath)
+                                    .collect(Collectors.toList()));
+                          }
                         }
                         getModuleLang(target)
                             .ifPresent(
@@ -215,12 +226,26 @@ public class IjProjectWriter {
       throws IOException {
 
     ST moduleContents = StringTemplateFile.MODULE_TEMPLATE.getST();
+    ImmutableSet<IjSourceFolder> generatedFolders =
+        projectDataPreparer.getGeneratedSourceFolders(module);
+    Map<String, Object> androidProperties = projectDataPreparer.getAndroidProperties(module);
+
+    if (buckOutPathConverter.hasBuckOutPathForGeneratedProjectFiles()) {
+      contentRoots =
+          contentRoots.stream()
+              .map(buckOutPathConverter::convert)
+              .collect(ImmutableList.toImmutableList());
+      generatedFolders =
+          generatedFolders.stream()
+              .map(buckOutPathConverter::convert)
+              .collect(ImmutableSet.toImmutableSet());
+      androidProperties = buckOutPathConverter.convert(androidProperties);
+    }
 
     moduleContents.add("contentRoots", contentRoots);
     moduleContents.add("dependencies", projectDataPreparer.getDependencies(module));
-    moduleContents.add(
-        "generatedSourceFolders", projectDataPreparer.getGeneratedSourceFolders(module));
-    moduleContents.add("androidFacet", projectDataPreparer.getAndroidProperties(module));
+    moduleContents.add("generatedSourceFolders", generatedFolders);
+    moduleContents.add("androidFacet", androidProperties);
     moduleContents.add("sdk", module.getModuleType().getSdkName(projectConfig).orElse(null));
     moduleContents.add("sdkType", module.getModuleType().getSdkType(projectConfig));
     moduleContents.add(
@@ -289,6 +314,11 @@ public class IjProjectWriter {
     if (contents == null) {
       return;
     }
+
+    if (buckOutPathConverter.hasBuckOutPathForGeneratedProjectFiles()) {
+      library = buckOutPathConverter.convert(library);
+    }
+
     contents.add("name", library.getName());
     contents.add(
         "binaryJars",

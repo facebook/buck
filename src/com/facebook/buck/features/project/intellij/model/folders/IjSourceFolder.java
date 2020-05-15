@@ -49,7 +49,7 @@ public abstract class IjSourceFolder implements Comparable<IjSourceFolder> {
     return getUrl().compareTo(o.getUrl());
   }
 
-  public static ImmutableIjSourceFolder of(
+  public static IjSourceFolder of(
       String type,
       String url,
       Path path,

@@ -179,7 +179,9 @@ public class IjProjectBuckConfig {
                 .orElse(DEFAULT_MAX_LIBRARY_NAME_LENGTH))
         .setKotlinJavaRuntimeLibraryTemplatePath(
             buckConfig.getPath(
-                INTELLIJ_BUCK_CONFIG_SECTION, "kotlin_java_runtime_library_template_path"));
+                INTELLIJ_BUCK_CONFIG_SECTION, "kotlin_java_runtime_library_template_path"))
+        .setBuckOutPathForGeneratedProjectFiles(
+            buckConfig.getValue(INTELLIJ_BUCK_CONFIG_SECTION, "buck_out_path_for_generated_files"));
   }
 
   private static String getModuleGroupName(String moduleGroupName, BuckConfig buckConfig) {
