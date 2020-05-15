@@ -308,6 +308,16 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .putAll(this.testSpecificEnvironmentVariables.orElse(ImmutableMap.of()))
             .build();
 
+    ImmutableSet.Builder<Path> requiredPathsBuilder = ImmutableSet.builder();
+    requiredPathsBuilder.add(resolvedTestBundleDirectory);
+    if (testHostAppPath.isPresent()) {
+      requiredPathsBuilder.add(testHostAppPath.get());
+    }
+    if (uiTestTargetAppPath.isPresent()) {
+      requiredPathsBuilder.add(uiTestTargetAppPath.get());
+    }
+    externalSpec.setRequiredPaths(requiredPathsBuilder.build());
+
     if (!useXctest) {
       if (!xctool.isPresent()) {
         throw new HumanReadableException(
