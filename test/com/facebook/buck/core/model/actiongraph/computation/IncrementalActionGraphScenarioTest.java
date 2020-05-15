@@ -389,7 +389,6 @@ public class IncrementalActionGraphScenarioTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20,
                 new TestCellBuilder().build())
             .getTargetGraph();
     ActionGraphAndBuilder result = createActionGraph(versionedTargetGraph);
@@ -565,7 +564,6 @@ public class IncrementalActionGraphScenarioTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20,
                 new TestCellBuilder().setFilesystem(filesystem).build())
             .getTargetGraph();
 
@@ -592,7 +590,6 @@ public class IncrementalActionGraphScenarioTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20,
                 new TestCellBuilder().setFilesystem(filesystem).build())
             .getTargetGraph();
 

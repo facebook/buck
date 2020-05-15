@@ -30,7 +30,6 @@ import java.util.Optional;
 public class VersionBuckConfig {
 
   private static final String UNIVERSES_SECTION = "version_universes";
-  private static final long DEFAULT_TIMEOUT = 20;
 
   private final BuckConfig delegate;
 
@@ -68,9 +67,5 @@ public class VersionBuckConfig {
       universes.put(name, getVersionUniverse(name, targetConfiguration));
     }
     return universes.build();
-  }
-
-  public long getVersionTargetGraphTimeoutSeconds() {
-    return delegate.getLong("build", "version_tg_timeout").orElse(DEFAULT_TIMEOUT);
   }
 }

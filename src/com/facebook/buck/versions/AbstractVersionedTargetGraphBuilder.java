@@ -39,30 +39,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractVersionedTargetGraphBuilder implements VersionedTargetGraphBuilder {
 
   protected final TypeCoercerFactory typeCoercerFactory;
   private final UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory;
   protected final TargetGraphCreationResult unversionedTargetGraphCreationResult;
-  protected final long timeout;
-  protected final TimeUnit timeUnit;
   private final Cells cells;
 
   protected AbstractVersionedTargetGraphBuilder(
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
       TargetGraphCreationResult unversionedTargetGraphCreationResult,
-      long timeout,
-      TimeUnit timeUnit,
       Cells cells) {
 
     this.typeCoercerFactory = typeCoercerFactory;
     this.unconfiguredBuildTargetFactory = unconfiguredBuildTargetFactory;
     this.unversionedTargetGraphCreationResult = unversionedTargetGraphCreationResult;
-    this.timeout = timeout;
-    this.timeUnit = timeUnit;
     this.cells = cells;
   }
 

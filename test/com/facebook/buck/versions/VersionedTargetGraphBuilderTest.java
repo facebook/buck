@@ -65,7 +65,6 @@ public class VersionedTargetGraphBuilderTest {
                 unversionedTargetGraphAndBuildTargets,
                 typeCoercerFactory,
                 unconfiguredBuildTargetFactory,
-                20,
                 new TestCellBuilder().build());
   }
 

@@ -29,7 +29,6 @@ import com.facebook.buck.util.cache.CacheStats;
 import com.facebook.buck.util.cache.CacheStatsTracker;
 import com.google.common.collect.ImmutableMap;
 import java.util.Optional;
-import java.util.concurrent.TimeoutException;
 
 /**
  * Wrapper class around VersionedTargetGraphCache containing a command specific stats tracker to
@@ -57,7 +56,7 @@ public class InstrumentedVersionedTargetGraphCache {
       TargetGraphCreationResult targetGraphCreationResult,
       ImmutableMap<String, VersionUniverse> versionUniverses,
       Cells cells)
-      throws VersionException, InterruptedException, TimeoutException {
+      throws VersionException, InterruptedException {
     return cache.toVersionedTargetGraph(
         depsAwareExecutor,
         versionUniverses,

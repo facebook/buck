@@ -235,7 +235,6 @@ public class CxxGenruleDescriptionTest {
             executor.get(),
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            20,
             new TestCellBuilder().build());
     CxxGenruleDescriptionArg arg =
         extractArg(
@@ -273,7 +272,6 @@ public class CxxGenruleDescriptionTest {
             executor.get(),
             new DefaultTypeCoercerFactory(),
             new ParsingUnconfiguredBuildTargetViewFactory(),
-            20,
             new TestCellBuilder().build());
     CxxGenruleDescriptionArg arg =
         extractArg(

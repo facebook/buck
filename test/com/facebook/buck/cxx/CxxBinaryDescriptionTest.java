@@ -450,7 +450,6 @@ public class CxxBinaryDescriptionTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20,
                 new TestCellBuilder().build())
             .getTargetGraph();
 

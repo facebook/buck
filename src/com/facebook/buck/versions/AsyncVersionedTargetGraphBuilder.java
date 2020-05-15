@@ -55,8 +55,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.immutables.value.Value;
 
@@ -80,14 +78,11 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
       TargetGraphCreationResult unversionedTargetGraphCreationResult,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      long timeoutSeconds,
       Cells cells) {
     super(
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
         unversionedTargetGraphCreationResult,
-        timeoutSeconds,
-        TimeUnit.SECONDS,
         cells);
 
     this.versionedTargetGraphTransformer =
@@ -117,7 +112,7 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
 
   @Override
   @SuppressWarnings("PMD")
-  public TargetGraph build() throws TimeoutException, InterruptedException, VersionException {
+  public TargetGraph build() throws InterruptedException, VersionException {
     LOG.debug(
         "Starting version target graph transformation (nodes %d)",
         unversionedTargetGraphCreationResult.getTargetGraph().getNodes().size());
@@ -137,11 +132,10 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
     // Wait for actions to complete.
     for (Future<TargetNode<?>> futures : results.values()) {
       try {
-        futures.get(timeout, timeUnit);
+        futures.get();
       } catch (ExecutionException e) {
         Throwable rootCause = Throwables.getRootCause(e);
         Throwables.throwIfInstanceOf(rootCause, VersionException.class);
-        Throwables.throwIfInstanceOf(rootCause, TimeoutException.class);
         Throwables.throwIfInstanceOf(rootCause, RuntimeException.class);
         throw new IllegalStateException(
             String.format("Unexpected exception: %s: %s", e.getClass(), e.getMessage()), e);
@@ -168,9 +162,8 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
       DepsAwareExecutor<? super ComputeResult, ?> executor,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      long timeoutSeconds,
       Cells cells)
-      throws VersionException, TimeoutException, InterruptedException {
+      throws VersionException, InterruptedException {
     return unversionedTargetGraphCreationResult.withTargetGraph(
         new AsyncVersionedTargetGraphBuilder(
                 executor,
@@ -178,7 +171,6 @@ public class AsyncVersionedTargetGraphBuilder extends AbstractVersionedTargetGra
                 unversionedTargetGraphCreationResult,
                 typeCoercerFactory,
                 unconfiguredBuildTargetFactory,
-                timeoutSeconds,
                 cells)
             .build());
   }

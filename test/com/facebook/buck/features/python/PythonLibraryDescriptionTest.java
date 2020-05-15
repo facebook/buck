@@ -229,7 +229,6 @@ public class PythonLibraryDescriptionTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20,
                 new TestCellBuilder().build())
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
@@ -280,7 +279,6 @@ public class PythonLibraryDescriptionTest {
                 executor.get(),
                 new DefaultTypeCoercerFactory(),
                 new ParsingUnconfiguredBuildTargetViewFactory(),
-                20,
                 new TestCellBuilder().build())
             .getTargetGraph();
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);

@@ -29,18 +29,11 @@ import com.facebook.buck.event.BuckEvent;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.rules.coercer.TypeCoercerFactory;
 import com.facebook.buck.util.cache.CacheStatsTracker;
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.concurrent.TimeoutException;
 import javax.annotation.Nullable;
 
 public class VersionedTargetGraphCache {
-
-  // How many times to attempt to build a version target graph in the face of timeouts.
-  private static final int ATTEMPTS = 3;
 
   private static final Logger LOG = Logger.get(VersionedTargetGraphCache.class);
 
@@ -52,10 +45,9 @@ public class VersionedTargetGraphCache {
       ImmutableMap<String, VersionUniverse> versionUniverses,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      long timeoutSeconds,
       TargetGraphCreationResult targetGraphCreationResult,
       Cells cells)
-      throws VersionException, TimeoutException, InterruptedException {
+      throws VersionException, InterruptedException {
 
     TargetGraphCreationResult versionedTargetGraph =
         AsyncVersionedTargetGraphBuilder.transform(
@@ -65,7 +57,6 @@ public class VersionedTargetGraphCache {
             depsAwareExecutor,
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
-            timeoutSeconds,
             cells);
     return versionedTargetGraph;
   }
@@ -75,11 +66,10 @@ public class VersionedTargetGraphCache {
       ImmutableMap<String, VersionUniverse> versionUniverses,
       TypeCoercerFactory typeCoercerFactory,
       UnconfiguredBuildTargetViewFactory unconfiguredBuildTargetFactory,
-      long timeoutSeconds,
       CacheStatsTracker statsTracker,
       TargetGraphCreationResult targetGraphCreationResult,
       Cells cells)
-      throws VersionException, TimeoutException, InterruptedException {
+      throws VersionException, InterruptedException {
 
     CacheStatsTracker.CacheRequest request = statsTracker.startRequest();
 
@@ -114,7 +104,6 @@ public class VersionedTargetGraphCache {
             versionUniverses,
             typeCoercerFactory,
             unconfiguredBuildTargetFactory,
-            timeoutSeconds,
             targetGraphCreationResult,
             cells);
     cachedVersionedTargetGraph =
@@ -150,43 +139,18 @@ public class VersionedTargetGraphCache {
     VersionedTargetGraphEvent.Started started = VersionedTargetGraphEvent.started();
     eventBus.post(started);
     try {
-
-      // TODO(agallagher): There are occasional deadlocks happening inside the `ForkJoinPool` used
-      // by the `VersionedTargetGraphBuilder`, and it's not clear if this is from our side and if
-      // so, where we're causing this.  So in the meantime, we build-in a timeout into the builder
-      // and catch it here, performing retries and logging.
-      for (int attempt = 1; ; attempt++) {
-        try {
-          VersionedTargetGraphCacheResult result =
-              getVersionedTargetGraph(
-                  depsAwareExecutor,
-                  versionUniverses,
-                  typeCoercerFactory,
-                  unconfiguredBuildTargetFactory,
-                  versionBuckConfig.getVersionTargetGraphTimeoutSeconds(),
-                  statsTracker,
-                  targetGraphCreationResult,
-                  cells);
-          LOG.info("versioned target graph " + result.getType().getDescription());
-          eventBus.post(result.getType().getEvent());
-          return result;
-        } catch (TimeoutException e) {
-          eventBus.post(VersionedTargetGraphEvent.timeout());
-          LOG.warn("Timed out building versioned target graph.");
-          Map<Thread, StackTraceElement[]> stackTraces = Thread.getAllStackTraces();
-          StringBuilder traces = new StringBuilder(stackTraces.size());
-          for (Entry<Thread, StackTraceElement[]> trace : stackTraces.entrySet()) {
-            traces.append("Thread [");
-            traces.append(trace.getKey().getName());
-            traces.append("],stack:[");
-            Joiner.on(", ").appendTo(traces, trace.getValue());
-            traces.append("],");
-          }
-          LOG.info(traces.toString());
-          if (attempt < ATTEMPTS) continue;
-          throw new RuntimeException(e);
-        }
-      }
+      VersionedTargetGraphCacheResult result =
+          getVersionedTargetGraph(
+              depsAwareExecutor,
+              versionUniverses,
+              typeCoercerFactory,
+              unconfiguredBuildTargetFactory,
+              statsTracker,
+              targetGraphCreationResult,
+              cells);
+      LOG.info("versioned target graph " + result.getType().getDescription());
+      eventBus.post(result.getType().getEvent());
+      return result;
     } finally {
       eventBus.post(VersionedTargetGraphEvent.finished(started));
     }
@@ -200,13 +164,12 @@ public class VersionedTargetGraphCache {
       TargetGraphCreationResult targetGraphCreationResult,
       CacheStatsTracker statsTracker,
       Cells cells)
-      throws VersionException, InterruptedException, TimeoutException {
+      throws VersionException, InterruptedException {
     return getVersionedTargetGraph(
         depsAwareExecutor,
         versionUniverses,
         typeCoercerFactory,
         unconfiguredBuildTargetFactory,
-        20,
         statsTracker,
         targetGraphCreationResult,
         cells);
