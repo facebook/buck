@@ -138,7 +138,12 @@ public class AndroidBinaryDescription
     for (Flavor flavor : FLAVORS) {
       if (buildTarget.getFlavors().contains(flavor)) {
         graphBuilder.requireRule(buildTarget.withoutFlavors(flavor));
-        return graphBuilder.getRule(buildTarget);
+        return graphBuilder
+            .getRuleOptional(buildTarget)
+            .orElseThrow(
+                () ->
+                    new HumanReadableException(
+                        "Rule for target '%s' could not be resolved.", buildTarget));
       }
     }
 

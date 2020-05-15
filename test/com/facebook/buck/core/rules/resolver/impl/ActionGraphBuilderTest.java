@@ -147,7 +147,7 @@ public class ActionGraphBuilderTest {
   @Test
   public void getRuleWithTypeMissingRule() {
     BuildRuleResolver resolver = actionGraphBuilderFactory.create(TargetGraph.EMPTY);
-    expectedException.expect(HumanReadableException.class);
+    expectedException.expect(RuntimeException.class);
     expectedException.expectMessage(Matchers.containsString("could not be resolved"));
     resolver.getRuleWithType(BuildTargetFactory.newInstance("//:non-existent"), BuildRule.class);
   }

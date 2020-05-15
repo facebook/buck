@@ -66,8 +66,9 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
         .orElseThrow(() -> unresolvableRuleException(buildTarget));
   }
 
-  private static HumanReadableException unresolvableRuleException(BuildTarget target) {
-    return new HumanReadableException("Rule for target '%s' could not be resolved.", target);
+  private static RuntimeException unresolvableRuleException(BuildTarget target) {
+    return new IllegalStateException(
+        String.format("Rule for target '%s' could not be resolved.", target));
   }
 
   @Override
