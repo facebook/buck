@@ -142,6 +142,49 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testAppleLibraryHeadersOnlyWithoutSwift() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_headers_only", tmp);
+    workspace.setUp();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//Libraries/TestLibrary:TestLibrary#shared,iphonesimulator-x86_64");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    assertTrue(
+        Files.exists(workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))));
+  }
+
+  @Test
+  public void testAppleLibraryHeadersOnlyWithSwift() throws IOException {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_headers_only", tmp);
+    workspace.addBuckConfigLocalOption("apple", "use_swift_delegate", "false");
+    workspace.setUp();
+    ProjectFilesystem filesystem =
+        TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
+
+    BuildTarget target =
+        BuildTargetFactory.newInstance(
+            "//Libraries/TestLibrary:TestSwiftLibrary#shared,iphonesimulator-x86_64");
+    ProcessResult result = workspace.runBuckCommand("build", target.getFullyQualifiedName());
+    result.assertSuccess();
+
+    assertTrue(
+        Files.exists(workspace.getPath(BuildTargetPaths.getGenPath(filesystem, target, "%s"))));
+  }
+
+  @Test
   public void appleLibraryUsesPlatformDepOfSpecifiedPlatform() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

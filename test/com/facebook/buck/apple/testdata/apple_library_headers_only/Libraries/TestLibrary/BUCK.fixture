@@ -1,0 +1,51 @@
+# Non-Swift
+
+apple_library(
+    name = "TestLibrary",
+    srcs = ["TestClass.m"],
+    info_plist = "Info.plist",
+    linker_flags = ["-lobjc"],
+    frameworks = [
+        "$SDKROOT/System/Library/Frameworks/Foundation.framework",
+    ],
+    deps = [
+        ":Analytics#headers",
+    ],
+)
+
+apple_library(
+    name = "Analytics",
+    srcs = ["Analytics.m"],
+    exported_headers = ["Analytics.h"],
+    info_plist = "Info.plist",
+    linker_flags = ["-lobjc"],
+)
+
+# Swift
+
+apple_library(
+    name = "TestSwiftLibrary",
+    srcs = ["AppDelegate.swift"],
+    info_plist = "Info.plist",
+    linker_flags = [
+        "-lobjc",
+        # Needed because the Swift code needs to link against
+        # NetworkingLib but we're only depending on its #headers
+        # flavor, i.e., interface.
+        "-Wl,-undefined,dynamic_lookup",
+    ],
+    swift_version = "5",
+    module_name = "TestSwiftLibrary",
+    deps = [
+        ":NetworkingLib#headers",
+    ],
+)
+
+apple_library(
+    name = "NetworkingLib",
+    srcs = ["NetworkingManager.swift"],
+    info_plist = "Info.plist",
+    linker_flags = ["-lobjc"],
+    swift_version = "5",
+    module_name = "NetworkingLib",
+)

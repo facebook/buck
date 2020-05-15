@@ -48,7 +48,6 @@ import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.util.function.QuadFunction;
 import com.facebook.buck.util.stream.RichStream;
-import com.google.common.base.Preconditions;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
@@ -382,10 +381,6 @@ public class CxxLibraryGroup extends NoopBuildRuleWithDeclaredAndExtraDeps
             .orElse(false);
     boolean headersOnly = headerOnly.test(cxxPlatform);
     boolean shouldProduceArtifact = (!headersOnly || delegateWantsArtifact) && propagateLinkables;
-
-    Preconditions.checkState(
-        shouldProduceArtifact || !delegateWantsArtifact,
-        "Delegate wants artifact but will not produce one");
 
     if (shouldProduceArtifact) {
       boolean isStatic;
