@@ -175,6 +175,7 @@ public class GraphEngineFactory {
             (buildFile, node) -> {},
             // TODO: replace with DefaultSelectorListResolver
             new SelectorListResolver() {
+
               @Nullable
               @Override
               public <T> T resolveList(

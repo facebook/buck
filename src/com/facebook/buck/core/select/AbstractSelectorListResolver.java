@@ -22,10 +22,12 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.rules.coercer.concat.Concatable;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -40,6 +42,35 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
     this.selectableResolver = selectableResolver;
   }
 
+  private ConfigSettingSelectable resolveSelectorKey(
+      SelectorKey selectorKey, DependencyStack dependencyStack) {
+    return (ConfigSettingSelectable)
+        selectorKey
+            .getBuildTarget()
+            .map(t -> selectableResolver.getSelectable(t, dependencyStack))
+            .orElse(ConfigSettingSelectable.any());
+  }
+
+  /** Resolve selector keys into {@link ConfigSettingSelectable}. */
+  protected <T> SelectorResolved<T> resolveSelector(
+      Selector<T> selector, DependencyStack dependencyStack) {
+    ImmutableMap.Builder<SelectorKey, SelectorResolved.Resolved<T>> conditions =
+        ImmutableMap.builder();
+    for (Map.Entry<SelectorKey, T> e : selector.getConditions().entrySet()) {
+      conditions.put(
+          e.getKey(),
+          new SelectorResolved.Resolved<T>(
+              resolveSelectorKey(e.getKey(), dependencyStack), Optional.of(e.getValue())));
+    }
+    for (SelectorKey nullCondition : selector.getNullConditions()) {
+      conditions.put(
+          nullCondition,
+          new SelectorResolved.Resolved<>(
+              resolveSelectorKey(nullCondition, dependencyStack), Optional.empty()));
+    }
+    return new SelectorResolved<>(conditions.build(), selector.getNoMatchMessage());
+  }
+
   @Nullable
   @Override
   public <T> T resolveList(
@@ -52,7 +83,7 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
     List<T> resolvedList = new ArrayList<>();
     for (Selector<T> selector : selectorList.getSelectors()) {
       T selectorValue =
-          resolveSelector(
+          resolveSelectorValue(
               configurationContext, buildTarget, dependencyStack, attributeName, selector);
       if (selectorValue != null) {
         resolvedList.add(selectorValue);
@@ -63,7 +94,7 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
   }
 
   @Nullable
-  protected abstract <T> T resolveSelector(
+  protected abstract <T> T resolveSelectorValue(
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
@@ -76,21 +107,18 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
    */
   protected <T> Map<NamedSelectable, Object> findMatchingConditions(
       SelectableConfigurationContext configurationContext,
-      Selector<T> selector,
+      SelectorResolved<T> selector,
       DependencyStack dependencyStack) {
     Map<NamedSelectable, Object> matchingConditions = new LinkedHashMap<>();
 
-    for (Map.Entry<SelectorKey, T> entry : selector.getConditions().entrySet()) {
+    for (Map.Entry<SelectorKey, SelectorResolved.Resolved<T>> entry :
+        selector.getConditions().entrySet()) {
       handleSelector(
           configurationContext,
           matchingConditions,
           entry.getKey(),
           entry.getValue(),
           dependencyStack);
-    }
-    for (SelectorKey selectorKey : selector.getNullConditions()) {
-      handleSelector(
-          configurationContext, matchingConditions, selectorKey, NULL_VALUE, dependencyStack);
     }
     return matchingConditions;
   }
@@ -99,15 +127,10 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
       SelectableConfigurationContext configurationContext,
       Map<NamedSelectable, Object> matchingConditions,
       SelectorKey selectorKey,
-      Object value,
+      SelectorResolved.Resolved<?> value,
       DependencyStack dependencyStack) {
     NamedSelectable selectable =
-        NamedSelectable.of(
-            selectorKey.getBuildTarget(),
-            selectorKey
-                .getBuildTarget()
-                .map(t -> selectableResolver.getSelectable(t, dependencyStack))
-                .orElse(ConfigSettingSelectable.any()));
+        NamedSelectable.of(selectorKey.getBuildTarget(), value.getSelectable());
 
     if (selectable
         .getSelectable()
@@ -115,7 +138,10 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
             configurationContext.getPlatform(),
             configurationContext.getBuckConfig(),
             dependencyStack)) {
-      updateConditions(matchingConditions, selectable, value);
+      updateConditions(
+          matchingConditions,
+          selectable,
+          value.getOutput().isPresent() ? value.getOutput().get() : NULL_VALUE);
     }
   }
 

@@ -24,6 +24,7 @@ import com.facebook.buck.core.select.SelectableConfigurationContext;
 import com.facebook.buck.core.select.SelectableResolver;
 import com.facebook.buck.core.select.Selector;
 import com.facebook.buck.core.select.SelectorListResolver;
+import com.facebook.buck.core.select.SelectorResolved;
 import com.google.common.collect.Iterables;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -41,14 +42,16 @@ public class DefaultSelectorListResolver extends AbstractSelectorListResolver {
   @Override
   @Nullable
   @SuppressWarnings("unchecked")
-  protected <T> T resolveSelector(
+  protected <T> T resolveSelectorValue(
       SelectableConfigurationContext configurationContext,
       BuildTarget buildTarget,
       DependencyStack dependencyStack,
       String attributeName,
       Selector<T> selector) {
+    SelectorResolved<T> selectorResolved = resolveSelector(selector, dependencyStack);
+
     Map<NamedSelectable, Object> matchingConditions =
-        findMatchingConditions(configurationContext, selector, dependencyStack);
+        findMatchingConditions(configurationContext, selectorResolved, dependencyStack);
 
     Object matchingResult = null;
     assertNotMultipleMatches(matchingConditions, attributeName, buildTarget);
