@@ -32,6 +32,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -427,7 +428,7 @@ public class AppleBundle extends AbstractBuildRule
 
     AbsPath infoPlistInputPath =
         AbsPath.of(context.getSourcePathResolver().getAbsolutePath(infoPlist));
-    Path infoPlistSubstitutionTempPath =
+    RelPath infoPlistSubstitutionTempPath =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s.plist");
     Path infoPlistOutputPath = metadataPath.resolve("Info.plist");
 
@@ -455,7 +456,7 @@ public class AppleBundle extends AbstractBuildRule
         new FindAndReplaceStep(
             getProjectFilesystem(),
             infoPlistInputPath,
-            infoPlistSubstitutionTempPath,
+            infoPlistSubstitutionTempPath.getPath(),
             InfoPlistSubstitution.createVariableExpansionFunction(
                 withDefaults(
                     infoPlistSubstitutions,
@@ -464,8 +465,8 @@ public class AppleBundle extends AbstractBuildRule
                         "PRODUCT_NAME", binaryName)))),
         new PlistProcessStep(
             getProjectFilesystem(),
-            infoPlistSubstitutionTempPath,
-            assetCatalog.map(AppleAssetCatalog::getOutputPlist),
+            infoPlistSubstitutionTempPath.getPath(),
+            assetCatalog.map(appleAssetCatalog -> appleAssetCatalog.getOutputPlist().getPath()),
             infoPlistOutputPath,
             getInfoPlistAdditionalKeys(),
             getInfoPlistOverrideKeys(),
@@ -541,7 +542,8 @@ public class AppleBundle extends AbstractBuildRule
         signingEntitlementsTempPath =
             Optional.of(
                 BuildTargetPaths.getScratchPath(
-                    getProjectFilesystem(), getBuildTarget(), "%s.xcent"));
+                        getProjectFilesystem(), getBuildTarget(), "%s.xcent")
+                    .getPath());
 
         Path dryRunResultPath = bundleRoot.resolve(PP_DRY_RUN_RESULT_FILE);
 
@@ -735,7 +737,7 @@ public class AppleBundle extends AbstractBuildRule
                 ProjectFilesystem filesystem = getProjectFilesystem();
                 AbsPath originalEntitlementsPlist =
                     srcRoot.resolve(Paths.get(entitlementsPlistName));
-                Path entitlementsPlistWithSubstitutions =
+                RelPath entitlementsPlistWithSubstitutions =
                     BuildTargetPaths.getScratchPath(
                         filesystem, getBuildTarget(), "%s-Entitlements.plist");
 
@@ -743,11 +745,11 @@ public class AppleBundle extends AbstractBuildRule
                     new FindAndReplaceStep(
                         filesystem,
                         originalEntitlementsPlist,
-                        entitlementsPlistWithSubstitutions,
+                        entitlementsPlistWithSubstitutions.getPath(),
                         InfoPlistSubstitution.createVariableExpansionFunction(
                             infoPlistSubstitutions)));
 
-                return filesystem.resolve(entitlementsPlistWithSubstitutions);
+                return filesystem.resolve(entitlementsPlistWithSubstitutions).getPath();
               });
     }
     return entitlementsPlist;

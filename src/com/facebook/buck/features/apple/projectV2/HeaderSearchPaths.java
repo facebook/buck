@@ -604,10 +604,10 @@ class HeaderSearchPaths {
                 NodeHelper.getModularMapTarget(
                     nativeNode, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP, defaultPlatformFlavor);
 
-            Path symlinkPath =
+            RelPath symlinkPath =
                 CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
                     projectFilesystem, flavoredBuildTarget, headerVisibility);
-            builder.add(projectFilesystem.resolve(symlinkPath));
+            builder.add(projectFilesystem.resolve(symlinkPath).getPath());
           }
         });
     return builder.build();

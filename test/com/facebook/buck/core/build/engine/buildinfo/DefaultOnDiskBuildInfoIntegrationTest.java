@@ -47,13 +47,13 @@ public class DefaultOnDiskBuildInfoIntegrationTest {
         ImmutableSortedSet.of(
             preparer.metadataDirectory,
             preparer.metadataDirectory.resolve(MetadataKey.ARTIFACT_METADATA),
-            preparer.filePath,
-            preparer.dirPath,
+            preparer.filePath.getPath(),
+            preparer.dirPath.getPath(),
             preparer.subDir,
             preparer.emptySubDir,
             preparer.fileWithinDirPath,
             preparer.otherPathWithinDir,
-            preparer.symlinkPath,
+            preparer.symlinkPath.getPath(),
             preparer.fileViaSymlinkPath),
         preparer.onDiskBuildInfo.getPathsForArtifact());
     assertEquals(

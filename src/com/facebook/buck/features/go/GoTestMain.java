@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -48,7 +49,7 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey(stringify = true)
   private final ImmutableMap<Path, ImmutableMap<String, Path>> coverVariables;
 
-  private final Path output;
+  private final RelPath output;
   private final GoPlatform platform;
 
   public GoTestMain(
@@ -78,7 +79,7 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(output);
+    buildableContext.recordArtifact(output.getPath());
     Builder<Step> steps =
         ImmutableList.<Step>builder()
             .add(
@@ -103,7 +104,7 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             coverVariables,
             testPackage,
             filteredSrcs,
-            output));
+            output.getPath()));
     return steps.build();
   }
 

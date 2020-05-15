@@ -87,4 +87,8 @@ public interface RelPath extends PathWrapper {
   default RelPath relativize(Path path) {
     return RelPath.of(getPath().relativize(path));
   }
+
+  default RelPath relativize(RelPath path) {
+    return relativize(path.getPath());
+  }
 }

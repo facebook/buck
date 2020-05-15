@@ -16,6 +16,7 @@
 
 package com.facebook.buck.util;
 
+import com.facebook.buck.core.filesystems.PathWrapper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.CharMatcher;
@@ -161,6 +162,10 @@ public final class Escaper {
 
   public static String escapeAsBashString(Path path) {
     return escapeAsBashString(path.toString());
+  }
+
+  public static String escapeAsBashString(PathWrapper path) {
+    return escapeAsBashString(path.getPath());
   }
 
   // Adapted from org.apache.commons.lang.StringEscapeUtils

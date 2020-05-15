@@ -27,6 +27,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.apple.clang.HeaderMap;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -101,9 +102,9 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertEquals(
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(), target, "__%s/compile_commands.json"),
-        rootPath.relativize(compilationDatabase).getPath());
+        rootPath.relativize(compilationDatabase));
 
-    Path binaryHeaderSymlinkTreeFolder =
+    RelPath binaryHeaderSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
             target.withFlavors(
@@ -112,7 +113,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertTrue(Files.exists(rootPath.resolve(binaryHeaderSymlinkTreeFolder).getPath()));
 
     BuildTarget libraryTarget = BuildTargetFactory.newInstance("//:library_with_header");
-    Path libraryExportedHeaderSymlinkTreeFolder =
+    RelPath libraryExportedHeaderSymlinkTreeFolder =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             filesystem,
             libraryTarget,
@@ -181,15 +182,15 @@ public class CxxCompilationDatabaseIntegrationTest {
     AbsPath rootPath = tmp.getRoot();
     assertEquals(
         BuildTargetPaths.getGenPath(filesystem, target, "__%s/compile_commands.json"),
-        rootPath.relativize(compilationDatabase).getPath());
+        rootPath.relativize(compilationDatabase));
 
-    Path headerSymlinkTreeFolder =
+    RelPath headerSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(
             filesystem,
             target.withFlavors(
                 InternalFlavor.of("default"), CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
-    Path exportedHeaderSymlinkTreeFolder =
+    RelPath exportedHeaderSymlinkTreeFolder =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             filesystem,
             target.withFlavors(),
@@ -265,9 +266,9 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertEquals(
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(), target, "__%s/compile_commands.json"),
-        rootPath.relativize(compilationDatabase).getPath());
+        rootPath.relativize(compilationDatabase));
 
-    Path binaryHeaderSymlinkTreeFolder =
+    RelPath binaryHeaderSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
             target.withFlavors(
@@ -320,9 +321,9 @@ public class CxxCompilationDatabaseIntegrationTest {
     assertEquals(
         BuildTargetPaths.getGenPath(
             filesystem, target, "uber-compilation-database-%s/compile_commands.json"),
-        rootPath.relativize(compilationDatabase).getPath());
+        rootPath.relativize(compilationDatabase));
 
-    Path binaryHeaderSymlinkTreeFolder =
+    RelPath binaryHeaderSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(
             filesystem,
             target.withFlavors(
@@ -380,13 +381,13 @@ public class CxxCompilationDatabaseIntegrationTest {
     // Populate the cache with the built rule
     workspace.buildAndReturnOutput(target.getFullyQualifiedName());
 
-    Path headerSymlinkTreeFolder =
+    RelPath headerSymlinkTreeFolder =
         BuildTargetPaths.getGenPath(
             filesystem,
             target.withFlavors(
                 InternalFlavor.of("default"), CxxDescriptionEnhancer.HEADER_SYMLINK_TREE_FLAVOR),
             "%s");
-    Path exportedHeaderSymlinkTreeFolder =
+    RelPath exportedHeaderSymlinkTreeFolder =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             filesystem,
             target.withFlavors(),
@@ -439,13 +440,13 @@ public class CxxCompilationDatabaseIntegrationTest {
     // Populate the cache with the built rule
     workspace.buildAndReturnOutput(target.getFullyQualifiedName());
 
-    Path dep1ExportedSymlinkTreeFolder =
+    RelPath dep1ExportedSymlinkTreeFolder =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             filesystem,
             BuildTargetFactory.newInstance("//dep1:dep1"),
             HeaderVisibility.PUBLIC,
             CxxPlatformUtils.getHeaderModeForDefaultPlatform(tmp.getRoot()).getFlavor());
-    Path dep2ExportedSymlinkTreeFolder =
+    RelPath dep2ExportedSymlinkTreeFolder =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             filesystem,
             BuildTargetFactory.newInstance("//dep2:dep2"),
@@ -549,7 +550,7 @@ public class CxxCompilationDatabaseIntegrationTest {
     workspace.writeContentsToPath("// Hello dep2 world\n", "dep2/dep2_new.h");
   }
 
-  private void verifyHeaders(ProjectWorkspace projectWorkspace, Path path, String... headers)
+  private void verifyHeaders(ProjectWorkspace projectWorkspace, RelPath path, String... headers)
       throws IOException {
     Path resolvedPath = headerSymlinkTreePath(path);
     if (PREPROCESSOR_SUPPORTS_HEADER_MAPS) {
@@ -564,11 +565,11 @@ public class CxxCompilationDatabaseIntegrationTest {
     }
   }
 
-  private Path headerSymlinkTreePath(Path path) {
+  private Path headerSymlinkTreePath(RelPath path) {
     if (PREPROCESSOR_SUPPORTS_HEADER_MAPS) {
-      return path.resolveSibling(String.format("%s.hmap", path.getFileName()));
+      return path.getPath().resolveSibling(String.format("%s.hmap", path.getFileName()));
     } else {
-      return path;
+      return path.getPath();
     }
   }
 

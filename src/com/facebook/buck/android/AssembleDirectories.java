@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -44,7 +45,7 @@ import java.util.function.Supplier;
 public class AssembleDirectories extends AbstractBuildRule {
 
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
-  private final Path destinationDirectory;
+  private final RelPath destinationDirectory;
   @AddToRuleKey private final ImmutableCollection<SourcePath> originalDirectories;
 
   public AssembleDirectories(
@@ -82,10 +83,10 @@ public class AssembleDirectories extends AbstractBuildRule {
           CopyStep.forDirectory(
               getProjectFilesystem(),
               resolvedPath,
-              destinationDirectory,
+              destinationDirectory.getPath(),
               CopyStep.DirectoryMode.CONTENTS_ONLY));
     }
-    buildableContext.recordArtifact(destinationDirectory);
+    buildableContext.recordArtifact(destinationDirectory.getPath());
     return steps.build();
   }
 

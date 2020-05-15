@@ -159,7 +159,8 @@ public class CxxCompilationDatabaseTest {
 
     assertEquals(
         "getPathToOutput() should be a function of the build target.",
-        BuildTargetPaths.getGenPath(filesystem, testBuildTarget, "__%s/compile_commands.json"),
+        BuildTargetPaths.getGenPath(filesystem, testBuildTarget, "__%s/compile_commands.json")
+            .getPath(),
         graphBuilder
             .getSourcePathResolver()
             .getRelativePath(compilationDatabase.getSourcePathToOutput()));

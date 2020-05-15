@@ -138,11 +138,14 @@ public class AndroidInstrumentationApkTest {
         "//apps:app should have three JAR files to dex.",
         ImmutableSet.of(
             BuildTargetPaths.getGenPath(
-                javaLibrary1.getProjectFilesystem(), javaLibrary1.getBuildTarget(), "%s.jar"),
+                    javaLibrary1.getProjectFilesystem(), javaLibrary1.getBuildTarget(), "%s.jar")
+                .getPath(),
             BuildTargetPaths.getGenPath(
-                javaLibrary2.getProjectFilesystem(), javaLibrary2.getBuildTarget(), "%s.jar"),
+                    javaLibrary2.getProjectFilesystem(), javaLibrary2.getBuildTarget(), "%s.jar")
+                .getPath(),
             BuildTargetPaths.getGenPath(
-                javaLibrary3.getProjectFilesystem(), javaLibrary3.getBuildTarget(), "%s.jar")),
+                    javaLibrary3.getProjectFilesystem(), javaLibrary3.getBuildTarget(), "%s.jar")
+                .getPath()),
         androidBinary.getAndroidPackageableCollection().getClasspathEntriesToDex().stream()
             .map(graphBuilder.getSourcePathResolver()::getRelativePath)
             .collect(ImmutableSet.toImmutableSet()));
@@ -150,7 +153,8 @@ public class AndroidInstrumentationApkTest {
         "//apps:instrumentation should have one JAR file to dex.",
         ImmutableSet.of(
             BuildTargetPaths.getGenPath(
-                javaLibrary4.getProjectFilesystem(), javaLibrary4.getBuildTarget(), "%s.jar")),
+                    javaLibrary4.getProjectFilesystem(), javaLibrary4.getBuildTarget(), "%s.jar")
+                .getPath()),
         androidInstrumentationApk.getAndroidPackageableCollection().getClasspathEntriesToDex()
             .stream()
             .map(graphBuilder.getSourcePathResolver()::getRelativePath)

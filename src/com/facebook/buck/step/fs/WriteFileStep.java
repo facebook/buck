@@ -17,6 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -53,6 +54,11 @@ public class WriteFileStep implements Step {
   }
 
   public WriteFileStep(
+      ProjectFilesystem filesystem, ByteSource content, RelPath outputPath, boolean executable) {
+    this(filesystem, content, outputPath.getPath(), executable);
+  }
+
+  public WriteFileStep(
       ProjectFilesystem filesystem, String content, Path outputPath, boolean executable) {
     this(filesystem, Suppliers.ofInstance(content), outputPath, executable);
   }
@@ -71,6 +77,11 @@ public class WriteFileStep implements Step {
         },
         outputPath,
         executable);
+  }
+
+  public WriteFileStep(
+      ProjectFilesystem projectFilesystem, String content, RelPath outputPath, boolean executable) {
+    this(projectFilesystem, content, outputPath.getPath(), executable);
   }
 
   @Override

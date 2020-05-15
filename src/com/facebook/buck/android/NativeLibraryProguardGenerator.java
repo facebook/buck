@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -54,7 +55,7 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
   @AddToRuleKey private final BuildRule codeGenerator;
 
   @AddToRuleKey(stringify = true)
-  private final Path outputPath;
+  private final RelPath outputPath;
 
   NativeLibraryProguardGenerator(
       BuildTarget buildTarget,
@@ -84,8 +85,8 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    Path outputDir = outputPath.getParent();
-    buildableContext.recordArtifact(outputDir);
+    RelPath outputDir = outputPath.getParent();
+    buildableContext.recordArtifact(outputDir.getPath());
     return ImmutableList.<Step>builder()
         .addAll(
             MakeCleanDirectoryStep.of(

@@ -20,6 +20,7 @@ import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -99,19 +100,20 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
         Optional.empty());
 
     if (staticLibDeps.size() > 0) {
-      Path argsFile =
+      RelPath argsFile =
           BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "argsfile.tmp");
       String output =
           staticLibDeps.stream()
               .map(t -> context.getSourcePathResolver().getAbsolutePath(t).toString())
               .collect(Collectors.joining("\n"));
-      stepsBuilder.add(new WriteFileStep(getProjectFilesystem(), output, argsFile, false));
+      stepsBuilder.add(
+          new WriteFileStep(getProjectFilesystem(), output, argsFile.getPath(), false));
       stepsBuilder.add(
           new LibtoolStep(
               getProjectFilesystem(),
               libTool.getEnvironment(context.getSourcePathResolver()),
               libTool.getCommandPrefix(context.getSourcePathResolver()),
-              argsFile,
+              argsFile.getPath(),
               codeDir.resolve("TEST_DEPS.a"),
               ImmutableList.of("-no_warning_for_no_symbols"),
               LibtoolStep.Style.STATIC));

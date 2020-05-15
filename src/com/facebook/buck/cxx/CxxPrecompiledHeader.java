@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -156,7 +157,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
         .checkConflictingHeaders()
         .ifPresent(result -> result.throwHumanReadableExceptionWithContext(getBuildTarget()));
 
-    Path scratchDir =
+    RelPath scratchDir =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s_tmp");
 
     return new ImmutableList.Builder<Step>()
@@ -280,7 +281,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
   }
 
   @VisibleForTesting
-  CxxPreprocessAndCompileStep makeMainStep(BuildContext context, Path scratchDir) {
+  CxxPreprocessAndCompileStep makeMainStep(BuildContext context, RelPath scratchDir) {
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     Path pchOutput =
         canPrecompile()
@@ -314,7 +315,7 @@ class CxxPrecompiledHeader extends AbstractBuildRule
         context.getSourcePathResolver(),
         preprocessorDelegate.getHeaderPathNormalizer(context),
         compilerSanitizer,
-        scratchDir,
+        scratchDir.getPath(),
         /* useArgFile*/ true,
         /* nonArgfileArgs */ ImmutableList.of(),
         compilerDelegate.getCompiler(),

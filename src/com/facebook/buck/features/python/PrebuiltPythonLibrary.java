@@ -18,6 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -36,7 +37,6 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -45,7 +45,7 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
     implements PythonPackagable {
 
   @AddToRuleKey private final SourcePath binarySrc;
-  private final Path extractedOutput;
+  private final RelPath extractedOutput;
   private final boolean excludeDepsFromOmnibus;
   private final boolean compile;
 
@@ -120,7 +120,7 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     Builder<Step> builder = ImmutableList.builder();
-    buildableContext.recordArtifact(extractedOutput);
+    buildableContext.recordArtifact(extractedOutput.getPath());
 
     builder.addAll(
         MakeCleanDirectoryStep.of(
@@ -130,9 +130,9 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
         new UnzipStep(
             getProjectFilesystem(),
             context.getSourcePathResolver().getAbsolutePath(binarySrc),
-            extractedOutput,
+            extractedOutput.getPath(),
             Optional.empty()));
-    builder.add(new MovePythonWhlDataStep(getProjectFilesystem(), extractedOutput));
+    builder.add(new MovePythonWhlDataStep(getProjectFilesystem(), extractedOutput.getPath()));
     return builder.build();
   }
 

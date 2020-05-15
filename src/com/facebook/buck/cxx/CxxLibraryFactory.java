@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -68,7 +69,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Ordering;
-import java.nio.file.Path;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -716,7 +716,7 @@ public class CxxLibraryFactory {
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             soname, buildTargetMaybeWithLinkerMapMode, cxxPlatform, projectFilesystem);
-    Path sharedLibraryPath =
+    RelPath sharedLibraryPath =
         CxxDescriptionEnhancer.getSharedLibraryPath(
             projectFilesystem, sharedTarget, sharedLibrarySoname);
 
@@ -743,7 +743,7 @@ public class CxxLibraryFactory {
         sharedTarget,
         linkType,
         Optional.of(sharedLibrarySoname),
-        sharedLibraryPath,
+        sharedLibraryPath.getPath(),
         args.getLinkerExtraOutputs(),
         linkableDepType,
         linkableListFilter,

@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -90,7 +91,8 @@ public class AppleDsym extends AbstractBuildRule
     checkFlavorCorrectness(buildTarget);
   }
 
-  public static Path getDsymOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
+  /** Output path for .dsym file. */
+  public static RelPath getDsymOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
     AppleDsym.checkFlavorCorrectness(target);
     return BuildTargetPaths.getGenPath(
         filesystem, target, "%s." + AppleBundleExtension.DSYM.toFileExtension());

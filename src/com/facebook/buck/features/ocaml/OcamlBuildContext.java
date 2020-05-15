@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.ocaml;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -165,22 +166,23 @@ abstract class OcamlBuildContext implements AddsToRuleKey {
         .asList();
   }
 
-  private static Path getArchiveNativeOutputPath(BuildTarget target, ProjectFilesystem filesystem) {
+  private static RelPath getArchiveNativeOutputPath(
+      BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(
         filesystem, target, "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMXA);
   }
 
-  private static Path getArchiveBytecodeOutputPath(
+  private static RelPath getArchiveBytecodeOutputPath(
       BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(
         filesystem, target, "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMA);
   }
 
-  public Path getNativeOutput() {
+  public RelPath getNativeOutput() {
     return getNativeOutputPath(getBuildTarget(), getProjectFilesystem(), isLibrary());
   }
 
-  public Path getNativePluginOutput() {
+  public RelPath getNativePluginOutput() {
     BuildTarget target = getBuildTarget();
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(),
@@ -188,7 +190,7 @@ abstract class OcamlBuildContext implements AddsToRuleKey {
         "%s/lib" + target.getShortName() + OcamlCompilables.OCAML_CMXS);
   }
 
-  public static Path getNativeOutputPath(
+  public static RelPath getNativeOutputPath(
       BuildTarget target, ProjectFilesystem filesystem, boolean isLibrary) {
     if (isLibrary) {
       return getArchiveNativeOutputPath(target, filesystem);
@@ -198,11 +200,11 @@ abstract class OcamlBuildContext implements AddsToRuleKey {
     }
   }
 
-  public Path getBytecodeOutput() {
+  public RelPath getBytecodeOutput() {
     return getBytecodeOutputPath(getBuildTarget(), getProjectFilesystem(), isLibrary());
   }
 
-  public static Path getBytecodeOutputPath(
+  public static RelPath getBytecodeOutputPath(
       BuildTarget target, ProjectFilesystem filesystem, boolean isLibrary) {
     if (isLibrary) {
       return getArchiveBytecodeOutputPath(target, filesystem);

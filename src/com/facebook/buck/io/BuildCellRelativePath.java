@@ -17,6 +17,7 @@
 package com.facebook.buck.io;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.base.Preconditions;
@@ -63,8 +64,18 @@ public abstract class BuildCellRelativePath {
         buildCellRootPath.getPath(), cellProjectFilesystem, cellRelativeOrAbsolutePath);
   }
 
+  public static BuildCellRelativePath fromCellRelativePath(
+      Path buildCellRootPath, ProjectFilesystem cellProjectFilesystem, RelPath cellRelativePath) {
+    return fromCellRelativePath(
+        buildCellRootPath, cellProjectFilesystem, cellRelativePath.getPath());
+  }
+
   public static BuildCellRelativePath of(Path pathRelativeToBuildCellRoot) {
     return ImmutableBuildCellRelativePath.ofImpl(pathRelativeToBuildCellRoot);
+  }
+
+  public static BuildCellRelativePath of(RelPath pathRelativeToBuildCellRoot) {
+    return of(pathRelativeToBuildCellRoot.getPath());
   }
 
   @Override

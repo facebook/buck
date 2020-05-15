@@ -145,7 +145,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
                 getProjectFilesystem(),
                 paths.additionalJarfilesSubdir)));
 
-    buildableContext.recordArtifact(getPrimaryDexRoot());
+    buildableContext.recordArtifact(getPrimaryDexRoot().getPath());
     buildableContext.recordArtifact(paths.jarfilesSubdir);
     buildableContext.recordArtifact(paths.metadataSubdir);
     buildableContext.recordArtifact(paths.successDir);

@@ -27,6 +27,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -188,7 +189,8 @@ public class AppleTestIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath =
         projectRoot.resolve(
-            BuildTargetPaths.getGenPath(filesystem, appleTestBundleFlavoredBuildTarget, "%s"));
+            BuildTargetPaths.getGenPath(filesystem, appleTestBundleFlavoredBuildTarget, "%s")
+                .getPath());
     Path bundlePath = outputPath.resolve("foo.xctest");
     Path infoPlistPath = bundlePath.resolve("Info.plist");
 
@@ -219,7 +221,8 @@ public class AppleTestIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath =
         projectRoot.resolve(
-            BuildTargetPaths.getGenPath(filesystem, appleTestBundleFlavoredBuildTarget, "%s"));
+            BuildTargetPaths.getGenPath(filesystem, appleTestBundleFlavoredBuildTarget, "%s")
+                .getPath());
     Path bundlePath = outputPath.resolve("foo.xctest");
     Path testBinaryPath = bundlePath.resolve("foo");
 
@@ -239,7 +242,7 @@ public class AppleTestIntegrationTest {
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     workspace.verify(
-        Paths.get("foo_output.expected"),
+        RelPath.get("foo_output.expected"),
         BuildTargetPaths.getGenPath(
             filesystem,
             target.withAppendedFlavors(
@@ -261,7 +264,7 @@ public class AppleTestIntegrationTest {
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     workspace.verify(
-        Paths.get("foo_output.expected"),
+        RelPath.get("foo_output.expected"),
         BuildTargetPaths.getGenPath(
             filesystem,
             target.withAppendedFlavors(
@@ -282,7 +285,7 @@ public class AppleTestIntegrationTest {
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     workspace.verify(
-        Paths.get("DemoTest_output.expected"),
+        RelPath.get("DemoTest_output.expected"),
         BuildTargetPaths.getGenPath(
             filesystem,
             target.withAppendedFlavors(
@@ -347,7 +350,7 @@ public class AppleTestIntegrationTest {
         .assertSuccess();
 
     workspace.verify(
-        Paths.get("foo_output.expected"),
+        RelPath.get("foo_output.expected"),
         BuildTargetPaths.getGenPath(
             filesystem,
             buildTarget.withAppendedFlavors(
@@ -366,7 +369,8 @@ public class AppleTestIntegrationTest {
             AppleDescriptions.NO_INCLUDE_FRAMEWORKS_FLAVOR);
     Path outputPath =
         projectRoot.resolve(
-            BuildTargetPaths.getGenPath(filesystem, appleTestBundleFlavoredBuildTarget, "%s"));
+            BuildTargetPaths.getGenPath(filesystem, appleTestBundleFlavoredBuildTarget, "%s")
+                .getPath());
     Path bundlePath = outputPath.resolve("foo.xctest");
     Path testBinaryPath = bundlePath.resolve("foo");
 
@@ -452,7 +456,7 @@ public class AppleTestIntegrationTest {
     workspace.runBuckCommand("build", target.getFullyQualifiedName()).assertSuccess();
 
     workspace.verify(
-        Paths.get("foo_output.expected"),
+        RelPath.get("foo_output.expected"),
         BuildTargetPaths.getGenPath(
             filesystem,
             target.withAppendedFlavors(

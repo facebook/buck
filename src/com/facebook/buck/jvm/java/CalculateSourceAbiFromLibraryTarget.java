@@ -93,7 +93,7 @@ public class CalculateSourceAbiFromLibraryTarget
               .setJarPath(outputPathResolver.resolvePath(output))
               .setEntriesToJar(
                   ImmutableSortedSet.of(
-                      JavaAbis.getTmpGenPathForSourceAbi(filesystem, libraryTarget)))
+                      JavaAbis.getTmpGenPathForSourceAbi(filesystem, libraryTarget).getPath()))
               .setHashEntries(true)
               .build();
       return ImmutableList.of(new JarDirectoryStep(filesystem, jarParameters));

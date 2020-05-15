@@ -22,6 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -99,11 +100,11 @@ public class DummyRDotJavaTest {
     List<Step> steps = dummyRDotJava.getBuildSteps(FakeBuildContext.NOOP_CONTEXT, buildableContext);
     assertEquals("DummyRDotJava returns an incorrect number of Steps.", 14, steps.size());
 
-    Path rDotJavaSrcFolder =
+    RelPath rDotJavaSrcFolder =
         DummyRDotJava.getRDotJavaSrcFolder(dummyRDotJava.getBuildTarget(), filesystem);
     Path rDotJavaBinFolder =
         CompilerOutputPaths.getClassesDir(dummyRDotJava.getBuildTarget(), filesystem);
-    Path rDotJavaOutputFolder =
+    RelPath rDotJavaOutputFolder =
         DummyRDotJava.getPathToOutputDir(dummyRDotJava.getBuildTarget(), filesystem);
     Path rDotJavaAnnotationFolder =
         CompilerOutputPaths.getAnnotationPath(filesystem, dummyRDotJava.getBuildTarget()).get();
@@ -126,11 +127,11 @@ public class DummyRDotJavaTest {
 
     List<String> expectedStepDescriptions =
         new ImmutableList.Builder<String>()
-            .addAll(makeCleanDirDescription(rDotJavaSrcFolder))
+            .addAll(makeCleanDirDescription(rDotJavaSrcFolder.getPath()))
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
             .add("android-res-merge " + Joiner.on(' ').join(sortedSymbolsFiles))
             .addAll(makeCleanDirDescription(rDotJavaBinFolder))
-            .addAll(makeCleanDirDescription(rDotJavaOutputFolder))
+            .addAll(makeCleanDirDescription(rDotJavaOutputFolder.getPath()))
             .add(String.format("mkdir -p %s", genFolder))
             .addAll(makeCleanDirDescription(rDotJavaAnnotationFolder))
             .add(
@@ -188,9 +189,10 @@ public class DummyRDotJavaTest {
             /* skipNonUnionRDotJava */ false);
     assertEquals(
         BuildTargetPaths.getScratchPath(
-            dummyRDotJava.getProjectFilesystem(),
-            dummyRDotJava.getBuildTarget(),
-            "lib__%s__scratch/classes"),
+                dummyRDotJava.getProjectFilesystem(),
+                dummyRDotJava.getBuildTarget(),
+                "lib__%s__scratch/classes")
+            .getPath(),
         dummyRDotJava.getRDotJavaBinFolder());
   }
 

@@ -26,6 +26,7 @@ import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.android.exopackage.TestAndroidDevice;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -77,7 +78,7 @@ public class AndroidBinaryInstallIntegrationTest {
       ExopackageInstaller.EXOPACKAGE_INSTALL_ROOT.resolve(FAKE_PACKAGE_NAME);
   private static final Path CONFIG_PATH = Paths.get("state.config");
   private static final String BINARY_TARGET = "//:binary";
-  private Path apkPath;
+  private RelPath apkPath;
 
   @Parameterized.Parameters(name = "concurrentInstall: {0}")
   public static Collection<Object[]> data() {
@@ -142,7 +143,7 @@ public class AndroidBinaryInstallIntegrationTest {
         new InstallLimitingAndroidDevice(
             testDevice,
             INSTALL_ROOT,
-            filesystem.resolve(apkPath),
+            filesystem.resolve(apkPath).getPath(),
             filesystem.resolve("").getPath());
   }
 

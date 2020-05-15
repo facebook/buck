@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
@@ -38,7 +39,6 @@ import com.facebook.buck.unarchive.UnzipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
 import java.net.URI;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -55,7 +55,7 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final FileHash sha1;
 
   @AddToRuleKey(stringify = true)
-  private final Path output;
+  private final RelPath output;
 
   private final Downloader downloader;
 
@@ -85,7 +85,7 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    Path tempFile =
+    RelPath tempFile =
         BuildTargetPaths.getScratchPath(
             getProjectFilesystem(), getBuildTarget(), "%s/" + output.getFileName());
 
@@ -95,7 +95,7 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context.getBuildCellRootPath(), getProjectFilesystem(), tempFile.getParent())));
     steps.add(
         new DownloadStep(
-            getProjectFilesystem(), downloader, uri, ImmutableList.of(), sha1, tempFile));
+            getProjectFilesystem(), downloader, uri, ImmutableList.of(), sha1, tempFile.getPath()));
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -107,7 +107,9 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), getProjectFilesystem(), output)));
-      steps.add(new UnzipStep(getProjectFilesystem(), tempFile, output, Optional.empty()));
+      steps.add(
+          new UnzipStep(
+              getProjectFilesystem(), tempFile.getPath(), output.getPath(), Optional.empty()));
     } else {
       steps.add(CopyStep.forFile(getProjectFilesystem(), tempFile, output));
     }
@@ -115,7 +117,7 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       steps.add(new MakeExecutableStep(getProjectFilesystem(), output));
     }
 
-    buildableContext.recordArtifact(output);
+    buildableContext.recordArtifact(output.getPath());
 
     return steps.build();
   }
@@ -128,7 +130,7 @@ public class RemoteFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     // Just pass that hash along so that RuleKeyBuilder can use it.
     return ExplicitBuildTargetSourcePath.of(
         BuildTargetWithOutputs.of(getBuildTarget(), OutputLabel.defaultLabel()),
-        output,
+        output.getPath(),
         Optional.of(sha1.getHashCode()));
   }
 

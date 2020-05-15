@@ -22,6 +22,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -115,7 +116,7 @@ public class LuaBinaryDescription
     return target.withAppendedFlavors(InternalFlavor.of("native-libs-link-tree"));
   }
 
-  private static Path getNativeLibsSymlinkTreeRoot(
+  private static RelPath getNativeLibsSymlinkTreeRoot(
       BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(filesystem, getNativeLibsSymlinkTreeTarget(target), "%s");
   }
@@ -124,7 +125,8 @@ public class LuaBinaryDescription
     return target.withAppendedFlavors(InternalFlavor.of("modules-link-tree"));
   }
 
-  private static Path getModulesSymlinkTreeRoot(BuildTarget target, ProjectFilesystem filesystem) {
+  private static RelPath getModulesSymlinkTreeRoot(
+      BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(filesystem, getModulesSymlinkTreeTarget(target), "%s");
   }
 
@@ -132,12 +134,12 @@ public class LuaBinaryDescription
     return target.withAppendedFlavors(InternalFlavor.of("python-modules-link-tree"));
   }
 
-  private static Path getPythonModulesSymlinkTreeRoot(
+  private static RelPath getPythonModulesSymlinkTreeRoot(
       BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(filesystem, getPythonModulesSymlinkTreeTarget(target), "%s");
   }
 
-  private Path getOutputPath(
+  private RelPath getOutputPath(
       BuildTarget target, ProjectFilesystem filesystem, LuaPlatform luaPlatform) {
     return BuildTargetPaths.getGenPath(filesystem, target, "%s" + luaPlatform.getExtension());
   }
@@ -224,13 +226,13 @@ public class LuaBinaryDescription
       LuaPlatform.PackageStyle packageStyle,
       boolean mayHaveNativeCode) {
 
-    Path output = getOutputPath(baseTarget, projectFilesystem, luaPlatform);
+    RelPath output = getOutputPath(baseTarget, projectFilesystem, luaPlatform);
     StarterType starterType = getStarterType(luaPlatform, mayHaveNativeCode);
 
     // The relative paths from the starter to the various components.
-    Optional<Path> relativeModulesDir = Optional.empty();
-    Optional<Path> relativePythonModulesDir = Optional.empty();
-    Optional<Path> relativeNativeLibsDir = Optional.empty();
+    Optional<RelPath> relativeModulesDir = Optional.empty();
+    Optional<RelPath> relativePythonModulesDir = Optional.empty();
+    Optional<RelPath> relativeNativeLibsDir = Optional.empty();
 
     // For in-place binaries, set the relative paths to the symlink trees holding the components.
     if (packageStyle == LuaPlatform.PackageStyle.INPLACE) {
@@ -268,14 +270,14 @@ public class LuaBinaryDescription
                 ? InternalFlavor.of("starter")
                 : BINARY_FLAVOR),
         packageStyle == LuaPlatform.PackageStyle.STANDALONE
-            ? output.resolveSibling(output.getFileName() + "-starter")
-            : output,
+            ? output.getPath().resolveSibling(output.getFileName() + "-starter")
+            : output.getPath(),
         starterType,
         nativeStarterLibrary,
         mainModule,
-        relativeModulesDir,
-        relativePythonModulesDir,
-        relativeNativeLibsDir);
+        relativeModulesDir.map(RelPath::getPath),
+        relativePythonModulesDir.map(RelPath::getPath),
+        relativeNativeLibsDir.map(RelPath::getPath));
   }
 
   private LuaBinaryPackageComponents getPackageComponentsFromDeps(
@@ -522,14 +524,14 @@ public class LuaBinaryDescription
       BuildTarget linkTreeTarget,
       ProjectFilesystem filesystem,
       ActionGraphBuilder graphBuilder,
-      Path root,
+      RelPath root,
       ImmutableMap<String, SourcePath> components) {
     return graphBuilder.addToIndex(
         new MappedSymlinkTree(
             "lua_binary",
             linkTreeTarget,
             filesystem,
-            root,
+            root.getPath(),
             MoreMaps.transformKeys(components, MorePaths.toPathFn(root.getFileSystem()))));
   }
 
@@ -647,7 +649,7 @@ public class LuaBinaryDescription
       SourcePath starter,
       String mainModule,
       LuaPackageComponents components) {
-    Path output = getOutputPath(buildTarget, projectFilesystem, luaPlatform);
+    RelPath output = getOutputPath(buildTarget, projectFilesystem, luaPlatform);
 
     Tool lua = luaPlatform.getLua().resolve(graphBuilder, buildTarget.getTargetConfiguration());
     Tool packager =
@@ -668,7 +670,7 @@ public class LuaBinaryDescription
                             .build())
                     .withoutExtraDeps(),
                 packager,
-                output,
+                output.getPath(),
                 starter,
                 components,
                 mainModule,
@@ -793,7 +795,7 @@ public class LuaBinaryDescription
         buildTarget,
         projectFilesystem,
         params.copyAppendingExtraDeps(BuildableSupport.getDepsCollection(binary, graphBuilder)),
-        getOutputPath(buildTarget, projectFilesystem, luaPlatform),
+        getOutputPath(buildTarget, projectFilesystem, luaPlatform).getPath(),
         binary,
         args.getMainModule(),
         components.getComponents(),

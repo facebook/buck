@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.build.engine.buildinfo;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -213,7 +214,12 @@ public class BuildInfoRecorder {
   public void recordArtifact(Path pathToArtifact) {
     Preconditions.checkArgument(
         !pathToArtifact.isAbsolute(), ABSOLUTE_PATH_ERROR_FORMAT, buildTarget, pathToArtifact);
-    pathsToOutputs.add(pathToArtifact);
+    recordArtifact(RelPath.of(pathToArtifact));
+  }
+
+  /** @param pathToArtifact Relative path to the project root. */
+  public void recordArtifact(RelPath pathToArtifact) {
+    pathsToOutputs.add(pathToArtifact.getPath());
   }
 
   @Nullable

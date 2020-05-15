@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -37,7 +38,6 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -54,7 +54,7 @@ public class DexProducedFromJavaLibraryTest {
         new FakeJavaLibrary(
             BuildTargetFactory.newInstance("//foo:lib"), filesystem, ImmutableSortedSet.of());
     graphBuilder.addToIndex(javaLibRule);
-    Path jarLibOutput =
+    RelPath jarLibOutput =
         BuildTargetPaths.getGenPath(filesystem, javaLibRule.getBuildTarget(), "%s.jar");
     javaLibRule.setOutputFile(jarLibOutput.toString());
 
@@ -69,7 +69,7 @@ public class DexProducedFromJavaLibraryTest {
           }
         };
     graphBuilder.addToIndex(javaBarRule);
-    Path jarBarOutput =
+    RelPath jarBarOutput =
         BuildTargetPaths.getGenPath(filesystem, javaBarRule.getBuildTarget(), "%s.jar");
     javaBarRule.setOutputFile(jarBarOutput.toString());
 
@@ -78,7 +78,7 @@ public class DexProducedFromJavaLibraryTest {
             .withBuildCellRootPath(filesystem.getRootPath().getPath());
     FakeBuildableContext buildableContext = new FakeBuildableContext();
 
-    Path dexOutput =
+    RelPath dexOutput =
         BuildTargetPaths.getGenPath(
             filesystem,
             javaBarRule.getBuildTarget().withFlavors(AndroidBinaryGraphEnhancer.D8_FLAVOR),

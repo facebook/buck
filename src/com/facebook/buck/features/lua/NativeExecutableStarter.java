@@ -17,6 +17,7 @@
 package com.facebook.buck.features.lua;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -169,7 +170,7 @@ abstract class NativeExecutableStarter implements Starter {
                                       "%s/native-starter.cpp.in"),
                                   /* executable */ false));
 
-                  Path output =
+                  RelPath output =
                       BuildTargetPaths.getGenPath(
                           getProjectFilesystem(), target, "%s/native-starter.cpp");
                   return WriteStringTemplateRule.from(
@@ -177,7 +178,7 @@ abstract class NativeExecutableStarter implements Starter {
                       getBaseParams(),
                       getActionGraphBuilder(),
                       target,
-                      output,
+                      output.getPath(),
                       templateRule.getSourcePathToOutput(),
                       ImmutableMap.of(
                           "MAIN_MODULE",

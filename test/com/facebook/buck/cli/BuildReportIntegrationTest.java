@@ -22,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.BuckPaths;
@@ -144,7 +145,7 @@ public class BuildReportIntegrationTest {
   public void multipleOutputPaths() throws Exception {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "build_report", tmp).setUp();
-    Path expectedBasePath =
+    RelPath expectedBasePath =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
             BuildTargetFactory.newInstance("//:rule_with_multiple_outputs"),

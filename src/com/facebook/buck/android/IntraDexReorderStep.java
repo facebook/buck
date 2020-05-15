@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -115,14 +116,14 @@ public class IntraDexReorderStep implements Step {
 
     if (!isPrimaryDex) {
       String tmpname = "dex-tmp-" + inputPath.getFileName() + "-%s";
-      Path temp = BuildTargetPaths.getScratchPath(filesystem, buildTarget, tmpname);
+      RelPath temp = BuildTargetPaths.getScratchPath(filesystem, buildTarget, tmpname);
       // Create tmp directory if necessary
       steps.addAll(
           MakeCleanDirectoryStep.of(
               BuildCellRelativePath.fromCellRelativePath(
                   context.getBuildCellRootPath(), filesystem, temp)));
       // un-zip
-      steps.add(new UnzipStep(filesystem, inputPath, temp, Optional.empty()));
+      steps.add(new UnzipStep(filesystem, inputPath, temp.getPath(), Optional.empty()));
       // run reorder tool
       steps.add(
           new DefaultShellStep(
@@ -140,7 +141,7 @@ public class IntraDexReorderStep implements Step {
               /* paths */ ImmutableSet.of(),
               /* junkPaths */ false,
               ZipCompressionLevel.MAX,
-              temp));
+              temp.getPath()));
     } else {
       // copy dex
       // apply reorder directly on dex

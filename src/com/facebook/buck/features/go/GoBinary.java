@@ -19,6 +19,7 @@ package com.facebook.buck.features.go;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -61,7 +62,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey private final GoLinkStep.LinkMode linkMode;
   @AddToRuleKey private final GoPlatform platform;
 
-  private final Path output;
+  private final RelPath output;
   private final GoCompile mainObject;
   private final SymlinkTree linkTree;
   private final ImmutableSortedSet<SourcePath> resources;
@@ -114,7 +115,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return environment.build();
   }
 
-  protected Path getPathToBinaryDirectory() {
+  protected RelPath getPathToBinaryDirectory() {
     return output.getParent();
   }
 
@@ -122,7 +123,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
-    buildableContext.recordArtifact(output);
+    buildableContext.recordArtifact(output.getPath());
 
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
@@ -187,7 +188,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
               argFilePath.getPath(),
               fileListPath.getPath(),
               cxxLinker.fileList(fileListPath),
-              output,
+              output.getPath(),
               cxxLinkerArgs,
               cxxLinker,
               getBuildTarget().getCell(),
@@ -209,7 +210,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             resolver.getRelativePath(mainObject.getSourcePathToOutput()),
             GoLinkStep.BuildMode.EXECUTABLE,
             linkMode,
-            output));
+            output.getPath()));
     return steps.build();
   }
 

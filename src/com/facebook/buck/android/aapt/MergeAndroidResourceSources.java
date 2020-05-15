@@ -18,6 +18,7 @@ package com.facebook.buck.android.aapt;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -36,14 +37,13 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
-import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 
 public class MergeAndroidResourceSources extends AbstractBuildRule {
 
-  private final Path destinationDirectory;
-  private final Path tempDirectory;
+  private final RelPath destinationDirectory;
+  private final RelPath tempDirectory;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
 
   @AddToRuleKey private final ImmutableCollection<SourcePath> originalDirectories;
@@ -85,9 +85,9 @@ public class MergeAndroidResourceSources extends AbstractBuildRule {
             originalDirectories.stream()
                 .map(context.getSourcePathResolver()::getAbsolutePath)
                 .collect(ImmutableList.toImmutableList()),
-            getProjectFilesystem().resolve(destinationDirectory),
-            getProjectFilesystem().resolve(tempDirectory)));
-    buildableContext.recordArtifact(destinationDirectory);
+            getProjectFilesystem().resolve(destinationDirectory).getPath(),
+            getProjectFilesystem().resolve(tempDirectory).getPath()));
+    buildableContext.recordArtifact(destinationDirectory.getPath());
     return steps.build();
   }
 

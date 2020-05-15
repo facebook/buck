@@ -35,6 +35,7 @@ import com.facebook.buck.artifact_cache.ArtifactCache;
 import com.facebook.buck.artifact_cache.DirArtifactCacheTestUtil;
 import com.facebook.buck.artifact_cache.TestArtifactCaches;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -335,13 +336,13 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
 
-    Path utilOutputPath =
+    RelPath utilOutputPath =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
             utilTarget,
             "lib__%s__output/" + utilTarget.getShortName() + ".jar");
     long utilJarSize = Files.size(workspace.getPath(utilOutputPath));
-    Path bizOutputPath =
+    RelPath bizOutputPath =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
             bizTarget,
@@ -747,7 +748,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
         workspace.runBuckCommand("build", bizTarget.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
 
-    Path bizClassUsageFilePath =
+    RelPath bizClassUsageFilePath =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(), bizTarget, "lib__%s__output/used-classes.json");
 
@@ -822,7 +823,7 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
     ProcessResult buildResult = workspace.runBuckBuild(bizTarget.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
 
-    Path bizClassUsageFilePath =
+    RelPath bizClassUsageFilePath =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(), bizTarget, "lib__%s__output/used-classes.json");
 
@@ -890,8 +891,8 @@ public class DefaultJavaLibraryIntegrationTest extends AbiCompilationModeTest {
             "build", binaryTarget.getFullyQualifiedName(), binary2Target.getFullyQualifiedName());
     buildResult.assertSuccess("Successful build should exit with 0.");
 
-    for (Path filename :
-        new Path[] {
+    for (RelPath filename :
+        new RelPath[] {
           BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), binaryTarget, "%s.jar"),
           BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), binary2Target, "%s.jar")
         }) {

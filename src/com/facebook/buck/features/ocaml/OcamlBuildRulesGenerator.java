@@ -241,7 +241,7 @@ public class OcamlBuildRulesGenerator {
             params.withoutDeclaredDeps().withoutExtraDeps(),
             new OcamlDebugLauncherStep.Args(
                 ocamlContext.getOcamlDebug().get(),
-                ocamlContext.getBytecodeOutput(),
+                ocamlContext.getBytecodeOutput().getPath(),
                 ocamlContext.getTransitiveBytecodeIncludes(),
                 ocamlContext.getBytecodeIncludeFlags()));
     graphBuilder.addToIndex(debugLauncher);
@@ -282,8 +282,8 @@ public class OcamlBuildRulesGenerator {
             ocamlContext.getOcamlCompiler().get(),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
-            ocamlContext.getNativeOutput(),
-            ocamlContext.getNativePluginOutput(),
+            ocamlContext.getNativeOutput().getPath(),
+            ocamlContext.getNativePluginOutput().getPath(),
             ocamlContext.getNativeLinkableInput().getArgs(),
             ocamlContext.getCLinkableInput().getArgs(),
             ocamlContext.isLibrary(),
@@ -333,8 +333,8 @@ public class OcamlBuildRulesGenerator {
             ocamlContext.getOcamlBytecodeCompiler().get(),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
-            ocamlContext.getBytecodeOutput(),
-            ocamlContext.getNativePluginOutput(),
+            ocamlContext.getBytecodeOutput().getPath(),
+            ocamlContext.getNativePluginOutput().getPath(),
             ocamlContext.getBytecodeLinkableInput().getArgs(),
             ocamlContext.getCLinkableInput().getArgs(),
             ocamlContext.isLibrary(),

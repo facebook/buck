@@ -144,7 +144,8 @@ abstract class DDescriptionUtils {
         Linker.LinkType.EXECUTABLE,
         Optional.empty(),
         BuildTargetPaths.getGenPath(
-            projectFilesystem, buildTarget, "%s/" + buildTarget.getShortName()),
+                projectFilesystem, buildTarget, "%s/" + buildTarget.getShortName())
+            .getPath(),
         ImmutableList.of(),
         Linker.LinkableDepType.STATIC,
         Optional.empty(),
@@ -204,7 +205,7 @@ abstract class DDescriptionUtils {
         "d_src",
         target,
         projectFilesystem,
-        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s"),
+        BuildTargetPaths.getGenPath(projectFilesystem, target, "%s").getPath(),
         MoreMaps.transformKeys(
             sources.toNameMap(target, ruleFinder.getSourcePathResolver(), "srcs"),
             MorePaths.toPathFn(projectFilesystem.getRootPath().getFileSystem())));

@@ -26,6 +26,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.OutputLabel;
@@ -140,7 +141,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
         depActionFunction);
 
     Path outpath = Paths.get("foo.output");
-    Path packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
+    RelPath packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
 
     AtomicBoolean functionCalled = new AtomicBoolean();
     FakeAction.FakeActionExecuteLambda actionFunction =
@@ -212,7 +213,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     Path setTwoOutputTwo = Paths.get("foo.set2.output2");
     Path defaultOutput = Paths.get("default");
     Path defaultOutput2 = Paths.get("default2");
-    Path packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
+    RelPath packagePath = BuildPaths.getGenDir(filesystem, buildTarget);
 
     ActionRegistry actionRegistry =
         new DefaultActionRegistry(buildTarget, actionAnalysisRegistry, filesystem);

@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -43,7 +44,6 @@ import com.facebook.buck.versions.VersionPropagator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Optional;
 import org.immutables.value.Value;
 
@@ -116,7 +116,7 @@ public class PrebuiltJarDescription
 
     class ExistingOutputs extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       @AddToRuleKey private final SourcePath source;
-      private final Path output;
+      private final RelPath output;
 
       protected ExistingOutputs(
           BuildTarget buildTarget,
@@ -148,7 +148,7 @@ public class PrebuiltJarDescription
             CopyStep.forFile(
                 getProjectFilesystem(),
                 context.getSourcePathResolver().getAbsolutePath(source),
-                output));
+                output.getPath()));
 
         return steps.build();
       }

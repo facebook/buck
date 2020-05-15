@@ -18,13 +18,13 @@ package com.facebook.buck.android;
 
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -48,7 +48,7 @@ public class MultipleResourcePackageIntegrationTest {
     AssumeAndroidPlatform.get(workspace).assumeSdkIsAvailable();
     workspace.runBuckBuild("//apps/sample:app_with_multiple_rdot_java_packages").assertSuccess();
 
-    Path uberRDotJavaDir =
+    RelPath uberRDotJavaDir =
         GenerateRDotJava.getPathToGeneratedRDotJavaSrcFiles(
             BuildTargetFactory.newInstance("//apps/sample:app_with_multiple_rdot_java_packages")
                 .withFlavors(AndroidBinaryResourcesGraphEnhancer.GENERATE_RDOT_JAVA_FLAVOR),

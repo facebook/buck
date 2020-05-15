@@ -18,6 +18,7 @@ package com.facebook.buck.features.python;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -142,7 +143,7 @@ public class PythonInPlaceBinary extends PythonBinary implements HasRuntimeDeps 
       CxxPlatform cxxPlatform,
       String mainModule,
       PythonPackageComponents components,
-      Path relativeLinkTreeRoot,
+      RelPath relativeLinkTreeRoot,
       ImmutableSet<String> preloadLibraries,
       PackageStyle packageStyle) {
     String relativeLinkTreeRootStr = Escaper.escapeAsPythonString(relativeLinkTreeRoot.toString());

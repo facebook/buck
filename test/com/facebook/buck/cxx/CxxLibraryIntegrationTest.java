@@ -29,6 +29,7 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -322,13 +323,13 @@ public class CxxLibraryIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
-    Path publicGenDir =
+    RelPath publicGenDir =
         BuildPaths.getGenDir(
             filesystem,
             BuildTargetFactory.newInstance(
                 "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
 
-    Path privateGenDir =
+    RelPath privateGenDir =
         BuildPaths.getGenDir(
             filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
@@ -350,13 +351,13 @@ public class CxxLibraryIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
-    Path publicGenDir =
+    RelPath publicGenDir =
         BuildPaths.getGenDir(
             filesystem,
             BuildTargetFactory.newInstance(
                 "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
 
-    Path privateGenDir =
+    RelPath privateGenDir =
         BuildPaths.getGenDir(
             filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
@@ -377,13 +378,13 @@ public class CxxLibraryIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
-    Path publicGenDir =
+    RelPath publicGenDir =
         BuildPaths.getGenDir(
             filesystem,
             BuildTargetFactory.newInstance(
                 "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
 
-    Path privateGenDir =
+    RelPath privateGenDir =
         BuildPaths.getGenDir(
             filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
@@ -405,12 +406,12 @@ public class CxxLibraryIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
-    Path publicGenDir =
+    RelPath publicGenDir =
         BuildPaths.getGenDir(
             filesystem,
             BuildTargetFactory.newInstance("//:foobar#header-mode-symlink-tree-only,headers"));
 
-    Path privateGenDir =
+    RelPath privateGenDir =
         BuildPaths.getGenDir(
             filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
@@ -437,13 +438,13 @@ public class CxxLibraryIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
-    Path publicGenDir =
+    RelPath publicGenDir =
         BuildPaths.getGenDir(
             filesystem,
             BuildTargetFactory.newInstance(
                 "//:foobar#header-mode-symlink-tree-with-header-map,headers"));
 
-    Path privateGenDir =
+    RelPath privateGenDir =
         BuildPaths.getGenDir(
             filesystem, BuildTargetFactory.newInstance("//:foobar#default,private-headers"));
 
@@ -502,7 +503,7 @@ public class CxxLibraryIntegrationTest {
 
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
 
-    Path genDir =
+    RelPath genDir =
         BuildPaths.getGenDir(filesystem, BuildTargetFactory.newInstance("//:foo#default,static"));
 
     AbsPath rootPath = tmp.getRoot();

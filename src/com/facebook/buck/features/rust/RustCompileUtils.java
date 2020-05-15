@@ -21,6 +21,7 @@ import static com.facebook.buck.cxx.CxxDescriptionEnhancer.createSharedLibrarySy
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.description.arg.HasDefaultPlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.OutputLabel;
@@ -523,7 +524,7 @@ public class RustCompileUtils {
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-      Path absBinaryDir =
+      AbsPath absBinaryDir =
           projectFilesystem.resolve(RustCompileRule.getOutputDir(binaryTarget, projectFilesystem));
 
       StreamSupport.stream(

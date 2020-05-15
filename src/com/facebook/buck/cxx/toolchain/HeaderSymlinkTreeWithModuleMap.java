@@ -19,6 +19,7 @@ package com.facebook.buck.cxx.toolchain;
 import com.facebook.buck.apple.clang.ModuleMap;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -86,7 +87,7 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
           builder.add(
               new ModuleMapStep(
                   getProjectFilesystem(),
-                  moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName),
+                  moduleMapPath(getProjectFilesystem(), getBuildTarget(), moduleName).getPath(),
                   ModuleMap.create(
                       moduleName,
                       paths.contains(expectedSwiftHeaderPath)
@@ -105,7 +106,8 @@ public final class HeaderSymlinkTreeWithModuleMap extends HeaderSymlinkTree {
     }
   }
 
-  static Path moduleMapPath(ProjectFilesystem filesystem, BuildTarget target, String moduleName) {
+  static RelPath moduleMapPath(
+      ProjectFilesystem filesystem, BuildTarget target, String moduleName) {
     return BuildTargetPaths.getGenPath(
         filesystem, target, "%s/" + moduleName + "/module.modulemap");
   }

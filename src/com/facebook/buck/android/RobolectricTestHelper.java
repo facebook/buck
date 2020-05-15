@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
@@ -35,7 +36,6 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -67,8 +67,8 @@ class RobolectricTestHelper {
   private final Optional<SourcePath> robolectricRuntimeDependency;
   private final ProjectFilesystem projectFilesystem;
   private final boolean passDirectoriesInFile;
-  private final Path resourceDirectoriesPath;
-  private final Path assetDirectoriesPath;
+  private final RelPath resourceDirectoriesPath;
+  private final RelPath assetDirectoriesPath;
 
   RobolectricTestHelper(
       BuildTarget buildTarget,
@@ -91,14 +91,14 @@ class RobolectricTestHelper {
   }
 
   @VisibleForTesting
-  static Path getResourceDirectoriesPath(
+  static RelPath getResourceDirectoriesPath(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
     return BuildTargetPaths.getGenPath(
         projectFilesystem, buildTarget, "%s/robolectric-resource-directories");
   }
 
   @VisibleForTesting
-  static Path getAssetDirectoriesPath(
+  static RelPath getAssetDirectoriesPath(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
     return BuildTargetPaths.getGenPath(
         projectFilesystem, buildTarget, "%s/robolectric-asset-directories");

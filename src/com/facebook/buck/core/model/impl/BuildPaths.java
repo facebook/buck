@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -38,7 +39,7 @@ public class BuildPaths {
    * @return A {@link java.nio.file.Path} under buck-out/bin, scoped to the base path of {@code
    *     target}.
    */
-  public static Path getScratchDir(ProjectFilesystem filesystem, BuildTarget target) {
+  public static RelPath getScratchDir(ProjectFilesystem filesystem, BuildTarget target) {
     return BuildTargetPaths.getScratchPath(filesystem, target, getFormat(target));
   }
 
@@ -50,7 +51,7 @@ public class BuildPaths {
    * @return A {@link java.nio.file.Path} under buck-out/annotation, scoped to the base path of
    *     {@code target}.
    */
-  public static Path getAnnotationDir(ProjectFilesystem filesystem, BuildTarget target) {
+  public static RelPath getAnnotationDir(ProjectFilesystem filesystem, BuildTarget target) {
     return BuildTargetPaths.getAnnotationPath(filesystem, target, getFormat(target));
   }
 
@@ -62,7 +63,7 @@ public class BuildPaths {
    * @return A {@link java.nio.file.Path} under buck-out/gen, scoped to the base path of {@code
    *     target}.
    */
-  public static Path getGenDir(ProjectFilesystem filesystem, BuildTarget target) {
+  public static RelPath getGenDir(ProjectFilesystem filesystem, BuildTarget target) {
     return BuildTargetPaths.getGenPath(filesystem, target, getFormat(target));
   }
 

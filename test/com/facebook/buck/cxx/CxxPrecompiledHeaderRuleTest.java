@@ -31,6 +31,7 @@ import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.cell.TestCellPathResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -409,7 +410,7 @@ public class CxxPrecompiledHeaderRuleTest {
     }
     assertNotNull(pchInstance);
     ImmutableList<String> pchCmd =
-        pchInstance.makeMainStep(context, Paths.get("/tmp/x")).getCommand();
+        pchInstance.makeMainStep(context, RelPath.get("tmp/x")).getCommand();
 
     assertTrue(seek(pchCmd, "-flag-for-source").size() > 0);
     assertTrue(seek(pchCmd, "-flag-for-factory").size() > 0);
@@ -611,7 +612,7 @@ public class CxxPrecompiledHeaderRuleTest {
     }
     assertNotNull(pchInstance);
     ImmutableList<String> pchCmd =
-        pchInstance.makeMainStep(context, Paths.get("/tmp/z")).getCommand();
+        pchInstance.makeMainStep(context, RelPath.get("tmp/z")).getCommand();
 
     // (pretend that) lib1 has a dep resulting in adding this dir to the include path flags
     assertContains(lib1Cmd, ImmutableList.of("-isystem", "/tmp/sys"));

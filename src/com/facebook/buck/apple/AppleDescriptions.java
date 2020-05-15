@@ -651,7 +651,7 @@ public class AppleDescriptions {
                       .getAppleDebugSymbolDeps()
                       .map(BuildRule::getSourcePathToOutput)
                       .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
-                  AppleDsym.getDsymOutputPath(dsymBuildTarget, projectFilesystem),
+                  AppleDsym.getDsymOutputPath(dsymBuildTarget, projectFilesystem).getPath(),
                   isCacheable);
             });
   }

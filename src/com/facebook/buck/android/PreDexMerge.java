@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -74,7 +75,7 @@ public abstract class PreDexMerge extends AbstractBuildRuleWithDeclaredAndExtraD
     this.dexTool = dexTool;
   }
 
-  Path getPrimaryDexRoot() {
+  RelPath getPrimaryDexRoot() {
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s_output/primary");
   }

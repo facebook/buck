@@ -88,7 +88,7 @@ public class PomIntegrationTest {
     assertFalse(Files.exists(pomPath.getPath()));
 
     // Basic case
-    Pom.generatePomFile(pathResolver, item, pomPath.getPath());
+    Pom.generatePomFile(pathResolver, item, pomPath);
 
     Model pomModel = parse(pomPath);
     assertEquals("com.example", pomModel.getGroupId());
@@ -104,14 +104,14 @@ public class PomIntegrationTest {
     // Corrupt dependency data and ensure buck restores that
     removeDependencies(pomModel, pomPath);
 
-    Pom.generatePomFile(pathResolver, item, pomPath.getPath());
+    Pom.generatePomFile(pathResolver, item, pomPath);
     pomModel = parse(pomPath);
 
     // Add extra pom data and ensure buck preserves that
     pomModel.setUrl(URL);
     serializePom(pomModel, pomPath);
 
-    Pom.generatePomFile(pathResolver, item, pomPath.getPath());
+    Pom.generatePomFile(pathResolver, item, pomPath);
 
     pomModel = parse(pomPath);
     assertEquals(URL, pomModel.getUrl());

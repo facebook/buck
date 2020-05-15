@@ -20,6 +20,7 @@ import com.facebook.buck.android.exopackage.ExopackageInstaller;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -57,7 +58,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
   @AddToRuleKey private final InstallTrigger trigger;
-  private final Path outputPath;
+  private final RelPath outputPath;
 
   public ExopackageDeviceDirectoryLister(
       BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
@@ -102,7 +103,7 @@ public class ExopackageDeviceDirectoryLister extends AbstractBuildRule {
             getProjectFilesystem()
                 .writeContentsToPath(
                     serializeDirectoryContents(ImmutableSortedMap.copyOf(contents)), outputPath);
-            buildableContext.recordArtifact(outputPath);
+            buildableContext.recordArtifact(outputPath.getPath());
             return StepExecutionResults.SUCCESS;
           }
         });

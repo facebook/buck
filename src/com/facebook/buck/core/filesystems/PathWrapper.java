@@ -76,4 +76,8 @@ public interface PathWrapper {
   default boolean startsWith(String other) {
     return getPath().startsWith(other);
   }
+
+  default Path getFileName() {
+    return getPath().getFileName();
+  }
 }

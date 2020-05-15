@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -72,7 +73,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final ImmutableMap<Path, Path> importPathMap;
 
   private final SymlinkTree symlinkTree;
-  private final Path output;
+  private final RelPath output;
   private final List<ListType> goListTypes;
 
   public GoCompile(
@@ -117,7 +118,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
 
-    buildableContext.recordArtifact(output);
+    buildableContext.recordArtifact(output.getPath());
 
     List<Path> srcFiles = getSourceFiles(srcs, context);
     ImmutableMap<String, ImmutableList<Path>> groupedSrcs = getGroupedSrcs(srcFiles);
@@ -136,13 +137,13 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
 
-    Path asmOutputDir =
+    RelPath asmOutputDir =
         BuildTargetPaths.getScratchPath(
             getProjectFilesystem(),
             getBuildTarget(),
             "%s/" + getBuildTarget().getShortName() + "__asm_compile");
 
-    Path asmIncludeDir =
+    RelPath asmIncludeDir =
         BuildTargetPaths.getScratchPath(
             getProjectFilesystem(),
             getBuildTarget(),
@@ -177,7 +178,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
     if (getGoSources(groupedSrcs).isEmpty()) {
-      steps.add(new TouchStep(getProjectFilesystem(), output));
+      steps.add(new TouchStep(getProjectFilesystem(), output.getPath()));
     } else {
       Optional<Path> asmSymabisPath = Optional.empty();
 
@@ -195,7 +196,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 ImmutableList.<Path>builder()
                     .addAll(assemblerIncludeDirs)
                     .add(asmHeaderPath.get().getParent())
-                    .add(asmIncludeDir)
+                    .add(asmIncludeDir.getPath())
                     .build(),
                 platform,
                 asmSymabisPath.get()));
@@ -224,7 +225,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               allowExternalReferences,
               platform,
               asmSymabisPath,
-              output));
+              output.getPath()));
     }
 
     ImmutableList.Builder<Path> asmOutputs = ImmutableList.builder();
@@ -254,7 +255,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               ImmutableList.<Path>builder()
                   .addAll(assemblerIncludeDirs)
                   .add(asmHeaderPath.get().getParent())
-                  .add(asmIncludeDir)
+                  .add(asmIncludeDir.getPath())
                   .build(),
               platform,
               asmOutputPath));
@@ -272,7 +273,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                   .addAll(extraAsmOutputs.stream().map(x -> resolver.getAbsolutePath(x)).iterator())
                   .build(),
               filteredAsmSrcs,
-              output));
+              output.getPath()));
     }
 
     return steps.build();

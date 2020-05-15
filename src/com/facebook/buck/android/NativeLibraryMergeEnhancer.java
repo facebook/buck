@@ -1015,7 +1015,8 @@ class NativeLibraryMergeEnhancer {
                       target,
                       Linker.LinkType.SHARED,
                       Optional.of(soname),
-                      BuildTargetPaths.getGenPath(projectFilesystem, target, "%s/" + getSoname()),
+                      BuildTargetPaths.getGenPath(projectFilesystem, target, "%s/" + getSoname())
+                          .getPath(),
                       ImmutableList.of(),
                       // Android Binaries will use share deps by default.
                       Linker.LinkableDepType.SHARED,

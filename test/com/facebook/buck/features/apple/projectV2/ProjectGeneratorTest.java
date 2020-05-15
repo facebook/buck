@@ -79,6 +79,7 @@ import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -507,7 +508,7 @@ public class ProjectGeneratorTest {
 
     FakeProjectFilesystem frameworkBundleFileSystem =
         (FakeProjectFilesystem) frameworkBundleNode.getFilesystem();
-    Path expectedXcConfigPath =
+    RelPath expectedXcConfigPath =
         BuildConfiguration.getXcconfigPath(
             frameworkBundleFileSystem, frameworkBundleTarget, "Debug");
     String xccConfigContents =
@@ -515,7 +516,7 @@ public class ProjectGeneratorTest {
     Xcconfig config = Xcconfig.fromString(xccConfigContents);
     assertTrue(config.containsKey("SWIFT_INCLUDE_PATHS"));
 
-    Path symlinkPath =
+    RelPath symlinkPath =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             projectFilesystem,
             NodeHelper.getModularMapTarget(
@@ -2523,7 +2524,9 @@ public class ProjectGeneratorTest {
     PBXFileReference xcconfigReference = configuration.getBaseConfigurationReference();
     Path xcconfigRelativeReferencePath =
         Paths.get("..")
-            .resolve(BuildConfiguration.getXcconfigPath(projectFilesystem, buildTarget, "Debug"));
+            .resolve(
+                BuildConfiguration.getXcconfigPath(projectFilesystem, buildTarget, "Debug")
+                    .getPath());
     assertEquals(xcconfigReference.getPath(), xcconfigRelativeReferencePath.toString());
 
     ImmutableMap<String, String> settings = getBuildSettings(buildTarget, target, "Debug");
@@ -4772,7 +4775,7 @@ public class ProjectGeneratorTest {
     Map<String, XCBuildConfiguration> buildConfigurationMap =
         target.getBuildConfigurationList().getBuildConfigurationsByName().asMap();
 
-    Path buckOutPath = BuildConfiguration.getXcconfigPath(projectFilesystem, buildTarget, "");
+    RelPath buckOutPath = BuildConfiguration.getXcconfigPath(projectFilesystem, buildTarget, "");
     PBXGroup configsGroup = project.getMainGroup();
 
     // File should be located in the buck-out/gen/{target-path}, so iterate through the path
@@ -4780,6 +4783,7 @@ public class ProjectGeneratorTest {
     // to find the configs directory.
     for (Path pathComponent :
         buckOutPath
+            .getPath()
             .getParent()) { // last component will be {target_name}-.xcconfig, which we don't care
       // about.
       configsGroup =

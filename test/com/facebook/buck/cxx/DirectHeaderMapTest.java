@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -70,7 +71,7 @@ public class DirectHeaderMapTest {
   private ActionGraphBuilder graphBuilder;
   private SourcePathResolverAdapter pathResolver;
   private ImmutableMap<Path, SourcePath> links;
-  private Path symlinkTreeRoot;
+  private RelPath symlinkTreeRoot;
   private Path headerMapPath;
   private AbsPath file1;
   private AbsPath file2;
@@ -109,7 +110,8 @@ public class DirectHeaderMapTest {
 
     pathResolver = graphBuilder.getSourcePathResolver();
 
-    buildRule = new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot, links);
+    buildRule =
+        new DirectHeaderMap(buildTarget, projectFilesystem, symlinkTreeRoot.getPath(), links);
     graphBuilder.addToIndex(buildRule);
 
     headerMapPath = pathResolver.getRelativePath(buildRule.getSourcePathToOutput());
@@ -159,7 +161,10 @@ public class DirectHeaderMapTest {
     }
     DirectHeaderMap modifiedBuildRule =
         new DirectHeaderMap(
-            buildTarget, projectFilesystem, symlinkTreeRoot, modifiedLinksBuilder.build());
+            buildTarget,
+            projectFilesystem,
+            symlinkTreeRoot.getPath(),
+            modifiedLinksBuilder.build());
 
     SourcePathRuleFinder ruleFinder = new TestActionGraphBuilder();
 

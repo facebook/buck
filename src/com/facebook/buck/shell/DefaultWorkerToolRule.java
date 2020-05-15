@@ -64,7 +64,7 @@ public class DefaultWorkerToolRule extends WriteFile
         buildTarget,
         projectFilesystem,
         "",
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/worker.file"),
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/worker.file").getPath(),
         false);
     this.actualTool = tool;
     this.workerTool =
@@ -172,7 +172,7 @@ public class DefaultWorkerToolRule extends WriteFile
 
     @Override
     public Path getTempDir(ProjectFilesystem filesystem) {
-      return BuildTargetPaths.getScratchPath(filesystem, buildTarget, "%s__worker");
+      return BuildTargetPaths.getScratchPath(filesystem, buildTarget, "%s__worker").getPath();
     }
 
     @Override

@@ -54,6 +54,7 @@ import com.facebook.buck.apple.xcode.xcodeproj.PBXResourcesBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXShellScriptBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
 import com.facebook.buck.apple.xcode.xcodeproj.SourceTreePath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -464,7 +465,7 @@ public class XcodeNativeTargetProjectWriterTest {
     PBXShellScriptBuildPhase phase =
         getSingletonPhaseByType(result.target, PBXShellScriptBuildPhase.class);
     String shellScript = phase.getShellScript();
-    Path genPath = BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s");
+    RelPath genPath = BuildTargetPaths.getGenPath(scenario.filesystem, depBuildTarget, "%s");
     Path jsGenPath = genPath.resolve("js").toAbsolutePath();
     Path resGenPath = genPath.resolve("res").toAbsolutePath();
     assertEquals(

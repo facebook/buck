@@ -187,8 +187,8 @@ public class MultiarchFileInfos {
               applePlatform.getLipo(),
               inputs,
               cxxBuckConfig.shouldCacheLinks(),
-              BuildTargetPaths.getGenPath(
-                  projectFilesystem, buildTarget, multiarchOutputPathFormat));
+              BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, multiarchOutputPathFormat)
+                  .getPath());
       graphBuilder.addToIndex(multiarchFile);
       return multiarchFile;
     } else {

@@ -19,6 +19,7 @@ package com.facebook.buck.features.go;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -153,7 +154,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 // Note: the working directory here is important for tests
                 // targets that have resources defined on them.
-                getPathToTestWorkingDirectory(),
+                getPathToTestWorkingDirectory().getPath(),
                 args.build(),
                 Stream.of(
                         testMain
@@ -283,7 +284,8 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "__test_%s_output__");
+            getProjectFilesystem(), getBuildTarget(), "__test_%s_output__")
+        .getPath();
   }
 
   @Override
@@ -306,7 +308,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return getPathToTestOutputDirectory().resolve("results");
   }
 
-  protected Path getPathToTestWorkingDirectory() {
+  protected RelPath getPathToTestWorkingDirectory() {
     return testMain.getPathToBinaryDirectory();
   }
 

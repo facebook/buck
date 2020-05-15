@@ -68,7 +68,7 @@ public class OcamlCCompileStep extends ShellStep {
     ImmutableList<String> cCompilerFlags =
         OcamlUtil.makeArgFile(
             filesystem,
-            OcamlUtil.makeArgFilePath(filesystem, args.buildTarget, COMPILER_FLAG),
+            OcamlUtil.makeArgFilePath(filesystem, args.buildTarget, COMPILER_FLAG).getPath(),
             ocamlCompilerPrefix,
             COMPILER_FLAG,
             RichStream.of("-Wall", "-Wextra", "-o", args.output.toString())

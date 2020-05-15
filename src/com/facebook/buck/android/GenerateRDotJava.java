@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.aapt.RDotTxtEntry;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -40,7 +41,6 @@ import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -115,7 +115,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Merge R.txt of HasAndroidRes and generate the resulting R.java files per package.
-    Path rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
+    RelPath rDotJavaSrc = getPathToGeneratedRDotJavaSrcFiles();
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -130,7 +130,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
             pathToRDotTxtFiles.stream()
                 .map(p -> pathResolver.getAbsolutePath(p))
                 .collect(ImmutableList.toImmutableList()),
-            rDotJavaSrc,
+            rDotJavaSrc.getPath(),
             bannedDuplicateResourceTypes,
             duplicateResourceWhitelistPath.map(pathResolver::getAbsolutePath),
             pathToOverrideSymbolsFile.stream()
@@ -139,30 +139,30 @@ public class GenerateRDotJava extends AbstractBuildRule {
             resourceUnionPackage);
     steps.add(mergeStep);
 
-    Path rzipPath = getPathToRZip();
+    RelPath rzipPath = getPathToRZip();
     steps.add(RmStep.of(BuildCellRelativePath.of(rzipPath)));
     steps.add(
         new ZipStep(
             projectFilesystem,
-            rzipPath,
+            rzipPath.getPath(),
             ImmutableSet.of(),
             false,
             ZipCompressionLevel.NONE,
-            getPathToGeneratedRDotJavaSrcFiles()));
+            getPathToGeneratedRDotJavaSrcFiles().getPath()));
 
     // Ensure the generated R.txt and R.java files are also recorded.
-    buildableContext.recordArtifact(rDotJavaSrc);
-    buildableContext.recordArtifact(rzipPath);
+    buildableContext.recordArtifact(rDotJavaSrc.getPath());
+    buildableContext.recordArtifact(rzipPath.getPath());
 
     return steps.build();
   }
 
-  private Path getPathToGeneratedRDotJavaSrcFiles() {
+  private RelPath getPathToGeneratedRDotJavaSrcFiles() {
     return getPathToGeneratedRDotJavaSrcFiles(getBuildTarget(), getProjectFilesystem());
   }
 
   @VisibleForTesting
-  static Path getPathToGeneratedRDotJavaSrcFiles(
+  static RelPath getPathToGeneratedRDotJavaSrcFiles(
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getScratchPath(filesystem, buildTarget, "__%s_rdotjava_src__");
   }
@@ -181,7 +181,7 @@ public class GenerateRDotJava extends AbstractBuildRule {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToRZip());
   }
 
-  private Path getPathToRZip() {
+  private RelPath getPathToRZip() {
     return BuildTargetPaths.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), "__%s_rzip.src.zip");
   }

@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -49,7 +50,6 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.shell.GenruleBuilder;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
-import java.nio.file.Path;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
@@ -92,7 +92,7 @@ public class ExecutableMacroExpanderTest {
             graphBuilder.requireRule(buildTarget));
 
     // Verify that the correct cmd was created.
-    Path expectedClasspath =
+    AbsPath expectedClasspath =
         BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
@@ -111,7 +111,7 @@ public class ExecutableMacroExpanderTest {
         coerceAndStringify("$(exe :ManifestGenerator) $OUT", graphBuilder.requireRule(buildTarget));
 
     // Verify that the correct cmd was created.
-    Path expectedClasspath =
+    AbsPath expectedClasspath =
         BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);
@@ -131,7 +131,7 @@ public class ExecutableMacroExpanderTest {
     String transformedString = coerceAndStringify("$(exe :ManifestGenerator) $OUT", buildRule);
 
     // Verify that the correct cmd was created.
-    Path expectedClasspath =
+    AbsPath expectedClasspath =
         BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.jar").toAbsolutePath();
     String expectedCmd = String.format("java -jar %s $OUT", expectedClasspath);
     assertEquals(expectedCmd, transformedString);

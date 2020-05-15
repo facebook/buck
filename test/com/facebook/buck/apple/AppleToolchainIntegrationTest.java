@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.cxx.CxxToolchainHelper;
@@ -183,17 +184,17 @@ public class AppleToolchainIntegrationTest {
     workspace.setUp();
     Path output = workspace.buildAndReturnOutput("//:TestSwiftBinary#iphoneos-arm64");
     AbsPath rootPath = workspace.getProjectFileSystem().getRootPath();
-    Path swiftLibraryPath =
+    RelPath swiftLibraryPath =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
             BuildTargetFactory.newInstance("//:SwiftLibrary#iphoneos-arm64,swift-compile"),
             "%s");
-    Path anotherSwiftLibraryPath =
+    RelPath anotherSwiftLibraryPath =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
             BuildTargetFactory.newInstance("//:AnotherSwiftLibrary#iphoneos-arm64,swift-compile"),
             "%s");
-    Path companionLibraryPath =
+    RelPath companionLibraryPath =
         BuildTargetPaths.getGenPath(
             workspace.getProjectFileSystem(),
             BuildTargetFactory.newInstance("//:SwiftCompanionLibrary#iphoneos-arm64,swift-compile"),

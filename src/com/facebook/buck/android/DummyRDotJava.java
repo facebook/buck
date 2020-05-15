@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -167,7 +168,7 @@ public class DummyRDotJava extends AbstractBuildRule
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    Path rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), getProjectFilesystem());
+    RelPath rDotJavaSrcFolder = getRDotJavaSrcFolder(getBuildTarget(), getProjectFilesystem());
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -204,7 +205,7 @@ public class DummyRDotJava extends AbstractBuildRule
               getProjectFilesystem(),
               context.getSourcePathResolver(),
               androidResourceDeps,
-              rDotJavaSrcFolder,
+              rDotJavaSrcFolder.getPath(),
               forceFinalResourceIds,
               unionPackage,
               /* rName */ Optional.empty(),
@@ -220,7 +221,7 @@ public class DummyRDotJava extends AbstractBuildRule
                 getProjectFilesystem(),
                 context.getSourcePathResolver(),
                 androidResourceDeps,
-                rDotJavaSrcFolder,
+                rDotJavaSrcFolder.getPath(),
                 /* forceFinalResourceIds */ true,
                 unionPackage,
                 finalRName,
@@ -356,7 +357,8 @@ public class DummyRDotJava extends AbstractBuildRule
     }
   }
 
-  public static Path getRDotJavaSrcFolder(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  public static RelPath getRDotJavaSrcFolder(
+      BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getScratchPath(filesystem, buildTarget, "__%s_rdotjava_src__");
   }
 
@@ -364,7 +366,7 @@ public class DummyRDotJava extends AbstractBuildRule
     return CompilerOutputPaths.of(buildTarget, filesystem).getClassesDir();
   }
 
-  public static Path getPathToOutputDir(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  public static RelPath getPathToOutputDir(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(filesystem, buildTarget, "__%s_dummyrdotjava_output__");
   }
 

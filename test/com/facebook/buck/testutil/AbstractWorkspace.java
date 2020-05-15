@@ -681,4 +681,8 @@ public abstract class AbstractWorkspace {
   public Path resolve(String pathRelativeToWorkspaceRoot) {
     return destPath.resolve(pathRelativeToWorkspaceRoot);
   }
+
+  public Path resolve(RelPath pathRelativeToWorkspaceRoot) {
+    return resolve(pathRelativeToWorkspaceRoot.getPath());
+  }
 }

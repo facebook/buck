@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.args;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -41,7 +42,7 @@ public class WriteToFileArg implements Arg {
     this.delegate = delegate;
   }
 
-  public static Path getMacroPath(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
+  public static RelPath getMacroPath(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
     return BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "%s__macros");
   }
 
@@ -61,7 +62,7 @@ public class WriteToFileArg implements Arg {
 
   /** @return The absolute path to the temp file. */
   private Path createTempFile(ProjectFilesystem filesystem, BuildTarget target) throws IOException {
-    Path directory = getMacroPath(filesystem, target);
+    RelPath directory = getMacroPath(filesystem, target);
     filesystem.mkdirs(directory);
     return filesystem.createTempFile(directory, prefix, ".macro");
   }

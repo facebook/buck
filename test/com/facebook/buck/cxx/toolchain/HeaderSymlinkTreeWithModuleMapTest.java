@@ -27,6 +27,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -71,7 +72,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
   private BuildTarget buildTarget;
   private HeaderSymlinkTreeWithModuleMap symlinkTreeBuildRule;
   private ImmutableMap<Path, SourcePath> links;
-  private Path symlinkTreeRoot;
+  private RelPath symlinkTreeRoot;
   private BuildRuleResolver ruleResolver;
   private SourcePathResolverAdapter resolver;
 
@@ -110,7 +111,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
         HeaderSymlinkTreeWithModuleMap.create(
-            buildTarget, projectFilesystem, symlinkTreeRoot, links);
+            buildTarget, projectFilesystem, symlinkTreeRoot.getPath(), links);
   }
 
   @Test
@@ -128,14 +129,15 @@ public class HeaderSymlinkTreeWithModuleMapTest {
                 new SymlinkTreeMergeStep(
                     "cxx_header",
                     projectFilesystem,
-                    symlinkTreeRoot,
+                    symlinkTreeRoot.getPath(),
                     new SymlinkMapsPaths(resolver.getMappedPaths(links)),
                     (fs, p) -> false))
             .add(
                 new ModuleMapStep(
                     projectFilesystem,
                     BuildTargetPaths.getGenPath(
-                        projectFilesystem, buildTarget, "%s/SomeModule/module.modulemap"),
+                            projectFilesystem, buildTarget, "%s/SomeModule/module.modulemap")
+                        .getPath(),
                     ModuleMap.create("SomeModule", ModuleMap.SwiftMode.NO_SWIFT, links.keySet())))
             .build();
     ImmutableList<Step> actualBuildSteps =
@@ -152,7 +154,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
         HeaderSymlinkTreeWithModuleMap.create(
             buildTarget,
             projectFilesystem,
-            symlinkTreeRoot,
+            symlinkTreeRoot.getPath(),
             new ImmutableMap.Builder<Path, SourcePath>()
                 .putAll(links)
                 .put(Paths.get("SomeModule", "SomeModule-Swift.h"), FakeSourcePath.of("SomeModule"))
@@ -165,7 +167,8 @@ public class HeaderSymlinkTreeWithModuleMapTest {
         new ModuleMapStep(
             projectFilesystem,
             BuildTargetPaths.getGenPath(
-                projectFilesystem, buildTarget, "%s/SomeModule/module.modulemap"),
+                    projectFilesystem, buildTarget, "%s/SomeModule/module.modulemap")
+                .getPath(),
             ModuleMap.create(
                 "SomeModule", ModuleMap.SwiftMode.INCLUDE_SWIFT_HEADER, links.keySet()));
     assertThat(actualBuildSteps, hasItem(moduleMapStep));
@@ -179,7 +182,7 @@ public class HeaderSymlinkTreeWithModuleMapTest {
         HeaderSymlinkTreeWithModuleMap.create(
             buildTarget,
             projectFilesystem,
-            symlinkTreeRoot,
+            symlinkTreeRoot.getPath(),
             ImmutableMap.of(
                 Paths.get("OtherModule", "Header.h"),
                 PathSourcePath.of(

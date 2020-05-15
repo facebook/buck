@@ -23,6 +23,7 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.HasTestTimeout;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -203,7 +204,7 @@ public class PythonTestDescription
    * test runner.
    */
   private static class PythonTestMainRule extends AbstractBuildRule {
-    private final Path output =
+    private final RelPath output =
         BuildTargetPaths.getGenPath(
             getProjectFilesystem(), getBuildTarget(), "%s/" + DEFAULT_TEST_MAIN_NAME);
 
@@ -219,7 +220,7 @@ public class PythonTestDescription
     @Override
     public ImmutableList<? extends Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
-      buildableContext.recordArtifact(output);
+      buildableContext.recordArtifact(output.getPath());
       return ImmutableList.of(
           MkdirStep.of(
               BuildCellRelativePath.fromCellRelativePath(
@@ -228,7 +229,7 @@ public class PythonTestDescription
               getProjectFilesystem(),
               Resources.asByteSource(
                   Resources.getResource(PythonTestDescription.class, DEFAULT_TEST_MAIN_NAME)),
-              output,
+              output.getPath(),
               /* executable */ false));
     }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.python;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -30,7 +31,6 @@ import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -66,7 +66,7 @@ public abstract class PythonBinary extends AbstractBuildRule
     this.legacyOutputPath = legacyOutputPath;
   }
 
-  static Path getBinPath(
+  static RelPath getBinPath(
       BuildTarget target,
       ProjectFilesystem filesystem,
       String extension,
@@ -77,7 +77,7 @@ public abstract class PythonBinary extends AbstractBuildRule
     return BuildTargetPaths.getGenPath(filesystem, target, "%s" + extension);
   }
 
-  final Path getBinPath() {
+  final RelPath getBinPath() {
     return getBinPath(getBuildTarget(), getProjectFilesystem(), pexExtension, legacyOutputPath);
   }
 

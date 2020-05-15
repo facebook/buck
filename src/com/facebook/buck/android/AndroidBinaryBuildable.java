@@ -24,6 +24,7 @@ import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -175,7 +176,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
 
     // The `HasInstallableApk` interface needs access to the manifest, so make sure we create our
     // own copy of this so that we don't have a runtime dep on the `AaptPackageResources` step.
-    Path manifestPath = getManifestPath();
+    RelPath manifestPath = getManifestPath();
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -184,8 +185,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         CopyStep.forFile(
             getProjectFilesystem(),
             pathResolver.getRelativePath(androidManifestPath),
-            manifestPath));
-    buildableContext.recordArtifact(manifestPath);
+            manifestPath.getPath()));
+    buildableContext.recordArtifact(manifestPath.getPath());
 
     dexFilesInfo.proguardTextFilesPath.ifPresent(
         path -> {
@@ -531,7 +532,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     Preconditions.checkState(
         ExopackageMode.enabledForModules(exopackageModes)
             || !ExopackageMode.enabledForResources(exopackageModes));
-    Path pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
+    RelPath pathForNativeLibsAsAssets = getPathForNativeLibsAsAssets();
 
     Path libSubdirectory =
         pathForNativeLibsAsAssets
@@ -545,9 +546,9 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
         module.isRootModule() ? "metadata.txt" : "libs.txt",
         module);
 
-    nativeLibraryAsAssetDirectories.add(pathForNativeLibsAsAssets);
+    nativeLibraryAsAssetDirectories.add(pathForNativeLibsAsAssets.getPath());
 
-    assetDirectoriesBuilderForThisModule.put(pathForNativeLibsAsAssets, "");
+    assetDirectoriesBuilderForThisModule.put(pathForNativeLibsAsAssets.getPath(), "");
   }
 
   private Path addModuleResourceDirectory(
@@ -557,7 +558,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableList.Builder<Step> steps) {
     SourcePath resourcePath = moduleResourceApkPaths.get(module);
 
-    Path moduleResDirectory =
+    RelPath moduleResDirectory =
         BuildTargetPaths.getScratchPath(
             getProjectFilesystem(), buildTarget, "__module_res_" + module.getName() + "_%s__");
 
@@ -574,7 +575,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             unpackDirectory,
             Optional.empty()));
 
-    moduleResourcesDirectories.add(moduleResDirectory);
+    moduleResourcesDirectories.add(moduleResDirectory.getPath());
     return unpackDirectory;
   }
 
@@ -744,7 +745,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       Path apkToRedexAndAlign,
       Path redexedApk) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
-    Path proguardConfigDir = getProguardTextFilesPath();
+    RelPath proguardConfigDir = getProguardTextFilesPath();
     steps.add(
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -758,7 +759,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             apkToRedexAndAlign,
             redexedApk,
             keystoreProperties,
-            proguardConfigDir,
+            proguardConfigDir.getPath(),
             buildableContext);
     steps.addAll(redexSteps);
     return steps.build();
@@ -769,7 +770,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     return CopyStep.forDirectory(
         getProjectFilesystem(),
         pathResolver.getRelativePath(proguardTextFilesPath),
-        getProguardTextFilesPath(),
+        getProguardTextFilesPath().getPath(),
         CopyStep.DirectoryMode.CONTENTS_ONLY);
   }
 
@@ -781,13 +782,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     return buildTarget;
   }
 
-  public Path getManifestPath() {
+  public RelPath getManifestPath() {
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/AndroidManifest.xml");
   }
 
   /** All native-libs-as-assets are copied to this directory before running apkbuilder. */
-  private Path getPathForNativeLibsAsAssets() {
+  private RelPath getPathForNativeLibsAsAssets() {
     return BuildTargetPaths.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), "__native_libs_as_assets_%s__");
   }
@@ -832,19 +833,20 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     return isApk ? "apk" : "aab";
   }
 
-  private Path getPath(String format) {
+  private RelPath getPath(String format) {
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), format);
   }
 
   private Path getRedexedApkPath() {
-    Path path = BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__redex");
+    RelPath path =
+        BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s__redex");
     return path.resolve(getBuildTarget().getShortName() + ".redex." + getExtension());
   }
 
   /**
    * Directory of text files used by proguard. Unforunately, this contains both inputs and outputs.
    */
-  private Path getProguardTextFilesPath() {
+  private RelPath getProguardTextFilesPath() {
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/proguard");
   }
 

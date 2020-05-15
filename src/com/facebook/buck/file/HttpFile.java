@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -85,7 +86,7 @@ public class HttpFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildContext context, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    Path tempFile =
+    RelPath tempFile =
         BuildTargetPaths.getScratchPath(
             getProjectFilesystem(), getBuildTarget(), "%s/" + output.getFileName());
 
@@ -100,12 +101,12 @@ public class HttpFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             uris.get(0),
             uris.subList(1, uris.size()),
             FileHash.ofSha256(sha256),
-            tempFile));
+            tempFile.getPath()));
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())));
-    steps.add(new MoveStep(getProjectFilesystem(), tempFile, output));
+    steps.add(new MoveStep(getProjectFilesystem(), tempFile.getPath(), output));
     if (executable) {
       steps.add(new MakeExecutableStep(getProjectFilesystem(), output));
     }

@@ -38,6 +38,7 @@ import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
@@ -638,9 +639,9 @@ public class CxxBinaryIntegrationTest {
     result.assertSuccess();
 
     ProjectFilesystem filesystem = primary.getProjectFileSystem();
-    Path depsPath =
+    RelPath depsPath =
         BuildTargetPaths.getGenPath(filesystem, inputBuildTarget, "infer-%s/infer-deps.txt");
-    List<String> lines = filesystem.readLines(depsPath);
+    List<String> lines = filesystem.readLines(depsPath.getPath());
     assertEquals(2, lines.size());
   }
 

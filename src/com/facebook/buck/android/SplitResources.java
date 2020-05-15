@@ -20,6 +20,7 @@ import com.facebook.buck.android.resources.ExoResourcesRewriter;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -79,7 +80,7 @@ public class SplitResources extends AbstractBuildRule {
     this.zipalignTool = zipalignTool;
   }
 
-  private Path getOutputDirectory() {
+  private RelPath getOutputDirectory() {
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
@@ -92,7 +93,7 @@ public class SplitResources extends AbstractBuildRule {
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(getOutputDirectory());
+    buildableContext.recordArtifact(getOutputDirectory().getPath());
 
     return ImmutableList.<Step>builder()
         .addAll(
@@ -136,7 +137,7 @@ public class SplitResources extends AbstractBuildRule {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), exoResourcesOutputPath);
   }
 
-  public Path getScratchDirectory() {
+  public RelPath getScratchDirectory() {
     return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 

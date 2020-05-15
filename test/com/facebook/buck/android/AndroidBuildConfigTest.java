@@ -73,7 +73,8 @@ public class AndroidBuildConfigTest {
             /* javaPackage */ "com.example",
             /* useConstantExpressions */ false,
             /* constants */ Suppliers.ofInstance(BuildConfigFields.of()),
-            BuildTargetPaths.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java"));
+            BuildTargetPaths.getGenPath(filesystem, BUILD_TARGET, "__%s__/BuildConfig.java")
+                .getPath());
     assertEquals(expectedStep, generateBuildConfigStep);
   }
 

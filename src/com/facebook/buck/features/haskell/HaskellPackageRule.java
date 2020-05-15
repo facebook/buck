@@ -19,6 +19,7 @@ package com.facebook.buck.features.haskell;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -143,12 +144,12 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         objects);
   }
 
-  private Path getPackageDb() {
+  private RelPath getPackageDb() {
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
   private WriteFileStep getWriteRegistrationFileStep(
-      SourcePathResolverAdapter resolver, Path registrationFile, Path packageDb) {
+      SourcePathResolverAdapter resolver, Path registrationFile, RelPath packageDb) {
     Map<String, String> entries = new LinkedHashMap<>();
 
     entries.put("name", packageInfo.getName());
@@ -169,7 +170,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       for (SourcePath interfaceDir : interfaces) {
         Path relInterfaceDir =
             pkgRoot.resolve(
-                packageDb.getParent().relativize(resolver.getRelativePath(interfaceDir)));
+                packageDb.getParent().relativize(resolver.getRelativePath(interfaceDir)).getPath());
         importDirs.add('"' + relInterfaceDir.toString() + '"');
       }
       entries.put("import-dirs", Joiner.on(", ").join(importDirs));
@@ -179,7 +180,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     Set<String> libs = new LinkedHashSet<>();
     for (SourcePath library : libraries) {
       Path relLibPath =
-          pkgRoot.resolve(packageDb.getParent().relativize(resolver.getRelativePath(library)));
+          pkgRoot.resolve(
+              packageDb.getParent().relativize(resolver.getRelativePath(library)).getPath());
       libDirs.add('"' + relLibPath.getParent().toString() + '"');
 
       String libName = MorePaths.stripPathPrefixAndExtension(relLibPath.getFileName(), "lib");
@@ -215,7 +217,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     // Setup the scratch dir.
-    Path scratchDir =
+    RelPath scratchDir =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
 
     steps.addAll(
@@ -224,13 +226,13 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                 context.getBuildCellRootPath(), getProjectFilesystem(), scratchDir)));
 
     // Setup the package DB directory.
-    Path packageDb = getPackageDb();
+    RelPath packageDb = getPackageDb();
     steps.add(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), packageDb),
             true));
-    buildableContext.recordArtifact(packageDb);
+    buildableContext.recordArtifact(packageDb.getPath());
 
     // Create the registration file.
     Path registrationFile = scratchDir.resolve("registration-file");
@@ -279,13 +281,13 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @Override
   public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPackageDb());
+    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPackageDb().getPath());
   }
 
   public HaskellPackage getPackage() {
     return HaskellPackage.builder()
         .setInfo(packageInfo)
-        .setPackageDb(ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPackageDb()))
+        .setPackageDb(ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPackageDb().getPath()))
         .addAllLibraries(libraries)
         .addAllInterfaces(interfaces)
         .addAllObjects(objects)

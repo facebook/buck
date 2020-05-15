@@ -17,6 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.filesystem.CopySourceMode;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -67,6 +68,12 @@ public class CopyStep implements Step {
     return new CopyStep(filesystem, source, destination, CopySourceMode.FILE);
   }
 
+  /** Creates a CopyStep which copies a single file from 'source' to 'destination'. */
+  public static CopyStep forFile(
+      ProjectFilesystem filesystem, RelPath source, RelPath destination) {
+    return forFile(filesystem, source.getPath(), destination.getPath());
+  }
+
   /**
    * Creates a CopyStep which recursively copies a directory from 'source' to 'destination'. See
    * {@link DirectoryMode} for options to control the copy.
@@ -85,6 +92,18 @@ public class CopyStep implements Step {
         throw new IllegalArgumentException("Invalid directory mode: " + directoryMode);
     }
     return new CopyStep(filesystem, source, destination, copySourceMode);
+  }
+
+  /**
+   * Creates a CopyStep which recursively copies a directory from 'source' to 'destination'. See
+   * {@link DirectoryMode} for options to control the copy.
+   */
+  public static CopyStep forDirectory(
+      ProjectFilesystem filesystem,
+      RelPath source,
+      RelPath destination,
+      DirectoryMode directoryMode) {
+    return forDirectory(filesystem, source.getPath(), destination.getPath(), directoryMode);
   }
 
   @Override

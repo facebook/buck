@@ -129,7 +129,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
-        InferLogLine.fromBuildTarget(testBuildTarget, captureRule.getAbsolutePathToOutput())
+        InferLogLine.fromBuildTarget(
+                testBuildTarget, captureRule.getAbsolutePathToOutput().getPath())
             .toString();
 
     assertEquals(expectedOutput + "\n", filesystem.readFileIfItExists(outputFile).get());
@@ -163,7 +164,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
-        InferLogLine.fromBuildTarget(testBuildTarget, captureRule.getAbsolutePathToOutput())
+        InferLogLine.fromBuildTarget(
+                testBuildTarget, captureRule.getAbsolutePathToOutput().getPath())
             .toString();
 
     assertEquals(expectedOutput + "\n", filesystem.readFileIfItExists(outputFile).get());
@@ -208,9 +210,10 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
-        InferLogLine.fromBuildTarget(buildTarget1, captureRule1.getAbsolutePathToOutput())
+        InferLogLine.fromBuildTarget(buildTarget1, captureRule1.getAbsolutePathToOutput().getPath())
             + "\n"
-            + InferLogLine.fromBuildTarget(buildTarget2, captureRule2.getAbsolutePathToOutput());
+            + InferLogLine.fromBuildTarget(
+                buildTarget2, captureRule2.getAbsolutePathToOutput().getPath());
 
     assertEquals(expectedOutput + "\n", filesystem1.readFileIfItExists(outputFile).get());
   }
@@ -253,9 +256,10 @@ public class CxxCollectAndLogInferDependenciesStepTest {
     assertThat(exitCode, is(StepExecutionResults.SUCCESS.getExitCode()));
 
     String expectedOutput =
-        InferLogLine.fromBuildTarget(buildTarget1, captureRule1.getAbsolutePathToOutput())
+        InferLogLine.fromBuildTarget(buildTarget1, captureRule1.getAbsolutePathToOutput().getPath())
             + "\n"
-            + InferLogLine.fromBuildTarget(buildTarget2, captureRule2.getAbsolutePathToOutput());
+            + InferLogLine.fromBuildTarget(
+                buildTarget2, captureRule2.getAbsolutePathToOutput().getPath());
 
     assertEquals(expectedOutput + "\n", filesystem1.readFileIfItExists(outputFile).get());
   }

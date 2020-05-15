@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -89,8 +90,8 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
       BuildContext context, BuildableContext buildableContext) {
     Path output = context.getSourcePathResolver().getRelativePath(getSourcePathToOutput());
     buildableContext.recordArtifact(output);
-    buildableContext.recordArtifact(getMappingPath());
-    buildableContext.recordArtifact(getTargetsPath());
+    buildableContext.recordArtifact(getMappingPath().getPath());
+    buildableContext.recordArtifact(getTargetsPath().getPath());
     return new ImmutableList.Builder<Step>()
         .addAll(
             MakeCleanDirectoryStep.of(
@@ -110,7 +111,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
             getProjectFilesystem(), getBuildTarget(), "%s/MergedLibraryMapping.java"));
   }
 
-  private Path getMappingPath() {
+  private RelPath getMappingPath() {
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/merged_library_map.txt");
   }
@@ -119,7 +120,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
    * This file shows which targets went into which libraries. It's just meant for human consumption
    * when writing merge configs.
    */
-  private Path getTargetsPath() {
+  private RelPath getTargetsPath() {
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/shared_object_targets.txt");
   }
@@ -130,7 +131,8 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
       ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (Writer out =
           new BufferedWriter(
-              new OutputStreamWriter(projectFilesystem.newFileOutputStream(getMappingPath())))) {
+              new OutputStreamWriter(
+                  projectFilesystem.newFileOutputStream(getMappingPath().getPath())))) {
         for (Map.Entry<String, NativeLibraryMergeEnhancer.SonameMergeData> entry :
             mergeResult.entrySet()) {
           if (!entry.getValue().getIncludeInAndroidMergeMapOutput()) {
@@ -163,7 +165,8 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
       ProjectFilesystem projectFilesystem = getProjectFilesystem();
       try (Writer out =
           new BufferedWriter(
-              new OutputStreamWriter(projectFilesystem.newFileOutputStream(getTargetsPath())))) {
+              new OutputStreamWriter(
+                  projectFilesystem.newFileOutputStream(getTargetsPath().getPath())))) {
         for (Map.Entry<String, ImmutableSortedSet<String>> entry : sharedObjectTargets.entrySet()) {
           out.write(entry.getKey());
           for (String target : entry.getValue()) {

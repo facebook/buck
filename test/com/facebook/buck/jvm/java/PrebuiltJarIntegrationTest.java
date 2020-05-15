@@ -20,6 +20,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -51,7 +52,7 @@ public class PrebuiltJarIntegrationTest {
     Path output = workspace.buildAndReturnOutput("//:jar_from_gen");
     assertTrue(Files.exists(output));
 
-    Path localPath =
+    RelPath localPath =
         BuildTargetPaths.getGenPath(
                 workspace.asCell().getFilesystem(),
                 BuildTargetFactory.newInstance("//:jar_from_gen"),

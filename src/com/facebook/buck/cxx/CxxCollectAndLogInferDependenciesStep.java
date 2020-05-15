@@ -51,7 +51,7 @@ final class CxxCollectAndLogInferDependenciesStep implements Step {
 
   private String processCaptureRule(CxxInferCapture captureRule) {
     return InferLogLine.fromBuildTarget(
-            captureRule.getBuildTarget(), captureRule.getAbsolutePathToOutput())
+            captureRule.getBuildTarget(), captureRule.getAbsolutePathToOutput().getPath())
         .toString();
   }
 

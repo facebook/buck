@@ -23,6 +23,7 @@ import com.facebook.buck.android.packageable.AndroidPackageableCollector;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -95,7 +96,7 @@ public class AndroidResource extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey
   private final ImmutableSortedMap<String, SourcePath> assetsSrcs;
 
-  private final Path pathToTextSymbolsDir;
+  private final RelPath pathToTextSymbolsDir;
   private final Path pathToTextSymbolsFile;
   private final Path pathToRDotJavaPackageFile;
 

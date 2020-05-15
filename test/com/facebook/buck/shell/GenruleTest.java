@@ -30,6 +30,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -256,7 +257,7 @@ public class GenruleTest {
                 BuildTargetPaths.getScratchPath(filesystem, buildTarget, "%s__"))),
         steps.get(4));
 
-    Path pathToOutDir = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
+    RelPath pathToOutDir = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
     assertEquals(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -269,7 +270,7 @@ public class GenruleTest {
                 buildContext.getBuildCellRootPath(), filesystem, pathToOutDir)),
         steps.get(6));
 
-    Path pathToSrcDir = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__srcs");
+    RelPath pathToSrcDir = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s__srcs");
     assertEquals(
         RmStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -286,7 +287,7 @@ public class GenruleTest {
         new SymlinkTreeStep(
             "genrule_srcs",
             filesystem,
-            pathToSrcDir,
+            pathToSrcDir.getPath(),
             ImmutableMap.of(
                 filesystem.getPath("convert_to_katana.py"),
                 filesystem.getPath("src/com/facebook/katana/convert_to_katana.py"),

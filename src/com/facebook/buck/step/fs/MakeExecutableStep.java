@@ -17,6 +17,7 @@
 package com.facebook.buck.step.fs;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -32,6 +33,10 @@ public class MakeExecutableStep implements Step {
   public MakeExecutableStep(ProjectFilesystem filesystem, Path file) {
     this.filesystem = filesystem;
     this.file = file;
+  }
+
+  public MakeExecutableStep(ProjectFilesystem filesystem, RelPath file) {
+    this(filesystem, file.getPath());
   }
 
   @Override

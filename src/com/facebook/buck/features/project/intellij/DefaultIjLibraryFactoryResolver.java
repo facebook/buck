@@ -18,6 +18,7 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.core.description.BaseDescription;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -67,7 +68,7 @@ class DefaultIjLibraryFactoryResolver implements IjLibraryFactoryResolver {
       // This is the output path of the classes.jar which buck extracts from the AAR archive
       // so that it can be passed to `javac`. We also use it to provide IntelliJ with a jar
       // so we can reference it as a library.
-      Path scratchPath =
+      RelPath scratchPath =
           BuildTargetPaths.getScratchPath(
               targetNode.getFilesystem(), buildTarget, "__uber_classes_%s__/classes.jar");
       toReturn =

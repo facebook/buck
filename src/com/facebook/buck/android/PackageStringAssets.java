@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
@@ -109,7 +110,7 @@ public class PackageStringAssets extends AbstractBuildRule {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     // We need to generate a zip file with the following dir structure:
     // /assets/strings/*.fbstr
-    Path pathToBaseDir = getPathToStringAssetsDir();
+    RelPath pathToBaseDir = getPathToStringAssetsDir();
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -174,7 +175,7 @@ public class PackageStringAssets extends AbstractBuildRule {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToStringAssetsDir());
   }
 
-  private Path getPathToStringAssetsDir() {
+  private RelPath getPathToStringAssetsDir() {
     return BuildTargetPaths.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), STRING_ASSETS_DIR_FORMAT);
   }

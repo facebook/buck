@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assume.assumeTrue;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -28,7 +29,6 @@ import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import java.io.IOException;
-import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
@@ -71,11 +71,14 @@ public class WorkerToolRuleIntegrationTest {
             target3.getFullyQualifiedName())
         .assertSuccess();
     workspace.verify(
-        Paths.get("test1_output.expected"), BuildTargetPaths.getGenPath(filesystem, target1, "%s"));
+        RelPath.get("test1_output.expected"),
+        BuildTargetPaths.getGenPath(filesystem, target1, "%s"));
     workspace.verify(
-        Paths.get("test2_output.expected"), BuildTargetPaths.getGenPath(filesystem, target2, "%s"));
+        RelPath.get("test2_output.expected"),
+        BuildTargetPaths.getGenPath(filesystem, target2, "%s"));
     workspace.verify(
-        Paths.get("test3_output.expected"), BuildTargetPaths.getGenPath(filesystem, target3, "%s"));
+        RelPath.get("test3_output.expected"),
+        BuildTargetPaths.getGenPath(filesystem, target3, "%s"));
   }
 
   /**
@@ -165,9 +168,11 @@ public class WorkerToolRuleIntegrationTest {
         .runBuckBuild(target1.getFullyQualifiedName(), target2.getFullyQualifiedName())
         .assertSuccess();
     workspace.verify(
-        Paths.get("test8_output.expected"), BuildTargetPaths.getGenPath(filesystem, target1, "%s"));
+        RelPath.get("test8_output.expected"),
+        BuildTargetPaths.getGenPath(filesystem, target1, "%s"));
     workspace.verify(
-        Paths.get("test9_output.expected"), BuildTargetPaths.getGenPath(filesystem, target2, "%s"));
+        RelPath.get("test9_output.expected"),
+        BuildTargetPaths.getGenPath(filesystem, target2, "%s"));
   }
 
   @Test

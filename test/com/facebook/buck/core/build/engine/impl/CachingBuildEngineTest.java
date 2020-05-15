@@ -76,6 +76,7 @@ import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.ExceptionWithContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -3551,7 +3552,7 @@ public class CachingBuildEngineTest {
       SourcePath input =
           PathSourcePath.of(filesystem, filesystem.getRootPath().getFileSystem().getPath("input"));
       filesystem.touch(pathResolver.getRelativePath(input));
-      Path output = BuildTargetPaths.getGenPath(filesystem, target, "%s/output");
+      RelPath output = BuildTargetPaths.getGenPath(filesystem, target, "%s/output");
       DepFileBuildRule rule =
           new DepFileBuildRule(target, filesystem, params) {
             @AddToRuleKey private final SourcePath path = input;
@@ -3559,7 +3560,7 @@ public class CachingBuildEngineTest {
             @Override
             public ImmutableList<Step> getBuildSteps(
                 BuildContext context, BuildableContext buildableContext) {
-              buildableContext.recordArtifact(output);
+              buildableContext.recordArtifact(output.getPath());
               return ImmutableList.of(
                   new WriteFileStep(filesystem, "", output, /* executable */ false));
             }
@@ -3626,7 +3627,7 @@ public class CachingBuildEngineTest {
       writeEntriesToArchive(
           artifact,
           ImmutableMap.of(
-              output,
+              output.getPath(),
               "stuff",
               BuildInfo.getPathToArtifactMetadataFile(target, filesystem),
               ObjectMappers.WRITER.writeValueAsString(

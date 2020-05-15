@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
@@ -106,14 +107,15 @@ public abstract class ResourcesParameters implements AddsToRuleKey {
                           ((HasOutputName) underlyingRule.get())
                               .getOutputName(getOutputLabel(rawResource))));
         } else {
-          Path genOutputParent =
+          RelPath genOutputParent =
               BuildTargetPaths.getGenPath(filesystem, underlyingTarget, "%s").getParent();
-          Path scratchOutputParent =
+          RelPath scratchOutputParent =
               BuildTargetPaths.getScratchPath(filesystem, underlyingTarget, "%s").getParent();
           Optional<Path> outputPath =
-              MorePaths.stripPrefix(relativePathToResource, genOutputParent)
+              MorePaths.stripPrefix(relativePathToResource, genOutputParent.getPath())
                   .map(Optional::of)
-                  .orElse(MorePaths.stripPrefix(relativePathToResource, scratchOutputParent));
+                  .orElse(
+                      MorePaths.stripPrefix(relativePathToResource, scratchOutputParent.getPath()));
           Preconditions.checkState(
               outputPath.isPresent(),
               "%s is used as a resource but does not output to a default output directory",

@@ -17,6 +17,7 @@
 package com.facebook.buck.cli;
 
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -28,7 +29,6 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.hamcrest.Matchers;
@@ -176,7 +176,7 @@ public class AuditActionGraphCommandIntegrationTest {
   private AbsPath getLegacyGenPathForTarget(
       String buildTarget, ProjectWorkspace workspace, String suffix) throws IOException {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
-    Path genDir =
+    RelPath genDir =
         BuildTargetPaths.getGenPath(
             filesystem, BuildTargetFactory.newInstance(buildTarget), "%s" + suffix);
     return tmp.getRoot().resolve(genDir);

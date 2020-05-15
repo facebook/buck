@@ -16,6 +16,7 @@
 
 package com.facebook.buck.maven;
 
+import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -88,15 +89,16 @@ public class Pom {
     applyBuildRule();
   }
 
-  public static Path generatePomFile(SourcePathResolverAdapter pathResolver, MavenPublishable rule)
-      throws IOException {
-    Path pom = getPomPath(rule);
-    Files.deleteIfExists(pom);
+  /** Generate POM file. */
+  public static AbsPath generatePomFile(
+      SourcePathResolverAdapter pathResolver, MavenPublishable rule) throws IOException {
+    AbsPath pom = getPomPath(rule);
+    Files.deleteIfExists(pom.getPath());
     generatePomFile(pathResolver, rule, pom);
     return pom;
   }
 
-  private static Path getPomPath(HasMavenCoordinates rule) {
+  private static AbsPath getPomPath(HasMavenCoordinates rule) {
     return rule.getProjectFilesystem()
         .resolve(
             BuildTargetPaths.getGenPath(
@@ -105,9 +107,9 @@ public class Pom {
 
   @VisibleForTesting
   static void generatePomFile(
-      SourcePathResolverAdapter pathResolver, MavenPublishable rule, Path optionallyExistingPom)
+      SourcePathResolverAdapter pathResolver, MavenPublishable rule, AbsPath optionallyExistingPom)
       throws IOException {
-    new Pom(pathResolver, optionallyExistingPom, rule).flushToFile();
+    new Pom(pathResolver, optionallyExistingPom.getPath(), rule).flushToFile();
   }
 
   private void applyBuildRule() {

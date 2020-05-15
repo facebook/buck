@@ -23,6 +23,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -241,12 +242,12 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         .build();
   }
 
-  private Path getRootScratchPath() {
+  private RelPath getRootScratchPath() {
     return BuildTargetPaths.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), "%s/non_predexed_root");
   }
 
-  private Path getRootGenPath() {
+  private RelPath getRootGenPath() {
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/non_predexed_root");
   }
@@ -484,7 +485,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
             return StepExecutionResults.SUCCESS;
           }
         });
-    buildableContext.recordArtifact(getRootGenPath());
+    buildableContext.recordArtifact(getRootGenPath().getPath());
     buildableContext.recordArtifact(getSecondaryDexRoot());
     return steps.build();
   }
@@ -501,7 +502,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   private SourcePath genSourcePath(Path path) {
     // We only record the root gen path, so we should only be creating SourcePaths within that.
     Preconditions.checkState(
-        path.startsWith(getRootGenPath()) || path.startsWith(getSecondaryDexRoot()),
+        path.startsWith(getRootGenPath().getPath()) || path.startsWith(getSecondaryDexRoot()),
         "%s should start with %s or %s",
         path,
         getRootGenPath(),

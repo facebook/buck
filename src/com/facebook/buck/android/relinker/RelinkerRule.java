@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -248,7 +249,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
   private Path getScratchPath() {
     // ld doesn't seem to like commas in the version script path so we construct one without commas.
-    Path path = BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    RelPath path = BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
     String dirname = path.getFileName().toString().replace(',', '.');
     return path.getParent().resolve(dirname);
   }

@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -151,7 +152,7 @@ public class ResourcesFilter extends AbstractBuildRule
   }
 
   private ImmutableList<Path> getRawResDirectories() {
-    Path resDestinationBasePath =
+    RelPath resDestinationBasePath =
         BuildTargetPaths.getScratchPath(
             getProjectFilesystem(), getBuildTarget(), "__filtered__%s__");
 
@@ -236,15 +237,15 @@ public class ResourcesFilter extends AbstractBuildRule
           @Override
           public StepExecutionResult execute(ExecutionContext context) throws IOException {
             if (postFilterResourcesCmd.isPresent()) {
-              buildableContext.recordArtifact(getRDotJsonPath());
+              buildableContext.recordArtifact(getRDotJsonPath().getPath());
             }
-            Path stringFiles = getStringFilesPath();
+            RelPath stringFiles = getStringFilesPath();
             getProjectFilesystem().mkdirs(stringFiles.getParent());
             getProjectFilesystem()
                 .writeLinesToPath(
                     stringFilesBuilder.build().stream().map(Object::toString)::iterator,
                     stringFiles);
-            buildableContext.recordArtifact(stringFiles);
+            buildableContext.recordArtifact(stringFiles.getPath());
             return StepExecutionResults.SUCCESS;
           }
         });
@@ -252,7 +253,7 @@ public class ResourcesFilter extends AbstractBuildRule
     return steps.build();
   }
 
-  private Path getStringFilesPath() {
+  private RelPath getStringFilesPath() {
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/string_files");
   }
 
@@ -265,12 +266,12 @@ public class ResourcesFilter extends AbstractBuildRule
         cmd -> {
           OutputStream filterResourcesDataOutputStream = null;
           try {
-            Path filterResourcesDataPath = getFilterResourcesDataPath();
+            RelPath filterResourcesDataPath = getFilterResourcesDataPath();
             getProjectFilesystem().createParentDirs(filterResourcesDataPath);
             filterResourcesDataOutputStream =
-                getProjectFilesystem().newFileOutputStream(filterResourcesDataPath);
+                getProjectFilesystem().newFileOutputStream(filterResourcesDataPath.getPath());
             writeFilterResourcesData(filterResourcesDataOutputStream, inResDirToOutResDirMap);
-            buildableContext.recordArtifact(filterResourcesDataPath);
+            buildableContext.recordArtifact(filterResourcesDataPath.getPath());
             addPostFilterCommandSteps(cmd, context.getSourcePathResolver(), steps);
           } catch (IOException e) {
             throw new RuntimeException("Could not generate/save filter resources data json", e);
@@ -293,7 +294,7 @@ public class ResourcesFilter extends AbstractBuildRule
     steps.add(new BashStep(getProjectFilesystem().getRootPath(), commandLine));
   }
 
-  private Path getFilterResourcesDataPath() {
+  private RelPath getFilterResourcesDataPath() {
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/post_filter_resources_data.json");
   }
@@ -306,7 +307,7 @@ public class ResourcesFilter extends AbstractBuildRule
     return Optional.empty();
   }
 
-  private Path getRDotJsonPath() {
+  private RelPath getRDotJsonPath() {
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/R.json");
   }
 
@@ -376,7 +377,7 @@ public class ResourcesFilter extends AbstractBuildRule
   @Override
   public BuildOutput initializeFromDisk(SourcePathResolverAdapter pathResolver) throws IOException {
     ImmutableList<Path> stringFiles =
-        getProjectFilesystem().readLines(getStringFilesPath()).stream()
+        getProjectFilesystem().readLines(getStringFilesPath().getPath()).stream()
             .map(Paths::get)
             .collect(ImmutableList.toImmutableList());
     return new BuildOutput(stringFiles);

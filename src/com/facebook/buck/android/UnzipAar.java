@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -57,9 +58,9 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private static final String AAR_UNZIP_PATH_FORMAT = "__unpack_%s__";
 
   @AddToRuleKey private final SourcePath aarFile;
-  private final Path unpackDirectory;
-  private final Path uberClassesJar;
-  private final Path pathToTextSymbolsDir;
+  private final RelPath unpackDirectory;
+  private final RelPath uberClassesJar;
+  private final RelPath pathToTextSymbolsDir;
   private final Path pathToTextSymbolsFile;
   private final Path pathToRDotJavaPackageFile;
   private final BuildOutputInitializer<BuildOutput> outputInitializer;
@@ -96,7 +97,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
         new UnzipStep(
             getProjectFilesystem(),
             context.getSourcePathResolver().getAbsolutePath(aarFile),
-            unpackDirectory,
+            unpackDirectory.getPath(),
             Optional.empty()));
 
     steps.add(new TouchStep(getProjectFilesystem(), getProguardConfig()));
@@ -153,7 +154,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
             }
 
             if (dirDoesNotExistOrIsEmpty) {
-              filesystem.copy(classesJar, uberClassesJar, CopySourceMode.FILE);
+              filesystem.copy(classesJar, uberClassesJar.getPath(), CopySourceMode.FILE);
             } else {
               // Glob all of the contents from classes.jar and the entries in libs/ into a single
               // JAR.
@@ -172,7 +173,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   .setManifestFile(Optional.<Path>empty().orElse(null))
                   .setShouldMergeManifests(true)
                   .setRemoveEntryPredicate(RemoveClassesPatternsMatcher.EMPTY)
-                  .createJarFile(filesystem.resolve(uberClassesJar));
+                  .createJarFile(filesystem.resolve(uberClassesJar).getPath());
             }
             return StepExecutionResults.SUCCESS;
           }
@@ -188,8 +189,8 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         CopyStep.forFile(getProjectFilesystem(), getTextSymbolsFile(), pathToTextSymbolsFile));
 
-    buildableContext.recordArtifact(unpackDirectory);
-    buildableContext.recordArtifact(uberClassesJar);
+    buildableContext.recordArtifact(unpackDirectory.getPath());
+    buildableContext.recordArtifact(uberClassesJar.getPath());
     buildableContext.recordArtifact(pathToTextSymbolsFile);
     buildableContext.recordArtifact(pathToRDotJavaPackageFile);
     return steps.build();
@@ -228,7 +229,7 @@ public class UnzipAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), unpackDirectory);
   }
 
-  Path getPathToClassesJar() {
+  RelPath getPathToClassesJar() {
     return uberClassesJar;
   }
 

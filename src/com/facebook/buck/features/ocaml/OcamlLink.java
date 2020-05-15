@@ -115,7 +115,8 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                     flags,
                     stdlib,
                     getProjectFilesystem().resolve(outputRelativePath),
-                    OcamlUtil.makeLinkerArgFilePath(getProjectFilesystem(), getBuildTarget()),
+                    OcamlUtil.makeLinkerArgFilePath(getProjectFilesystem(), getBuildTarget())
+                        .getPath(),
                     depInput,
                     cDepInput,
                     inputs.stream()

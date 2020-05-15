@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -82,7 +83,7 @@ public class SymlinkTreeTest {
   private BuildTarget buildTarget;
   private SymlinkTree symlinkTreeBuildRule;
   private ImmutableMap<Path, SourcePath> links;
-  private Path outputPath;
+  private RelPath outputPath;
   private SourcePathResolverAdapter pathResolver;
   private ActionGraphBuilder graphBuilder;
 
@@ -120,7 +121,7 @@ public class SymlinkTreeTest {
 
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
-        new SymlinkTree("link_tree", buildTarget, projectFilesystem, outputPath, links);
+        new SymlinkTree("link_tree", buildTarget, projectFilesystem, outputPath.getPath(), links);
   }
 
   @Test
@@ -141,7 +142,7 @@ public class SymlinkTreeTest {
                 new SymlinkTreeMergeStep(
                     "link_tree",
                     projectFilesystem,
-                    outputPath,
+                    outputPath.getPath(),
                     new SymlinkMapsPaths(pathResolver.getMappedPaths(links)),
                     (a, b) -> false))
             .build();
@@ -164,7 +165,7 @@ public class SymlinkTreeTest {
             "link_tree",
             buildTarget,
             projectFilesystem,
-            outputPath,
+            outputPath.getPath(),
             ImmutableMap.of(
                 Paths.get("different/link"),
                 PathSourcePath.of(
@@ -250,7 +251,7 @@ public class SymlinkTreeTest {
             "link_tree",
             buildTarget,
             projectFilesystem,
-            outputPath,
+            outputPath.getPath(),
             ImmutableMap.of(Paths.get("link"), dep.getSourcePathToOutput()));
 
     // Generate an input-based rule key for the symlink tree with the contents of the link
@@ -279,7 +280,7 @@ public class SymlinkTreeTest {
             "link_tree",
             buildTarget,
             projectFilesystem,
-            outputPath,
+            outputPath.getPath(),
             ImmutableMap.of(
                 Paths.get("../something"),
                 PathSourcePath.of(

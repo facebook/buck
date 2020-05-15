@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -58,8 +59,8 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
   @AddToRuleKey private final Optional<SourcePath> mavenPomTemplate;
   @AddToRuleKey private final Iterable<HasMavenCoordinates> mavenDeps;
 
-  private final Path output;
-  private final Path scratchDir;
+  private final RelPath output;
+  private final RelPath scratchDir;
 
   protected Javadoc(
       BuildTarget buildTarget,
@@ -91,7 +92,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(output);
+    buildableContext.recordArtifact(output.getPath());
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
@@ -109,11 +110,11 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
       steps.add(
           new ZipStep(
               getProjectFilesystem(),
-              output,
+              output.getPath(),
               ImmutableSet.of(),
               /* junk paths */ false,
               ZipCompressionLevel.NONE,
-              output));
+              output.getPath()));
       return steps.build();
     }
 
@@ -180,7 +181,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
     steps.add(
         new ZipStep(
             getProjectFilesystem(),
-            output,
+            output.getPath(),
             ImmutableSet.of(),
             /* junk paths */ false,
             ZipCompressionLevel.DEFAULT,

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.build.engine.buildinfo;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -36,13 +37,13 @@ public class DefaultOnDiskInfoPreparer {
   public final ProjectFilesystem projectFilesystem;
 
   public Path metadataDirectory;
-  public Path filePath;
-  public Path dirPath;
+  public RelPath filePath;
+  public RelPath dirPath;
   public Path subDir;
   public Path emptySubDir;
   public Path fileWithinDirPath;
   public Path otherPathWithinDir;
-  public Path symlinkPath;
+  public RelPath symlinkPath;
   public Path fileViaSymlinkPath;
 
   public DefaultOnDiskBuildInfo onDiskBuildInfo;
@@ -72,7 +73,7 @@ public class DefaultOnDiskInfoPreparer {
     emptySubDir = dirPath.resolve("empty_sub_dir");
     fileWithinDirPath = subDir.resolve("some_inner.path");
     otherPathWithinDir = subDir.resolve("other.file");
-    Path symlinkedDirPath =
+    RelPath symlinkedDirPath =
         BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "%s/symlinked_dir");
     symlinkPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/symlink");
     Path fileInSymlinkedDirPath = symlinkedDirPath.resolve("file_in_symlink");
@@ -93,7 +94,7 @@ public class DefaultOnDiskInfoPreparer {
 
     projectFilesystem.mkdirs(symlinkedDirPath);
     projectFilesystem.createSymLink(
-        symlinkPath, projectFilesystem.resolve(symlinkedDirPath), false);
+        symlinkPath.getPath(), projectFilesystem.resolve(symlinkedDirPath).getPath(), false);
     projectFilesystem.writeContentsToPath("data3", fileInSymlinkedDirPath);
 
     recorder.addMetadata(

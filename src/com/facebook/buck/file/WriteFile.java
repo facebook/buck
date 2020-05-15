@@ -18,6 +18,7 @@ package com.facebook.buck.file;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -74,6 +75,29 @@ public class WriteFile extends AbstractBuildRule {
     this.fileContents = fileContents;
     this.output = output;
     this.executable = executable;
+  }
+
+  public WriteFile(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      String fileContents,
+      RelPath output,
+      boolean executable) {
+    this(
+        buildTarget,
+        projectFilesystem,
+        fileContents.getBytes(StandardCharsets.UTF_8),
+        output,
+        executable);
+  }
+
+  public WriteFile(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      byte[] fileContents,
+      RelPath output,
+      boolean executable) {
+    this(buildTarget, projectFilesystem, fileContents, output.getPath(), executable);
   }
 
   @Override

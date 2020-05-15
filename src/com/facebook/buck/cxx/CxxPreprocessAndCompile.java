@@ -61,7 +61,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
     implements SupportsDependencyFileRuleKey, CxxIntermediateBuildProduct {
   private static final Logger LOG = Logger.get(CxxPreprocessAndCompile.class);
 
-  private final Path output;
+  private final RelPath output;
   private final Optional<CxxPrecompiledHeader> precompiledHeaderRule;
 
   private CxxPreprocessAndCompile(
@@ -252,7 +252,7 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
                 preprocessorDelegate.getHeaderVerification(),
                 getDepFilePath(),
                 getRelativeInputPaths(context.getSourcePathResolver()).getPath(),
-                output,
+                output.getPath(),
                 compilerDelegate.getDependencyTrackingMode(),
                 compilerDelegate.getCompiler().getUseUnixPathSeparator());
       } catch (Depfiles.HeaderVerificationException e) {

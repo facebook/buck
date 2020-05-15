@@ -21,6 +21,8 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -66,11 +68,11 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
   private final Optional<PreInclude> preInclude;
 
   @AddToRuleKey(stringify = true)
-  private final Path output;
+  private final RelPath output;
 
   @AddToRuleKey private final PreprocessorDelegate preprocessorDelegate;
 
-  private final Path resultsDir;
+  private final RelPath resultsDir;
 
   CxxInferCapture(
       BuildTarget buildTarget,
@@ -156,7 +158,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), resultsDir);
   }
 
-  public Path getAbsolutePathToOutput() {
+  public AbsPath getAbsolutePathToOutput() {
     return getProjectFilesystem().resolve(resultsDir);
   }
 
@@ -193,7 +195,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
               HeaderVerification.of(HeaderVerification.Mode.IGNORE),
               getDepFilePath(),
               context.getSourcePathResolver().getRelativePath(input),
-              output,
+              output.getPath(),
               DependencyTrackingMode.MAKEFILE,
               false);
     } catch (Depfiles.HeaderVerificationException e) {

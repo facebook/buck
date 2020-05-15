@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -35,7 +36,6 @@ import com.facebook.buck.util.ExitCode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Ignore;
@@ -61,7 +61,7 @@ public class ParserIntegrationTest {
     buildResult.assertSuccess();
 
     workspace.verify(
-        Paths.get("base_genrule_output.expected"),
+        RelPath.get("base_genrule_output.expected"),
         BuildTargetPaths.getGenPath(filesystem, target, "%s"));
   }
 

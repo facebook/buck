@@ -23,6 +23,7 @@ import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -136,7 +137,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
    * Returns the path that is the immediate parent of {@link #getPathToNativeLibsAssetsDir()} and
    * {@link #getPathToNativeLibsDir()}.
    */
-  private Path getPathToAllLibsDir() {
+  private RelPath getPathToAllLibsDir() {
     return getBinPath();
   }
 
@@ -152,7 +153,7 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToMetadataTxt());
   }
 
-  private Path getBinPath() {
+  private RelPath getBinPath() {
     return BuildTargetPaths.getScratchPath(
         getProjectFilesystem(), getBuildTarget(), "__native_" + moduleName + "_%s__");
   }
@@ -252,7 +253,8 @@ public class CopyNativeLibraries extends AbstractBuildRule implements SupportsIn
 
     Path pathToMetadataTxt = getPathToMetadataTxt();
     steps.add(
-        createMetadataStep(getProjectFilesystem(), getPathToMetadataTxt(), getPathToAllLibsDir()));
+        createMetadataStep(
+            getProjectFilesystem(), getPathToMetadataTxt(), getPathToAllLibsDir().getPath()));
 
     buildableContext.recordArtifact(pathToNativeLibs);
     buildableContext.recordArtifact(pathToNativeLibsAssets);

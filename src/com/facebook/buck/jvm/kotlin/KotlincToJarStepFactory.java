@@ -20,6 +20,8 @@ import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -178,22 +180,22 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
 
     // Only invoke kotlinc if we have kotlin or src zip files.
     if (hasKotlinSources) {
-      Path stubsOutput =
+      RelPath stubsOutput =
           BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_stubs__");
-      Path sourcesOutput =
+      RelPath sourcesOutput =
           BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_sources__");
-      Path classesOutput =
+      RelPath classesOutput =
           BuildTargetPaths.getAnnotationPath(projectFilesystem, invokingRule, "__%s_classes__");
-      Path kaptGeneratedOutput =
+      RelPath kaptGeneratedOutput =
           BuildTargetPaths.getAnnotationPath(
               projectFilesystem, invokingRule, "__%s_kapt_generated__");
-      Path kotlincPluginGeneratedOutput =
+      RelPath kotlincPluginGeneratedOutput =
           BuildTargetPaths.getAnnotationPath(
               projectFilesystem, invokingRule, "__%s_kotlinc_plugin_generated__");
-      Path annotationGenFolder = getKaptAnnotationGenPath(projectFilesystem, invokingRule);
-      Path genOutputFolder =
+      RelPath annotationGenFolder = getKaptAnnotationGenPath(projectFilesystem, invokingRule);
+      RelPath genOutputFolder =
           BuildTargetPaths.getGenPath(projectFilesystem, invokingRule, "__%s_gen_sources__");
-      Path genOutput =
+      RelPath genOutput =
           BuildTargetPaths.getGenPath(
               projectFilesystem, invokingRule, "__%s_gen_sources__/generated" + SRC_ZIP);
 
@@ -307,19 +309,22 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
         postKotlinCompilationSteps.add(
             new ZipStep(
                 projectFilesystem,
-                genOutput,
+                genOutput.getPath(),
                 ImmutableSet.of(),
                 false,
                 ZipCompressionLevel.DEFAULT,
-                annotationGenFolder));
+                annotationGenFolder.getPath()));
 
         // Generated classes should be part of the output. This way generated files
         // such as META-INF dirs will also be added to the final jar.
         postKotlinCompilationSteps.add(
             CopyStep.forDirectory(
-                projectFilesystem, classesOutput, outputDirectory, DirectoryMode.CONTENTS_ONLY));
+                projectFilesystem,
+                classesOutput.getPath(),
+                outputDirectory,
+                DirectoryMode.CONTENTS_ONLY));
 
-        sourceBuilder.add(genOutput);
+        sourceBuilder.add(genOutput.getPath());
       }
 
       ImmutableList.Builder<String> extraArguments =
@@ -341,7 +346,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
             extraArguments.add(target);
           });
 
-      Path tmpSourceAbiFolder;
+      AbsPath tmpSourceAbiFolder;
       if (abiGenerationPlugin != null) {
         tmpSourceAbiFolder = JavaAbis.getTmpGenPathForSourceAbi(projectFilesystem, invokingRule);
         extraArguments.add("-Xplugin=" + abiGenerationPlugin);
@@ -446,7 +451,7 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
       ImmutableList.Builder<Step> steps,
       ProjectFilesystem filesystem,
       BuildContext buildContext,
-      Path location) {
+      RelPath location) {
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -540,8 +545,8 @@ public class KotlincToJarStepFactory extends CompileToJarStepFactory implements 
     return !javacOptions.getJavaAnnotationProcessorParams().isEmpty();
   }
 
-  public static Path getKaptAnnotationGenPath(
+  public static RelPath getKaptAnnotationGenPath(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
-    return BuildPaths.getGenDir(projectFilesystem, buildTarget).resolve("__generated__");
+    return BuildPaths.getGenDir(projectFilesystem, buildTarget).resolveRel("__generated__");
   }
 }

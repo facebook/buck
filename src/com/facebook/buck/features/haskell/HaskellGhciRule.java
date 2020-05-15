@@ -19,6 +19,7 @@ package com.facebook.buck.features.haskell;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -262,7 +263,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
         platform.getGhciPackager().get());
   }
 
-  private Path getOutputDir() {
+  private RelPath getOutputDir() {
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
@@ -315,7 +316,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
     String name = getBuildTarget().getShortName();
-    Path dir = getOutputDir();
+    RelPath dir = getOutputDir();
     Path so = resolver.getRelativePath(omnibusSharedObject.getSourcePathToOutput());
     Path binDir = dir.resolve(name + ".bin");
     Path packagesDir = dir.resolve(name + ".packages");
@@ -558,7 +559,7 @@ public class HaskellGhciRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       steps.add(new MakeExecutableStep(getProjectFilesystem(), extraScript));
     }
 
-    buildableContext.recordArtifact(dir);
+    buildableContext.recordArtifact(dir.getPath());
 
     return steps.build();
   }

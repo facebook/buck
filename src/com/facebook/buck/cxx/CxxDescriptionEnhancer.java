@@ -18,6 +18,8 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -169,11 +171,11 @@ public class CxxDescriptionEnhancer {
     BuildTarget headerSymlinkTreeTarget =
         CxxDescriptionEnhancer.createHeaderSymlinkTreeTarget(
             buildTarget, headerVisibility, flavors);
-    Path headerSymlinkTreeRoot =
+    RelPath headerSymlinkTreeRoot =
         CxxDescriptionEnhancer.getHeaderSymlinkTreePath(
             projectFilesystem, buildTarget, headerVisibility, flavors);
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        headerSymlinkTreeTarget, projectFilesystem, headerSymlinkTreeRoot, headers, mode);
+        headerSymlinkTreeTarget, projectFilesystem, headerSymlinkTreeRoot.getPath(), headers, mode);
   }
 
   public static HeaderSymlinkTree createHeaderSymlinkTree(
@@ -239,7 +241,7 @@ public class CxxDescriptionEnhancer {
   }
 
   /** @return the absolute {@link Path} to use for the symlink tree of headers. */
-  public static Path getHeaderSymlinkTreePath(
+  public static RelPath getHeaderSymlinkTreePath(
       ProjectFilesystem filesystem,
       BuildTarget target,
       HeaderVisibility headerVisibility,
@@ -668,12 +670,12 @@ public class CxxDescriptionEnhancer {
     return String.format("lib%s.%s", libName, extension);
   }
 
-  public static Path getSharedLibraryPath(
+  public static RelPath getSharedLibraryPath(
       ProjectFilesystem filesystem, BuildTarget sharedLibraryTarget, String soname) {
     return BuildTargetPaths.getGenPath(filesystem, sharedLibraryTarget, "%s/" + soname);
   }
 
-  private static Path getBinaryOutputPath(
+  private static RelPath getBinaryOutputPath(
       BuildTarget target,
       ProjectFilesystem filesystem,
       Optional<String> extension,
@@ -798,7 +800,7 @@ public class CxxDescriptionEnhancer {
             args.getIncludeDirectories());
 
     BuildTarget thinIndexTarget = target.withAppendedFlavors(CXX_LINK_THININDEX_FLAVOR);
-    Path indexOutput =
+    RelPath indexOutput =
         getBinaryOutputPath(
             thinIndexTarget, projectFilesystem, Optional.empty(), Optional.of("thinlto.indices"));
 
@@ -832,7 +834,7 @@ public class CxxDescriptionEnhancer {
                         projectFilesystem,
                         graphBuilder,
                         thinIndexTarget,
-                        indexOutput,
+                        indexOutput.getPath(),
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
                         Optional.empty(),
                         RichStream.from(deps)
@@ -898,7 +900,7 @@ public class CxxDescriptionEnhancer {
             args.getPrecompiledHeader(),
             cxxThinLTOIndex.getSourcePathToOutput());
 
-    Path linkOutput =
+    RelPath linkOutput =
         getBinaryOutputPath(
             flavoredLinkerMapMode.isPresent()
                 ? target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor())
@@ -940,7 +942,7 @@ public class CxxDescriptionEnhancer {
                         linkRuleTarget,
                         Linker.LinkType.EXECUTABLE,
                         Optional.empty(),
-                        linkOutput,
+                        linkOutput.getPath(),
                         args.getLinkerExtraOutputs(),
                         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
                         Optional.empty(),
@@ -1095,7 +1097,7 @@ public class CxxDescriptionEnhancer {
       CommandTool.Builder executableBuilder,
       Linker linker,
       LinkableDepType linkStyle,
-      Path linkOutput,
+      RelPath linkOutput,
       ImmutableList<StringWithMacros> linkerFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -1129,7 +1131,7 @@ public class CxxDescriptionEnhancer {
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-      Path absLinkOut = projectFilesystem.resolve(linkOutput);
+      AbsPath absLinkOut = projectFilesystem.resolve(linkOutput);
       argsBuilder.addAll(
           StringArg.from(
               Linkers.iXlinker(
@@ -1417,7 +1419,7 @@ public class CxxDescriptionEnhancer {
     Linker linker = cxxPlatform.getLd().resolve(graphBuilder, target.getTargetConfiguration());
     BuildTarget linkRuleTarget = createCxxLinkTarget(target, flavoredLinkerMapMode);
 
-    Path linkOutput =
+    RelPath linkOutput =
         getBinaryOutputPath(
             flavoredLinkerMapMode.isPresent()
                 ? target.withAppendedFlavors(flavoredLinkerMapMode.get().getFlavor())
@@ -1457,7 +1459,7 @@ public class CxxDescriptionEnhancer {
                         linkRuleTarget,
                         Linker.LinkType.EXECUTABLE,
                         Optional.empty(),
-                        linkOutput,
+                        linkOutput.getPath(),
                         linkerExtraOutputs,
                         linkStyle,
                         linkableListFilter,
@@ -1511,7 +1513,7 @@ public class CxxDescriptionEnhancer {
       Path binaryName = linkOutput.getFileName();
       BuildTarget binaryWithSharedLibrariesTarget =
           createBinaryWithSharedLibrariesSymlinkTreeTarget(target, cxxPlatform.getFlavor());
-      Path symlinkTreeRoot =
+      RelPath symlinkTreeRoot =
           getBinaryWithSharedLibrariesSymlinkTreePath(
               projectFilesystem, binaryWithSharedLibrariesTarget, cxxPlatform.getFlavor());
       Path appPath = symlinkTreeRoot.resolve(binaryName);
@@ -1567,10 +1569,11 @@ public class CxxDescriptionEnhancer {
                     cxxPlatform.getStrip(),
                     isCacheable,
                     CxxDescriptionEnhancer.getBinaryOutputPath(
-                        stripBuildTarget,
-                        projectFilesystem,
-                        cxxPlatform.getBinaryExtension(),
-                        outputRootName)));
+                            stripBuildTarget,
+                            projectFilesystem,
+                            cxxPlatform.getBinaryExtension(),
+                            outputRootName)
+                        .getPath()));
   }
 
   public static BuildRule createUberCompilationDatabase(
@@ -1641,7 +1644,7 @@ public class CxxDescriptionEnhancer {
   }
 
   /** @return the {@link Path} to use for the symlink tree of headers. */
-  public static Path getSharedLibrarySymlinkTreePath(
+  public static RelPath getSharedLibrarySymlinkTreePath(
       ProjectFilesystem filesystem, BuildTarget target, Flavor platform) {
     return BuildTargetPaths.getGenPath(
         filesystem, createSharedLibrarySymlinkTreeTarget(target, platform), "%s");
@@ -1661,7 +1664,7 @@ public class CxxDescriptionEnhancer {
 
     BuildTarget symlinkTreeTarget =
         createSharedLibrarySymlinkTreeTarget(baseBuildTarget, cxxPlatform.getFlavor());
-    Path symlinkTreeRoot =
+    RelPath symlinkTreeRoot =
         getSharedLibrarySymlinkTreePath(filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
     ImmutableMap<BuildTarget, NativeLinkableGroup> roots =
@@ -1678,7 +1681,7 @@ public class CxxDescriptionEnhancer {
       links.put(Paths.get(ent.getKey()), ent.getValue());
     }
     return new MappedSymlinkTree(
-        "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
+        "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot.getPath(), links.build());
   }
 
   public static MappedSymlinkTree requireSharedLibrarySymlinkTree(
@@ -1705,7 +1708,7 @@ public class CxxDescriptionEnhancer {
     return target.withAppendedFlavors(BINARY_WITH_SHARED_LIBRARIES_SYMLINK_TREE_FLAVOR, platform);
   }
 
-  private static Path getBinaryWithSharedLibrariesSymlinkTreePath(
+  private static RelPath getBinaryWithSharedLibrariesSymlinkTreePath(
       ProjectFilesystem filesystem, BuildTarget target, Flavor platform) {
     return BuildTargetPaths.getGenPath(
         filesystem, createBinaryWithSharedLibrariesSymlinkTreeTarget(target, platform), "%s");
@@ -1722,7 +1725,7 @@ public class CxxDescriptionEnhancer {
 
     BuildTarget symlinkTreeTarget =
         createBinaryWithSharedLibrariesSymlinkTreeTarget(baseBuildTarget, cxxPlatform.getFlavor());
-    Path symlinkTreeRoot =
+    RelPath symlinkTreeRoot =
         getBinaryWithSharedLibrariesSymlinkTreePath(
             filesystem, baseBuildTarget, cxxPlatform.getFlavor());
 
@@ -1741,7 +1744,7 @@ public class CxxDescriptionEnhancer {
     }
     links.put(binaryName, binarySource);
     return new MappedSymlinkTree(
-        "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot, links.build());
+        "cxx_binary", symlinkTreeTarget, filesystem, symlinkTreeRoot.getPath(), links.build());
   }
 
   private static MappedSymlinkTree requireBinaryWithSharedLibrariesSymlinkTree(

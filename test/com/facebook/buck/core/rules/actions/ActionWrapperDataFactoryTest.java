@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThat;
 import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.BuildArtifact;
 import com.facebook.buck.core.artifact.SourceArtifactImpl;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -36,7 +37,6 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
@@ -116,7 +116,7 @@ public class ActionWrapperDataFactoryTest {
     ImmutableSortedSet<Artifact> inputs = ImmutableSortedSet.of();
     Artifact output = actionRegistry.declareArtifact(Paths.get("myoutput"));
 
-    Path expectedBasePath = BuildPaths.getGenDir(filesystem, target);
+    RelPath expectedBasePath = BuildPaths.getGenDir(filesystem, target);
 
     FakeAction.FakeActionExecuteLambda executeFunc =
         (srcs, inputs1, outputs1, executionContext) ->

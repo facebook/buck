@@ -20,6 +20,7 @@ import com.facebook.buck.android.exopackage.ExopackageInfo;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -37,7 +38,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.SortedSet;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -78,7 +78,7 @@ public class AndroidBinaryExopackageSymlinkTree extends AbstractBuildRule {
   @Override
   public ImmutableList<? extends Step> getBuildSteps(
       BuildContext buildContext, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(getOutputPath());
+    buildableContext.recordArtifact(getOutputPath().getPath());
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     steps.add(
         new AbstractExecutionStep("creating_exopackage_symlink_tree") {
@@ -103,7 +103,7 @@ public class AndroidBinaryExopackageSymlinkTree extends AbstractBuildRule {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getOutputPath());
   }
 
-  private Path getOutputPath() {
+  private RelPath getOutputPath() {
     return ExopackageSymlinkTreeStep.getExopackageSymlinkTreePath(
         getBuildTarget(), getProjectFilesystem());
   }

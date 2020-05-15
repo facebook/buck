@@ -16,13 +16,13 @@
 
 package com.facebook.buck.core.model.impl;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.io.filesystem.BuckPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.base.Preconditions;
-import java.nio.file.Path;
 
 /**
  * Static helpers for working with build targets.
@@ -48,14 +48,14 @@ public class BuildTargetPaths {
    * @return A {@link java.nio.file.Path} under buck-out/bin, scoped to the base path of {@code
    *     target}.
    */
-  public static Path getScratchPath(
+  public static RelPath getScratchPath(
       ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
     return filesystem
         .getBuckPaths()
         .getScratchDir()
-        .resolve(getBasePath(filesystem, target, format).toPath(filesystem.getFileSystem()));
+        .resolve(getBasePath(filesystem, target, format).toRelPath(filesystem.getFileSystem()));
   }
 
   /**
@@ -69,14 +69,14 @@ public class BuildTargetPaths {
    * @return A {@link java.nio.file.Path} under buck-out/annotation, scoped to the base path of
    *     {@code target}.
    */
-  public static Path getAnnotationPath(
+  public static RelPath getAnnotationPath(
       ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
     return filesystem
         .getBuckPaths()
         .getAnnotationDir()
-        .resolve(getBasePath(filesystem, target, format).toPath(filesystem.getFileSystem()));
+        .resolve(getBasePath(filesystem, target, format).toRelPath(filesystem.getFileSystem()));
   }
 
   /**
@@ -90,22 +90,23 @@ public class BuildTargetPaths {
    * @return A {@link java.nio.file.Path} under buck-out/gen, scoped to the base path of {@code
    *     target}.
    */
-  public static Path getGenPath(ProjectFilesystem filesystem, BuildTarget target, String format) {
+  public static RelPath getGenPath(
+      ProjectFilesystem filesystem, BuildTarget target, String format) {
     Preconditions.checkArgument(
         !format.startsWith("/"), "format string should not start with a slash");
 
     return filesystem
         .getBuckPaths()
         .getGenDir()
-        .resolve(getBasePath(filesystem, target, format).toPath(filesystem.getFileSystem()));
+        .resolve(getBasePath(filesystem, target, format).toRelPath(filesystem.getFileSystem()));
   }
 
   /** A folder where all targets in the file of target are created. */
-  public static Path getGenPathForBaseName(ProjectFilesystem filesystem, BuildTarget target) {
+  public static RelPath getGenPathForBaseName(ProjectFilesystem filesystem, BuildTarget target) {
     return filesystem
         .getBuckPaths()
         .getGenDir()
-        .resolve(getBasePathForBaseName(filesystem, target).toPath(filesystem.getFileSystem()));
+        .resolve(getBasePathForBaseName(filesystem, target).toRelPath(filesystem.getFileSystem()));
   }
 
   /**

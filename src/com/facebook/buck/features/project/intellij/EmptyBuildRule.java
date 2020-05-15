@@ -18,6 +18,7 @@ package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
@@ -57,7 +58,7 @@ class EmptyBuildRule extends AbstractBuildRule implements HasOutputName {
   @Nullable
   @Override
   public SourcePath getSourcePathToOutput() {
-    Path pathToOutDirectory =
+    RelPath pathToOutDirectory =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
     Path pathToOutFile = pathToOutDirectory.resolve(out);
 

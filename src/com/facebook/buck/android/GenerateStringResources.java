@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -84,7 +85,7 @@ public class GenerateStringResources extends AbstractBuildRule {
       BuildContext buildContext, BuildableContext buildableContext) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
     // Make sure we have a clean output directory
-    Path outputDirPath = getPathForStringResourcesDirectory();
+    RelPath outputDirPath = getPathForStringResourcesDirectory();
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -121,11 +122,11 @@ public class GenerateStringResources extends AbstractBuildRule {
           }
         });
     // Cache the outputDirPath with all the required string resources
-    buildableContext.recordArtifact(outputDirPath);
+    buildableContext.recordArtifact(outputDirPath.getPath());
     return steps.build();
   }
 
-  private Path getPathForStringResourcesDirectory() {
+  private RelPath getPathForStringResourcesDirectory() {
     return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "__%s__");
   }
 

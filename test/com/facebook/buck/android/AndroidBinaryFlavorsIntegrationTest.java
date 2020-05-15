@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -28,7 +29,6 @@ import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
-import java.nio.file.Path;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -53,7 +53,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
     String target = "//apps/sample:app_comp_str#package_string_assets";
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
-    Path path =
+    RelPath path =
         BuildTargetPaths.getScratchPath(
             filesystem,
             BuildTargetFactory.newInstance(target),
@@ -67,7 +67,7 @@ public class AndroidBinaryFlavorsIntegrationTest {
     String target = "//apps/sample:app_str#package_string_assets";
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     ProcessResult result = workspace.runBuckCommand("targets", "--show-output", target);
-    Path path =
+    RelPath path =
         BuildTargetPaths.getScratchPath(
             filesystem,
             BuildTargetFactory.newInstance(target),

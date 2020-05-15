@@ -18,6 +18,7 @@ package com.facebook.buck.cxx.toolchain;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -49,7 +50,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -116,7 +116,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
       this.inputs = inputs;
     }
 
-    private Path getUndefinedSymbolsPath() {
+    private RelPath getUndefinedSymbolsPath() {
       return BuildTargetPaths.getGenPath(
           getProjectFilesystem(), getBuildTarget(), "%s/undefined_symbols.txt");
     }
@@ -124,10 +124,10 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
     @Override
     public ImmutableList<Step> getBuildSteps(
         BuildContext context, BuildableContext buildableContext) {
-      Path output = getUndefinedSymbolsPath();
+      RelPath output = getUndefinedSymbolsPath();
 
       // Cache the symbols file.
-      buildableContext.recordArtifact(output);
+      buildableContext.recordArtifact(output.getPath());
 
       // Run `nm` on the inputs.
       ShellStep shellStep =

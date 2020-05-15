@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -58,7 +59,7 @@ public class GoTestCoverSource extends AbstractBuildRule {
   private final ImmutableMap<SourcePath, SourcePath> coveredSources;
   private final ImmutableSet<SourcePath> testSources;
   private final ImmutableSortedSet<BuildRule> buildDeps;
-  private final Path genDir;
+  private final RelPath genDir;
 
   public GoTestCoverSource(
       BuildTarget buildTarget,
@@ -125,7 +126,7 @@ public class GoTestCoverSource extends AbstractBuildRule {
               coverageMode));
     }
 
-    buildableContext.recordArtifact(genDir);
+    buildableContext.recordArtifact(genDir.getPath());
     return steps.build();
   }
 

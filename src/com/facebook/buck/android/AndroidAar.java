@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -41,7 +42,6 @@ import com.facebook.buck.zip.ZipStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -50,8 +50,8 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   public static final String AAR_FORMAT = "%s.aar";
 
-  private final Path pathToOutputFile;
-  private final Path temp;
+  private final RelPath pathToOutputFile;
+  private final RelPath temp;
   private final AndroidManifest manifest;
   private final AndroidResource androidResource;
   private final SourcePath assembledResourceDirectory;
@@ -175,13 +175,13 @@ public class AndroidAar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     commands.add(
         new ZipStep(
             getProjectFilesystem(),
-            pathToOutputFile,
+            pathToOutputFile.getPath(),
             ImmutableSet.of(),
             false,
             ZipCompressionLevel.DEFAULT,
-            temp));
+            temp.getPath()));
 
-    buildableContext.recordArtifact(pathToOutputFile);
+    buildableContext.recordArtifact(pathToOutputFile.getPath());
     return commands.build();
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
@@ -43,12 +44,12 @@ public abstract class CompilerOutputPaths {
   public abstract Optional<Path> getOutputJarPath();
 
   public static CompilerOutputPaths of(BuildTarget target, ProjectFilesystem filesystem) {
-    Path genRoot = BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output");
-    Path scratchRoot = BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__scratch");
+    RelPath genRoot = BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__output");
+    RelPath scratchRoot = BuildTargetPaths.getScratchPath(filesystem, target, "lib__%s__scratch");
 
     return ImmutableCompilerOutputPaths.builder()
         .setClassesDir(scratchRoot.resolve("classes"))
-        .setOutputJarDirPath(genRoot)
+        .setOutputJarDirPath(genRoot.getPath())
         .setAbiJarPath(
             hasAbiJar(target)
                 ? Optional.of(genRoot.resolve(String.format("%s-abi.jar", target.getShortName())))
@@ -58,10 +59,12 @@ public abstract class CompilerOutputPaths {
                 ? Optional.of(
                     genRoot.resolve(String.format("%s.jar", target.getShortNameAndFlavorPostfix())))
                 : Optional.empty())
-        .setAnnotationPath(BuildTargetPaths.getAnnotationPath(filesystem, target, "__%s_gen__"))
-        .setPathToSourcesList(BuildTargetPaths.getGenPath(filesystem, target, "__%s__srcs"))
+        .setAnnotationPath(
+            BuildTargetPaths.getAnnotationPath(filesystem, target, "__%s_gen__").getPath())
+        .setPathToSourcesList(
+            BuildTargetPaths.getGenPath(filesystem, target, "__%s__srcs").getPath())
         .setWorkingDirectory(
-            BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__working_directory"))
+            BuildTargetPaths.getGenPath(filesystem, target, "lib__%s__working_directory").getPath())
         .build();
   }
 

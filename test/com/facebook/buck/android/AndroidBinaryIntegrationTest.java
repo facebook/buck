@@ -38,6 +38,7 @@ import com.facebook.buck.android.toolchain.AndroidSdkLocation;
 import com.facebook.buck.android.toolchain.TestAndroidSdkLocationFactory;
 import com.facebook.buck.android.toolchain.impl.AndroidBuildToolsResolver;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -264,7 +265,7 @@ public class AndroidBinaryIntegrationTest extends AbiCompilationModeTest {
   @Test
   public void testEditingPrimaryDexClassForcesRebuildForSimplePackage() throws IOException {
     BuildTarget buildTarget = BuildTargetFactory.newInstance(SIMPLE_TARGET);
-    Path outputPath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.apk");
+    RelPath outputPath = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.apk");
     HashFunction hashFunction = Hashing.sha1();
     String dexFileName = "classes.dex";
 

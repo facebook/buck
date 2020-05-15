@@ -25,6 +25,7 @@ import com.facebook.buck.android.RobolectricTestDescription;
 import com.facebook.buck.core.description.BaseDescription;
 import com.facebook.buck.core.description.arg.ConstructorArg;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
@@ -110,7 +111,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     } else if (description instanceof JavaBinaryDescription) {
       return getOutputPathForJavaBinary(buildTarget, filesystem);
     } else if (description instanceof AndroidBinaryDescription) {
-      return getOutputPathForAndroidBinary(buildTarget, filesystem);
+      return getOutputPathForAndroidBinary(buildTarget, filesystem).map(RelPath::getPath);
     } else if (description instanceof AndroidResourceDescription) {
       return getOutputPathForAndroidResource(buildTarget, filesystem);
     } else if (description instanceof AndroidBuildConfigDescription) {
@@ -118,14 +119,16 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return getOutputPathFromJavaTargetNode(targetNode, buildTarget, filesystem);
     } else if (description instanceof PrebuiltJarDescription) {
       return getOutputPathForPrebuiltJar(
-          (PrebuiltJarDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
+              (PrebuiltJarDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem)
+          .map(RelPath::getPath);
     } else if (isJvmLanguageTargetNode(targetNode)) {
       // All the JVM languages currently use DefaultJavaLibrary under the hood, so we can share
       // the implementation for these languages here
       return getOutputPathFromJavaTargetNode(targetNode, buildTarget, filesystem);
     } else if (description instanceof AndroidManifestDescription) {
       return Optional.of(
-          BuildTargetPaths.getGenPath(filesystem, buildTarget, "AndroidManifest__%s__.xml"));
+          BuildTargetPaths.getGenPath(filesystem, buildTarget, "AndroidManifest__%s__.xml")
+              .getPath());
     } else if (isJvmTestTargetNode(targetNode)) {
       // Test targets compile their code into a standard library under the hood using the
       // TESTS_FLAVOR
@@ -137,7 +140,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
           (ExportFileDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
     } else if (description instanceof RemoteFileDescription) {
       return getOutputPathForRemoteFile(
-          (RemoteFileDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
+              (RemoteFileDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem)
+          .map(RelPath::getPath);
     } else if (description instanceof FilegroupDescription) {
       return getOutputPathForFilegroup(
           (FileGroupDescriptionArg) targetNode.getConstructorArg(), buildTarget, filesystem);
@@ -238,7 +242,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
   }
 
   /** Calculate the output path for a RemoteFile rule */
-  private Optional<Path> getOutputPathForRemoteFile(
+  private Optional<RelPath> getOutputPathForRemoteFile(
       RemoteFileDescriptionArg arg, BuildTarget buildTarget, ProjectFilesystem filesystem) {
     // This matches the implementation in RemoteFileDescription for the output filename
     // calculation
@@ -287,8 +291,12 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
     }
   }
 
-  /** Calculate the output path for a PrebuiltJar from information in the Arg */
-  private Optional<Path> getOutputPathForPrebuiltJar(
+  /**
+   * Calculate the output path for a PrebuiltJar from information in the Arg
+   *
+   * @return
+   */
+  private Optional<RelPath> getOutputPathForPrebuiltJar(
       PrebuiltJarDescriptionArg constructorArg,
       BuildTarget buildTarget,
       ProjectFilesystem filesystem) {
@@ -315,7 +323,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
       return Optional.of(BuildPaths.getGenDir(filesystem, buildTarget).resolve("res"));
     } else {
       return Optional.of(
-          BuildTargetPaths.getGenPath(filesystem, buildTarget, "__%s_text_symbols__"));
+          BuildTargetPaths.getGenPath(filesystem, buildTarget, "__%s_text_symbols__").getPath());
     }
   }
 
@@ -323,7 +331,7 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
    * Calculate the output path of the apk produced by an android_binary rule from the information in
    * the constructor Arg
    */
-  private Optional<Path> getOutputPathForAndroidBinary(
+  private Optional<RelPath> getOutputPathForAndroidBinary(
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return Optional.of(BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.apk"));
   }
@@ -357,7 +365,8 @@ public class IjProjectSourcePathResolver extends AbstractSourcePathResolver {
   private Optional<Path> getOutputPathForJavaBinary(
       BuildTarget buildTarget, ProjectFilesystem filesystem) {
     // Matches the implementation in JavaBinary#getOutputDirectory()
-    Path outputDirectory = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").getParent();
+    RelPath outputDirectory =
+        BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s").getParent();
     // Matches the implementation in JavaBinary#getSourcePathToOutput()
     return Optional.of(
         Paths.get(

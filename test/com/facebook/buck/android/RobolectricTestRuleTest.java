@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.FakeBuckConfig;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
@@ -172,7 +173,7 @@ public class RobolectricTestRuleTest {
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
 
-    Path resDirectoriesPath =
+    RelPath resDirectoriesPath =
         RobolectricTestHelper.getResourceDirectoriesPath(filesystem, robolectricBuildTarget);
     String result =
         robolectricTest
@@ -218,7 +219,7 @@ public class RobolectricTestRuleTest {
     RobolectricTest robolectricTest =
         (RobolectricTest) graphBuilder.requireRule(robolectricBuildTarget);
 
-    Path assetDirectoriesPath =
+    RelPath assetDirectoriesPath =
         RobolectricTestHelper.getAssetDirectoriesPath(filesystem, robolectricBuildTarget);
     String result =
         robolectricTest

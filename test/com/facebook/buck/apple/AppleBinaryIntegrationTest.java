@@ -29,6 +29,7 @@ import static org.junit.Assume.assumeTrue;
 
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -1034,7 +1035,7 @@ public class AppleBinaryIntegrationTest {
             workspace.getPath("second"), "build", target.getFullyQualifiedName());
     second.assertSuccess();
 
-    Path outputPath =
+    RelPath outputPath =
         BuildTargetPaths.getGenPath(
             FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
                 BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
@@ -1043,8 +1044,8 @@ public class AppleBinaryIntegrationTest {
                 InternalFlavor.of("compile-" + sanitize("TestClass.m.o"))),
             "%s/TestClass.m.o");
     MoreAsserts.assertContentsEqual(
-        workspace.getPath(Paths.get("first").resolve(outputPath)),
-        workspace.getPath(Paths.get("second").resolve(outputPath)));
+        workspace.getPath(RelPath.get("first").resolve(outputPath)),
+        workspace.getPath(RelPath.get("second").resolve(outputPath)));
     outputPath =
         BuildTargetPaths.getGenPath(
             FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
@@ -1052,8 +1053,8 @@ public class AppleBinaryIntegrationTest {
             target,
             "%s");
     MoreAsserts.assertContentsEqual(
-        workspace.getPath(Paths.get("first").resolve(outputPath)),
-        workspace.getPath(Paths.get("second").resolve(outputPath)));
+        workspace.getPath(RelPath.get("first").resolve(outputPath)),
+        workspace.getPath(RelPath.get("second").resolve(outputPath)));
   }
 
   private void runTestAppleBinaryWithDebugFormatIsHermetic(AppleDebugFormat debugFormat)
@@ -1078,7 +1079,7 @@ public class AppleBinaryIntegrationTest {
             workspace.getPath("second"), "build", target.getFullyQualifiedName());
     second.assertSuccess();
 
-    Path outputPath =
+    RelPath outputPath =
         BuildTargetPaths.getGenPath(
             FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
                 BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
@@ -1087,8 +1088,8 @@ public class AppleBinaryIntegrationTest {
                 InternalFlavor.of("compile-" + sanitize("TestClass.m.o"))),
             "%s/TestClass.m.o");
     MoreAsserts.assertContentsEqual(
-        workspace.getPath(Paths.get("first").resolve(outputPath)),
-        workspace.getPath(Paths.get("second").resolve(outputPath)));
+        workspace.getPath(RelPath.get("first").resolve(outputPath)),
+        workspace.getPath(RelPath.get("second").resolve(outputPath)));
     outputPath =
         BuildTargetPaths.getGenPath(
             FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
@@ -1096,11 +1097,11 @@ public class AppleBinaryIntegrationTest {
             target.withoutFlavors(AppleDebugFormat.FLAVOR_DOMAIN.getFlavors()),
             "%s");
     MoreAsserts.assertContentsEqual(
-        workspace.getPath(Paths.get("first").resolve(outputPath)),
-        workspace.getPath(Paths.get("second").resolve(outputPath)));
+        workspace.getPath(RelPath.get("first").resolve(outputPath)),
+        workspace.getPath(RelPath.get("second").resolve(outputPath)));
 
     if (debugFormat != AppleDebugFormat.DWARF) {
-      Path strippedPath =
+      RelPath strippedPath =
           BuildTargetPaths.getGenPath(
               FakeProjectFilesystem.createFilesystemWithTargetConfigHashInBuckPaths(
                   BuckPaths.DEFAULT_BUCK_OUT_INCLUDE_TARGET_CONFIG_HASH),
@@ -1110,8 +1111,8 @@ public class AppleBinaryIntegrationTest {
                       StripStyle.NON_GLOBAL_SYMBOLS.getFlavor(), CxxStrip.RULE_FLAVOR),
               "%s");
       MoreAsserts.assertContentsEqual(
-          workspace.getPath(Paths.get("first").resolve(strippedPath)),
-          workspace.getPath(Paths.get("second").resolve(strippedPath)));
+          workspace.getPath(RelPath.get("first").resolve(strippedPath)),
+          workspace.getPath(RelPath.get("second").resolve(strippedPath)));
     }
   }
 

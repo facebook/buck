@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -140,10 +141,10 @@ public class AppleLibraryDescriptionSwiftEnhancer {
     ImmutableMap<Path, SourcePath> headers =
         getObjCGeneratedHeader(buildTarget, graphBuilder, cxxPlatform, headerVisibility);
 
-    Path outputPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
+    RelPath outputPath = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
 
     return HeaderSymlinkTreeWithHeaderMap.create(
-        buildTarget, projectFilesystem, outputPath, headers);
+        buildTarget, projectFilesystem, outputPath.getPath(), headers);
   }
 
   public static ImmutableMap<Path, SourcePath> getObjCGeneratedHeader(

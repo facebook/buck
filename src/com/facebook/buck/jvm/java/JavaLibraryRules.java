@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -57,11 +58,12 @@ public class JavaLibraryRules {
 
   static JavaLibrary.Data initializeFromDisk(BuildTarget buildTarget, ProjectFilesystem filesystem)
       throws IOException {
-    List<String> lines = filesystem.readLines(getPathToClassHashes(buildTarget, filesystem));
+    List<String> lines =
+        filesystem.readLines(getPathToClassHashes(buildTarget, filesystem).getPath());
     return new JavaLibrary.Data(AccumulateClassNamesStep.parseClassHashes(lines));
   }
 
-  static Path getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
+  static RelPath getPathToClassHashes(BuildTarget buildTarget, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s.classes.txt");
   }
 

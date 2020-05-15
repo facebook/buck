@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -125,7 +126,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
     ImmutableList.Builder<Step> commands = ImmutableList.builder();
 
-    Path outputDirectory = getOutputDirectory();
+    RelPath outputDirectory = getOutputDirectory();
     Step mkdir =
         MkdirStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -203,7 +204,7 @@ public class JavaBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ImmutableSet.of();
   }
 
-  private Path getOutputDirectory() {
+  private RelPath getOutputDirectory() {
     return BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s").getParent();
   }
 

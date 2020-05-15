@@ -106,7 +106,7 @@ public class BuildConfiguration {
       ProjectFilesystem buildTargetFileSystem = targetNode.getFilesystem();
       // Get the Xcconfig path relative to the target's file system; this makes sure that each
       // buck-out gen path is appropriate depending on the cell.
-      Path buildTargetXcconfigPath =
+      RelPath buildTargetXcconfigPath =
           getXcconfigPath(buildTargetFileSystem, buildTarget, config.getKey());
       // Now we relativize the path based around the project file system in order for relative paths
       // in Xcode to resolve properly (since they are relative to the project).
@@ -238,7 +238,7 @@ public class BuildConfiguration {
   }
 
   @VisibleForTesting
-  static Path getXcconfigPath(
+  static RelPath getXcconfigPath(
       ProjectFilesystem projectFilesystem, BuildTarget buildTarget, String configurationName) {
     // buck-out/gen/BUILD_TARGET_PATH.../BUILD_TARGET_SHORT_NAME-CONFIGURATION_NAME.xcconfig
     return BuildTargetPaths.getGenPath(

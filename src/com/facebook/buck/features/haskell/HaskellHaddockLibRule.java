@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -164,14 +165,14 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
   }
 
   private Path getOutputDir() {
-    Path p = BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
+    RelPath p = BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s");
     // Haddock doesn't like commas in its file-paths for --read-interface
     // so replace commas with dashes
     return Paths.get(p.toString().replaceAll(",", "-"));
   }
 
-  private Path getArgsfile() {
-    Path scratchDir =
+  private AbsPath getArgsfile() {
+    RelPath scratchDir =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
     return getProjectFilesystem().resolve(scratchDir).resolve("haddock.argsfile");
   }
@@ -250,7 +251,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
               Iterables.transform(
                   getSourceArguments(buildContext.getSourcePathResolver()),
                   Escaper.ARGFILE_ESCAPER::apply),
-              getArgsfile());
+              getArgsfile().getPath());
       return StepExecutionResults.SUCCESS;
     }
 

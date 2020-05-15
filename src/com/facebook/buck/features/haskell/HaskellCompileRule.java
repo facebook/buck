@@ -20,6 +20,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -167,11 +168,11 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .resolve("stubs");
   }
 
-  private Path getScratchDir() {
+  private RelPath getScratchDir() {
     return BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
   }
 
-  private Path getArgsfile() {
+  private AbsPath getArgsfile() {
     return getProjectFilesystem().resolve(getScratchDir()).resolve("ghc.argsfile");
   }
 
@@ -273,7 +274,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
               Iterables.transform(
                   getSourceArguments(buildContext.getSourcePathResolver()),
                   Escaper.ARGFILE_ESCAPER::apply),
-              getArgsfile());
+              getArgsfile().getPath());
       return StepExecutionResults.SUCCESS;
     }
 

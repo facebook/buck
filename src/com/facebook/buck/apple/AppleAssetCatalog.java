@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -67,7 +68,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
   @AddToRuleKey(stringify = true)
   private final Path outputDir;
 
-  private final Path outputPlist;
+  private final RelPath outputPlist;
 
   @AddToRuleKey private final Optional<String> appIcon;
 
@@ -145,13 +146,13 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             actool.getCommandPrefix(context.getSourcePathResolver()),
             absoluteAssetCatalogDirs,
             getProjectFilesystem().resolve(outputDir),
-            getProjectFilesystem().resolve(outputPlist),
+            getProjectFilesystem().resolve(outputPlist).getPath(),
             appIcon,
             launchImage,
             compilationOptions));
 
     buildableContext.recordArtifact(getOutputDir());
-    buildableContext.recordArtifact(outputPlist);
+    buildableContext.recordArtifact(outputPlist.getPath());
     return stepsBuilder.build();
   }
 
@@ -165,7 +166,7 @@ public class AppleAssetCatalog extends AbstractBuildRule {
     return outputDir;
   }
 
-  public Path getOutputPlist() {
+  public RelPath getOutputPlist() {
     return outputPlist;
   }
 

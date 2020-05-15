@@ -22,6 +22,7 @@ import com.facebook.buck.android.toolchain.ndk.AndroidNdk;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -79,8 +80,8 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final Path makefile;
   private final String makefileContents;
-  private final Path buildArtifactsDirectory;
-  private final Path genDirectory;
+  private final RelPath buildArtifactsDirectory;
+  private final RelPath genDirectory;
 
   @SuppressWarnings("PMD.UnusedPrivateField")
   @AddToRuleKey
@@ -133,7 +134,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   @Override
   public Path getLibraryPath() {
-    return genDirectory;
+    return genDirectory.getPath();
   }
 
   @Override
@@ -166,7 +167,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             androidNdk,
             root,
             makefile,
-            buildArtifactsDirectory,
+            buildArtifactsDirectory.getPath(),
             binDirectory,
             Arg.stringify(flags, context.getSourcePathResolver()),
             concurrencyLimit));
@@ -179,10 +180,10 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
         CopyStep.forDirectory(
             getProjectFilesystem(),
             binDirectory,
-            genDirectory,
+            genDirectory.getPath(),
             CopyStep.DirectoryMode.CONTENTS_ONLY));
 
-    buildableContext.recordArtifact(genDirectory);
+    buildableContext.recordArtifact(genDirectory.getPath());
     // Some tools need to inspect .so files whose symbols haven't been stripped, so cache these too.
     // However, the intermediate object files are huge and we have no interest in them, so filter
     // them out.
@@ -193,7 +194,8 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             Set<Path> unstrippedSharedObjs =
                 getProjectFilesystem()
                     .getFilesUnderPath(
-                        buildArtifactsDirectory, input -> input.toString().endsWith(".so"));
+                        buildArtifactsDirectory.getPath(),
+                        input -> input.toString().endsWith(".so"));
             for (Path path : unstrippedSharedObjs) {
               buildableContext.recordArtifact(path);
             }
@@ -210,7 +212,7 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
    *     where the "official" outputs of the build rule should be written. Files of the latter type
    *     can be referenced via a {@link BuildTargetSourcePath} or somesuch.
    */
-  private Path getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
+  private RelPath getBuildArtifactsDirectory(BuildTarget target, boolean isScratchDir) {
     return isScratchDir
         ? BuildTargetPaths.getScratchPath(getProjectFilesystem(), target, "__lib%s")
         : BuildTargetPaths.getGenPath(getProjectFilesystem(), target, "__lib%s");

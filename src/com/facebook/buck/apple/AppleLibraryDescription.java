@@ -31,6 +31,7 @@ import com.facebook.buck.core.description.attr.ImplicitFlavorsInferringDescripti
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
@@ -763,9 +764,13 @@ public class AppleLibraryDescription
                 headerPathPrefix,
                 args.getExportedHeaders()));
 
-    Path root = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
+    RelPath root = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
     return CxxPreprocessables.createHeaderSymlinkTreeBuildRule(
-        buildTarget, projectFilesystem, root, headers, HeaderMode.SYMLINK_TREE_WITH_MODULEMAP);
+        buildTarget,
+        projectFilesystem,
+        root.getPath(),
+        headers,
+        HeaderMode.SYMLINK_TREE_WITH_MODULEMAP);
   }
 
   <U> Optional<U> createMetadataForLibrary(

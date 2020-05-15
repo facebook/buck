@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -49,8 +50,8 @@ public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     implements HasMavenCoordinates, HasSources {
 
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
-  private final Path output;
-  private final Path temp;
+  private final RelPath output;
+  private final RelPath temp;
   private final Optional<String> mavenCoords;
 
   public JavaSourceJar(
@@ -109,13 +110,13 @@ public class JavaSourceJar extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new ZipStep(
             getProjectFilesystem(),
-            output,
+            output.getPath(),
             ImmutableSet.of(),
             /* junk paths */ false,
             ZipCompressionLevel.DEFAULT,
-            temp));
+            temp.getPath()));
 
-    buildableContext.recordArtifact(output);
+    buildableContext.recordArtifact(output.getPath());
 
     return steps.build();
   }

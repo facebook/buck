@@ -18,6 +18,7 @@ package com.facebook.buck.json;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -40,7 +41,7 @@ public class JsonConcatenate extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final String stepShortName;
   private final String stepDescription;
   private ImmutableSortedSet<Path> inputs;
-  private Path outputDirectory;
+  private RelPath outputDirectory;
   private Path output;
 
   public JsonConcatenate(

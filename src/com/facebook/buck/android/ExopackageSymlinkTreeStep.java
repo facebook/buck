@@ -22,6 +22,7 @@ import com.facebook.buck.android.exopackage.ExopackageSymlinkTree;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -31,7 +32,6 @@ import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.Optional;
 
 /**
@@ -117,7 +117,7 @@ class ExopackageSymlinkTreeStep implements Step {
       SourcePathResolverAdapter pathResolver,
       SourcePath manifestPath) {
     // Set up a scratch path where we can lay out a symlink tree
-    Path exopackageSymlinkTreePath = getExopackageSymlinkTreePath(buildTarget, filesystem);
+    RelPath exopackageSymlinkTreePath = getExopackageSymlinkTreePath(buildTarget, filesystem);
     String packageName =
         AdbHelper.tryToExtractPackageNameFromManifest(pathResolver.getAbsolutePath(manifestPath));
     try {
@@ -126,7 +126,7 @@ class ExopackageSymlinkTreeStep implements Step {
       // Create a symlink tree which lays out files exactly how they should be pushed to
       // the device
       ExopackageSymlinkTree.createSymlinkTree(
-          packageName, exoInfo, pathResolver, filesystem, exopackageSymlinkTreePath);
+          packageName, exoInfo, pathResolver, filesystem, exopackageSymlinkTreePath.getPath());
     } catch (IOException e) {
       throw new HumanReadableException(
           e, "Unable to install %s, could not set up symlink tree", buildTarget);
@@ -137,7 +137,7 @@ class ExopackageSymlinkTreeStep implements Step {
    * @return the temporary directory where we lay out the exopackage symlink tree so the external
    *     testrunner can find all the components
    */
-  static Path getExopackageSymlinkTreePath(BuildTarget target, ProjectFilesystem filesystem) {
+  static RelPath getExopackageSymlinkTreePath(BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getScratchPath(filesystem, target, "__%s__exopackage_dir__");
   }
 }

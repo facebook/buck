@@ -21,6 +21,8 @@ import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDepsQuery;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
@@ -198,10 +200,11 @@ public class HaskellBinaryDescription
     // Add the binary as the first argument.
     executableBuilder.addArg(SourcePathArg.of(DefaultBuildTargetSourcePath.of(binaryTarget)));
 
-    Path outputDir = BuildTargetPaths.getGenPath(projectFilesystem, binaryTarget, "%s").getParent();
+    RelPath outputDir =
+        BuildTargetPaths.getGenPath(projectFilesystem, binaryTarget, "%s").getParent();
     Path outputPath = outputDir.resolve(binaryTarget.getShortName());
 
-    Path absBinaryDir = projectFilesystem.resolve(outputDir);
+    AbsPath absBinaryDir = projectFilesystem.resolve(outputDir);
 
     // Special handling for dynamically linked binaries.
     if (depType == Linker.LinkableDepType.SHARED) {

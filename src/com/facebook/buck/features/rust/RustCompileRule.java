@@ -19,6 +19,7 @@ package com.facebook.buck.features.rust;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.path.ForwardRelativePath;
@@ -140,7 +141,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         xcrunSdkPath);
   }
 
-  protected static Path getOutputDir(BuildTarget target, ProjectFilesystem filesystem) {
+  protected static RelPath getOutputDir(BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(filesystem, target, "%s");
   }
 
@@ -211,7 +212,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         ProjectFilesystem filesystem,
         OutputPathResolver outputPathResolver,
         BuildCellRelativePathFactory buildCellPathFactory) {
-      Path outputdir = getOutputDir(buildTarget, filesystem);
+      RelPath outputdir = getOutputDir(buildTarget, filesystem);
       Path outputPath = outputPathResolver.resolvePath(output);
       Path scratchDir = outputPathResolver.getTempPath();
 

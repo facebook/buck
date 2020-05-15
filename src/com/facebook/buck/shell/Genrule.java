@@ -17,6 +17,7 @@
 package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.HasOutputName;
 import com.facebook.buck.core.model.OutputLabel;
@@ -223,9 +224,9 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
     // ModernBuildRule and GenruleBuildable. This is the same calculation that MBR/GenruleBuildable
     // would do, so it works.
     Path pathToSrcDirectory = BuildPaths.getScratchDir(filesystem, buildTarget).resolve("srcs");
-    Path pathToTmpDirectory = BuildPaths.getScratchDir(filesystem, buildTarget);
-    Path pathToOutDirectory = BuildPaths.getGenDir(filesystem, buildTarget);
-    Path pathToPublicOutDirectory = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
+    RelPath pathToTmpDirectory = BuildPaths.getScratchDir(filesystem, buildTarget);
+    RelPath pathToOutDirectory = BuildPaths.getGenDir(filesystem, buildTarget);
+    RelPath pathToPublicOutDirectory = BuildTargetPaths.getGenPath(filesystem, buildTarget, "%s");
 
     SandboxProperties.Builder builder = SandboxProperties.builder();
     return builder

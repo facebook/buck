@@ -38,6 +38,7 @@ import com.facebook.buck.apple.AppleNativeIntegrationTestUtils;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.ConfigurationBuildTargetFactoryForTests;
@@ -67,7 +68,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -102,7 +102,7 @@ public class TargetsCommandIntegrationTest {
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private static Path getLegacyGenDir(String buildTarget, ProjectWorkspace workspace)
+  private static RelPath getLegacyGenDir(String buildTarget, ProjectWorkspace workspace)
       throws IOException {
     ProjectFilesystem filesystem = workspace.getProjectFileSystem();
     BuildTarget target = BuildTargetFactory.newInstance(buildTarget);

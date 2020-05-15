@@ -35,6 +35,7 @@ import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.description.metadata.MetadataProvidingDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.exceptions.UserVerify;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -641,7 +642,7 @@ public class AppleTestDescription
               .getBuildTarget()
               .withAppendedFlavors(UNZIP_XCTOOL_FLAVOR)
               .withAppendedFlavors(InternalFlavor.of(sha1Hash));
-      Path outputDirectory =
+      RelPath outputDirectory =
           BuildTargetPaths.getGenPath(
               xctoolZipBuildRule.getProjectFilesystem(), unzipXctoolTarget, "%s/unzipped");
       graphBuilder.computeIfAbsent(
@@ -656,7 +657,7 @@ public class AppleTestDescription
               @Override
               public ImmutableList<Step> getBuildSteps(
                   BuildContext context, BuildableContext buildableContext) {
-                buildableContext.recordArtifact(outputDirectory);
+                buildableContext.recordArtifact(outputDirectory.getPath());
                 return new ImmutableList.Builder<Step>()
                     .addAll(
                         MakeCleanDirectoryStep.of(
@@ -672,7 +673,7 @@ public class AppleTestDescription
                                 .getAbsolutePath(
                                     Objects.requireNonNull(
                                         xctoolZipBuildRule.getSourcePathToOutput())),
-                            outputDirectory,
+                            outputDirectory.getPath(),
                             Optional.empty()))
                     .build();
               }

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -296,7 +297,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
               // course in
               // our case we'll only have the ".gch" file, which is alright; the ".h" isn't
               // truly needed.
-              Path output = BuildTargetPaths.getGenPath(getProjectFilesystem(), target, "%s.h.gch");
+              RelPath output =
+                  BuildTargetPaths.getGenPath(getProjectFilesystem(), target, "%s.h.gch");
 
               CompilerDelegate compilerDelegate =
                   new CompilerDelegate(
@@ -315,7 +317,7 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
                   target,
                   getProjectFilesystem(),
                   depsBuilder.build(),
-                  output,
+                  output.getPath(),
                   preprocessorDelegate,
                   compilerDelegate,
                   compilerFlags,

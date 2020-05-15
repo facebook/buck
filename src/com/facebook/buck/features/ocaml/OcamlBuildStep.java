@@ -181,7 +181,7 @@ public class OcamlBuildStep implements Step {
               getResolver(),
               new OcamlDebugLauncherStep.Args(
                   ocamlContext.getOcamlDebug().get(),
-                  ocamlContext.getBytecodeOutput(),
+                  ocamlContext.getBytecodeOutput().getPath(),
                   ocamlContext.getTransitiveBytecodeIncludes(),
                   ocamlContext.getBytecodeIncludeFlags()));
       return debugLauncher.execute(context);
@@ -241,8 +241,8 @@ public class OcamlBuildStep implements Step {
             ocamlContext.getOcamlCompiler().get().getCommandPrefix(getResolver()),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
-            ocamlContext.getNativeOutput(),
-            OcamlUtil.makeLinkerArgFilePath(filesystem, buildTarget),
+            ocamlContext.getNativeOutput().getPath(),
+            OcamlUtil.makeLinkerArgFilePath(filesystem, buildTarget).getPath(),
             ocamlContext.getNativeLinkableInput().getArgs(),
             ocamlContext.getCLinkableInput().getArgs(),
             linkerInputs,
@@ -268,8 +268,8 @@ public class OcamlBuildStep implements Step {
             ocamlContext.getOcamlBytecodeCompiler().get().getCommandPrefix(getResolver()),
             flags.build(),
             ocamlContext.getOcamlInteropIncludesDir(),
-            ocamlContext.getBytecodeOutput(),
-            OcamlUtil.makeLinkerArgFilePath(filesystem, buildTarget),
+            ocamlContext.getBytecodeOutput().getPath(),
+            OcamlUtil.makeLinkerArgFilePath(filesystem, buildTarget).getPath(),
             ocamlContext.getBytecodeLinkableInput().getArgs(),
             ocamlContext.getCLinkableInput().getArgs(),
             linkerInputs,

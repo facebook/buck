@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
@@ -87,14 +88,14 @@ class DefaultJavaLibraryBuildable implements PipelinedBuildable<JavacPipelineSta
 
     CompilerOutputPaths outputPaths = CompilerOutputPaths.of(buildTarget, filesystem);
 
-    Path pathToClassHashes = getPathToClassHashes(filesystem);
+    RelPath pathToClassHashes = getPathToClassHashes(filesystem);
     this.pathToClassHashesOutputPath = new PublicOutputPath(pathToClassHashes);
 
     this.rootOutputPath = new PublicOutputPath(outputPaths.getOutputJarDirPath());
     this.annotationsOutputPath = new PublicOutputPath(outputPaths.getAnnotationPath());
   }
 
-  Path getPathToClassHashes(ProjectFilesystem filesystem) {
+  RelPath getPathToClassHashes(ProjectFilesystem filesystem) {
     return JavaLibraryRules.getPathToClassHashes(buildTarget, filesystem);
   }
 

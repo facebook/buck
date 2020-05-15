@@ -17,6 +17,7 @@
 package com.facebook.buck.features.ocaml;
 
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -73,13 +74,14 @@ public class OcamlUtil {
         };
   }
 
-  /** Creates a file path for a linker arg file */
-  public static Path makeLinkerArgFilePath(ProjectFilesystem filesystem, BuildTarget buildTarget) {
+  /** Creates a file path for a linker arg file. */
+  public static RelPath makeLinkerArgFilePath(
+      ProjectFilesystem filesystem, BuildTarget buildTarget) {
     return makeArgFilePath(filesystem, buildTarget, "cclib");
   }
 
   /** Creates a file path for an arg file */
-  public static Path makeArgFilePath(
+  public static RelPath makeArgFilePath(
       ProjectFilesystem filesystem, BuildTarget buildTarget, String prefix) {
     String scratchFileName = String.format("%s.argfile", prefix);
 

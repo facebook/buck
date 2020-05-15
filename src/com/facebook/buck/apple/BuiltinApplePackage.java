@@ -18,6 +18,7 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rules.BuildRule;
@@ -46,8 +47,8 @@ import java.util.Optional;
 
 public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-  private final Path pathToOutputFile;
-  private final Path temp;
+  private final RelPath pathToOutputFile;
+  private final RelPath temp;
   private final BuildRule bundle;
   private final ZipCompressionLevel compressionLevel;
 
@@ -117,11 +118,11 @@ public class BuiltinApplePackage extends AbstractBuildRuleWithDeclaredAndExtraDe
     commands.add(
         new ZipStep(
             getProjectFilesystem(),
-            pathToOutputFile,
+            pathToOutputFile.getPath(),
             ImmutableSet.of(),
             false,
             compressionLevel,
-            temp));
+            temp.getPath()));
 
     buildableContext.recordArtifact(
         context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()));

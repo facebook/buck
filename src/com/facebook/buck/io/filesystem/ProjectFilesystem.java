@@ -338,6 +338,13 @@ public interface ProjectFilesystem {
       Iterable<String> lines, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException;
 
+  /** Rel-path version of {@link #writeLinesToPath(Iterable, Path, FileAttribute[])}. */
+  default void writeLinesToPath(
+      Iterable<String> lines, RelPath pathRelativeToProjectRoot, FileAttribute<?>... attrs)
+      throws IOException {
+    writeLinesToPath(lines, pathRelativeToProjectRoot.getPath(), attrs);
+  }
+
   void writeContentsToPath(
       String contents, Path pathRelativeToProjectRoot, FileAttribute<?>... attrs)
       throws IOException;

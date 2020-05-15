@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -51,7 +52,7 @@ public class CGoGenImport extends AbstractBuildRule {
   private final ImmutableSortedSet<BuildRule> deps;
   private final SourcePathResolverAdapter pathResolver;
   private final Path outputFile;
-  private final Path genDir;
+  private final RelPath genDir;
 
   public CGoGenImport(
       BuildTarget buildTarget,

@@ -451,6 +451,7 @@ public class BuildCommandIntegrationTest {
     Path expected =
         workspace.resolve(
             BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                .getPath()
                 .resolveSibling("binary.jar"));
     Path hardlink = BuildPaths.removeHashFrom(expected, target).get();
 
@@ -472,6 +473,7 @@ public class BuildCommandIntegrationTest {
     Path expected =
         workspace.resolve(
             BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                .getPath()
                 .resolveSibling("binary.jar"));
     Path symlink = BuildPaths.removeHashFrom(expected, target).get();
 
@@ -492,6 +494,7 @@ public class BuildCommandIntegrationTest {
         BuildPaths.removeHashFrom(
                 workspace.resolve(
                     BuildTargetPaths.getGenPath(workspace.getProjectFileSystem(), target, "%s")
+                        .getPath()
                         .resolveSibling("binary.jar")),
                 target)
             .get();

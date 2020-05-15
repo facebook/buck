@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.sourcepath;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetWithOutputs;
 import com.facebook.buck.core.model.OutputLabel;
@@ -47,6 +48,10 @@ public abstract class ExplicitBuildTargetSourcePath implements BuildTargetSource
         BuildTargetWithOutputs.of(target, OutputLabel.defaultLabel()),
         resolvedPath,
         Optional.empty());
+  }
+
+  public static ExplicitBuildTargetSourcePath of(BuildTarget target, RelPath resolvedPath) {
+    return of(target, resolvedPath.getPath());
   }
 
   /**

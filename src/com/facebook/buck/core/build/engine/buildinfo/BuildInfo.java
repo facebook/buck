@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.build.engine.buildinfo;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.RuleKey;
@@ -117,10 +118,11 @@ public class BuildInfo {
    * Returns the path to a directory where metadata files for a build rule with the specified target
    * should be stored.
    *
-   * @return A path relative to the project root that includes a trailing slash.
+   * @return A path relative to the project root.
    */
   @VisibleForTesting
-  public static Path getPathToMetadataDirectory(BuildTarget target, ProjectFilesystem filesystem) {
+  public static RelPath getPathToMetadataDirectory(
+      BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getScratchPath(filesystem, target, ".%s/metadata");
   }
 

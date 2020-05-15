@@ -17,6 +17,7 @@
 package com.facebook.buck.features.project.intellij;
 
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
@@ -297,25 +298,27 @@ public abstract class BaseIjModuleRule<T extends BuildRuleArg> implements IjModu
   private void addGeneratedOutputIfNeeded(
       IJFolderFactory folderFactory, TargetNode<T> targetNode, ModuleBuildContext context) {
 
-    ImmutableSet<Path> generatedSourcePaths = findConfiguredGeneratedSourcePaths(targetNode);
+    ImmutableSet<RelPath> generatedSourcePaths = findConfiguredGeneratedSourcePaths(targetNode);
 
-    for (Path generatedSourcePath : generatedSourcePaths) {
+    for (RelPath generatedSourcePath : generatedSourcePaths) {
       context.addGeneratedSourceCodeFolder(
           targetNode.getBuildTarget(),
           folderFactory.create(
-              generatedSourcePath, false, ImmutableSortedSet.of(generatedSourcePath)));
+              generatedSourcePath.getPath(),
+              false,
+              ImmutableSortedSet.of(generatedSourcePath.getPath())));
     }
   }
 
-  private ImmutableSet<Path> findConfiguredGeneratedSourcePaths(TargetNode<T> targetNode) {
-    ImmutableSet.Builder<Path> generatedSourcePaths = ImmutableSet.builder();
+  private ImmutableSet<RelPath> findConfiguredGeneratedSourcePaths(TargetNode<T> targetNode) {
+    ImmutableSet.Builder<RelPath> generatedSourcePaths = ImmutableSet.builder();
 
     generatedSourcePaths.addAll(findConfiguredGeneratedSourcePathsUsingLabels(targetNode));
 
     return generatedSourcePaths.build();
   }
 
-  private ImmutableSet<Path> findConfiguredGeneratedSourcePathsUsingLabels(
+  private ImmutableSet<RelPath> findConfiguredGeneratedSourcePathsUsingLabels(
       TargetNode<T> targetNode) {
     BuildTarget buildTarget = targetNode.getBuildTarget();
     ImmutableMap<String, String> labelToGeneratedSourcesMap =

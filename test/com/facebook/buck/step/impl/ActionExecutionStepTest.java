@@ -25,6 +25,7 @@ import com.facebook.buck.core.artifact.Artifact;
 import com.facebook.buck.core.artifact.ArtifactFilesystem;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -150,7 +151,7 @@ public class ActionExecutionStepTest {
     ActionExecutionStep step =
         new ActionExecutionStep(action, new ArtifactFilesystem(projectFilesystem));
 
-    Path packagePath = BuildPaths.getGenDir(projectFilesystem, buildTarget);
+    RelPath packagePath = BuildPaths.getGenDir(projectFilesystem, buildTarget);
 
     assertFalse(projectFilesystem.exists(packagePath));
     assertEquals(

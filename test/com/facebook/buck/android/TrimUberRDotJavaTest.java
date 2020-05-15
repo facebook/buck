@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.cell.TestCellPathResolver;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -93,7 +94,7 @@ public class TrimUberRDotJavaTest {
             + "    public static final int keep_resource=0x7f083bc2;\n"
             + "  }\n"
             + "}\n";
-    Path rDotJavaDir =
+    RelPath rDotJavaDir =
         BuildTargetPaths.getGenPath(
             filesystem,
             BuildTargetFactory.newInstance("//:aapt#aapt_package_resources"),
@@ -124,7 +125,7 @@ public class TrimUberRDotJavaTest {
             trimTarget,
             filesystem,
             TestBuildRuleParams.create(),
-            Optional.of(FakeSourcePath.of(filesystem, rDotJavaDir)),
+            Optional.of(FakeSourcePath.of(filesystem, rDotJavaDir.getPath())),
             ImmutableList.of(dexProducedFromJavaLibrary),
             keepResourcePattern);
     graphBuilder.addToIndex(trimUberRDotJava);

@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -176,7 +177,7 @@ public class Aapt2Link extends AbstractBuildRule {
       steps.add(new ExtraFilterResourcesStep(getProjectFilesystem()));
     }
 
-    buildableContext.recordArtifact(getFinalManifestPath());
+    buildableContext.recordArtifact(getFinalManifestPath().getPath());
     buildableContext.recordArtifact(getResourceApkPath());
     buildableContext.recordArtifact(getProguardConfigPath());
     buildableContext.recordArtifact(getRDotTxtPath());
@@ -192,7 +193,7 @@ public class Aapt2Link extends AbstractBuildRule {
     return null;
   }
 
-  private Path getGenDir() {
+  private RelPath getGenDir() {
     return BuildPaths.getGenDir(getProjectFilesystem(), getBuildTarget());
   }
 
@@ -200,8 +201,8 @@ public class Aapt2Link extends AbstractBuildRule {
     return getGenDir().resolve("aapt2-R-args.txt");
   }
 
-  private Path getFinalManifestPath() {
-    return getGenDir().resolve("AndroidManifest.xml");
+  private RelPath getFinalManifestPath() {
+    return getGenDir().resolveRel("AndroidManifest.xml");
   }
 
   private Path getResourceApkPath() {

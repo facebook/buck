@@ -19,6 +19,7 @@ package com.facebook.buck.android;
 import com.facebook.buck.android.apkmodule.APKModule;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -35,7 +36,6 @@ import com.facebook.buck.step.fs.MkdirStep;
 import com.facebook.buck.step.fs.RmStep;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.nio.file.Path;
 import java.util.Collection;
 import java.util.SortedSet;
 import java.util.function.Supplier;
@@ -76,7 +76,7 @@ public class AndroidManifest extends AbstractBuildRule {
 
   @AddToRuleKey private final APKModule module;
 
-  private final Path pathToOutputFile;
+  private final RelPath pathToOutputFile;
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
   protected AndroidManifest(
@@ -131,9 +131,10 @@ public class AndroidManifest extends AbstractBuildRule {
             getProjectFilesystem()
                 .resolve(
                     BuildTargetPaths.getScratchPath(
-                        getProjectFilesystem(), getBuildTarget(), "%s/merge-report.txt"))));
+                            getProjectFilesystem(), getBuildTarget(), "%s/merge-report.txt")
+                        .getPath())));
 
-    buildableContext.recordArtifact(pathToOutputFile);
+    buildableContext.recordArtifact(pathToOutputFile.getPath());
     return commands.build();
   }
 

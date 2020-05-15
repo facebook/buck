@@ -19,6 +19,7 @@ package com.facebook.buck.features.gwt;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -67,7 +68,7 @@ public class GwtBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private static final String GWT_COMPILER_CLASS = "com.google.gwt.dev.Compiler";
 
-  private final Path outputFile;
+  private final RelPath outputFile;
   @AddToRuleKey private final ImmutableSortedSet<String> modules;
   @AddToRuleKey private final Tool javaRuntimeLauncher;
   @AddToRuleKey private final ImmutableList<String> vmArgs;

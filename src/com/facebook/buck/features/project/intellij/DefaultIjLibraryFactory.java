@@ -22,6 +22,7 @@ import com.facebook.buck.android.AndroidPrebuiltAarDescription;
 import com.facebook.buck.android.AndroidPrebuiltAarDescriptionArg;
 import com.facebook.buck.android.UnzipAar;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
@@ -161,7 +162,7 @@ class DefaultIjLibraryFactory extends IjLibraryFactory {
               sourcePath -> library.addSourceJars(libraryFactoryResolver.getPath(sourcePath)));
       arg.getJavadocUrl().ifPresent(library::addJavadocUrls);
 
-      Path aarUnpackPath =
+      RelPath aarUnpackPath =
           BuildTargetPaths.getScratchPath(
               targetNode.getFilesystem(),
               targetNode

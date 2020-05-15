@@ -94,7 +94,8 @@ public class FakeFileHashCache implements FileHashCache {
   public HashCode get(Path path) throws IOException {
     HashCode hashCode = pathsToHashes.get(path);
     if (hashCode == null) {
-      throw new NoSuchFileException(path.toString());
+      throw new NoSuchFileException(
+          path.toString(), null, "known files: " + pathsToHashes.keySet().toString());
     }
     return hashCode;
   }

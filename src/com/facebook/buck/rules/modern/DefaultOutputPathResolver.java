@@ -16,6 +16,7 @@
 
 package com.facebook.buck.rules.modern;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -23,8 +24,8 @@ import java.nio.file.Path;
 
 /** Default OutputPathResolver implementation. */
 public class DefaultOutputPathResolver implements OutputPathResolver {
-  private final Path scratchRoot;
-  private final Path genRoot;
+  private final RelPath scratchRoot;
+  private final RelPath genRoot;
 
   public DefaultOutputPathResolver(ProjectFilesystem projectFilesystem, BuildTarget buildTarget) {
     this.scratchRoot = BuildPaths.getScratchDir(projectFilesystem, buildTarget);
@@ -33,7 +34,7 @@ public class DefaultOutputPathResolver implements OutputPathResolver {
 
   @Override
   public Path getTempPath() {
-    return scratchRoot;
+    return scratchRoot.getPath();
   }
 
   @Override
@@ -46,6 +47,6 @@ public class DefaultOutputPathResolver implements OutputPathResolver {
 
   @Override
   public Path getRootPath() {
-    return genRoot;
+    return genRoot.getPath();
   }
 }

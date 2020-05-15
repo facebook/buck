@@ -23,6 +23,7 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorConvertible;
@@ -77,7 +78,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Ordering;
 import com.google.common.collect.Sets;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -299,7 +299,7 @@ public class SwiftLibraryDescription
           swiftPlatform.get().getSwiftc(),
           args.getFrameworks(),
           args.getModuleName().orElse(buildTarget.getShortName()),
-          BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"),
+          BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
           args.getSrcs(),
           args.getVersion(),
           RichStream.from(args.getCompilerFlags())
@@ -345,7 +345,7 @@ public class SwiftLibraryDescription
     String sharedLibrarySoname =
         CxxDescriptionEnhancer.getSharedLibrarySoname(
             soname, buildTarget.withoutFlavors(SUPPORTED_FLAVORS), cxxPlatform, projectFilesystem);
-    Path sharedLibOutput =
+    RelPath sharedLibOutput =
         CxxDescriptionEnhancer.getSharedLibraryPath(
             projectFilesystem, buildTarget, sharedLibrarySoname);
 
@@ -378,7 +378,7 @@ public class SwiftLibraryDescription
             buildTarget,
             Linker.LinkType.SHARED,
             Optional.of(sharedLibrarySoname),
-            sharedLibOutput,
+            sharedLibOutput.getPath(),
             ImmutableList.of(),
             Linker.LinkableDepType.SHARED,
             Optional.empty(),
@@ -469,7 +469,7 @@ public class SwiftLibraryDescription
         swiftPlatform.getSwiftc(),
         args.getFrameworks(),
         args.getModuleName().orElse(buildTarget.getShortName()),
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"),
+        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s").getPath(),
         args.getSrcs(),
         args.getVersion(),
         RichStream.from(args.getCompilerFlags())

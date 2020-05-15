@@ -26,6 +26,7 @@ import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasSrcs;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -182,7 +183,8 @@ public class NdkLibraryDescription
   }
 
   @VisibleForTesting
-  protected static Path getGeneratedMakefilePath(BuildTarget target, ProjectFilesystem filesystem) {
+  protected static RelPath getGeneratedMakefilePath(
+      BuildTarget target, ProjectFilesystem filesystem) {
     return BuildTargetPaths.getGenPath(filesystem, target, "Android.%s.mk");
   }
 
@@ -458,7 +460,7 @@ public class NdkLibraryDescription
             AndroidNdk.DEFAULT_NAME, buildTarget.getTargetConfiguration(), AndroidNdk.class),
         params.copyAppendingExtraDeps(
             ImmutableSortedSet.<BuildRule>naturalOrder().addAll(makefilePair.getSecond()).build()),
-        getGeneratedMakefilePath(buildTarget, projectFilesystem),
+        getGeneratedMakefilePath(buildTarget, projectFilesystem).getPath(),
         makefilePair.getFirst(),
         sources,
         flags,

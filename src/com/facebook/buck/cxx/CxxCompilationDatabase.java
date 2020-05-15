@@ -19,6 +19,7 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
@@ -58,7 +59,7 @@ public class CxxCompilationDatabase extends AbstractBuildRule implements HasRunt
   @AddToRuleKey private final ImmutableSortedSet<CxxPreprocessAndCompile> compileRules;
 
   @AddToRuleKey(stringify = true)
-  private final Path outputJsonFile;
+  private final RelPath outputJsonFile;
 
   private final ImmutableSortedSet<BuildRule> runtimeDeps;
 

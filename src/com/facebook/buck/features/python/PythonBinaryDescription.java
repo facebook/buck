@@ -23,6 +23,7 @@ import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -118,12 +119,16 @@ public class PythonBinaryDescription
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder) {
     BuildTarget emptyInitTarget = getEmptyInitTarget(buildTarget);
-    Path emptyInitPath =
+    RelPath emptyInitPath =
         BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/__init__.py");
     WriteFile rule =
         graphBuilder.addToIndex(
             new WriteFile(
-                emptyInitTarget, projectFilesystem, "", emptyInitPath, /* executable */ false));
+                emptyInitTarget,
+                projectFilesystem,
+                "",
+                emptyInitPath.getPath(), /* executable */
+                false));
     return rule.getSourcePathToOutput();
   }
 
@@ -163,7 +168,7 @@ public class PythonBinaryDescription
 
     SourcePath emptyInit = createEmptyInitModule(buildTarget, projectFilesystem, graphBuilder);
     BuildTarget linkTreeTarget = buildTarget.withAppendedFlavors(InternalFlavor.of("link-tree"));
-    Path linkTreeRoot = BuildTargetPaths.getGenPath(projectFilesystem, linkTreeTarget, "%s");
+    RelPath linkTreeRoot = BuildTargetPaths.getGenPath(projectFilesystem, linkTreeTarget, "%s");
     SymlinkTree linkTree =
         graphBuilder.addToIndex(
             new SymlinkTree(
@@ -171,7 +176,7 @@ public class PythonBinaryDescription
                 linkTreeTarget,
                 projectFilesystem,
                 graphBuilder,
-                linkTreeRoot,
+                linkTreeRoot.getPath(),
                 components.withDefaultInitPy(emptyInit).asSymlinks()));
 
     return new PythonInPlaceBinary(

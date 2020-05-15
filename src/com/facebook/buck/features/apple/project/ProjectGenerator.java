@@ -714,7 +714,7 @@ public class ProjectGenerator {
 
     BuildTarget compilerTarget =
         HalideLibraryDescription.createHalideCompilerBuildTarget(buildTarget);
-    Path compilerPath = BuildTargetPaths.getGenPath(projectFilesystem, compilerTarget, "%s");
+    RelPath compilerPath = BuildTargetPaths.getGenPath(projectFilesystem, compilerTarget, "%s");
     ImmutableMap<String, String> appendedConfig = ImmutableMap.of();
     ImmutableMap<String, String> extraSettings = ImmutableMap.of();
     ImmutableMap.Builder<String, String> defaultSettingsBuilder = ImmutableMap.builder();
@@ -2836,7 +2836,7 @@ public class ProjectGenerator {
     }
   }
 
-  private Path getConfigurationXcconfigPath(BuildTarget buildTarget, String input) {
+  private RelPath getConfigurationXcconfigPath(BuildTarget buildTarget, String input) {
     return BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s-" + input + ".xcconfig");
   }
 
@@ -2913,7 +2913,7 @@ public class ProjectGenerator {
 
       ImmutableSortedMap<String, String> mergedSettings =
           MoreMaps.mergeSorted(targetLevelInlineSettings, combinedOverrideConfigs);
-      Path xcconfigPath = getConfigurationXcconfigPath(buildTarget, configurationEntry.getKey());
+      RelPath xcconfigPath = getConfigurationXcconfigPath(buildTarget, configurationEntry.getKey());
       projectFilesystem.mkdirs(Objects.requireNonNull(xcconfigPath).getParent());
 
       StringBuilder stringBuilder = new StringBuilder();
@@ -2927,7 +2927,7 @@ public class ProjectGenerator {
 
       if (MoreProjectFilesystems.fileContentsDiffer(
           new ByteArrayInputStream(xcconfigContents.getBytes(StandardCharsets.UTF_8)),
-          xcconfigPath,
+          xcconfigPath.getPath(),
           projectFilesystem)) {
         if (options.shouldGenerateReadOnlyFiles()) {
           projectFilesystem.writeContentsToPath(
@@ -2945,14 +2945,15 @@ public class ProjectGenerator {
     }
   }
 
-  private PBXFileReference getConfigurationFileReference(PBXGroup targetGroup, Path xcconfigPath) {
+  private PBXFileReference getConfigurationFileReference(
+      PBXGroup targetGroup, RelPath xcconfigPath) {
     return targetGroup
         .getOrCreateChildGroupByName("Configurations")
         .getOrCreateChildGroupByName("Buck (Do Not Modify)")
         .getOrCreateFileReferenceBySourceTreePath(
             new SourceTreePath(
                 PBXReference.SourceTree.SOURCE_ROOT,
-                pathRelativizer.outputDirToRootRelative(xcconfigPath),
+                pathRelativizer.outputDirToRootRelative(xcconfigPath.getPath()),
                 Optional.empty()));
   }
 

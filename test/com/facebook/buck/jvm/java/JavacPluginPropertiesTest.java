@@ -37,6 +37,7 @@ import com.facebook.buck.testutil.FakeFileHashCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.hash.HashCode;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
 import org.hamcrest.Matchers;
@@ -174,14 +175,16 @@ public class JavacPluginPropertiesTest {
     JavaAnnotationProcessor processor =
         createAnnotationProcessor(resource, graphBuilder, filesystem);
 
-    ImmutableMap.Builder builder =
-        ImmutableMap.builder()
+    ImmutableMap.Builder<Path, HashCode> builder =
+        ImmutableMap.<Path, HashCode>builder()
             .put(
-                filesystem.resolve(
-                    BuildTargetPaths.getGenPath(
-                        filesystem,
-                        BuildTargetFactory.newInstance("//:internal_java_lib"),
-                        "%s.jar")),
+                filesystem
+                    .resolve(
+                        BuildTargetPaths.getGenPath(
+                            filesystem,
+                            BuildTargetFactory.newInstance("//:internal_java_lib"),
+                            "%s.jar"))
+                    .getPath(),
                 HashCode.fromInt(0));
     resource.ifPresent(
         pathSourcePath ->

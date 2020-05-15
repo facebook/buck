@@ -45,7 +45,7 @@ class DirectHeaderMap extends HeaderSymlinkTree {
   private static final Logger LOG = Logger.get(DirectHeaderMap.class);
 
   @AddToRuleKey(stringify = true)
-  private final Path headerMapPath;
+  private final RelPath headerMapPath;
 
   public DirectHeaderMap(
       BuildTarget target,
@@ -92,7 +92,10 @@ class DirectHeaderMap extends HeaderSymlinkTree {
                     context.getBuildCellRootPath(), getProjectFilesystem(), headerMapPath)))
         .add(
             new HeaderMapStep(
-                getProjectFilesystem(), headerMapPath, entriesBuilder.build(), buildableContext))
+                getProjectFilesystem(),
+                headerMapPath.getPath(),
+                entriesBuilder.build(),
+                buildableContext))
         .build();
   }
 

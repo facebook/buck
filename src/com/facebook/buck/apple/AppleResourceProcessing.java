@@ -20,6 +20,7 @@ import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -74,7 +75,7 @@ public class AppleResourceProcessing {
       LOG.debug(
           "Compiling storyboard %s to storyboardc %s and linking", sourcePath, destinationPath);
 
-      Path compiledStoryboardPath =
+      RelPath compiledStoryboardPath =
           BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "%s.storyboardc");
 
       stepsBuilder.add(
@@ -88,7 +89,7 @@ public class AppleResourceProcessing {
                   .add("--target-device", "watch", "--compile")
                   .build(),
               sourcePath,
-              compiledStoryboardPath));
+              compiledStoryboardPath.getPath()));
 
       stepsBuilder.add(
           new IbtoolStep(
@@ -100,7 +101,7 @@ public class AppleResourceProcessing {
                   .addAll(modifiedFlags)
                   .add("--target-device", "watch", "--link")
                   .build(),
-              compiledStoryboardPath,
+              compiledStoryboardPath.getPath(),
               destinationPath.getParent()));
 
     } else {
@@ -234,7 +235,7 @@ public class AppleResourceProcessing {
 
     if (swiftStdlibTool.isPresent() && shouldCopySwiftStdlib) {
       String tempDirPattern = isForPackaging ? "__swift_packaging_temp__%s" : "__swift_temp__%s";
-      Path tempPath =
+      RelPath tempPath =
           BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, tempDirPattern);
 
       stepsBuilder.addAll(MakeCleanDirectoryStep.of(BuildCellRelativePath.of(tempPath)));
@@ -244,7 +245,7 @@ public class AppleResourceProcessing {
       stepsBuilder.add(
           new SwiftStdlibStep(
               projectFilesystem.getRootPath(),
-              tempPath,
+              tempPath.getPath(),
               sdkPath,
               destinationPath,
               swiftStdlibTool.get().getCommandPrefix(resolver),

@@ -17,6 +17,8 @@
 package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -385,7 +387,7 @@ abstract class GoDescriptors {
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-      Path absBinaryDir =
+      AbsPath absBinaryDir =
           projectFilesystem.resolve(
               BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s"));
 
@@ -596,9 +598,10 @@ abstract class GoDescriptors {
           buildTarget.getFullyQualifiedName());
     }
 
-    Path root = BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "__%s__tree");
+    RelPath root = BuildTargetPaths.getScratchPath(projectFilesystem, buildTarget, "__%s__tree");
 
-    return new MappedSymlinkTree("go_linkable", buildTarget, projectFilesystem, root, treeMap);
+    return new MappedSymlinkTree(
+        "go_linkable", buildTarget, projectFilesystem, root.getPath(), treeMap);
   }
 
   /**

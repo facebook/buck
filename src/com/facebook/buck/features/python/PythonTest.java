@@ -194,7 +194,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "__test_%s_output__");
+            getProjectFilesystem(), getBuildTarget(), "__test_%s_output__")
+        .getPath();
   }
 
   private Path getPathToTestOutputResult() {

@@ -20,6 +20,7 @@ import com.facebook.buck.android.resources.ResourcesZipBuilder;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -145,7 +146,7 @@ public class MergeAssets extends AbstractBuildRule {
             getProjectFilesystem().getPathForRelativePath(getPathToMergedAssets()),
             baseApk.map(pathResolver::getAbsolutePath),
             assets));
-    buildableContext.recordArtifact(getPathToMergedAssets());
+    buildableContext.recordArtifact(getPathToMergedAssets().getPath());
     return steps.build();
   }
 
@@ -154,7 +155,7 @@ public class MergeAssets extends AbstractBuildRule {
     return ExplicitBuildTargetSourcePath.of(getBuildTarget(), getPathToMergedAssets());
   }
 
-  public Path getPathToMergedAssets() {
+  public RelPath getPathToMergedAssets() {
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/merged.assets.ap_");
   }

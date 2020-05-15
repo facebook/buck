@@ -18,6 +18,7 @@ package com.facebook.buck.features.gwt;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -46,7 +47,7 @@ import java.util.Optional;
  */
 public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
-  private final Path outputFile;
+  private final RelPath outputFile;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> filesForGwtModule;
   private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final Optional<String> resourcesRoot;
@@ -75,7 +76,7 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
-    Path workingDirectory = outputFile.getParent();
+    RelPath workingDirectory = outputFile.getParent();
     steps.addAll(
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
@@ -100,12 +101,12 @@ public class GwtModule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         new JarDirectoryStep(
             getProjectFilesystem(),
             JarParameters.builder()
-                .setJarPath(outputFile)
+                .setJarPath(outputFile.getPath())
                 .setEntriesToJar(ImmutableSortedSet.of(tempJarFolder))
                 .setMergeManifests(true)
                 .build()));
 
-    buildableContext.recordArtifact(outputFile);
+    buildableContext.recordArtifact(outputFile.getPath());
 
     return steps.build();
   }

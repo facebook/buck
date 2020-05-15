@@ -37,6 +37,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -721,15 +722,15 @@ public class JsBundleGenruleDescriptionTest {
     GenruleBuildable buildable = genrule.getBuildable();
     ProjectFilesystem filesystem = setup.scenario.filesystem;
     BuildTarget target = setup.target;
-    Path srcPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__srcs");
-    Path tmpPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__tmp");
+    RelPath srcPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__srcs");
+    RelPath tmpPath = BuildTargetPaths.getGenPath(filesystem, target, "%s__tmp");
     ImmutableMap.Builder<String, String> actualEnvVarsBuilder = ImmutableMap.builder();
     buildable.addEnvironmentVariables(
         sourcePathResolver(),
         new DefaultOutputPathResolver(filesystem, target),
         filesystem,
-        srcPath,
-        tmpPath,
+        srcPath.getPath(),
+        tmpPath.getPath(),
         actualEnvVarsBuilder);
     return actualEnvVarsBuilder.build();
   }

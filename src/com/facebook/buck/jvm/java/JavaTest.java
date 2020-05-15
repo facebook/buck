@@ -20,6 +20,7 @@ import com.facebook.buck.android.device.TargetDevice;
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildId;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -206,7 +207,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     return ImmutableSet.of();
   }
 
-  private Path getClassPathFile() {
+  private RelPath getClassPathFile() {
     return BuildTargetPaths.getGenPath(
         getProjectFilesystem(), getBuildTarget(), "%s/classpath-file");
   }
@@ -237,7 +238,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             .setTargetJavaVersion(targetJavaVersion)
             .setTestType(testType)
             .setDirectoryForTestResults(outDir)
-            .setClasspathFile(getClassPathFile())
+            .setClasspathFile(getClassPathFile().getPath())
             .setTestRunnerClasspath(TESTRUNNER_CLASSES)
             .setCodeCoverageEnabled(options.isCodeCoverageEnabled())
             .setInclNoLocationClassesEnabled(options.isInclNoLocationClassesEnabled())
@@ -388,7 +389,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public Path getPathToTestOutputDirectory() {
     return BuildTargetPaths.getGenPath(
-        getProjectFilesystem(), getBuildTarget(), "__java_test_%s_output__");
+            getProjectFilesystem(), getBuildTarget(), "__java_test_%s_output__")
+        .getPath();
   }
 
   /** @return a test case result, named "main", signifying a failure of the entire test class. */

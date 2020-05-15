@@ -20,6 +20,7 @@ import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildPaths;
@@ -156,7 +157,7 @@ public class ArtifactFilesystemTest {
     OutputArtifact outputArtifact = declaredArtifact.asOutputArtifact();
     declaredArtifact.materialize(key);
 
-    Path expectedPath = BuildPaths.getGenDir(filesystem, buildTarget);
+    RelPath expectedPath = BuildPaths.getGenDir(filesystem, buildTarget);
 
     assertFalse(filesystem.isDirectory(expectedPath));
 

@@ -39,6 +39,7 @@ import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableExceptionAugmentor;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.PathWrapper;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -735,6 +736,10 @@ public class ProjectWorkspace extends AbstractWorkspace {
     assertFilesEqual(expected, actual, s -> s);
   }
 
+  public void assertFilesEqual(RelPath expected, RelPath actual) throws IOException {
+    assertFilesEqual(expected.getPath(), actual.getPath());
+  }
+
   private void assertFilesEqual(
       Path expected, Path actual, Function<String, String> normalizeObservedContent)
       throws IOException {
@@ -916,6 +921,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
     verify(templateSubdirectory, destinationSubdirectory, s -> s);
   }
 
+  public void verify(RelPath templateSubdirectory, RelPath destinationSubdirectory)
+      throws IOException {
+    verify(templateSubdirectory.getPath(), destinationSubdirectory.getPath());
+  }
+
   public void verify() throws IOException {
     assertPathsEqual(templatePath, destPath, s -> s);
   }
@@ -941,12 +951,14 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   public Path getGenPath(BuildTarget buildTarget, String format) throws IOException {
     return getProjectFileSystem()
-        .resolve(BuildTargetPaths.getGenPath(getProjectFileSystem(), buildTarget, format));
+        .resolve(BuildTargetPaths.getGenPath(getProjectFileSystem(), buildTarget, format))
+        .getPath();
   }
 
   public Path getScratchPath(BuildTarget buildTarget, String format) throws IOException {
     return getProjectFileSystem()
-        .resolve(BuildTargetPaths.getScratchPath(getProjectFileSystem(), buildTarget, format));
+        .resolve(BuildTargetPaths.getScratchPath(getProjectFileSystem(), buildTarget, format))
+        .getPath();
   }
 
   public void verify(Path subdirectory) throws IOException {

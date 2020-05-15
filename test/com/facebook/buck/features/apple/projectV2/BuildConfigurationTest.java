@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -192,7 +193,7 @@ public class BuildConfigurationTest {
 
   @Test
   public void testGetConfigurationXcconfigPath() {
-    Path xcconfigPath =
+    RelPath xcconfigPath =
         BuildConfiguration.getXcconfigPath(
             projectFilesystem, fooBuildTarget, BuildConfiguration.DEBUG_BUILD_CONFIGURATION_NAME);
     assertEquals(

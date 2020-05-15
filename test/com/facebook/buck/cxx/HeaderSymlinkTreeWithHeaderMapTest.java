@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
@@ -71,7 +72,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
   private BuildTarget buildTarget;
   private HeaderSymlinkTreeWithHeaderMap symlinkTreeBuildRule;
   private ImmutableMap<Path, SourcePath> links;
-  private Path symlinkTreeRoot;
+  private RelPath symlinkTreeRoot;
   private ActionGraphBuilder graphBuilder;
   private SourcePathResolverAdapter resolver;
 
@@ -110,7 +111,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
     // Setup the symlink tree buildable.
     symlinkTreeBuildRule =
         HeaderSymlinkTreeWithHeaderMap.create(
-            buildTarget, projectFilesystem, symlinkTreeRoot, links);
+            buildTarget, projectFilesystem, symlinkTreeRoot.getPath(), links);
   }
 
   @Test
@@ -128,13 +129,14 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
                 new SymlinkTreeMergeStep(
                     "cxx_header",
                     projectFilesystem,
-                    symlinkTreeRoot,
+                    symlinkTreeRoot.getPath(),
                     new SymlinkMapsPaths(resolver.getMappedPaths(links)),
                     (fs, p) -> false))
             .add(
                 new HeaderMapStep(
                     projectFilesystem,
-                    HeaderSymlinkTreeWithHeaderMap.getPath(projectFilesystem, buildTarget),
+                    HeaderSymlinkTreeWithHeaderMap.getPath(projectFilesystem, buildTarget)
+                        .getPath(),
                     ImmutableMap.of(
                         Paths.get("file"),
                         projectFilesystem
@@ -163,7 +165,7 @@ public class HeaderSymlinkTreeWithHeaderMapTest {
         HeaderSymlinkTreeWithHeaderMap.create(
             buildTarget,
             projectFilesystem,
-            symlinkTreeRoot,
+            symlinkTreeRoot.getPath(),
             ImmutableMap.of(
                 Paths.get("different/link"),
                 PathSourcePath.of(

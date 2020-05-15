@@ -20,6 +20,7 @@ import static com.facebook.buck.jvm.java.JavaPaths.SRC_ZIP;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -70,7 +71,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final String importPath;
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> aidlSrcs;
   private final Path output;
-  private final Path genPath;
+  private final RelPath genPath;
 
   GenAidl(
       BuildTarget buildTarget,
@@ -108,7 +109,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context.getBuildCellRootPath(), getProjectFilesystem(), genPath)));
 
     BuildTarget target = getBuildTarget();
-    Path outputDirectory =
+    RelPath outputDirectory =
         BuildTargetPaths.getScratchPath(getProjectFilesystem(), target, "__%s.aidl");
 
     commands.addAll(
@@ -123,7 +124,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             target.getTargetConfiguration(),
             context.getSourcePathResolver().getAbsolutePath(aidlFilePath),
             ImmutableSet.of(importPath),
-            outputDirectory);
+            outputDirectory.getPath());
     commands.add(command);
 
     // Files must ultimately be written to GEN_DIR to be used as source paths.
@@ -150,7 +151,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             getProjectFilesystem(),
             JarParameters.builder()
                 .setJarPath(output)
-                .setEntriesToJar(ImmutableSortedSet.of(outputDirectory))
+                .setEntriesToJar(ImmutableSortedSet.of(outputDirectory.getPath()))
                 .setMergeManifests(true)
                 .build()));
     buildableContext.recordArtifact(output);

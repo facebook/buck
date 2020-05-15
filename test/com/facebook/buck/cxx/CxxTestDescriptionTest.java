@@ -465,9 +465,10 @@ public class CxxTestDescriptionTest {
           hasItem(
               filesystem.resolve(
                   CxxDescriptionEnhancer.getSharedLibrarySymlinkTreePath(
-                      filesystem,
-                      cxxTest.getBinary().getBuildTarget(),
-                      CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor()))));
+                          filesystem,
+                          cxxTest.getBinary().getBuildTarget(),
+                          CxxPlatformUtils.DEFAULT_PLATFORM.getFlavor())
+                      .getPath())));
     }
   }
 

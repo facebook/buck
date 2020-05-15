@@ -18,6 +18,7 @@ package com.facebook.buck.features.go;
 
 import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
+import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
@@ -66,8 +67,8 @@ public class CGoGenSource extends AbstractBuildRule {
   private final ImmutableMap<String, NonHashableSourcePathContainer> headerLinkTreeMap;
 
   private final ImmutableSortedSet<BuildRule> buildDeps;
-  private final Path genDir;
-  private final Path argsFile;
+  private final RelPath genDir;
+  private final RelPath argsFile;
   private final ImmutableList<SourcePath> cFiles;
   private final ImmutableList<SourcePath> cgoFiles;
   private final ImmutableList<SourcePath> goFiles;
@@ -163,7 +164,7 @@ public class CGoGenSource extends AbstractBuildRule {
                     .build().stream()
                     .map(Escaper.ARGFILE_ESCAPER::apply)
                     .collect(Collectors.joining(System.lineSeparator())),
-            argsFile,
+            argsFile.getPath(),
             false));
     steps.add(
         new CGoCompileStep(
@@ -177,9 +178,9 @@ public class CGoGenSource extends AbstractBuildRule {
                 .map(context.getSourcePathResolver()::getRelativePath)
                 .collect(ImmutableList.toImmutableList()),
             platform,
-            genDir));
+            genDir.getPath()));
 
-    buildableContext.recordArtifact(genDir);
+    buildableContext.recordArtifact(genDir.getPath());
     return steps.build();
   }
 

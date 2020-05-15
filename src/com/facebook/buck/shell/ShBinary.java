@@ -88,9 +88,9 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final NewCellPathResolver cellPathResolver;
 
   /** The path where the output will be written. */
-  private final Path output;
+  private final RelPath output;
 
-  private final Path runtimeResourcesDir;
+  private final RelPath runtimeResourcesDir;
 
   protected ShBinary(
       BuildTarget buildTarget,
@@ -119,7 +119,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @Override
   public ImmutableList<Step> getBuildSteps(
       BuildContext context, BuildableContext buildableContext) {
-    buildableContext.recordArtifact(output);
+    buildableContext.recordArtifact(output.getPath());
 
     ImmutableList.Builder<String> cellsPathsStringsBuilder = new ImmutableList.Builder<String>();
     ImmutableList.Builder<String> cellsNamesBuilder = new ImmutableList.Builder<String>();
@@ -168,7 +168,7 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     }
 
     ImmutableList<String> resourceStrings = resourceStringsBuilder.build();
-    Path pathToProjectRoot =
+    RelPath pathToProjectRoot =
         output.getParent().relativize(projectFilesystem.getBuckPaths().getProjectRootDir());
 
     // Configure the template output.
@@ -206,7 +206,8 @@ public class ShBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getProjectFilesystem(),
                 context.getBuildCellRootPath()))
         .add(
-            new StringTemplateStep(TEMPLATE, getProjectFilesystem(), output, valuesBuilder.build()))
+            new StringTemplateStep(
+                TEMPLATE, getProjectFilesystem(), output.getPath(), valuesBuilder.build()))
         .add(new MakeExecutableStep(getProjectFilesystem(), output))
         .build();
   }
