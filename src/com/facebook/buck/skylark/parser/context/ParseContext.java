@@ -21,16 +21,12 @@ import com.facebook.buck.rules.param.CommonParamNames;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.annotation.Nullable;
 
 /**
@@ -43,14 +39,10 @@ public class ParseContext {
   private @Nullable PackageMetadata pkg;
 
   private final Map<String, RecordedRule> rawRules;
-  // stores every accessed configuration option while parsing the build file.
-  // the schema is: section->key->value
-  private final Map<String, Map<String, Optional<String>>> readConfigOptions;
   private final PackageContext packageContext;
 
   public ParseContext(PackageContext packageContext) {
     this.rawRules = new HashMap<>();
-    this.readConfigOptions = new ConcurrentHashMap<>();
     this.packageContext = packageContext;
   }
 
@@ -89,18 +81,6 @@ public class ParseContext {
     rawRules.put(name, rawRule);
   }
 
-  /**
-   * Records an accessed {@code section.key} configuration and its returned {@code value}.
-   *
-   * <p>It's safe to not have to override existing values because configuration options are frozen
-   * for the duration of build file parsing.
-   */
-  public void recordReadConfigurationOption(String section, String key, @Nullable String value) {
-    readConfigOptions
-        .computeIfAbsent(section, s -> new HashMap<>())
-        .putIfAbsent(key, Optional.ofNullable(value));
-  }
-
   /** @return The package in the parsed package file if defined. */
   public PackageMetadata getPackage() {
     if (pkg == null) {
@@ -120,13 +100,6 @@ public class ParseContext {
   /** @return {@code true} if the rule with provided name exists, {@code false} otherwise. */
   public boolean hasRule(String name) {
     return rawRules.containsKey(name);
-  }
-
-  public ImmutableMap<String, ImmutableMap<String, Optional<String>>>
-      getAccessedConfigurationOptions() {
-    return readConfigOptions.entrySet().stream()
-        .collect(
-            ImmutableMap.toImmutableMap(Entry::getKey, e -> ImmutableMap.copyOf(e.getValue())));
   }
 
   /** Returns a context of the package currently being parsed. */

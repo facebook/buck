@@ -28,6 +28,7 @@ import com.facebook.buck.parser.exceptions.BuildFileParseException;
 import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
@@ -36,6 +37,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.vfs.FileSystem;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.Set;
@@ -77,14 +79,15 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
   }
 
   @Override
-  Globber getGlobber(java.nio.file.Path parseFile) {
+  Globber getGlobber(Path parseFile) {
     return new UnsupportedGlobber();
   }
 
   @Override
   ParseResult getParseResult(
-      java.nio.file.Path parseFile,
+      Path parseFile,
       ParseContext context,
+      ReadConfigContext readConfigContext,
       Globber globber,
       ImmutableList<String> loadedPaths) {
     PackageMetadata pkg = context.getPackage();
@@ -95,7 +98,7 @@ public class SkylarkPackageFileParser extends AbstractSkylarkFileParser<PackageF
         pkg,
         TwoArraysImmutableHashMap.of(),
         loadedPaths,
-        context.getAccessedConfigurationOptions(),
+        readConfigContext.getAccessedConfigurationOptions(),
         ImmutableList.of());
   }
 

@@ -31,6 +31,7 @@ import com.facebook.buck.parser.options.ProjectBuildFileParserOptions;
 import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.packages.PackageContext;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
@@ -92,6 +93,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
   private final LoadingCache<LoadImport, IncludesData> includesDataCache;
   private final PackageImplicitIncludesFinder packageImplicitIncludeFinder;
 
+  private final ReadConfigContext readConfigContext;
+
   AbstractSkylarkFileParser(
       ProjectBuildFileParserOptions options,
       FileSystem fileSystem,
@@ -118,12 +121,18 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
 
     this.packageImplicitIncludeFinder =
         PackageImplicitIncludesFinder.fromConfiguration(options.getPackageImplicitIncludes());
+
+    this.readConfigContext = new ReadConfigContext(options.getRawConfig());
   }
 
   abstract BuckOrPackage getBuckOrPackage();
 
   abstract ParseResult getParseResult(
-      Path parseFile, ParseContext context, Globber globber, ImmutableList<String> loadedPaths);
+      Path parseFile,
+      ParseContext context,
+      ReadConfigContext readConfigContext,
+      Globber globber,
+      ImmutableList<String> loadedPaths);
 
   abstract Globber getGlobber(Path parseFile);
 
@@ -171,6 +180,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     PackageContext packageContext =
         createPackageContext(basePath, globber, implicitLoad.getLoadedSymbols());
     ParseContext parseContext = new ParseContext(packageContext);
+    ReadConfigContext readConfigContext = new ReadConfigContext(packageContext.getRawConfig());
     try (Mutability mutability = Mutability.create("parsing " + parseFile)) {
       EnvironmentData envData =
           createBuildFileEvaluationEnvironment(
@@ -179,6 +189,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               buildFileAst,
               mutability,
               parseContext,
+              readConfigContext,
               implicitLoad.getExtensionData());
 
       exec(buildFileAst, envData.getEnvironment(), "file %s", parseFile);
@@ -188,7 +199,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       loadedPaths.add(buildFilePath.toString());
       loadedPaths.addAll(envData.getLoadedPaths());
 
-      return getParseResult(parseFile.getPath(), parseContext, globber, loadedPaths.build());
+      return getParseResult(
+          parseFile.getPath(), parseContext, readConfigContext, globber, loadedPaths.build());
     }
   }
 
@@ -220,6 +232,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       StarlarkFile buildFileAst,
       Mutability mutability,
       ParseContext parseContext,
+      ReadConfigContext readConfigContext,
       @Nullable ExtensionData implicitLoadExtensionData)
       throws IOException, InterruptedException, BuildFileParseException {
     ImmutableList<ExtensionData> dependencies =
@@ -236,6 +249,7 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
     SkylarkUtils.setPhase(env, Phase.LOADING);
 
     parseContext.setup(env);
+    readConfigContext.setup(env);
 
     return ImmutableEnvironmentData.ofImpl(
         env, toLoadedPaths(buildFilePath, dependencies, implicitLoadExtensionData));
@@ -682,6 +696,8 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
       // Create this extension.
       StarlarkThread extensionEnv =
           envBuilder.setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS).build();
+
+      readConfigContext.setup(extensionEnv);
 
       extensionEnv.setPostAssignHook(
           (n, v) -> {

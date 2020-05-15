@@ -23,12 +23,8 @@ import com.facebook.buck.core.starlark.compatible.BuckStarlark;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.skylark.SkylarkFilesystem;
-import com.facebook.buck.skylark.io.impl.NativeGlobber;
-import com.facebook.buck.skylark.packages.PackageContext;
-import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
-import com.google.devtools.build.lib.cmdline.PackageIdentifier;
-import com.google.devtools.build.lib.cmdline.RepositoryName;
 import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.EvalException;
@@ -41,7 +37,6 @@ import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.vfs.FileSystemUtils;
 import com.google.devtools.build.lib.vfs.Path;
-import com.google.devtools.build.lib.vfs.PathFragment;
 import java.io.IOException;
 import java.util.EnumSet;
 import org.junit.Before;
@@ -110,15 +105,9 @@ public class ReadConfigTest {
             .setGlobals(Module.createForBuiltins(module.build()))
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
-    ParseContext parseContext =
-        new ParseContext(
-            PackageContext.of(
-                NativeGlobber.create(root),
-                rawConfig,
-                PackageIdentifier.create(RepositoryName.DEFAULT, PathFragment.create("pkg")),
-                eventHandler,
-                ImmutableMap.of()));
-    parseContext.setup(env);
+    ReadConfigContext readConfigContext = new ReadConfigContext(rawConfig);
+    readConfigContext.setup(env);
+
     try {
       EvalUtils.exec(buildFileAst, env);
     } catch (EvalException e) {

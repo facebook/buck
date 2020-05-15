@@ -16,7 +16,7 @@
 
 package com.facebook.buck.skylark.function;
 
-import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
@@ -74,16 +74,11 @@ public abstract class AbstractSkylarkFunctions {
   public Object readConfig(
       String section, String field, Object defaultValue, FuncallExpression ast, StarlarkThread env)
       throws EvalException {
-    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+    ReadConfigContext configContext = ReadConfigContext.getContext(env, ast);
     @Nullable
-    String value =
-        parseContext
-            .getPackageContext()
-            .getRawConfig()
-            .getOrDefault(section, ImmutableMap.of())
-            .get(field);
+    String value = configContext.getRawConfig().getOrDefault(section, ImmutableMap.of()).get(field);
 
-    parseContext.recordReadConfigurationOption(section, field, value);
+    configContext.recordReadConfigurationOption(section, field, value);
     return value != null ? value : defaultValue;
   }
 }

@@ -37,6 +37,7 @@ import com.facebook.buck.skylark.io.Globber;
 import com.facebook.buck.skylark.io.GlobberFactory;
 import com.facebook.buck.skylark.io.impl.CachingGlobber;
 import com.facebook.buck.skylark.parser.context.ParseContext;
+import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.annotations.VisibleForTesting;
@@ -114,7 +115,11 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
 
   @Override
   ParseResult getParseResult(
-      Path parseFile, ParseContext context, Globber globber, ImmutableList<String> loadedPaths) {
+      Path parseFile,
+      ParseContext context,
+      ReadConfigContext readConfigContext,
+      Globber globber,
+      ImmutableList<String> loadedPaths) {
     Preconditions.checkState(globber instanceof CachingGlobber);
     TwoArraysImmutableHashMap<String, RecordedRule> rules = context.getRecordedRules();
     if (LOG.isVerboseEnabled()) {
@@ -125,7 +130,7 @@ public class SkylarkProjectBuildFileParser extends AbstractSkylarkFileParser<Bui
         PackageMetadata.EMPTY_SINGLETON,
         rules,
         loadedPaths,
-        context.getAccessedConfigurationOptions(),
+        readConfigContext.getAccessedConfigurationOptions(),
         ((CachingGlobber) globber).createGlobManifest());
   }
 

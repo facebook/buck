@@ -468,27 +468,18 @@ public class SkylarkProjectBuildFileParserTest {
   }
 
   @Test
-  public void nativeFunctionUsageAtTopLevelIsReportedAsAnError() throws Exception {
+  public void readConfigUsageAtTopLevel() throws Exception {
     EventCollector eventCollector = new EventCollector(EnumSet.allOf(EventKind.class));
     parser = createParser(eventCollector);
     AbsPath buildFile = projectFilesystem.resolve("BUCK");
-    Files.write(buildFile.getPath(), Collections.singletonList("load('//:ext.bzl', 'ext')"));
+    Files.write(buildFile.getPath(), ImmutableList.of("load('//:ext.bzl', 'ext')", "print(ext)"));
     AbsPath extensionFile = projectFilesystem.resolve("ext.bzl");
     Files.write(
         extensionFile.getPath(),
-        Collections.singletonList("ext = native.read_config('foo', 'bar')"));
-    try {
-      parser.getManifest(buildFile);
-      fail("Parsing should have failed.");
-    } catch (BuildFileParseException e) {
-      Event printEvent = eventCollector.iterator().next();
-      assertThat(
-          printEvent.getMessage(),
-          equalTo(
-              "Top-level invocations of native.read_config are not allowed in .bzl files. "
-                  + "Wrap it in a macro and call it from a BUCK file."));
-      assertThat(printEvent.getKind(), equalTo(EventKind.ERROR));
-    }
+        Collections.singletonList("ext = native.read_config('foo', 'bar', 'baz')"));
+    parser.getManifest(buildFile);
+    Event printEvent = eventCollector.iterator().next();
+    assertThat(printEvent.getMessage(), equalTo("baz"));
   }
 
   @Test
