@@ -17,6 +17,7 @@
 package com.facebook.buck.features.go;
 
 import static org.hamcrest.Matchers.hasItem;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
@@ -458,7 +459,12 @@ public class GoBinaryIntegrationTest {
         .assertSuccess();
     // we are looking for the .o files produced by cxx library /src/cxx (not cgo toolchain)
     ImmutableSortedSet<Path> initialObjects =
-        findFiles(tmp.getRoot(), tmp.getRoot().getFileSystem().getPathMatcher("glob:**/cxx**/*.o"));
+        findFiles(
+            tmp.getRoot().resolve("buck-out/gen"),
+            tmp.getRoot().getFileSystem().getPathMatcher("glob:**/cxx**/*.o"));
+    // sanity check
+    assertFalse(initialObjects.isEmpty());
+
     workspace.runBuckCommand("clean", "--keep-cache");
     workspace
         .runBuckBuild(
@@ -469,7 +475,9 @@ public class GoBinaryIntegrationTest {
             "//src/cgo_with_go_deps:bin")
         .assertSuccess();
     ImmutableSortedSet<Path> subsequentObjects =
-        findFiles(tmp.getRoot(), tmp.getRoot().getFileSystem().getPathMatcher("glob:**/cxx**/*.o"));
+        findFiles(
+            tmp.getRoot().resolve("buck-out/gen"),
+            tmp.getRoot().getFileSystem().getPathMatcher("glob:**/cxx**/*.o"));
     assertThat(initialObjects, Matchers.equalTo(subsequentObjects));
     assertTrue(initialObjects.size() > 0);
   }
