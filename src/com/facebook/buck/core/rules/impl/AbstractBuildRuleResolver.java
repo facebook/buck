@@ -68,7 +68,8 @@ public abstract class AbstractBuildRuleResolver implements BuildRuleResolver {
 
   private static RuntimeException unresolvableRuleException(BuildTarget target) {
     return new IllegalStateException(
-        String.format("Rule for target '%s' could not be resolved.", target));
+        String.format(
+            "Rule for target %s could not be resolved.", target.toStringWithConfiguration()));
   }
 
   @Override
