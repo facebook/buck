@@ -600,6 +600,28 @@ public abstract class CxxSourceRuleFactory {
 
     PreprocessorDelegateCacheValue preprocessorDelegateValue =
         getPreprocessorDelegateCacheValue(source);
+
+    Pair<PreprocessorDelegate, Optional<CxxPrecompiledHeader>> preprocessorAndPCH =
+        getPreprocessorDelegateAndPrecompiledHeader(preprocessorDelegateValue, source);
+    PreprocessorDelegate preprocessorDelegate = preprocessorAndPCH.getFirst();
+    Optional<CxxPrecompiledHeader> precompiledHeaderRule = preprocessorAndPCH.getSecond();
+
+    return CxxPreprocessAndCompile.preprocessAndCompile(
+        target,
+        getProjectFilesystem(),
+        getActionGraphBuilder(),
+        preprocessorDelegate,
+        compilerDelegate,
+        getCompileOutputName(name),
+        source.getPath(),
+        source.getType(),
+        precompiledHeaderRule,
+        getSanitizer());
+  }
+
+  private Pair<PreprocessorDelegate, Optional<CxxPrecompiledHeader>>
+      getPreprocessorDelegateAndPrecompiledHeader(
+          PreprocessorDelegateCacheValue preprocessorDelegateValue, CxxSource source) {
     PreprocessorDelegate preprocessorDelegate = preprocessorDelegateValue.getPreprocessorDelegate();
 
     Optional<CxxPrecompiledHeader> precompiledHeaderRule =
@@ -614,17 +636,7 @@ public abstract class CxxSourceRuleFactory {
               precompiledHeaderRule.get().getCxxIncludePaths());
     }
 
-    return CxxPreprocessAndCompile.preprocessAndCompile(
-        target,
-        getProjectFilesystem(),
-        getActionGraphBuilder(),
-        preprocessorDelegate,
-        compilerDelegate,
-        getCompileOutputName(name),
-        source.getPath(),
-        source.getType(),
-        precompiledHeaderRule,
-        getSanitizer());
+    return new Pair<>(preprocessorDelegate, precompiledHeaderRule);
   }
 
   private CompilerDelegate makeCompilerDelegateForPreprocessAndCompile(CxxSource source) {
