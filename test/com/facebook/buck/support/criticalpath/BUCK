@@ -1,0 +1,15 @@
+load("//tools/build_rules:java_rules.bzl", "java_test")
+
+java_test(
+    name = "criticalpath",
+    srcs = glob(["*.java"]),
+    deps = [
+        "//src/com/facebook/buck/core/rules:rules",
+        "//src/com/facebook/buck/core/rules/impl:impl",
+        "//src/com/facebook/buck/support/criticalpath:criticalpath",
+        "//test/com/facebook/buck/core/model:testutil",
+        "//test/com/facebook/buck/core/rules/impl:testutil",
+        "//test/com/facebook/buck/testutil:testutil",
+        "//third-party/java/junit:junit",
+    ],
+)

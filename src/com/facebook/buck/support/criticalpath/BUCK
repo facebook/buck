@@ -1,0 +1,14 @@
+load("//tools/build_rules:java_rules.bzl", "java_immutables_library")
+
+java_immutables_library(
+    name = "criticalpath",
+    srcs = glob(["*.java"]),
+    visibility = [
+        "PUBLIC",
+    ],
+    deps = [
+        "//src/com/facebook/buck/core/model:model",
+        "//src/com/facebook/buck/core/rules:rules",
+        "//third-party/java/guava:guava",
+    ],
+)
