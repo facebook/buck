@@ -16,7 +16,6 @@
 
 package com.facebook.buck.core.parser.buildtargetparser;
 
-import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.model.BaseName;
 import com.facebook.buck.core.model.CellRelativePath;
@@ -36,7 +35,7 @@ public interface UnconfiguredBuildTargetViewFactory {
    *
    * <p>Note that the cell name of the result build target can be different from the cell name
    * specified in the target name. The build target contains a {@link
-   * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
+   * com.facebook.buck.core.cell.CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    *
    * @see #createForBaseName(BaseName, String, CellNameResolver) for more information about other
    *     types of target names.
@@ -54,7 +53,7 @@ public interface UnconfiguredBuildTargetViewFactory {
    *
    * <p>Note that the cell name of the result build target can be different from the cell name
    * specified in the target name. The build target contains a {@link
-   * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
+   * com.facebook.buck.core.cell.CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    */
   UnconfiguredBuildTarget createForBaseName(
       BaseName baseName, String buildTargetName, CellNameResolver cellNameResolver);
@@ -81,7 +80,7 @@ public interface UnconfiguredBuildTargetViewFactory {
    *
    * <p>Note that the cell name of the result build target can be different from the cell name
    * specified in the target name. The build target contains a {@link
-   * CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
+   * com.facebook.buck.core.cell.CellPathResolver#getCanonicalCellName(Path) canonical cell name}.
    */
   Either<UnconfiguredBuildTarget, CellRelativePath> createWithWildcard(
       String buildTargetName, CellNameResolver cellNameResolver);

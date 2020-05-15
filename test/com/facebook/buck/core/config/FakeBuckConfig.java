@@ -111,8 +111,8 @@ public class FakeBuckConfig {
           architecture,
           platform,
           environment,
-          buildTargetName ->
-              buildTargetFactory.create(buildTargetName, cellPathResolver.getCellNameResolver()));
+          buildTargetFactory,
+          cellPathResolver.getCellNameResolver());
     }
   }
 }

@@ -162,9 +162,8 @@ public class LocalCellProviderFactory {
                         rootConfig.getArchitecture(),
                         rootConfig.getPlatform(),
                         rootConfig.getEnvironment(),
-                        buildTargetName ->
-                            unconfiguredBuildTargetFactory.create(
-                                buildTargetName, cellPathResolver.getCellNameResolver()));
+                        unconfiguredBuildTargetFactory,
+                        cellPathResolver.getCellNameResolver());
 
                 RuleKeyConfiguration ruleKeyConfiguration =
                     ConfigRuleKeyConfigurationFactory.create(buckConfig, moduleManager);

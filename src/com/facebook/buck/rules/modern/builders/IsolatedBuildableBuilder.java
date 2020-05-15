@@ -164,8 +164,8 @@ public abstract class IsolatedBuildableBuilder {
             architecture,
             platform,
             clientEnvironment,
-            buildTargetName ->
-                buildTargetFactory.create(buildTargetName, cellPathResolver.getCellNameResolver()));
+            buildTargetFactory,
+            cellPathResolver.getCellNameResolver());
 
     BuckModuleManager moduleManager =
         new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());

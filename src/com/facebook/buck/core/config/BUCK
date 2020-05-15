@@ -19,6 +19,8 @@ java_immutables_library(
         "//third-party/java/infer-annotations:infer-annotations",
     ],
     exported_deps = [
+        "//src/com/facebook/buck/core/cell/nameresolver:nameresolver",
+        "//src/com/facebook/buck/core/parser/buildtargetparser:buildtargetparser",
         "//src/com/facebook/buck/util:process_executor",
         "//src/com/facebook/buck/util/config:config",
         "//src/com/facebook/buck/util/environment:platform",

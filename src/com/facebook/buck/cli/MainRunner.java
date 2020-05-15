@@ -774,9 +774,8 @@ public final class MainRunner {
                 architecture,
                 platform,
                 clientEnvironment,
-                buildTargetName ->
-                    buildTargetFactory.create(
-                        buildTargetName, cellPathResolver.getCellNameResolver()));
+                buildTargetFactory,
+                cellPathResolver.getCellNameResolver());
       }
 
       // Set so that we can use some settings when we print out messages to users

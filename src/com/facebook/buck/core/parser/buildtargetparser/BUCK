@@ -8,7 +8,7 @@ java_immutables_library(
     ],
     deps = [
         "//src/com/facebook/buck/core/cell/exception:exception",
-        "//src/com/facebook/buck/core/model/impl:impl",
+        "//src/com/facebook/buck/core/cell/nameresolver:nameresolver",
         "//src/com/facebook/buck/core/util/log:log",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/io/pathformat:pathformat",
@@ -16,7 +16,6 @@ java_immutables_library(
         "//src/com/facebook/buck/util/stream:stream",
     ],
     exported_deps = [
-        "//src/com/facebook/buck/core/cell:cell",
         "//src/com/facebook/buck/core/model:model",
     ],
 )

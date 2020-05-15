@@ -16,12 +16,14 @@
 
 package com.facebook.buck.core.config;
 
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.exceptions.BuildTargetParseException;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.UnconfiguredBuildTarget;
+import com.facebook.buck.core.parser.buildtargetparser.UnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -43,7 +45,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 /** Structured representation of data read from a {@code .buckconfig} file. */
@@ -62,7 +63,8 @@ public class BuckConfig {
   private final ConfigViewCache<BuckConfig> viewCache =
       new ConfigViewCache<>(this, BuckConfig.class);
 
-  private final Function<String, UnconfiguredBuildTarget> buildTargetParser;
+  private final UnconfiguredBuildTargetViewFactory buildTargetParser;
+  private final CellNameResolver cellNameResolver;
 
   private final int hashCode;
 
@@ -72,7 +74,8 @@ public class BuckConfig {
       Architecture architecture,
       Platform platform,
       ImmutableMap<String, String> environment,
-      Function<String, UnconfiguredBuildTarget> buildTargetParser) {
+      UnconfiguredBuildTargetViewFactory buildTargetParser,
+      CellNameResolver cellNameResolver) {
     this.config = config;
     this.projectFilesystem = projectFilesystem;
     this.architecture = architecture;
@@ -82,13 +85,7 @@ public class BuckConfig {
     this.buildTargetParser = buildTargetParser;
 
     this.hashCode = Objects.hashCode(config);
-  }
-
-  /** Returns a clone of the current config with a the argument CellPathResolver. */
-  public BuckConfig withBuildTargetParser(
-      Function<String, UnconfiguredBuildTarget> buildTargetParser) {
-    return new BuckConfig(
-        config, projectFilesystem, architecture, platform, environment, buildTargetParser);
+    this.cellNameResolver = cellNameResolver;
   }
 
   /**
@@ -152,12 +149,12 @@ public class BuckConfig {
   }
 
   public UnconfiguredBuildTarget getUnconfiguredBuildTargetForFullyQualifiedTarget(String target) {
-    return buildTargetParser.apply(target);
+    return buildTargetParser.create(target, cellNameResolver);
   }
 
   public BuildTarget getBuildTargetForFullyQualifiedTarget(
       String target, TargetConfiguration targetConfiguration) {
-    return buildTargetParser.apply(target).configure(targetConfiguration);
+    return getUnconfiguredBuildTargetForFullyQualifiedTarget(target).configure(targetConfiguration);
   }
 
   public ImmutableList<BuildTarget> getFullyQualifiedBuildTargets(
