@@ -204,7 +204,7 @@ public class CriticalPathBuilderTest {
             BuildTargetFactory.newInstance("//:" + targetName),
             ImmutableSortedSet.copyOf(dependencies));
     builder.onBuildRuleCompletedExecution(buildRule, execTime);
-    builder.onBuildRuleFinalized(buildRule);
+    builder.onBuildRuleFinalized(buildRule, 0L);
     return buildRule;
   }
 
@@ -214,7 +214,7 @@ public class CriticalPathBuilderTest {
         new FakeBuildRule(
             BuildTargetFactory.newInstance("//:" + targetName),
             ImmutableSortedSet.copyOf(dependencies));
-    builder.onBuildRuleFinalized(buildRule);
+    builder.onBuildRuleFinalized(buildRule, 0L);
     return buildRule;
   }
 }

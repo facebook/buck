@@ -32,4 +32,7 @@ interface CriticalPathNode {
 
   /** The total path cost of the critical path ending at this node, in milliseconds. */
   long getPathCost();
+
+  /** The timestamp of the event, in nanoseconds. */
+  long getEventNanoTime();
 }

@@ -26,11 +26,17 @@ public interface ReportableCriticalPathNode {
   /** The target associated with this critical path node. */
   BuildTarget getTarget();
 
+  /** The type of the target associated with this critical path node. */
+  String getType();
+
   /** The total cost of the critical path up to this node. */
   long getPathCostMilliseconds();
 
   /** The execution time of this particular target. */
   long getExecutionTimeMilliseconds();
+
+  /** The event timestamp for the finalization of the build target, in nanoseconds. */
+  long getEventNanoTime();
 
   /** If applicable, the sibling target to this target with the second-longest path. */
   Optional<BuildTarget> getClosestSiblingTarget();

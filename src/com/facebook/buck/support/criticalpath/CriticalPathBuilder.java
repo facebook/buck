@@ -43,7 +43,7 @@ public final class CriticalPathBuilder {
    * built, there will not be an entry in this map for that target.
    */
   @GuardedBy("this")
-  private final Map<BuildTarget, Integer> executionTimeMap;
+  private final Map<BuildTarget, Long> executionTimeMap;
 
   /** The longest path seen so far. Updated continuously as new build rules complete. */
   @GuardedBy("this")
@@ -63,7 +63,7 @@ public final class CriticalPathBuilder {
    * @param rule The rule that just finished executing
    * @param elapsedTimeMillis The duration of the executed rule, in milliseconds
    */
-  public synchronized void onBuildRuleCompletedExecution(BuildRule rule, int elapsedTimeMillis) {
+  public synchronized void onBuildRuleCompletedExecution(BuildRule rule, long elapsedTimeMillis) {
     executionTimeMap.put(rule.getBuildTarget(), elapsedTimeMillis);
   }
 
@@ -73,7 +73,7 @@ public final class CriticalPathBuilder {
    *
    * @param rule The rule that was just finalized
    */
-  public synchronized void onBuildRuleFinalized(BuildRule rule) {
+  public synchronized void onBuildRuleFinalized(BuildRule rule, long eventNanoTime) {
     long longestSoFar = 0;
     CriticalPathNode longestPath = null;
 
@@ -82,16 +82,17 @@ public final class CriticalPathBuilder {
     for (BuildRule dependency : rule.getBuildDeps()) {
       BuildTarget dependencyTarget = dependency.getBuildTarget();
       CriticalPathNode cpNode = criticalPathNodeMap.get(dependencyTarget);
-      if (cpNode.getPathCost() > longestSoFar) {
+      if (cpNode != null && cpNode.getPathCost() > longestSoFar) {
         longestSoFar = cpNode.getPathCost();
         longestPath = cpNode;
       }
     }
 
     // Default to 0 if not in the execution time map; this indicates a cache hit.
-    long thisTargetExecutionTime = executionTimeMap.getOrDefault(rule.getBuildTarget(), 0);
+    long thisTargetExecutionTime = executionTimeMap.getOrDefault(rule.getBuildTarget(), 0L);
     CriticalPathNode thisRuleNode =
-        ImmutableCriticalPathNode.ofImpl(longestPath, rule, longestSoFar + thisTargetExecutionTime);
+        ImmutableCriticalPathNode.ofImpl(
+            longestPath, rule, longestSoFar + thisTargetExecutionTime, eventNanoTime);
     criticalPathNodeMap.put(rule.getBuildTarget(), thisRuleNode);
 
     // Is this new path the longest one we've seen so far? Stash it, it might be the critical path.
@@ -118,15 +119,18 @@ public final class CriticalPathBuilder {
     while (cursor != null) {
       ImmutableReportableCriticalPathNode.Builder reportableNode =
           ImmutableReportableCriticalPathNode.builder();
-      BuildTarget ruleTarget = cursor.getRule().getBuildTarget();
+      BuildRule rule = cursor.getRule();
+      BuildTarget ruleTarget = rule.getBuildTarget();
       reportableNode.setTarget(ruleTarget).setPathCostMilliseconds(cursor.getPathCost());
-      long ruleExecutionTime = executionTimeMap.getOrDefault(ruleTarget, 0);
+      long ruleExecutionTime = executionTimeMap.getOrDefault(ruleTarget, 0L);
       reportableNode.setExecutionTimeMilliseconds(ruleExecutionTime);
+      reportableNode.setType(rule.getType());
+      reportableNode.setEventNanoTime(cursor.getEventNanoTime());
 
       // If we recorded a sibling sub-critical path for this target, record it.
       if (siblingMap.containsKey(ruleTarget)) {
         BuildTarget siblingTarget = siblingMap.get(ruleTarget);
-        long siblingExecutionTime = executionTimeMap.getOrDefault(siblingTarget, 0);
+        long siblingExecutionTime = executionTimeMap.getOrDefault(siblingTarget, 0L);
         reportableNode.setClosestSiblingTarget(siblingTarget);
         reportableNode.setClosestSiblingExecutionTimeDelta(
             ruleExecutionTime - siblingExecutionTime);
@@ -142,7 +146,7 @@ public final class CriticalPathBuilder {
                 .filter(r -> !r.getBuildTarget().equals(parentTarget))
                 .max(
                     Comparator.comparing(
-                        r -> executionTimeMap.getOrDefault(r.getBuildTarget(), 0)));
+                        r -> executionTimeMap.getOrDefault(r.getBuildTarget(), 0L)));
 
         if (secondLongestPathRule.isPresent()) {
           BuildTarget secondLongestPathTarget = secondLongestPathRule.get().getBuildTarget();
