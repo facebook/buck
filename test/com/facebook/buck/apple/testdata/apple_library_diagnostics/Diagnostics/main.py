@@ -22,7 +22,7 @@ def main():
             encoding=sys.stdout.encoding,
         )
         tokens = clang_result.stderr
-        print(json.dumps({"token_count": tokens.count("\n")}))
+        print(json.dumps({"token_count": tokens.count("\n"), "compiler_args": args}))
         sys.exit(0)
 
 

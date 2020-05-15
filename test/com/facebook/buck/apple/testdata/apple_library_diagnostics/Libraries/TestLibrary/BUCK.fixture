@@ -9,6 +9,12 @@ apple_library(
     diagnostics = {
         "tc": "//Diagnostics:tokencount",
     },
+    precompiled_header = ":Common_pch",
+)
+
+cxx_precompiled_header(
+    name = "Common_pch",
+    src = "Common.h",
 )
 
 genrule(

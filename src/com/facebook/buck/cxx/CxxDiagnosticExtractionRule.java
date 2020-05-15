@@ -63,6 +63,7 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
       Optional<PreprocessorDelegate> preprocessorDelegate,
       CompilerDelegate compilerDelegate,
       SourcePath input,
+      Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       CxxSource.Type inputType,
       DebugPathSanitizer sanitizer) {
     super(
@@ -75,7 +76,7 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
             preprocessorDelegate,
             compilerDelegate,
             input,
-            Optional.empty(),
+            precompiledHeaderRule,
             inputType,
             sanitizer));
   }

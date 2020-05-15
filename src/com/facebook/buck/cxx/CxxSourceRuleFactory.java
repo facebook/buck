@@ -743,12 +743,16 @@ public abstract class CxxSourceRuleFactory {
 
   private CxxDiagnosticExtractionRule createDiagnosticExtractionBuildRule(
       BuildTarget target, CxxSource source, Pair<String, Tool> tools) {
+    Optional<CxxPrecompiledHeader> pch = Optional.empty();
     Optional<PreprocessorDelegate> preprocessorDelegate = Optional.empty();
     CompilerDelegate compilerDelegate;
 
     if (CxxSourceTypes.isPreprocessableType(source.getType())) {
       PreprocessorDelegateCacheValue cacheValue = getPreprocessorDelegateCacheValue(source);
-      preprocessorDelegate = Optional.of(cacheValue.getPreprocessorDelegate());
+      Pair<PreprocessorDelegate, Optional<CxxPrecompiledHeader>> preprocessorAndPCH =
+          getPreprocessorDelegateAndPrecompiledHeader(cacheValue, source);
+      preprocessorDelegate = Optional.of(preprocessorAndPCH.getFirst());
+      pch = preprocessorAndPCH.getSecond();
       compilerDelegate = makeCompilerDelegateForPreprocessAndCompile(source);
     } else {
       compilerDelegate = makeCompilerDelegateForCompileOnly(source);
@@ -762,6 +766,7 @@ public abstract class CxxSourceRuleFactory {
         preprocessorDelegate,
         compilerDelegate,
         source.getPath(),
+        pch,
         source.getType(),
         getSanitizer());
   }

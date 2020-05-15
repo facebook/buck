@@ -52,6 +52,7 @@ import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -73,6 +74,7 @@ public class AppleLibraryIntegrationTest {
 
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "apple_library_diagnostics", tmp);
+    workspace.addBuckConfigLocalOption("cxx", "pch_enabled", "false");
     workspace.setUp();
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(workspace.getDestPath());
@@ -117,7 +119,23 @@ public class AppleLibraryIntegrationTest {
       JsonNode tokenCount = tokenCountDiagnostics.get("token_count");
       assertTrue(tokenCount.isNumber());
       assertTrue(tokenCount.numberValue().longValue() > 0);
+
+      JsonNode compilerArgs = tokenCountDiagnostics.get("compiler_args");
+      assertTrue(jsonArrayContainsString(compilerArgs, "Libraries/TestLibrary/Common.h"));
     }
+  }
+
+  private static boolean jsonArrayContainsString(JsonNode node, String string) {
+    Preconditions.checkArgument(node.isArray());
+
+    for (int i = 0; i < node.size(); ++i) {
+      JsonNode element = node.get(i);
+      if (element.isTextual() && element.textValue().equals(string)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   @Test
