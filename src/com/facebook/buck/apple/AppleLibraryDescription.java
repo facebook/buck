@@ -1011,13 +1011,7 @@ public class AppleLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     MultiarchFileInfos.checkTargetSupportsMultiarch(buildTarget);
-    AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
-            toolchainProvider, buildTarget.getTargetConfiguration())
-        .getValues()
-        .forEach(
-            platform ->
-                targetGraphOnlyDepsBuilder.addAll(
-                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
+    AppleDescriptions.findToolchainDeps(buildTarget, targetGraphOnlyDepsBuilder, toolchainProvider);
   }
 
   public static boolean isNotStaticallyLinkedLibraryNode(

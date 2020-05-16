@@ -719,13 +719,7 @@ public class AppleBinaryDescription
           CxxPlatforms.findDepsForTargetFromConstructorArgs(
               cxxPlatformsProvider, buildTarget, Optional.empty()));
     }
-    AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
-            toolchainProvider, buildTarget.getTargetConfiguration())
-        .getValues()
-        .forEach(
-            platform ->
-                targetGraphOnlyDepsBuilder.addAll(
-                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
+    AppleDescriptions.findToolchainDeps(buildTarget, targetGraphOnlyDepsBuilder, toolchainProvider);
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider(

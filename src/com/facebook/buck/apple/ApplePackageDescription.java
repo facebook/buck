@@ -127,13 +127,7 @@ public class ApplePackageDescription
           toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
     }
     extraDepsBuilder.add(propagateFlavorsToTarget(buildTarget, constructorArg.getBundle()));
-    AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
-            toolchainProvider, buildTarget.getTargetConfiguration())
-        .getValues()
-        .forEach(
-            platform ->
-                targetGraphOnlyDepsBuilder.addAll(
-                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
+    AppleDescriptions.findToolchainDeps(buildTarget, targetGraphOnlyDepsBuilder, toolchainProvider);
   }
 
   @Override

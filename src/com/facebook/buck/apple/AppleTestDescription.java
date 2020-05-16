@@ -754,13 +754,7 @@ public class AppleTestDescription
               extraDepsBuilder.addAll(
                   platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
     }
-    AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
-            toolchainProvider, buildTarget.getTargetConfiguration())
-        .getValues()
-        .forEach(
-            platform ->
-                targetGraphOnlyDepsBuilder.addAll(
-                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
+    AppleDescriptions.findToolchainDeps(buildTarget, targetGraphOnlyDepsBuilder, toolchainProvider);
   }
 
   private AppleBundle getBuildRuleForTestHostAppTarget(

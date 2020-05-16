@@ -80,6 +80,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -1233,5 +1234,17 @@ public class AppleDescriptions {
             toolchainTargetConfiguration,
             AppleCxxPlatformsProvider.class);
     return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
+  }
+
+  static void findToolchainDeps(
+      BuildTarget buildTarget,
+      ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder,
+      ToolchainProvider toolchainProvider) {
+    getAppleCxxPlatformsFlavorDomain(toolchainProvider, buildTarget.getTargetConfiguration())
+        .getValues()
+        .forEach(
+            platform ->
+                targetGraphOnlyDepsBuilder.addAll(
+                    platform.getParseTimeDeps(buildTarget.getTargetConfiguration())));
   }
 }

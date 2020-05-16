@@ -342,13 +342,7 @@ public class AppleBundleDescription
     }
 
     extraDepsBuilder.addAll(depsExcludingBinary);
-    BuildTarget finalBuildTarget = buildTarget;
-    appleCxxPlatformsFlavorDomain
-        .getValues()
-        .forEach(
-            platform ->
-                targetGraphOnlyDepsBuilder.addAll(
-                    platform.getParseTimeDeps(finalBuildTarget.getTargetConfiguration())));
+    AppleDescriptions.findToolchainDeps(buildTarget, targetGraphOnlyDepsBuilder, toolchainProvider);
   }
 
   @Override
