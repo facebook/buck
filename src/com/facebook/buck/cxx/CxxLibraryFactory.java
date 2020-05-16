@@ -443,17 +443,9 @@ public class CxxLibraryFactory {
     return LinkableListFilterFactory.from(cxxBuckConfig, args, targetGraph);
   }
 
-  /**
-   * @return an {@link Iterable} with platform dependencies that need to be resolved at parse time.
-   */
   public Iterable<BuildTarget> getPlatformParseTimeDeps(TargetConfiguration targetConfiguration) {
-    // Since we don't have context on the top-level rules using this C/C++ library (e.g. it may be
-    // a `python_binary`), we eagerly add the deps for all possible platforms to guarantee that the
-    // correct ones are included.
-    return getCxxPlatformsProvider(targetConfiguration).getUnresolvedCxxPlatforms().getValues()
-        .stream()
-        .flatMap(p -> RichStream.from(p.getParseTimeDeps(targetConfiguration)))
-        .collect(ImmutableList.toImmutableList());
+    return CxxPlatformParseTimeDeps.getPlatformParseTimeDeps(
+        toolchainProvider, targetConfiguration);
   }
 
   private static ImmutableList<SourcePath> requireObjects(
