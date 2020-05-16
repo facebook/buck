@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -65,16 +64,6 @@ public class PrebuiltAppleFrameworkDescription
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
-  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
-      TargetConfiguration toolchainTargetConfiguration) {
-    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
-        toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME,
-            toolchainTargetConfiguration,
-            AppleCxxPlatformsProvider.class);
-    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
-  }
-
   @Override
   public boolean hasFlavors(
       ImmutableSet<Flavor> flavors, TargetConfiguration toolchainTargetConfiguration) {
@@ -82,7 +71,8 @@ public class PrebuiltAppleFrameworkDescription
     // It's mainly there to be compatible with other apple rules which blindly add flavor tags to
     // all its targets.
     FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain =
-        getAppleCxxPlatformsFlavorDomain(toolchainTargetConfiguration);
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, toolchainTargetConfiguration);
     return RichStream.from(flavors)
         .allMatch(
             flavor ->
@@ -99,7 +89,8 @@ public class PrebuiltAppleFrameworkDescription
       TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(
         ImmutableSet.of(
-            getAppleCxxPlatformsFlavorDomain(toolchainTargetConfiguration),
+            AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+                toolchainProvider, toolchainTargetConfiguration),
             AppleDebugFormat.FLAVOR_DOMAIN,
             AppleDescriptions.INCLUDE_FRAMEWORKS,
             StripStyle.FLAVOR_DOMAIN));
@@ -128,7 +119,8 @@ public class PrebuiltAppleFrameworkDescription
         input ->
             CxxFlags.getFlagsWithPlatformMacroExpansion(
                 args.getExportedLinkerFlags(), args.getExportedPlatformLinkerFlags(), input),
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()));
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, buildTarget.getTargetConfiguration()));
   }
 
   @Override

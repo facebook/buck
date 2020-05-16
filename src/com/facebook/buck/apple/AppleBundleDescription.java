@@ -17,7 +17,6 @@
 package com.facebook.buck.apple;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
-import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
@@ -182,7 +181,8 @@ public class AppleBundleDescription
     return AppleDescriptions.createAppleBundle(
         xcodeDescriptions,
         cxxPlatformsProvider,
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()),
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, buildTarget.getTargetConfiguration()),
         context.getTargetGraph(),
         buildTarget,
         context.getProjectFilesystem(),
@@ -246,7 +246,8 @@ public class AppleBundleDescription
     }
 
     FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain =
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, buildTarget.getTargetConfiguration());
     Optional<MultiarchFileInfo> fatBinaryInfo =
         MultiarchFileInfos.create(appleCxxPlatformsFlavorDomain, buildTarget);
     UnresolvedCxxPlatform cxxPlatform;
@@ -365,7 +366,8 @@ public class AppleBundleDescription
     CxxPlatformsProvider cxxPlatformsProvider =
         getCxxPlatformsProvider(buildTarget.getTargetConfiguration());
     FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms =
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, buildTarget.getTargetConfiguration());
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -378,16 +380,6 @@ public class AppleBundleDescription
         AppleDescriptions.getTargetPlatformBinary(
             args.getBinary(), args.getPlatformBinary(), appleCxxPlatform.getFlavor());
     return graphBuilder.requireMetadata(binaryTarget, metadataClass);
-  }
-
-  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
-      TargetConfiguration toolchainTargetConfiguration) {
-    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
-        toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME,
-            toolchainTargetConfiguration,
-            AppleCxxPlatformsProvider.class);
-    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider(

@@ -20,7 +20,6 @@ import static com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Lin
 import static com.facebook.buck.swift.SwiftLibraryDescription.isSwiftTarget;
 
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
-import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
@@ -325,7 +324,8 @@ public class AppleLibraryDescription
 
             // TODO(mgd): Must handle 'default' platform
             AppleCxxPlatform applePlatform =
-                getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+                AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+                        toolchainProvider, buildTarget.getTargetConfiguration())
                     .getValue(buildTarget)
                     .map(unresolved -> unresolved.resolve(graphBuilder))
                     .orElseThrow(IllegalArgumentException::new);
@@ -431,7 +431,8 @@ public class AppleLibraryDescription
     return AppleDescriptions.createAppleBundle(
         xcodeDescriptions,
         cxxPlatformsProvider,
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()),
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, buildTarget.getTargetConfiguration()),
         targetGraph,
         buildTarget,
         projectFilesystem,
@@ -552,7 +553,8 @@ public class AppleLibraryDescription
             .getValue(buildTarget)
             .orElse(appleConfig.getDefaultDebugInfoFormatForLibraries()),
         cxxPlatformsProvider,
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()),
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, buildTarget.getTargetConfiguration()),
         cxxBuckConfig.shouldCacheStrip());
   }
 
@@ -569,7 +571,9 @@ public class AppleLibraryDescription
       CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxPreprocessorInput) {
     Optional<MultiarchFileInfo> multiarchFileInfo =
         MultiarchFileInfos.create(
-            getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()), buildTarget);
+            AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+                toolchainProvider, buildTarget.getTargetConfiguration()),
+            buildTarget);
     if (multiarchFileInfo.isPresent()) {
       ImmutableSortedSet.Builder<BuildRule> thinRules = ImmutableSortedSet.naturalOrder();
       for (BuildTarget thinTarget : multiarchFileInfo.get().getThinTargets()) {
@@ -598,7 +602,8 @@ public class AppleLibraryDescription
           multiarchFileInfo.get(),
           thinRules.build(),
           cxxBuckConfig,
-          getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()));
+          AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+              toolchainProvider, buildTarget.getTargetConfiguration()));
     } else {
       return requireSingleArchUnstrippedBuildRule(
           context,
@@ -628,7 +633,8 @@ public class AppleLibraryDescription
           CxxLibraryDescription.TransitiveCxxPreprocessorInputFunction transitiveCxxDeps) {
 
     Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+                toolchainProvider, buildTarget.getTargetConfiguration())
             .getValue(buildTarget);
 
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
@@ -963,7 +969,8 @@ public class AppleLibraryDescription
       AppleNativeTargetDescriptionArg args,
       Class<U> metadataClass) {
     Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+                toolchainProvider, buildTarget.getTargetConfiguration())
             .getValue(buildTarget);
 
     CxxLibraryDescriptionArg.Builder delegateArg = CxxLibraryDescriptionArg.builder().from(args);
@@ -1004,7 +1011,8 @@ public class AppleLibraryDescription
       ImmutableCollection.Builder<BuildTarget> extraDepsBuilder,
       ImmutableCollection.Builder<BuildTarget> targetGraphOnlyDepsBuilder) {
     MultiarchFileInfos.checkTargetSupportsMultiarch(buildTarget);
-    getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+    AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, buildTarget.getTargetConfiguration())
         .getValues()
         .forEach(
             platform ->
@@ -1128,17 +1136,6 @@ public class AppleLibraryDescription
             return true;
           }
         });
-  }
-
-  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
-      TargetConfiguration toolchainTargetConfiguration) {
-    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
-        toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME,
-            toolchainTargetConfiguration,
-            AppleCxxPlatformsProvider.class);
-
-    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
   }
 
   private CxxPlatformsProvider getCxxPlatformsProvider(

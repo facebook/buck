@@ -18,7 +18,6 @@ package com.facebook.buck.apple;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.apple.toolchain.AppleCxxPlatform;
-import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.UnresolvedAppleCxxPlatform;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
@@ -128,7 +127,8 @@ public class ApplePackageDescription
           toolchainProvider, buildTarget, targetGraphOnlyDepsBuilder);
     }
     extraDepsBuilder.add(propagateFlavorsToTarget(buildTarget, constructorArg.getBundle()));
-    getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+    AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, buildTarget.getTargetConfiguration())
         .getValues()
         .forEach(
             platform ->
@@ -140,7 +140,9 @@ public class ApplePackageDescription
   public Optional<ImmutableSet<FlavorDomain<?>>> flavorDomains(
       TargetConfiguration toolchainTargetConfiguration) {
     return Optional.of(
-        ImmutableSet.of(getAppleCxxPlatformsFlavorDomain(toolchainTargetConfiguration)));
+        ImmutableSet.of(
+            AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+                toolchainProvider, toolchainTargetConfiguration)));
   }
 
   @Override
@@ -172,7 +174,8 @@ public class ApplePackageDescription
   private Optional<ImmutableApplePackageConfigAndPlatformInfo> getApplePackageConfig(
       BuildTarget target, Optional<Flavor> defaultPlatform, ActionGraphBuilder graphBuilder) {
     FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformFlavorDomain =
-        getAppleCxxPlatformsFlavorDomain(target.getTargetConfiguration());
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, target.getTargetConfiguration());
     Set<Flavor> platformFlavors =
         getPlatformFlavorsOrDefault(target, defaultPlatform, appleCxxPlatformFlavorDomain);
 
@@ -226,15 +229,5 @@ public class ApplePackageDescription
     } else {
       return intersection.immutableCopy();
     }
-  }
-
-  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
-      TargetConfiguration toolchainTargetConfiguration) {
-    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
-        toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME,
-            toolchainTargetConfiguration,
-            AppleCxxPlatformsProvider.class);
-    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
   }
 }

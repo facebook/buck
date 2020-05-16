@@ -16,7 +16,6 @@
 
 package com.facebook.buck.apple;
 
-import com.facebook.buck.apple.toolchain.AppleCxxPlatformsProvider;
 import com.facebook.buck.apple.toolchain.ApplePlatform;
 import com.facebook.buck.apple.toolchain.CodeSignIdentityStore;
 import com.facebook.buck.apple.toolchain.ProvisioningProfileStore;
@@ -212,7 +211,8 @@ public class AppleBinaryDescription
       BuildRuleParams params,
       AppleBinaryDescriptionArg args) {
     FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain =
-        getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration());
+        AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, buildTarget.getTargetConfiguration());
     ActionGraphBuilder actionGraphBuilder = context.getActionGraphBuilder();
     args.checkDuplicateSources(actionGraphBuilder.getSourcePathResolver());
     if (buildTarget.getFlavors().contains(APP_FLAVOR)) {
@@ -235,16 +235,6 @@ public class AppleBinaryDescription
           appleCxxPlatformsFlavorDomain,
           args);
     }
-  }
-
-  private FlavorDomain<UnresolvedAppleCxxPlatform> getAppleCxxPlatformsFlavorDomain(
-      TargetConfiguration toolchainTargetConfiguration) {
-    AppleCxxPlatformsProvider appleCxxPlatformsProvider =
-        toolchainProvider.getByName(
-            AppleCxxPlatformsProvider.DEFAULT_NAME,
-            toolchainTargetConfiguration,
-            AppleCxxPlatformsProvider.class);
-    return appleCxxPlatformsProvider.getUnresolvedAppleCxxPlatforms();
   }
 
   // We want to wrap only if we have explicit debug flavor. This is because we don't want to
@@ -659,7 +649,9 @@ public class AppleBinaryDescription
       CxxBinaryDescriptionArg.Builder delegateArg = CxxBinaryDescriptionArg.builder().from(args);
       Optional<UnresolvedAppleCxxPlatform> appleCxxPlatform =
           getAppleCxxPlatformFromParams(
-              getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration()), buildTarget);
+              AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+                  toolchainProvider, buildTarget.getTargetConfiguration()),
+              buildTarget);
       AppleDescriptions.populateCxxBinaryDescriptionArg(
           graphBuilder, delegateArg, appleCxxPlatform, args, buildTarget);
       return cxxBinaryMetadataFactory.createMetadata(
@@ -727,7 +719,8 @@ public class AppleBinaryDescription
           CxxPlatforms.findDepsForTargetFromConstructorArgs(
               cxxPlatformsProvider, buildTarget, Optional.empty()));
     }
-    getAppleCxxPlatformsFlavorDomain(buildTarget.getTargetConfiguration())
+    AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
+            toolchainProvider, buildTarget.getTargetConfiguration())
         .getValues()
         .forEach(
             platform ->
