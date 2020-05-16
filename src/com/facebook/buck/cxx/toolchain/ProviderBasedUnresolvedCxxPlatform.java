@@ -41,7 +41,9 @@ public class ProviderBasedUnresolvedCxxPlatform
   public CxxPlatform resolve(BuildRuleResolver resolver, TargetConfiguration targetConfiguration) {
     BuildRule rule = resolver.getRule(unconfiguredBuildTarget.configure(targetConfiguration));
     Verify.verify(
-        rule instanceof ProvidesCxxPlatform, "%s isn't a cxx_platform rule", rule.getBuildTarget());
+        rule instanceof ProvidesCxxPlatform,
+        "%s isn't a cxx_toolchain rule",
+        rule.getBuildTarget());
     return ((ProvidesCxxPlatform) rule).getPlatformWithFlavor(flavor);
   }
 
