@@ -158,7 +158,8 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidTools> androidTools,
-      boolean executeRemotely) {
+      boolean executeRemotely,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -190,7 +191,8 @@ public class Genrule extends BaseGenrule<GenruleBuildable>
                 : Optional.empty(),
             androidTools.map(
                 tools -> GenruleAndroidTools.of(tools, buildTarget, buildRuleResolver)),
-            executeRemotely));
+            executeRemotely,
+            withDownwardApi));
   }
 
   /**

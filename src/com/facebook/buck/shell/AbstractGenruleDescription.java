@@ -18,7 +18,6 @@ package com.facebook.buck.shell;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasTests;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
@@ -33,6 +32,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
@@ -56,6 +56,7 @@ import com.facebook.buck.rules.macros.StringWithMacrosConverter;
 import com.facebook.buck.rules.macros.WorkerMacro;
 import com.facebook.buck.rules.macros.WorkerMacroArg;
 import com.facebook.buck.rules.macros.WorkerMacroExpander;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.string.MoreStrings;
@@ -76,17 +77,23 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
     implements DescriptionWithTargetGraph<T>, ImplicitDepsInferringDescription<T> {
 
   protected final ToolchainProvider toolchainProvider;
-  protected final BuckConfig buckConfig;
+  protected final SandboxConfig sandboxConfig;
+  protected final RemoteExecutionConfig reConfig;
+  protected final DownwardApiConfig downwardApiConfig;
   protected final SandboxExecutionStrategy sandboxExecutionStrategy;
   protected final boolean enableSandbox;
 
   protected AbstractGenruleDescription(
       ToolchainProvider toolchainProvider,
-      BuckConfig buckConfig,
+      SandboxConfig sandboxConfig,
+      RemoteExecutionConfig reConfig,
+      DownwardApiConfig downwardApiConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy,
       boolean enableSandbox) {
     this.toolchainProvider = toolchainProvider;
-    this.buckConfig = buckConfig;
+    this.sandboxConfig = sandboxConfig;
+    this.reConfig = reConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.enableSandbox = enableSandbox;
   }
@@ -116,7 +123,6 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
   protected boolean canExecuteRemotely(T args) {
     boolean executeRemotely = args.getRemote().orElse(false);
     if (executeRemotely) {
-      RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
       executeRemotely =
           reConfig.shouldUseRemoteExecutionForGenruleIfRequested(
               args.getType().map(type -> getGenruleType() + "_" + type).orElse(getGenruleType()));
@@ -134,7 +140,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
       Optional<Arg> cmdExe,
       Optional<String> outputFileName,
       Optional<ImmutableMap<String, ImmutableSet<String>>> namedOutputFileNames,
-      Optional<ImmutableSet<String>> defaultOutputFileNames) {
+      Optional<ImmutableSet<String>> defaultOutputFileNames,
+      boolean withDownwardApi) {
     return new Genrule(
         buildTarget,
         projectFilesystem,
@@ -152,7 +159,8 @@ public abstract class AbstractGenruleDescription<T extends AbstractGenruleDescri
         args.getCacheable().orElse(true),
         args.getEnvironmentExpansionSeparator(),
         getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
-        canExecuteRemotely(args));
+        canExecuteRemotely(args),
+        withDownwardApi);
   }
 
   /**

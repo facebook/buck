@@ -36,13 +36,23 @@ public class BashStep extends ShellStep {
    * @param bashCommand command to execute. For convenience, multiple arguments are supported and
    *     will be joined with space characters if more than one is present.
    */
-  public BashStep(Path workingDirectory, String... bashCommand) {
-    super(workingDirectory);
+  public BashStep(Path workingDirectory, boolean withDownwardApi, String... bashCommand) {
+    super(workingDirectory, withDownwardApi);
     this.bashCommand = Joiner.on(' ').join(bashCommand);
   }
 
+  public BashStep(AbsPath workingDirectory, boolean withDownwardApi, String... bashCommand) {
+    this(workingDirectory.getPath(), withDownwardApi, bashCommand);
+  }
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
+  public BashStep(Path workingDirectory, String... bashCommand) {
+    this(workingDirectory, false, bashCommand);
+  }
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   public BashStep(AbsPath workingDirectory, String... bashCommand) {
-    this(workingDirectory.getPath(), bashCommand);
+    this(workingDirectory, false, bashCommand);
   }
 
   @Override

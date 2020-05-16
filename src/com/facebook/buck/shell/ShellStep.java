@@ -19,6 +19,7 @@ package com.facebook.buck.shell;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -62,6 +63,8 @@ public abstract class ShellStep implements Step {
    */
   protected final Path workingDirectory;
 
+  private final boolean withDownwardApi;
+
   /**
    * This is set if {@link #shouldPrintStdout(Verbosity)} returns {@code true} when the command is
    * executed.
@@ -77,8 +80,9 @@ public abstract class ShellStep implements Step {
   private long startTime = 0L;
   private long endTime = 0L;
 
-  protected ShellStep(Path workingDirectory) {
+  protected ShellStep(Path workingDirectory, boolean withDownwardApi) {
     this.workingDirectory = Objects.requireNonNull(workingDirectory);
+    this.withDownwardApi = withDownwardApi;
     this.stdout = Optional.empty();
     this.stderr = Optional.empty();
 
@@ -87,8 +91,18 @@ public abstract class ShellStep implements Step {
     }
   }
 
+  protected ShellStep(AbsPath workingDirectory, boolean withDownwardApi) {
+    this(workingDirectory.getPath(), withDownwardApi);
+  }
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
+  protected ShellStep(Path workingDirectory) {
+    this(workingDirectory, false);
+  }
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   protected ShellStep(AbsPath workingDirectory) {
-    this(workingDirectory.getPath());
+    this(workingDirectory, false);
   }
 
   @Override
@@ -180,6 +194,11 @@ public abstract class ShellStep implements Step {
     addOptions(options);
 
     ProcessExecutor executor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      executor =
+          executor.withDownwardAPI(DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
+
     ProcessExecutor.Result result =
         executor.launchAndExecute(
             params, options.build(), stdin, getTimeout(), getTimeoutHandler(context));
@@ -327,5 +346,9 @@ public abstract class ShellStep implements Step {
   @SuppressWarnings("unused")
   protected Optional<Consumer<Process>> getTimeoutHandler(ExecutionContext context) {
     return Optional.empty();
+  }
+
+  protected boolean isWithDownwardApi() {
+    return withDownwardApi;
   }
 }

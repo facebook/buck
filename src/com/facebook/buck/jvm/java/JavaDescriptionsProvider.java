@@ -21,6 +21,9 @@ import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.sandbox.SandboxConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -31,11 +34,19 @@ public class JavaDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
-    BuckConfig config = context.getBuckConfig();
-    JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
+    BuckConfig buckConfig = context.getBuckConfig();
+    JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
     return Arrays.asList(
-        new JarGenruleDescription(toolchainProvider, config, context.getSandboxExecutionStrategy()),
+        new JarGenruleDescription(
+            toolchainProvider,
+            sandboxConfig,
+            reConfig,
+            downwardApiConfig,
+            context.getSandboxExecutionStrategy()),
         new JavaBinaryDescription(toolchainProvider, javaConfig),
         new JavaAnnotationProcessorDescription(),
         new JavaPluginDescription(),

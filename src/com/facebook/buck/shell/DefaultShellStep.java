@@ -31,23 +31,51 @@ public class DefaultShellStep extends ShellStep {
   private ImmutableList<String> args;
 
   public DefaultShellStep(
-      AbsPath workingDirectory, List<String> args, Map<String, String> environment) {
-    this(workingDirectory.getPath(), args, environment);
+      AbsPath workingDirectory,
+      boolean withDownwardApi,
+      List<String> args,
+      Map<String, String> environment) {
+    this(workingDirectory.getPath(), withDownwardApi, args, environment);
   }
 
   public DefaultShellStep(
-      Path workingDirectory, List<String> args, Map<String, String> environment) {
-    super(workingDirectory);
+      Path workingDirectory,
+      boolean withDownwardApi,
+      List<String> args,
+      Map<String, String> environment) {
+    super(workingDirectory, withDownwardApi);
     this.args = ImmutableList.copyOf(args);
     this.environment = ImmutableMap.copyOf(environment);
   }
 
-  public DefaultShellStep(Path workingDirectory, List<String> args) {
-    this(workingDirectory, args, ImmutableMap.of());
+  public DefaultShellStep(Path workingDirectory, boolean withDownwardApi, List<String> args) {
+    this(workingDirectory, withDownwardApi, args, ImmutableMap.of());
   }
 
+  public DefaultShellStep(AbsPath workingDirectory, boolean withDownwardApi, List<String> args) {
+    this(workingDirectory.getPath(), withDownwardApi, args);
+  }
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
+  public DefaultShellStep(
+      Path workingDirectory, List<String> args, Map<String, String> environment) {
+    this(workingDirectory, false, args, environment);
+  }
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
+  public DefaultShellStep(
+      AbsPath workingDirectory, List<String> args, Map<String, String> environment) {
+    this(workingDirectory, false, args, environment);
+  }
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
+  public DefaultShellStep(Path workingDirectory, List<String> args) {
+    this(workingDirectory, false, args, ImmutableMap.of());
+  }
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   public DefaultShellStep(AbsPath workingDirectory, List<String> args) {
-    this(workingDirectory.getPath(), args);
+    this(workingDirectory, false, args, ImmutableMap.of());
   }
 
   @Override

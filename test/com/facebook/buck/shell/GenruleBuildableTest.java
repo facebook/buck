@@ -700,7 +700,8 @@ public class GenruleBuildableTest {
               public ImmutableList<String> enhanceCommandLine(ImmutableList<String> commandLine) {
                 return ImmutableList.of();
               }
-            });
+            },
+            false);
 
     step.execute(TestExecutionContext.newInstance());
   }
@@ -749,7 +750,8 @@ public class GenruleBuildableTest {
               public ImmutableList<String> enhanceCommandLine(ImmutableList<String> commandLine) {
                 return ImmutableList.of();
               }
-            });
+            },
+            false);
 
     step.execute(TestExecutionContext.newInstance());
   }

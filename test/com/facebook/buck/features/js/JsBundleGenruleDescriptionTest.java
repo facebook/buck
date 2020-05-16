@@ -35,6 +35,7 @@ import com.facebook.buck.apple.SourcePathWithAppleBundleDestination;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -52,13 +53,16 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.macros.LocationMacro;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.rules.modern.DefaultOutputPathResolver;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.shell.GenruleBuildable;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.fs.MkdirStep;
@@ -334,9 +338,17 @@ public class JsBundleGenruleDescriptionTest {
   @Test
   public void addAppleBundleResourcesIsDelegatedToUnderlyingBundle() {
     AppleBundleResources.Builder genruleBuilder = AppleBundleResources.builder();
+
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+
     new JsBundleGenruleDescription(
             new ToolchainProviderBuilder().build(),
-            FakeBuckConfig.empty(),
+            sandboxConfig,
+            reConfig,
+            downwardApiConfig,
             new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             genruleBuilder,
@@ -360,9 +372,16 @@ public class JsBundleGenruleDescriptionTest {
     setupWithSkipResources();
 
     AppleBundleResources.Builder resourcesBuilder = AppleBundleResources.builder();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+
     new JsBundleGenruleDescription(
             new ToolchainProviderBuilder().build(),
-            FakeBuckConfig.empty(),
+            sandboxConfig,
+            reConfig,
+            downwardApiConfig,
             new NoSandboxExecutionStrategy())
         .addAppleBundleResources(
             resourcesBuilder,

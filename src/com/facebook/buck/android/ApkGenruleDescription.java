@@ -17,7 +17,6 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidTools;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
@@ -25,8 +24,11 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import java.util.Optional;
@@ -36,9 +38,17 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
 
   public ApkGenruleDescription(
       ToolchainProvider toolchainProvider,
-      BuckConfig config,
+      SandboxConfig sandboxConfig,
+      RemoteExecutionConfig reConfig,
+      DownwardApiConfig downwardApiConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(toolchainProvider, config, sandboxExecutionStrategy, false);
+    super(
+        toolchainProvider,
+        sandboxConfig,
+        reConfig,
+        downwardApiConfig,
+        sandboxExecutionStrategy,
+        false);
   }
 
   @Override

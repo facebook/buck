@@ -27,8 +27,11 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.sandbox.SandboxConfig;
 
 public class CxxGenruleBuilder
     extends AbstractNodeBuilder<
@@ -39,18 +42,27 @@ public class CxxGenruleBuilder
 
   public CxxGenruleBuilder(
       BuildTarget target, FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms, BuckConfig config) {
-    super(
-        new CxxGenruleDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    CxxPlatformsProvider.DEFAULT_NAME,
-                    CxxPlatformsProvider.of(
-                        CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
-                .build(),
-            config,
-            new CxxBuckConfig(FakeBuckConfig.empty()),
-            new NoSandboxExecutionStrategy()),
-        target);
+    super(getDescription(cxxPlatforms, config), target);
+  }
+
+  public static CxxGenruleDescription getDescription(
+      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms, BuckConfig buckConfig) {
+
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+
+    return new CxxGenruleDescription(
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                CxxPlatformsProvider.DEFAULT_NAME,
+                CxxPlatformsProvider.of(CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
+            .build(),
+        sandboxConfig,
+        reConfig,
+        downwardApiConfig,
+        new CxxBuckConfig(FakeBuckConfig.empty()),
+        new NoSandboxExecutionStrategy());
   }
 
   public CxxGenruleBuilder(BuildTarget target, BuckConfig config) {

@@ -21,6 +21,9 @@ import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.util.environment.Platform;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,15 +35,23 @@ public class ShellDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
-    BuckConfig config = context.getBuckConfig();
+    BuckConfig buckConfig = context.getBuckConfig();
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
     return Arrays.asList(
         new CommandAliasDescription(Platform.detect()),
-        new ExportFileDescription(config),
-        new GenruleDescription(toolchainProvider, config, context.getSandboxExecutionStrategy()),
+        new ExportFileDescription(buckConfig),
+        new GenruleDescription(
+            toolchainProvider,
+            sandboxConfig,
+            reConfig,
+            downwardApiConfig,
+            context.getSandboxExecutionStrategy()),
         new ShBinaryDescription(),
-        new ShTestDescription(config),
+        new ShTestDescription(buckConfig),
         new TestSuiteDescription(),
-        new WorkerToolDescription(config));
+        new WorkerToolDescription(buckConfig));
   }
 }

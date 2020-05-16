@@ -29,6 +29,7 @@ import com.facebook.buck.android.AndroidManifestFactory;
 import com.facebook.buck.android.AndroidResourceBuilder;
 import com.facebook.buck.android.AndroidResourceDescription;
 import com.facebook.buck.android.AndroidResourceDescriptionArg;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -43,6 +44,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
 import com.facebook.buck.features.filegroup.FilegroupBuilder;
 import com.facebook.buck.features.zip.rules.Zip;
@@ -65,7 +67,9 @@ import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.jvm.java.KeystoreDescriptionArg;
 import com.facebook.buck.jvm.java.PrebuiltJarBuilder;
 import com.facebook.buck.jvm.java.PrebuiltJarDescriptionArg;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.shell.ExportFileBuilder;
 import com.facebook.buck.shell.ExportFileDescription;
 import com.facebook.buck.shell.ExportFileDescriptionArg;
@@ -100,6 +104,12 @@ public class IjProjectSourcePathResolverTest {
 
   @Test
   public void testJarGenrule() {
+
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+
     BuildTarget target = BuildTargetFactory.newInstance("//lib:jar_rule");
     AbstractNodeBuilder<
             JarGenruleDescriptionArg.Builder,
@@ -114,7 +124,9 @@ public class IjProjectSourcePathResolverTest {
                 JarGenrule>(
                 new JarGenruleDescription(
                     JavaLibraryBuilder.createToolchainProviderForJavaLibrary(),
-                    FakeBuckConfig.empty(),
+                    sandboxConfig,
+                    reConfig,
+                    downwardApiConfig,
                     new NoSandboxExecutionStrategy()),
                 target) {};
     TargetNode<JarGenruleDescriptionArg> node = builder.build(filesystem);

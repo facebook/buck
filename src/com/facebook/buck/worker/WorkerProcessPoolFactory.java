@@ -17,9 +17,11 @@
 package com.facebook.buck.worker;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Escaper;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.annotations.VisibleForTesting;
@@ -47,9 +49,16 @@ import java.util.stream.Collectors;
 public class WorkerProcessPoolFactory {
 
   private final ProjectFilesystem filesystem;
+  private final boolean withDownwardApi;
 
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   public WorkerProcessPoolFactory(ProjectFilesystem filesystem) {
+    this(filesystem, false);
+  }
+
+  public WorkerProcessPoolFactory(ProjectFilesystem filesystem, boolean withDownwardApi) {
     this.filesystem = filesystem;
+    this.withDownwardApi = withDownwardApi;
   }
 
   /**
@@ -163,7 +172,12 @@ public class WorkerProcessPoolFactory {
       ProcessExecutorParams processParams, ExecutionContext context, Path tmpDir)
       throws IOException {
     Path stdErr = Files.createTempFile("buck-worker-", "-stderr.log");
-    return new WorkerProcess(
-        context.getProcessExecutor(), processParams, filesystem, stdErr, tmpDir);
+    ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
+    return new WorkerProcess(processExecutor, processParams, filesystem, stdErr, tmpDir);
   }
 }

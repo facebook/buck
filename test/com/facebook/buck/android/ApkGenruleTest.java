@@ -24,6 +24,7 @@ import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -37,15 +38,18 @@ import com.facebook.buck.core.rules.impl.FakeBuildRule;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
 import com.facebook.buck.jvm.java.Keystore;
 import com.facebook.buck.jvm.java.KeystoreBuilder;
 import com.facebook.buck.parser.exceptions.NoSuchBuildTargetException;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.shell.AbstractGenruleStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.TestExecutionContext;
@@ -105,10 +109,17 @@ public class ApkGenruleTest {
 
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//src/com/facebook:sign_fb4a");
 
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+
     ApkGenruleDescription description =
         new ApkGenruleDescription(
             ApkGenruleBuilder.getToolchainProvider(),
-            FakeBuckConfig.empty(),
+            sandboxConfig,
+            reConfig,
+            downwardApiConfig,
             new NoSandboxExecutionStrategy());
     ApkGenruleDescriptionArg arg =
         ApkGenruleDescriptionArg.builder()

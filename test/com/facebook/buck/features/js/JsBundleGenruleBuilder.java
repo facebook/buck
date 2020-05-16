@@ -16,15 +16,19 @@
 
 package com.facebook.buck.features.js;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.util.types.Pair;
 import com.google.common.collect.ImmutableList;
 import javax.annotation.Nullable;
@@ -36,8 +40,21 @@ public class JsBundleGenruleBuilder
         JsBundleGenruleDescription,
         JsBundleGenrule> {
   private static final JsBundleGenruleDescription genruleDescription =
-      new JsBundleGenruleDescription(
-          createToolchainProvider(), FakeBuckConfig.empty(), new NoSandboxExecutionStrategy());
+      getJsBundleGenruleDescription();
+
+  private static JsBundleGenruleDescription getJsBundleGenruleDescription() {
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+
+    return new JsBundleGenruleDescription(
+        createToolchainProvider(),
+        sandboxConfig,
+        reConfig,
+        downwardApiConfig,
+        new NoSandboxExecutionStrategy());
+  }
 
   private static ToolchainProvider createToolchainProvider() {
     return new ToolchainProviderBuilder().build();

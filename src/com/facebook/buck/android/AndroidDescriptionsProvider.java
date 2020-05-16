@@ -23,9 +23,12 @@ import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.resources.ResourcesConfig;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.kotlin.KotlinBuckConfig;
 import com.facebook.buck.jvm.scala.ScalaBuckConfig;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.util.environment.Platform;
 import java.util.Arrays;
@@ -39,20 +42,22 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     SandboxExecutionStrategy sandboxExecutionStrategy = context.getSandboxExecutionStrategy();
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
-    BuckConfig config = context.getBuckConfig();
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
-    JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
-    ResourcesConfig resourcesConfig = config.getView(ResourcesConfig.class);
+    BuckConfig buckConfig = context.getBuckConfig();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
+    ResourcesConfig resourcesConfig = buckConfig.getView(ResourcesConfig.class);
 
-    ProGuardConfig proGuardConfig = new ProGuardConfig(config);
-    DxConfig dxConfig = new DxConfig(config);
-    ScalaBuckConfig scalaConfig = new ScalaBuckConfig(config);
-    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
-    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(config, Platform.detect());
+    ProGuardConfig proGuardConfig = new ProGuardConfig(buckConfig);
+    DxConfig dxConfig = new DxConfig(buckConfig);
+    ScalaBuckConfig scalaConfig = new ScalaBuckConfig(buckConfig);
+    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
+    AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
     AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
         new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig);
-
     AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory();
 
     return Arrays.asList(
@@ -63,7 +68,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             javaConfig,
             proGuardConfig,
             androidBuckConfig,
-            config,
+            buckConfig,
             cxxBuckConfig,
             dxConfig,
             toolchainProvider,
@@ -74,7 +79,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             javaConfig,
             proGuardConfig,
             androidBuckConfig,
-            config,
+            buckConfig,
             cxxBuckConfig,
             dxConfig,
             toolchainProvider,
@@ -87,7 +92,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             dxConfig,
             toolchainProvider,
             androidBuckConfig),
-        new AndroidInstrumentationTestDescription(config, toolchainProvider),
+        new AndroidInstrumentationTestDescription(buckConfig, toolchainProvider),
         new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory, toolchainProvider),
         new AndroidPrebuiltAarDescription(toolchainProvider, androidBuckConfig),
         new AndroidResourceDescription(toolchainProvider, androidBuckConfig),
@@ -97,6 +102,11 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
         new NdkLibraryDescription(toolchainProvider, resourcesConfig.getConcurrencyLimit()),
         new NdkToolchainDescription(),
         new GenAidlDescription(),
-        new ApkGenruleDescription(toolchainProvider, config, sandboxExecutionStrategy));
+        new ApkGenruleDescription(
+            toolchainProvider,
+            sandboxConfig,
+            reConfig,
+            downwardApiConfig,
+            sandboxExecutionStrategy));
   }
 }

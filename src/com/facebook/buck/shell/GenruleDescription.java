@@ -16,7 +16,6 @@
 
 package com.facebook.buck.shell;
 
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.path.GenruleOutPath;
@@ -25,7 +24,9 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
@@ -40,9 +41,17 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
 
   public GenruleDescription(
       ToolchainProvider toolchainProvider,
-      BuckConfig buckConfig,
+      SandboxConfig sandboxConfig,
+      RemoteExecutionConfig reConfig,
+      DownwardApiConfig downwardApiConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(toolchainProvider, buckConfig, sandboxExecutionStrategy, false);
+    super(
+        toolchainProvider,
+        sandboxConfig,
+        reConfig,
+        downwardApiConfig,
+        sandboxExecutionStrategy,
+        false);
   }
 
   @Override
@@ -60,8 +69,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
       Optional<Arg> cmd,
       Optional<Arg> bash,
       Optional<Arg> cmdExe) {
+    boolean withDownwardApi = downwardApiConfig.isEnabledForGenrule();
     if (!args.getExecutable().orElse(false)) {
-      SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
       return new Genrule(
           buildTarget,
           projectFilesystem,
@@ -80,7 +89,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
           getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
-          canExecuteRemotely(args));
+          canExecuteRemotely(args),
+          withDownwardApi);
     } else {
       return new GenruleBinary(
           buildTarget,
@@ -98,7 +108,8 @@ public class GenruleDescription extends AbstractGenruleDescription<GenruleDescri
           args.getCacheable().orElse(true),
           args.getEnvironmentExpansionSeparator(),
           getAndroidToolsOptional(args, buildTarget.getTargetConfiguration()),
-          canExecuteRemotely(args));
+          canExecuteRemotely(args),
+          withDownwardApi);
     }
   }
 

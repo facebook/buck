@@ -56,25 +56,52 @@ public abstract class AbstractGenruleStep extends ShellStep {
                 }
               });
 
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   public AbstractGenruleStep(
       ProjectFilesystem projectFilesystem,
       CommandString commandString,
       Path workingDirectory,
       ProgramRunner programRunner) {
-    super(workingDirectory);
+    this(projectFilesystem, commandString, workingDirectory, false, programRunner);
+  }
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
+  public AbstractGenruleStep(
+      ProjectFilesystem projectFilesystem, CommandString commandString, AbsPath workingDirectory) {
+    this(projectFilesystem, commandString, workingDirectory.getPath(), false);
+  }
+
+  public AbstractGenruleStep(
+      ProjectFilesystem projectFilesystem,
+      CommandString commandString,
+      Path workingDirectory,
+      boolean withDownwardApi,
+      ProgramRunner programRunner) {
+    super(workingDirectory, withDownwardApi);
     this.projectFilesystem = projectFilesystem;
     this.commandString = commandString;
     this.programRunner = programRunner;
   }
 
   public AbstractGenruleStep(
-      ProjectFilesystem projectFilesystem, CommandString commandString, Path workingDirectory) {
-    this(projectFilesystem, commandString, workingDirectory, new DirectProgramRunner());
+      ProjectFilesystem projectFilesystem,
+      CommandString commandString,
+      Path workingDirectory,
+      boolean withDownwardApi) {
+    this(
+        projectFilesystem,
+        commandString,
+        workingDirectory,
+        withDownwardApi,
+        new DirectProgramRunner());
   }
 
   public AbstractGenruleStep(
-      ProjectFilesystem projectFilesystem, CommandString commandString, AbsPath workingDirectory) {
-    this(projectFilesystem, commandString, workingDirectory.getPath());
+      ProjectFilesystem projectFilesystem,
+      CommandString commandString,
+      AbsPath workingDirectory,
+      boolean withDownwardApi) {
+    this(projectFilesystem, commandString, workingDirectory.getPath(), withDownwardApi);
   }
 
   @Override

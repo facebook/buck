@@ -23,6 +23,9 @@ import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
+import com.facebook.buck.sandbox.SandboxConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -33,9 +36,12 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
-    BuckConfig config = context.getBuckConfig();
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
-    InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
+    BuckConfig buckConfig = context.getBuckConfig();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    InferBuckConfig inferBuckConfig = new InferBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
     CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
         new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig);
@@ -60,7 +66,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
     CxxLibraryFactory cxxLibraryFactory =
         new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
-        new CxxLibraryMetadataFactory(toolchainProvider, config.getFilesystem());
+        new CxxLibraryMetadataFactory(toolchainProvider, buckConfig.getFilesystem());
 
     CxxLibraryDescription cxxLibraryDescription =
         new CxxLibraryDescription(
@@ -73,7 +79,12 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
         cxxBinaryDescription,
         cxxLibraryDescription,
         new CxxGenruleDescription(
-            toolchainProvider, config, cxxBuckConfig, context.getSandboxExecutionStrategy()),
+            toolchainProvider,
+            sandboxConfig,
+            reConfig,
+            downwardApiConfig,
+            cxxBuckConfig,
+            context.getSandboxExecutionStrategy()),
         new CxxToolchainDescription(),
         new CxxTestDescription(toolchainProvider, cxxBuckConfig, cxxBinaryMetadataFactory),
         new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig),

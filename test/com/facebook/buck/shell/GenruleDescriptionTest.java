@@ -47,6 +47,7 @@ import com.facebook.buck.core.select.SelectableConfigurationContextFactory;
 import com.facebook.buck.core.select.impl.ThrowingSelectorListResolver;
 import com.facebook.buck.core.sourcepath.UnconfiguredSourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaLibraryBuilder;
@@ -65,6 +66,7 @@ import com.facebook.buck.rules.macros.UnconfiguredStringWithMacros;
 import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.rules.visibility.VisibilityPattern;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -82,10 +84,17 @@ public class GenruleDescriptionTest {
   public void testImplicitDepsAreAddedCorrectly() throws Exception {
     DefaultTypeCoercerFactory typeCoercerFactory = new DefaultTypeCoercerFactory();
 
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+    SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
+    RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
+
     GenruleDescription genruleDescription =
         new GenruleDescription(
             new ToolchainProviderBuilder().build(),
-            FakeBuckConfig.empty(),
+            sandboxConfig,
+            reConfig,
+            downwardApiConfig,
             new NoSandboxExecutionStrategy());
     KnownNativeRuleTypes knownRuleTypes =
         KnownNativeRuleTypes.of(

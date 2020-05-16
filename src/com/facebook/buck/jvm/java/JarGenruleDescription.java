@@ -17,7 +17,6 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
@@ -26,9 +25,12 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavaOptionsProvider;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.google.common.collect.ImmutableCollection.Builder;
@@ -48,9 +50,17 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
 
   public JarGenruleDescription(
       ToolchainProvider toolchainProvider,
-      BuckConfig config,
+      SandboxConfig sandboxConfig,
+      RemoteExecutionConfig reConfig,
+      DownwardApiConfig downwardApiConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(toolchainProvider, config, sandboxExecutionStrategy, false);
+    super(
+        toolchainProvider,
+        sandboxConfig,
+        reConfig,
+        downwardApiConfig,
+        sandboxExecutionStrategy,
+        false);
     this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
   }
 

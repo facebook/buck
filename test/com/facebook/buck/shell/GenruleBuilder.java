@@ -23,11 +23,14 @@ import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.coercer.SourceSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -40,31 +43,38 @@ public class GenruleBuilder
         GenruleDescriptionArg.Builder, GenruleDescriptionArg, GenruleDescription, Genrule> {
 
   private GenruleBuilder(BuildTarget target) {
-    super(
-        new GenruleDescription(
-            createToolchainProvider(), FakeBuckConfig.empty(), new NoSandboxExecutionStrategy()),
-        target);
+    super(getDescription(getBuckConfig(), createToolchainProvider()), target);
   }
 
   private GenruleBuilder(BuildTarget target, ToolchainProvider toolchainProvider) {
-    super(
-        new GenruleDescription(
-            toolchainProvider, FakeBuckConfig.empty(), new NoSandboxExecutionStrategy()),
-        target);
+    super(getDescription(getBuckConfig(), toolchainProvider), target);
   }
 
   private GenruleBuilder(BuildTarget target, ProjectFilesystem filesystem) {
-    super(
-        new GenruleDescription(
-            createToolchainProvider(), FakeBuckConfig.empty(), new NoSandboxExecutionStrategy()),
-        target,
-        filesystem);
+    super(getDescription(getBuckConfig(), createToolchainProvider()), target, filesystem);
   }
 
-  private GenruleBuilder(BuildTarget target, BuckConfig config) {
-    super(
-        new GenruleDescription(createToolchainProvider(), config, new NoSandboxExecutionStrategy()),
-        target);
+  private GenruleBuilder(BuildTarget target, BuckConfig buckConfig) {
+    super(getDescription(buckConfig, createToolchainProvider()), target);
+  }
+
+  private static GenruleDescription getDescription(
+      BuckConfig buckConfig, ToolchainProvider toolchainProvider) {
+
+    RemoteExecutionConfig reConfig = RemoteExecutionConfig.of(buckConfig);
+    SandboxConfig sandboxConfig = SandboxConfig.of(buckConfig);
+    DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
+
+    return new GenruleDescription(
+        toolchainProvider,
+        sandboxConfig,
+        reConfig,
+        downwardApiConfig,
+        new NoSandboxExecutionStrategy());
+  }
+
+  private static BuckConfig getBuckConfig() {
+    return FakeBuckConfig.empty();
   }
 
   private static ToolchainProvider createToolchainProvider() {

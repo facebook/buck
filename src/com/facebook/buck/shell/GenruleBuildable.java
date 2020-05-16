@@ -25,7 +25,9 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -211,6 +213,14 @@ public class GenruleBuildable implements Buildable {
       inputs = SandboxPropertiesBehavior.class)
   private final Optional<SandboxProperties> sandboxProperties;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   public GenruleBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
@@ -229,6 +239,46 @@ public class GenruleBuildable implements Buildable {
       Optional<SandboxProperties> sandboxProperties,
       Optional<GenruleAndroidTools> androidTools,
       boolean executeRemotely) {
+    this(
+        buildTarget,
+        filesystem,
+        sandboxExecutionStrategy,
+        srcs,
+        cmd,
+        bash,
+        cmdExe,
+        type,
+        out,
+        outs,
+        defaultOuts,
+        enableSandboxingInGenrule,
+        isCacheable,
+        environmentExpansionSeparator,
+        sandboxProperties,
+        androidTools,
+        executeRemotely,
+        false);
+  }
+
+  public GenruleBuildable(
+      BuildTarget buildTarget,
+      ProjectFilesystem filesystem,
+      SandboxExecutionStrategy sandboxExecutionStrategy,
+      SourceSet srcs,
+      Optional<Arg> cmd,
+      Optional<Arg> bash,
+      Optional<Arg> cmdExe,
+      Optional<String> type,
+      Optional<String> out,
+      Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
+      Optional<ImmutableSet<String>> defaultOuts,
+      boolean enableSandboxingInGenrule,
+      boolean isCacheable,
+      String environmentExpansionSeparator,
+      Optional<SandboxProperties> sandboxProperties,
+      Optional<GenruleAndroidTools> androidTools,
+      boolean executeRemotely,
+      boolean withDownwardApi) {
     this.buildTarget = buildTarget;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
     this.srcs = srcs;
@@ -237,6 +287,7 @@ public class GenruleBuildable implements Buildable {
     this.cmdExe = cmdExe;
     this.type = type;
     this.out = out;
+    this.withDownwardApi = withDownwardApi;
     this.outputLabelsSupplier = MoreSuppliers.memoize(this::getOutputLabelsSupplier);
     this.enableSandboxingInGenrule = enableSandboxingInGenrule;
     this.isCacheable = isCacheable;
@@ -411,7 +462,8 @@ public class GenruleBuildable implements Buildable {
               filesystem,
               srcPath.getPath(),
               tmpPath,
-              createProgramRunner()));
+              createProgramRunner(),
+              withDownwardApi));
     }
 
     outputPaths.ifPresent(
@@ -582,7 +634,8 @@ public class GenruleBuildable implements Buildable {
       ProjectFilesystem filesystem,
       Path srcPath,
       Path tmpPath,
-      ProgramRunner programRunner) {
+      ProgramRunner programRunner,
+      boolean withDownwardApi) {
     SourcePathResolverAdapter sourcePathResolverAdapter = context.getSourcePathResolver();
     // The user's command (this.cmd) should be run from the directory that contains only the
     // symlinked files. This ensures that the user can reference only the files that were declared
@@ -597,6 +650,7 @@ public class GenruleBuildable implements Buildable {
         BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), filesystem, srcPath)
             .getPathRelativeToBuildCellRoot(),
+        withDownwardApi,
         programRunner) {
       @Override
       protected void addEnvironmentVariables(
@@ -738,7 +792,7 @@ public class GenruleBuildable implements Buildable {
         convertToWorkerJobParams(context.getSourcePathResolver(), cmd),
         convertToWorkerJobParams(context.getSourcePathResolver(), bash),
         convertToWorkerJobParams(context.getSourcePathResolver(), cmdExe),
-        new WorkerProcessPoolFactory(filesystem)) {
+        new WorkerProcessPoolFactory(filesystem, withDownwardApi)) {
       @Override
       protected ImmutableMap<String, String> getEnvironmentVariables() {
         ImmutableMap.Builder<String, String> envVarBuilder = ImmutableMap.builder();

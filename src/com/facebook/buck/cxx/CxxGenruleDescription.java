@@ -17,7 +17,6 @@
 package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
@@ -55,7 +54,9 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ProxyArg;
@@ -87,6 +88,7 @@ import com.facebook.buck.rules.macros.MacroExpander;
 import com.facebook.buck.rules.macros.PlatformNameMacro;
 import com.facebook.buck.rules.macros.SimpleMacroExpander;
 import com.facebook.buck.rules.macros.StringExpander;
+import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.facebook.buck.shell.AbstractGenruleDescription;
 import com.facebook.buck.shell.Genrule;
@@ -120,10 +122,18 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
   public CxxGenruleDescription(
       ToolchainProvider toolchainProvider,
-      BuckConfig buckConfig,
+      SandboxConfig sandboxConfig,
+      RemoteExecutionConfig reConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxBuckConfig cxxBuckConfig,
       SandboxExecutionStrategy sandboxExecutionStrategy) {
-    super(toolchainProvider, buckConfig, sandboxExecutionStrategy, false);
+    super(
+        toolchainProvider,
+        sandboxConfig,
+        reConfig,
+        downwardApiConfig,
+        sandboxExecutionStrategy,
+        false);
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
   }
 
@@ -308,7 +318,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
         cmdExe,
         Optional.of(args.getOut()),
         Optional.empty(), // named outputs not supported yet for CxxGenRule
-        Optional.empty());
+        Optional.empty(),
+        downwardApiConfig.isEnabledForCxx());
   }
 
   @Override
