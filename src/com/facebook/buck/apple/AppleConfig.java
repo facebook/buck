@@ -72,7 +72,7 @@ public class AppleConfig implements ConfigView<BuckConfig> {
 
   public static final String LINK_SCRUB_CONCURRENTLY = "link_scrub_concurrently";
 
-  private static final String PROJECT_EXCLUDE_LABEL = "exclude_from_project";
+  private static final String PROJECT_EXCLUDE_LABEL = "exclude_from_xcode";
 
   private final BuckConfig delegate;
 
