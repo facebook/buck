@@ -35,7 +35,6 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.Map;
@@ -99,8 +98,6 @@ public class SkylarkRuleFunctions implements SkylarkRuleFunctionsApi {
       Location loc,
       StarlarkThread env)
       throws EvalException {
-    SkylarkUtils.checkLoadingOrWorkspacePhase(env, "rule", loc);
-
     Map<String, AttributeHolder> attributesByString =
         attrs.getContents(String.class, AttributeHolder.class, "attrs keyword of rule()");
     ImmutableMap.Builder<ParamName, AttributeHolder> checkedAttributes =

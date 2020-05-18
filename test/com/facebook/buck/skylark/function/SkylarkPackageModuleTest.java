@@ -39,7 +39,6 @@ import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -113,7 +112,6 @@ public class SkylarkPackageModuleTest {
             .setGlobals(Module.createForBuiltins(module.build()))
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .build();
-    SkylarkUtils.setPhase(env, SkylarkUtils.Phase.LOADING);
     ParseContext parseContext =
         new ParseContext(
             PackageContext.of(

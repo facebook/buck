@@ -26,7 +26,6 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.FileNotFoundException;
@@ -65,7 +64,6 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       useLocation = true,
       useStarlarkThread = true)
   public String packageName(Location loc, StarlarkThread env) throws EvalException {
-    SkylarkUtils.checkLoadingPhase(env, "native.package_name", loc);
     ParseContext parseContext = ParseContext.getParseContext(env, loc, "package_name");
     return parseContext
         .getPackageContext()
@@ -85,7 +83,6 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       useLocation = true,
       useStarlarkThread = true)
   public String repositoryName(Location location, StarlarkThread env) throws EvalException {
-    SkylarkUtils.checkLoadingPhase(env, "native.repository_name", location);
     ParseContext parseContext = ParseContext.getParseContext(env, location, "repository_name");
     return parseContext.getPackageContext().getPackageIdentifier().getRepository().getName();
   }
@@ -99,7 +96,6 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
       useLocation = true,
       useStarlarkThread = true)
   public Boolean ruleExists(String name, Location loc, StarlarkThread env) throws EvalException {
-    SkylarkUtils.checkLoadingOrWorkspacePhase(env, "native.rule_exists", loc);
     ParseContext parseContext = ParseContext.getParseContext(env, loc, "rule_exists");
     return parseContext.hasRule(name);
   }

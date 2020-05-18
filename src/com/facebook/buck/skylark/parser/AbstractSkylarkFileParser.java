@@ -58,8 +58,6 @@ import com.google.devtools.build.lib.syntax.LoadStatement;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.ParserInput;
-import com.google.devtools.build.lib.syntax.SkylarkUtils;
-import com.google.devtools.build.lib.syntax.SkylarkUtils.Phase;
 import com.google.devtools.build.lib.syntax.StarlarkFile;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.ValidationEnvironment;
@@ -246,7 +244,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
             .setSemantics(BuckStarlark.BUCK_STARLARK_SEMANTICS)
             .setEventHandler(eventHandler)
             .build();
-    SkylarkUtils.setPhase(env, Phase.LOADING);
 
     parseContext.setup(env);
     readConfigContext.setup(env);
@@ -709,8 +706,6 @@ abstract class AbstractSkylarkFileParser<T extends FileManifest> implements File
               throw new BuildFileParseException(e, e.getMessage());
             }
           });
-
-      SkylarkUtils.setPhase(extensionEnv, Phase.LOADING);
 
       StarlarkFile ast = load.getAST();
       buckGlobals.getKnownUserDefinedRuleTypes().invalidateExtension(load.getLabel());
