@@ -90,8 +90,11 @@ public class UserDefinedProviderTest {
     try (TestMutableEnv env = new TestMutableEnv()) {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)
-              provider.callWithArgArray(
-                  new Object[] {"val_1", "val_2", "val_3"}, null, env.getEnv(), Location.BUILTIN);
+              provider.call(
+                  ImmutableList.of(),
+                  ImmutableMap.of("foo", "val_1", "bar", "val_2", "baz", "val_3"),
+                  null,
+                  env.getEnv());
       Assert.assertTrue(providerInfo.isImmutable());
     }
   }

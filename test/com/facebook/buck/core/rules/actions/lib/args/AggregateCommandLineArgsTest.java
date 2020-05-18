@@ -276,7 +276,7 @@ public class AggregateCommandLineArgsTest {
     try (TestMutableEnv env = new TestMutableEnv()) {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)
-              provider.callWithArgArray(new Object[] {args}, null, env.getEnv(), Location.BUILTIN);
+              provider.call(ImmutableList.of(), ImmutableMap.of("foo", args), null, env.getEnv());
       assertEquals(args, providerInfo.getValue("foo"));
       assertTrue(providerInfo.isImmutable());
     }
