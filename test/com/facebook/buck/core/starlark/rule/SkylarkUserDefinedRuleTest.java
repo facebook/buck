@@ -315,7 +315,7 @@ public class SkylarkUserDefinedRuleTest {
               ImmutableList.of(), ImmutableMap.of("name", "some_rule_name"), getJunkAst(), env);
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
-          ParseContext.getParseContext(env, null).getRecordedRules();
+          ParseContext.getParseContext(env, Location.BUILTIN, "some_rule_name").getRecordedRules();
 
       assertEquals(Starlark.NONE, res);
       assertEquals(1, rules.size());
@@ -368,7 +368,7 @@ public class SkylarkUserDefinedRuleTest {
               env);
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
-          ParseContext.getParseContext(env, null).getRecordedRules();
+          ParseContext.getParseContext(env, Location.BUILTIN, "some_rule_name").getRecordedRules();
 
       assertEquals(Starlark.NONE, res);
       assertEquals(1, rules.size());
@@ -469,7 +469,7 @@ public class SkylarkUserDefinedRuleTest {
               env);
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
-          ParseContext.getParseContext(env, null).getRecordedRules();
+          ParseContext.getParseContext(env, Location.BUILTIN, "some_rule_name").getRecordedRules();
 
       assertEquals(Starlark.NONE, res);
       assertEquals(1, rules.size());

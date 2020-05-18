@@ -29,7 +29,6 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkGlobalLibrary;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 
@@ -106,7 +105,6 @@ public interface SkylarkRuleFunctionsApi {
                     + "to create one from various implicit parameters.")
       },
       useStarlarkThread = true,
-      useAst = true,
       useLocation = true)
   SkylarkUserDefinedRule rule(
       BaseFunction implementation,
@@ -114,7 +112,6 @@ public interface SkylarkRuleFunctionsApi {
       boolean executable,
       boolean test,
       Location loc,
-      FuncallExpression ast,
       StarlarkThread env)
       throws EvalException;
 

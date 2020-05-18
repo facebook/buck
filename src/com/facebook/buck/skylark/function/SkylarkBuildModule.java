@@ -26,7 +26,6 @@ import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModule;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkModuleCategory;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.SkylarkUtils;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
@@ -63,11 +62,11 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
               + "<code>package_name()</code> will match the caller BUCK file package. "
               + "This function is equivalent to the deprecated variable <code>PACKAGE_NAME</code>.",
       parameters = {},
-      useAst = true,
+      useLocation = true,
       useStarlarkThread = true)
-  public String packageName(FuncallExpression ast, StarlarkThread env) throws EvalException {
-    SkylarkUtils.checkLoadingPhase(env, "native.package_name", ast.getLocation());
-    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+  public String packageName(Location loc, StarlarkThread env) throws EvalException {
+    SkylarkUtils.checkLoadingPhase(env, "native.package_name", loc);
+    ParseContext parseContext = ParseContext.getParseContext(env, loc, "package_name");
     return parseContext
         .getPackageContext()
         .getPackageIdentifier()
@@ -84,12 +83,10 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
               + "repository (or standalone project), it will be set to <code>@</code>.",
       parameters = {},
       useLocation = true,
-      useAst = true,
       useStarlarkThread = true)
-  public String repositoryName(Location location, FuncallExpression ast, StarlarkThread env)
-      throws EvalException {
+  public String repositoryName(Location location, StarlarkThread env) throws EvalException {
     SkylarkUtils.checkLoadingPhase(env, "native.repository_name", location);
-    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+    ParseContext parseContext = ParseContext.getParseContext(env, location, "repository_name");
     return parseContext.getPackageContext().getPackageIdentifier().getRepository().getName();
   }
 
@@ -99,12 +96,11 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
           "Returns True if there is a previously defined rule with provided name, "
               + "or False if the rule with such name does not exist.",
       parameters = {@Param(name = "name", type = String.class, doc = "The name of the rule.")},
-      useAst = true,
+      useLocation = true,
       useStarlarkThread = true)
-  public Boolean ruleExists(String name, FuncallExpression ast, StarlarkThread env)
-      throws EvalException {
-    SkylarkUtils.checkLoadingOrWorkspacePhase(env, "native.rule_exists", ast.getLocation());
-    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+  public Boolean ruleExists(String name, Location loc, StarlarkThread env) throws EvalException {
+    SkylarkUtils.checkLoadingOrWorkspacePhase(env, "native.rule_exists", loc);
+    ParseContext parseContext = ParseContext.getParseContext(env, loc, "rule_exists");
     return parseContext.hasRule(name);
   }
 
@@ -135,23 +131,23 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
             doc = "True indicates directories should not be matched."),
       },
       documented = false,
-      useAst = true,
+      useLocation = true,
       useStarlarkThread = true)
   public StarlarkList<String> glob(
       StarlarkList<String> include,
       StarlarkList<String> exclude,
       Boolean excludeDirectories,
-      FuncallExpression ast,
+      Location loc,
       StarlarkThread env)
       throws EvalException, IOException, InterruptedException {
-    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+    ParseContext parseContext = ParseContext.getParseContext(env, loc, "glob");
     if (include.isEmpty()) {
       parseContext
           .getPackageContext()
           .getEventHandler()
           .handle(
               Event.warn(
-                  ast.getLocation(),
+                  loc,
                   "glob's 'include' attribute is empty. "
                       + "Such calls are expensive and unnecessary. "
                       + "Please use an empty list ([]) instead."));
@@ -159,8 +155,7 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
     }
     if (parseContext.getPackageContext().getPackageIdentifier().getRunfilesPath().isEmpty()
         && include.stream().anyMatch(str -> TOP_LEVEL_GLOB_PATTERN.matcher(str).matches())) {
-      throw new EvalException(
-          ast.getLocation(), "Recursive globs are prohibited at top-level directory");
+      throw new EvalException(loc, "Recursive globs are prohibited at top-level directory");
     }
 
     try {
@@ -171,9 +166,9 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
               .sorted()
               .collect(ImmutableList.toImmutableList()));
     } catch (FileNotFoundException e) {
-      throw new EvalException(ast.getLocation(), "Cannot find " + e.getMessage());
+      throw new EvalException(loc, "Cannot find " + e.getMessage());
     } catch (Exception e) {
-      throw new EvalException(ast.getLocation(), e);
+      throw new EvalException(loc, e);
     }
   }
 
@@ -220,8 +215,8 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
               + "file that is currently being evaluated. If the symbol was not present, "
               + "`default` will be returned.",
       documented = true,
-      useAst = true,
       useStarlarkThread = true,
+      useLocation = true,
       allowReturnNones = true,
       parameters = {
         @Param(
@@ -236,9 +231,8 @@ public class SkylarkBuildModule extends AbstractSkylarkFunctions implements Skyl
             doc = "if no implicit symbol with the requested name exists, return this value."),
       })
   public @Nullable Object implicitPackageSymbol(
-      String symbol, Object defaultValue, FuncallExpression ast, StarlarkThread env)
-      throws EvalException {
-    return ParseContext.getParseContext(env, ast)
+      String symbol, Object defaultValue, Location loc, StarlarkThread env) throws EvalException {
+    return ParseContext.getParseContext(env, loc, "implicit_package_symbol")
         .getPackageContext()
         .getImplicitlyLoadedSymbols()
         .getOrDefault(symbol, defaultValue);

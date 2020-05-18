@@ -41,7 +41,6 @@ public class SoyTemplateSkylarkSignatureRendererTest {
         @Param(name = "seed", type = String.class, doc = "the first element of the returned list."),
       },
       documented = false,
-      useAst = true,
       useStarlarkThread = true)
   public StarlarkList<String> dummy(String seed) {
     return StarlarkList.immutableCopyOf(Collections.singleton(seed));
@@ -51,7 +50,6 @@ public class SoyTemplateSkylarkSignatureRendererTest {
       name = "dummy",
       doc = "Returns a dummy list of strings.",
       documented = false,
-      useAst = true,
       useStarlarkThread = true)
   public StarlarkList<String> dummyWithoutArgs() {
     return StarlarkList.immutableCopyOf(Collections.emptyList());
@@ -62,7 +60,6 @@ public class SoyTemplateSkylarkSignatureRendererTest {
       doc = "Returns a dummy list of strings.",
       extraKeywords = @Param(name = "kwargs", doc = "the dummy attributes."),
       documented = false,
-      useAst = true,
       useStarlarkThread = true)
   public StarlarkList<String> dummyWithKwargs(Map<String, Object> kwargs) {
     return StarlarkList.immutableCopyOf(kwargs.keySet());
@@ -72,7 +69,6 @@ public class SoyTemplateSkylarkSignatureRendererTest {
       name = "dummy",
       doc = "Doc with {} inside.",
       documented = false,
-      useAst = true,
       useStarlarkThread = true)
   public StarlarkList<String> dummyWithBracesInside() {
     return StarlarkList.immutableCopyOf(Collections.emptyList());

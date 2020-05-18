@@ -30,7 +30,6 @@ public class DummyFunction {
         @Param(name = "seed", type = String.class, doc = "the first element of the returned list."),
       },
       documented = false,
-      useAst = true,
       useStarlarkThread = true)
   public StarlarkList<String> dummy(String seed) {
     return StarlarkList.immutableCopyOf(Collections.singleton(seed));

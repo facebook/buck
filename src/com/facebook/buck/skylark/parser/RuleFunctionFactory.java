@@ -30,9 +30,9 @@ import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.NoneType;
 import com.google.devtools.build.lib.syntax.Starlark;
@@ -80,9 +80,9 @@ public class RuleFunctionFactory {
       }
 
       @SuppressWarnings({"unused"})
-      public NoneType invoke(Map<String, Object> kwargs, FuncallExpression ast, StarlarkThread env)
+      public NoneType invoke(Map<String, Object> kwargs, Location loc, StarlarkThread env)
           throws EvalException {
-        ParseContext parseContext = ParseContext.getParseContext(env, ast);
+        ParseContext parseContext = ParseContext.getParseContext(env, loc, name);
         String basePath =
             parseContext
                 .getPackageContext()
@@ -91,8 +91,8 @@ public class RuleFunctionFactory {
                 .getPathString();
         TwoArraysImmutableHashMap.Builder<String, Object> builder =
             TwoArraysImmutableHashMap.builder();
-        RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, kwargs, ast);
-        parseContext.recordRule(recordedRule, ast);
+        RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, kwargs, loc);
+        parseContext.recordRule(recordedRule, loc);
         return Starlark.NONE;
       }
     };
@@ -105,13 +105,13 @@ public class RuleFunctionFactory {
    * @param kwargs The keyword arguments passed to the rule.
    * @param allParamInfo The mapping from build rule attributes to their information.
    * @param name The build rule name. (e.g. {@code java_library}).
-   * @param ast The abstract syntax tree of the build rule function invocation.
+   * @param loc Location of the invocation
    */
   private void throwOnMissingRequiredAttribute(
       Map<String, Object> kwargs,
       ImmutableMap<ParamName, ParamInfo<?>> allParamInfo,
       String name,
-      FuncallExpression ast)
+      Location loc)
       throws EvalException {
     ImmutableList<ParamInfo<?>> missingAttributes =
         allParamInfo.values().stream()
@@ -120,7 +120,7 @@ public class RuleFunctionFactory {
             .collect(ImmutableList.toImmutableList());
     if (!missingAttributes.isEmpty()) {
       throw new EvalException(
-          ast.getLocation(),
+          loc,
           name
               + " requires "
               + missingAttributes.stream()
@@ -145,7 +145,7 @@ public class RuleFunctionFactory {
       String name,
       String basePath,
       Map<String, Object> kwargs,
-      FuncallExpression ast)
+      Location loc)
       throws EvalException {
 
     TwoArraysImmutableHashMap.Builder<ParamName, Object> builder =
@@ -179,7 +179,7 @@ public class RuleFunctionFactory {
       builder.put(paramName, kwargEntry.getValue());
     }
 
-    throwOnMissingRequiredAttribute(kwargs, allParamInfo.getParamInfosByName(), name, ast);
+    throwOnMissingRequiredAttribute(kwargs, allParamInfo.getParamInfosByName(), name, loc);
     return RecordedRule.of(
         ForwardRelativePath.of(basePath), name, visibility, withinView, builder.build());
   }

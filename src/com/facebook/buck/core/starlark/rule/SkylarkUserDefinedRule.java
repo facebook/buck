@@ -108,7 +108,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     ImmutableList<String> names = Objects.requireNonNull(this.getSignature()).getParameterNames();
     Preconditions.checkArgument(
         names.size() == args.length, "Got different number of arguments than expected");
-    ParseContext parseContext = ParseContext.getParseContext(env, ast);
+    ParseContext parseContext = ParseContext.getParseContext(env, ast.getLocation(), getName());
     String basePath =
         parseContext
             .getPackageContext()
@@ -143,7 +143,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
             visibility,
             withinView,
             builder.build()),
-        ast);
+        ast.getLocation());
     return Starlark.NONE;
   }
 

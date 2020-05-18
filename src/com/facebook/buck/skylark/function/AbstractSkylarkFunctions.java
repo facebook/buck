@@ -18,10 +18,10 @@ package com.facebook.buck.skylark.function;
 
 import com.facebook.buck.skylark.parser.context.ReadConfigContext;
 import com.google.common.collect.ImmutableMap;
+import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.skylarkinterface.Param;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import javax.annotation.Nullable;
 
@@ -69,12 +69,12 @@ public abstract class AbstractSkylarkFunctions {
       },
       documented = false, // this is an API that we should remove once select is available
       allowReturnNones = true,
-      useAst = true,
+      useLocation = true,
       useStarlarkThread = true)
   public Object readConfig(
-      String section, String field, Object defaultValue, FuncallExpression ast, StarlarkThread env)
+      String section, String field, Object defaultValue, Location loc, StarlarkThread env)
       throws EvalException {
-    ReadConfigContext configContext = ReadConfigContext.getContext(env, ast);
+    ReadConfigContext configContext = ReadConfigContext.getContext(env, loc);
     @Nullable
     String value = configContext.getRawConfig().getOrDefault(section, ImmutableMap.of()).get(field);
 
