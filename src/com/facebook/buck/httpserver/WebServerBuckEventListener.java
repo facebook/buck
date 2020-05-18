@@ -21,6 +21,7 @@ import com.facebook.buck.core.build.event.BuildEvent;
 import com.facebook.buck.core.build.event.BuildRuleEvent;
 import com.facebook.buck.core.test.event.IndividualTestEvent;
 import com.facebook.buck.core.test.event.TestRunEvent;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.event.BuckEventListener;
 import com.facebook.buck.event.CompilerErrorEvent;
 import com.facebook.buck.event.ConsoleEvent;
@@ -34,6 +35,7 @@ import com.facebook.buck.parser.events.ParseBuckFileEvent;
 import com.facebook.buck.util.timing.Clock;
 import com.google.common.eventbus.Subscribe;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +47,9 @@ import javax.annotation.concurrent.GuardedBy;
  * takes responsibility for serializing the objects as JSON down to the client.
  */
 public class WebServerBuckEventListener implements BuckEventListener {
+
+  private static final Logger LOG = Logger.get(WebServerBuckEventListener.class);
+
   private final StreamingWebSocketServlet streamingWebSocketServlet;
   private final Clock clock;
   private final ScheduledExecutorService executorService =
@@ -233,8 +238,13 @@ public class WebServerBuckEventListener implements BuckEventListener {
     if (buildStatusFuture != null) {
       return; // already scheduled
     }
-    buildStatusFuture =
-        executorService.schedule(this::sendBuildStatusEventInternal, 500, TimeUnit.MILLISECONDS);
+    try {
+      buildStatusFuture =
+          executorService.schedule(this::sendBuildStatusEventInternal, 500, TimeUnit.MILLISECONDS);
+    } catch (RejectedExecutionException e) {
+      // This is expected if shutting down, so only log at verbose level:
+      LOG.verbose("Rejected scheduling sendBuildStatusEventInternal", e);
+    }
   }
 
   /** Internal implementation detail of scheduleBuildStatusEvent. */
@@ -267,7 +277,7 @@ public class WebServerBuckEventListener implements BuckEventListener {
     try {
       executorService.awaitTermination(1000, TimeUnit.MILLISECONDS);
     } catch (InterruptedException e) {
-      // shrug
+      LOG.verbose("Failed to await termination of executor");
     }
   }
 
