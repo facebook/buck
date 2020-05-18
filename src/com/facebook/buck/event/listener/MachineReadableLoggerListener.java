@@ -92,6 +92,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   private final ProjectFilesystem filesystem;
   private final ObjectWriter objectWriter;
   private BufferedOutputStream outputStream;
+  private boolean outputStreamClosed;
 
   private final ChromeTraceBuckConfig chromeTraceConfig;
   private final Path logFilePath;
@@ -356,6 +357,13 @@ public class MachineReadableLoggerListener implements BuckEventListener {
   }
 
   private synchronized void writeToLogImpl(String prefix, Object obj) {
+    if (outputStreamClosed) {
+      // If we already closed the output stream, don't try writing to it.
+      // Closing the output stream can happen long before the executor is
+      // shut down, since we use a BackgroundTask to actually call shutDown().
+      return;
+    }
+
     try {
       outputStream.write((prefix + " ").getBytes(StandardCharsets.UTF_8));
       objectWriter.without(Feature.AUTO_CLOSE_TARGET).writeValue(outputStream, obj);
@@ -417,6 +425,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
                   exitCode.map(code -> code.getCode()).orElse(-1))
               .getBytes(StandardCharsets.UTF_8));
 
+      outputStreamClosed = true;
       outputStream.close();
     } catch (IOException e) {
       LOG.warn("Failed to close output stream.");
