@@ -414,7 +414,7 @@ class Jsr199JavacInvocation implements Javac.Invocation {
                 () -> {
                   threadName.set(Thread.currentThread().getName());
                   tracingBridge = new Jsr199TracingBridge(context.getEventSink(), invokingRule);
-                  BuckTracing.setCurrentThreadTracingInterfaceFromJsr199Javac(tracingBridge);
+                  BuckTracing.setCurrentThreadTracingInterface(tracingBridge);
                   targetEvent =
                       new JavacEventSinkScopedSimplePerfEvent(
                           context.getEventSink(), invokingRule.toString());

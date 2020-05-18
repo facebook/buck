@@ -128,8 +128,7 @@ public final class BuckTracing {
    * Used by Buck to connect this class to its tracing mechanism. There is no need to call this
    * method manually.
    */
-  public static void setCurrentThreadTracingInterfaceFromJsr199Javac(
-      BuckTracingInterface buckTracingInterface) {
+  public static void setCurrentThreadTracingInterface(BuckTracingInterface buckTracingInterface) {
     curThreadTracingInterface.set(buckTracingInterface);
   }
 
@@ -137,7 +136,7 @@ public final class BuckTracing {
    * Used by Buck to disconnect this class from its tracing mechanism. There is no need to call this
    * method manually.
    */
-  public static void clearCurrentThreadTracingInterfaceFromJsr199Javac() {
+  public static void clearCurrentThreadTracingInterface() {
     curThreadTracingInterface.set(null);
   }
 

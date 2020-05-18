@@ -25,6 +25,8 @@ import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.event.BuckTracingEventBusBridge;
+import com.facebook.buck.event.api.BuckTracing;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.javax.SynchronizedToolProvider;
 import com.facebook.buck.util.ClassLoaderCache;
@@ -148,6 +150,9 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
             .build();
 
     try {
+      BuckTracing.setCurrentThreadTracingInterface(
+          new BuckTracingEventBusBridge(context.getBuckEventBus(), invokingRule));
+
       Object compilerShim = loadCompilerShim(context);
 
       Method compile = compilerShim.getClass().getMethod("exec", PrintStream.class, String[].class);
@@ -167,6 +172,8 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
         | NoSuchMethodException
         | ClassNotFoundException ex) {
       throw new RuntimeException(ex);
+    } finally {
+      BuckTracing.clearCurrentThreadTracingInterface();
     }
   }
 
