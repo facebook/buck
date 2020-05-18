@@ -252,8 +252,8 @@ public interface ProcessExecutor {
               + "%s"
               + "\n",
           message,
-          MoreStrings.truncatePretty(getCommand().toString()),
           getExitCode(),
+          MoreStrings.truncatePretty(getCommand().toString()),
           MoreStrings.truncatePretty(getStdout().orElse("")),
           MoreStrings.truncatePretty(getStderr().orElse("")));
     }
