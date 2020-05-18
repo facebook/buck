@@ -370,38 +370,7 @@ public class MachineReadableLoggerListener implements BuckEventListener {
 
   @Override
   public synchronized void close() {
-    executor.submit(
-        () -> {
-          try {
-            if (latestPerfTimesStats != null) {
-              writeToLogImpl(PREFIX_PERFTIMES, latestPerfTimesStats);
-            }
-            writeToLogImpl(
-                PREFIX_CACHE_STATS,
-                CacheCountersSummary.of(
-                    cacheModeHits,
-                    cacheModeErrors,
-                    cacheModeBytes,
-                    cacheModeHits.values().stream().mapToInt(AtomicInteger::get).sum(),
-                    cacheModeErrors.values().stream().mapToInt(AtomicInteger::get).sum(),
-                    cacheMisses.get(),
-                    cacheIgnores.get(),
-                    cacheModeBytes.values().stream().mapToLong(AtomicLong::get).sum(),
-                    localKeyUnchangedHits.get(),
-                    cacheUploadSuccessCount,
-                    cacheUploadFailureCount));
-
-            outputStream.write(
-                String.format(
-                        PREFIX_EXIT_CODE + " {\"exitCode\":%d}",
-                        exitCode.map(code -> code.getCode()).orElse(-1))
-                    .getBytes(StandardCharsets.UTF_8));
-
-            outputStream.close();
-          } catch (IOException e) {
-            LOG.warn("Failed to close output stream.");
-          }
-        });
+    executor.submit(() -> closeImpl());
 
     MachineReadableLoggerListenerCloseArgs args =
         ImmutableMachineReadableLoggerListenerCloseArgs.ofImpl(
@@ -420,6 +389,38 @@ public class MachineReadableLoggerListener implements BuckEventListener {
             new MachineReadableLoggerListenerCloseAction(),
             args);
     managerScope.schedule(task);
+  }
+
+  private synchronized void closeImpl() {
+    try {
+      if (latestPerfTimesStats != null) {
+        writeToLogImpl(PREFIX_PERFTIMES, latestPerfTimesStats);
+      }
+      writeToLogImpl(
+          PREFIX_CACHE_STATS,
+          CacheCountersSummary.of(
+              cacheModeHits,
+              cacheModeErrors,
+              cacheModeBytes,
+              cacheModeHits.values().stream().mapToInt(AtomicInteger::get).sum(),
+              cacheModeErrors.values().stream().mapToInt(AtomicInteger::get).sum(),
+              cacheMisses.get(),
+              cacheIgnores.get(),
+              cacheModeBytes.values().stream().mapToLong(AtomicLong::get).sum(),
+              localKeyUnchangedHits.get(),
+              cacheUploadSuccessCount,
+              cacheUploadFailureCount));
+
+      outputStream.write(
+          String.format(
+                  PREFIX_EXIT_CODE + " {\"exitCode\":%d}",
+                  exitCode.map(code -> code.getCode()).orElse(-1))
+              .getBytes(StandardCharsets.UTF_8));
+
+      outputStream.close();
+    } catch (IOException e) {
+      LOG.warn("Failed to close output stream.");
+    }
   }
 
   /**
