@@ -23,6 +23,7 @@ import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.SkylarkType;
 import com.google.devtools.build.lib.syntax.StarlarkList;
+import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -35,7 +36,7 @@ public class SkylarkProviderFunction implements SkylarkProviderFunctionApi {
 
   @Override
   public Provider provider(String doc, Object fields, Location location) throws EvalException {
-    @Nullable Iterable<String> fieldNames = null;
+    @Nullable Collection<String> fieldNames = null;
     if (fields instanceof StarlarkList<?>) {
       @SuppressWarnings("unchecked")
       StarlarkList<String> list =
