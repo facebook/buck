@@ -35,7 +35,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.BaseFunction;
-import com.google.devtools.build.lib.syntax.BuiltinFunction;
 import com.google.devtools.build.lib.syntax.ClassObject;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
@@ -125,7 +124,7 @@ public abstract class BuckGlobals {
    * @return The list of functions supporting all native Buck functions like {@code java_library}.
    */
   @Lazy
-  ImmutableMap<String, BuiltinFunction> getBuckRuleFunctions() {
+  ImmutableMap<String, BaseFunction> getBuckRuleFunctions() {
     return getDescriptions().stream()
         .map(getRuleFunctionFactory()::create)
         .collect(ImmutableMap.toImmutableMap(BaseFunction::getName, r -> r));

@@ -107,8 +107,8 @@ public class ParseContext {
   }
 
   /** Get the {@link ParseContext} by looking up in the environment. */
-  public static ParseContext getParseContext(StarlarkThread env, Location loc, String name)
-      throws EvalException {
+  public static ParseContext getParseContext(
+      StarlarkThread env, @Nullable Location loc, String name) throws EvalException {
     @Nullable ParseContext value = env.getThreadLocal(ParseContext.class);
     if (value == null) {
       // if PARSE_CONTEXT is missing, we're not called from a build file. This happens if someone

@@ -28,18 +28,21 @@ import com.facebook.buck.rules.param.ParamName;
 import com.facebook.buck.skylark.parser.context.ParseContext;
 import com.facebook.buck.skylark.parser.context.RecordedRule;
 import com.facebook.buck.util.collect.TwoArraysImmutableHashMap;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.events.Location;
-import com.google.devtools.build.lib.syntax.BuiltinFunction;
+import com.google.devtools.build.lib.syntax.BaseFunction;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
-import com.google.devtools.build.lib.syntax.NoneType;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * Responsible for creating instances of Skylark functions based on Buck's {@link BaseDescription}s.
@@ -70,29 +73,35 @@ public class RuleFunctionFactory {
    * @param ruleClass The name of the rule to to define.
    * @return Skylark function to handle the Buck rule.
    */
-  BuiltinFunction create(BaseDescription<?> ruleClass) {
+  BaseFunction create(BaseDescription<?> ruleClass) {
     String name = DescriptionCache.getRuleType(ruleClass).getName();
-    return new BuiltinFunction(FunctionSignature.KWARGS) {
+    return new BaseFunction(FunctionSignature.KWARGS) {
 
       @Override
       public String getName() {
         return name;
       }
 
-      @SuppressWarnings({"unused"})
-      public NoneType invoke(Map<String, Object> kwargs, Location loc, StarlarkThread env)
-          throws EvalException {
-        ParseContext parseContext = ParseContext.getParseContext(env, loc, name);
+      @SuppressWarnings("unchecked")
+      @Override
+      protected Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread thread)
+          throws EvalException, InterruptedException {
+
+        Preconditions.checkArgument(args.length == 1);
+
+        Dict<String, Object> kwargs = (Dict<String, Object>) args[0];
+
+        ParseContext parseContext =
+            ParseContext.getParseContext(thread, ast != null ? ast.getLocation() : null, name);
         String basePath =
             parseContext
                 .getPackageContext()
                 .getPackageIdentifier()
                 .getPackageFragment()
                 .getPathString();
-        TwoArraysImmutableHashMap.Builder<String, Object> builder =
-            TwoArraysImmutableHashMap.builder();
-        RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, kwargs, loc);
-        parseContext.recordRule(recordedRule, loc);
+        RecordedRule recordedRule =
+            populateAttributes(ruleClass, getName(), basePath, kwargs, ast.getLocation());
+        parseContext.recordRule(recordedRule, ast.getLocation());
         return Starlark.NONE;
       }
     };
@@ -171,7 +180,7 @@ public class RuleFunctionFactory {
         continue;
       }
       if (!allParamInfo.getParamInfosByName().containsKey(paramName)) {
-        throw new IllegalArgumentException(kwargEntry.getKey() + " is not a recognized attribute");
+        throw new EvalException(loc, kwargEntry.getKey() + " is not a recognized attribute");
       }
       if (Starlark.NONE.equals(kwargEntry.getValue())) {
         continue;
