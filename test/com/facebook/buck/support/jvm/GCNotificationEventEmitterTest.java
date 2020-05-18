@@ -16,7 +16,7 @@
 
 package com.facebook.buck.support.jvm;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.BuckEventBusForTests;
@@ -34,11 +34,20 @@ public class GCNotificationEventEmitterTest {
     bus.register(listener);
     System.gc();
 
-    // GCs themselves are asynchronous and often happen in the background - give it a chance to
-    // finish and dispatch its event.
-    Thread.sleep(200);
-    bus.waitEvents(200);
-    assertFalse(listener.getGcEvents().isEmpty());
+    long start = System.currentTimeMillis();
+    for (; ; ) {
+      if (!listener.getGcEvents().isEmpty()) {
+        break;
+      }
+
+      // Kill test if it runs too long
+      assertTrue(System.currentTimeMillis() - start < 60_000);
+
+      // GCs themselves are asynchronous and often happen in the background - give it a chance to
+      // finish and dispatch its event.
+      Thread.sleep(200);
+      bus.waitEvents(200);
+    }
   }
 
   public static class MockGCListener {
