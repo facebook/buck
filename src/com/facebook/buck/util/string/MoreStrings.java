@@ -143,7 +143,7 @@ public final class MoreStrings {
     if (data.length() <= keepFirstChars + keepLastChars + truncateMessage.length()) {
       return data;
     }
-    LOG.info("Before truncate: " + data);
+    LOG.verbose("Before truncate: " + data);
 
     StringBuilder resultBuilder = new StringBuilder(data.substring(0, keepFirstChars));
     resultBuilder.append(truncateMessage);
