@@ -585,7 +585,7 @@ public class PythonBinaryIntegrationTest {
 
     ImmutableList<RelPath> pycFiles =
         Files.find(
-                tmp.getRoot().getPath(),
+                tmp.getRoot().getPath().resolve("buck-out/gen"),
                 Integer.MAX_VALUE,
                 (path, attr) -> path.getFileName().toString().endsWith(".pyc"))
             .map(path -> tmp.getRoot().relativize(path))
@@ -598,7 +598,7 @@ public class PythonBinaryIntegrationTest {
     // Fall back to using the defaults (-Es), which should write out bytecode
     pycFiles =
         Files.find(
-                tmp.getRoot().getPath(),
+                tmp.getRoot().getPath().resolve("buck-out/gen"),
                 Integer.MAX_VALUE,
                 (path, attr) -> path.getFileName().toString().endsWith(".pyc"))
             .map(path -> tmp.getRoot().relativize(path))
