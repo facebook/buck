@@ -67,7 +67,8 @@ public class SkylarkBuildModuleTest {
 
   @Test
   public void defaultValueIsReturned() throws Exception {
-    assertThat(evaluate("pkg = package_name()", true).moduleLookup("pkg"), equalTo("my/package"));
+    assertThat(
+        evaluate("pkg = package_name()", true).getGlobals().get("pkg"), equalTo("my/package"));
     assertEquals(eventHandler.count(), 0);
   }
 

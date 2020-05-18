@@ -74,7 +74,7 @@ public class GlobTest {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['*.txt'])");
     assertThat(
-        assertEvaluate(buildFile).moduleLookup("txts"),
+        assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("bar.txt", "foo.txt"))));
   }
 
@@ -87,7 +87,7 @@ public class GlobTest {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(include=['*.txt'])");
     assertThat(
-        assertEvaluate(buildFile).moduleLookup("txts"),
+        assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("bar.txt", "foo.txt"))));
   }
 
@@ -100,7 +100,7 @@ public class GlobTest {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['*.txt'], exclude=['bar.txt'])");
     assertThat(
-        assertEvaluate(buildFile).moduleLookup("txts"),
+        assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("foo.txt"))));
   }
 
@@ -111,7 +111,7 @@ public class GlobTest {
     FileSystemUtils.writeContentAsLatin1(
         buildFile, "txts = glob(['some_dir'], exclude_directories=False)");
     assertThat(
-        assertEvaluate(buildFile).moduleLookup("txts"),
+        assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of("some_dir"))));
   }
 
@@ -122,7 +122,7 @@ public class GlobTest {
     FileSystemUtils.writeContentAsLatin1(
         buildFile, "txts = glob(['some_dir'], exclude_directories=True)");
     assertThat(
-        assertEvaluate(buildFile).moduleLookup("txts"),
+        assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
   }
 
@@ -132,7 +132,7 @@ public class GlobTest {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob(['some_dir'])");
     assertThat(
-        assertEvaluate(buildFile).moduleLookup("txts"),
+        assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
   }
 
@@ -141,7 +141,7 @@ public class GlobTest {
     Path buildFile = root.getChild("BUCK");
     FileSystemUtils.writeContentAsLatin1(buildFile, "txts = glob([])");
     assertThat(
-        assertEvaluate(buildFile).moduleLookup("txts"),
+        assertEvaluate(buildFile).getGlobals().get("txts"),
         equalTo(StarlarkList.immutableCopyOf(ImmutableList.of())));
     Event event = Iterables.getOnlyElement(eventHandler);
     assertThat(event.getKind(), is(EventKind.WARNING));

@@ -30,7 +30,6 @@ import com.facebook.buck.skylark.function.SkylarkRuleFunctions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.cmdline.Label;
-import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
@@ -133,8 +132,7 @@ public class UserDefinedProviderInfoTest {
   }
 
   @Test
-  public void isImmutableWorks()
-      throws InterruptedException, EvalException, LabelSyntaxException, SyntaxError {
+  public void isImmutableWorks() throws Exception {
 
     String buildFile =
         "ui1 = UserInfo(value=\"foo\", immutable=immutable_list, mutable=mutable_list)\n"
@@ -160,7 +158,7 @@ public class UserDefinedProviderInfoTest {
             ImmutableMap.of("immutable_list", immutableList, "UserInfo", userInfo))) {
 
       StarlarkList<Integer> mutableList = StarlarkList.of(env.getEnv().mutability(), 4, 5, 6);
-      env.getEnv().update("mutable_list", mutableList);
+      env.getEnv().getGlobals().put("mutable_list", mutableList);
 
       assertFalse(mutableList.isImmutable());
 

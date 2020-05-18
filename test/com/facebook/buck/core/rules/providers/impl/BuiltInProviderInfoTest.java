@@ -481,7 +481,7 @@ public class BuiltInProviderInfoTest {
             ImmutableMap.of(
                 "SomeInfoWithMutableAndImmutable", SomeInfoWithMutableAndImmutable.PROVIDER))) {
       StarlarkList<Integer> mutableList = StarlarkList.of(env.getEnv().mutability(), 1, 2, 3);
-      env.getEnv().update("mutable_list", mutableList);
+      env.getEnv().getGlobals().put("mutable_list", mutableList);
 
       out = (SomeInfoWithMutableAndImmutable) TestStarlarkParser.eval(env.getEnv(), buildFile);
 

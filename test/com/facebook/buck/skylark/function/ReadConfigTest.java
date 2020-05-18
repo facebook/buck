@@ -60,13 +60,14 @@ public class ReadConfigTest {
   @Test
   public void defaultValueIsReturned() throws Exception {
     assertThat(
-        evaluate("value = read_config('foo', 'bar', 'baz')").moduleLookup("value"), equalTo("baz"));
+        evaluate("value = read_config('foo', 'bar', 'baz')").getGlobals().get("value"),
+        equalTo("baz"));
   }
 
   @Test
   public void noneIsReturnedWhenFieldIsNotPresent() throws Exception {
     assertThat(
-        evaluate("value = read_config('foo', 'bar')").moduleLookup("value"),
+        evaluate("value = read_config('foo', 'bar')").getGlobals().get("value"),
         equalTo(Starlark.NONE));
   }
 
@@ -74,7 +75,7 @@ public class ReadConfigTest {
   public void configValueIsReturnedIfExists() throws Exception {
     rawConfig = ImmutableMap.of("foo", ImmutableMap.of("bar", "value"));
     assertThat(
-        evaluate("value = read_config('foo', 'bar')").moduleLookup("value"), equalTo("value"));
+        evaluate("value = read_config('foo', 'bar')").getGlobals().get("value"), equalTo("value"));
   }
 
   private StarlarkThread evaluate(String expression) throws IOException, InterruptedException {
