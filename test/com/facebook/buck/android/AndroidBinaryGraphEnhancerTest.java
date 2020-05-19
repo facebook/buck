@@ -169,7 +169,8 @@ public class AndroidBinaryGraphEnhancerTest {
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* manifestEntries */ ManifestEntries.empty(),
-            ImmutableList.of());
+            ImmutableList.of(),
+            false);
     graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
@@ -300,7 +301,8 @@ public class AndroidBinaryGraphEnhancerTest {
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* manifestEntries */ ManifestEntries.empty(),
-            ImmutableList.of());
+            ImmutableList.of(),
+            false);
     graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
@@ -446,7 +448,8 @@ public class AndroidBinaryGraphEnhancerTest {
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* manifestEntries */ ManifestEntries.empty(),
-            ImmutableList.of());
+            ImmutableList.of(),
+            false);
     graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
@@ -572,7 +575,8 @@ public class AndroidBinaryGraphEnhancerTest {
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* manifestEntries */ ManifestEntries.empty(),
-            ImmutableList.of());
+            ImmutableList.of(),
+            false);
     graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =
@@ -710,7 +714,8 @@ public class AndroidBinaryGraphEnhancerTest {
             /* skipCrunchPngs */ false,
             /* includesVectorDrawables */ false,
             /* manifestEntries */ ManifestEntries.empty(),
-            ImmutableList.of());
+            ImmutableList.of(),
+            false);
     graphBuilder.addToIndex(aaptPackageResources);
 
     AndroidPackageableCollection collection =

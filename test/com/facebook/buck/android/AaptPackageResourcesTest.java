@@ -207,7 +207,8 @@ public class AaptPackageResourcesTest {
             /* localizedStringFileName */ null,
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
 
@@ -224,7 +225,8 @@ public class AaptPackageResourcesTest {
             /* localizedStringFileName */ null,
             ResourcesFilter.ResourceCompressionMode.DISABLED,
             FilterResourcesSteps.ResourceFilter.EMPTY_FILTER,
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     previousRuleKey = assertKeyChanged(previousRuleKey, args);
   }
@@ -262,6 +264,7 @@ public class AaptPackageResourcesTest {
                 false,
                 false,
                 constructorArgs.manifestEntries,
-                ImmutableList.of()));
+                ImmutableList.of(),
+                false));
   }
 }

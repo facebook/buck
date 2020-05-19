@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -24,6 +25,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -40,12 +42,15 @@ public class AndroidResourceBuilder
         AndroidResource> {
 
   private AndroidResourceBuilder(BuildTarget target, ProjectFilesystem filesystem) {
-    super(
-        new AndroidResourceDescription(
-            createToolchainProviderForAndroidResource(),
-            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect())),
-        target,
-        filesystem);
+    super(getDescription(), target, filesystem);
+  }
+
+  private static AndroidResourceDescription getDescription() {
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    return new AndroidResourceDescription(
+        createToolchainProviderForAndroidResource(),
+        new AndroidBuckConfig(buckConfig, Platform.detect()),
+        DownwardApiConfig.of(buckConfig));
   }
 
   private static ToolchainProvider createToolchainProviderForAndroidResource() {

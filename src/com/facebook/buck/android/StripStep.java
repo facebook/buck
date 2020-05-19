@@ -39,8 +39,9 @@ public class StripStep extends ShellStep {
       ImmutableList<String> stripCommandPrefix,
       ImmutableList<String> flags,
       AbsPath source,
-      AbsPath destination) {
-    super(workingDirectory);
+      AbsPath destination,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.stripCommandPrefix = stripCommandPrefix;
     this.flags = flags;

@@ -197,7 +197,8 @@ public class AndroidBinaryTest {
         buildableContext,
         buildContext,
         false,
-        expectedSteps);
+        expectedSteps,
+        false);
 
     assertEquals(expectedSteps.build(), commands.build());
 
@@ -356,7 +357,8 @@ public class AndroidBinaryTest {
             Optional.empty(),
             Optional.empty(),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
+            false);
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "
@@ -409,7 +411,8 @@ public class AndroidBinaryTest {
             Optional.of(reorderTool),
             Optional.of(reorderData),
             /*  additionalDexStoreToJarPathMap */ ImmutableMultimap.of(),
-            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()));
+            FakeBuildContext.withSourcePathResolver(graphBuilder.getSourcePathResolver()),
+            false);
 
     assertEquals(
         "Expected 2 new assets paths (one for metadata.txt and the other for the "

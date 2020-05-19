@@ -94,7 +94,8 @@ public class DexProducedFromJavaLibraryTest {
             javaBarRule,
             DxStep.D8,
             1,
-            ImmutableSortedSet.of(javaLibRule));
+            ImmutableSortedSet.of(javaLibRule),
+            false);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
     DxStep dxStep = null;
     for (Step step : steps) {

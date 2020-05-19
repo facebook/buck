@@ -300,7 +300,10 @@ public class JsBundleDescription
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           jsBundle.getSourcePathToResources(),
           /* skipCrunchPngs */ false,
-          androidBuckConfig.getFailOnLegacyAaptErrors());
+          androidBuckConfig.getFailOnLegacyAaptErrors(),
+          // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} from {@code
+          // DownwardApiConfig}
+          false);
     }
 
     BuildRuleParams params =

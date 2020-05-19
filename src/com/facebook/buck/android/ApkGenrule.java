@@ -78,7 +78,8 @@ public final class ApkGenrule extends BaseGenrule<ApkGenrule.Buildable>
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
       Optional<AndroidTools> androidTools,
-      HasInstallableApk installableApk) {
+      HasInstallableApk installableApk,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -101,7 +102,8 @@ public final class ApkGenrule extends BaseGenrule<ApkGenrule.Buildable>
             Optional.empty(),
             androidTools.map(tools -> GenruleAndroidTools.of(tools, buildTarget, resolver)),
             false,
-            installableApk.getApkInfo().getApkPath()));
+            installableApk.getApkInfo().getApkPath(),
+            withDownwardApi));
     // TODO(cjhopman): Disallow apk_genrule depending on an apk with exopackage enabled.
     this.hasInstallableApk = installableApk;
   }
@@ -166,7 +168,8 @@ public final class ApkGenrule extends BaseGenrule<ApkGenrule.Buildable>
         Optional<SandboxProperties> sandboxProperties,
         Optional<GenruleAndroidTools> androidTools,
         boolean executeRemotely,
-        SourcePath apkPath) {
+        SourcePath apkPath,
+        boolean withDownwardApi) {
       super(
           buildTarget,
           filesystem,
@@ -184,7 +187,8 @@ public final class ApkGenrule extends BaseGenrule<ApkGenrule.Buildable>
           environmentExpansionSeparator,
           sandboxProperties,
           androidTools,
-          executeRemotely);
+          executeRemotely,
+          withDownwardApi);
       this.apkPath = apkPath;
     }
 

@@ -38,6 +38,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
@@ -88,12 +89,16 @@ public class AndroidPrebuiltAarDescription
   private final ToolchainProvider toolchainProvider;
   private final JavacFactory javacFactory;
   private final AndroidBuckConfig androidBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public AndroidPrebuiltAarDescription(
-      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      AndroidBuckConfig androidBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -188,7 +193,8 @@ public class AndroidPrebuiltAarDescription
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           unzipAar.getResDirectory(),
           /* skipCrunchPngs */ false,
-          androidBuckConfig.getFailOnLegacyAaptErrors());
+          androidBuckConfig.getFailOnLegacyAaptErrors(),
+          downwardApiConfig.isEnabledForAndroid());
     }
 
     BuildRule prebuiltJarRule =

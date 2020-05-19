@@ -26,6 +26,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -42,6 +46,7 @@ import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -91,6 +96,13 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
 
   private final DepsSupplier depsSupplier;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public RelinkerRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -104,7 +116,8 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
       SourcePath baseLibSourcePath,
       @Nullable Linker linker,
       ImmutableList<Arg> linkerArgs,
-      ImmutableList<Pattern> symbolWhitelist) {
+      ImmutableList<Pattern> symbolWhitelist,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.pathResolver = resolver;
     this.cellPathResolver = cellPathResolver;
@@ -119,6 +132,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
     this.symbolWhitelist = symbolWhitelist;
 
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -196,7 +210,8 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
                   cxxBuckConfig.getLinkScheduleInfo(),
                   cxxBuckConfig.shouldCacheLinks(),
                   /* thinLto */ false,
-                  /* fatLto */ false)
+                  /* fatLto */ false,
+                  withDownwardApi)
               .getBuildSteps(context, buildableContext));
       buildableContext.recordArtifact(getRelativeVersionFilePath());
     }
@@ -214,11 +229,18 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
               public StepExecutionResult execute(ExecutionContext context)
                   throws IOException, InterruptedException {
                 ImmutableSet<String> symbolsNeeded = readSymbolsNeeded();
+                ProcessExecutor processExecutor = context.getProcessExecutor();
+                if (withDownwardApi) {
+                  processExecutor =
+                      processExecutor.withDownwardAPI(
+                          DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+                }
+
                 if (linker == null) {
                   getProjectFilesystem().copyFile(getBaseLibPath(), getLibFilePath());
                   buildableContext.recordArtifact(getLibFilePath());
                 } else {
-                  writeVersionScript(context.getProcessExecutor(), symbolsNeeded);
+                  writeVersionScript(processExecutor, symbolsNeeded);
                   for (Step s : relinkerSteps.build()) {
                     StepExecutionResult executionResult = s.execute(context);
                     if (!executionResult.isSuccess()) {
@@ -229,8 +251,7 @@ class RelinkerRule extends AbstractBuildRule implements OverrideScheduleRule {
                 writeSymbols(
                     getSymbolsNeededOutPath(),
                     Sets.union(
-                        symbolsNeeded,
-                        getSymbols(context.getProcessExecutor(), getLibFilePath()).undefined));
+                        symbolsNeeded, getSymbols(processExecutor, getLibFilePath()).undefined));
                 return StepExecutionResults.SUCCESS;
               }
             })

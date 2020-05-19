@@ -34,8 +34,9 @@ public class InstrumentationStep extends ShellStep {
       ProjectFilesystem filesystem,
       ImmutableList<String> javaRuntimeLauncher,
       AndroidInstrumentationTestJVMArgs jvmArgs,
-      Optional<Long> testRuleTimeoutMs) {
-    super(filesystem.getRootPath());
+      Optional<Long> testRuleTimeoutMs,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
     this.filesystem = filesystem;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.jvmArgs = jvmArgs;

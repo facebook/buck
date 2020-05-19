@@ -21,6 +21,10 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -49,12 +53,13 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
       Tool aapt2ExecutableTool,
       SourcePath resDir,
       boolean skipCrunchPngs,
-      boolean failOnLegacyErrors) {
+      boolean failOnLegacyErrors,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new Impl(aapt2ExecutableTool, resDir, skipCrunchPngs, failOnLegacyErrors));
+        new Impl(aapt2ExecutableTool, resDir, skipCrunchPngs, failOnLegacyErrors, withDownwardApi));
   }
 
   /** internal buildable implementation */
@@ -69,15 +74,24 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
     @AddToRuleKey private final boolean skipCrunchPngs;
     @AddToRuleKey private final boolean failOnLegacyErrors;
 
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
     private Impl(
         Tool aapt2ExecutableTool,
         SourcePath resDir,
         boolean skipCrunchPngs,
-        boolean failOnLegacyErrors) {
+        boolean failOnLegacyErrors,
+        boolean withDownwardApi) {
       this.aapt2ExecutableTool = aapt2ExecutableTool;
       this.resDir = resDir;
       this.skipCrunchPngs = skipCrunchPngs;
       this.failOnLegacyErrors = failOnLegacyErrors;
+      this.withDownwardApi = withDownwardApi;
     }
 
     @Override
@@ -97,7 +111,8 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
               sourcePathResolverAdapter.getRelativePath(resDir),
               outputPath,
               skipCrunchPngs,
-              failOnLegacyErrors);
+              failOnLegacyErrors,
+              withDownwardApi);
       ZipScrubberStep zipScrubberStep = ZipScrubberStep.of(filesystem.resolve(outputPath));
       return ImmutableList.of(aapt2CompileStep, zipScrubberStep);
     }
@@ -116,8 +131,9 @@ public class Aapt2Compile extends ModernBuildRule<Aapt2Compile.Impl> {
         Path resDirPath,
         Path outputPath,
         boolean skipCrunchPngs,
-        boolean failOnLegacyErrors) {
-      super(workingDirectory);
+        boolean failOnLegacyErrors,
+        boolean withDownwardApi) {
+      super(workingDirectory, withDownwardApi);
       this.commandPrefix = commandPrefix;
       this.resDirPath = resDirPath;
       this.outputPath = outputPath;

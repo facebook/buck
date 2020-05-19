@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.JavaOptions;
 import com.facebook.buck.jvm.java.Keystore;
@@ -42,9 +43,12 @@ public class AndroidBundleFactory {
       InternalFlavor.of("modularity_verification");
 
   private final AndroidBuckConfig androidBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
-  public AndroidBundleFactory(AndroidBuckConfig androidBuckConfig) {
+  public AndroidBundleFactory(
+      AndroidBuckConfig androidBuckConfig, DownwardApiConfig downwardApiConfig) {
     this.androidBuckConfig = androidBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   public AndroidBundle create(
@@ -140,6 +144,7 @@ public class AndroidBundleFactory {
         filesInfo.getResourceFilesInfo(),
         ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
         filesInfo.getExopackageInfo(),
-        args.getBundleConfigFile());
+        args.getBundleConfigFile(),
+        downwardApiConfig.isEnabledForAndroid());
   }
 }

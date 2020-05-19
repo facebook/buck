@@ -73,7 +73,8 @@ public class DxStepTest {
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.of(Option.NO_OPTIMIZE),
-              DxStep.DX);
+              DxStep.DX,
+              false);
 
       String expected =
           String.format(
@@ -96,7 +97,8 @@ public class DxStepTest {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
-          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+          new DxStep(
+              filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX, false);
 
       String expected =
           String.format(
@@ -125,7 +127,8 @@ public class DxStepTest {
               SAMPLE_OUTPUT_PATH,
               SAMPLE_FILES_TO_DEX,
               EnumSet.of(DxStep.Option.NO_OPTIMIZE, DxStep.Option.FORCE_JUMBO),
-              DxStep.DX);
+              DxStep.DX,
+              false);
 
       String expected =
           String.format(
@@ -148,7 +151,8 @@ public class DxStepTest {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
-          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+          new DxStep(
+              filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX, false);
 
       String expected =
           String.format(
@@ -176,7 +180,8 @@ public class DxStepTest {
       ProjectFilesystem filesystem = FakeProjectFilesystem.createJavaOnlyFilesystem();
 
       DxStep dx =
-          new DxStep(filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX);
+          new DxStep(
+              filesystem, androidPlatformTarget, SAMPLE_OUTPUT_PATH, SAMPLE_FILES_TO_DEX, false);
 
       String expected =
           String.format(
@@ -213,6 +218,7 @@ public class DxStepTest {
               EnumSet.noneOf(DxStep.Option.class),
               Optional.of("2g"),
               DxStep.DX,
+              false,
               false);
 
       String expected =
@@ -246,7 +252,8 @@ public class DxStepTest {
               false,
               ImmutableSet.of(),
               Optional.empty(),
-              Optional.of(28));
+              Optional.of(28),
+              false);
 
       String expected =
           String.format(

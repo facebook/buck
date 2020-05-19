@@ -96,7 +96,8 @@ public class AaptStepTest {
         isCrunchFiles,
         includesVectorDrawables,
         manifestEntries,
-        additionalAaptParams);
+        additionalAaptParams,
+        false);
   }
 
   /**

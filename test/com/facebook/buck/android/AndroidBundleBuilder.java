@@ -72,7 +72,9 @@ public class AndroidBundleBuilder
             CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             createToolchainProviderForAndroidBundle(),
             new AndroidBinaryGraphEnhancerFactory(),
-            new AndroidBundleFactory(new AndroidBuckConfig(buckConfig, Platform.detect()))),
+            new AndroidBundleFactory(
+                new AndroidBuckConfig(buckConfig, Platform.detect()),
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG)),
         target,
         new FakeProjectFilesystem(),
         createToolchainProviderForAndroidBundle());

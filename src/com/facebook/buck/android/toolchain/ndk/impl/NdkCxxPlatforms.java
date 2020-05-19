@@ -57,6 +57,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.GnuLinker;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
@@ -200,6 +201,7 @@ public class NdkCxxPlatforms {
   public static ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getPlatforms(
       CxxBuckConfig cxxBuckConfig,
       AndroidBuckConfig androidConfig,
+      DownwardApiConfig downwardApiConfig,
       ProjectFilesystem filesystem,
       TargetConfiguration targetConfiguration,
       Platform platform,
@@ -227,6 +229,7 @@ public class NdkCxxPlatforms {
     return getPlatforms(
         cxxBuckConfig,
         androidConfig,
+        downwardApiConfig,
         filesystem,
         ndkRoot,
         compiler,
@@ -251,6 +254,7 @@ public class NdkCxxPlatforms {
   public static ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getPlatforms(
       CxxBuckConfig cxxBuckConfig,
       AndroidBuckConfig androidConfig,
+      DownwardApiConfig downwardApiConfig,
       ProjectFilesystem filesystem,
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
@@ -261,6 +265,7 @@ public class NdkCxxPlatforms {
     return getPlatforms(
         cxxBuckConfig,
         androidConfig,
+        downwardApiConfig,
         filesystem,
         ndkRoot,
         compiler,
@@ -276,6 +281,7 @@ public class NdkCxxPlatforms {
   public static ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getPlatforms(
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
+      DownwardApiConfig downwardApiConfig,
       ProjectFilesystem filesystem,
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
@@ -295,6 +301,7 @@ public class NdkCxxPlatforms {
           getNdkCxxPlatform(
               config,
               androidConfig,
+              downwardApiConfig,
               filesystem,
               ndkRoot,
               compiler,
@@ -315,6 +322,7 @@ public class NdkCxxPlatforms {
           getNdkCxxPlatform(
               config,
               androidConfig,
+              downwardApiConfig,
               filesystem,
               ndkRoot,
               compiler,
@@ -335,6 +343,7 @@ public class NdkCxxPlatforms {
           getNdkCxxPlatform(
               config,
               androidConfig,
+              downwardApiConfig,
               filesystem,
               ndkRoot,
               compiler,
@@ -355,6 +364,7 @@ public class NdkCxxPlatforms {
           getNdkCxxPlatform(
               config,
               androidConfig,
+              downwardApiConfig,
               filesystem,
               ndkRoot,
               compiler,
@@ -375,6 +385,7 @@ public class NdkCxxPlatforms {
           getNdkCxxPlatform(
               config,
               androidConfig,
+              downwardApiConfig,
               filesystem,
               ndkRoot,
               compiler,
@@ -394,6 +405,7 @@ public class NdkCxxPlatforms {
   private static UnresolvedNdkCxxPlatform getNdkCxxPlatform(
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
+      DownwardApiConfig downwardApiConfig,
       ProjectFilesystem filesystem,
       Path ndkRoot,
       NdkCxxPlatformCompiler compiler,
@@ -415,6 +427,7 @@ public class NdkCxxPlatforms {
     return build(
         config,
         androidConfig,
+        downwardApiConfig,
         filesystem,
         flavor,
         platform,
@@ -444,6 +457,7 @@ public class NdkCxxPlatforms {
   static UnresolvedNdkCxxPlatform build(
       CxxBuckConfig config,
       AndroidBuckConfig androidConfig,
+      DownwardApiConfig downwardApiConfig,
       ProjectFilesystem filesystem,
       Flavor flavor,
       Platform platform,
@@ -586,7 +600,8 @@ public class NdkCxxPlatforms {
         .setSymbolNameTool(
             new PosixNmSymbolNameTool(
                 new ConstantToolProvider(
-                    getGccTool(toolchainPaths, "nm", version, executableFinder))))
+                    getGccTool(toolchainPaths, "nm", version, executableFinder)),
+                downwardApiConfig.isEnabledForAndroid()))
         .setAr(
             ArchiverProvider.from(
                 new GnuArchiver(getGccTool(toolchainPaths, "ar", version, executableFinder))))

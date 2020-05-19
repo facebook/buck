@@ -23,6 +23,7 @@ import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.description.impl.DescriptionCache;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -40,6 +41,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.testutil.SimpleTool;
 import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -115,13 +117,15 @@ public class GenAidlTest {
         params,
         pathToAidl,
         importPath,
-        aidlSourceDeps);
+        aidlSourceDeps,
+        false);
   }
 
   @Test
   public void testSimpleGenAidlRule() {
     GenAidl genAidlRule = createGenAidlRule(ImmutableSortedSet.of());
-    GenAidlDescription description = new GenAidlDescription();
+    GenAidlDescription description =
+        new GenAidlDescription(DownwardApiConfig.of(FakeBuckConfig.empty()));
     assertEquals(
         DescriptionCache.getRuleType(GenAidlDescription.class),
         DescriptionCache.getRuleType(description));

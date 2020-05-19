@@ -96,7 +96,7 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
     BuildTarget buildTarget = BuildTargetFactory.newInstance("//foo:bar#dex");
     DexProducedFromJavaLibrary preDex =
         new DexProducedFromJavaLibrary(
-            buildTarget, filesystem, graphBuilder, androidPlatformTarget, javaLibraryRule);
+            buildTarget, filesystem, graphBuilder, androidPlatformTarget, javaLibraryRule, false);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
     steps = steps.subList(4, steps.size());
 
@@ -161,7 +161,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             projectFilesystem,
             graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
-            javaLibrary);
+            javaLibrary,
+            false);
     List<Step> steps = preDex.getBuildSteps(context, buildableContext);
 
     ExecutionContext executionContext = TestExecutionContext.newBuilder().build();
@@ -191,7 +192,8 @@ public class DexProducedFromJavaLibraryThatContainsClassFilesTest {
             projectFilesystem,
             graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
-            accumulateClassNames);
+            accumulateClassNames,
+            false);
     assertNull(preDexWithClasses.getSourcePathToOutput());
     OutputPathResolver outputPathResolver =
         new DefaultOutputPathResolver(projectFilesystem, buildTarget);

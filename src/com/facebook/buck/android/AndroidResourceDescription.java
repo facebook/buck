@@ -42,6 +42,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
@@ -77,6 +78,7 @@ public class AndroidResourceDescription
           ".gitkeep", ".svn", ".git", ".ds_store", ".scc", "cvs", "thumbs.db", "picasa.ini");
 
   private final AndroidBuckConfig androidBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public static final Flavor RESOURCES_SYMLINK_TREE_FLAVOR =
       InternalFlavor.of("resources-symlink-tree");
@@ -92,9 +94,12 @@ public class AndroidResourceDescription
   private final ToolchainProvider toolchainProvider;
 
   public AndroidResourceDescription(
-      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      AndroidBuckConfig androidBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -165,7 +170,8 @@ public class AndroidResourceDescription
           aapt2ToolProvider.resolve(graphBuilder, buildTarget.getTargetConfiguration()),
           resDir.get(),
           androidBuckConfig.getSkipCrunchPngsDefault().orElse(false),
-          androidBuckConfig.getFailOnLegacyAaptErrors());
+          androidBuckConfig.getFailOnLegacyAaptErrors(),
+          downwardApiConfig.isEnabledForAndroid());
     }
 
     params =

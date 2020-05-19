@@ -48,8 +48,9 @@ public class NdkBuildStep extends ShellStep {
       Path buildArtifactsDirectory,
       Path binDirectory,
       Iterable<String> flags,
-      ConcurrencyLimit concurrencyLimit) {
-    super(filesystem.getRootPath());
+      ConcurrencyLimit concurrencyLimit,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
 
     this.filesystem = filesystem;
     this.androidNdk = androidNdk;

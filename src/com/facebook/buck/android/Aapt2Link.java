@@ -23,6 +23,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
@@ -80,6 +84,13 @@ public class Aapt2Link extends AbstractBuildRule {
   private final Path androidJar;
   private final BuildableSupport.DepsSupplier depsSupplier;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   private static final int BASE_PACKAGE_ID = 0x7f;
 
   Aapt2Link(
@@ -103,7 +114,8 @@ public class Aapt2Link extends AbstractBuildRule {
       boolean filterLocales,
       ImmutableSet<String> locales,
       ImmutableSet<String> extraFilteredResources,
-      Optional<SourcePath> resourceStableIds) {
+      Optional<SourcePath> resourceStableIds,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.compileRules = compileRules;
     this.manifest = manifest;
@@ -124,6 +136,7 @@ public class Aapt2Link extends AbstractBuildRule {
     this.locales = locales;
     this.extraFilteredResources = extraFilteredResources;
     this.resourceStableIds = resourceStableIds;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -170,11 +183,12 @@ public class Aapt2Link extends AbstractBuildRule {
             getProjectFilesystem(),
             context.getSourcePathResolver(),
             getArgsPath(),
-            compiledApkPaths));
+            compiledApkPaths,
+            withDownwardApi));
     steps.add(ZipScrubberStep.of(getProjectFilesystem().resolve(getResourceApkPath())));
 
     if (!extraFilteredResources.isEmpty()) {
-      steps.add(new ExtraFilterResourcesStep(getProjectFilesystem()));
+      steps.add(new ExtraFilterResourcesStep(getProjectFilesystem(), withDownwardApi));
     }
 
     buildableContext.recordArtifact(getFinalManifestPath().getPath());
@@ -240,8 +254,8 @@ public class Aapt2Link extends AbstractBuildRule {
   class ExtraFilterResourcesStep extends ShellStep {
     private static final int ZIP_NOTHING_TO_DO_EXIT_CODE = 12;
 
-    ExtraFilterResourcesStep(ProjectFilesystem filesystem) {
-      super(filesystem.getRootPath());
+    ExtraFilterResourcesStep(ProjectFilesystem filesystem, boolean withDownwardApi) {
+      super(filesystem.getRootPath(), withDownwardApi);
     }
 
     @Override
@@ -285,8 +299,9 @@ public class Aapt2Link extends AbstractBuildRule {
         ProjectFilesystem filesystem,
         SourcePathResolverAdapter pathResolver,
         Path argsFile,
-        List<Path> compiledResourceApkPaths) {
-      super(filesystem.getRootPath());
+        List<Path> compiledResourceApkPaths,
+        boolean withDownwardApi) {
+      super(filesystem.getRootPath(), withDownwardApi);
       this.filesystem = filesystem;
       this.pathResolver = pathResolver;
       this.argsFile = argsFile;

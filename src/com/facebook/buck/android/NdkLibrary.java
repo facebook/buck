@@ -26,6 +26,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -95,6 +99,13 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final ConcurrencyLimit concurrencyLimit;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   protected NdkLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -106,11 +117,13 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Arg> flags,
       boolean isAsset,
       String ndkVersion,
-      ConcurrencyLimit concurrencyLimit) {
+      ConcurrencyLimit concurrencyLimit,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.androidNdk = androidNdk;
     this.isAsset = isAsset;
     this.concurrencyLimit = concurrencyLimit;
+    this.withDownwardApi = withDownwardApi;
 
     this.root =
         buildTarget.getCellRelativeBasePath().getPath().toPath(projectFilesystem.getFileSystem());
@@ -170,7 +183,8 @@ public class NdkLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             buildArtifactsDirectory.getPath(),
             binDirectory,
             Arg.stringify(flags, context.getSourcePathResolver()),
-            concurrencyLimit));
+            concurrencyLimit,
+            withDownwardApi));
 
     steps.addAll(
         MakeCleanDirectoryStep.of(

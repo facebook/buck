@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -38,6 +39,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -101,10 +103,12 @@ public class AndroidResourceDescriptionTest {
     tmpFolder.newFolder("res", "dirs", "_dir");
     tmpFolder.newFile("res/dirs/_dir/ignore");
 
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     AndroidResourceDescription description =
         new AndroidResourceDescription(
             createToolchainProviderForAndroidResource(),
-            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()));
+            new AndroidBuckConfig(buckConfig, Platform.detect()),
+            DownwardApiConfig.of(buckConfig));
     ProjectFilesystem filesystem =
         TestProjectFilesystems.createProjectFilesystem(tmpFolder.getRoot().toPath());
     Map<Path, SourcePath> inputs = description.collectInputFiles(filesystem, Paths.get("res"));

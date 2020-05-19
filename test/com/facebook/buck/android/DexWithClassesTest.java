@@ -48,7 +48,8 @@ public class DexWithClassesTest {
             new FakeProjectFilesystem(),
             new TestActionGraphBuilder(),
             TestAndroidPlatformTargetFactory.create(),
-            javaLibrary);
+            javaLibrary,
+            false);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(
@@ -82,7 +83,8 @@ public class DexWithClassesTest {
             new FakeProjectFilesystem(),
             new TestActionGraphBuilder(),
             TestAndroidPlatformTargetFactory.create(),
-            javaLibrary);
+            javaLibrary,
+            false);
     dexFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(

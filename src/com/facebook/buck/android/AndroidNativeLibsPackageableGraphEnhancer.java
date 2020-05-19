@@ -325,6 +325,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               graphBuilder.getSourcePathResolver(),
               graphBuilder,
               cxxBuckConfig,
+              downwardApiConfig,
               nativePlatforms,
               nativeLinkableLibs,
               nativeLinkableLibsAssets,
@@ -535,7 +536,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
               targetCpuType,
               platform,
               baseBuildTarget,
-              sharedLibrarySoName);
+              sharedLibrarySoName,
+              downwardApiConfig.isEnabledForAndroid());
       result.put(
           stripLinkable,
           ImmutableStrippedObjectDescription.ofImpl(
@@ -556,7 +558,8 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       TargetCpuType targetCpuType,
       NdkCxxPlatform platform,
       BuildTarget baseBuildTarget,
-      String sharedLibrarySoName) {
+      String sharedLibrarySoName,
+      boolean withDownwardApi) {
     BuildTarget targetForStripRule =
         baseBuildTarget.withAppendedFlavors(
             InternalFlavor.of("android-strip"),
@@ -573,6 +576,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
                     graphBuilder,
                     platform.getCxxPlatform().getStrip(),
                     sourcePath,
-                    sharedLibrarySoName));
+                    sharedLibrarySoName,
+                    withDownwardApi));
   }
 }

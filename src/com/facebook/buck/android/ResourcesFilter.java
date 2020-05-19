@@ -23,6 +23,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
@@ -115,6 +119,13 @@ public class ResourcesFilter extends AbstractBuildRule
   @AddToRuleKey private final FilterResourcesSteps.ResourceFilter resourceFilter;
   @AddToRuleKey private final Optional<Arg> postFilterResourcesCmd;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
 
   public ResourcesFilter(
@@ -129,7 +140,8 @@ public class ResourcesFilter extends AbstractBuildRule
       Optional<String> localizedStringFileName,
       ResourceCompressionMode resourceCompressionMode,
       FilterResourcesSteps.ResourceFilter resourceFilter,
-      Optional<Arg> postFilterResourcesCmd) {
+      Optional<Arg> postFilterResourcesCmd,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.resourceRules = resourceRules;
     this.rulesWithResourceDirectories = rulesWithResourceDirectories;
@@ -142,6 +154,7 @@ public class ResourcesFilter extends AbstractBuildRule
     this.resourceFilter = resourceFilter;
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.postFilterResourcesCmd = postFilterResourcesCmd;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -214,7 +227,11 @@ public class ResourcesFilter extends AbstractBuildRule
         createInResDirToOutResDirMap(resPaths, filteredResDirectoriesBuilder);
     FilterResourcesSteps filterResourcesSteps =
         createFilterResourcesSteps(
-            whitelistedStringPaths, locales, localizedStringFileName, inResDirToOutResDirMap);
+            whitelistedStringPaths,
+            locales,
+            localizedStringFileName,
+            inResDirToOutResDirMap,
+            withDownwardApi);
     steps.add(filterResourcesSteps.getCopyStep());
     maybeAddPostFilterCmdStep(context, buildableContext, steps, inResDirToOutResDirMap);
     steps.add(filterResourcesSteps.getScaleStep());
@@ -291,7 +308,7 @@ public class ResourcesFilter extends AbstractBuildRule
     commandLineBuilder.add(Escaper.escapeAsBashString(getFilterResourcesDataPath()));
     commandLineBuilder.add(Escaper.escapeAsBashString(getRDotJsonPath()));
     String commandLine = Joiner.on(' ').join(commandLineBuilder.build());
-    steps.add(new BashStep(getProjectFilesystem().getRootPath(), commandLine));
+    steps.add(new BashStep(getProjectFilesystem().getRootPath(), withDownwardApi, commandLine));
   }
 
   private RelPath getFilterResourcesDataPath() {
@@ -338,12 +355,14 @@ public class ResourcesFilter extends AbstractBuildRule
       ImmutableSet<Path> whitelistedStringDirs,
       ImmutableSet<String> locales,
       Optional<String> localizedStringFileName,
-      ImmutableBiMap<Path, Path> resSourceToDestDirMap) {
+      ImmutableBiMap<Path, Path> resSourceToDestDirMap,
+      boolean withDownwardApi) {
     FilterResourcesSteps.Builder filterResourcesStepBuilder =
         FilterResourcesSteps.builder()
             .setProjectFilesystem(getProjectFilesystem())
             .setInResToOutResDirMap(resSourceToDestDirMap)
-            .setResourceFilter(resourceFilter);
+            .setResourceFilter(resourceFilter)
+            .withDownwardApi(withDownwardApi);
 
     if (resourceCompressionMode.isStoreStringsAsAssets()) {
       filterResourcesStepBuilder.enableStringWhitelisting();

@@ -73,7 +73,8 @@ public class AndroidBinaryBuilder
             DEFAULT_DOWNWARD_API_CONFIG,
             createToolchainProviderForAndroidBinary(),
             new AndroidBinaryGraphEnhancerFactory(),
-            new AndroidBinaryFactory(new AndroidBuckConfig(buckConfig, Platform.detect()))),
+            new AndroidBinaryFactory(
+                new AndroidBuckConfig(buckConfig, Platform.detect()), DEFAULT_DOWNWARD_API_CONFIG)),
         target,
         new FakeProjectFilesystem(),
         createToolchainProviderForAndroidBinary());

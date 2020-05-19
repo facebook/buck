@@ -43,4 +43,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForGenrule() {
     return getDelegate().getBooleanValue(SECTION, "genrule_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForAndroid() {
+    return getDelegate().getBooleanValue(SECTION, "android_enabled", false);
+  }
 }

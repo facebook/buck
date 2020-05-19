@@ -25,6 +25,10 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
 import com.facebook.buck.core.rules.attr.InitializableFromDisk;
@@ -102,6 +106,13 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
   @SuppressWarnings("PMD.UnusedPrivateField")
   private final ImmutableList<SourcePath> preDexInputs;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public PreDexSplitDexGroup(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -116,7 +127,8 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
       int xzCompressionLevel,
       Optional<String> dxMaxHeapSize,
       Optional<Integer> groupIndex,
-      int secondaryDexWeightLimit) {
+      int secondaryDexWeightLimit,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
     this.dexTool = dexTool;
@@ -134,6 +146,7 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             .map(DexProducedFromJavaLibrary::getSourcePathToDex)
             .collect(ImmutableList.toImmutableList());
     this.secondaryDexWeightLimit = secondaryDexWeightLimit;
+    this.withDownwardApi = withDownwardApi;
   }
 
   public List<DexWithClasses> getDexWithClasses() {
@@ -270,7 +283,8 @@ public class PreDexSplitDexGroup extends AbstractBuildRuleWithDeclaredAndExtraDe
             false,
             Optional.empty(),
             getBuildTarget(),
-            Optional.empty() /* minSdkVersion */));
+            Optional.empty() /* minSdkVersion */,
+            withDownwardApi));
 
     steps.add(
         new AbstractExecutionStep("write_metadata_txt") {

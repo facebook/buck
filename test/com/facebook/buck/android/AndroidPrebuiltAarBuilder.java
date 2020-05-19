@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -24,6 +25,7 @@ import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.java.JavaCompilationConstants;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.facebook.buck.util.environment.Platform;
@@ -38,11 +40,16 @@ public class AndroidPrebuiltAarBuilder
         AndroidPrebuiltAar> {
 
   private AndroidPrebuiltAarBuilder(BuildTarget target) {
-    super(
-        new AndroidPrebuiltAarDescription(
-            createToolchainProviderForAndroidPrebuiltAar(),
-            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect())),
-        target);
+    super(getDescription(), target);
+  }
+
+  private static AndroidPrebuiltAarDescription getDescription() {
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
+    return new AndroidPrebuiltAarDescription(
+        createToolchainProviderForAndroidPrebuiltAar(),
+        new AndroidBuckConfig(buckConfig, Platform.detect()),
+        downwardApiConfig);
   }
 
   public static AndroidPrebuiltAarBuilder createBuilder(BuildTarget target) {

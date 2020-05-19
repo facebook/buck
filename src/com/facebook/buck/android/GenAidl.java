@@ -24,6 +24,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -73,6 +77,13 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path output;
   private final RelPath genPath;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   GenAidl(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -80,7 +91,8 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       BuildRuleParams params,
       SourcePath aidlFilePath,
       String importPath,
-      ImmutableSortedSet<SourcePath> aidlSrcs) {
+      ImmutableSortedSet<SourcePath> aidlSrcs,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.toolchainProvider = toolchainProvider;
     this.aidlFilePath = aidlFilePath;
@@ -90,6 +102,7 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
         genPath.resolve(
             String.format("lib%s%s", buildTarget.getShortNameAndFlavorPostfix(), SRC_ZIP));
     this.aidlSrcs = aidlSrcs;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -124,7 +137,8 @@ public class GenAidl extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             target.getTargetConfiguration(),
             context.getSourcePathResolver().getAbsolutePath(aidlFilePath),
             ImmutableSet.of(importPath),
-            outputDirectory.getPath());
+            outputDirectory.getPath(),
+            withDownwardApi);
     commands.add(command);
 
     // Files must ultimately be written to GEN_DIR to be used as source paths.

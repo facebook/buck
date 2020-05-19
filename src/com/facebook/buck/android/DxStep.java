@@ -124,14 +124,16 @@ public class DxStep extends ShellStep {
       ProjectFilesystem filesystem,
       AndroidPlatformTarget androidPlatformTarget,
       Path outputDexFile,
-      Iterable<Path> filesToDex) {
+      Iterable<Path> filesToDex,
+      boolean withDownwardApi) {
     this(
         filesystem,
         androidPlatformTarget,
         outputDexFile,
         filesToDex,
         EnumSet.noneOf(DxStep.Option.class),
-        D8);
+        D8,
+        withDownwardApi);
   }
 
   /**
@@ -147,7 +149,8 @@ public class DxStep extends ShellStep {
       Path outputDexFile,
       Iterable<Path> filesToDex,
       EnumSet<Option> options,
-      String dexTool) {
+      String dexTool,
+      boolean withDownwardApi) {
     this(
         filesystem,
         androidPlatformTarget,
@@ -156,7 +159,8 @@ public class DxStep extends ShellStep {
         options,
         Optional.empty(),
         dexTool,
-        false);
+        false,
+        withDownwardApi);
   }
 
   /**
@@ -175,7 +179,8 @@ public class DxStep extends ShellStep {
       EnumSet<Option> options,
       Optional<String> maxHeapSize,
       String dexTool,
-      boolean intermediate) {
+      boolean intermediate,
+      boolean withDownwardApi) {
     this(
         filesystem,
         androidPlatformTarget,
@@ -187,7 +192,8 @@ public class DxStep extends ShellStep {
         intermediate,
         null,
         Optional.empty(),
-        Optional.empty() /* minSdkVersion */);
+        Optional.empty() /* minSdkVersion */,
+        withDownwardApi);
   }
 
   /**
@@ -211,8 +217,9 @@ public class DxStep extends ShellStep {
       boolean intermediate,
       @Nullable Collection<Path> classpathFiles,
       Optional<String> bucketId,
-      Optional<Integer> minSdkVersion) {
-    super(filesystem.getRootPath());
+      Optional<Integer> minSdkVersion,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
     this.filesystem = filesystem;
     this.androidPlatformTarget = androidPlatformTarget;
     this.classpathFiles = classpathFiles;

@@ -29,6 +29,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
@@ -119,6 +123,13 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
   private final BuildTarget buildTarget;
   private final AndroidSdkLocation androidSdkLocation;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   AndroidBinaryBuildable(
       BuildTarget buildTarget,
       ProjectFilesystem filesystem,
@@ -142,7 +153,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
       ImmutableSortedSet<APKModule> apkModules,
       ImmutableMap<APKModule, SourcePath> moduleResourceApkPaths,
       Optional<SourcePath> bundleConfigFilePath,
-      boolean isApk) {
+      boolean isApk,
+      boolean withDownwardApi) {
     this.filesystem = filesystem;
     this.buildTarget = buildTarget;
     this.androidSdkLocation = androidSdkLocation;
@@ -166,6 +178,7 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
     this.resourceFilesInfo = resourceFilesInfo;
     this.bundleConfigFilePath = bundleConfigFilePath;
     this.isApk = isApk;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @SuppressWarnings("PMD.PrematureDeclaration")
@@ -362,7 +375,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               apkToAlign,
               zipalignedApkPath,
               zipalignTool,
-              pathResolver));
+              pathResolver,
+              withDownwardApi));
       steps.add(
           new ApkSignerStep(
               getProjectFilesystem(),
@@ -378,7 +392,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
               apkToAlign,
               v2SignedApkPath,
               zipalignTool,
-              pathResolver));
+              pathResolver,
+              withDownwardApi));
     }
     buildableContext.recordArtifact(v2SignedApkPath);
     return steps.build();
@@ -760,7 +775,8 @@ class AndroidBinaryBuildable implements AddsToRuleKey {
             redexedApk,
             keystoreProperties,
             proguardConfigDir.getPath(),
-            buildableContext);
+            buildableContext,
+            withDownwardApi);
     steps.addAll(redexSteps);
     return steps.build();
   }

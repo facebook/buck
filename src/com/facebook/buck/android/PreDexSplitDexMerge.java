@@ -25,6 +25,10 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -79,6 +83,13 @@ public class PreDexSplitDexMerge extends PreDexMerge {
   private final int xzCompressionLevel;
   private final Optional<String> dxMaxHeapSize;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public PreDexSplitDexMerge(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -90,7 +101,8 @@ public class PreDexSplitDexMerge extends PreDexMerge {
       ImmutableCollection<PreDexSplitDexGroup> preDexDeps,
       ListeningExecutorService dxExecutorService,
       int xzCompressionLevel,
-      Optional<String> dxMaxHeapSize) {
+      Optional<String> dxMaxHeapSize,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params, androidPlatformTarget, dexTool);
     this.dexSplitMode = dexSplitMode;
     this.apkModuleGraph = apkModuleGraph;
@@ -98,6 +110,7 @@ public class PreDexSplitDexMerge extends PreDexMerge {
     this.dxExecutorService = dxExecutorService;
     this.xzCompressionLevel = xzCompressionLevel;
     this.dxMaxHeapSize = dxMaxHeapSize;
+    this.withDownwardApi = withDownwardApi;
   }
 
   private ImmutableMap<Path, Sha1HashCode> resolvePrimaryDexInputHashPaths() {
@@ -172,7 +185,8 @@ public class PreDexSplitDexMerge extends PreDexMerge {
             false,
             Optional.empty(),
             getBuildTarget(),
-            Optional.empty() /* minSdkVersion */));
+            Optional.empty() /* minSdkVersion */,
+            withDownwardApi));
 
     ImmutableSet.Builder<APKModule> modulesWithDexesBuilder = ImmutableSet.builder();
     for (PreDexSplitDexGroup partialDex : preDexDeps) {

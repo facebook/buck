@@ -95,6 +95,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
   private final PackagedResource kxml2Jar;
   private final PackagedResource guavaJar;
   private final PackagedResource toolsCommonJar;
+  private final boolean withDownwardApi;
 
   protected AndroidInstrumentationTest(
       BuildTarget buildTarget,
@@ -109,7 +110,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
       PackagedResource ddmlibJar,
       PackagedResource kxml2Jar,
       PackagedResource guavaJar,
-      PackagedResource toolsCommonJar) {
+      PackagedResource toolsCommonJar,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.androidPlatformTarget = androidPlatformTarget;
     this.apk = apk;
@@ -121,6 +123,7 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
     this.kxml2Jar = kxml2Jar;
     this.guavaJar = guavaJar;
     this.toolsCommonJar = toolsCommonJar;
+    this.withDownwardApi = withDownwardApi;
   }
 
   private static AndroidDevice getSingleDevice(AndroidDevicesHelper adbHelper) {
@@ -302,7 +305,8 @@ public class AndroidInstrumentationTest extends AbstractBuildRuleWithDeclaredAnd
         getProjectFilesystem(),
         javaRuntimeLauncher.getCommandPrefix(pathResolver),
         jvmArgs,
-        testRuleTimeoutMs);
+        testRuleTimeoutMs,
+        withDownwardApi);
   }
 
   private String getPathForResourceJarString(PackagedResource packagedResource) {

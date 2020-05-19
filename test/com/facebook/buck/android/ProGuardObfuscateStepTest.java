@@ -132,7 +132,8 @@ public class ProGuardObfuscateStepTest {
         new FakeBuildableContext(),
         FakeBuildContext.NOOP_CONTEXT,
         false,
-        steps);
+        steps,
+        false);
     ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
         (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(2);
     ImmutableList<String> parameters = commandLineHelperStep.getParameters(cwd);
@@ -166,7 +167,8 @@ public class ProGuardObfuscateStepTest {
         new FakeBuildableContext(),
         FakeBuildContext.NOOP_CONTEXT,
         false,
-        steps);
+        steps,
+        false);
     ProGuardObfuscateStep proguardStep = (ProGuardObfuscateStep) steps.build().get(3);
     ImmutableList<String> parameters = proguardStep.getShellCommandInternal(executionContext);
     for (String s : proguardJvmArgs) {
@@ -197,7 +199,8 @@ public class ProGuardObfuscateStepTest {
         new FakeBuildableContext(),
         FakeBuildContext.NOOP_CONTEXT,
         false,
-        steps);
+        steps,
+        false);
     ProGuardObfuscateStep.CommandLineHelperStep commandLineHelperStep =
         (ProGuardObfuscateStep.CommandLineHelperStep) steps.build().get(2);
 

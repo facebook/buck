@@ -156,7 +156,8 @@ public class AndroidBinary extends AbstractBuildRule
       NativeFilesInfo nativeFilesInfo,
       ResourceFilesInfo resourceFilesInfo,
       ImmutableSortedSet<APKModule> apkModules,
-      Optional<ExopackageInfo> exopackageInfo) {
+      Optional<ExopackageInfo> exopackageInfo,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     Preconditions.checkArgument(params.getExtraDeps().get().isEmpty());
     this.proguardJvmArgs = proguardJvmArgs;
@@ -229,7 +230,8 @@ public class AndroidBinary extends AbstractBuildRule
             apkModules,
             enhancementResult.getModuleResourceApkPaths(),
             Optional.empty(),
-            true);
+            true,
+            withDownwardApi);
     this.exopackageInfo = exopackageInfo;
 
     params =

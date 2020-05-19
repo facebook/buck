@@ -30,6 +30,7 @@ import com.facebook.buck.jvm.scala.ScalaBuckConfig;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.sandbox.SandboxConfig;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
+import com.facebook.buck.test.config.TestBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import java.util.Arrays;
 import java.util.Collection;
@@ -52,6 +53,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     ScalaBuckConfig scalaConfig = new ScalaBuckConfig(buckConfig);
     KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
     AndroidBuckConfig androidBuckConfig = new AndroidBuckConfig(buckConfig, Platform.detect());
+    TestBuckConfig testBuckConfig = buckConfig.getView(TestBuckConfig.class);
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
     SandboxConfig sandboxConfig = buckConfig.getView(SandboxConfig.class);
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
@@ -76,7 +78,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             downwardApiConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
-            new AndroidBinaryFactory(androidBuckConfig)),
+            new AndroidBinaryFactory(androidBuckConfig, downwardApiConfig)),
         new AndroidBuildConfigDescription(toolchainProvider),
         new AndroidBundleDescription(
             javaConfig,
@@ -88,7 +90,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             downwardApiConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
-            new AndroidBundleFactory(androidBuckConfig)),
+            new AndroidBundleFactory(androidBuckConfig, downwardApiConfig)),
         new AndroidInstrumentationApkDescription(
             javaConfig,
             proGuardConfig,
@@ -97,16 +99,18 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             toolchainProvider,
             androidBuckConfig,
             downwardApiConfig),
-        new AndroidInstrumentationTestDescription(buckConfig, toolchainProvider),
+        new AndroidInstrumentationTestDescription(
+            testBuckConfig, downwardApiConfig, toolchainProvider),
         new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory, toolchainProvider),
-        new AndroidPrebuiltAarDescription(toolchainProvider, androidBuckConfig),
-        new AndroidResourceDescription(toolchainProvider, androidBuckConfig),
+        new AndroidPrebuiltAarDescription(toolchainProvider, androidBuckConfig, downwardApiConfig),
+        new AndroidResourceDescription(toolchainProvider, androidBuckConfig, downwardApiConfig),
         new RobolectricTestDescription(
-            toolchainProvider, javaConfig, defaultAndroidCompilerFactory),
+            toolchainProvider, javaConfig, downwardApiConfig, defaultAndroidCompilerFactory),
         new PrebuiltNativeLibraryDescription(),
-        new NdkLibraryDescription(toolchainProvider, resourcesConfig.getConcurrencyLimit()),
+        new NdkLibraryDescription(
+            toolchainProvider, resourcesConfig.getConcurrencyLimit(), downwardApiConfig),
         new NdkToolchainDescription(),
-        new GenAidlDescription(),
+        new GenAidlDescription(downwardApiConfig),
         new ApkGenruleDescription(
             toolchainProvider,
             sandboxConfig,

@@ -131,6 +131,7 @@ public class AndroidBinaryGraphEnhancer {
   private final ImmutableCollection<SourcePath> nativeLibAssetsToExclude;
   private final ImmutableCollection<NativeLinkableGroup> nativeLinkablesAssetsToExcludeGroup;
   private final JavaBuckConfig javaBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final Javac javac;
   private final JavacFactory javacFactory;
   private final JavacOptions javacOptions;
@@ -225,6 +226,7 @@ public class AndroidBinaryGraphEnhancer {
       int rDotJavaWeightFactor,
       int secondaryDexWeightLimit,
       ImmutableSet<String> resourcePackagesToExclude) {
+    this.downwardApiConfig = downwardApiConfig;
     this.ignoreAaptProguardConfig = ignoreAaptProguardConfig;
     this.androidPlatformTarget = androidPlatformTarget;
     Preconditions.checkArgument(originalParams.getExtraDeps().get().isEmpty());
@@ -305,7 +307,8 @@ public class AndroidBinaryGraphEnhancer {
             failOnLegacyAapt2Errors,
             useAapt2LocaleFiltering,
             extraFilteredResources,
-            resourceStableIds);
+            resourceStableIds,
+            downwardApiConfig.isEnabledForAndroid());
     this.apkModuleGraph = apkModuleGraph;
     this.dxConfig = dxConfig;
     this.nonPreDexedDexBuildableArgs = nonPreDexedDexBuildableArgs;
@@ -389,7 +392,8 @@ public class AndroidBinaryGraphEnhancer {
               buildRuleParams.withDeclaredDeps(ImmutableSortedSet.of(generatorRule)),
               sonameMergeMap.get(),
               nativeLibsEnhancementResult.getSharedObjectTargets().get(),
-              generatorRule);
+              generatorRule,
+              downwardApiConfig.isEnabledForAndroid());
       graphBuilder.addToIndex(generateCodeForMergedLibraryMap);
 
       BuildRuleParams paramsForCompileGenCode =
@@ -496,7 +500,8 @@ public class AndroidBinaryGraphEnhancer {
               packageableCollection,
               classpathEntriesToDex,
               compileUberRDotJava,
-              javaBuckConfig.shouldDesugarInterfaceMethods());
+              javaBuckConfig.shouldDesugarInterfaceMethods(),
+              downwardApiConfig.isEnabledForAndroid());
     }
 
     return ImmutableAndroidGraphEnhancementResult.builder()
@@ -657,7 +662,8 @@ public class AndroidBinaryGraphEnhancer {
               prebuiltJar,
               dexTool,
               weightFactor,
-              ImmutableSortedSet.of());
+              ImmutableSortedSet.of(),
+              downwardApiConfig.isEnabledForAndroid());
       graphBuilder.addToIndex(dexJar);
       builder.add(dexJar);
     }
@@ -675,7 +681,8 @@ public class AndroidBinaryGraphEnhancer {
         paramsForNativeLibraryProguardGenerator,
         graphBuilder,
         nativeLibsDirs,
-        graphBuilder.requireRule(nativeLibraryProguardConfigGenerator.get()));
+        graphBuilder.requireRule(nativeLibraryProguardConfigGenerator.get()),
+        downwardApiConfig.isEnabledForAndroid());
   }
 
   /**
@@ -771,7 +778,8 @@ public class AndroidBinaryGraphEnhancer {
         xzCompressionLevel,
         dxConfig.getDxMaxHeapSize(),
         group,
-        secondaryDexWeightLimit);
+        secondaryDexWeightLimit,
+        downwardApiConfig.isEnabledForAndroid());
   }
 
   /**
@@ -898,7 +906,8 @@ public class AndroidBinaryGraphEnhancer {
             dexGroupRules,
             dxExecutorService,
             xzCompressionLevel,
-            dxConfig.getDxMaxHeapSize());
+            dxConfig.getDxMaxHeapSize(),
+            downwardApiConfig.isEnabledForAndroid());
     graphBuilder.addToIndex(superDexMergeRule);
 
     return superDexMergeRule;
@@ -920,7 +929,8 @@ public class AndroidBinaryGraphEnhancer {
             buildRuleParams.withDeclaredDeps(ImmutableSortedSet.copyOf(allPreDexDeps)),
             androidPlatformTarget,
             dexTool,
-            allPreDexDeps);
+            allPreDexDeps,
+            downwardApiConfig.isEnabledForAndroid());
     graphBuilder.addToIndex(preDexMerge);
     return preDexMerge;
   }
@@ -970,7 +980,8 @@ public class AndroidBinaryGraphEnhancer {
                     javaLibrary,
                     dexTool,
                     1,
-                    desugarDeps);
+                    desugarDeps,
+                    downwardApiConfig.isEnabledForAndroid());
               });
       preDexDeps.add((DexProducedFromJavaLibrary) preDexRule);
     }
@@ -1005,7 +1016,8 @@ public class AndroidBinaryGraphEnhancer {
       AndroidPackageableCollection packageableCollection,
       ImmutableSet<SourcePath> classpathEntriesToDex,
       JavaLibrary compiledUberRDotJava,
-      boolean desugarInterfaceMethods) {
+      boolean desugarInterfaceMethods,
+      boolean withDownwardApi) {
     ImmutableSortedMap<APKModule, ImmutableSortedSet<APKModule>> apkModuleMap =
         apkModuleGraph.toOutgoingEdgesMap();
     APKModule rootAPKModule = apkModuleGraph.getRootAPKModule();
@@ -1041,7 +1053,8 @@ public class AndroidBinaryGraphEnhancer {
             projectFilesystem,
             originalBuildTarget.withFlavors(NON_PREDEXED_DEX_BUILDABLE_FLAVOR),
             dexTool,
-            desugarInterfaceMethods);
+            desugarInterfaceMethods,
+            withDownwardApi);
     graphBuilder.addToIndex(nonPreDexedDexBuildable);
 
     if (nonPreDexedDexBuildableArgs.getShouldProguard()) {

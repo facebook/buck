@@ -123,7 +123,8 @@ public class AndroidBinaryFilesInfoTest {
           null,
           MoreExecutors.newDirectExecutorService(),
           XzStep.DEFAULT_COMPRESSION_LEVEL,
-          Optional.empty());
+          Optional.empty(),
+          false);
     }
 
     @Override

@@ -25,6 +25,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -65,17 +69,26 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   @AddToRuleKey
   private final ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   GenerateCodeForMergedLibraryMap(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams buildRuleParams,
       ImmutableSortedMap<String, NativeLibraryMergeEnhancer.SonameMergeData> mergeResult,
       ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets,
-      BuildRule codeGenerator) {
+      BuildRule codeGenerator,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.mergeResult = mergeResult;
     this.sharedObjectTargets = sharedObjectTargets;
     this.codeGenerator = codeGenerator;
+    this.withDownwardApi = withDownwardApi;
 
     if (!(codeGenerator instanceof BinaryBuildRule)) {
       throw new HumanReadableException(
@@ -99,7 +112,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
                     context.getBuildCellRootPath(), getProjectFilesystem(), output.getParent())))
         .add(new WriteMapDataStep())
         .add(new WriteTargetsFileStep())
-        .add(new RunCodeGenStep(context.getSourcePathResolver()))
+        .add(new RunCodeGenStep(context.getSourcePathResolver(), withDownwardApi))
         .build();
   }
 
@@ -194,8 +207,8 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   private class RunCodeGenStep extends ShellStep {
     private final SourcePathResolverAdapter pathResolver;
 
-    RunCodeGenStep(SourcePathResolverAdapter pathResolver) {
-      super(getProjectFilesystem().getRootPath());
+    RunCodeGenStep(SourcePathResolverAdapter pathResolver, boolean withDownwardApi) {
+      super(getProjectFilesystem().getRootPath(), withDownwardApi);
       this.pathResolver = pathResolver;
     }
 

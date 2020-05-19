@@ -103,6 +103,7 @@ public class SmartDexingStep implements Step {
   private final Optional<Set<Path>> additonalDesugarDeps;
   private final BuildTarget buildTarget;
   private final Optional<Integer> minSdkVersion;
+  private final boolean withDownwardApi;
 
   /**
    * @param primaryOutputPath Path for the primary dex artifact.
@@ -136,11 +137,13 @@ public class SmartDexingStep implements Step {
       boolean useDexBuckedId,
       Optional<Set<Path>> additonalDesugarDeps,
       BuildTarget buildTarget,
-      Optional<Integer> minSdkVersion) {
+      Optional<Integer> minSdkVersion,
+      boolean withDownwardApi) {
     this.androidPlatformTarget = androidPlatformTarget;
     this.buildContext = buildContext;
     this.filesystem = filesystem;
     this.desugarInterfaceMethods = desugarInterfaceMethods;
+    this.withDownwardApi = withDownwardApi;
     this.outputToInputsSupplier =
         MoreSuppliers.memoize(
             () -> {
@@ -362,7 +365,8 @@ public class SmartDexingStep implements Step {
                             additonalDesugarDeps.orElse(ImmutableSet.of()))
                         : null,
                     useDexBuckedId,
-                    minSdkVersion))
+                    minSdkVersion,
+                    withDownwardApi))
         .filter(dxPseudoRule -> !dxPseudoRule.checkIsCached())
         .map(
             dxPseudoRule -> {
@@ -399,6 +403,7 @@ public class SmartDexingStep implements Step {
     @Nullable private final Collection<Path> classpathFiles;
     private final boolean useDexBuckedId;
     private final Optional<Integer> minSdkVersion;
+    private final boolean withDownwardApi;
 
     public DxPseudoRule(
         AndroidPlatformTarget androidPlatformTarget,
@@ -414,7 +419,8 @@ public class SmartDexingStep implements Step {
         String dexTool,
         @Nullable Collection<Path> classpathFiles,
         boolean useDexBuckedId,
-        Optional<Integer> minSdkVersion) {
+        Optional<Integer> minSdkVersion,
+        boolean withDownwardApi) {
       this.androidPlatformTarget = androidPlatformTarget;
       this.buildContext = buildContext;
       this.filesystem = filesystem;
@@ -429,6 +435,7 @@ public class SmartDexingStep implements Step {
       this.classpathFiles = classpathFiles;
       this.useDexBuckedId = useDexBuckedId;
       this.minSdkVersion = minSdkVersion;
+      this.withDownwardApi = withDownwardApi;
     }
 
     /**
@@ -482,7 +489,8 @@ public class SmartDexingStep implements Step {
           dexTool,
           classpathFiles,
           useDexBuckedId,
-          minSdkVersion);
+          minSdkVersion,
+          withDownwardApi);
       steps.add(
           new WriteFileStep(filesystem, newInputsHash, outputHashPath, /* executable */ false));
     }
@@ -508,7 +516,8 @@ public class SmartDexingStep implements Step {
       String dexTool,
       @Nullable Collection<Path> classpathFiles,
       boolean useDexBuckedId,
-      Optional<Integer> minSdkVersion) {
+      Optional<Integer> minSdkVersion,
+      boolean withDownwardApi) {
 
     Optional<String> buckedId = Optional.empty();
     String output = outputPath.toString();
@@ -537,7 +546,8 @@ public class SmartDexingStep implements Step {
               false,
               classpathFiles,
               buckedId,
-              minSdkVersion));
+              minSdkVersion,
+              withDownwardApi));
       // We need to make sure classes.dex is STOREd in the .dex.jar file, otherwise .XZ
       // compression won't be effective.
       Path repackedJar = Paths.get(output.replaceAll("\\.xz$", ""));
@@ -577,7 +587,8 @@ public class SmartDexingStep implements Step {
               false,
               classpathFiles,
               buckedId,
-              minSdkVersion));
+              minSdkVersion,
+              withDownwardApi));
       steps.add(
           new RepackZipEntriesStep(
               filesystem,
@@ -611,7 +622,8 @@ public class SmartDexingStep implements Step {
               false,
               classpathFiles,
               buckedId,
-              minSdkVersion));
+              minSdkVersion,
+              withDownwardApi));
       if (DexStore.JAR.matchesPath(outputPath)) {
         steps.add(
             new DexJarAnalysisStep(

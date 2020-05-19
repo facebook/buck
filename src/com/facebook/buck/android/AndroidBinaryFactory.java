@@ -29,6 +29,7 @@ import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
@@ -46,9 +47,12 @@ public class AndroidBinaryFactory {
   static final Flavor EXO_SYMLINK_TREE = InternalFlavor.of("exo_symlink_tree");
 
   private final AndroidBuckConfig androidBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
-  public AndroidBinaryFactory(AndroidBuckConfig androidBuckConfig) {
+  public AndroidBinaryFactory(
+      AndroidBuckConfig androidBuckConfig, DownwardApiConfig downwardApiConfig) {
     this.androidBuckConfig = androidBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   public AndroidBinary create(
@@ -160,6 +164,7 @@ public class AndroidBinaryFactory {
         filesInfo.getNativeFilesInfo(),
         filesInfo.getResourceFilesInfo(),
         ImmutableSortedSet.copyOf(result.getAPKModuleGraph().getAPKModules()),
-        filesInfo.getExopackageInfo());
+        filesInfo.getExopackageInfo(),
+        downwardApiConfig.isEnabledForAndroid());
   }
 }

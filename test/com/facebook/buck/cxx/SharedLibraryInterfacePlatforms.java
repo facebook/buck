@@ -30,6 +30,7 @@ import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -58,6 +59,7 @@ public class SharedLibraryInterfacePlatforms {
         NdkCxxPlatforms.getPlatforms(
             cxxBuckConfig,
             new AndroidBuckConfig(buckConfig, Platform.detect()),
+            DownwardApiConfig.of(buckConfig),
             filesystem,
             ndkDir,
             compiler,

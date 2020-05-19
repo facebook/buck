@@ -110,7 +110,8 @@ public class TrimUberRDotJavaTest {
             filesystem,
             graphBuilder,
             TestAndroidPlatformTargetFactory.create(),
-            new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib")));
+            new FakeJavaLibrary(BuildTargetFactory.newInstance("//:lib")),
+            false);
     dexProducedFromJavaLibrary
         .getBuildOutputInitializer()
         .setBuildOutputForTests(

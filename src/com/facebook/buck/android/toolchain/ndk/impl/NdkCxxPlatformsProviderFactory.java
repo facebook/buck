@@ -31,6 +31,7 @@ import com.facebook.buck.core.toolchain.ToolchainFactory;
 import com.facebook.buck.core.toolchain.ToolchainInstantiationException;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
@@ -60,14 +61,15 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
   }
 
   private static ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getNdkCxxPlatforms(
-      BuckConfig config,
+      BuckConfig buckConfig,
       ProjectFilesystem filesystem,
       TargetConfiguration targetConfiguration,
       ToolchainProvider toolchainProvider) {
 
     Platform platform = Platform.detect();
-    AndroidBuckConfig androidConfig = new AndroidBuckConfig(config, platform);
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
+    AndroidBuckConfig androidConfig = new AndroidBuckConfig(buckConfig, platform);
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     String ndkVersion;
     if (androidConfig.getNdkVersion().isPresent()) {
@@ -83,6 +85,7 @@ public class NdkCxxPlatformsProviderFactory implements ToolchainFactory<NdkCxxPl
       return NdkCxxPlatforms.getPlatforms(
           cxxBuckConfig,
           androidConfig,
+          downwardApiConfig,
           filesystem,
           targetConfiguration,
           platform,

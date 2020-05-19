@@ -113,6 +113,7 @@ public class AndroidNdkHelper {
         NdkCxxPlatforms.getPlatforms(
                 CxxPlatformUtils.DEFAULT_CONFIG,
                 AndroidNdkHelper.DEFAULT_CONFIG,
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
                 filesystem,
                 ndkPath,
                 NdkCxxPlatformCompiler.of(compilerType, compilerVersion, gccVersion),

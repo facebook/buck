@@ -46,8 +46,9 @@ public class AidlStep extends ShellStep {
       TargetConfiguration toolchainTargetConfiguration,
       Path aidlFilePath,
       Set<String> importDirectoryPaths,
-      Path destinationDirectory) {
-    super(filesystem.getRootPath());
+      Path destinationDirectory,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
 
     this.filesystem = filesystem;
     this.toolchainProvider = toolchainProvider;

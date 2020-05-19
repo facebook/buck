@@ -36,8 +36,9 @@ public class ZipalignStep extends ShellStep {
       Path inputFile,
       Path outputFile,
       Tool zipalignTool,
-      SourcePathResolverAdapter sourcePathResolver) {
-    super(workingDirectory);
+      SourcePathResolverAdapter sourcePathResolver,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.inputFile = inputFile;
     this.outputFile = outputFile;
     this.zipalignTool = zipalignTool;

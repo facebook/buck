@@ -64,7 +64,8 @@ public class StripLinkableTest {
     Tool stripTool = new HashedFileTool(DefaultBuildTargetSourcePath.of(toolTarget));
 
     StripLinkable stripRule =
-        new StripLinkable(target, filesystem, ruleFinder, stripTool, libraryPath, "somename.so");
+        new StripLinkable(
+            target, filesystem, ruleFinder, stripTool, libraryPath, "somename.so", false);
 
     assertEquals(stripRule.getBuildDeps(), ImmutableSortedSet.of(libraryRule, toolRule));
   }

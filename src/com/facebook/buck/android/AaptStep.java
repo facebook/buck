@@ -95,8 +95,9 @@ public class AaptStep extends ShellStep {
       boolean isCrunchPngFiles,
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries,
-      ImmutableList<String> additionalAaptParams) {
-    super(workingDirectory);
+      ImmutableList<String> additionalAaptParams,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.pathResolver = pathResolver;
     this.androidPlatformTarget = androidPlatformTarget;
     this.androidManifest = androidManifest;

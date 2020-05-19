@@ -75,7 +75,8 @@ public class ReDexStepTest {
             proguardMap,
             proguardConfig,
             seeds,
-            new TestActionGraphBuilder().getSourcePathResolver());
+            new TestActionGraphBuilder().getSourcePathResolver(),
+            false);
 
     assertEquals("redex", redex.getShortName());
 

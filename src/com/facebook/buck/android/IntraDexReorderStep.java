@@ -61,6 +61,7 @@ public class IntraDexReorderStep implements Step {
   private final BuildTarget buildTarget;
   private final String inputSubDir;
   private final String outputSubDir;
+  private final boolean withDownwardApi;
 
   IntraDexReorderStep(
       BuildContext context,
@@ -72,7 +73,8 @@ public class IntraDexReorderStep implements Step {
       Path outputPrimaryDexPath,
       Optional<Supplier<Multimap<Path, Path>>> secondaryDexMap,
       String inputSubDir,
-      String outputSubDir) {
+      String outputSubDir,
+      boolean withDownwardApi) {
     this.context = context;
     this.filesystem = filesystem;
     this.reorderTool = reorderTool;
@@ -83,6 +85,7 @@ public class IntraDexReorderStep implements Step {
     this.buildTarget = buildTarget;
     this.inputSubDir = inputSubDir;
     this.outputSubDir = outputSubDir;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -128,6 +131,7 @@ public class IntraDexReorderStep implements Step {
       steps.add(
           new DefaultShellStep(
               filesystem.getRootPath(),
+              withDownwardApi,
               ImmutableList.of(
                   reorderTool.toString(),
                   reorderDataFile.toString(),
@@ -149,6 +153,7 @@ public class IntraDexReorderStep implements Step {
       steps.add(
           new DefaultShellStep(
               filesystem.getRootPath(),
+              withDownwardApi,
               ImmutableList.of(
                   reorderTool.toString(),
                   reorderDataFile.toString(),

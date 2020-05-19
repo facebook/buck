@@ -28,6 +28,10 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
@@ -87,7 +91,6 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         TrimUberRDotJava.UsesResources {
 
   private final BuildOutputInitializer<BuildOutput> buildOutputInitializer;
-
   private final BuildTarget javaLibraryBuildTarget;
 
   public DexProducedFromJavaLibrary(
@@ -98,7 +101,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
       JavaLibrary javaLibrary,
       String dexTool,
       int weightFactor,
-      ImmutableSortedSet<BuildRule> desugarDeps) {
+      ImmutableSortedSet<BuildRule> desugarDeps,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -109,7 +113,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
             weightFactor,
             getDesugarClassPaths(desugarDeps),
             androidPlatformTarget,
-            javaLibrary));
+            javaLibrary,
+            withDownwardApi));
     this.buildOutputInitializer = new BuildOutputInitializer<>(buildTarget, this);
     this.javaLibraryBuildTarget = javaLibrary.getBuildTarget();
   }
@@ -119,7 +124,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       AndroidPlatformTarget androidPlatformTarget,
-      JavaLibrary javaLibrary) {
+      JavaLibrary javaLibrary,
+      boolean withDownwardApi) {
     this(
         buildTarget,
         projectFilesystem,
@@ -128,7 +134,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
         javaLibrary,
         DxStep.DX,
         1,
-        ImmutableSortedSet.of());
+        ImmutableSortedSet.of(),
+        withDownwardApi);
   }
 
   /** Impl class */
@@ -150,13 +157,21 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     @AddToRuleKey private final OutputPath metadataClassnamesToHashes;
     @AddToRuleKey private final OutputPath metadataReferencedResources;
 
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
     Impl(
         ProjectFilesystem projectFilesystem,
         String dexTool,
         int weightFactor,
         ImmutableSortedSet<SourcePath> desugarDeps,
         AndroidPlatformTarget androidPlatformTarget,
-        JavaLibrary javaLibrary) {
+        JavaLibrary javaLibrary,
+        boolean withDownwardApi) {
       this.dexTool = dexTool;
       this.weightFactor = weightFactor;
       this.desugarDeps = desugarDeps;
@@ -166,6 +181,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
       this.javaClassHashesProvider = javaLibrary.getClassHashesProvider();
 
       this.outputDex = new OutputPath(projectFilesystem.getPath("dex.jar"));
+      this.withDownwardApi = withDownwardApi;
       Path metadataDir = projectFilesystem.getPath(DEX_RULE_METADATA);
       this.metadataWeight = new OutputPath(metadataDir.resolve(WEIGHT_ESTIMATE.toString()));
       this.metadataClassnamesToHashes =
@@ -221,7 +237,8 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
                 dexTool.equals(DxStep.D8),
                 getAbsolutePaths(desugarDeps, sourcePathResolverAdapter),
                 Optional.empty(),
-                Optional.empty() /* minSdkVersion */);
+                Optional.empty() /* minSdkVersion */,
+                withDownwardApi);
         steps.add(dx);
 
         // The `DxStep` delegates to android tools to build a ZIP with timestamps in it, making

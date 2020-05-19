@@ -54,6 +54,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.EnvironmentVariableMacroExpander;
@@ -111,11 +112,15 @@ public class NdkLibraryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final ConcurrencyLimit concurrencyLimit;
+  private final DownwardApiConfig downwardApiConfig;
 
   public NdkLibraryDescription(
-      ToolchainProvider toolchainProvider, ConcurrencyLimit concurrencyLimit) {
+      ToolchainProvider toolchainProvider,
+      ConcurrencyLimit concurrencyLimit,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.concurrencyLimit = concurrencyLimit;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -466,7 +471,8 @@ public class NdkLibraryDescription
         flags,
         args.getIsAsset(),
         androidNdk.getNdkVersion(),
-        concurrencyLimit);
+        concurrencyLimit,
+        downwardApiConfig.isEnabledForAndroid());
   }
 
   @Override

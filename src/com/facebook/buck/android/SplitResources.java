@@ -24,6 +24,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
@@ -63,17 +67,26 @@ public class SplitResources extends AbstractBuildRule {
 
   private final SourcePathRuleFinder ruleFinder;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public SplitResources(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       SourcePath pathToAaptResources,
       SourcePath pathToOriginalRDotTxt,
-      Tool zipalignTool) {
+      Tool zipalignTool,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.ruleFinder = ruleFinder;
     this.pathToAaptResources = pathToAaptResources;
     this.pathToOriginalRDotTxt = pathToOriginalRDotTxt;
+    this.withDownwardApi = withDownwardApi;
     this.exoResourcesOutputPath = getOutputDirectory().resolve("exo-resources.apk");
     this.primaryResourcesOutputPath = getOutputDirectory().resolve("primary-resources.apk");
     this.rDotTxtOutputPath = getOutputDirectory().resolve("R.txt");
@@ -111,7 +124,8 @@ public class SplitResources extends AbstractBuildRule {
                 getUnalignedExoPath(),
                 exoResourcesOutputPath,
                 zipalignTool,
-                context.getSourcePathResolver()))
+                context.getSourcePathResolver(),
+                withDownwardApi))
         .build();
   }
 

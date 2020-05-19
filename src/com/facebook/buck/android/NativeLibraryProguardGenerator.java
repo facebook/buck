@@ -24,6 +24,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -51,11 +55,20 @@ import java.nio.file.attribute.BasicFileAttributes;
 /** This provides a way for android_binary rules to generate proguard config based on the */
 public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   public static final String OUTPUT_FORMAT = "%s/native-libs.pro";
+  @javax.annotation.Nonnull private final BuildRuleParams buildRuleParams;
+  @javax.annotation.Nonnull private final SourcePathRuleFinder ruleFinder;
   @AddToRuleKey private final ImmutableList<SourcePath> nativeLibsDirs;
   @AddToRuleKey private final BuildRule codeGenerator;
 
   @AddToRuleKey(stringify = true)
   private final RelPath outputPath;
+
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
 
   NativeLibraryProguardGenerator(
       BuildTarget buildTarget,
@@ -63,7 +76,8 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
       BuildRuleParams buildRuleParams,
       SourcePathRuleFinder ruleFinder,
       ImmutableList<SourcePath> nativeLibsDirs,
-      BuildRule codeGenerator) {
+      BuildRule codeGenerator,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -71,10 +85,13 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
             RichStream.from(ruleFinder.filterBuildRuleInputs(nativeLibsDirs))
                 .concat(RichStream.of(codeGenerator))
                 .toImmutableList()));
+    this.buildRuleParams = buildRuleParams;
+    this.ruleFinder = ruleFinder;
     this.nativeLibsDirs = nativeLibsDirs;
     this.codeGenerator = codeGenerator;
     this.outputPath =
         BuildTargetPaths.getGenPath(projectFilesystem, getBuildTarget(), OUTPUT_FORMAT);
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -92,16 +109,16 @@ public class NativeLibraryProguardGenerator extends AbstractBuildRuleWithDeclare
             MakeCleanDirectoryStep.of(
                 BuildCellRelativePath.fromCellRelativePath(
                     context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)))
-        .add(new RunConfigGenStep(context.getSourcePathResolver()))
+        .add(new RunConfigGenStep(context.getSourcePathResolver(), withDownwardApi))
         .build();
   }
 
   private class RunConfigGenStep extends ShellStep {
     private final SourcePathResolverAdapter pathResolver;
 
-    RunConfigGenStep(SourcePathResolverAdapter sourcePathResolverAdapter) {
-      super(getProjectFilesystem().getRootPath());
-      this.pathResolver = sourcePathResolverAdapter;
+    RunConfigGenStep(SourcePathResolverAdapter resolverAdapter, boolean withDownwardApi) {
+      super(getProjectFilesystem().getRootPath(), withDownwardApi);
+      this.pathResolver = resolverAdapter;
     }
 
     @Override

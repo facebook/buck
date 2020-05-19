@@ -20,6 +20,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -46,12 +50,13 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
       SourcePathRuleFinder ruleFinder,
       Tool stripTool,
       SourcePath sourcePathToStrip,
-      String strippedObjectName) {
+      String strippedObjectName,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new Impl(stripTool, sourcePathToStrip, strippedObjectName));
+        new Impl(stripTool, sourcePathToStrip, strippedObjectName, withDownwardApi));
   }
 
   /** internal buildable implementation */
@@ -61,10 +66,22 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
     @AddToRuleKey private final SourcePath sourcePathToStrip;
     @AddToRuleKey private final OutputPath output;
 
-    Impl(Tool stripTool, SourcePath sourcePathToStrip, String strippedObjectName) {
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
+    Impl(
+        Tool stripTool,
+        SourcePath sourcePathToStrip,
+        String strippedObjectName,
+        boolean withDownwardApi) {
       this.stripTool = stripTool;
       this.sourcePathToStrip = sourcePathToStrip;
       this.output = new OutputPath(strippedObjectName);
+      this.withDownwardApi = withDownwardApi;
     }
 
     @Override
@@ -84,7 +101,8 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
               stripTool.getCommandPrefix(sourcePathResolverAdapter),
               ImmutableList.of("--strip-unneeded"),
               AbsPath.of(sourcePathResolverAdapter.getAbsolutePath(sourcePathToStrip)),
-              AbsPath.of(filesystem.resolve(destination))));
+              AbsPath.of(filesystem.resolve(destination)),
+              withDownwardApi));
     }
   }
 

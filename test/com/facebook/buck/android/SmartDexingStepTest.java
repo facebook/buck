@@ -89,7 +89,8 @@ public class SmartDexingStepTest {
             DxStep.DX,
             null,
             false,
-            Optional.empty());
+            Optional.empty(),
+            false);
     assertFalse("'dummy' is not a matching input hash", rule.checkIsCached());
 
     // Write the real hash into the output hash file and ensure that checkIsCached now
@@ -124,7 +125,8 @@ public class SmartDexingStepTest {
         DxStep.DX,
         null,
         false,
-        Optional.empty());
+        Optional.empty(),
+        false);
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
@@ -169,7 +171,8 @@ public class SmartDexingStepTest {
         DxStep.DX,
         null,
         false,
-        Optional.empty());
+        Optional.empty(),
+        false);
 
     MoreAsserts.assertSteps(
         "Steps should repack zip entries and then compress using xz.",
@@ -214,7 +217,8 @@ public class SmartDexingStepTest {
         DxStep.DX,
         null,
         false,
-        Optional.empty());
+        Optional.empty(),
+        false);
 
     assertEquals(
         Joiner.on(" ")
@@ -253,7 +257,8 @@ public class SmartDexingStepTest {
         DxStep.D8,
         null,
         false,
-        Optional.of(28));
+        Optional.of(28),
+        false);
 
     assertEquals(
         Joiner.on(" ")
@@ -294,7 +299,8 @@ public class SmartDexingStepTest {
         DxStep.DX,
         null,
         false,
-        /* min-sdk-version */ Optional.of(28));
+        /* min-sdk-version */ Optional.of(28),
+        false);
 
     MoreAsserts.assertSteps(
         "Wrong steps",
@@ -338,7 +344,8 @@ public class SmartDexingStepTest {
         DxStep.DX,
         null,
         false,
-        /* min-sdk-version */ Optional.of(28));
+        /* min-sdk-version */ Optional.of(28),
+        false);
 
     String description = steps.build().get(0).getDescription(TestExecutionContext.newInstance());
     Assert.assertThat(description, Matchers.containsString("--min-sdk-version 28"));
@@ -366,6 +373,7 @@ public class SmartDexingStepTest {
         DxStep.DX,
         null,
         false,
-        Optional.empty());
+        Optional.empty(),
+        false);
   }
 }

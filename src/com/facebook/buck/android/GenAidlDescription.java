@@ -24,10 +24,17 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.google.common.collect.ImmutableSortedSet;
 import org.immutables.value.Value;
 
 public class GenAidlDescription implements DescriptionWithTargetGraph<GenAidlDescriptionArg> {
+
+  private final DownwardApiConfig downwardApiConfig;
+
+  public GenAidlDescription(DownwardApiConfig downwardApiConfig) {
+    this.downwardApiConfig = downwardApiConfig;
+  }
 
   @Override
   public Class<GenAidlDescriptionArg> getConstructorArgType() {
@@ -47,7 +54,8 @@ public class GenAidlDescription implements DescriptionWithTargetGraph<GenAidlDes
         params,
         args.getAidl(),
         args.getImportPath(),
-        args.getAidlSrcs());
+        args.getAidlSrcs(),
+        downwardApiConfig.isEnabledForAndroid());
   }
 
   @RuleArg

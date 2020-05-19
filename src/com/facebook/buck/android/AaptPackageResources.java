@@ -23,6 +23,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.common.BuildRules;
@@ -61,6 +65,13 @@ public class AaptPackageResources extends AbstractBuildRule {
   @AddToRuleKey private final boolean includesVectorDrawables;
   @AddToRuleKey private final ImmutableList<SourcePath> dependencyResourceApks;
   @AddToRuleKey private final ImmutableList<String> additionalAaptParams;
+
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
 
   private final AndroidPlatformTarget androidPlatformTarget;
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
@@ -101,7 +112,8 @@ public class AaptPackageResources extends AbstractBuildRule {
       boolean skipCrunchPngs,
       boolean includesVectorDrawables,
       ManifestEntries manifestEntries,
-      ImmutableList<String> additionalAaptParams) {
+      ImmutableList<String> additionalAaptParams,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.androidPlatformTarget = androidPlatformTarget;
     this.manifest = manifest;
@@ -110,6 +122,7 @@ public class AaptPackageResources extends AbstractBuildRule {
     this.skipCrunchPngs = skipCrunchPngs;
     this.includesVectorDrawables = includesVectorDrawables;
     this.manifestEntries = manifestEntries;
+    this.withDownwardApi = withDownwardApi;
     this.buildDepsSupplier =
         MoreSuppliers.memoize(
             () ->
@@ -207,7 +220,8 @@ public class AaptPackageResources extends AbstractBuildRule {
             !skipCrunchPngs /* && packageType.isCrunchPngFiles() */,
             includesVectorDrawables,
             manifestEntries,
-            additionalAaptParams),
+            additionalAaptParams,
+            withDownwardApi),
         ZipScrubberStep.of(
             context.getSourcePathResolver().getAbsolutePath(getSourcePathToOutput())));
 

@@ -93,7 +93,8 @@ public class ApkGenruleDescription extends AbstractGenruleDescription<ApkGenrule
                 AndroidTools.getAndroidTools(
                     toolchainProvider, buildTarget.getTargetConfiguration()))
             : Optional.empty(),
-        installableApk);
+        installableApk,
+        downwardApiConfig.isEnabledForAndroid());
   }
 
   @RuleArg

@@ -92,7 +92,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
       BuildableContext buildableContext,
       BuildContext buildContext,
       boolean skipProguard,
-      ImmutableList.Builder<Step> steps) {
+      ImmutableList.Builder<Step> steps,
+      boolean withDownwardApi) {
 
     steps.addAll(
         MakeCleanDirectoryStep.of(
@@ -128,7 +129,8 @@ public final class ProGuardObfuscateStep extends ShellStep {
               proguardJarOverride,
               proguardMaxHeapSize,
               proguardJvmArgs,
-              proguardAgentPath);
+              proguardAgentPath,
+              withDownwardApi);
 
       buildableContext.recordArtifact(commandLineHelperStep.getConfigurationTxt());
       buildableContext.recordArtifact(commandLineHelperStep.getMappingTxt());
@@ -161,8 +163,9 @@ public final class ProGuardObfuscateStep extends ShellStep {
       Optional<Path> proguardJarOverride,
       String proguardMaxHeapSize,
       Optional<List<String>> proguardJvmArgs,
-      Optional<String> proguardAgentPath) {
-    super(filesystem.getRootPath());
+      Optional<String> proguardAgentPath,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
     this.androidPlatformTarget = androidPlatformTarget;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.filesystem = filesystem;

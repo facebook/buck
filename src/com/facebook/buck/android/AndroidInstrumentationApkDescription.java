@@ -295,7 +295,8 @@ public class AndroidInstrumentationApkDescription
         filesInfo.getDexFilesInfo(),
         filesInfo.getNativeFilesInfo(),
         filesInfo.getResourceFilesInfo(),
-        filesInfo.getExopackageInfo());
+        filesInfo.getExopackageInfo(),
+        downwardApiConfig.isEnabledForAndroid());
   }
 
   private static Supplier<ImmutableSet<JavaLibrary>> createRulesToExcludeFromDexSupplier(

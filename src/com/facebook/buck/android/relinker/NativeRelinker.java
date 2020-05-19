@@ -34,6 +34,7 @@ import com.facebook.buck.core.util.graph.TopologicalSort;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.util.types.Pair;
@@ -86,6 +87,7 @@ public class NativeRelinker {
       SourcePathResolverAdapter resolver,
       SourcePathRuleFinder ruleFinder,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       ImmutableMap<TargetCpuType, NdkCxxPlatform> nativePlatforms,
       ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibs,
       ImmutableMap<AndroidLinkableMetadata, SourcePath> linkableLibsAssets,
@@ -155,7 +157,9 @@ public class NativeRelinker {
       // the list of needed symbols.
       TargetCpuType cpuType = p.getFirst();
       SourcePath source = p.getSecond();
-      RelinkerRule relink = makeRelinkerRule(cpuType, source, ImmutableList.of());
+      RelinkerRule relink =
+          makeRelinkerRule(
+              cpuType, source, ImmutableList.of(), downwardApiConfig.isEnabledForAndroid());
       relinkRules.add(relink);
       pathMap.put(source, relink.getLibFileSourcePath());
     }
@@ -186,7 +190,8 @@ public class NativeRelinker {
                       Functions.forMap(relinkerMap)))
               .build();
 
-      RelinkerRule relink = makeRelinkerRule(cpuType, source, relinkerDeps);
+      RelinkerRule relink =
+          makeRelinkerRule(cpuType, source, relinkerDeps, downwardApiConfig.isEnabledForAndroid());
       relinkRules.add(relink);
       pathMap.put(source, relink.getLibFileSourcePath());
       relinkerMap.put(baseRule, relink);
@@ -231,7 +236,10 @@ public class NativeRelinker {
   }
 
   private RelinkerRule makeRelinkerRule(
-      TargetCpuType cpuType, SourcePath source, ImmutableList<RelinkerRule> relinkerDeps) {
+      TargetCpuType cpuType,
+      SourcePath source,
+      ImmutableList<RelinkerRule> relinkerDeps,
+      boolean withDownwardApi) {
     String libname = resolver.getAbsolutePath(source).getFileName().toString();
     BuildRule baseRule = ruleFinder.getRule(source).orElse(null);
     ImmutableList<Arg> linkerArgs = ImmutableList.of();
@@ -259,7 +267,8 @@ public class NativeRelinker {
         source,
         linker,
         linkerArgs,
-        symbolPatternWhitelist);
+        symbolPatternWhitelist,
+        withDownwardApi);
   }
 
   public ImmutableMap<AndroidLinkableMetadata, SourcePath> getRelinkedLibs() {

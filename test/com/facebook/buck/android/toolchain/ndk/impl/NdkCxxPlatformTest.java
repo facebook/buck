@@ -335,6 +335,7 @@ public class NdkCxxPlatformTest {
         NdkCxxPlatforms.build(
             CxxPlatformUtils.DEFAULT_CONFIG,
             new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()),
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             filesystem,
             InternalFlavor.of("android-x86"),
             Platform.detect(),
@@ -384,6 +385,7 @@ public class NdkCxxPlatformTest {
         NdkCxxPlatforms.build(
                 new CxxBuckConfig(buckConfig),
                 new AndroidBuckConfig(buckConfig, Platform.detect()),
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
                 filesystem,
                 InternalFlavor.of("android-x86"),
                 Platform.detect(),
@@ -487,6 +489,7 @@ public class NdkCxxPlatformTest {
         NdkCxxPlatforms.build(
                 new CxxBuckConfig(buckConfig),
                 new AndroidBuckConfig(buckConfig, Platform.detect()),
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
                 filesystem,
                 InternalFlavor.of("android-x86"),
                 Platform.detect(),
@@ -574,6 +577,7 @@ public class NdkCxxPlatformTest {
               NdkCxxPlatforms.getPlatforms(
                   CxxPlatformUtils.DEFAULT_CONFIG,
                   new AndroidBuckConfig(FakeBuckConfig.empty(), platform),
+                  CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
                   filesystem,
                   root.getPath(),
                   NdkCxxPlatformCompiler.of(config.getFirst(), "gcc-version", "clang-version"),
@@ -623,6 +627,7 @@ public class NdkCxxPlatformTest {
         NdkCxxPlatforms.getPlatforms(
             CxxPlatformUtils.DEFAULT_CONFIG,
             new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()),
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             filesystem,
             root.getPath(),
             NdkCxxPlatformCompiler.of(NdkCompilerType.GCC, "gcc-version", "clang-version"),

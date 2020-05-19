@@ -23,6 +23,7 @@ import com.facebook.buck.android.toolchain.ndk.NdkCxxRuntime;
 import com.facebook.buck.android.toolchain.ndk.TargetCpuType;
 import com.facebook.buck.android.toolchain.ndk.UnresolvedNdkCxxPlatform;
 import com.facebook.buck.android.toolchain.ndk.impl.StaticUnresolvedNdkCxxPlatform;
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
@@ -32,6 +33,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -83,7 +85,10 @@ public class NdkLibraryBuilder
   public NdkLibraryBuilder(
       BuildTarget target, ProjectFilesystem filesystem, ToolchainProvider toolchainProvider) {
     super(
-        new NdkLibraryDescription(toolchainProvider, getConcurrencyLimit()) {
+        new NdkLibraryDescription(
+            toolchainProvider,
+            getConcurrencyLimit(),
+            DownwardApiConfig.of(FakeBuckConfig.empty())) {
           @Override
           protected ImmutableSortedSet<SourcePath> findSources(
               ProjectFilesystem filesystem, Path buildRulePath) {

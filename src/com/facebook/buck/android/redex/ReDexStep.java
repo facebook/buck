@@ -66,8 +66,9 @@ public class ReDexStep extends ShellStep {
       Path proguardMap,
       Path proguardCommandLine,
       Path seeds,
-      SourcePathResolverAdapter pathResolver) {
-    super(workingDirectory);
+      SourcePathResolverAdapter pathResolver,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.androidSdkLocation = androidSdkLocation;
     this.redexBinaryArgs = ImmutableList.copyOf(redexBinaryArgs);
     this.redexEnvironmentVariables = ImmutableMap.copyOf(redexEnvironmentVariables);
@@ -91,7 +92,8 @@ public class ReDexStep extends ShellStep {
       Path outputApkPath,
       Supplier<KeystoreProperties> keystorePropertiesSupplier,
       Path proguardConfigDir,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      boolean withDownwardApi) {
     ImmutableList.Builder<Step> steps = ImmutableList.builder();
 
     Tool redexBinary = redexOptions.getRedex();
@@ -109,7 +111,8 @@ public class ReDexStep extends ShellStep {
             proguardConfigDir.resolve("mapping.txt"),
             proguardConfigDir.resolve("command-line.txt"),
             proguardConfigDir.resolve("seeds.txt"),
-            resolver);
+            resolver,
+            withDownwardApi);
     steps.add(redexStep);
 
     Path outputDir = outputApkPath.getParent();

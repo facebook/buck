@@ -379,9 +379,11 @@ public class FilterResourcesSteps {
    */
   static class ImageMagickScaler implements ImageScaler {
     private final AbsPath workingDirectory;
+    private final boolean withDownwardApi;
 
-    public ImageMagickScaler(AbsPath workingDirectory) {
+    public ImageMagickScaler(AbsPath workingDirectory, boolean withDownwardApi) {
       this.workingDirectory = workingDirectory;
+      this.withDownwardApi = withDownwardApi;
     }
 
     @Override
@@ -397,6 +399,7 @@ public class FilterResourcesSteps {
       Step convertStep =
           new BashStep(
               workingDirectory,
+              withDownwardApi,
               "convert",
               "-adaptive-resize",
               (int) (factor * 100) + "%",
@@ -473,6 +476,7 @@ public class FilterResourcesSteps {
     private ImmutableSet<Path> whitelistedStringDirs = ImmutableSet.of();
     private ImmutableSet<String> locales = ImmutableSet.of();
     private boolean enableStringWhitelisting = false;
+    private boolean withDownwardApi = false;
 
     private Builder() {
       this.localizedStringFileName = Optional.empty();
@@ -495,6 +499,11 @@ public class FilterResourcesSteps {
 
     public Builder enableStringWhitelisting() {
       this.enableStringWhitelisting = true;
+      return this;
+    }
+
+    public Builder withDownwardApi(boolean withDownwardApi) {
+      this.withDownwardApi = withDownwardApi;
       return this;
     }
 
@@ -530,7 +539,7 @@ public class FilterResourcesSteps {
           resourceFilter.getDensities(),
           DefaultDrawableFinder.getInstance(),
           resourceFilter.shouldDownscale()
-              ? new ImageMagickScaler(filesystem.getRootPath())
+              ? new ImageMagickScaler(filesystem.getRootPath(), withDownwardApi)
               : null);
     }
   }

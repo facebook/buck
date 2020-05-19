@@ -27,6 +27,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
@@ -118,6 +122,13 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
   @AddToRuleKey private final boolean desugarInterfaceMethods;
   @AddToRuleKey private final Optional<Integer> minSdkVersion;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   private final AndroidPlatformTarget androidPlatformTarget;
   private final ListeningExecutorService dxExecutorService;
   private final Supplier<ImmutableSortedSet<BuildRule>> buildDepsSupplier;
@@ -176,7 +187,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
       ProjectFilesystem filesystem,
       BuildTarget buildTarget,
       String dexTool,
-      boolean desugarInterfaceMethods) {
+      boolean desugarInterfaceMethods,
+      boolean withDownwardApi) {
     super(buildTarget, filesystem);
     this.androidPlatformTarget = androidPlatformTarget;
     this.additionalJarsForProguardAndDesugar = additionalJarsForProguardAndDesugar;
@@ -213,6 +225,7 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
                     .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())));
     this.dexTool = dexTool;
     this.desugarInterfaceMethods = desugarInterfaceMethods;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @VisibleForTesting
@@ -383,7 +396,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
           new AbstractGenruleStep(
               getProjectFilesystem(),
               commandString,
-              getProjectFilesystem().getRootPath().resolve(preprocessJavaClassesInDir)) {
+              getProjectFilesystem().getRootPath().resolve(preprocessJavaClassesInDir),
+              withDownwardApi) {
 
             @Override
             protected void addEnvironmentVariables(
@@ -470,7 +484,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         dexReorderToolFile,
         dexReorderDataDumpFile,
         additionalDexStoreToJarPathMap,
-        buildContext);
+        buildContext,
+        withDownwardApi);
 
     steps.add(
         new AbstractExecutionStep("writing_secondary_dex_listing") {
@@ -601,7 +616,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
         buildableContext,
         buildContext,
         skipProguard,
-        steps);
+        steps,
+        withDownwardApi);
 
     // Apply the transformed inputs to the classpath (this will modify deps.classpathEntriesToDex
     // so that we're now dexing the proguarded artifacts). However, if we are not running
@@ -636,7 +652,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
       Optional<SourcePath> dexReorderToolFile,
       Optional<SourcePath> dexReorderDataDumpFile,
       ImmutableMultimap<APKModule, Path> additionalDexStoreToJarPathMap,
-      BuildContext buildContext) {
+      BuildContext buildContext,
+      boolean withDownwardApi) {
     SourcePathResolverAdapter resolver = buildContext.getSourcePathResolver();
     Supplier<Set<Path>> primaryInputsToDex;
     Optional<Path> secondaryDexDir;
@@ -881,7 +898,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
                     .map(input -> buildContext.getSourcePathResolver().getAbsolutePath(input))
                     .collect(ImmutableSet.toImmutableSet())),
             getBuildTarget(),
-            minSdkVersion);
+            minSdkVersion,
+            withDownwardApi);
     steps.add(smartDexingCommand);
 
     if (reorderClassesIntraDex) {
@@ -896,7 +914,8 @@ class NonPreDexedDexBuildable extends AbstractBuildRule implements HasDexFiles {
               primaryDexPath,
               secondaryOutputToInputs,
               SMART_DEX_SECONDARY_DEX_SUBDIR,
-              AndroidBinary.SECONDARY_DEX_SUBDIR);
+              AndroidBinary.SECONDARY_DEX_SUBDIR,
+              withDownwardApi);
       steps.add(intraDexReorderStep);
     }
   }
