@@ -18,6 +18,7 @@ package com.facebook.buck.core.select;
 
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.model.platform.ConstraintSetting;
 import com.facebook.buck.core.model.platform.ConstraintValue;
 import com.facebook.buck.core.model.platform.Platform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -27,6 +28,7 @@ import com.google.common.collect.ImmutableSet;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import org.immutables.value.Value;
 
 /**
  * {@code Selectable} created by {@link
@@ -39,6 +41,14 @@ public abstract class ConfigSettingSelectable implements Selectable {
   public abstract ImmutableMap<BuckConfigKey, String> getValues();
 
   public abstract ImmutableSet<ConstraintValue> getConstraintValues();
+
+  /** {@link #getConstraintValues()} as a map by constraint setting. */
+  @Value.Derived
+  public ImmutableMap<ConstraintSetting, ConstraintValue> getConstraintValueMap() {
+    // We know this won't fail because we have already validated constraint set.
+    return getConstraintValues().stream()
+        .collect(ImmutableMap.toImmutableMap(ConstraintValue::getConstraintSetting, v -> v));
+  }
 
   @Override
   public boolean matchesPlatform(

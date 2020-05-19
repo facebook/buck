@@ -37,6 +37,7 @@ public class SelectorResolved<T> {
   /** A pair of resolve selector key and selector entry output. */
   public static class Resolved<T> {
     private final ConfigSettingSelectable selectable;
+    /** Empty encodes null. */
     private final Optional<T> output;
 
     public Resolved(ConfigSettingSelectable selectable, Optional<T> output) {

@@ -295,10 +295,9 @@ public class DefaultSelectorListResolverTest {
           DependencyStack.root());
     } catch (HumanReadableException e) {
       assertEquals(
-          "Multiple matches found when resolving configurable attribute \"some_attribute\" in //a:b:\n"
-              + "//x:y\n"
-              + "//x:z\n"
-              + "Multiple matches are not allowed unless one is unambiguously more specialized.",
+          "When checking configurable attribute \"some_attribute\" in //a:b:"
+              + " Ambiguous keys in select: //x:y and //x:z;"
+              + " keys must have at least one different constraint or config property",
           e.getHumanReadableErrorMessage());
     }
   }

@@ -17,6 +17,7 @@
 package com.facebook.buck.core.select.impl;
 
 import com.facebook.buck.core.exceptions.DependencyStack;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.select.AbstractSelectorListResolver;
 import com.facebook.buck.core.select.NamedSelectable;
@@ -48,7 +49,18 @@ public class DefaultSelectorListResolver extends AbstractSelectorListResolver {
       DependencyStack dependencyStack,
       String attributeName,
       Selector<T> selector) {
-    SelectorResolved<T> selectorResolved = resolveSelector(selector, dependencyStack);
+    SelectorResolved<T> selectorResolved;
+    try {
+      selectorResolved = resolveSelector(selector, dependencyStack);
+    } catch (HumanReadableException e) {
+      throw new HumanReadableException(
+          e,
+          dependencyStack,
+          "When checking configurable attribute \"%s\" in %s: %s",
+          attributeName,
+          buildTarget.getUnflavoredBuildTarget(),
+          e.getMessage());
+    }
 
     Map<NamedSelectable, Object> matchingConditions =
         findMatchingConditions(configurationContext, selectorResolved, dependencyStack);

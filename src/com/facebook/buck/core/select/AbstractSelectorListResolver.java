@@ -20,6 +20,7 @@ import com.facebook.buck.core.exceptions.DependencyStack;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.rules.coercer.concat.Concatable;
+import com.facebook.buck.util.types.Pair;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -68,7 +69,18 @@ public abstract class AbstractSelectorListResolver implements SelectorListResolv
           new SelectorResolved.Resolved<>(
               resolveSelectorKey(nullCondition, dependencyStack), Optional.empty()));
     }
-    return new SelectorResolved<>(conditions.build(), selector.getNoMatchMessage());
+    ImmutableMap<SelectorKey, SelectorResolved.Resolved<T>> conditionsMap = conditions.build();
+
+    ConfigSettingUtil.checkUnambiguous(
+        conditionsMap.entrySet().stream()
+            .map(
+                e ->
+                    new Pair<ConfigSettingSelectable, Object>(
+                        e.getValue().getSelectable(), e.getKey()))
+            .collect(ImmutableList.toImmutableList()),
+        dependencyStack);
+
+    return new SelectorResolved<>(conditionsMap, selector.getNoMatchMessage());
   }
 
   @Nullable

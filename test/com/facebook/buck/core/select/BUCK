@@ -29,6 +29,7 @@ java_test(
     deps = [
         ":testutil",
         "//src/com/facebook/buck/core/select:select",
+        "//src/com/facebook/buck/util/types:types",
         "//test/com/facebook/buck/core/model:testutil",
         "//test/com/facebook/buck/testutil:testutil",
         "//test/com/facebook/buck/testutil/integration:util",
