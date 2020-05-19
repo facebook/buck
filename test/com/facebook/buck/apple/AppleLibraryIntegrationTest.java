@@ -54,10 +54,12 @@ import com.facebook.buck.util.json.ObjectMappers;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -981,12 +983,27 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildAppleLibraryThatHasSwiftWithFilelist() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    testBuildAppleLibraryThatHasSwiftWithLocalConfig(
+        ImmutableMap.of("swift", ImmutableMap.of("use_filelist", "true")));
+  }
+
+  @Test
   public void testBuildAppleLibraryThatHasSwift() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
 
+    testBuildAppleLibraryThatHasSwiftWithLocalConfig(ImmutableMap.of());
+  }
+
+  private void testBuildAppleLibraryThatHasSwiftWithLocalConfig(
+      Map<String, Map<String, String>> localConfigs) throws IOException, InterruptedException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "empty_source_targets", tmp);
+    workspace.addBuckConfigLocalOptions(localConfigs);
     workspace.setUp();
     BuildTarget target =
         workspace

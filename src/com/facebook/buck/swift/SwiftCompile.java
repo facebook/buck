@@ -143,14 +143,13 @@ public class SwiftCompile extends AbstractBuildRule {
     this.objectFilePath = outputPath.resolve(escapedModuleName + ".o");
     this.modulePath = outputPath.resolve(escapedModuleName + ".swiftmodule");
     this.objectPaths = ImmutableList.of(objectFilePath);
+
+    RelPath scratchDir =
+        BuildTargetPaths.getScratchPath(getProjectFilesystem(), getBuildTarget(), "%s");
     this.swiftFileListPath =
         swiftBuckConfig.getUseFileList()
             ? Optional.of(
-                getProjectFilesystem()
-                    .getRootPath()
-                    .resolve(
-                        BuildTargetPaths.getScratchPath(
-                            getProjectFilesystem(), getBuildTarget(), "%s__filelist.txt")))
+                getProjectFilesystem().getRootPath().resolve(scratchDir.resolve("filelist.txt")))
             : Optional.empty();
 
     this.shouldEmitSwiftdocs = swiftBuckConfig.getEmitSwiftdocs();
