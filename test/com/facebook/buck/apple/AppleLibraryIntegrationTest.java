@@ -983,6 +983,15 @@ public class AppleLibraryIntegrationTest {
   }
 
   @Test
+  public void testBuildAppleLibraryThatHasSwiftWithArgfile() throws Exception {
+    assumeTrue(Platform.detect() == Platform.MACOS);
+    assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));
+
+    testBuildAppleLibraryThatHasSwiftWithLocalConfig(
+        ImmutableMap.of("swift", ImmutableMap.of("use_argfile", "true")));
+  }
+
+  @Test
   public void testBuildAppleLibraryThatHasSwiftWithFilelist() throws Exception {
     assumeTrue(Platform.detect() == Platform.MACOS);
     assumeTrue(AppleNativeIntegrationTestUtils.isApplePlatformAvailable(ApplePlatform.MACOSX));

@@ -67,6 +67,7 @@ import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
@@ -85,6 +86,13 @@ public class SwiftLibraryIntegrationTest {
     assumeThat(Platform.detect(), is(not(WINDOWS)));
     graphBuilder = new TestActionGraphBuilder();
     pathResolver = graphBuilder.getSourcePathResolver();
+  }
+
+  private ProjectWorkspace createProjectWorkspaceForScenario(String scenario) throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, scenario, tmpDir);
+    workspace.addBuckConfigLocalOption("swift", "use_argfile", "true");
+    return workspace;
   }
 
   @Test
@@ -205,8 +213,7 @@ public class SwiftLibraryIntegrationTest {
   public void testBridgingHeaderTracking() throws Exception {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "bridging_header_tracking", tmpDir);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("bridging_header_tracking");
     workspace.setUp();
     workspace.addBuckConfigLocalOption("cxx", "untracked_headers", "error");
 
@@ -219,8 +226,7 @@ public class SwiftLibraryIntegrationTest {
   public void testBridgingHeaderTrackingTransitive() throws Exception {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "bridging_header_tracking", tmpDir);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("bridging_header_tracking");
     workspace.setUp();
     workspace.addBuckConfigLocalOption("cxx", "untracked_headers", "error");
 
@@ -234,8 +240,7 @@ public class SwiftLibraryIntegrationTest {
   public void testGlobalFlagsInRuleKey() throws Exception {
     assumeThat(
         AppleNativeIntegrationTestUtils.isSwiftAvailable(ApplePlatform.IPHONESIMULATOR), is(true));
-    ProjectWorkspace workspace =
-        TestDataHelper.createProjectWorkspaceForScenario(this, "helloworld", tmpDir);
+    ProjectWorkspace workspace = createProjectWorkspaceForScenario("helloworld");
     workspace.setUp();
 
     BuildTarget target = workspace.newBuildTarget("//:hello#iphonesimulator-x86_64,swift-compile");

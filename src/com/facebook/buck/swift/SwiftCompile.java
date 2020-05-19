@@ -109,6 +109,9 @@ public class SwiftCompile extends AbstractBuildRule {
 
   @AddToRuleKey private final boolean importUnderlyingModule;
 
+  @AddToRuleKey private final boolean useArgfile;
+  private final Optional<AbsPath> argfilePath;
+
   private BuildableSupport.DepsSupplier depsSupplier;
 
   SwiftCompile(
@@ -151,6 +154,13 @@ public class SwiftCompile extends AbstractBuildRule {
             ? Optional.of(
                 getProjectFilesystem().getRootPath().resolve(scratchDir.resolve("filelist.txt")))
             : Optional.empty();
+
+    this.useArgfile = swiftBuckConfig.getUseArgfile();
+    this.argfilePath =
+        (this.useArgfile
+            ? Optional.of(
+                getProjectFilesystem().getRootPath().resolve(scratchDir.resolve("swiftc.argfile")))
+            : Optional.empty());
 
     this.shouldEmitSwiftdocs = swiftBuckConfig.getEmitSwiftdocs();
     this.swiftdocPath = outputPath.resolve(escapedModuleName + ".swiftdoc");
@@ -257,7 +267,12 @@ public class SwiftCompile extends AbstractBuildRule {
 
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
-        projectFilesystem.getRootPath(), ImmutableMap.of(), commandPrefix, compilerArgs.build());
+        projectFilesystem.getRootPath(),
+        ImmutableMap.of(),
+        commandPrefix,
+        compilerArgs.build(),
+        projectFilesystem,
+        argfilePath);
   }
 
   @VisibleForTesting
