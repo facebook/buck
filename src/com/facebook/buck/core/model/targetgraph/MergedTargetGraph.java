@@ -45,7 +45,7 @@ public class MergedTargetGraph extends DirectedAcyclicGraph<MergedTargetNode> {
     return index;
   }
 
-  /** Group notes by {@link UnflavoredBuildTarget}. */
+  /** Group nodes by {@link UnflavoredBuildTarget}. */
   public static MergedTargetGraph merge(DirectedAcyclicGraph<TargetNode<?>> targetGraph) {
     ImmutableMap<UnflavoredBuildTarget, MergedTargetNode> index =
         MergedTargetNode.group(targetGraph.getNodes());
