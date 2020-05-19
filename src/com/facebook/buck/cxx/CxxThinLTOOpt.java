@@ -20,6 +20,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -54,7 +58,8 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
       SourcePath input,
       SourcePath thinIndicesRoot,
       Type inputType,
-      DebugPathSanitizer sanitizer) {
+      DebugPathSanitizer sanitizer,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -66,7 +71,8 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
             input,
             thinIndicesRoot,
             inputType,
-            sanitizer));
+            sanitizer,
+            withDownwardApi));
     Preconditions.checkArgument(
         !buildTarget.getFlavors().contains(CxxStrip.RULE_FLAVOR)
             || !StripStyle.FLAVOR_DOMAIN.containsAnyOf(buildTarget.getFlavors()),
@@ -88,7 +94,8 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
       SourcePath input,
       SourcePath thinIndicesRoot,
       Type inputType,
-      DebugPathSanitizer sanitizer) {
+      DebugPathSanitizer sanitizer,
+      boolean withDownwardApi) {
     return new CxxThinLTOOpt(
         buildTarget,
         projectFilesystem,
@@ -98,7 +105,8 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
         input,
         thinIndicesRoot,
         inputType,
-        sanitizer);
+        sanitizer,
+        withDownwardApi);
   }
 
   CompilerDelegate getCompilerDelegate() {
@@ -132,6 +140,13 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
     @AddToRuleKey private final SourcePath thinIndicesRoot;
     @AddToRuleKey private final CxxSource.Type inputType;
 
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
     public Impl(
         BuildTarget targetName,
         CompilerDelegate compilerDelegate,
@@ -139,7 +154,8 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
         SourcePath input,
         SourcePath thinIndicesRoot,
         Type inputType,
-        DebugPathSanitizer sanitizer) {
+        DebugPathSanitizer sanitizer,
+        boolean withDownwardApi) {
       this.targetName = targetName;
       this.compilerDelegate = compilerDelegate;
       this.sanitizer = sanitizer;
@@ -147,6 +163,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
       this.input = input;
       this.thinIndicesRoot = thinIndicesRoot;
       this.inputType = inputType;
+      this.withDownwardApi = withDownwardApi;
     }
 
     CxxPreprocessAndCompileStep makeMainStep(
@@ -184,7 +201,8 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
               ImmutableCxxLogInfo.ofImpl(
                   Optional.ofNullable(targetName),
                   Optional.ofNullable(relativeInputPath.getPath()),
-                  Optional.ofNullable(resolvedOutput))));
+                  Optional.ofNullable(resolvedOutput))),
+          withDownwardApi);
     }
 
     @Override

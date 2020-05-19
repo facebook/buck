@@ -52,6 +52,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.file.WriteFile;
@@ -104,16 +105,19 @@ public class PythonTestDescription
   private final PythonBinaryDescription binaryDescription;
   private final PythonBuckConfig pythonBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public PythonTestDescription(
       ToolchainProvider toolchainProvider,
       PythonBinaryDescription binaryDescription,
       PythonBuckConfig pythonBuckConfig,
-      CxxBuckConfig cxxBuckConfig) {
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.binaryDescription = binaryDescription;
     this.pythonBuckConfig = pythonBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -368,6 +372,7 @@ public class PythonTestDescription
             root,
             pythonPlatform,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             PythonUtil.getParamForPlatform(
                     pythonPlatform,

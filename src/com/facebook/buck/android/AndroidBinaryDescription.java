@@ -25,7 +25,6 @@ import com.facebook.buck.android.toolchain.AndroidTools;
 import com.facebook.buck.android.toolchain.ndk.NdkCxxPlatformsProvider;
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
-import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.arg.BuildRuleArg;
 import com.facebook.buck.core.description.arg.HasDeclaredDeps;
 import com.facebook.buck.core.description.arg.HasTests;
@@ -47,6 +46,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -91,6 +91,7 @@ public class AndroidBinaryDescription
   private final CxxBuckConfig cxxBuckConfig;
   private final DxConfig dxConfig;
   private final AndroidInstallConfig androidInstallConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
   private final AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory;
   private final AndroidBinaryFactory androidBinaryFactory;
@@ -99,9 +100,10 @@ public class AndroidBinaryDescription
       JavaBuckConfig javaBuckConfig,
       ProGuardConfig proGuardConfig,
       AndroidBuckConfig androidBuckConfig,
-      BuckConfig buckConfig,
+      AndroidInstallConfig androidInstallConfig,
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
+      DownwardApiConfig downwardApiConfig,
       ToolchainProvider toolchainProvider,
       AndroidBinaryGraphEnhancerFactory androidBinaryGraphEnhancerFactory,
       AndroidBinaryFactory androidBinaryFactory) {
@@ -112,7 +114,8 @@ public class AndroidBinaryDescription
     this.proGuardConfig = proGuardConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.dxConfig = dxConfig;
-    this.androidInstallConfig = new AndroidInstallConfig(buckConfig);
+    this.downwardApiConfig = downwardApiConfig;
+    this.androidInstallConfig = androidInstallConfig;
     this.toolchainProvider = toolchainProvider;
     this.androidBinaryGraphEnhancerFactory = androidBinaryGraphEnhancerFactory;
     this.androidBinaryFactory = androidBinaryFactory;
@@ -177,6 +180,7 @@ public class AndroidBinaryDescription
             cxxBuckConfig,
             dxConfig,
             proGuardConfig,
+            downwardApiConfig,
             cellRoots,
             context.getTargetGraph(),
             buildTarget,

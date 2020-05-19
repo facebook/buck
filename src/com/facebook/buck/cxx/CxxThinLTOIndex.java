@@ -19,6 +19,10 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.SupportsInputBasedRuleKey;
@@ -65,8 +69,13 @@ public class CxxThinLTOIndex extends ModernBuildRule<CxxThinLTOIndex.Impl>
       Path output,
       ImmutableList<Arg> args,
       Optional<RuleScheduleInfo> ruleScheduleInfo,
-      boolean cacheable) {
-    super(buildTarget, projectFilesystem, ruleFinder, new Impl(linker, output, args, buildTarget));
+      boolean cacheable,
+      boolean withDownwardApi) {
+    super(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        new Impl(linker, output, args, buildTarget, withDownwardApi));
     this.output = output;
     this.ruleScheduleInfo = ruleScheduleInfo;
     this.cacheable = cacheable;
@@ -88,9 +97,22 @@ public class CxxThinLTOIndex extends ModernBuildRule<CxxThinLTOIndex.Impl>
     @AddToRuleKey private final PublicOutputPath output;
     @AddToRuleKey private final Optional<PublicOutputPath> linkerMapPath;
 
-    public Impl(Linker linker, Path output, ImmutableList<Arg> args, BuildTarget buildTarget) {
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
+    public Impl(
+        Linker linker,
+        Path output,
+        ImmutableList<Arg> args,
+        BuildTarget buildTarget,
+        boolean withDownwardApi) {
       this.linker = linker;
       this.output = new PublicOutputPath(output);
+      this.withDownwardApi = withDownwardApi;
       Optional<Path> linkerMapPath = getLinkerMapPath(linker, output);
       if (linkerMapPath.isPresent()
           && LinkerMapMode.isLinkerMapEnabledForBuildTarget(buildTarget)) {
@@ -137,7 +159,8 @@ public class CxxThinLTOIndex extends ModernBuildRule<CxxThinLTOIndex.Impl>
                       linker.getEnvironment(context.getSourcePathResolver()),
                       linker.getCommandPrefix(context.getSourcePathResolver()),
                       argFilePath,
-                      scratchDir));
+                      scratchDir,
+                      withDownwardApi));
 
       if (linkerMapPath.isPresent()) {
         // In some case (when there are no `dll_export`s eg) an import library is not produced by

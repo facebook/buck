@@ -33,18 +33,21 @@ class StripSymbolsStep implements Step {
   private final ImmutableMap<String, String> stripEnvironment;
   private final ImmutableList<String> stripToolArgs;
   private final ProjectFilesystem projectFilesystem;
+  private final boolean withDownwardApi;
 
   public StripSymbolsStep(
       Path input,
       ImmutableList<String> stripCommandPrefix,
       ImmutableMap<String, String> stripEnvironment,
       ImmutableList<String> stripToolArgs,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      boolean withDownwardApi) {
     this.input = input;
     this.stripCommandPrefix = stripCommandPrefix;
     this.stripEnvironment = stripEnvironment;
     this.stripToolArgs = stripToolArgs;
     this.projectFilesystem = projectFilesystem;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -52,6 +55,7 @@ class StripSymbolsStep implements Step {
       throws IOException, InterruptedException {
     return (new DefaultShellStep(
             projectFilesystem.getRootPath(),
+            withDownwardApi,
             ImmutableList.<String>builder()
                 .addAll(stripCommandPrefix)
                 .addAll(stripToolArgs)

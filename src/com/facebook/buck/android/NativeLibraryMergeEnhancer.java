@@ -51,6 +51,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTarget;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -121,6 +122,7 @@ class NativeLibraryMergeEnhancer {
   public static NativeLibraryMergeEnhancementResult enhance(
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       ActionGraphBuilder graphBuilder,
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -211,6 +213,7 @@ class NativeLibraryMergeEnhancer {
               nativePlatforms.get(cpuType).getCxxPlatform(),
               cellPathResolver,
               cxxBuckConfig,
+              downwardApiConfig,
               graphBuilder,
               buildTarget,
               projectFilesystem,
@@ -525,6 +528,7 @@ class NativeLibraryMergeEnhancer {
       CxxPlatform cxxPlatform,
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       ActionGraphBuilder graphBuilder,
       BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -556,6 +560,7 @@ class NativeLibraryMergeEnhancer {
               cxxPlatform,
               cellPathResolver,
               cxxBuckConfig,
+              downwardApiConfig,
               graphBuilder,
               baseBuildTarget,
               targetProjectFilesystem,
@@ -681,6 +686,7 @@ class NativeLibraryMergeEnhancer {
   private static class MergedLibNativeLinkable implements NativeLinkable {
     private final CxxPlatform cxxPlatform;
     private final CxxBuckConfig cxxBuckConfig;
+    private final DownwardApiConfig downwardApiConfig;
     private final ActionGraphBuilder graphBuilder;
     private final ProjectFilesystem projectFilesystem;
     private final MergedNativeLibraryConstituents constituents;
@@ -696,6 +702,7 @@ class NativeLibraryMergeEnhancer {
         CxxPlatform cxxPlatform,
         CellPathResolver cellPathResolver,
         CxxBuckConfig cxxBuckConfig,
+        DownwardApiConfig downwardApiConfig,
         ActionGraphBuilder graphBuilder,
         BuildTarget baseBuildTarget,
         ProjectFilesystem projectFilesystem,
@@ -707,6 +714,7 @@ class NativeLibraryMergeEnhancer {
       this.cxxPlatform = cxxPlatform;
       this.cellPathResolver = cellPathResolver;
       this.cxxBuckConfig = cxxBuckConfig;
+      this.downwardApiConfig = downwardApiConfig;
       this.graphBuilder = graphBuilder;
       this.projectFilesystem = projectFilesystem;
       this.constituents = constituents;
@@ -1009,6 +1017,7 @@ class NativeLibraryMergeEnhancer {
               target ->
                   CxxLinkableEnhancer.createCxxLinkableBuildRule(
                       cxxBuckConfig,
+                      downwardApiConfig,
                       cxxPlatform,
                       projectFilesystem,
                       graphBuilder,

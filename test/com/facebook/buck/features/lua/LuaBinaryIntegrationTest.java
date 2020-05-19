@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.FakeExecutableFinder;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -104,8 +105,10 @@ public class LuaBinaryIntegrationTest {
 
     // Try to detect if a Lua devel package is available, which is needed to C/C++ support.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     CxxPlatform cxxPlatform =
-        DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(FakeBuckConfig.empty()));
+        DefaultCxxPlatforms.build(
+            Platform.detect(), new CxxBuckConfig(buckConfig), DownwardApiConfig.of(buckConfig));
     ProcessExecutorParams params =
         ProcessExecutorParams.builder()
             .setCommand(

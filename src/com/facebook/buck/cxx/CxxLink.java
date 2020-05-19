@@ -22,6 +22,10 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
@@ -70,6 +74,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
   private final Path output;
   private final ImmutableMap<String, Path> extraOutputs;
 
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   public CxxLink(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -84,6 +89,38 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
       boolean cacheable,
       boolean thinLto,
       boolean fatLto) {
+    this(
+        buildTarget,
+        projectFilesystem,
+        ruleFinder,
+        cellResolver,
+        linker,
+        output,
+        extraOutputs,
+        args,
+        postprocessor,
+        ruleScheduleInfo,
+        cacheable,
+        thinLto,
+        fatLto,
+        false);
+  }
+
+  public CxxLink(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      SourcePathRuleFinder ruleFinder,
+      CellPathResolver cellResolver,
+      Linker linker,
+      Path output,
+      ImmutableMap<String, Path> extraOutputs,
+      ImmutableList<Arg> args,
+      Optional<LinkOutputPostprocessor> postprocessor,
+      Optional<RuleScheduleInfo> ruleScheduleInfo,
+      boolean cacheable,
+      boolean thinLto,
+      boolean fatLto,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -97,7 +134,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
             thinLto,
             fatLto,
             buildTarget,
-            computeCellRoots(cellResolver, buildTarget.getCell())));
+            computeCellRoots(cellResolver, buildTarget.getCell()),
+            withDownwardApi));
     this.output = output;
     this.ruleScheduleInfo = ruleScheduleInfo;
     this.cacheable = cacheable;
@@ -137,6 +175,13 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final ImmutableList<PublicOutputPath> extraOutputs;
     @AddToRuleKey private final BuildTarget buildTarget;
 
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
     public Impl(
         Linker linker,
         Path output,
@@ -146,13 +191,15 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
         boolean thinLto,
         boolean fatLto,
         BuildTarget buildTarget,
-        ImmutableSortedSet<Path> relativeCellRoots) {
+        ImmutableSortedSet<Path> relativeCellRoots,
+        boolean withDownwardApi) {
       this.linker = linker;
       this.output = new PublicOutputPath(output);
       this.extraOutputs =
           extraOutputs.values().stream()
               .map(PublicOutputPath::new)
               .collect(ImmutableList.toImmutableList());
+      this.withDownwardApi = withDownwardApi;
       Optional<Path> linkerMapPath = getLinkerMapPath(linker, output);
       if (linkerMapPath.isPresent()
           && LinkerMapMode.isLinkerMapEnabledForBuildTarget(buildTarget)) {
@@ -220,7 +267,8 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
                       linker.getEnvironment(context.getSourcePathResolver()),
                       linker.getCommandPrefix(context.getSourcePathResolver()),
                       argFilePath,
-                      scratchDir))
+                      scratchDir,
+                      withDownwardApi))
               .addAll(
                   postprocessor
                       .map(

@@ -38,8 +38,9 @@ public class MachoScrubContentSectionsStep extends ShellStep {
       ProjectFilesystem inputFilesystem,
       Path inputDylib,
       ProjectFilesystem outputFilesystem,
-      Path outputDylib) {
-    super(outputFilesystem.getRootPath());
+      Path outputDylib,
+      boolean withDownwardApi) {
+    super(outputFilesystem.getRootPath(), withDownwardApi);
     this.stripToolPrefix = stripToolPrefix;
     this.inputFilesystem = inputFilesystem;
     this.inputDylib = inputDylib;

@@ -37,8 +37,9 @@ class RanlibStep extends ShellStep {
       ImmutableMap<String, String> ranlibEnv,
       ImmutableList<String> ranlibPrefix,
       ImmutableList<String> ranlibFlags,
-      Path output) {
-    super(filesystem.getRootPath());
+      Path output,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
     Preconditions.checkArgument(!output.isAbsolute());
     this.ranlibEnv = ranlibEnv;
     this.ranlibPrefix = ranlibPrefix;

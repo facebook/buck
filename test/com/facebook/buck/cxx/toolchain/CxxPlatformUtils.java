@@ -34,6 +34,7 @@ import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
 import com.facebook.buck.util.config.Config;
 import com.facebook.buck.util.config.Configs;
@@ -48,7 +49,11 @@ public class CxxPlatformUtils {
 
   private CxxPlatformUtils() {}
 
-  public static final CxxBuckConfig DEFAULT_CONFIG = new CxxBuckConfig(FakeBuckConfig.empty());
+  public static final BuckConfig DEFAULT_BUCK_CONFIG = FakeBuckConfig.empty();
+
+  public static final CxxBuckConfig DEFAULT_CONFIG = new CxxBuckConfig(DEFAULT_BUCK_CONFIG);
+  public static final DownwardApiConfig DEFAULT_DOWNWARD_API_CONFIG =
+      DownwardApiConfig.of(DEFAULT_BUCK_CONFIG);
 
   public static final Tool DEFAULT_TOOL = new CommandTool.Builder().build();
 
@@ -88,7 +93,8 @@ public class CxxPlatformUtils {
           .setAr(ArchiverProvider.from(new GnuArchiver(DEFAULT_TOOL)))
           .setArchiveContents(ArchiveContents.NORMAL)
           .setRanlib(new ConstantToolProvider(DEFAULT_TOOL))
-          .setSymbolNameTool(new PosixNmSymbolNameTool(new ConstantToolProvider(DEFAULT_TOOL)))
+          .setSymbolNameTool(
+              new PosixNmSymbolNameTool(new ConstantToolProvider(DEFAULT_TOOL), false))
           .setSharedLibraryExtension("so")
           .setSharedLibraryVersionedExtensionFormat("so.%s")
           .setStaticLibraryExtension("a")
@@ -124,7 +130,7 @@ public class CxxPlatformUtils {
         .setAr(ArchiverProvider.from(new GnuArchiver(DEFAULT_TOOL)))
         .setArchiveContents(ArchiveContents.NORMAL)
         .setRanlib(new ConstantToolProvider(DEFAULT_TOOL))
-        .setSymbolNameTool(new PosixNmSymbolNameTool(new ConstantToolProvider(DEFAULT_TOOL)))
+        .setSymbolNameTool(new PosixNmSymbolNameTool(new ConstantToolProvider(DEFAULT_TOOL), false))
         .setSharedLibraryExtension("so")
         .setSharedLibraryVersionedExtensionFormat("so.%s")
         .setStaticLibraryExtension("a")
@@ -142,8 +148,9 @@ public class CxxPlatformUtils {
   public static final FlavorDomain<UnresolvedCxxPlatform> DEFAULT_PLATFORMS =
       FlavorDomain.of("C/C++ Platform", DEFAULT_UNRESOLVED_PLATFORM);
 
-  public static CxxPlatform build(CxxBuckConfig config) {
-    return DefaultCxxPlatforms.build(Platform.detect(), config);
+  public static CxxPlatform build(
+      CxxBuckConfig cxxBuckConfig, DownwardApiConfig downwardApiConfig) {
+    return DefaultCxxPlatforms.build(Platform.detect(), cxxBuckConfig, downwardApiConfig);
   }
 
   private static CxxPlatform getDefaultPlatform(Path root) throws IOException {
@@ -154,7 +161,9 @@ public class CxxPlatformUtils {
             .setFilesystem(TestProjectFilesystems.createProjectFilesystem(root))
             .setEnvironment(ImmutableMap.of())
             .build();
-    return DefaultCxxPlatforms.build(Platform.detect(), new CxxBuckConfig(buckConfig));
+    DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
+    return DefaultCxxPlatforms.build(
+        Platform.detect(), new CxxBuckConfig(buckConfig), downwardApiConfig);
   }
 
   public static HeaderMode getHeaderModeForDefaultPlatform(Path root) throws IOException {

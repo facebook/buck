@@ -38,6 +38,7 @@ import com.facebook.buck.cxx.CxxBinaryDescription;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -65,12 +66,17 @@ public class CgoLibraryDescription
 
   private final GoBuckConfig goBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
 
   public CgoLibraryDescription(
-      GoBuckConfig goBuckConfig, CxxBuckConfig cxxBuckConfig, ToolchainProvider toolchainProvider) {
+      GoBuckConfig goBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      ToolchainProvider toolchainProvider) {
     this.goBuckConfig = goBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
@@ -169,6 +175,7 @@ public class CgoLibraryDescription
                   graphBuilder,
                   context.getCellPathResolver(),
                   cxxBuckConfig,
+                  downwardApiConfig,
                   platform.get(),
                   args,
                   cxxDeps,

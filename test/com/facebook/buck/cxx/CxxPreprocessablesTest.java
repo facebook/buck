@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -146,7 +147,8 @@ public class CxxPreprocessablesTest {
     FakeProjectFilesystem filesystem = new FakeProjectFilesystem();
     CxxPlatform cxxPlatform =
         CxxPlatformUtils.build(
-            new CxxBuckConfig(FakeBuckConfig.builder().setFilesystem(filesystem).build()));
+            new CxxBuckConfig(FakeBuckConfig.builder().setFilesystem(filesystem).build()),
+            DEFAULT_DOWNWARD_API_CONFIG);
 
     // Setup a simple CxxPreprocessorDep which contributes components to preprocessing.
     BuildTarget cppDepTarget1 = BuildTargetFactory.newInstance("//:cpp1");
@@ -224,7 +226,9 @@ public class CxxPreprocessablesTest {
 
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
 
     // Create a native linkable that sits at the bottom of the dep chain.
     StringArg sentinal = StringArg.of("bottom");

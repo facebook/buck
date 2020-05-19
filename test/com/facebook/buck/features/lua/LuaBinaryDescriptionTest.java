@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.PrebuiltCxxLibraryBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.CxxPythonExtensionBuilder;
 import com.facebook.buck.features.python.PythonBinaryDescription;
 import com.facebook.buck.features.python.PythonBuckConfig;
@@ -276,7 +277,8 @@ public class LuaBinaryDescriptionTest {
                             PythonPlatformsProvider.DEFAULT_NAME,
                             PythonPlatformsProvider.of(pythonPlatforms))
                         .build(),
-                    cxxBuckConfig),
+                    cxxBuckConfig,
+                    DownwardApiConfig.of(FakeBuckConfig.empty())),
                 BuildTargetFactory.newInstance("//:binary"))
             .setMainModule("main")
             .setDeps(ImmutableSortedSet.of(cxxPythonExtensionBuilder.getTarget()));

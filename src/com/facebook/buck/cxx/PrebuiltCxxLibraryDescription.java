@@ -57,6 +57,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
@@ -120,11 +121,15 @@ public class PrebuiltCxxLibraryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public PrebuiltCxxLibraryDescription(
-      ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -247,6 +252,7 @@ public class PrebuiltCxxLibraryDescription
         BuildTargetPaths.getGenPath(projectFilesystem, sharedTarget, "%s").resolve(soname);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
@@ -370,7 +376,8 @@ public class PrebuiltCxxLibraryDescription
             projectFilesystem,
             graphBuilder,
             cxxPlatform,
-            sharedLibrary);
+            sharedLibrary,
+            downwardApiConfig.isEnabledForCxx());
   }
 
   @Override

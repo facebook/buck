@@ -58,9 +58,13 @@ public class PythonTestBuilder
         new PythonTestDescription(
             toolchainProvider,
             new PythonBinaryDescription(
-                toolchainProvider, pythonBuckConfig, CxxPlatformUtils.DEFAULT_CONFIG),
+                toolchainProvider,
+                pythonBuckConfig,
+                CxxPlatformUtils.DEFAULT_CONFIG,
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG),
             pythonBuckConfig,
-            CxxPlatformUtils.DEFAULT_CONFIG),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG),
         target);
   }
 

@@ -21,6 +21,7 @@ java_test(
         "//src/com/facebook/buck/core/toolchain/impl:impl",
         "//src/com/facebook/buck/cxx:rules",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
+        "//src/com/facebook/buck/downwardapi/config:config",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io/file:file",
         "//src/com/facebook/buck/parser/exceptions:exceptions",

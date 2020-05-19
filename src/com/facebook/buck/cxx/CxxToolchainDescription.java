@@ -45,6 +45,7 @@ import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.cxx.toolchain.linker.Linker.LinkableDepType;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -66,6 +67,12 @@ import org.immutables.value.Value;
  */
 public class CxxToolchainDescription
     implements DescriptionWithTargetGraph<CxxToolchainDescriptionArg> {
+
+  private final DownwardApiConfig downwardApiConfig;
+
+  public CxxToolchainDescription(DownwardApiConfig downwardApiConfig) {
+    this.downwardApiConfig = downwardApiConfig;
+  }
 
   @Override
   public BuildRule createBuildRule(
@@ -243,7 +250,9 @@ public class CxxToolchainDescription
     cxxPlatform.setRuntimeLdflags(runtimeLdFlags);
 
     cxxPlatform.setSymbolNameTool(
-        new PosixNmSymbolNameTool(new ConstantToolProvider(new HashedFileTool(args.getNm()))));
+        new PosixNmSymbolNameTool(
+            new ConstantToolProvider(new HashedFileTool(args.getNm())),
+            downwardApiConfig.isEnabledForCxx()));
 
     // User-configured cxx platforms are required to handle path sanitization themselves.
     cxxPlatform.setCompilerDebugPathSanitizer(NoopDebugPathSanitizer.INSTANCE);

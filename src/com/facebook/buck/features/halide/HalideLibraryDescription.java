@@ -57,6 +57,7 @@ import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -83,14 +84,17 @@ public class HalideLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final HalideBuckConfig halideBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public HalideLibraryDescription(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      HalideBuckConfig halideBuckConfig) {
+      HalideBuckConfig halideBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.halideBuckConfig = halideBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -157,6 +161,7 @@ public class HalideLibraryDescription
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             srcs,
             /* headers */ ImmutableMap.of(),

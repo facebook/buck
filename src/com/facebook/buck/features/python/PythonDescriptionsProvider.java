@@ -22,6 +22,7 @@ import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -35,17 +36,18 @@ public class PythonDescriptionsProvider implements DescriptionProvider {
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
     PythonBuckConfig pyConfig = new PythonBuckConfig(buckConfig);
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     PythonBinaryDescription pythonBinaryDescription =
-        new PythonBinaryDescription(toolchainProvider, pyConfig, cxxBuckConfig);
+        new PythonBinaryDescription(toolchainProvider, pyConfig, cxxBuckConfig, downwardApiConfig);
 
     return Arrays.asList(
         pythonBinaryDescription,
         new PrebuiltPythonLibraryDescription(toolchainProvider),
         new PythonLibraryDescription(toolchainProvider),
         new PythonTestDescription(
-            toolchainProvider, pythonBinaryDescription, pyConfig, cxxBuckConfig),
+            toolchainProvider, pythonBinaryDescription, pyConfig, cxxBuckConfig, downwardApiConfig),
         new PythonTestRunnerDescription(),
-        new CxxPythonExtensionDescription(toolchainProvider, cxxBuckConfig));
+        new CxxPythonExtensionDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig));
   }
 }

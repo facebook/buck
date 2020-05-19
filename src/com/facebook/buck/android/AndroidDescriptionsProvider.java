@@ -58,19 +58,22 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
 
     AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
         new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig);
+    AndroidInstallConfig androidInstallConfig = new AndroidInstallConfig(buckConfig);
     AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory();
 
     return Arrays.asList(
-        new AndroidAarDescription(androidManifestFactory, cxxBuckConfig, toolchainProvider),
+        new AndroidAarDescription(
+            androidManifestFactory, cxxBuckConfig, downwardApiConfig, toolchainProvider),
         new AndroidManifestDescription(androidManifestFactory),
         new AndroidAppModularityDescription(),
         new AndroidBinaryDescription(
             javaConfig,
             proGuardConfig,
             androidBuckConfig,
-            buckConfig,
+            androidInstallConfig,
             cxxBuckConfig,
             dxConfig,
+            downwardApiConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBinaryFactory(androidBuckConfig)),
@@ -82,6 +85,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             buckConfig,
             cxxBuckConfig,
             dxConfig,
+            downwardApiConfig,
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBundleFactory(androidBuckConfig)),
@@ -91,7 +95,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             cxxBuckConfig,
             dxConfig,
             toolchainProvider,
-            androidBuckConfig),
+            androidBuckConfig,
+            downwardApiConfig),
         new AndroidInstrumentationTestDescription(buckConfig, toolchainProvider),
         new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory, toolchainProvider),
         new AndroidPrebuiltAarDescription(toolchainProvider, androidBuckConfig),

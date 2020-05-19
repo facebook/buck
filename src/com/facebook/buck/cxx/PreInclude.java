@@ -266,7 +266,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolverAdapter pathResolver);
+      SourcePathResolverAdapter pathResolver,
+      boolean withDownwardApi);
 
   /**
    * Look up or build a precompiled header build rule which this build rule is requesting.
@@ -284,7 +285,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
       CxxToolFlags compilerFlags,
       DepsBuilder depsBuilder,
       BuildTarget buildTarget,
-      ActionGraphBuilder graphBuilder) {
+      ActionGraphBuilder graphBuilder,
+      boolean withDownwardApi) {
     return (CxxPrecompiledHeader)
         graphBuilder.computeIfAbsent(
             buildTarget,
@@ -323,7 +325,8 @@ public abstract class PreInclude extends NoopBuildRuleWithDeclaredAndExtraDeps
                   compilerFlags,
                   getHeaderSourcePath(),
                   sourceType,
-                  cxxPlatform.getCompilerDebugPathSanitizer());
+                  cxxPlatform.getCompilerDebugPathSanitizer(),
+                  withDownwardApi);
             });
   }
 }

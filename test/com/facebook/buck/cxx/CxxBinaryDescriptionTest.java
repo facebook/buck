@@ -160,6 +160,7 @@ public class CxxBinaryDescriptionTest {
             graphBuilder,
             graphBuilder.getSourcePathResolver(),
             CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             cxxPlatform,
             ImmutableList.of(),
             ImmutableMultimap.of(),

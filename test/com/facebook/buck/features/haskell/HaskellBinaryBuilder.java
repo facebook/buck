@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.haskell;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
@@ -23,6 +24,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.query.Query;
 import com.google.common.collect.ImmutableList;
 import java.util.Optional;
@@ -46,7 +48,8 @@ public class HaskellBinaryBuilder
                     HaskellPlatformsProvider.DEFAULT_NAME,
                     ImmutableHaskellPlatformsProvider.ofImpl(defaultPlatform, platforms))
                 .build(),
-            cxxBuckConfig),
+            cxxBuckConfig,
+            DownwardApiConfig.of(FakeBuckConfig.empty())),
         target);
   }
 

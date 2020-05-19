@@ -64,6 +64,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -116,11 +117,15 @@ public class CxxPythonExtensionDescription
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public CxxPythonExtensionDescription(
-      ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -238,6 +243,7 @@ public class CxxPythonExtensionDescription
             graphBuilder,
             graphBuilder.getSourcePathResolver(),
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             cxxPreprocessorInput,
             compilerFlags,
@@ -334,6 +340,7 @@ public class CxxPythonExtensionDescription
     ImmutableSet<BuildRule> deps = getPlatformDeps(graphBuilder, pythonPlatform, cxxPlatform, args);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         projectFilesystem,
         graphBuilder,

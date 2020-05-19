@@ -16,6 +16,8 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
+
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
@@ -60,14 +62,18 @@ public class CxxLibraryBuilder
             .withToolchain(
                 CxxPlatformsProvider.DEFAULT_NAME,
                 CxxPlatformsProvider.of(
-                    new StaticUnresolvedCxxPlatform(CxxPlatformUtils.build(cxxBuckConfig)),
+                    new StaticUnresolvedCxxPlatform(
+                        CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG)),
                     cxxPlatforms))
             .build();
     CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors =
         new CxxLibraryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     CxxLibraryFactory cxxLibraryFactory =
         new CxxLibraryFactory(
-            toolchainProvider, cxxBuckConfig, new InferBuckConfig(FakeBuckConfig.empty()));
+            toolchainProvider,
+            cxxBuckConfig,
+            new InferBuckConfig(FakeBuckConfig.empty()),
+            DEFAULT_DOWNWARD_API_CONFIG);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(
             toolchainProvider, cxxBuckConfig.getDelegate().getFilesystem());

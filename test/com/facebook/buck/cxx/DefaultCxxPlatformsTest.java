@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -48,7 +49,8 @@ public class DefaultCxxPlatformsTest {
                                 "cppflags", "-DCFOO",
                                 "cxxflags", "-std=c++11",
                                 "cxxppflags", "-DCXXFOO")))
-                    .build()));
+                    .build()),
+            DEFAULT_DOWNWARD_API_CONFIG);
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     SourcePathResolverAdapter resolver = ruleResolver.getSourcePathResolver();
     assertThat(Arg.stringify(cxxPlatform.getCflags(), resolver), containsInAnyOrder("-std=gnu11"));
@@ -67,7 +69,8 @@ public class DefaultCxxPlatformsTest {
                 FakeBuckConfig.builder()
                     .setSections(
                         ImmutableMap.of("cxx", ImmutableMap.of("archive_contents", "thin")))
-                    .build()));
+                    .build()),
+            DEFAULT_DOWNWARD_API_CONFIG);
     assertEquals(cxxPlatform.getArchiveContents(), ArchiveContents.THIN);
   }
 }

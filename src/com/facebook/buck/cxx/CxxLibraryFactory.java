@@ -50,6 +50,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SanitizedArg;
@@ -78,14 +79,17 @@ public class CxxLibraryFactory {
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public CxxLibraryFactory(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      InferBuckConfig inferBuckConfig) {
+      InferBuckConfig inferBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.inferBuckConfig = inferBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   public BuildRule createBuildRule(
@@ -144,6 +148,7 @@ public class CxxLibraryFactory {
               graphBuilder,
               cellRoots,
               cxxBuckConfig,
+              downwardApiConfig,
               cxxPlatformOrDefault,
               cxxPlatformOrDefault.getPicTypeForSharedLinking(),
               args,
@@ -169,6 +174,7 @@ public class CxxLibraryFactory {
               graphBuilder,
               cellRoots,
               cxxBuckConfig,
+              downwardApiConfig,
               cxxPlatformOrDefault,
               cxxPlatformOrDefault.getPicTypeForSharedLinking(),
               args,
@@ -186,7 +192,9 @@ public class CxxLibraryFactory {
           parseCxxSourcesFromArgs(
               targetWithoutDiagnosticsFlavor, graphBuilder, cxxPlatformOrDefault, args);
       ImmutableSortedSet<SourcePath> extractionRuleInputs =
-          sourceRuleFactory.requireDiagnosticExtractionBuildRules(sources, toolsBuilder.build())
+          sourceRuleFactory
+              .requireDiagnosticExtractionBuildRules(
+                  sources, toolsBuilder.build(), downwardApiConfig.isEnabledForCxx())
               .stream()
               .map(BuildRule::getSourcePathToOutput)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural()));
@@ -233,6 +241,7 @@ public class CxxLibraryFactory {
           graphBuilder,
           cellRoots,
           cxxBuckConfig,
+          downwardApiConfig,
           cxxPlatformOrDefaultSupplier.get(),
           args,
           inferBuckConfig);
@@ -272,6 +281,7 @@ public class CxxLibraryFactory {
               graphBuilder,
               cellRoots,
               cxxBuckConfig,
+              downwardApiConfig,
               platform.get(),
               args,
               cxxDeps.get(graphBuilder, platform.get()),
@@ -288,7 +298,8 @@ public class CxxLibraryFactory {
               projectFilesystem,
               graphBuilder,
               platform.get(),
-              cxxBuckConfig.isIndependentSharedLibraryInterfaces());
+              cxxBuckConfig.isIndependentSharedLibraryInterfaces(),
+              downwardApiConfig.isEnabledForCxx());
         case MACH_O_BUNDLE:
           return createSharedLibraryBuildRule(
               untypedBuildTarget,
@@ -296,6 +307,7 @@ public class CxxLibraryFactory {
               graphBuilder,
               cellRoots,
               cxxBuckConfig,
+              downwardApiConfig,
               platform.get(),
               args,
               cxxDeps.get(graphBuilder, platform.get()),
@@ -313,6 +325,7 @@ public class CxxLibraryFactory {
               graphBuilder,
               cellRoots,
               cxxBuckConfig,
+              downwardApiConfig,
               platform.get(),
               args,
               cxxDeps.get(graphBuilder, platform.get()),
@@ -326,6 +339,7 @@ public class CxxLibraryFactory {
               graphBuilder,
               cellRoots,
               cxxBuckConfig,
+              downwardApiConfig,
               platform.get(),
               args,
               cxxDeps.get(graphBuilder, platform.get()),
@@ -395,6 +409,7 @@ public class CxxLibraryFactory {
                 ruleResolverInner,
                 cellRoots,
                 cxxBuckConfig,
+                downwardApiConfig,
                 cxxPlatform,
                 args,
                 cxxDeps.get(ruleResolverInner, cxxPlatform),
@@ -454,6 +469,7 @@ public class CxxLibraryFactory {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       PicType pic,
       CxxLibraryDescriptionArg args,
@@ -470,6 +486,7 @@ public class CxxLibraryFactory {
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             pic,
             args,
@@ -492,6 +509,7 @@ public class CxxLibraryFactory {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       PicType pic,
       CxxLibraryDescriptionArg args,
@@ -505,6 +523,7 @@ public class CxxLibraryFactory {
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             pic,
             args,
@@ -529,6 +548,7 @@ public class CxxLibraryFactory {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       PicType pic,
       CxxLibraryDescriptionArg args,
@@ -575,6 +595,7 @@ public class CxxLibraryFactory {
         graphBuilder,
         graphBuilder.getSourcePathResolver(),
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         CxxLibraryDescription.getPreprocessorInputsForBuildingLibrarySources(
             cxxBuckConfig,
@@ -599,6 +620,7 @@ public class CxxLibraryFactory {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       CxxLibraryDescriptionArg arg,
       ImmutableSet<BuildRule> deps,
@@ -624,6 +646,7 @@ public class CxxLibraryFactory {
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             cxxPlatform.getPicTypeForSharedLinking(),
             arg,
@@ -660,6 +683,7 @@ public class CxxLibraryFactory {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
@@ -690,6 +714,7 @@ public class CxxLibraryFactory {
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             cxxPlatform.getPicTypeForSharedLinking(),
             args,
@@ -729,6 +754,7 @@ public class CxxLibraryFactory {
             );
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
@@ -826,6 +852,7 @@ public class CxxLibraryFactory {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
@@ -841,6 +868,7 @@ public class CxxLibraryFactory {
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             pic,
             args,
@@ -869,7 +897,8 @@ public class CxxLibraryFactory {
         graphBuilder,
         cxxPlatform,
         staticLibraryName,
-        ImmutableList.copyOf(objects));
+        ImmutableList.copyOf(objects),
+        downwardApiConfig.isEnabledForCxx());
   }
 
   /** @return a {@link CxxLink} rule which builds a shared library version of this C/C++ library. */
@@ -879,6 +908,7 @@ public class CxxLibraryFactory {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       CxxLibraryDescriptionArg args,
       ImmutableSet<BuildRule> deps,
@@ -918,6 +948,7 @@ public class CxxLibraryFactory {
         graphBuilder,
         cellRoots,
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         args,
         deps,
@@ -958,7 +989,8 @@ public class CxxLibraryFactory {
             projectFilesystem,
             graphBuilder,
             cxxPlatform,
-            sharedLibrary.getSourcePathToOutput());
+            sharedLibrary.getSourcePathToOutput(),
+            downwardApiConfig.isEnabledForCxx());
   }
 
   // Create a shared library interface directly from this rule's object files -- independent of the
@@ -968,7 +1000,8 @@ public class CxxLibraryFactory {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
-      SharedLibraryInterfaceParams params) {
+      SharedLibraryInterfaceParams params,
+      boolean withDownwardApi) {
 
     NativeLinkTarget linkTarget =
         ((NativeLinkTargetGroup)
@@ -1027,7 +1060,8 @@ public class CxxLibraryFactory {
             graphBuilder,
             soname,
             linker,
-            args);
+            args,
+            withDownwardApi);
   }
 
   private BuildRule createSharedLibraryInterface(
@@ -1035,7 +1069,8 @@ public class CxxLibraryFactory {
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
-      boolean isIndependentInterfaces) {
+      boolean isIndependentInterfaces,
+      boolean withDownwardApi) {
 
     Optional<SharedLibraryInterfaceParams> params = cxxPlatform.getSharedLibraryInterfaceParams();
     if (!params.isPresent()) {
@@ -1046,7 +1081,7 @@ public class CxxLibraryFactory {
 
     return isIndependentInterfaces
         ? createIndependentSharedLibraryInterface(
-            baseTarget, projectFilesystem, graphBuilder, cxxPlatform, params.get())
+            baseTarget, projectFilesystem, graphBuilder, cxxPlatform, params.get(), withDownwardApi)
         : createDependentSharedLibraryInterface(
             baseTarget, projectFilesystem, graphBuilder, cxxPlatform, params.get());
   }

@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.ArgFactory;
@@ -98,6 +99,8 @@ public abstract class CxxSourceRuleFactory {
   protected abstract SourcePathResolverAdapter getPathResolver();
 
   protected abstract CxxBuckConfig getCxxBuckConfig();
+
+  protected abstract DownwardApiConfig getDownwardApiConfig();
 
   protected abstract CxxPlatform getCxxPlatform();
 
@@ -395,7 +398,8 @@ public abstract class CxxSourceRuleFactory {
         source.getPath(),
         thinIndicesRoot,
         source.getType(),
-        getSanitizer());
+        getSanitizer(),
+        getDownwardApiConfig().isEnabledForCxx());
   }
 
   /**
@@ -419,7 +423,8 @@ public abstract class CxxSourceRuleFactory {
         getCompileOutputName(name),
         source.getPath(),
         source.getType(),
-        getSanitizer());
+        getSanitizer(),
+        getDownwardApiConfig().isEnabledForCxx());
   }
 
   private CompilerDelegate makeCompilerDelegateForCompileOnly(CxxSource source) {
@@ -497,7 +502,10 @@ public abstract class CxxSourceRuleFactory {
   }
 
   private CxxInferCapture requireInferCaptureBuildRule(
-      String name, CxxSource source, InferBuckConfig inferConfig) {
+      String name,
+      CxxSource source,
+      InferBuckConfig inferConfig,
+      DownwardApiConfig downwardApiConfig) {
     return (CxxInferCapture)
         getActionGraphBuilder()
             .computeIfAbsent(
@@ -550,7 +558,8 @@ public abstract class CxxSourceRuleFactory {
                       getPreInclude(),
                       getCompileOutputName(name),
                       preprocessorDelegateValue.getPreprocessorDelegate(),
-                      inferConfig);
+                      inferConfig,
+                      downwardApiConfig.isEnabledForCxx());
                 });
   }
 
@@ -616,7 +625,8 @@ public abstract class CxxSourceRuleFactory {
         source.getPath(),
         source.getType(),
         precompiledHeaderRule,
-        getSanitizer());
+        getSanitizer(),
+        getDownwardApiConfig().isEnabledForCxx());
   }
 
   private Pair<PreprocessorDelegate, Optional<CxxPrecompiledHeader>>
@@ -678,7 +688,8 @@ public abstract class CxxSourceRuleFactory {
             sourceType,
             source.getFlags(),
             getActionGraphBuilder(),
-            getPathResolver()));
+            getPathResolver(),
+            getDownwardApiConfig().isEnabledForCxx()));
   }
 
   @VisibleForTesting
@@ -721,7 +732,8 @@ public abstract class CxxSourceRuleFactory {
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolverAdapter pathResolver) {
+      SourcePathResolverAdapter pathResolver,
+      boolean withDownwardApi) {
 
     // This method should be called only if prefix/precompiled header param present.
     Preconditions.checkState(getPreInclude().isPresent());
@@ -738,11 +750,12 @@ public abstract class CxxSourceRuleFactory {
         sourceType,
         sourceFlags,
         graphBuilder,
-        pathResolver);
+        pathResolver,
+        withDownwardApi);
   }
 
   private CxxDiagnosticExtractionRule createDiagnosticExtractionBuildRule(
-      BuildTarget target, CxxSource source, Pair<String, Tool> tools) {
+      BuildTarget target, CxxSource source, Pair<String, Tool> tools, boolean withDownwardApi) {
     Optional<CxxPrecompiledHeader> pch = Optional.empty();
     Optional<PreprocessorDelegate> preprocessorDelegate = Optional.empty();
     CompilerDelegate compilerDelegate;
@@ -768,21 +781,26 @@ public abstract class CxxSourceRuleFactory {
         source.getPath(),
         pch,
         source.getType(),
-        getSanitizer());
+        getSanitizer(),
+        withDownwardApi);
   }
 
   private CxxDiagnosticExtractionRule requireDiagnosticExtractionBuildRule(
-      String name, CxxSource source, Pair<String, Tool> diagnostic) {
+      String name, CxxSource source, Pair<String, Tool> diagnostic, boolean withDownwardApi) {
     return (CxxDiagnosticExtractionRule)
         getActionGraphBuilder()
             .computeIfAbsent(
                 createDiagnosticExtractionBuildTarget(name, diagnostic.getFirst()),
-                target -> createDiagnosticExtractionBuildRule(target, source, diagnostic));
+                target ->
+                    createDiagnosticExtractionBuildRule(
+                        target, source, diagnostic, withDownwardApi));
   }
 
   /** Returns diagnostics rule given a set of Cxx sources and tools to produce such diagnostics. */
   public ImmutableSortedSet<CxxDiagnosticExtractionRule> requireDiagnosticExtractionBuildRules(
-      ImmutableMap<String, CxxSource> sources, ImmutableMap<String, Tool> tools) {
+      ImmutableMap<String, CxxSource> sources,
+      ImmutableMap<String, Tool> tools,
+      boolean withDownwardApi) {
     ImmutableSortedSet.Builder<CxxDiagnosticExtractionRule> extractionRules =
         ImmutableSortedSet.naturalOrder();
 
@@ -792,7 +810,8 @@ public abstract class CxxSourceRuleFactory {
             requireDiagnosticExtractionBuildRule(
                 nameSourceEntry.getKey(),
                 nameSourceEntry.getValue(),
-                new Pair<>(diagnosticNameToolEntry.getKey(), diagnosticNameToolEntry.getValue()));
+                new Pair<>(diagnosticNameToolEntry.getKey(), diagnosticNameToolEntry.getValue()),
+                withDownwardApi);
         extractionRules.add(extractionRule);
       }
     }
@@ -801,7 +820,9 @@ public abstract class CxxSourceRuleFactory {
   }
 
   public ImmutableSet<CxxInferCapture> requireInferCaptureBuildRules(
-      ImmutableMap<String, CxxSource> sources, InferBuckConfig inferConfig) {
+      ImmutableMap<String, CxxSource> sources,
+      InferBuckConfig inferConfig,
+      DownwardApiConfig downwardApiConfig) {
 
     ImmutableSet.Builder<CxxInferCapture> objects = ImmutableSet.builder();
 
@@ -818,7 +839,8 @@ public abstract class CxxSourceRuleFactory {
           CxxSourceTypes.isPreprocessableType(source.getType()),
           "Only preprocessable source types are currently supported");
 
-      CxxInferCapture rule = requireInferCaptureBuildRule(name, source, inferConfig);
+      CxxInferCapture rule =
+          requireInferCaptureBuildRule(name, source, inferConfig, downwardApiConfig);
       objects.add(rule);
     }
 
@@ -876,6 +898,7 @@ public abstract class CxxSourceRuleFactory {
       ActionGraphBuilder actionGraphBuilder,
       SourcePathResolverAdapter pathResolver,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<CxxPreprocessorInput> cxxPreprocessorInput,
       ImmutableMultimap<CxxSource.Type, Arg> compilerFlags,
@@ -888,6 +911,7 @@ public abstract class CxxSourceRuleFactory {
         actionGraphBuilder,
         pathResolver,
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         cxxPreprocessorInput,
         compilerFlags,

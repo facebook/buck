@@ -48,6 +48,7 @@ import com.facebook.buck.cxx.toolchain.CxxToolProvider;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.PreprocessorProvider;
 import com.facebook.buck.cxx.toolchain.ToolType;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.AllExistingProjectFilesystem;
@@ -81,8 +82,14 @@ public class CxxSourceRuleFactoryTest {
 
   private static final ProjectFilesystem PROJECT_FILESYSTEM = new FakeProjectFilesystem();
 
-  private static final CxxPlatform CXX_PLATFORM =
-      CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+  private static final CxxPlatform CXX_PLATFORM;
+
+  static {
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
+    CXX_PLATFORM = CxxPlatformUtils.build(cxxBuckConfig, downwardApiConfig);
+  }
 
   private static <T> void assertContains(ImmutableList<T> container, Iterable<T> items) {
     for (T item : items) {
@@ -116,6 +123,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               graphBuilder.getSourcePathResolver(),
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               CXX_PLATFORM,
               ImmutableList.of(cxxPreprocessorInput),
               ImmutableMultimap.of(),
@@ -152,15 +160,14 @@ public class CxxSourceRuleFactoryTest {
       SourcePathResolverAdapter pathResolver = graphBuilder.getSourcePathResolver();
 
       ImmutableList<String> platformFlags = ImmutableList.of("-some", "-flags");
+      BuckConfig buckConfig =
+          FakeBuckConfig.builder()
+              .setSections(
+                  ImmutableMap.of(
+                      "cxx", ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags))))
+              .build();
       CxxPlatform platform =
-          CxxPlatformUtils.build(
-              new CxxBuckConfig(
-                  FakeBuckConfig.builder()
-                      .setSections(
-                          ImmutableMap.of(
-                              "cxx",
-                              ImmutableMap.of("cxxppflags", Joiner.on(" ").join(platformFlags))))
-                      .build()));
+          CxxPlatformUtils.build(new CxxBuckConfig(buckConfig), DownwardApiConfig.of(buckConfig));
 
       CxxPreprocessorInput cxxPreprocessorInput = CxxPreprocessorInput.of();
 
@@ -171,6 +178,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               pathResolver,
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               platform,
               ImmutableList.of(cxxPreprocessorInput),
               ImmutableMultimap.of(),
@@ -225,6 +233,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               graphBuilder.getSourcePathResolver(),
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               CXX_PLATFORM,
               ImmutableList.of(),
               ImmutableMultimap.of(),
@@ -264,6 +273,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               pathResolver,
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               CXX_PLATFORM,
               ImmutableList.of(),
               ImmutableMultimap.of(),
@@ -277,6 +287,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               pathResolver,
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               CXX_PLATFORM,
               ImmutableList.of(),
               ImmutableMultimap.of(),
@@ -342,7 +353,8 @@ public class CxxSourceRuleFactoryTest {
               .setSections(ImmutableMap.of("cxx", ImmutableMap.of("pch_enabled", "false")))
               .build();
       CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
-      CxxPlatform platform = CxxPlatformUtils.build(cxxBuckConfig);
+      DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
+      CxxPlatform platform = CxxPlatformUtils.build(cxxBuckConfig, downwardApiConfig);
 
       String prefixHeaderName = "test.pch";
       SourcePath prefixHeaderSourcePath = FakeSourcePath.of(filesystem, prefixHeaderName);
@@ -354,6 +366,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               pathResolver,
               cxxBuckConfig,
+              downwardApiConfig,
               platform,
               ImmutableList.of(),
               ImmutableMultimap.of(),
@@ -381,7 +394,8 @@ public class CxxSourceRuleFactoryTest {
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
       BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
-      CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
+      CxxPlatform platform =
+          CxxPlatformUtils.build(new CxxBuckConfig(buckConfig), DownwardApiConfig.of(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.of(
@@ -390,6 +404,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               graphBuilder.getSourcePathResolver(),
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               platform,
               ImmutableList.of(),
               ImmutableMultimap.of(),
@@ -447,6 +462,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               graphBuilder.getSourcePathResolver(),
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               cxxPlatform,
               ImmutableList.of(CxxPreprocessorInput.of()),
               ImmutableMultimap.of(),
@@ -526,7 +542,8 @@ public class CxxSourceRuleFactoryTest {
       ProjectFilesystem filesystem = new AllExistingProjectFilesystem();
 
       BuckConfig buckConfig = FakeBuckConfig.builder().setFilesystem(filesystem).build();
-      CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
+      CxxPlatform platform =
+          CxxPlatformUtils.build(new CxxBuckConfig(buckConfig), DownwardApiConfig.of(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.of(
@@ -535,6 +552,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               graphBuilder.getSourcePathResolver(),
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               platform,
               ImmutableList.of(),
               ImmutableMultimap.of(),
@@ -652,7 +670,8 @@ public class CxxSourceRuleFactoryTest {
                           .build()))
               .setFilesystem(PROJECT_FILESYSTEM)
               .build();
-      CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
+      CxxPlatform platform =
+          CxxPlatformUtils.build(new CxxBuckConfig(buckConfig), DownwardApiConfig.of(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.of(
@@ -661,6 +680,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               sourcePathResolverAdapter,
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               platform,
               ImmutableList.of(cxxPreprocessorInput),
               ImmutableMultimap.of(),
@@ -702,7 +722,8 @@ public class CxxSourceRuleFactoryTest {
                           .build()))
               .setFilesystem(PROJECT_FILESYSTEM)
               .build();
-      CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(buckConfig));
+      CxxPlatform platform =
+          CxxPlatformUtils.build(new CxxBuckConfig(buckConfig), DownwardApiConfig.of(buckConfig));
 
       CxxSourceRuleFactory cxxSourceRuleFactory =
           CxxSourceRuleFactory.of(
@@ -711,6 +732,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               sourcePathResolverAdapter,
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               platform,
               ImmutableList.of(),
               CxxFlags.toLanguageFlags(StringArg.from(expectedCompilerFlags)),
@@ -766,6 +788,7 @@ public class CxxSourceRuleFactoryTest {
               graphBuilder,
               sourcePathResolverAdapter,
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               CXX_PLATFORM,
               ImmutableList.of(),
               ImmutableMultimap.of(),

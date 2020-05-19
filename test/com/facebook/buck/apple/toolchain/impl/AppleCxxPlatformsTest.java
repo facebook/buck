@@ -931,6 +931,7 @@ public class AppleCxxPlatformsTest {
               graphBuilder,
               graphBuilder.getSourcePathResolver(),
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               entry.getValue().getCxxPlatform(),
               ImmutableList.of(),
               ImmutableMultimap.of(),
@@ -982,6 +983,7 @@ public class AppleCxxPlatformsTest {
       BuildRule rule =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               entry.getValue().getCxxPlatform(),
               new FakeProjectFilesystem(),
               graphBuilder,

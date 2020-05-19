@@ -43,7 +43,8 @@ public class CxxLinkStepTest {
             ImmutableMap.of(),
             linker,
             projectFilesystem.getRootPath().resolve("argfile.txt").getPath(),
-            Paths.get("scratchDir"));
+            Paths.get("scratchDir"),
+            false);
 
     // Verify it uses the expected command.
     ImmutableList<String> expected =

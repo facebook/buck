@@ -45,6 +45,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.PexToolProvider;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
@@ -86,6 +87,7 @@ public class PythonBinaryDescription
   private final ToolchainProvider toolchainProvider;
   private final PythonBuckConfig pythonBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   static FlavorDomain<PythonBuckConfig.PackageStyle> PACKAGE_STYLE =
       FlavorDomain.from("Package Style", PythonBuckConfig.PackageStyle.class);
@@ -93,10 +95,12 @@ public class PythonBinaryDescription
   public PythonBinaryDescription(
       ToolchainProvider toolchainProvider,
       PythonBuckConfig pythonBuckConfig,
-      CxxBuckConfig cxxBuckConfig) {
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.pythonBuckConfig = pythonBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -382,6 +386,7 @@ public class PythonBinaryDescription
             root,
             pythonPlatform,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             PythonUtil.getParamForPlatform(
                     pythonPlatform,

@@ -55,6 +55,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.CxxPythonExtension;
 import com.facebook.buck.features.python.PythonBinaryDescription;
 import com.facebook.buck.features.python.PythonMappedComponents;
@@ -100,10 +101,15 @@ public class LuaBinaryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
-  public LuaBinaryDescription(ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+  public LuaBinaryDescription(
+      ToolchainProvider toolchainProvider,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -195,6 +201,7 @@ public class LuaBinaryDescription
             cellPathResolver,
             luaPlatform,
             cxxBuckConfig,
+            downwardApiConfig,
             target,
             output,
             mainModule,
@@ -404,6 +411,7 @@ public class LuaBinaryDescription
               cellPathResolver,
               graphBuilder,
               cxxBuckConfig,
+              downwardApiConfig,
               cxxPlatform,
               ImmutableList.of(),
               roots.getIncludedRoots().values(),

@@ -63,7 +63,10 @@ public class ArchiveStepIntegrationTest {
   public void thatGeneratedArchivesAreDeterministic() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform platform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()),
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
@@ -87,7 +90,8 @@ public class ArchiveStepIntegrationTest {
             output,
             ImmutableList.of(input),
             archiver,
-            filesystem.getPath("scratchDir"));
+            filesystem.getPath("scratchDir"),
+            false);
     FileScrubberStep fileScrubberStep =
         new FileScrubberStep(filesystem, output, archiver.getScrubbers());
 
@@ -125,7 +129,8 @@ public class ArchiveStepIntegrationTest {
                 FakeBuckConfig.builder()
                     .setFilesystem(filesystem)
                     .setSections(CxxToolchainUtilsForTests.configureCxxToolchainsAndGetConfig())
-                    .build()));
+                    .build()),
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
@@ -144,7 +149,8 @@ public class ArchiveStepIntegrationTest {
             output,
             ImmutableList.of(),
             archiver,
-            filesystem.getPath("scratchDir"));
+            filesystem.getPath("scratchDir"),
+            false);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
@@ -164,7 +170,10 @@ public class ArchiveStepIntegrationTest {
   public void inputDirs() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform platform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()),
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
@@ -186,7 +195,8 @@ public class ArchiveStepIntegrationTest {
             output,
             ImmutableList.of(input.getParent()),
             archiver,
-            filesystem.getPath("scratchDir"));
+            filesystem.getPath("scratchDir"),
+            false);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();
@@ -207,7 +217,10 @@ public class ArchiveStepIntegrationTest {
   public void thinArchives() throws IOException, InterruptedException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform platform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()),
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
@@ -240,7 +253,8 @@ public class ArchiveStepIntegrationTest {
             output,
             ImmutableList.of(input),
             archiver,
-            filesystem.getPath("scratchDir"));
+            filesystem.getPath("scratchDir"),
+            false);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstanceWithRealProcessExecutor();

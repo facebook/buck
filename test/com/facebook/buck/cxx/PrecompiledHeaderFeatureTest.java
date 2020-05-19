@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
@@ -439,6 +440,7 @@ public class PrecompiledHeaderFeatureTest {
         graphBuilder,
         graphBuilder.getSourcePathResolver(),
         cxxBuckConfig,
+        DEFAULT_DOWNWARD_API_CONFIG,
         cxxPlatform,
         cxxPreprocessorInput,
         compilerFlags,
@@ -464,7 +466,7 @@ public class PrecompiledHeaderFeatureTest {
    *     not support PCH.
    */
   private static CxxPlatform buildPlatform(CxxToolProvider.Type type, boolean pchEnabled) {
-    return CxxPlatformUtils.build(buildConfig(pchEnabled))
+    return CxxPlatformUtils.build(buildConfig(pchEnabled), DEFAULT_DOWNWARD_API_CONFIG)
         .withCpp(
             new PreprocessorProvider(
                 new ConstantToolProvider(

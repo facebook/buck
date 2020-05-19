@@ -84,7 +84,7 @@ public class WorkerShellStepTest {
         Optional.ofNullable(cmdParams),
         Optional.ofNullable(bashParams),
         Optional.ofNullable(cmdExeParams),
-        new WorkerProcessPoolFactory(new FakeProjectFilesystem()));
+        new WorkerProcessPoolFactory(new FakeProjectFilesystem(), false));
   }
 
   private WorkerJobParams createJobParams() {
@@ -368,7 +368,7 @@ public class WorkerShellStepTest {
                     ImmutableList.of(), ImmutableMap.of("BAK", "chicken"), "$FOO $BAR $BAZ $BAK")),
             Optional.empty(),
             Optional.empty(),
-            new WorkerProcessPoolFactory(new FakeProjectFilesystem())) {
+            new WorkerProcessPoolFactory(new FakeProjectFilesystem(), false)) {
 
           @Override
           protected ImmutableMap<String, String> getEnvironmentVariables() {
@@ -420,7 +420,7 @@ public class WorkerShellStepTest {
             Optional.ofNullable(jobParams),
             Optional.empty(),
             Optional.empty(),
-            new WorkerProcessPoolFactory(new FakeProjectFilesystem()) {
+            new WorkerProcessPoolFactory(new FakeProjectFilesystem(), false) {
               @Override
               public WorkerProcess createWorkerProcess(
                   ProcessExecutorParams processParams, ExecutionContext context, Path tmpDir)

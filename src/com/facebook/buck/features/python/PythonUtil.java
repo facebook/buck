@@ -36,6 +36,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -306,6 +307,7 @@ public class PythonUtil {
       PythonPackagable binary,
       PythonPlatform pythonPlatform,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       NativeLinkStrategy nativeLinkStrategy,
@@ -396,6 +398,7 @@ public class PythonUtil {
               cellPathResolver,
               graphBuilder,
               cxxBuckConfig,
+              downwardApiConfig,
               cxxPlatform,
               extraLdflags,
               roots.getIncludedRoots().values(),

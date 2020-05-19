@@ -46,6 +46,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.PicType;
 import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -459,7 +460,9 @@ public class OCamlIntegrationTest {
         createStaticLibraryBuildTarget(libplus).withAppendedFlavors(DefaultCxxPlatforms.FLAVOR);
     BuildTarget cclib = BuildTargetFactory.newInstance("//clib:cc");
 
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(new CxxBuckConfig(buckConfig), DownwardApiConfig.of(buckConfig));
     CxxSourceRuleFactory cxxSourceRuleFactory =
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), cclib, cxxPlatform);
     BuildTarget cclibbin =

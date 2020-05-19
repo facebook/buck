@@ -55,6 +55,7 @@ import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
@@ -304,7 +305,7 @@ public class AppleCxxPlatforms {
         UserFlavor.of(
             Flavor.replaceInvalidCharacters(targetSdk.getName() + "-" + targetArchitecture),
             String.format("SDK: %s, architecture: %s", targetSdk.getName(), targetArchitecture));
-    CxxBuckConfig config =
+    CxxBuckConfig cxxBuckConfig =
         appleConfig.useFlavoredCxxSections()
             ? new CxxBuckConfig(buckConfig, targetFlavor)
             : new CxxBuckConfig(buckConfig);
@@ -326,7 +327,7 @@ public class AppleCxxPlatforms {
     DebugPathSanitizer compilerDebugPathSanitizer =
         new PrefixMapDebugPathSanitizer(
             DebugPathSanitizer.getPaddedDir(
-                ".", config.getDebugPathSanitizerLimit(), File.separatorChar),
+                ".", cxxBuckConfig.getDebugPathSanitizerLimit(), File.separatorChar),
             sanitizerPaths.build());
 
     ImmutableList<String> cflags = cflagsBuilder.build();
@@ -382,7 +383,7 @@ public class AppleCxxPlatforms {
             new ConstantToolProvider(clangPath),
             CxxToolProvider.Type.CLANG,
             ToolType.AS,
-            config.getUseDetailedUntrackedHeaderMessages());
+            cxxBuckConfig.getUseDetailedUntrackedHeaderMessages());
     PreprocessorProvider cpp =
         new PreprocessorProvider(
             new ConstantToolProvider(clangPath), CxxToolProvider.Type.CLANG, ToolType.CPP);
@@ -391,7 +392,7 @@ public class AppleCxxPlatforms {
             new ConstantToolProvider(clangPath),
             CxxToolProvider.Type.CLANG,
             ToolType.CC,
-            config.getUseDetailedUntrackedHeaderMessages());
+            cxxBuckConfig.getUseDetailedUntrackedHeaderMessages());
     PreprocessorProvider cxxpp =
         new PreprocessorProvider(
             new ConstantToolProvider(clangXxPath), CxxToolProvider.Type.CLANG, ToolType.CXXPP);
@@ -400,7 +401,7 @@ public class AppleCxxPlatforms {
             new ConstantToolProvider(clangXxPath),
             CxxToolProvider.Type.CLANG,
             ToolType.CXX,
-            config.getUseDetailedUntrackedHeaderMessages());
+            cxxBuckConfig.getUseDetailedUntrackedHeaderMessages());
     ImmutableList.Builder<String> whitelistBuilder = ImmutableList.builder();
     whitelistBuilder.add("^" + Pattern.quote(sdkPaths.getSdkPath().toString()) + "\\/.*");
     whitelistBuilder.add(
@@ -416,7 +417,9 @@ public class AppleCxxPlatforms {
       }
     }
     HeaderVerification headerVerification =
-        config.getHeaderVerificationOrIgnore().withPlatformWhitelist(whitelistBuilder.build());
+        cxxBuckConfig
+            .getHeaderVerificationOrIgnore()
+            .withPlatformWhitelist(whitelistBuilder.build());
     LOG.debug(
         "Headers verification platform whitelist: %s", headerVerification.getPlatformWhitelist());
     ImmutableList<String> ldFlags =
@@ -425,11 +428,14 @@ public class AppleCxxPlatforms {
         ImmutableList.<String>builder().addAll(cflags).addAll(ldFlags).build();
     ImmutableList<Arg> cflagsArgs = ImmutableList.copyOf(StringArg.from(cflags));
 
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+
     CxxPlatform cxxPlatform =
         CxxPlatforms.build(
             targetFlavor,
             Platform.MACOS,
-            config,
+            cxxBuckConfig,
+            downwardApiConfig,
             as,
             aspp,
             cc,
@@ -439,7 +445,7 @@ public class AppleCxxPlatforms {
             new DefaultLinkerProvider(
                 LinkerProvider.Type.DARWIN,
                 new ConstantToolProvider(clangXxPath),
-                config.shouldCacheLinks(),
+                cxxBuckConfig.shouldCacheLinks(),
                 appleConfig.shouldLinkScrubConcurrently()),
             StringArg.from(combinedLdFlags),
             ImmutableMultimap.of(),
@@ -463,8 +469,8 @@ public class AppleCxxPlatforms {
             macros,
             Optional.empty(),
             headerVerification,
-            config.getPublicHeadersSymlinksEnabled(),
-            config.getPrivateHeadersSymlinksEnabled(),
+            cxxBuckConfig.getPublicHeadersSymlinksEnabled(),
+            cxxBuckConfig.getPrivateHeadersSymlinksEnabled(),
             PicType.PIC);
 
     ApplePlatform applePlatform = targetSdk.getApplePlatform();

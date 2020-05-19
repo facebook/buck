@@ -26,6 +26,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.attr.SupportsDependencyFileRuleKey;
 import com.facebook.buck.core.rules.impl.AbstractBuildRule;
@@ -74,6 +78,13 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
 
   private final RelPath resultsDir;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   CxxInferCapture(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -85,7 +96,8 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
       Optional<PreInclude> preInclude,
       String outputName,
       PreprocessorDelegate preprocessorDelegate,
-      InferBuckConfig inferConfig) {
+      InferBuckConfig inferConfig,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.buildDeps = buildDeps;
     this.preprocessorFlags = preprocessorFlags;
@@ -97,6 +109,7 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
         BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + outputName);
     this.preprocessorDelegate = preprocessorDelegate;
     this.inferConfig = inferConfig;
+    this.withDownwardApi = withDownwardApi;
     this.resultsDir =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), this.getBuildTarget(), "infer-out-%s");
   }
@@ -149,7 +162,10 @@ class CxxInferCapture extends AbstractBuildRule implements SupportsDependencyFil
         .add(new WriteArgFileStep(context.getSourcePathResolver(), inputRelativePath))
         .add(
             new DefaultShellStep(
-                getProjectFilesystem().getRootPath(), frontendCommand, ImmutableMap.of()))
+                getProjectFilesystem().getRootPath(),
+                withDownwardApi,
+                frontendCommand,
+                ImmutableMap.of()))
         .build();
   }
 

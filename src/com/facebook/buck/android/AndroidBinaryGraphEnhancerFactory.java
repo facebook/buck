@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.config.registry.ConfigurationRuleRegistry;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
@@ -59,6 +60,7 @@ public class AndroidBinaryGraphEnhancerFactory {
       CxxBuckConfig cxxBuckConfig,
       DxConfig dxConfig,
       ProGuardConfig proGuardConfig,
+      DownwardApiConfig downwardApiConfig,
       CellPathResolver cellPathResolver,
       TargetGraph targetGraph,
       BuildTarget buildTarget,
@@ -187,6 +189,7 @@ public class AndroidBinaryGraphEnhancerFactory {
         args.isNoAutoAddOverlayResources(),
         androidBuckConfig.getAaptNoResourceRemoval(),
         javaBuckConfig,
+        downwardApiConfig,
         javacFactory,
         toolchainProvider
             .getByName(

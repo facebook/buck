@@ -10,6 +10,7 @@ standard_java_test(
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",
+        "//src/com/facebook/buck/downwardapi/config:config",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/cxx/toolchain:testutil",

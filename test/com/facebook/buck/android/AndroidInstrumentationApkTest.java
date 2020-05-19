@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWARD_API_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static org.junit.Assert.assertEquals;
 
@@ -126,7 +127,8 @@ public class AndroidInstrumentationApkTest {
                     CxxPlatformUtils.DEFAULT_CONFIG,
                     new DxConfig(FakeBuckConfig.empty()),
                     toolchainProvider,
-                    new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()))
+                    new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()),
+                    DEFAULT_DOWNWARD_API_CONFIG)
                 .createBuildRule(
                     TestBuildRuleCreationContextFactory.create(
                         graphBuilder, projectFilesystem, toolchainProvider),

@@ -99,7 +99,8 @@ public class CxxCollectAndLogInferDependenciesStepTest {
         Optional.empty(),
         "src.o",
         preprocessorDelegate,
-        inferBuckConfig);
+        inferBuckConfig,
+        false);
   }
 
   @Test

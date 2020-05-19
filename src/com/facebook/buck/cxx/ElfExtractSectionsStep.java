@@ -39,8 +39,9 @@ class ElfExtractSectionsStep extends ShellStep {
       ProjectFilesystem inputFilesystem,
       Path input,
       ProjectFilesystem outputFilesystem,
-      Path output) {
-    super(outputFilesystem.getRootPath());
+      Path output,
+      boolean withDownwardApi) {
+    super(outputFilesystem.getRootPath(), withDownwardApi);
     this.objcopyPrefix = objcopyPrefix;
     this.sections = sections;
     this.inputFilesystem = inputFilesystem;

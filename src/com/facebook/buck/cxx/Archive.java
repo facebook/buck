@@ -20,6 +20,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -67,12 +71,21 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       ArchiveContents contents,
       String outputFileName,
       ImmutableList<SourcePath> inputs,
-      boolean cacheable) {
+      boolean cacheable,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new Impl(archiver, archiverFlags, ranlib, ranlibFlags, contents, outputFileName, inputs));
+        new Impl(
+            archiver,
+            archiverFlags,
+            ranlib,
+            ranlibFlags,
+            contents,
+            outputFileName,
+            inputs,
+            withDownwardApi));
     Preconditions.checkState(
         contents == ArchiveContents.NORMAL || archiver.supportsThinArchives(),
         "%s: archive tool for this platform does not support thin archives",
@@ -87,7 +100,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
     this.cacheable = cacheable;
   }
 
-  /** @return the {@link Archive} created from the given parameters. */
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   public static Archive from(
       BuildTarget target,
       ProjectFilesystem projectFilesystem,
@@ -97,6 +110,40 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       ImmutableList<SourcePath> inputs,
       ArchiveContents contents,
       boolean cacheable) {
+    return from(
+        target,
+        projectFilesystem,
+        resolver,
+        platform,
+        outputFileName,
+        inputs,
+        contents,
+        cacheable,
+        false);
+  }
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
+  public static Archive from(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
+      CxxPlatform platform,
+      String outputFileName,
+      ImmutableList<SourcePath> inputs) {
+    return from(target, projectFilesystem, resolver, platform, outputFileName, inputs, false);
+  }
+
+  /** @return the {@link Archive} created from the given parameters. */
+  public static Archive from(
+      BuildTarget target,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleResolver resolver,
+      CxxPlatform platform,
+      String outputFileName,
+      ImmutableList<SourcePath> inputs,
+      ArchiveContents contents,
+      boolean cacheable,
+      boolean withDownwardApi) {
     return new Archive(
         target,
         projectFilesystem,
@@ -108,7 +155,8 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
         contents,
         outputFileName,
         inputs,
-        cacheable);
+        cacheable,
+        withDownwardApi);
   }
 
   /** @return the {@link Archive} created from the given parameters. */
@@ -118,7 +166,8 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       BuildRuleResolver resolver,
       CxxPlatform platform,
       String outputFileName,
-      ImmutableList<SourcePath> inputs) {
+      ImmutableList<SourcePath> inputs,
+      boolean withDownwardApi) {
     return Archive.from(
         target,
         projectFilesystem,
@@ -127,7 +176,8 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
         outputFileName,
         inputs,
         platform.getArchiveContents(),
-        true);
+        true,
+        withDownwardApi);
   }
 
   /** internal buildable implementation */
@@ -141,6 +191,13 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
     @AddToRuleKey private final OutputPath output;
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
 
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
     Impl(
         Archiver archiver,
         ImmutableList<Arg> archiverFlags,
@@ -148,7 +205,8 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
         ImmutableList<Arg> ranlibFlags,
         ArchiveContents contents,
         String outputFileName,
-        ImmutableList<SourcePath> inputs) {
+        ImmutableList<SourcePath> inputs,
+        boolean withDownwardApi) {
       this.archiver = archiver;
       this.archiverFlags = archiverFlags;
       this.ranlib = ranlib;
@@ -156,6 +214,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
       this.contents = contents;
       this.output = new OutputPath(outputFileName);
       this.inputs = inputs;
+      this.withDownwardApi = withDownwardApi;
     }
 
     @Override
@@ -192,7 +251,8 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                       .map(resolver::getRelativePath)
                       .collect(ImmutableList.toImmutableList()),
                   archiver,
-                  outputPathResolver.getTempPath()));
+                  outputPathResolver.getTempPath(),
+                  withDownwardApi));
 
       if (archiver.isRanLibStepRequired()) {
         Tool tool = ranlib.get();
@@ -202,7 +262,8 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
                 tool.getEnvironment(resolver),
                 tool.getCommandPrefix(resolver),
                 Arg.stringify(ranlibFlags, resolver),
-                outputPath));
+                outputPath,
+                withDownwardApi));
       }
 
       if (!archiver.getScrubbers().isEmpty()) {

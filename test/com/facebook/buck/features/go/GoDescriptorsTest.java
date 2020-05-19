@@ -23,6 +23,7 @@ import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.buildable.context.FakeBuildableContext;
 import com.facebook.buck.core.build.context.FakeBuildContext;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -155,7 +156,8 @@ public class GoDescriptorsTest {
         .build(graphBuilder);
 
     BuildRuleParams params = TestBuildRuleParams.create();
-    GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.empty());
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    GoBuckConfig goBuckConfig = new GoBuckConfig(buckConfig);
 
     GoCompile compile =
         GoDescriptors.createGoCompileRule(
@@ -199,7 +201,8 @@ public class GoDescriptorsTest {
         .build(graphBuilder);
 
     BuildRuleParams params = TestBuildRuleParams.create();
-    GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.empty());
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    GoBuckConfig goBuckConfig = new GoBuckConfig(buckConfig);
 
     GoBinary binary =
         GoDescriptors.createGoBinaryRule(
@@ -249,7 +252,8 @@ public class GoDescriptorsTest {
         TestProjectFilesystems.createProjectFilesystem(tmpPath.getRoot());
 
     BuildRuleParams params = TestBuildRuleParams.create();
-    GoBuckConfig goBuckConfig = new GoBuckConfig(FakeBuckConfig.empty());
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    GoBuckConfig goBuckConfig = new GoBuckConfig(buckConfig);
 
     ImmutableMap<Optional<GoLinkStep.LinkMode>, Matcher> modes =
         ImmutableMap.of(

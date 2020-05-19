@@ -39,6 +39,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -189,6 +190,7 @@ public class AndroidBinaryGraphEnhancer {
       boolean noAutoAddOverlayResources,
       boolean noResourceRemoval,
       JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       JavacFactory javacFactory,
       JavacOptions javacOptions,
       EnumSet<ExopackageMode> exopackageModes,
@@ -261,6 +263,7 @@ public class AndroidBinaryGraphEnhancer {
             projectFilesystem,
             cpuFilters,
             cxxBuckConfig,
+            downwardApiConfig,
             nativeLibraryMergeMap,
             nativeLibraryMergeGlue,
             nativeLibraryMergeLocalizedSymbols,

@@ -42,8 +42,10 @@ public abstract class MachoDylibStubRuleFactory implements SharedLibraryInterfac
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      SourcePath library) {
-    return MachoDylibStubRule.from(target, projectFilesystem, resolver, getStrip(), library);
+      SourcePath library,
+      boolean withDownwardApi) {
+    return MachoDylibStubRule.from(
+        target, projectFilesystem, resolver, getStrip(), library, withDownwardApi);
   }
 
   @Override
@@ -53,7 +55,8 @@ public abstract class MachoDylibStubRuleFactory implements SharedLibraryInterfac
       BuildRuleResolver resolver,
       String libName,
       Linker linker,
-      ImmutableList<Arg> args) {
+      ImmutableList<Arg> args,
+      boolean withDownwardApi) {
     throw new RuntimeException("Unsupported for Mach-O");
   }
 

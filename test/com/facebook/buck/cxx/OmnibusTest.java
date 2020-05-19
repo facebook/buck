@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.cell.TestCellPathResolver;
@@ -80,6 +81,7 @@ public class OmnibusTest {
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
+                DEFAULT_DOWNWARD_API_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
@@ -133,6 +135,7 @@ public class OmnibusTest {
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
+                DEFAULT_DOWNWARD_API_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
@@ -191,6 +194,7 @@ public class OmnibusTest {
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
+                DEFAULT_DOWNWARD_API_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
@@ -256,6 +260,7 @@ public class OmnibusTest {
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
+                DEFAULT_DOWNWARD_API_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
@@ -318,6 +323,7 @@ public class OmnibusTest {
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
+                DEFAULT_DOWNWARD_API_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
@@ -371,6 +377,7 @@ public class OmnibusTest {
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
+                DEFAULT_DOWNWARD_API_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(root),
@@ -428,6 +435,7 @@ public class OmnibusTest {
                 TestCellPathResolver.get(projectFilesystem),
                 graphBuilder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
+                DEFAULT_DOWNWARD_API_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(),
                 ImmutableList.of(includedRoot),
@@ -455,6 +463,7 @@ public class OmnibusTest {
                 TestCellPathResolver.get(filesystem),
                 graphBuilder,
                 CxxPlatformUtils.DEFAULT_CONFIG,
+                DEFAULT_DOWNWARD_API_CONFIG,
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 ImmutableList.of(StringArg.of(flag)),
                 ImmutableList.of(root),

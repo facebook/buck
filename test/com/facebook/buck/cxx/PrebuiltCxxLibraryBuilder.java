@@ -55,7 +55,8 @@ public class PrebuiltCxxLibraryBuilder
                     CxxPlatformsProvider.of(
                         CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
                 .build(),
-            CxxPlatformUtils.DEFAULT_CONFIG),
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG),
         target);
   }
 

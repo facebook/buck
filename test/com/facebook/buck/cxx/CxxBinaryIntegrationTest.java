@@ -17,6 +17,7 @@
 package com.facebook.buck.cxx;
 
 import static com.facebook.buck.cxx.toolchain.CxxFlavorSanitizer.sanitize;
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static java.io.File.pathSeparator;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -104,7 +105,7 @@ public class CxxBinaryIntegrationTest {
     workspace.enableDirCache();
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig);
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
     String inputBuildTargetName =
         inputBuildTarget
@@ -178,7 +179,7 @@ public class CxxBinaryIntegrationTest {
     workspace.enableDirCache();
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig);
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
     String inputBuildTargetName =
         inputBuildTarget
@@ -280,7 +281,7 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig);
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:simple");
     String inputBuildTargetName =
         inputBuildTarget
@@ -371,7 +372,7 @@ public class CxxBinaryIntegrationTest {
     ProjectWorkspace workspace = InferHelper.setupCxxInferWorkspace(this, tmp, Optional.empty());
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig);
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget inputBuildTarget = BuildTargetFactory.newInstance("//foo:binary_with_deps");
     String inputBuildTargetName =
         inputBuildTarget
@@ -924,7 +925,7 @@ public class CxxBinaryIntegrationTest {
             .getFullyQualifiedName();
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig);
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
 
     CxxSourceRuleFactory cxxSourceRuleFactory =
         CxxSourceRuleFactoryHelper.of(
@@ -1335,7 +1336,7 @@ public class CxxBinaryIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "simple", tmp);
     workspace.setUp();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig);
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple");
     CxxSourceRuleFactory cxxSourceRuleFactory =
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), target, cxxPlatform, cxxBuckConfig);
@@ -1433,7 +1434,7 @@ public class CxxBinaryIntegrationTest {
     workspace.setUp();
 
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig);
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:simple_with_header");
     CxxSourceRuleFactory cxxSourceRuleFactory =
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), target, cxxPlatform, cxxBuckConfig);
@@ -1500,7 +1501,7 @@ public class CxxBinaryIntegrationTest {
 
     // Setup variables pointing to the sources and targets of the top-level binary rule.
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(workspace.asCell().getBuckConfig());
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig);
+    CxxPlatform cxxPlatform = CxxPlatformUtils.build(cxxBuckConfig, DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget target = BuildTargetFactory.newInstance("//foo:binary_with_dep");
     CxxSourceRuleFactory cxxSourceRuleFactory =
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), target, cxxPlatform, cxxBuckConfig);
@@ -2285,7 +2286,9 @@ public class CxxBinaryIntegrationTest {
 
   @Test
   public void testThinArchives() throws IOException {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
     assumeTrue(
         cxxPlatform

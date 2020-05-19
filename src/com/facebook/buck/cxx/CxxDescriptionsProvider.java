@@ -46,7 +46,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
     CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
         new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     CxxBinaryFactory cxxBinaryFactory =
-        new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
+        new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, downwardApiConfig, inferBuckConfig);
     CxxBinaryMetadataFactory cxxBinaryMetadataFactory =
         new CxxBinaryMetadataFactory(toolchainProvider);
     CxxBinaryFlavored cxxBinaryFlavored = new CxxBinaryFlavored(toolchainProvider, cxxBuckConfig);
@@ -64,7 +64,7 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
     CxxLibraryFlavored cxxLibraryFlavored =
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig);
     CxxLibraryFactory cxxLibraryFactory =
-        new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
+        new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig, downwardApiConfig);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(toolchainProvider, buckConfig.getFilesystem());
 
@@ -85,9 +85,10 @@ public class CxxDescriptionsProvider implements DescriptionProvider {
             downwardApiConfig,
             cxxBuckConfig,
             context.getSandboxExecutionStrategy()),
-        new CxxToolchainDescription(),
-        new CxxTestDescription(toolchainProvider, cxxBuckConfig, cxxBinaryMetadataFactory),
-        new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig),
+        new CxxToolchainDescription(downwardApiConfig),
+        new CxxTestDescription(
+            toolchainProvider, cxxBuckConfig, downwardApiConfig, cxxBinaryMetadataFactory),
+        new PrebuiltCxxLibraryDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),
         new PrebuiltCxxLibraryGroupDescription(),
         new CxxPrecompiledHeaderDescription());
   }

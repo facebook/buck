@@ -31,6 +31,7 @@ import com.facebook.buck.cxx.CxxLibraryImplicitFlavors;
 import com.facebook.buck.cxx.CxxLibraryMetadataFactory;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftLibraryDescription;
 import java.util.Arrays;
@@ -47,11 +48,12 @@ public class AppleDescriptionProvider implements DescriptionProvider {
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
     InferBuckConfig inferBuckConfig = new InferBuckConfig(config);
     AppleConfig appleConfig = config.getView(AppleConfig.class);
+    DownwardApiConfig downwardApiConfig = config.getView(DownwardApiConfig.class);
 
     CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors =
         new CxxBinaryImplicitFlavors(toolchainProvider, cxxBuckConfig);
     CxxBinaryFactory cxxBinaryFactory =
-        new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
+        new CxxBinaryFactory(toolchainProvider, cxxBuckConfig, downwardApiConfig, inferBuckConfig);
     CxxBinaryMetadataFactory cxxBinaryMetadataFactory =
         new CxxBinaryMetadataFactory(toolchainProvider);
     CxxBinaryFlavored cxxBinaryFlavored = new CxxBinaryFlavored(toolchainProvider, cxxBuckConfig);
@@ -61,12 +63,13 @@ public class AppleDescriptionProvider implements DescriptionProvider {
     CxxLibraryFlavored cxxLibraryFlavored =
         new CxxLibraryFlavored(toolchainProvider, cxxBuckConfig);
     CxxLibraryFactory cxxLibraryFactory =
-        new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig);
+        new CxxLibraryFactory(toolchainProvider, cxxBuckConfig, inferBuckConfig, downwardApiConfig);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(toolchainProvider, config.getFilesystem());
 
     SwiftLibraryDescription swiftLibraryDescription =
-        new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig);
+        new SwiftLibraryDescription(
+            toolchainProvider, cxxBuckConfig, swiftBuckConfig, downwardApiConfig);
 
     XCodeDescriptions xcodeDescriptions =
         XCodeDescriptionsFactory.create(context.getPluginManager());

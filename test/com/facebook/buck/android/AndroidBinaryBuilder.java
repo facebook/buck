@@ -16,6 +16,7 @@
 
 package com.facebook.buck.android;
 
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWARD_API_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
@@ -66,9 +67,10 @@ public class AndroidBinaryBuilder
             DEFAULT_JAVA_CONFIG,
             new ProGuardConfig(buckConfig),
             new AndroidBuckConfig(buckConfig, Platform.detect()),
-            buckConfig,
+            new AndroidInstallConfig(buckConfig),
             CxxPlatformUtils.DEFAULT_CONFIG,
             new DxConfig(buckConfig),
+            DEFAULT_DOWNWARD_API_CONFIG,
             createToolchainProviderForAndroidBinary(),
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBinaryFactory(new AndroidBuckConfig(buckConfig, Platform.detect()))),

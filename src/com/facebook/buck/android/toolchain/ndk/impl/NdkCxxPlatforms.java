@@ -198,7 +198,7 @@ public class NdkCxxPlatforms {
 
   /** Gets all the unresolved {@link NdkCxxPlatform} based on the buckconfig. */
   public static ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getPlatforms(
-      CxxBuckConfig config,
+      CxxBuckConfig cxxBuckConfig,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
       TargetConfiguration targetConfiguration,
@@ -225,7 +225,7 @@ public class NdkCxxPlatforms {
     NdkCxxPlatformCompiler compiler =
         NdkCxxPlatformCompiler.of(compilerType, compilerVersion, gccVersion);
     return getPlatforms(
-        config,
+        cxxBuckConfig,
         androidConfig,
         filesystem,
         ndkRoot,
@@ -249,7 +249,7 @@ public class NdkCxxPlatforms {
 
   @VisibleForTesting
   public static ImmutableMap<TargetCpuType, UnresolvedNdkCxxPlatform> getPlatforms(
-      CxxBuckConfig config,
+      CxxBuckConfig cxxBuckConfig,
       AndroidBuckConfig androidConfig,
       ProjectFilesystem filesystem,
       Path ndkRoot,
@@ -259,7 +259,7 @@ public class NdkCxxPlatforms {
       Set<NdkTargetArchAbi> cpuAbis,
       Platform platform) {
     return getPlatforms(
-        config,
+        cxxBuckConfig,
         androidConfig,
         filesystem,
         ndkRoot,

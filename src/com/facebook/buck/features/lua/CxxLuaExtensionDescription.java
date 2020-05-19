@@ -58,6 +58,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -95,11 +96,15 @@ public class CxxLuaExtensionDescription
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public CxxLuaExtensionDescription(
-      ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   private String getExtensionName(BuildTarget target, CxxPlatform cxxPlatform) {
@@ -198,6 +203,7 @@ public class CxxLuaExtensionDescription
                 graphBuilder,
                 graphBuilder.getSourcePathResolver(),
                 cxxBuckConfig,
+                downwardApiConfig,
                 cxxPlatform,
                 cxxPreprocessorInput,
                 compilerFlags,
@@ -234,6 +240,7 @@ public class CxxLuaExtensionDescription
     Path extensionPath = getExtensionPath(projectFilesystem, buildTarget, cxxPlatform);
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         projectFilesystem,
         graphBuilder,

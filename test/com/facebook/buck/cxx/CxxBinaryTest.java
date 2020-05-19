@@ -66,7 +66,8 @@ public class CxxBinaryTest {
                 Optional.empty(),
                 /* cacheable */ true,
                 /* thinLto */ false,
-                /* fatLto */ false));
+                /* fatLto */ false,
+                false));
     BuildTarget target = BuildTargetFactory.newInstance("//:target");
     BuildRuleParams params = TestBuildRuleParams.create();
     CxxBinary binary =

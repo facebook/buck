@@ -55,7 +55,10 @@ public class CxxTestBuilder
                 CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
             .build();
     return new CxxTestDescription(
-        toolchainProvider, cxxBuckConfig, new CxxBinaryMetadataFactory(toolchainProvider));
+        toolchainProvider,
+        cxxBuckConfig,
+        CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
+        new CxxBinaryMetadataFactory(toolchainProvider));
   }
 
   public CxxTestBuilder(

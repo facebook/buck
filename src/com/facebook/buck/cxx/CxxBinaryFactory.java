@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.collect.Collections2;
@@ -52,14 +53,17 @@ public class CxxBinaryFactory {
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final InferBuckConfig inferBuckConfig;
 
   public CxxBinaryFactory(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       InferBuckConfig inferBuckConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.inferBuckConfig = inferBuckConfig;
   }
 
@@ -127,6 +131,7 @@ public class CxxBinaryFactory {
               graphBuilder,
               cellRoots,
               cxxBuckConfig,
+              downwardApiConfig,
               cxxPlatform,
               args,
               ImmutableSet.of(),
@@ -156,6 +161,7 @@ public class CxxBinaryFactory {
           graphBuilder,
           cellRoots,
           cxxBuckConfig,
+          downwardApiConfig,
           cxxPlatform,
           args,
           inferBuckConfig);
@@ -169,6 +175,7 @@ public class CxxBinaryFactory {
                 graphBuilder,
                 cellRoots,
                 cxxBuckConfig,
+                downwardApiConfig,
                 cxxPlatform,
                 args,
                 extraCxxDeps,
@@ -181,6 +188,7 @@ public class CxxBinaryFactory {
                 graphBuilder,
                 cellRoots,
                 cxxBuckConfig,
+                downwardApiConfig,
                 cxxPlatform,
                 args,
                 extraCxxDeps,

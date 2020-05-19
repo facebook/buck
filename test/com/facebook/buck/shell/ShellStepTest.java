@@ -112,7 +112,7 @@ public class ShellStepTest {
     workingDirectory =
         workingDirectory == null ? Paths.get(".").toAbsolutePath().normalize() : workingDirectory;
 
-    return new ShellStep(workingDirectory) {
+    return new ShellStep(workingDirectory, false) {
       @Override
       public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
         return env;

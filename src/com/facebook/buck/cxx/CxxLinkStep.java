@@ -39,8 +39,9 @@ class CxxLinkStep extends ShellStep {
       ImmutableMap<String, String> environment,
       ImmutableList<String> linker,
       Path argFilePath,
-      Path scratchDir) {
-    super(workingDirectory);
+      Path scratchDir,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.linker = linker;
     this.argFilePath = argFilePath;

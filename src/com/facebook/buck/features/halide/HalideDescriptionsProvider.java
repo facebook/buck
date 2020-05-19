@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import java.util.Collection;
 import java.util.Collections;
 import org.pf4j.Extension;
@@ -33,9 +34,10 @@ public class HalideDescriptionsProvider implements DescriptionProvider {
     BuckConfig buckConfig = context.getBuckConfig();
     CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
     HalideBuckConfig halideBuckConfig = new HalideBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     return Collections.singleton(
         new HalideLibraryDescription(
-            context.getToolchainProvider(), cxxBuckConfig, halideBuckConfig));
+            context.getToolchainProvider(), cxxBuckConfig, halideBuckConfig, downwardApiConfig));
   }
 }

@@ -19,6 +19,10 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
@@ -46,6 +50,13 @@ abstract class CxxPreprocessAndCompileBaseBuildable implements Buildable {
 
   @AddToRuleKey protected final Optional<PrecompiledHeaderData> precompiledHeaderData;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  protected final boolean withDownwardApi;
+
   public CxxPreprocessAndCompileBaseBuildable(
       BuildTarget targetName,
       Optional<PreprocessorDelegate> preprocessDelegate,
@@ -54,7 +65,8 @@ abstract class CxxPreprocessAndCompileBaseBuildable implements Buildable {
       SourcePath input,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       CxxSource.Type inputType,
-      DebugPathSanitizer sanitizer) {
+      DebugPathSanitizer sanitizer,
+      boolean withDownwardApi) {
     this.targetName = targetName;
     this.preprocessDelegate = preprocessDelegate;
     this.compilerDelegate = compilerDelegate;
@@ -63,6 +75,7 @@ abstract class CxxPreprocessAndCompileBaseBuildable implements Buildable {
     this.input = input;
     this.inputType = inputType;
     this.precompiledHeaderData = precompiledHeaderRule.map(CxxPrecompiledHeader::getData);
+    this.withDownwardApi = withDownwardApi;
   }
 
   static Path getDepFilePath(Path outputPath) {

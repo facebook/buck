@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Joiner;
@@ -73,6 +74,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
   private final ActionGraphBuilder graphBuilder;
   private final ImmutableSet<TargetCpuType> cpuFilters;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap;
   private final Optional<BuildTarget> nativeLibraryMergeGlue;
   private final Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols;
@@ -90,6 +92,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
       ProjectFilesystem projectFilesystem,
       ImmutableSet<TargetCpuType> cpuFilters,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       Optional<Map<String, List<Pattern>>> nativeLibraryMergeMap,
       Optional<BuildTarget> nativeLibraryMergeGlue,
       Optional<ImmutableSortedSet<String>> nativeLibraryMergeLocalizedSymbols,
@@ -105,6 +108,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
     this.graphBuilder = graphBuilder;
     this.cpuFilters = cpuFilters;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.nativeLibraryMergeMap = nativeLibraryMergeMap;
     this.nativeLibraryMergeGlue = nativeLibraryMergeGlue;
     this.relinkerMode = relinkerMode;
@@ -238,6 +242,7 @@ public class AndroidNativeLibsPackageableGraphEnhancer {
           NativeLibraryMergeEnhancer.enhance(
               cellPathResolver,
               cxxBuckConfig,
+              downwardApiConfig,
               graphBuilder,
               originalBuildTarget,
               projectFilesystem,

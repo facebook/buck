@@ -58,6 +58,8 @@ abstract class ElfCompactSectionsStep implements Step {
 
   abstract Path getOutput();
 
+  abstract boolean isWithDownwardApi();
+
   @Value.Check
   void check() {
     Preconditions.checkState(!getInput().isAbsolute());
@@ -108,6 +110,7 @@ abstract class ElfCompactSectionsStep implements Step {
     Step objcopy =
         new DefaultShellStep(
             getOutputFilesystem().getRootPath(),
+            isWithDownwardApi(),
             /* args */ getObjcopyCommand(addresses),
             /* env */ ImmutableMap.of());
     return objcopy.execute(context);

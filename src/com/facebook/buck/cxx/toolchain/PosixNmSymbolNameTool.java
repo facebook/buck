@@ -23,6 +23,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -63,9 +67,16 @@ import java.util.stream.StreamSupport;
 public class PosixNmSymbolNameTool implements SymbolNameTool {
 
   private final ToolProvider nm;
+  private final boolean withDownwardApi;
 
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   public PosixNmSymbolNameTool(ToolProvider nm) {
+    this(nm, false);
+  }
+
+  public PosixNmSymbolNameTool(ToolProvider nm, boolean withDownwardApi) {
     this.nm = nm;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -90,7 +101,8 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
                             .build())
                     .withoutExtraDeps(),
                 nm,
-                linkerInputs));
+                linkerInputs,
+                withDownwardApi));
     return rule.getSourcePathToOutput();
   }
 
@@ -102,18 +114,26 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
   private static class UndefinedSymbolsFile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     @AddToRuleKey private final Tool nm;
-
     @AddToRuleKey private final Iterable<? extends SourcePath> inputs;
+
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
 
     public UndefinedSymbolsFile(
         BuildTarget buildTarget,
         ProjectFilesystem projectFilesystem,
         BuildRuleParams buildRuleParams,
         Tool nm,
-        Iterable<? extends SourcePath> inputs) {
+        Iterable<? extends SourcePath> inputs,
+        boolean withDownwardApi) {
       super(buildTarget, projectFilesystem, buildRuleParams);
       this.nm = nm;
       this.inputs = inputs;
+      this.withDownwardApi = withDownwardApi;
     }
 
     private RelPath getUndefinedSymbolsPath() {
@@ -133,6 +153,7 @@ public class PosixNmSymbolNameTool implements SymbolNameTool {
       ShellStep shellStep =
           new DefaultShellStep(
               getProjectFilesystem().getRootPath(),
+              withDownwardApi,
               ImmutableList.<String>builder()
                   .addAll(nm.getCommandPrefix(context.getSourcePathResolver()))
                   // Prepend all lines with the name of the input file to which it

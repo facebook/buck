@@ -54,7 +54,10 @@ public class PythonBinaryBuilder
       ToolchainProviderBuilder toolchainProviderBuilder) {
     super(
         new PythonBinaryDescription(
-            toolchainProviderBuilder.build(), pythonBuckConfig, CxxPlatformUtils.DEFAULT_CONFIG),
+            toolchainProviderBuilder.build(),
+            pythonBuckConfig,
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG),
         target);
   }
 

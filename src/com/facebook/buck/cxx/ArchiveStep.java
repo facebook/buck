@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.cxx.toolchain.Archiver;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -54,6 +55,7 @@ class ArchiveStep implements Step {
   private final ImmutableList<Path> inputs;
   private final Archiver archiver;
   private final Path scratchDir;
+  private final boolean withDownwardApi;
 
   public ArchiveStep(
       ProjectFilesystem filesystem,
@@ -64,7 +66,9 @@ class ArchiveStep implements Step {
       Path output,
       ImmutableList<Path> inputs,
       Archiver archiver,
-      Path scratchDir) {
+      Path scratchDir,
+      boolean withDownwardApi) {
+    this.withDownwardApi = withDownwardApi;
     Preconditions.checkArgument(!output.isAbsolute());
     // Our current support for thin archives requires that all the inputs are relative paths from
     // the same cell as the output.
@@ -121,7 +125,15 @@ class ArchiveStep implements Step {
             .setEnvironment(ImmutableMap.copyOf(env))
             .setCommand(command)
             .build();
-    ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
+
+    ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
+
+    ProcessExecutor.Result result = processExecutor.launchAndExecute(params);
     if (result.getExitCode() != 0 && result.getStderr().isPresent()) {
       context.getBuckEventBus().post(ConsoleEvent.create(Level.SEVERE, result.getStderr().get()));
     }

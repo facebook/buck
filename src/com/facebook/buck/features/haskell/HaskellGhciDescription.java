@@ -46,6 +46,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -79,10 +80,15 @@ public class HaskellGhciDescription
 
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
-  public HaskellGhciDescription(ToolchainProvider toolchainProvider, CxxBuckConfig cxxBuckConfig) {
+  public HaskellGhciDescription(
+      ToolchainProvider toolchainProvider,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -233,6 +239,7 @@ public class HaskellGhciDescription
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       Iterable<NativeLinkable> body,
       Iterable<NativeLinkable> deps,
       ImmutableList<Arg> extraLdFlags) {
@@ -248,6 +255,7 @@ public class HaskellGhciDescription
           // Add to graphBuilder
           return CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
               cxxBuckConfig,
+              downwardApiConfig,
               cxxPlatform,
               projectFilesystem,
               graphBuilder,
@@ -295,6 +303,7 @@ public class HaskellGhciDescription
         context.getActionGraphBuilder(),
         platform,
         cxxBuckConfig,
+        downwardApiConfig,
         args.getDeps(),
         args.getPlatformDeps(),
         args.getSrcs(),

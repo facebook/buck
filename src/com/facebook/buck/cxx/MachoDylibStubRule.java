@@ -53,14 +53,15 @@ public class MachoDylibStubRule extends ModernBuildRule<MachoDylibStubRule.Dylib
       ProjectFilesystem projectFilesystem,
       SourcePathRuleFinder ruleFinder,
       Tool strip,
-      SourcePath inputDylib) {
+      SourcePath inputDylib,
+      boolean withDownwardApi) {
     String libName =
         ruleFinder.getSourcePathResolver().getRelativePath(inputDylib).getFileName().toString();
     return new MachoDylibStubRule(
         target,
         projectFilesystem,
         ruleFinder,
-        new DylibStubBuildable(target, strip, libName, inputDylib));
+        new DylibStubBuildable(target, strip, libName, inputDylib, withDownwardApi));
   }
 
   /** The buildable for the rule */
@@ -69,6 +70,13 @@ public class MachoDylibStubRule extends ModernBuildRule<MachoDylibStubRule.Dylib
     @AddToRuleKey private final Tool strip;
     @AddToRuleKey private final OutputPath outputPath;
     @AddToRuleKey private final String libName;
+
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
 
     // The main idea behind the dylib stub rule is to prevent unnecessary relinking of
     // any dependents of the dylib if and only if the ABI does not change. But any changes to
@@ -85,12 +93,17 @@ public class MachoDylibStubRule extends ModernBuildRule<MachoDylibStubRule.Dylib
     private final SourcePath inputDylib;
 
     private DylibStubBuildable(
-        BuildTarget buildTarget, Tool strip, String libName, SourcePath inputDylib) {
+        BuildTarget buildTarget,
+        Tool strip,
+        String libName,
+        SourcePath inputDylib,
+        boolean withDownwardApi) {
       this.buildTarget = buildTarget;
       this.strip = strip;
       this.libName = libName;
       this.inputDylib = inputDylib;
       this.outputPath = new OutputPath(libName);
+      this.withDownwardApi = withDownwardApi;
     }
 
     @Override
@@ -112,7 +125,8 @@ public class MachoDylibStubRule extends ModernBuildRule<MachoDylibStubRule.Dylib
               sourcePathResolverAdapter.getFilesystem(inputDylib),
               sourcePathResolverAdapter.getRelativePath(inputDylib),
               filesystem,
-              output),
+              output,
+              withDownwardApi),
           new MachoDylibStubScrubContentsStep(filesystem, output));
 
       return steps.build();

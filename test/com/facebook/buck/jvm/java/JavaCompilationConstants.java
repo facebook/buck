@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.java.toolchain.JavaToolchain;
 import com.google.common.collect.ImmutableList;
 
@@ -25,6 +26,9 @@ public class JavaCompilationConstants {
 
   public static final JavaBuckConfig DEFAULT_JAVA_CONFIG =
       JavaBuckConfig.of(FakeBuckConfig.empty());
+
+  public static final DownwardApiConfig DEFAULT_DOWNWARD_API_CONFIG =
+      DownwardApiConfig.of(FakeBuckConfig.empty());
 
   public static final ImmutableList<String> DEFAULT_JAVA_COMMAND_PREFIX = ImmutableList.of("java");
 

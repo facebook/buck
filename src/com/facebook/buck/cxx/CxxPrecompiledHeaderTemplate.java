@@ -72,7 +72,8 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude implements AndroidP
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolverAdapter pathResolver) {
+      SourcePathResolverAdapter pathResolver,
+      boolean withDownwardApi) {
 
     DepsBuilder depsBuilder = new DepsBuilder(graphBuilder);
 
@@ -114,7 +115,8 @@ public class CxxPrecompiledHeaderTemplate extends PreInclude implements AndroidP
             .withFlavors(
                 cxxPlatform.getFlavor(),
                 InternalFlavor.of(Flavor.replaceInvalidCharacters(pchBaseID))),
-        graphBuilder);
+        graphBuilder,
+        withDownwardApi);
   }
 
   @Override

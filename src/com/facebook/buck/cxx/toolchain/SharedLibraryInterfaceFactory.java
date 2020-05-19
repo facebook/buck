@@ -34,7 +34,8 @@ public interface SharedLibraryInterfaceFactory {
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      SourcePath library);
+      SourcePath library,
+      boolean withDownwardApi);
 
   /** @return a rule building a shared library interface from a shared link line */
   BuildRule createSharedInterfaceLibraryFromLinkableInput(
@@ -43,5 +44,6 @@ public interface SharedLibraryInterfaceFactory {
       BuildRuleResolver resolver,
       String libName,
       Linker linker,
-      ImmutableList<Arg> args);
+      ImmutableList<Arg> args,
+      boolean withDownwardApi);
 }

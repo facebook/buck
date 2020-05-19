@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static com.facebook.buck.file.ProjectFilesystemMatchers.pathExists;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItem;
@@ -57,7 +58,9 @@ public class CxxCompileStepIntegrationTest {
 
   private void assertCompDir(Optional<String> failure) throws Exception {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform platform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
@@ -96,7 +99,8 @@ public class CxxCompileStepIntegrationTest {
             true,
             ImmutableList.of(),
             compiler,
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();
@@ -128,7 +132,9 @@ public class CxxCompileStepIntegrationTest {
   @Test
   public void createsAnArgfile() throws Exception {
     ProjectFilesystem filesystem = TestProjectFilesystems.createProjectFilesystem(tmp.getRoot());
-    CxxPlatform platform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform platform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
 
     // Build up the paths to various files the archive step will use.
     BuildRuleResolver resolver = new TestActionGraphBuilder();
@@ -165,7 +171,8 @@ public class CxxCompileStepIntegrationTest {
             true,
             ImmutableList.of(),
             compiler,
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     // Execute the archive step and verify it ran successfully.
     ExecutionContext executionContext = TestExecutionContext.newInstance();

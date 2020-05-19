@@ -57,7 +57,8 @@ public class CxxPrefixHeader extends PreInclude {
       CxxSource.Type sourceType,
       ImmutableList<String> sourceFlags,
       ActionGraphBuilder graphBuilder,
-      SourcePathResolverAdapter pathResolver) {
+      SourcePathResolverAdapter pathResolver,
+      boolean withDownwardApi) {
 
     DepsBuilder depsBuilder = new DepsBuilder(graphBuilder);
 
@@ -82,6 +83,7 @@ public class CxxPrefixHeader extends PreInclude {
             .withFlavors(
                 cxxPlatform.getFlavor(),
                 InternalFlavor.of(Flavor.replaceInvalidCharacters(pchFullID))),
-        graphBuilder);
+        graphBuilder,
+        withDownwardApi);
   }
 }

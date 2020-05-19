@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static com.facebook.buck.testutil.HasConsecutiveItemsMatcher.hasConsecutiveItems;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
@@ -86,7 +87,8 @@ public class CxxLinkableEnhancerTest {
           FakeSourcePath.of("a.o"), FakeSourcePath.of("b.o"), FakeSourcePath.of("c.o"));
   private static final ImmutableSortedSet<NativeLinkable> EMPTY_DEPS = ImmutableSortedSet.of();
   private static final CxxPlatform CXX_PLATFORM =
-      CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+      CxxPlatformUtils.build(
+          new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
 
   private static class FakeNativeLinkableGroup extends FakeBuildRule
       implements LegacyNativeLinkableGroup {
@@ -179,6 +181,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink cxxLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
             CXX_PLATFORM,
             projectFilesystem,
             graphBuilder,
@@ -238,6 +241,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink cxxLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
             CXX_PLATFORM,
             projectFilesystem,
             graphBuilder,
@@ -280,6 +284,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink executable =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
             CXX_PLATFORM,
             filesystem,
             graphBuilder,
@@ -306,6 +311,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink shared =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
             CXX_PLATFORM,
             filesystem,
             graphBuilder,
@@ -333,6 +339,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink sharedWithSoname =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
             CXX_PLATFORM,
             filesystem,
             graphBuilder,
@@ -381,6 +388,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink staticLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
             CXX_PLATFORM,
             filesystem,
             graphBuilder,
@@ -410,6 +418,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink sharedLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
             CXX_PLATFORM,
             filesystem,
             graphBuilder,
@@ -454,6 +463,7 @@ public class CxxLinkableEnhancerTest {
       CxxLink lib =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
               CxxPlatformUtils.DEFAULT_CONFIG,
+              DEFAULT_DOWNWARD_API_CONFIG,
               cxxPlatform,
               filesystem,
               graphBuilder,
@@ -482,7 +492,9 @@ public class CxxLinkableEnhancerTest {
 
   @Test
   public void getTransitiveNativeLinkableInputDoesNotTraversePastNonNativeLinkables() {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
 
     // Create a native linkable that sits at the bottom of the dep chain.
@@ -533,6 +545,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink cxxLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
             CXX_PLATFORM,
             filesystem,
             graphBuilder,
@@ -571,6 +584,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink bundleLoaderRule =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
             CXX_PLATFORM,
             filesystem,
             graphBuilder,
@@ -598,6 +612,7 @@ public class CxxLinkableEnhancerTest {
     CxxLink bundleRule =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CxxPlatformUtils.DEFAULT_CONFIG,
+            DEFAULT_DOWNWARD_API_CONFIG,
             CXX_PLATFORM,
             filesystem,
             graphBuilder,

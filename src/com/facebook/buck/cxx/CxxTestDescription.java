@@ -46,6 +46,7 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.macros.LocationMacroExpander;
@@ -86,15 +87,18 @@ public class CxxTestDescription
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final ImmutableSet<Flavor> declaredPlatforms;
+  private final DownwardApiConfig downwardApiConfig;
   private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
 
   public CxxTestDescription(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxBinaryMetadataFactory cxxBinaryMetadataFactory) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.declaredPlatforms = cxxBuckConfig.getDeclaredPlatforms();
+    this.downwardApiConfig = downwardApiConfig;
     this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
   }
 
@@ -187,6 +191,7 @@ public class CxxTestDescription
               graphBuilder,
               cellRoots,
               cxxBuckConfig,
+              downwardApiConfig,
               cxxPlatform,
               args,
               getImplicitFrameworkDeps(buildTarget.getTargetConfiguration(), args),
@@ -245,6 +250,7 @@ public class CxxTestDescription
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             args,
             getImplicitFrameworkDeps(buildTarget.getTargetConfiguration(), args),

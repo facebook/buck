@@ -75,7 +75,10 @@ public class CxxRawHeadersIntegrationTest {
 
     String source = "test.cpp";
 
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()),
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
 
     target1 = BuildTargetFactory.newInstance("//depfiles1:test");
     target2 = BuildTargetFactory.newInstance("//depfiles2/test:test");

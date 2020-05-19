@@ -215,7 +215,8 @@ public class CxxPreprocessAndCompileTest {
                     DEFAULT_OUTPUT,
                     DEFAULT_INPUT,
                     DEFAULT_INPUT_TYPE,
-                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER));
+                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                    false));
 
     // Verify that changing the compiler causes a rulekey change.
 
@@ -241,7 +242,8 @@ public class CxxPreprocessAndCompileTest {
                     DEFAULT_OUTPUT,
                     DEFAULT_INPUT,
                     DEFAULT_INPUT_TYPE,
-                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER));
+                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                    false));
     assertNotEquals(defaultRuleKey, compilerChange);
 
     // Verify that changing the operation causes a rulekey change.
@@ -272,7 +274,8 @@ public class CxxPreprocessAndCompileTest {
                     DEFAULT_INPUT,
                     DEFAULT_INPUT_TYPE,
                     Optional.empty(),
-                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER));
+                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                    false));
     assertNotEquals(defaultRuleKey, operationChange);
 
     // Verify that changing the platform flags causes a rulekey change.
@@ -295,7 +298,8 @@ public class CxxPreprocessAndCompileTest {
                     DEFAULT_OUTPUT,
                     DEFAULT_INPUT,
                     DEFAULT_INPUT_TYPE,
-                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER));
+                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                    false));
     assertNotEquals(defaultRuleKey, platformFlagsChange);
 
     // Verify that changing the rule flags causes a rulekey change.
@@ -318,7 +322,8 @@ public class CxxPreprocessAndCompileTest {
                     DEFAULT_OUTPUT,
                     DEFAULT_INPUT,
                     DEFAULT_INPUT_TYPE,
-                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER));
+                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                    false));
     assertNotEquals(defaultRuleKey, ruleFlagsChange);
 
     // Verify that changing the input causes a rulekey change.
@@ -339,7 +344,8 @@ public class CxxPreprocessAndCompileTest {
                     FakeSourcePath.of(
                         PathNormalizer.toWindowsPathIfNeeded(Paths.get("/root/different"))),
                     DEFAULT_INPUT_TYPE,
-                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER));
+                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                    false));
     assertNotEquals(defaultRuleKey, inputChange);
   }
 
@@ -406,7 +412,8 @@ public class CxxPreprocessAndCompileTest {
                     DEFAULT_INPUT,
                     DEFAULT_INPUT_TYPE,
                     Optional.empty(),
-                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER));
+                    CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+                    false));
       }
     }
     TestData testData = new TestData();
@@ -446,7 +453,8 @@ public class CxxPreprocessAndCompileTest {
             outputName,
             FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
-            NoopDebugPathSanitizer.INSTANCE);
+            NoopDebugPathSanitizer.INSTANCE,
+            false);
 
     ImmutableList<String> expectedCompileCommand =
         ImmutableList.<String>builder()
@@ -510,7 +518,8 @@ public class CxxPreprocessAndCompileTest {
             fakeInput,
             DEFAULT_INPUT_TYPE,
             Optional.empty(),
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+            false);
     assertThat(
         cxxPreprocess.getInputsAfterBuildingLocally(context, cellPathResolver),
         not(hasItem(preprocessor)));
@@ -529,7 +538,8 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_OUTPUT,
             fakeInput,
             DEFAULT_INPUT_TYPE,
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+            false);
     assertThat(
         cxxCompile.getInputsAfterBuildingLocally(context, cellPathResolver),
         not(hasItem(compiler)));
@@ -561,7 +571,8 @@ public class CxxPreprocessAndCompileTest {
             output,
             FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+            false);
 
     ImmutableList<String> command =
         buildRule.makeMainStep(context, false).getArguments(/* allowColorsInDiagnostics */ false);
@@ -604,7 +615,8 @@ public class CxxPreprocessAndCompileTest {
             FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
             Optional.empty(),
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+            false);
 
     ImmutableList<String> command =
         buildRule.makeMainStep(context, false).getArguments(/* allowColorsInDiagnostics */ false);
@@ -668,7 +680,8 @@ public class CxxPreprocessAndCompileTest {
             outputName,
             FakeSourcePath.of(input.toString()),
             DEFAULT_INPUT_TYPE,
-            NoopDebugPathSanitizer.INSTANCE);
+            NoopDebugPathSanitizer.INSTANCE,
+            false);
 
     ImmutableList<String> expectedCompileCommand =
         ImmutableList.<String>builder()
@@ -769,7 +782,8 @@ public class CxxPreprocessAndCompileTest {
             CxxToolFlags.of(),
             FakeSourcePath.of("foo.h"),
             CxxSource.Type.C,
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+            false);
 
     CxxPreprocessAndCompile.Impl cxxPreprocessAndCompile =
         new CxxPreprocessAndCompile.Impl(
@@ -780,7 +794,8 @@ public class CxxPreprocessAndCompileTest {
             DEFAULT_INPUT,
             Optional.of(precompiledHeader),
             DEFAULT_INPUT_TYPE,
-            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER);
+            CxxPlatformUtils.DEFAULT_COMPILER_DEBUG_PATH_SANITIZER,
+            false);
 
     CxxPreprocessAndCompile.Impl reconstructed =
         SerializationTestHelper.serializeAndDeserialize(

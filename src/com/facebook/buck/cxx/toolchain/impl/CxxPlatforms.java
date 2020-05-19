@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.SymbolNameTool;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.StringArg;
 import com.facebook.buck.util.environment.Platform;
@@ -110,7 +111,8 @@ public class CxxPlatforms {
   public static CxxPlatform build(
       Flavor flavor,
       Platform platform,
-      CxxBuckConfig config,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CompilerProvider as,
       PreprocessorProvider aspp,
       CompilerProvider cc,
@@ -146,63 +148,68 @@ public class CxxPlatforms {
     // TODO(beng, agallagher): Generalize this so we don't need all these setters.
     CxxPlatform.Builder builder = CxxPlatform.builder();
 
-    if (config.getBinaryExtension().isPresent()) {
-      if (config.getBinaryExtension().get().isEmpty()) {
+    if (cxxBuckConfig.getBinaryExtension().isPresent()) {
+      if (cxxBuckConfig.getBinaryExtension().get().isEmpty()) {
         binaryExtension = Optional.empty();
       } else {
-        binaryExtension = config.getBinaryExtension();
+        binaryExtension = cxxBuckConfig.getBinaryExtension();
       }
     }
 
-    Tool stripTool = config.getStrip().orElse(strip);
+    Tool stripTool = cxxBuckConfig.getStrip().orElse(strip);
 
     builder
         .setFlavor(flavor)
-        .setAs(config.getAs().orElse(as))
-        .setAspp(config.getAspp().orElse(aspp))
-        .setCc(config.getCc().orElse(cc))
-        .setCxx(config.getCxx().orElse(cxx))
-        .setCpp(config.getCpp().orElse(cpp))
-        .setCxxpp(config.getCxxpp().orElse(cxxpp))
-        .setCuda(config.getCuda())
-        .setCudapp(config.getCudapp())
-        .setHip(config.getHip())
-        .setHippp(config.getHippp())
-        .setAsm(config.getAsm())
-        .setAsmpp(config.getAsmpp())
-        .setLd(config.getLinkerProvider(ld.getType()).orElse(ld))
+        .setAs(cxxBuckConfig.getAs().orElse(as))
+        .setAspp(cxxBuckConfig.getAspp().orElse(aspp))
+        .setCc(cxxBuckConfig.getCc().orElse(cc))
+        .setCxx(cxxBuckConfig.getCxx().orElse(cxx))
+        .setCpp(cxxBuckConfig.getCpp().orElse(cpp))
+        .setCxxpp(cxxBuckConfig.getCxxpp().orElse(cxxpp))
+        .setCuda(cxxBuckConfig.getCuda())
+        .setCudapp(cxxBuckConfig.getCudapp())
+        .setHip(cxxBuckConfig.getHip())
+        .setHippp(cxxBuckConfig.getHippp())
+        .setAsm(cxxBuckConfig.getAsm())
+        .setAsmpp(cxxBuckConfig.getAsmpp())
+        .setLd(cxxBuckConfig.getLinkerProvider(ld.getType()).orElse(ld))
         .addAllLdflags(ldFlags)
         .setRuntimeLdflags(runtimeLdflags)
-        .setAr(config.getArchiverProvider(platform).orElse(ar))
-        .setRanlib(config.getRanlib().isPresent() ? config.getRanlib() : ranlib)
+        .setAr(cxxBuckConfig.getArchiverProvider(platform).orElse(ar))
+        .setRanlib(cxxBuckConfig.getRanlib().isPresent() ? cxxBuckConfig.getRanlib() : ranlib)
         .setStrip(stripTool)
         .setBinaryExtension(binaryExtension)
         .setSharedLibraryExtension(
-            config.getSharedLibraryExtension().orElse(sharedLibraryExtension))
+            cxxBuckConfig.getSharedLibraryExtension().orElse(sharedLibraryExtension))
         .setSharedLibraryVersionedExtensionFormat(sharedLibraryVersionedExtensionFormat)
         .setStaticLibraryExtension(
-            config.getStaticLibraryExtension().orElse(staticLibraryExtension))
-        .setObjectFileExtension(config.getObjectFileExtension().orElse(objectFileExtension))
+            cxxBuckConfig.getStaticLibraryExtension().orElse(staticLibraryExtension))
+        .setObjectFileExtension(cxxBuckConfig.getObjectFileExtension().orElse(objectFileExtension))
         .setCompilerDebugPathSanitizer(compilerDebugPathSanitizer)
         .setFlagMacros(flagMacros)
         .setHeaderVerification(headerVerification)
         .setPublicHeadersSymlinksEnabled(
-            config.getPublicHeadersSymlinksSetting().orElse(publicHeadersSymlinksEnabled))
+            cxxBuckConfig.getPublicHeadersSymlinksSetting().orElse(publicHeadersSymlinksEnabled))
         .setPrivateHeadersSymlinksEnabled(
-            config.getPrivateHeadersSymlinksSetting().orElse(privateHeadersSymlinksEnabled))
+            cxxBuckConfig.getPrivateHeadersSymlinksSetting().orElse(privateHeadersSymlinksEnabled))
         .setPicTypeForSharedLinking(picTypeForSharedLinking)
-        .setConflictingHeaderBasenameWhitelist(config.getConflictingHeaderBasenameWhitelist())
-        .setHeaderMode(config.getHeaderMode())
-        .setUseArgFile(config.getUseArgFile())
-        .setFilepathLengthLimited(config.getFilepathLengthLimited());
+        .setConflictingHeaderBasenameWhitelist(
+            cxxBuckConfig.getConflictingHeaderBasenameWhitelist())
+        .setHeaderMode(cxxBuckConfig.getHeaderMode())
+        .setUseArgFile(cxxBuckConfig.getUseArgFile())
+        .setFilepathLengthLimited(cxxBuckConfig.getFilepathLengthLimited());
 
+    boolean withDownwardApi = downwardApiConfig.isEnabledForCxx();
     builder.setSymbolNameTool(
-        config.getNm().<SymbolNameTool>map(PosixNmSymbolNameTool::new).orElse(nm));
+        cxxBuckConfig
+            .getNm()
+            .<SymbolNameTool>map(tool -> new PosixNmSymbolNameTool(tool, withDownwardApi))
+            .orElse(nm));
 
-    builder.setArchiveContents(config.getArchiveContents().orElse(archiveContents));
+    builder.setArchiveContents(cxxBuckConfig.getArchiveContents().orElse(archiveContents));
 
     Optional<SharedLibraryInterfaceParams> sharedLibParams =
-        getSharedLibraryInterfaceParams(config, platform, Optional.of(stripTool));
+        getSharedLibraryInterfaceParams(cxxBuckConfig, platform, Optional.of(stripTool));
     builder.setSharedLibraryInterfaceParams(
         sharedLibParams.isPresent() ? sharedLibParams : defaultSharedLibraryInterfaceParams);
 
@@ -212,7 +219,7 @@ public class CxxPlatforms {
     builder.addAllCxxppflags(cxxppflags);
     builder.addAllAsflags(asflags);
     builder.addAllAsppflags(asppflags);
-    CxxPlatforms.addToolFlagsFromConfig(config, builder);
+    CxxPlatforms.addToolFlagsFromConfig(cxxBuckConfig, builder);
     return builder.build();
   }
 
@@ -221,11 +228,16 @@ public class CxxPlatforms {
    * from another default CxxPlatform
    */
   public static CxxPlatform copyPlatformWithFlavorAndConfig(
-      CxxPlatform defaultPlatform, Platform platform, CxxBuckConfig config, Flavor flavor) {
+      CxxPlatform defaultPlatform,
+      Platform platform,
+      CxxBuckConfig config,
+      DownwardApiConfig downwardApiConfig,
+      Flavor flavor) {
     return CxxPlatforms.build(
         flavor,
         platform,
         config,
+        downwardApiConfig,
         defaultPlatform.getAs(),
         defaultPlatform.getAspp(),
         defaultPlatform.getCc(),

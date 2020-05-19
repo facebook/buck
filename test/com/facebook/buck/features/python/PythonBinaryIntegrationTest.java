@@ -38,6 +38,7 @@ import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkStrategy;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.PythonBuckConfig.PackageStyle;
 import com.facebook.buck.features.python.toolchain.impl.PythonInterpreterFromConfig;
 import com.facebook.buck.io.ExecutableFinder;
@@ -245,8 +246,9 @@ public class PythonBinaryIntegrationTest {
 
     assumeThatNativeLibsAreSupported();
 
+    BuckConfig buckConfig = FakeBuckConfig.empty();
     String nativeLibsEnvVarName =
-        CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()))
+        CxxPlatformUtils.build(new CxxBuckConfig(buckConfig), DownwardApiConfig.of(buckConfig))
             .getLd()
             .resolve(resolver, UnconfiguredTargetConfiguration.INSTANCE)
             .searchPathEnvVar();

@@ -36,6 +36,7 @@ import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxLink;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
@@ -54,12 +55,17 @@ public class DBinaryDescription
   private final ToolchainProvider toolchainProvider;
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public DBinaryDescription(
-      ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      DBuckConfig dBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -98,6 +104,7 @@ public class DBinaryDescription
                 graphBuilder, toolchainProvider, dBuckConfig, buildTarget.getTargetConfiguration()),
             dBuckConfig,
             cxxBuckConfig,
+            downwardApiConfig,
             /* compilerFlags */ ImmutableList.of(),
             args.getSrcs(),
             args.getLinkerFlags(),

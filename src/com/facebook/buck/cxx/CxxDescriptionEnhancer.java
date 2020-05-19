@@ -18,7 +18,6 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.CellPathResolver;
 import com.facebook.buck.core.exceptions.HumanReadableException;
-import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -62,6 +61,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.json.JsonConcatenate;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
@@ -743,6 +743,7 @@ public class CxxDescriptionEnhancer {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       CommonArg args,
       ImmutableSet<BuildTarget> extraDeps,
@@ -779,6 +780,7 @@ public class CxxDescriptionEnhancer {
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             srcs,
             headers,
@@ -819,7 +821,7 @@ public class CxxDescriptionEnhancer {
             executableBuilder,
             linker,
             args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
-            indexOutput,
+            indexOutput.getPath(),
             args.getLinkerFlags(),
             args.getPlatformLinkerFlags());
 
@@ -830,6 +832,7 @@ public class CxxDescriptionEnhancer {
                 ignored ->
                     CxxLinkableEnhancer.createCxxThinLTOIndexBuildRule(
                         cxxBuckConfig,
+                        downwardApiConfig,
                         cxxPlatform,
                         projectFilesystem,
                         graphBuilder,
@@ -888,6 +891,7 @@ public class CxxDescriptionEnhancer {
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             srcObjects.build(),
             args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
@@ -921,7 +925,7 @@ public class CxxDescriptionEnhancer {
             executableBuilder,
             linker,
             args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC),
-            indexOutput,
+            indexOutput.getPath(),
             args.getLinkerFlags(),
             args.getPlatformLinkerFlags());
 
@@ -936,6 +940,7 @@ public class CxxDescriptionEnhancer {
                     // target, so that it corresponds to the actual binary we build.
                     CxxLinkableEnhancer.createCxxLinkableBuildRule(
                         cxxBuckConfig,
+                        downwardApiConfig,
                         cxxPlatform,
                         projectFilesystem,
                         graphBuilder,
@@ -986,7 +991,8 @@ public class CxxDescriptionEnhancer {
               cxxBuckConfig.shouldCacheStrip(),
               cxxLink,
               cxxPlatform,
-              args.getExecutableName());
+              args.getExecutableName(),
+              downwardApiConfig.isEnabledForCxx());
       cxxStrip = Optional.of(stripRule);
       binaryRuleForExecutable = stripRule;
     } else {
@@ -1013,6 +1019,7 @@ public class CxxDescriptionEnhancer {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       CommonArg args,
       ImmutableSet<BuildTarget> extraDeps,
@@ -1053,6 +1060,7 @@ public class CxxDescriptionEnhancer {
         graphBuilder,
         cellRoots,
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         srcs,
         headers,
@@ -1097,7 +1105,7 @@ public class CxxDescriptionEnhancer {
       CommandTool.Builder executableBuilder,
       Linker linker,
       LinkableDepType linkStyle,
-      RelPath linkOutput,
+      Path linkOutput,
       ImmutableList<StringWithMacros> linkerFlags,
       PatternMatchedCollection<ImmutableList<StringWithMacros>> platformLinkerFlags) {
     ImmutableList.Builder<Arg> argsBuilder = ImmutableList.builder();
@@ -1131,7 +1139,7 @@ public class CxxDescriptionEnhancer {
 
       // Embed a origin-relative library path into the binary so it can find the shared libraries.
       // The shared libraries root is absolute. Also need an absolute path to the linkOutput
-      AbsPath absLinkOut = projectFilesystem.resolve(linkOutput);
+      Path absLinkOut = projectFilesystem.resolve(linkOutput);
       argsBuilder.addAll(
           StringArg.from(
               Linkers.iXlinker(
@@ -1209,6 +1217,7 @@ public class CxxDescriptionEnhancer {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> srcs,
       LinkableDepType linkStyle,
@@ -1240,6 +1249,7 @@ public class CxxDescriptionEnhancer {
             graphBuilder,
             graphBuilder.getSourcePathResolver(),
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             ImmutableList.of(),
             allCompilerFlags,
@@ -1255,6 +1265,7 @@ public class CxxDescriptionEnhancer {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
@@ -1337,6 +1348,7 @@ public class CxxDescriptionEnhancer {
             graphBuilder,
             graphBuilder.getSourcePathResolver(),
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             cxxPreprocessorInput,
             allCompilerFlags,
@@ -1352,6 +1364,7 @@ public class CxxDescriptionEnhancer {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableMap<String, CxxSource> srcs,
       ImmutableMap<Path, SourcePath> headers,
@@ -1395,6 +1408,7 @@ public class CxxDescriptionEnhancer {
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             srcs,
             headers,
@@ -1440,7 +1454,7 @@ public class CxxDescriptionEnhancer {
             executableBuilder,
             linker,
             linkStyle,
-            linkOutput,
+            linkOutput.getPath(),
             linkerFlags,
             platformLinkerFlags);
 
@@ -1453,6 +1467,7 @@ public class CxxDescriptionEnhancer {
                     // target, so that it corresponds to the actual binary we build.
                     CxxLinkableEnhancer.createCxxLinkableBuildRule(
                         cxxBuckConfig,
+                        downwardApiConfig,
                         cxxPlatform,
                         projectFilesystem,
                         graphBuilder,
@@ -1496,7 +1511,8 @@ public class CxxDescriptionEnhancer {
               cxxBuckConfig.shouldCacheStrip(),
               cxxLink,
               cxxPlatform,
-              outputRootName);
+              outputRootName,
+              downwardApiConfig.isEnabledForCxx());
       cxxStrip = Optional.of(stripRule);
       binaryRuleForExecutable = stripRule;
     } else {
@@ -1544,6 +1560,7 @@ public class CxxDescriptionEnhancer {
         deps);
   }
 
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   public static CxxStrip createCxxStripRule(
       BuildTarget baseBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -1553,6 +1570,29 @@ public class CxxDescriptionEnhancer {
       BuildRule unstrippedBinaryRule,
       CxxPlatform cxxPlatform,
       Optional<String> outputRootName) {
+    return createCxxStripRule(
+        baseBuildTarget,
+        projectFilesystem,
+        graphBuilder,
+        stripStyle,
+        isCacheable,
+        unstrippedBinaryRule,
+        cxxPlatform,
+        outputRootName,
+        false);
+  }
+
+  /** Creates {@code CxxStrip} rule */
+  public static CxxStrip createCxxStripRule(
+      BuildTarget baseBuildTarget,
+      ProjectFilesystem projectFilesystem,
+      ActionGraphBuilder graphBuilder,
+      StripStyle stripStyle,
+      boolean isCacheable,
+      BuildRule unstrippedBinaryRule,
+      CxxPlatform cxxPlatform,
+      Optional<String> outputRootName,
+      boolean withDownwardApi) {
     return (CxxStrip)
         graphBuilder.computeIfAbsent(
             baseBuildTarget.withAppendedFlavors(CxxStrip.RULE_FLAVOR, stripStyle.getFlavor()),
@@ -1573,7 +1613,8 @@ public class CxxDescriptionEnhancer {
                             projectFilesystem,
                             cxxPlatform.getBinaryExtension(),
                             outputRootName)
-                        .getPath()));
+                        .getPath(),
+                    withDownwardApi));
   }
 
   public static BuildRule createUberCompilationDatabase(

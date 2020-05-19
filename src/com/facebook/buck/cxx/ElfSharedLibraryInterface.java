@@ -20,6 +20,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -61,7 +65,8 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
       SourcePathRuleFinder ruleFinder,
       Tool objcopy,
       SourcePath input,
-      boolean removeUndefinedSymbols) {
+      boolean removeUndefinedSymbols,
+      boolean withDownwardApi) {
     String libName =
         ruleFinder.getSourcePathResolver().getRelativePath(input).getFileName().toString();
     return new ElfSharedLibraryInterface<>(
@@ -69,7 +74,7 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
         projectFilesystem,
         ruleFinder,
         new ExistingBasedElfSharedLibraryImpl(
-            target, objcopy, libName, removeUndefinedSymbols, input));
+            target, objcopy, libName, removeUndefinedSymbols, input, withDownwardApi));
   }
 
   /**
@@ -84,13 +89,14 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
       String libName,
       Linker linker,
       ImmutableList<Arg> args,
-      boolean removeUndefinedSymbols) {
+      boolean removeUndefinedSymbols,
+      boolean withDownwardApi) {
     return new ElfSharedLibraryInterface<>(
         target,
         projectFilesystem,
         ruleFinder,
         new LinkerBasedElfSharedLibraryImpl(
-            target, objcopy, libName, removeUndefinedSymbols, linker, args));
+            target, objcopy, libName, removeUndefinedSymbols, linker, args, withDownwardApi));
   }
 
   /**
@@ -105,13 +111,25 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
     @AddToRuleKey protected final String libName;
     @AddToRuleKey private final boolean removeUndefinedSymbols;
 
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    protected final boolean withDownwardApi;
+
     private AbstractBuildable(
-        BuildTarget buildTarget, Tool objcopy, String libName, boolean removeUndefinedSymbols) {
+        BuildTarget buildTarget,
+        Tool objcopy,
+        String libName,
+        boolean removeUndefinedSymbols,
+        boolean withDownwardApi) {
       this.buildTarget = buildTarget;
       this.objcopy = objcopy;
       this.libName = libName;
       this.outputPath = new OutputPath(libName);
       this.removeUndefinedSymbols = removeUndefinedSymbols;
+      this.withDownwardApi = withDownwardApi;
     }
 
     @Override
@@ -135,7 +153,8 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
               input.getFirst(),
               input.getSecond(),
               filesystem,
-              outputScratch),
+              outputScratch,
+              withDownwardApi),
           ImmutableElfSymbolTableScrubberStep.ofImpl(
               filesystem,
               outputScratch,
@@ -173,7 +192,13 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
           // prior to compacting sections, and _again_ in the interface .so file.
           ImmutableElfClearProgramHeadersStep.ofImpl(filesystem, outputScratch),
           ImmutableElfCompactSectionsStep.ofImpl(
-              buildTarget, commandPrefix, filesystem, outputScratch, filesystem, output),
+              buildTarget,
+              commandPrefix,
+              filesystem,
+              outputScratch,
+              filesystem,
+              output,
+              withDownwardApi),
           ImmutableElfClearProgramHeadersStep.ofImpl(filesystem, output));
       return steps.build();
     }
@@ -207,8 +232,9 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
         Tool objcopy,
         String libName,
         boolean removeUndefinedSymbols,
-        SourcePath input) {
-      super(buildTarget, objcopy, libName, removeUndefinedSymbols);
+        SourcePath input,
+        boolean withDownwardApi) {
+      super(buildTarget, objcopy, libName, removeUndefinedSymbols, withDownwardApi);
       this.input = input;
     }
 
@@ -233,8 +259,9 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
         String libName,
         boolean removeUndefinedSymbols,
         Linker linker,
-        ImmutableList<Arg> args) {
-      super(buildTarget, objcopy, libName, removeUndefinedSymbols);
+        ImmutableList<Arg> args,
+        boolean withDownwardApi) {
+      super(buildTarget, objcopy, libName, removeUndefinedSymbols, withDownwardApi);
       this.linker = linker;
       this.args = args;
     }
@@ -269,7 +296,8 @@ class ElfSharedLibraryInterface<T extends AbstractBuildable> extends ModernBuild
                   linker.getEnvironment(sourcePathResolverAdapter),
                   linker.getCommandPrefix(sourcePathResolverAdapter),
                   argFilePath.getPath(),
-                  outputDirPath.getPath()));
+                  outputDirPath.getPath(),
+                  withDownwardApi));
       return new Pair<>(filesystem, output);
     }
   }

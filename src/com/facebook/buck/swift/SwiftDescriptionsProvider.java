@@ -22,6 +22,7 @@ import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -32,12 +33,14 @@ public class SwiftDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
-    BuckConfig config = context.getBuckConfig();
-    SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
+    BuckConfig buckConfig = context.getBuckConfig();
+    SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(buckConfig);
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     return Arrays.asList(
-        new SwiftLibraryDescription(toolchainProvider, cxxBuckConfig, swiftBuckConfig),
+        new SwiftLibraryDescription(
+            toolchainProvider, cxxBuckConfig, swiftBuckConfig, downwardApiConfig),
         new SwiftToolchainDescription());
   }
 }

@@ -49,6 +49,7 @@ import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.cxx.toolchain.WindowsArchiver;
 import com.facebook.buck.cxx.toolchain.linker.LinkerProvider;
 import com.facebook.buck.cxx.toolchain.linker.impl.DefaultLinkerProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.util.environment.Platform;
@@ -86,7 +87,7 @@ public class CxxPlatformsTest {
                 new DefaultLinkerProvider(
                     LinkerProvider.Type.GNU, new ConstantToolProvider(borland), true))
             .setStrip(borland)
-            .setSymbolNameTool(new PosixNmSymbolNameTool(new ConstantToolProvider(borland)))
+            .setSymbolNameTool(new PosixNmSymbolNameTool(new ConstantToolProvider(borland), false))
             .setAr(ArchiverProvider.from(new GnuArchiver(borland)))
             .setRanlib(new ConstantToolProvider(borland))
             .setSharedLibraryExtension("so")
@@ -158,14 +159,14 @@ public class CxxPlatformsTest {
                 "ld", Paths.get("fake_path").toString(),
                 "linker_platform", linkerType.name()));
 
-    CxxBuckConfig buckConfig =
-        new CxxBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(sections)
-                .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
-                .build());
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(sections)
+            .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
+            .build();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
 
-    return CxxPlatformUtils.build(buckConfig).getLd();
+    return CxxPlatformUtils.build(cxxBuckConfig, DownwardApiConfig.of(buckConfig)).getLd();
   }
 
   @Test
@@ -192,15 +193,15 @@ public class CxxPlatformsTest {
             ImmutableMap.of(
                 "ld", Paths.get("fake_path").toString(), "linker_platform", "WRONG_PLATFORM"));
 
-    CxxBuckConfig buckConfig =
-        new CxxBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(sections)
-                .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
-                .build());
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(sections)
+            .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
+            .build();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
 
     expectedException.expect(RuntimeException.class);
-    CxxPlatformUtils.build(buckConfig);
+    CxxPlatformUtils.build(cxxBuckConfig, DownwardApiConfig.of(buckConfig));
   }
 
   public Archiver getPlatformArchiver(Platform archiverPlatform) {
@@ -211,15 +212,15 @@ public class CxxPlatformsTest {
                 "ar", Paths.get("fake_path").toString(),
                 "archiver_platform", archiverPlatform.name()));
 
-    CxxBuckConfig buckConfig =
-        new CxxBuckConfig(
-            FakeBuckConfig.builder()
-                .setSections(sections)
-                .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
-                .build());
+    BuckConfig buckConfig =
+        FakeBuckConfig.builder()
+            .setSections(sections)
+            .setFilesystem(new FakeProjectFilesystem(ImmutableSet.of(Paths.get("fake_path"))))
+            .build();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
 
     BuildRuleResolver ruleResolver = new TestActionGraphBuilder();
-    return CxxPlatformUtils.build(buckConfig)
+    return CxxPlatformUtils.build(cxxBuckConfig, DownwardApiConfig.of(buckConfig))
         .getAr()
         .resolve(ruleResolver, UnconfiguredTargetConfiguration.INSTANCE);
   }
@@ -252,6 +253,7 @@ public class CxxPlatformsTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
                 InternalFlavor.of("custom"))
             .getSharedLibraryExtension(),
         equalTo(extension));
@@ -269,6 +271,7 @@ public class CxxPlatformsTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
                 InternalFlavor.of("custom"))
             .getStaticLibraryExtension(),
         equalTo(extension));
@@ -286,6 +289,7 @@ public class CxxPlatformsTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
                 InternalFlavor.of("custom"))
             .getObjectFileExtension(),
         equalTo(extension));
@@ -303,6 +307,7 @@ public class CxxPlatformsTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
                 InternalFlavor.of("custom"))
             .getBinaryExtension(),
         equalTo(Optional.of(extension)));
@@ -320,6 +325,7 @@ public class CxxPlatformsTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
                 InternalFlavor.of("custom"))
             .getBinaryExtension(),
         equalTo(Optional.empty()));
@@ -342,6 +348,7 @@ public class CxxPlatformsTest {
                 CxxPlatformUtils.DEFAULT_PLATFORM,
                 Platform.UNKNOWN,
                 new CxxBuckConfig(buckConfig, flavor),
+                CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
                 InternalFlavor.of("custom"))
             .getArchiveContents(),
         archiveContents);

@@ -24,6 +24,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -53,7 +54,8 @@ public class CxxLuaExtensionBuilder
                     ImmutableLuaPlatformsProvider.ofImpl(
                         luaPlatform, FlavorDomain.of(LuaPlatform.FLAVOR_DOMAIN_NAME, luaPlatform)))
                 .build(),
-            new CxxBuckConfig(FakeBuckConfig.empty())),
+            new CxxBuckConfig(FakeBuckConfig.empty()),
+            DownwardApiConfig.of(FakeBuckConfig.empty())),
         target);
   }
 

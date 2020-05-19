@@ -231,7 +231,10 @@ public class FakeAppleRuleDescriptions {
 
   public static final UnresolvedCxxPlatform DEFAULT_PLATFORM =
       new StaticUnresolvedCxxPlatform(
-          DefaultCxxPlatforms.build(Platform.MACOS, new CxxBuckConfig(DEFAULT_BUCK_CONFIG)));
+          DefaultCxxPlatforms.build(
+              Platform.MACOS,
+              new CxxBuckConfig(DEFAULT_BUCK_CONFIG),
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG));
 
   public static final FlavorDomain<UnresolvedCxxPlatform> DEFAULT_APPLE_FLAVOR_DOMAIN =
       FlavorDomain.of(
@@ -277,7 +280,8 @@ public class FakeAppleRuleDescriptions {
     return new SwiftLibraryDescription(
         createTestToolchainProviderForSwiftPlatform(DEFAULT_SWIFT_PLATFORM_FLAVOR_DOMAIN),
         CxxPlatformUtils.DEFAULT_CONFIG,
-        new SwiftBuckConfig(buckConfig));
+        new SwiftBuckConfig(buckConfig),
+        CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
   }
 
   public static final SwiftLibraryDescription SWIFT_LIBRARY_DESCRIPTION =
@@ -298,7 +302,8 @@ public class FakeAppleRuleDescriptions {
         new CxxLibraryFactory(
             toolchainProvider,
             CxxPlatformUtils.DEFAULT_CONFIG,
-            new InferBuckConfig(DEFAULT_BUCK_CONFIG));
+            new InferBuckConfig(DEFAULT_BUCK_CONFIG),
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
     CxxLibraryMetadataFactory cxxLibraryMetadataFactory =
         new CxxLibraryMetadataFactory(toolchainProvider, DEFAULT_BUCK_CONFIG.getFilesystem());
     XCodeDescriptions xcodeDescriptions =
@@ -336,6 +341,7 @@ public class FakeAppleRuleDescriptions {
         new CxxBinaryFactory(
             toolchainProvider,
             CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             new InferBuckConfig(DEFAULT_BUCK_CONFIG));
     CxxBinaryMetadataFactory cxxBinaryMetadataFactory =
         new CxxBinaryMetadataFactory(toolchainProvider);

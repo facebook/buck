@@ -83,7 +83,8 @@ public class ElfExtractSectionsStepTest {
             filesystem,
             filesystem.getPath("libfoo.so"),
             filesystem,
-            output);
+            output,
+            false);
     step.execute(TestExecutionContext.newInstanceWithRealProcessExecutor());
 
     // Verify that the program table section is empty.

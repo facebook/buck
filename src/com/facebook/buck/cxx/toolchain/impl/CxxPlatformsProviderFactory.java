@@ -33,6 +33,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsSupplier;
 import com.facebook.buck.cxx.toolchain.ProviderBackedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -71,9 +72,10 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
   }
 
   private static CxxPlatformsProvider createProvider(
-      BuckConfig config, ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatforms) {
+      BuckConfig buckConfig, ImmutableMap<Flavor, UnresolvedCxxPlatform> cxxSystemPlatforms) {
     Platform platform = Platform.detect();
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     // Create a map of system platforms.
     ImmutableMap.Builder<Flavor, UnresolvedCxxPlatform> cxxSystemPlatformsBuilder =
@@ -81,7 +83,8 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
 
     cxxSystemPlatformsBuilder.putAll(cxxSystemPlatforms);
 
-    CxxPlatform defaultHostCxxPlatform = DefaultCxxPlatforms.build(platform, cxxBuckConfig);
+    CxxPlatform defaultHostCxxPlatform =
+        DefaultCxxPlatforms.build(platform, cxxBuckConfig, downwardApiConfig);
     cxxSystemPlatformsBuilder.put(
         defaultHostCxxPlatform.getFlavor(),
         new StaticUnresolvedCxxPlatform(defaultHostCxxPlatform));
@@ -93,7 +96,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
 
     Map<Flavor, UnresolvedCxxPlatform> cxxOverridePlatformsMap =
         updateCxxPlatformsWithOptionsFromBuckConfig(
-            platform, config, cxxSystemPlatformsMap, defaultHostCxxPlatform);
+            platform, buckConfig, cxxSystemPlatformsMap, defaultHostCxxPlatform);
 
     UnresolvedCxxPlatform hostCxxPlatform =
         getHostCxxPlatform(cxxBuckConfig, cxxOverridePlatformsMap);
@@ -108,7 +111,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
         new FlavorDomain<>("C/C++ platform", cxxPlatformsMap);
 
-    // Get the default target platform from config.
+    // Get the default target platform from buckConfig.
     UnresolvedCxxPlatform defaultCxxPlatform =
         CxxPlatforms.getConfigDefaultCxxPlatform(cxxBuckConfig, cxxPlatformsMap, hostCxxPlatform);
 
@@ -157,7 +160,8 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
                 defaultHostCxxPlatform,
                 possibleHostFlavors,
                 flavor,
-                new CxxBuckConfig(config, flavor));
+                new CxxBuckConfig(config, flavor),
+                config.getView(DownwardApiConfig.class));
       }
 
       if (!newPlatform.isPresent()) {
@@ -175,7 +179,8 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
       CxxPlatform defaultHostCxxPlatform,
       ImmutableSet<Flavor> possibleHostFlavors,
       Flavor flavor,
-      CxxBuckConfig cxxConfig) {
+      CxxBuckConfig cxxConfig,
+      DownwardApiConfig downwardApiConfig) {
     UnresolvedCxxPlatform baseUnresolvedCxxPlatform = cxxSystemPlatformsMap.get(flavor);
     if (baseUnresolvedCxxPlatform instanceof ProviderBackedCxxPlatform) {
       return Optional.of(baseUnresolvedCxxPlatform);
@@ -198,7 +203,7 @@ public class CxxPlatformsProviderFactory implements ToolchainFactory<CxxPlatform
     StaticUnresolvedCxxPlatform augmentedPlatform =
         new StaticUnresolvedCxxPlatform(
             CxxPlatforms.copyPlatformWithFlavorAndConfig(
-                baseCxxPlatform, platform, cxxConfig, flavor));
+                baseCxxPlatform, platform, cxxConfig, downwardApiConfig, flavor));
     return Optional.of(augmentedPlatform);
   }
 

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -124,14 +125,16 @@ public class CxxPrecompiledHeaderRuleTest {
             ToolType.CPP);
 
     platformSupportingPch =
-        CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED).withCpp(preprocessorSupportingPch);
+        CxxPlatformUtils.build(CXX_CONFIG_PCH_ENABLED, DEFAULT_DOWNWARD_API_CONFIG)
+            .withCpp(preprocessorSupportingPch);
 
     cxxConfigPchDisabled =
         new CxxBuckConfig(
             FakeBuckConfig.builder().setSections("[cxx]\n" + "pch_enabled=false\n").build());
 
     platformNotSupportingPch =
-        CxxPlatformUtils.build(cxxConfigPchDisabled).withCpp(preprocessorSupportingPch);
+        CxxPlatformUtils.build(cxxConfigPchDisabled, DEFAULT_DOWNWARD_API_CONFIG)
+            .withCpp(preprocessorSupportingPch);
   }
 
   public final TargetNodeToBuildRuleTransformer transformer =
@@ -199,6 +202,7 @@ public class CxxPrecompiledHeaderRuleTest {
         graphBuilder,
         graphBuilder.getSourcePathResolver(),
         CXX_CONFIG_PCH_ENABLED,
+        DEFAULT_DOWNWARD_API_CONFIG,
         platform,
         ImmutableList.of(
             CxxPreprocessorInput.builder()
@@ -222,6 +226,7 @@ public class CxxPrecompiledHeaderRuleTest {
         graphBuilder,
         graphBuilder.getSourcePathResolver(),
         cxxConfig,
+        DEFAULT_DOWNWARD_API_CONFIG,
         platform,
         ImmutableList.of(),
         ImmutableMultimap.of(),
@@ -251,6 +256,7 @@ public class CxxPrecompiledHeaderRuleTest {
         graphBuilder,
         graphBuilder.getSourcePathResolver(),
         CXX_CONFIG_PCH_ENABLED,
+        DEFAULT_DOWNWARD_API_CONFIG,
         platformSupportingPch,
         preprocessorInputs,
         ImmutableMultimap.of(),
@@ -498,6 +504,7 @@ public class CxxPrecompiledHeaderRuleTest {
     CxxLink binLink =
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             CXX_CONFIG_PCH_ENABLED,
+            DEFAULT_DOWNWARD_API_CONFIG,
             platformSupportingPch,
             filesystem,
             graphBuilder,

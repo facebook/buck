@@ -67,7 +67,8 @@ public class HalideLibraryBuilder
                     CxxPlatformsProvider.of(defaultCxxPlatform, cxxPlatforms))
                 .build(),
             CxxPlatformUtils.DEFAULT_CONFIG,
-            halideBuckConfig),
+            halideBuckConfig,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG),
         target);
   }
 

@@ -47,6 +47,7 @@ import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetInfo;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkTargetMode;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -82,6 +83,7 @@ abstract class NativeExecutableStarter implements Starter {
       CellPathResolver cellPathResolver,
       LuaPlatform luaPlatform,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       BuildTarget target,
       Path output,
       String mainModule,
@@ -98,6 +100,7 @@ abstract class NativeExecutableStarter implements Starter {
         cellPathResolver,
         luaPlatform,
         cxxBuckConfig,
+        downwardApiConfig,
         target,
         output,
         mainModule,
@@ -122,6 +125,8 @@ abstract class NativeExecutableStarter implements Starter {
   abstract LuaPlatform getLuaPlatform();
 
   abstract CxxBuckConfig getCxxBuckConfig();
+
+  abstract DownwardApiConfig getDownwardApiConfig();
 
   abstract BuildTarget getTarget();
 
@@ -237,6 +242,7 @@ abstract class NativeExecutableStarter implements Starter {
                 getActionGraphBuilder(),
                 getPathResolver(),
                 getCxxBuckConfig(),
+                getDownwardApiConfig(),
                 getLuaPlatform().getCxxPlatform(),
                 ImmutableList.<CxxPreprocessorInput>builder()
                     .add(
@@ -286,6 +292,7 @@ abstract class NativeExecutableStarter implements Starter {
             .addToIndex(
                 CxxLinkableEnhancer.createCxxLinkableBuildRule(
                     getCxxBuckConfig(),
+                    getDownwardApiConfig(),
                     getLuaPlatform().getCxxPlatform(),
                     getProjectFilesystem(),
                     getActionGraphBuilder(),

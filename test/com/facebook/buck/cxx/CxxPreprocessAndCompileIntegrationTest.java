@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
@@ -158,7 +159,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedSourceDoesNotChange() throws Exception {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_source");
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:gensource");
@@ -193,7 +196,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void inputBasedRuleKeyAvoidsRerunningIfGeneratedHeaderDoesNotChange() throws Exception {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_using_generated_header");
     String unusedGenruleInput = "unused.dat";
     BuildTarget genrule = BuildTargetFactory.newInstance("//:genheader");
@@ -228,7 +233,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   private void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeader(boolean disableHeaderSymlinks)
       throws Exception {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     String targetName =
         "//:binary_with_used_full_header" + (disableHeaderSymlinks ? "_nosymlinks" : "");
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
@@ -270,7 +277,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   private void depfileBasedRuleKeyRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion(
       boolean disableHeaderSymlinks) throws Exception {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     String targetName =
         "//:binary_with_used_relative_header" + (disableHeaderSymlinks ? "_nosymlinks" : "");
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
@@ -315,7 +324,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   private void depfileBasedRuleKeyRebuildsAfterChangeToUsedParentHeaderUsingFileRelativeInclusion(
       boolean disableHeaderSymlinks) throws Exception {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     String targetName =
         "//:binary_with_used_relative_parent_header" + (disableHeaderSymlinks ? "_nosymlinks" : "");
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
@@ -360,7 +371,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   private void depfileBasedRuleKeyAvoidsRecompilingAfterChangeToUnusedHeader(
       boolean disableHeaderSymlinks) throws Exception {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     String targetName =
         "//:binary_with_unused_header" + (disableHeaderSymlinks ? "_nosymlinks" : "");
     BuildTarget target = BuildTargetFactory.newInstance(targetName);
@@ -405,7 +418,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void manifestCachingRebuildsAfterChangeToUsedHeader() throws Exception {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_full_header");
     String usedHeaderName = "source_full_header.h";
     String sourceName = "source_full_header.cpp";
@@ -442,7 +457,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
   @Test
   public void manifestCachingRebuildsAfterChangeToUsedHeaderUsingFileRelativeInclusion()
       throws Exception {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_used_relative_header");
     String usedHeaderName = "source_relative_header.h";
     String sourceName = "source_relative_header.cpp";
@@ -478,7 +495,9 @@ public class CxxPreprocessAndCompileIntegrationTest {
 
   @Test
   public void manifestCachingGetsHitAfterChangeToUnusedHeader() throws Exception {
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     BuildTarget target = BuildTargetFactory.newInstance("//:binary_with_unused_header");
     String unusedHeaderName = "unused_header.h";
     String sourceName = "source.cpp";

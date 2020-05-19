@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.InferBuckConfig;
 import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.stream.RichStream;
 import com.google.common.base.Preconditions;
@@ -95,26 +96,31 @@ public final class CxxInferEnhancer {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       CxxConstructorArg args,
       InferBuckConfig inferBuckConfig) {
-    return new CxxInferEnhancer(graphBuilder, cxxBuckConfig, inferBuckConfig, cxxPlatform)
+    return new CxxInferEnhancer(
+            graphBuilder, cxxBuckConfig, inferBuckConfig, downwardApiConfig, cxxPlatform)
         .requireInferRule(target, cellRoots, filesystem, args);
   }
 
   private final ActionGraphBuilder graphBuilder;
   private final CxxBuckConfig cxxBuckConfig;
   private final InferBuckConfig inferBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final CxxPlatform cxxPlatform;
 
   private CxxInferEnhancer(
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
       InferBuckConfig inferBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform) {
     this.graphBuilder = graphBuilder;
     this.cxxBuckConfig = cxxBuckConfig;
     this.inferBuckConfig = inferBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.cxxPlatform = cxxPlatform;
   }
 
@@ -323,6 +329,7 @@ public final class CxxInferEnhancer {
             graphBuilder,
             graphBuilder.getSourcePathResolver(),
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             preprocessorInputs,
             ImmutableMultimap.copyOf(
@@ -339,6 +346,6 @@ public final class CxxInferEnhancer {
             args.getPrefixHeader(),
             args.getPrecompiledHeader(),
             PicType.PDC);
-    return factory.requireInferCaptureBuildRules(sources, inferBuckConfig);
+    return factory.requireInferCaptureBuildRules(sources, inferBuckConfig, downwardApiConfig);
   }
 }

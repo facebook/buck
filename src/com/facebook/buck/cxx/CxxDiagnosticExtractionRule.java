@@ -25,6 +25,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.file.MostFiles;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -65,7 +66,8 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
       SourcePath input,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
       CxxSource.Type inputType,
-      DebugPathSanitizer sanitizer) {
+      DebugPathSanitizer sanitizer,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -78,7 +80,8 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
             input,
             precompiledHeaderRule,
             inputType,
-            sanitizer));
+            sanitizer,
+            withDownwardApi));
   }
 
   @Override
@@ -104,7 +107,8 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
         SourcePath input,
         Optional<CxxPrecompiledHeader> precompiledHeaderRule,
         CxxSource.Type inputType,
-        DebugPathSanitizer sanitizer) {
+        DebugPathSanitizer sanitizer,
+        boolean withDownwardApi) {
       super(
           targetName,
           preprocessDelegate,
@@ -113,7 +117,8 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
           input,
           precompiledHeaderRule,
           inputType,
-          sanitizer);
+          sanitizer,
+          withDownwardApi);
       this.diagnosticName = diagnosticTools.getFirst();
       this.diagnosticTool = diagnosticTools.getSecond();
     }
@@ -153,7 +158,8 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
               diagnosticTool,
               diagnosticName,
               sourceInputPath,
-              resolvedOutput));
+              resolvedOutput,
+              withDownwardApi));
 
       return steps.build();
     }
@@ -198,6 +204,7 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
     private final String diagnosticName;
     private final Path inputPath;
     private final Path outputPath;
+    private final boolean withDownwardApi;
 
     CxxExtractDiagnosticFromCompileCommand(
         ProjectFilesystem filesystem,
@@ -206,7 +213,8 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
         Tool diagnosticTool,
         String diagnosticName,
         Path inputPath,
-        Path outputPath) {
+        Path outputPath,
+        boolean withDownwardApi) {
       super("diagnostic-extraction-call-tool");
       this.filesystem = filesystem;
       this.resolver = resolver;
@@ -215,6 +223,7 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
       this.diagnosticName = diagnosticName;
       this.inputPath = inputPath;
       this.outputPath = outputPath;
+      this.withDownwardApi = withDownwardApi;
     }
 
     @Override
@@ -242,6 +251,12 @@ public class CxxDiagnosticExtractionRule extends ModernBuildRule<CxxDiagnosticEx
               .build();
       Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
       ProcessExecutor processExecutor = context.getProcessExecutor();
+      if (withDownwardApi) {
+        processExecutor =
+            processExecutor.withDownwardAPI(
+                DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+      }
+
       ProcessExecutor.Result result =
           processExecutor.launchAndExecute(
               processExecutorParams,

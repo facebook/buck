@@ -63,6 +63,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkable;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.FrameworkPath;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -139,14 +140,17 @@ public class SwiftLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public SwiftLibraryDescription(
       ToolchainProvider toolchainProvider,
       CxxBuckConfig cxxBuckConfig,
-      SwiftBuckConfig swiftBuckConfig) {
+      SwiftBuckConfig swiftBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -372,6 +376,7 @@ public class SwiftLibraryDescription
     return graphBuilder.addToIndex(
         CxxLinkableEnhancer.createCxxLinkableBuildRule(
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             projectFilesystem,
             graphBuilder,

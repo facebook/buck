@@ -16,6 +16,7 @@
 
 package com.facebook.buck.cxx;
 
+import static com.facebook.buck.cxx.toolchain.CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG;
 import static org.junit.Assert.assertThat;
 
 import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
@@ -70,7 +71,9 @@ public class CxxDependencyFileIntegrationTest {
 
     // Find the target used for preprocessing and verify it ran.
     target = BuildTargetFactory.newInstance("//:test");
-    CxxPlatform cxxPlatform = CxxPlatformUtils.build(new CxxBuckConfig(FakeBuckConfig.empty()));
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.build(
+            new CxxBuckConfig(FakeBuckConfig.empty()), DEFAULT_DOWNWARD_API_CONFIG);
     CxxSourceRuleFactory cxxSourceRuleFactory =
         CxxSourceRuleFactoryHelper.of(workspace.getDestPath(), target, cxxPlatform);
     String source = "test.cpp";

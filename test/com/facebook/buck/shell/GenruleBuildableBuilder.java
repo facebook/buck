@@ -121,6 +121,7 @@ abstract class GenruleBuildableBuilder {
         getEnvironmentExpansionSeparator(),
         getSandboxProperties(),
         getAndroidTools(),
-        getRemote());
+        getRemote(),
+        false);
   }
 }

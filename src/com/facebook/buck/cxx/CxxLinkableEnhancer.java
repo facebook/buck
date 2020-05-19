@@ -40,6 +40,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.AddsToRuleKeyFunction;
@@ -77,6 +78,7 @@ public class CxxLinkableEnhancer {
   /** Generate build rule for the indexing step of an incremental ThinLTO build */
   public static CxxThinLTOIndex createCxxThinLTOIndexBuildRule(
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -150,12 +152,14 @@ public class CxxLinkableEnhancer {
         output,
         ldArgs,
         cxxBuckConfig.getLinkScheduleInfo(),
-        cxxBuckConfig.shouldCacheLinks());
+        cxxBuckConfig.shouldCacheLinks(),
+        downwardApiConfig.isEnabledForCxx());
   }
 
   public static CxxLink createCxxLinkableBuildRule(
       CellPathResolver cellPathResolver,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
@@ -231,7 +235,8 @@ public class CxxLinkableEnhancer {
         cxxBuckConfig.getLinkScheduleInfo(),
         cxxBuckConfig.shouldCacheLinks(),
         linkOptions.getThinLto(),
-        linkOptions.getFatLto());
+        linkOptions.getFatLto(),
+        downwardApiConfig.isEnabledForCxx());
   }
 
   private static ImmutableList<Arg> createDepSharedLibFrameworkArgsForLink(
@@ -363,6 +368,7 @@ public class CxxLinkableEnhancer {
    */
   public static CxxLink createCxxLinkableBuildRule(
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       ActionGraphBuilder graphBuilder,
@@ -406,6 +412,7 @@ public class CxxLinkableEnhancer {
     return createCxxLinkableBuildRule(
         cellPathResolver,
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         projectFilesystem,
         graphBuilder,
@@ -449,6 +456,7 @@ public class CxxLinkableEnhancer {
 
   public static CxxLink createCxxLinkableSharedBuildRule(
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver ruleResolver,
@@ -477,6 +485,7 @@ public class CxxLinkableEnhancer {
     return createCxxLinkableBuildRule(
         cellPathResolver,
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         projectFilesystem,
         ruleResolver,

@@ -23,6 +23,7 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.cxx.toolchain.Compiler;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
 import com.facebook.buck.cxx.toolchain.DependencyTrackingMode;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -70,6 +71,7 @@ class CxxPreprocessAndCompileStep implements Step {
   private final DebugPathSanitizer sanitizer;
   private final Compiler compiler;
   private final Optional<CxxLogInfo> cxxLogInfo;
+  private final boolean withDownwardApi;
 
   /** Directory to use to store intermediate/temp files used for compilation. */
   private final Path scratchDir;
@@ -100,7 +102,8 @@ class CxxPreprocessAndCompileStep implements Step {
       boolean useArgfile,
       ImmutableList<String> preArgfileArgs,
       Compiler compiler,
-      Optional<CxxLogInfo> cxxLogInfo) {
+      Optional<CxxLogInfo> cxxLogInfo,
+      boolean withDownwardApi) {
     this.filesystem = filesystem;
     this.operation = operation;
     this.output = output;
@@ -116,6 +119,7 @@ class CxxPreprocessAndCompileStep implements Step {
     this.preArgfileArgs = preArgfileArgs;
     this.compiler = compiler;
     this.cxxLogInfo = cxxLogInfo;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -214,8 +218,15 @@ class CxxPreprocessAndCompileStep implements Step {
       LOG.verbose("Running command (pwd=%s): %s", params.getDirectory(), getDescription(context));
     }
 
-    ProcessExecutor.Result result =
-        new DefaultProcessExecutor(Console.createNullConsole()).launchAndExecute(params);
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(Console.createNullConsole());
+
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
+
+    ProcessExecutor.Result result = processExecutor.launchAndExecute(params);
 
     String err = getSanitizedStderr(result, context);
     result =

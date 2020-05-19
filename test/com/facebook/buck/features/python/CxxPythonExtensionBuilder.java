@@ -62,7 +62,8 @@ public class CxxPythonExtensionBuilder
                     CxxPlatformsProvider.of(
                         CxxPlatformUtils.DEFAULT_UNRESOLVED_PLATFORM, cxxPlatforms))
                 .build(),
-            cxxBuckConfig),
+            cxxBuckConfig,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG),
         target);
   }
 

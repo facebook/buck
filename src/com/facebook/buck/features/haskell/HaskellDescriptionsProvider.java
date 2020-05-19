@@ -16,11 +16,13 @@
 
 package com.facebook.buck.features.haskell;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -31,13 +33,15 @@ public class HaskellDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(context.getBuckConfig());
+    BuckConfig buckConfig = context.getBuckConfig();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     return Arrays.asList(
         new HaskellHaddockDescription(toolchainProvider),
-        new HaskellLibraryDescription(toolchainProvider, cxxBuckConfig),
-        new HaskellBinaryDescription(toolchainProvider, cxxBuckConfig),
+        new HaskellLibraryDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),
+        new HaskellBinaryDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),
         new HaskellPrebuiltLibraryDescription(),
-        new HaskellGhciDescription(toolchainProvider, cxxBuckConfig));
+        new HaskellGhciDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig));
   }
 }

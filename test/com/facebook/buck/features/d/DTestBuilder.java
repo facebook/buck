@@ -36,7 +36,10 @@ public class DTestBuilder
   public DTestBuilder(BuildTarget target, DBuckConfig dBuckConfig, CxxPlatform defaultCxxPlatform) {
     super(
         new DTestDescription(
-            createToolchain(defaultCxxPlatform), dBuckConfig, CxxPlatformUtils.DEFAULT_CONFIG),
+            createToolchain(defaultCxxPlatform),
+            dBuckConfig,
+            CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG),
         target);
     getArgForPopulating().setSrcs(SourceSortedSet.EMPTY);
   }

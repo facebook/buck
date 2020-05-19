@@ -43,6 +43,7 @@ import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -116,6 +117,7 @@ abstract class DDescriptionUtils {
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       ImmutableList<String> compilerFlags,
       SourceSortedSet sources,
       ImmutableList<String> linkerFlags,
@@ -137,6 +139,7 @@ abstract class DDescriptionUtils {
     // dependencies.
     return CxxLinkableEnhancer.createCxxLinkableBuildRule(
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         projectFilesystem,
         graphBuilder,

@@ -43,14 +43,16 @@ abstract class ElfSharedLibraryInterfaceFactory implements SharedLibraryInterfac
       ProjectFilesystem projectFilesystem,
       BuildRuleResolver resolver,
       CxxPlatform cxxPlatform,
-      SourcePath library) {
+      SourcePath library,
+      boolean withDownwardApi) {
     return ElfSharedLibraryInterface.from(
         target,
         projectFilesystem,
         resolver,
         getObjcopy().resolve(resolver, target.getTargetConfiguration()),
         library,
-        isRemoveUndefinedSymbols());
+        isRemoveUndefinedSymbols(),
+        withDownwardApi);
   }
 
   @Override
@@ -60,7 +62,8 @@ abstract class ElfSharedLibraryInterfaceFactory implements SharedLibraryInterfac
       BuildRuleResolver resolver,
       String libName,
       Linker linker,
-      ImmutableList<Arg> args) {
+      ImmutableList<Arg> args,
+      boolean withDownwardApi) {
     return ElfSharedLibraryInterface.from(
         target,
         projectFilesystem,
@@ -69,7 +72,8 @@ abstract class ElfSharedLibraryInterfaceFactory implements SharedLibraryInterfac
         libName,
         linker,
         args,
-        isRemoveUndefinedSymbols());
+        isRemoveUndefinedSymbols(),
+        withDownwardApi);
   }
 
   public static ElfSharedLibraryInterfaceFactory from(ElfSharedLibraryInterfaceParams params) {

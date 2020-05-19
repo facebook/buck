@@ -16,11 +16,13 @@
 
 package com.facebook.buck.features.lua;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -31,11 +33,13 @@ public class LuaDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
-    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(context.getBuckConfig());
+    BuckConfig buckConfig = context.getBuckConfig();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     return Arrays.asList(
-        new CxxLuaExtensionDescription(toolchainProvider, cxxBuckConfig),
-        new LuaBinaryDescription(toolchainProvider, cxxBuckConfig),
+        new CxxLuaExtensionDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),
+        new LuaBinaryDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),
         new LuaLibraryDescription());
   }
 }

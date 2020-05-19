@@ -74,7 +74,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
       SourcePath input,
       Type inputType,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
-      DebugPathSanitizer sanitizer) {
+      DebugPathSanitizer sanitizer,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -87,7 +88,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
             input,
             precompiledHeaderRule,
             inputType,
-            sanitizer));
+            sanitizer,
+            withDownwardApi));
     this.output =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s/" + outputName);
     if (precompiledHeaderRule.isPresent()) {
@@ -121,7 +123,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
       String outputName,
       SourcePath input,
       Type inputType,
-      DebugPathSanitizer sanitizer) {
+      DebugPathSanitizer sanitizer,
+      boolean withDownwardApi) {
     return new CxxPreprocessAndCompile(
         buildTarget,
         projectFilesystem,
@@ -132,7 +135,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
         input,
         inputType,
         Optional.empty(),
-        sanitizer);
+        sanitizer,
+        withDownwardApi);
   }
 
   /**
@@ -148,7 +152,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
       SourcePath input,
       Type inputType,
       Optional<CxxPrecompiledHeader> precompiledHeaderRule,
-      DebugPathSanitizer sanitizer) {
+      DebugPathSanitizer sanitizer,
+      boolean withDownwardApi) {
     return new CxxPreprocessAndCompile(
         buildTarget,
         projectFilesystem,
@@ -159,7 +164,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
         input,
         inputType,
         precompiledHeaderRule,
-        sanitizer);
+        sanitizer,
+        withDownwardApi);
   }
 
   private Path getDepFilePath() {
@@ -298,7 +304,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
         SourcePath input,
         Optional<CxxPrecompiledHeader> precompiledHeaderRule,
         Type inputType,
-        DebugPathSanitizer sanitizer) {
+        DebugPathSanitizer sanitizer,
+        boolean withDownwardApi) {
       super(
           targetName,
           preprocessDelegate,
@@ -307,7 +314,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
           input,
           precompiledHeaderRule,
           inputType,
-          sanitizer);
+          sanitizer,
+          withDownwardApi);
     }
 
     CxxPreprocessAndCompileStep makeMainStep(
@@ -344,7 +352,8 @@ public class CxxPreprocessAndCompile extends ModernBuildRule<CxxPreprocessAndCom
               ImmutableCxxLogInfo.ofImpl(
                   Optional.ofNullable(targetName),
                   Optional.ofNullable(relativeInputPath.getPath()),
-                  Optional.ofNullable(resolvedOutput))));
+                  Optional.ofNullable(resolvedOutput))),
+          withDownwardApi);
     }
 
     @Override

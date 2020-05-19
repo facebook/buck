@@ -132,6 +132,7 @@ public class NdkCxxPlatformTest {
               graphBuilder,
               graphBuilder.getSourcePathResolver(),
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               entry.getValue().resolve(graphBuilder).getCxxPlatform(),
               ImmutableList.of(),
               ImmutableMultimap.of(),
@@ -182,6 +183,7 @@ public class NdkCxxPlatformTest {
       BuildRule rule =
           CxxLinkableEnhancer.createCxxLinkableBuildRule(
               CxxPlatformUtils.DEFAULT_CONFIG,
+              CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
               entry.getValue().resolve(graphBuilder).getCxxPlatform(),
               filesystem,
               graphBuilder,
@@ -367,15 +369,16 @@ public class NdkCxxPlatformTest {
             .setSections(
                 ImmutableMap.of(
                     "ndk",
-                        ImmutableMap.of(
-                            "extra_cflags", "-DSOME_CFLAG -DBUCK -std=buck -Og -Wno-buck",
-                            "extra_cxxflags",
-                                "-DSOME_CXXFLAG -DBUCK -std=buck++ -Og -Wno-buck -frtti -fexceptions"),
+                    ImmutableMap.of(
+                        "extra_cflags",
+                        "-DSOME_CFLAG -DBUCK -std=buck -Og -Wno-buck",
+                        "extra_cxxflags",
+                        "-DSOME_CXXFLAG -DBUCK -std=buck++ -Og -Wno-buck -frtti -fexceptions"),
                     "cxx",
-                        ImmutableMap.of(
-                            "cxxflags", "-Wignored-cxx-flag",
-                            "cflags", "-Wignored-c-flag",
-                            "cppflags", "-Wignored-cpp-flag")))
+                    ImmutableMap.of(
+                        "cxxflags", "-Wignored-cxx-flag",
+                        "cflags", "-Wignored-c-flag",
+                        "cppflags", "-Wignored-cpp-flag")))
             .build();
     NdkCxxPlatform platform =
         NdkCxxPlatforms.build(

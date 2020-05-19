@@ -41,6 +41,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -244,6 +245,7 @@ public class Omnibus {
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags) {
     BuildTarget dummyOmnibusTarget = baseTarget.withAppendedFlavors(DUMMY_OMNIBUS_FLAVOR);
@@ -252,6 +254,7 @@ public class Omnibus {
         graphBuilder.addToIndex(
             CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
                 cxxBuckConfig,
+                downwardApiConfig,
                 cxxPlatform,
                 projectFilesystem,
                 graphBuilder,
@@ -273,6 +276,7 @@ public class Omnibus {
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdFlags,
       OmnibusSpec spec,
@@ -374,6 +378,7 @@ public class Omnibus {
           rootLinkRule =
               CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
                   cxxBuckConfig,
+                  downwardApiConfig,
                   cxxPlatform,
                   projectFilesystem,
                   graphBuilder,
@@ -400,6 +405,7 @@ public class Omnibus {
               CxxLinkableEnhancer.createCxxLinkableBuildRule(
                   cellPathResolver,
                   cxxBuckConfig,
+                  downwardApiConfig,
                   cxxPlatform,
                   projectFilesystem,
                   graphBuilder,
@@ -433,6 +439,7 @@ public class Omnibus {
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdFlags,
       OmnibusSpec spec,
@@ -444,6 +451,7 @@ public class Omnibus {
         cellPathResolver,
         graphBuilder,
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         extraLdFlags,
         spec,
@@ -459,6 +467,7 @@ public class Omnibus {
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdFlags,
       OmnibusSpec spec,
@@ -470,6 +479,7 @@ public class Omnibus {
         cellPathResolver,
         graphBuilder,
         cxxBuckConfig,
+        downwardApiConfig,
         cxxPlatform,
         extraLdFlags,
         spec,
@@ -516,6 +526,7 @@ public class Omnibus {
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       OmnibusSpec spec) {
@@ -607,6 +618,7 @@ public class Omnibus {
         graphBuilder.addToIndex(
             CxxLinkableEnhancer.createCxxLinkableSharedBuildRule(
                 cxxBuckConfig,
+                downwardApiConfig,
                 cxxPlatform,
                 projectFilesystem,
                 graphBuilder,
@@ -640,6 +652,7 @@ public class Omnibus {
       CellPathResolver cellPathResolver,
       ActionGraphBuilder graphBuilder,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       ImmutableList<? extends Arg> extraLdflags,
       Iterable<? extends NativeLinkTarget> nativeLinkTargetRoots,
@@ -659,6 +672,7 @@ public class Omnibus {
             cellPathResolver,
             graphBuilder,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             extraLdflags);
 
@@ -677,6 +691,7 @@ public class Omnibus {
                       cellPathResolver,
                       graphBuilder,
                       cxxBuckConfig,
+                      downwardApiConfig,
                       cxxPlatform,
                       extraLdflags,
                       spec,
@@ -697,6 +712,7 @@ public class Omnibus {
             cellPathResolver,
             graphBuilder,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             extraLdflags,
             spec,
@@ -716,6 +732,7 @@ public class Omnibus {
               params,
               graphBuilder,
               cxxBuckConfig,
+              downwardApiConfig,
               cxxPlatform,
               extraLdflags,
               spec);
@@ -734,6 +751,7 @@ public class Omnibus {
                 cellPathResolver,
                 graphBuilder,
                 cxxBuckConfig,
+                downwardApiConfig,
                 cxxPlatform,
                 extraLdflags,
                 spec,

@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.PythonTestUtils;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
@@ -53,7 +54,8 @@ public class LuaBinaryBuilder
                     PythonPlatformsProvider.DEFAULT_NAME,
                     PythonPlatformsProvider.of(pythonPlatforms))
                 .build(),
-            cxxBuckConfig),
+            cxxBuckConfig,
+            DownwardApiConfig.of(FakeBuckConfig.empty())),
         target);
   }
 

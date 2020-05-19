@@ -104,7 +104,8 @@ public class ArchiveTest {
                     ArchiveContents.NORMAL,
                     DEFAULT_OUTPUT_FILE_NAME,
                     DEFAULT_INPUTS,
-                    /* cacheable */ true));
+                    /* cacheable */ true,
+                    false));
 
     // Verify that changing the archiver causes a rulekey change.
     RuleKey archiverChange =
@@ -123,7 +124,8 @@ public class ArchiveTest {
                     ArchiveContents.NORMAL,
                     DEFAULT_OUTPUT_FILE_NAME,
                     DEFAULT_INPUTS,
-                    /* cacheable */ true));
+                    /* cacheable */ true,
+                    false));
     assertNotEquals(defaultRuleKey, archiverChange);
 
     // Verify that changing the output path causes a rulekey change.
@@ -141,7 +143,8 @@ public class ArchiveTest {
                     ArchiveContents.NORMAL,
                     "different",
                     DEFAULT_INPUTS,
-                    /* cacheable */ true));
+                    /* cacheable */ true,
+                    false));
     assertNotEquals(defaultRuleKey, outputChange);
 
     // Verify that changing the inputs causes a rulekey change.
@@ -159,7 +162,8 @@ public class ArchiveTest {
                     ArchiveContents.NORMAL,
                     DEFAULT_OUTPUT_FILE_NAME,
                     ImmutableList.of(FakeSourcePath.of("different")),
-                    /* cacheable */ true));
+                    /* cacheable */ true,
+                    false));
     assertNotEquals(defaultRuleKey, inputChange);
 
     // Verify that changing the type of archiver causes a rulekey change.
@@ -177,7 +181,8 @@ public class ArchiveTest {
                     ArchiveContents.NORMAL,
                     DEFAULT_OUTPUT_FILE_NAME,
                     DEFAULT_INPUTS,
-                    /* cacheable */ true));
+                    /* cacheable */ true,
+                    false));
     assertNotEquals(defaultRuleKey, archiverTypeChange);
   }
 
@@ -198,7 +203,8 @@ public class ArchiveTest {
             ArchiveContents.NORMAL,
             DEFAULT_OUTPUT_FILE_NAME,
             ImmutableList.of(FakeSourcePath.of("simple.o")),
-            /* cacheable */ true);
+            /* cacheable */ true,
+            false);
 
     BuildContext buildContext =
         FakeBuildContext.NOOP_CONTEXT.withSourcePathResolver(resolver.getSourcePathResolver());
@@ -245,7 +251,8 @@ public class ArchiveTest {
                 FakeSourcePath.of("simple.o"),
                 genrule1.getSourcePathToOutput(),
                 genrule2.getSourcePathToOutput()),
-            /* cacheable */ true);
+            /* cacheable */ true,
+            false);
 
     // Verify that the archive dependencies include the genrules providing the
     // SourcePath inputs.

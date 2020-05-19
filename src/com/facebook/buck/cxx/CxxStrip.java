@@ -22,6 +22,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -64,6 +68,13 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
 
   private final boolean isCacheable;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   private SourcePathRuleFinder ruleFinder;
   private BuildableSupport.DepsSupplier depsSupplier;
 
@@ -75,7 +86,8 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
       StripStyle stripStyle,
       Tool strip,
       boolean isCacheable,
-      Path output) {
+      Path output,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.unstrippedBinary = unstrippedBinary;
     this.ruleFinder = ruleFinder;
@@ -84,6 +96,7 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
     this.isCacheable = isCacheable;
     this.output = output;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleFinder);
+    this.withDownwardApi = withDownwardApi;
 
     Preconditions.checkArgument(
         buildTarget.getFlavors().contains(RULE_FLAVOR),
@@ -144,7 +157,8 @@ public class CxxStrip extends AbstractBuildRule implements SupportsInputBasedRul
             strip.getCommandPrefix(context.getSourcePathResolver()),
             strip.getEnvironment(context.getSourcePathResolver()),
             stripStyle.getStripToolArgs(),
-            getProjectFilesystem()));
+            getProjectFilesystem(),
+            withDownwardApi));
   }
 
   public StripStyle getStripStyle() {

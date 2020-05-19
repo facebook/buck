@@ -45,6 +45,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderSymlinkTree;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.FileListableLinkerInputArg;
@@ -99,6 +100,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       GoPlatform platform,
       CgoLibraryDescriptionArg args,
       Iterable<BuildTarget> cxxDeps,
@@ -198,6 +200,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                         graphBuilder,
                         cellRoots,
                         cxxBuckConfig,
+                        downwardApiConfig,
                         platform.getCxxPlatform(),
                         args,
                         new ImmutableList.Builder<BuildRule>()
@@ -271,6 +274,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     CxxLinkableEnhancer.createCxxLinkableBuildRule(
                         cellRoots,
                         cxxBuckConfig,
+                        downwardApiConfig,
                         platform.getCxxPlatform(),
                         projectFilesystem,
                         graphBuilder,
@@ -358,6 +362,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxPlatform cxxPlatform,
       CgoLibraryDescriptionArg args,
       Iterable<BuildRule> deps,
@@ -380,6 +385,7 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
             graphBuilder,
             cellRoots,
             cxxBuckConfig,
+            downwardApiConfig,
             cxxPlatform,
             srcs,
             headers,

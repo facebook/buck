@@ -49,6 +49,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -405,6 +406,7 @@ public class HaskellDescriptionUtils {
       ActionGraphBuilder graphBuilder,
       HaskellPlatform platform,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       ImmutableSortedSet<BuildTarget> argDeps,
       PatternMatchedCollection<ImmutableSortedSet<BuildTarget>> argPlatformDeps,
       SourceSortedSet argSrcs,
@@ -524,6 +526,7 @@ public class HaskellDescriptionUtils {
             graphBuilder,
             platform.getCxxPlatform(),
             cxxBuckConfig,
+            downwardApiConfig,
             omnibusSpec.getBody(),
             omnibusSpec.getDeps(),
             extraLinkFlags.build());
