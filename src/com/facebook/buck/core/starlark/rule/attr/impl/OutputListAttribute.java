@@ -26,6 +26,7 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 
 /**
  * Represents a list of output files.
@@ -79,7 +80,7 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
     return ImmutableOutputListAttribute.ofImpl(preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 
-  ImmutableList<Artifact> postCoercionTransform(
+  StarlarkList<Artifact> postCoercionTransform(
       ImmutableList<String> coercedValue, RuleAnalysisContext analysisContext) {
     ImmutableList.Builder<Artifact> builder =
         ImmutableList.builderWithExpectedSize(coercedValue.size());
@@ -88,6 +89,6 @@ public abstract class OutputListAttribute extends Attribute<ImmutableList<String
           OutputAttributeValidator.validateAndRegisterArtifact(
               output, analysisContext.actionRegistry()));
     }
-    return builder.build();
+    return StarlarkList.immutableCopyOf(builder.build());
   }
 }

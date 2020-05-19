@@ -22,10 +22,10 @@ import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 
 /** Class that represents a sorted set of uniq strings */
 @BuckStyleValue
@@ -65,9 +65,10 @@ public abstract class StringSortedSetAttribute extends Attribute<ImmutableSorted
   }
 
   @Override
-  public PostCoercionTransform<RuleAnalysisContext, ImmutableSortedSet<String>, ?>
+  public PostCoercionTransform<
+          RuleAnalysisContext, ImmutableSortedSet<String>, StarlarkList<String>>
       getPostCoercionTransform() {
-    return (coercedValue, ctx) -> ImmutableList.copyOf(coercedValue);
+    return (coercedValue, ctx) -> StarlarkList.immutableCopyOf(coercedValue);
   }
 
   public static StringSortedSetAttribute of(

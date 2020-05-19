@@ -32,11 +32,11 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.starlark.compatible.MutableObjectException;
 import com.facebook.buck.core.starlark.compatible.TestMutableEnv;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Optional;
 import org.junit.Rule;
 import org.junit.Test;
@@ -47,7 +47,7 @@ public class ProviderInfoCollectionImplTest {
   @Rule public ExpectedException expectedException = ExpectedException.none();
 
   private static final DefaultInfo DEFAULT_INFO =
-      new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of());
+      new ImmutableDefaultInfo(Dict.empty(), StarlarkList.empty());
 
   @Test
   public void getIndexThrowsWhenKeyNotProvider() throws EvalException {
@@ -149,7 +149,7 @@ public class ProviderInfoCollectionImplTest {
 
       assertFalse(mutableDict.isImmutable());
       expectedException.expect(MutableObjectException.class);
-      collection.put(new ImmutableDefaultInfo(mutableDict, ImmutableSet.of()));
+      collection.put(new ImmutableDefaultInfo(mutableDict, StarlarkList.empty()));
     }
   }
 }

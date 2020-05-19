@@ -39,7 +39,7 @@ public class DefaultInfoArtifactsRetriever {
       DefaultInfo defaultInfo, BuildTargetWithOutputs buildTargetWithOutputs) {
     OutputLabel outputLabel = buildTargetWithOutputs.getOutputLabel();
     if (outputLabel.isDefault()) {
-      return defaultInfo.defaultOutputs();
+      return defaultInfo.defaultOutputs().getImmutableList();
     }
     ImmutableList<Artifact> namedArtifacts =
         defaultInfo.namedOutputs().get(OutputLabel.internals().getLabel(outputLabel));

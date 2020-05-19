@@ -24,10 +24,10 @@ import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 
 /**
  * Class that represents a set of source files, whether on disk or that are other build targets
@@ -74,15 +74,15 @@ public abstract class SourceSortedSetAttribute extends Attribute<ImmutableSorted
 
   @Override
   public PostCoercionTransform<
-          RuleAnalysisContext, ImmutableSortedSet<SourcePath>, ImmutableList<Artifact>>
+          RuleAnalysisContext, ImmutableSortedSet<SourcePath>, StarlarkList<Artifact>>
       getPostCoercionTransform() {
     return this::postCoercionTransform;
   }
 
-  private ImmutableList<Artifact> postCoercionTransform(
+  private StarlarkList<Artifact> postCoercionTransform(
       ImmutableSortedSet<SourcePath> coercedValue, RuleAnalysisContext analysisContext) {
 
-    return ImmutableList.copyOf(analysisContext.resolveSrcs(coercedValue));
+    return StarlarkList.immutableCopyOf(analysisContext.resolveSrcs(coercedValue));
   }
 
   public static SourceSortedSetAttribute of(

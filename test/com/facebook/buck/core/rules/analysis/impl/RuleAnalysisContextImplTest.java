@@ -54,6 +54,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Ordering;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.Dict;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
@@ -93,7 +94,7 @@ public class RuleAnalysisContextImplTest {
         ImmutableMap.of(
             BuildTargetFactory.newInstance("//my:foo"),
             TestProviderInfoCollectionImpl.builder()
-                .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableSet.of(output))));
+                .build(new ImmutableDefaultInfo(Dict.empty(), StarlarkList.of(null, output))));
 
     assertEquals(
         ImmutableSortedSet.of(output),

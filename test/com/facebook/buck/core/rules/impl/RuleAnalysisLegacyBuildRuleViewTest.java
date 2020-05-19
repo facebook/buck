@@ -73,6 +73,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -362,7 +363,7 @@ public class RuleAnalysisLegacyBuildRuleViewTest {
     }
     return TestProviderInfoCollectionImpl.builder()
         .put(new FakeInfo(new FakeBuiltInProvider("foo")))
-        .build(new ImmutableDefaultInfo(dict, defaultOutputs));
+        .build(new ImmutableDefaultInfo(dict, StarlarkList.immutableCopyOf(defaultOutputs)));
   }
 
   /**

@@ -49,6 +49,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -153,7 +154,8 @@ public class BasicRuleRuleDescription implements RuleDescription<BasicRuleDescri
         allArtifactsBuilder.build(),
         actionExecution);
     return ProviderInfoCollectionImpl.builder()
-        .build(new ImmutableDefaultInfo(namedOutputs, defaultOutputs));
+        .build(
+            new ImmutableDefaultInfo(namedOutputs, StarlarkList.immutableCopyOf(defaultOutputs)));
   }
 
   @Override

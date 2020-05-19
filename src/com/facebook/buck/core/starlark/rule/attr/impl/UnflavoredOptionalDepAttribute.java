@@ -30,6 +30,7 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.List;
 import java.util.Optional;
 
@@ -85,23 +86,25 @@ public abstract class UnflavoredOptionalDepAttribute
         preCoercionDefaultValue, doc, mandatory, allowEmpty);
   }
 
-  private ImmutableList<SkylarkDependency> postCoercionTransform(
+  private StarlarkList<SkylarkDependency> postCoercionTransform(
       Optional<UnflavoredBuildTarget> coercedValue, RuleAnalysisContext analysisContext) {
-    return analysisContext
-        .resolveDeps(
-            coercedValue
-                .map(
-                    target -> {
-                      // TODO(nga): use proper configuration
-                      return ImmutableList.of(
-                          UnconfiguredBuildTarget.of(target, FlavorSet.NO_FLAVORS)
-                              .configure(UnconfiguredTargetConfiguration.INSTANCE));
-                    })
-                .orElse(ImmutableList.of()))
-        .entrySet().stream()
-        .map(
-            targetAndProviders ->
-                new SkylarkDependency(targetAndProviders.getKey(), targetAndProviders.getValue()))
-        .collect(ImmutableList.toImmutableList());
+    return StarlarkList.immutableCopyOf(
+        analysisContext
+            .resolveDeps(
+                coercedValue
+                    .map(
+                        target -> {
+                          // TODO(nga): use proper configuration
+                          return ImmutableList.of(
+                              UnconfiguredBuildTarget.of(target, FlavorSet.NO_FLAVORS)
+                                  .configure(UnconfiguredTargetConfiguration.INSTANCE));
+                        })
+                    .orElse(ImmutableList.of()))
+            .entrySet().stream()
+            .map(
+                targetAndProviders ->
+                    new SkylarkDependency(
+                        targetAndProviders.getKey(), targetAndProviders.getValue()))
+            .collect(ImmutableList.toImmutableList()));
   }
 }

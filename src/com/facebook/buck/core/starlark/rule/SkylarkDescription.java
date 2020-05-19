@@ -50,6 +50,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Sequence;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
 import java.util.List;
@@ -157,7 +158,8 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
       if (outputs.isEmpty()) {
         outputs = ctx.getOutputs();
       }
-      suppliedDefaultInfo = new ImmutableDefaultInfo(Dict.empty(), outputs);
+      suppliedDefaultInfo =
+          new ImmutableDefaultInfo(Dict.empty(), StarlarkList.immutableCopyOf(outputs));
     }
     if (inferRunInfo) {
       if (suppliedRunInfo != null) {

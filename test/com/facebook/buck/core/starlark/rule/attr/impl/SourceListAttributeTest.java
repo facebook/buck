@@ -45,6 +45,7 @@ import com.facebook.buck.step.impl.TestActionExecutionRunner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Dict;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
@@ -223,7 +224,7 @@ public class SourceListAttributeTest {
     SourceArtifact sourceArtifact =
         SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("src", "main.cpp")));
     ImmutableDefaultInfo defaultInfo =
-        new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(buildArtifact1));
+        new ImmutableDefaultInfo(Dict.empty(), StarlarkList.of(null, buildArtifact1));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
         ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));

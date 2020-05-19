@@ -39,6 +39,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.hash.HashCode;
 import com.google.devtools.build.lib.syntax.Dict;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.Optional;
 
 /**
@@ -123,7 +124,7 @@ public class HttpFileDescription
           new ImmutableRunInfo(
               ImmutableMap.of(), CommandLineArgsFactory.from(ImmutableList.of(output))));
     }
-    return builder.build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(output)));
+    return builder.build(new ImmutableDefaultInfo(Dict.empty(), StarlarkList.of(null, output)));
   }
 
   /** Args required for http_rule */

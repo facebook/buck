@@ -37,6 +37,7 @@ import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.nio.file.Paths;
 import org.hamcrest.Matchers;
 import org.junit.Rule;
@@ -152,6 +153,7 @@ public class OutputListAttributeTest {
         .postCoercionTransform(value, new FakeRuleAnalysisContextImpl(ImmutableMap.of()));
   }
 
+  @SuppressWarnings("unchecked")
   @Test
   public void transformsToArtifact() throws CoerceFailedException {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
@@ -169,8 +171,8 @@ public class OutputListAttributeTest {
             .postCoercionTransform(
                 outputPaths, new FakeRuleAnalysisContextImpl(target, ImmutableMap.of()));
 
-    assertThat(coerced, Matchers.instanceOf(ImmutableList.class));
-    ImmutableList<Artifact> artifacts = (ImmutableList<Artifact>) coerced;
+    assertThat(coerced, Matchers.instanceOf(StarlarkList.class));
+    StarlarkList<Artifact> artifacts = (StarlarkList<Artifact>) coerced;
     assertEquals(2, artifacts.size());
 
     for (Artifact artifact : artifacts) {

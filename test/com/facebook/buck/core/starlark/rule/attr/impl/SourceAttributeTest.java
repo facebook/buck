@@ -41,10 +41,10 @@ import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystemFactory;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.step.impl.TestActionExecutionRunner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.Starlark;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.nio.file.Paths;
 import org.junit.Rule;
 import org.junit.Test;
@@ -198,7 +198,7 @@ public class SourceAttributeTest {
   @Test
   public void failsTransformIfZeroOutputFiles() throws CoerceFailedException {
     BuildTarget target = BuildTargetFactory.newInstance("//foo:bar");
-    ImmutableDefaultInfo defaultInfo = new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of());
+    ImmutableDefaultInfo defaultInfo = new ImmutableDefaultInfo(Dict.empty(), StarlarkList.empty());
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
         ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));
@@ -225,7 +225,7 @@ public class SourceAttributeTest {
     Artifact artifact1 = registry.declareArtifact(Paths.get("baz1"));
     Artifact artifact2 = registry.declareArtifact(Paths.get("baz2"));
     ImmutableDefaultInfo defaultInfo =
-        new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(artifact1, artifact2));
+        new ImmutableDefaultInfo(Dict.empty(), StarlarkList.of(null, artifact1, artifact2));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
         ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));
@@ -253,7 +253,7 @@ public class SourceAttributeTest {
     SourceArtifact sourceArtifact =
         SourceArtifactImpl.of(PathSourcePath.of(filesystem, Paths.get("src", "main.cpp")));
     ImmutableDefaultInfo defaultInfo =
-        new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of(buildArtifact1));
+        new ImmutableDefaultInfo(Dict.empty(), StarlarkList.of(null, buildArtifact1));
 
     ImmutableMap<BuildTarget, ProviderInfoCollection> deps =
         ImmutableMap.of(target, ProviderInfoCollectionImpl.builder().build(defaultInfo));

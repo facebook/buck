@@ -20,9 +20,9 @@ import com.facebook.buck.core.rules.providers.Provider;
 import com.facebook.buck.core.rules.providers.ProviderInfo;
 import com.facebook.buck.core.rules.providers.collect.ProviderInfoCollection;
 import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.devtools.build.lib.syntax.Dict;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 
 /**
  * Implementation of {@link ProviderInfoCollection} for tests that automatically creates an empty
@@ -58,7 +58,7 @@ public class TestProviderInfoCollectionImpl extends ProviderInfoCollectionImpl {
     }
 
     public ProviderInfoCollection build() {
-      return super.build(new ImmutableDefaultInfo(Dict.empty(), ImmutableList.of()));
+      return super.build(new ImmutableDefaultInfo(Dict.empty(), StarlarkList.empty()));
     }
   }
 }

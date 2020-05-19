@@ -16,13 +16,16 @@
 
 package com.facebook.buck.core.starlark.rule.attr.impl;
 
+import com.facebook.buck.core.rules.analysis.RuleAnalysisContext;
 import com.facebook.buck.core.starlark.rule.attr.Attribute;
+import com.facebook.buck.core.starlark.rule.attr.PostCoercionTransform;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
 import com.facebook.buck.rules.coercer.CoerceFailedException;
 import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 
 /** Class that represents a list of strings */
 @BuckStyleValue
@@ -58,6 +61,16 @@ public abstract class StringListAttribute extends Attribute<ImmutableList<String
     if (!getAllowEmpty() && paths.isEmpty()) {
       throw new CoerceFailedException("List of strings may not be empty");
     }
+  }
+
+  @Override
+  public PostCoercionTransform<RuleAnalysisContext, ImmutableList<String>, StarlarkList<String>>
+      getPostCoercionTransform() {
+    return (coercedValue, analysisContext) -> postCoercionTransform(coercedValue);
+  }
+
+  private StarlarkList<String> postCoercionTransform(ImmutableList<String> coercedValue) {
+    return StarlarkList.immutableCopyOf(coercedValue);
   }
 
   public static StringListAttribute of(

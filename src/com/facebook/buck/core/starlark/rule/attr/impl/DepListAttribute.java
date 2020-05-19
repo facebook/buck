@@ -29,6 +29,7 @@ import com.facebook.buck.rules.coercer.TypeCoercer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.TypeToken;
 import com.google.devtools.build.lib.syntax.Printer;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.util.List;
 
 /**
@@ -90,19 +91,20 @@ public abstract class DepListAttribute extends Attribute<ImmutableList<BuildTarg
   }
 
   @SuppressWarnings("unused")
-  private ImmutableList<SkylarkDependency> postCoercionTransform(
+  private StarlarkList<SkylarkDependency> postCoercionTransform(
       ImmutableList<BuildTarget> coercedValue, RuleAnalysisContext analysisContext) {
     ImmutableList.Builder<SkylarkDependency> builder =
         ImmutableList.builderWithExpectedSize(coercedValue.size());
 
-    return analysisContext.resolveDeps(coercedValue).entrySet().stream()
-        .map(
-            targetAndProviders -> {
-              validateProvidersPresent(
-                  getProviders(), targetAndProviders.getKey(), targetAndProviders.getValue());
-              return new SkylarkDependency(
-                  targetAndProviders.getKey(), targetAndProviders.getValue());
-            })
-        .collect(ImmutableList.toImmutableList());
+    return StarlarkList.immutableCopyOf(
+        analysisContext.resolveDeps(coercedValue).entrySet().stream()
+            .map(
+                targetAndProviders -> {
+                  validateProvidersPresent(
+                      getProviders(), targetAndProviders.getKey(), targetAndProviders.getValue());
+                  return new SkylarkDependency(
+                      targetAndProviders.getKey(), targetAndProviders.getValue());
+                })
+            .collect(ImmutableList.toImmutableList()));
   }
 }

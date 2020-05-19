@@ -73,6 +73,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.devtools.build.lib.syntax.Dict;
+import com.google.devtools.build.lib.syntax.StarlarkList;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
@@ -210,7 +211,8 @@ public class LegacyRuleAnalysisProviderCompatibleTargetNodeToBuildRuleTransforme
               return FakeRuleAnalysisResultImpl.of(
                   target,
                   TestProviderInfoCollectionImpl.builder()
-                      .build(new ImmutableDefaultInfo(Dict.empty(), ImmutableSet.of(artifact))),
+                      .build(
+                          new ImmutableDefaultInfo(Dict.empty(), StarlarkList.of(null, artifact))),
                   fakeActionAnalysisRegistry.getRegistered().entrySet().stream()
                       .collect(
                           ImmutableMap.toImmutableMap(
