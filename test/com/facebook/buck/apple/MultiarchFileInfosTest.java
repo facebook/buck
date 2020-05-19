@@ -151,6 +151,7 @@ public class MultiarchFileInfosTest {
             multiarchFileInfo,
             inputs,
             CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             getAppleCxxPlatformFlavorDomain());
 
     assertThat(outputRule, instanceOf(MultiarchFile.class));
@@ -186,6 +187,7 @@ public class MultiarchFileInfosTest {
             multiarchFileInfo,
             inputs,
             CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             getAppleCxxPlatformFlavorDomain());
 
     assertThat(outputRule, instanceOf(NoopBuildRule.class));
@@ -221,6 +223,7 @@ public class MultiarchFileInfosTest {
             multiarchFileInfo,
             inputs,
             CxxPlatformUtils.DEFAULT_CONFIG,
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             getAppleCxxPlatformFlavorDomain());
 
     assertThat(outputRule, instanceOf(MultiarchFile.class));

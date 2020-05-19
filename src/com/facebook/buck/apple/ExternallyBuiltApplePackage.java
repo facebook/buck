@@ -58,7 +58,8 @@ public final class ExternallyBuiltApplePackage
       SourcePath bundle,
       boolean cacheable,
       Optional<String> environmentExpansionSeparator,
-      Optional<AndroidTools> androidTools) {
+      Optional<AndroidTools> androidTools,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -86,7 +87,8 @@ public final class ExternallyBuiltApplePackage
             false,
             packageConfigAndPlatformInfo.getSdkVersion(),
             packageConfigAndPlatformInfo.getPlatformBuildVersion(),
-            packageConfigAndPlatformInfo.getSdkPath()));
+            packageConfigAndPlatformInfo.getSdkPath(),
+            withDownwardApi));
   }
 
   static class Buildable extends GenruleBuildable {
@@ -120,7 +122,8 @@ public final class ExternallyBuiltApplePackage
         boolean executeRemotely,
         String sdkVersion,
         Optional<String> platformBuildVersion,
-        Path sdkPath) {
+        Path sdkPath,
+        boolean withDownwardApi) {
       super(
           buildTarget,
           filesystem,
@@ -138,7 +141,8 @@ public final class ExternallyBuiltApplePackage
           environmentExpansionSeparator,
           sandboxProperties,
           androidTools,
-          executeRemotely);
+          executeRemotely,
+          withDownwardApi);
       this.sdkVersion = sdkVersion;
       this.platformBuildVersion = platformBuildVersion;
       this.sdkPath = sdkPath;

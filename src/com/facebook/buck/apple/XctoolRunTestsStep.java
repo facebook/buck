@@ -20,6 +20,7 @@ import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -83,6 +84,7 @@ class XctoolRunTestsStep implements Step {
   private static final Locale LOCALE = Locale.US;
 
   private final ProjectFilesystem filesystem;
+  private final boolean withDownwardApi;
 
   public interface StdoutReadingCallback {
     void readStdout(InputStream stdout) throws IOException;
@@ -180,7 +182,9 @@ class XctoolRunTestsStep implements Step {
       Optional<String> logLevelEnvironmentVariable,
       Optional<String> logLevel,
       Optional<Long> timeoutInMs,
-      Optional<String> snapshotReferenceImagesPath) {
+      Optional<String> snapshotReferenceImagesPath,
+      boolean withDownwardApi) {
+    this.withDownwardApi = withDownwardApi;
     Preconditions.checkArgument(
         !(logicTestBundlePaths.isEmpty()
             && appTestBundleToHostAppPaths.isEmpty()
@@ -267,6 +271,11 @@ class XctoolRunTestsStep implements Step {
 
     Console console = context.getConsole();
     ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
     if (!testSelectorList.isEmpty()) {
       ImmutableList.Builder<String> xctoolFilterParamsBuilder = ImmutableList.builder();
       if (isUsingXCodeBuildTool) {

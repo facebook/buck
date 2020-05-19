@@ -33,6 +33,7 @@ import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.CxxCompilationDatabase;
 import com.facebook.buck.cxx.CxxInferEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.FluentIterable;
@@ -155,6 +156,7 @@ public class MultiarchFileInfos {
       MultiarchFileInfo info,
       ImmutableSortedSet<BuildRule> thinRules,
       CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatformsFlavorDomain) {
     Optional<BuildRule> existingRule = graphBuilder.getRuleOptional(info.getFatTarget());
     if (existingRule.isPresent()) {
@@ -188,7 +190,8 @@ public class MultiarchFileInfos {
               inputs,
               cxxBuckConfig.shouldCacheLinks(),
               BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, multiarchOutputPathFormat)
-                  .getPath());
+                  .getPath(),
+              downwardApiConfig.isEnabledForApple());
       graphBuilder.addToIndex(multiarchFile);
       return multiarchFile;
     } else {

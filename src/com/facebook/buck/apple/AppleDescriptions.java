@@ -430,7 +430,8 @@ public class AppleDescriptions {
       Tool actool,
       AppleAssetCatalog.ValidationType assetCatalogValidation,
       AppleAssetCatalogsCompilationOptions appleAssetCatalogsCompilationOptions,
-      Predicate<BuildTarget> filter) {
+      Predicate<BuildTarget> filter,
+      boolean withDownwardApi) {
     TargetNode<?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleAssetCatalogDescriptionArg> assetCatalogArgs =
@@ -503,7 +504,8 @@ public class AppleDescriptions {
             appIcon,
             launchImage,
             appleAssetCatalogsCompilationOptions,
-            MERGED_ASSET_CATALOG_NAME));
+            MERGED_ASSET_CATALOG_NAME,
+            withDownwardApi));
   }
 
   public static Optional<CoreDataModel> createBuildRulesForCoreDataDependencies(
@@ -514,7 +516,8 @@ public class AppleDescriptions {
       BuildRuleParams params,
       String moduleName,
       AppleCxxPlatform appleCxxPlatform,
-      Predicate<BuildTarget> filter) {
+      Predicate<BuildTarget> filter,
+      boolean withDownwardApi) {
     TargetNode<?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleWrapperResourceArg> coreDataModelArgs =
@@ -541,7 +544,8 @@ public class AppleDescriptions {
               moduleName,
               coreDataModelArgs.stream()
                   .map(input -> PathSourcePath.of(projectFilesystem, input.getPath()))
-                  .collect(ImmutableSet.toImmutableSet())));
+                  .collect(ImmutableSet.toImmutableSet()),
+              withDownwardApi));
     }
   }
 
@@ -552,7 +556,8 @@ public class AppleDescriptions {
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AppleCxxPlatform appleCxxPlatform,
-      Predicate<BuildTarget> filter) {
+      Predicate<BuildTarget> filter,
+      boolean withDownwardApi) {
     TargetNode<?> targetNode = targetGraph.get(buildTarget);
 
     ImmutableSet<AppleWrapperResourceArg> sceneKitAssetsArgs =
@@ -578,7 +583,8 @@ public class AppleDescriptions {
               appleCxxPlatform,
               sceneKitAssetsArgs.stream()
                   .map(input -> PathSourcePath.of(projectFilesystem, input.getPath()))
-                  .collect(ImmutableSet.toImmutableSet())));
+                  .collect(ImmutableSet.toImmutableSet()),
+              withDownwardApi));
     }
   }
 
@@ -591,7 +597,8 @@ public class AppleDescriptions {
       AppleDebugFormat debugFormat,
       CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms,
-      boolean shouldCacheStrips) {
+      boolean shouldCacheStrips,
+      boolean withDownwardApi) {
     // Target used as the base target of AppleDebuggableBinary.
 
     BuildTarget baseTarget = unstrippedBinaryRule.getBuildTarget();
@@ -608,7 +615,8 @@ public class AppleDescriptions {
                 unstrippedBinaryRule,
                 cxxPlatformsProvider,
                 appleCxxPlatforms,
-                shouldCacheStrips);
+                shouldCacheStrips,
+                withDownwardApi);
         return AppleDebuggableBinary.createWithDsym(
             projectFilesystem, baseTarget, strippedBinaryRule, dsym);
       case NONE:
@@ -625,7 +633,8 @@ public class AppleDescriptions {
       HasAppleDebugSymbolDeps unstrippedBinaryRule,
       CxxPlatformsProvider cxxPlatformsProvider,
       FlavorDomain<UnresolvedAppleCxxPlatform> appleCxxPlatforms,
-      boolean isCacheable) {
+      boolean isCacheable,
+      boolean withDownwardApi) {
     return (AppleDsym)
         graphBuilder.computeIfAbsent(
             buildTarget
@@ -656,7 +665,8 @@ public class AppleDescriptions {
                       .map(BuildRule::getSourcePathToOutput)
                       .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
                   AppleDsym.getDsymOutputPath(dsymBuildTarget, projectFilesystem).getPath(),
-                  isCacheable);
+                  isCacheable,
+                  withDownwardApi);
             });
   }
 
@@ -696,7 +706,8 @@ public class AppleDescriptions {
       boolean useEntitlementsWhenAdhocCodeSigning,
       Predicate<BuildTarget> filter,
       boolean sliceAppPackageSwiftRuntime,
-      boolean sliceAppBundleSwiftRuntime) {
+      boolean sliceAppBundleSwiftRuntime,
+      boolean withDownwardApi) {
     AppleCxxPlatform appleCxxPlatform =
         ApplePlatforms.getAppleCxxPlatformForBuildTarget(
             graphBuilder,
@@ -780,7 +791,8 @@ public class AppleDescriptions {
             appleCxxPlatform.getActool(),
             assetCatalogValidation,
             appleAssetCatalogsCompilationOptions,
-            filter);
+            filter,
+            withDownwardApi);
     addToIndex(graphBuilder, assetCatalog);
 
     Optional<CoreDataModel> coreDataModel =
@@ -792,7 +804,8 @@ public class AppleDescriptions {
             params,
             AppleBundle.getBinaryName(buildTarget, productName),
             appleCxxPlatform,
-            filter);
+            filter,
+            withDownwardApi);
     addToIndex(graphBuilder, coreDataModel);
 
     Optional<SceneKitAssets> sceneKitAssets =
@@ -803,7 +816,8 @@ public class AppleDescriptions {
             projectFilesystem,
             params,
             appleCxxPlatform,
-            filter);
+            filter,
+            withDownwardApi);
     addToIndex(graphBuilder, sceneKitAssets);
 
     // TODO(beng): Sort through the changes needed to make project generation work with
@@ -859,7 +873,8 @@ public class AppleDescriptions {
               debugFormat,
               cxxPlatformsProvider,
               appleCxxPlatforms,
-              cacheStrips);
+              cacheStrips,
+              withDownwardApi);
       targetDebuggableBinaryRule = debuggableBinary;
       appleDsym = debuggableBinary.getAppleDsym();
     } else {
@@ -939,7 +954,8 @@ public class AppleDescriptions {
         copySwiftStdlibToFrameworks,
         useEntitlementsWhenAdhocCodeSigning,
         sliceAppPackageSwiftRuntime,
-        sliceAppBundleSwiftRuntime);
+        sliceAppBundleSwiftRuntime,
+        withDownwardApi);
   }
 
   /**

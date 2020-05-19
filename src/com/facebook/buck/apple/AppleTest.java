@@ -25,6 +25,10 @@ import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -38,6 +42,7 @@ import com.facebook.buck.core.test.rule.ExternalTestRunnerTestSpec;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -45,6 +50,7 @@ import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
 import com.facebook.buck.test.TestCaseSummary;
 import com.facebook.buck.test.TestResults;
 import com.facebook.buck.test.TestRunningOptions;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.stream.RichStream;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
@@ -105,7 +111,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final Optional<Either<SourcePath, String>> snapshotReferenceImagesPath;
 
-  private Optional<Long> testRuleTimeoutMs;
+  private final Optional<Long> testRuleTimeoutMs;
 
   private Optional<AppleTestXctoolStdoutReader> xctoolStdoutReader;
   private Optional<AppleTestIdbStdoutReader> idbStdoutReader;
@@ -117,6 +123,13 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Optional<ImmutableMap<String, String>> testSpecificEnvironmentVariables;
   private final boolean useIdb;
   private final Path idbPath;
+
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
 
   /**
    * Absolute path to xcode developer dir.
@@ -219,7 +232,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Optional<Either<SourcePath, String>> snapshotReferenceImagesPath,
       Optional<ImmutableMap<String, String>> testSpecificEnvironmentVariables,
       boolean useIdb,
-      Path idbPath) {
+      Path idbPath,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.xctool = xctool;
     this.stutterTimeout = stutterTimeout;
@@ -235,6 +249,7 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.labels = labels;
     this.runTestSeparately = runTestSeparately;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
+    this.withDownwardApi = withDownwardApi;
     this.testOutputPath = getPathToTestOutputDirectory().resolve("test-output.json");
     this.testLogsPath = getPathToTestOutputDirectory().resolve("logs");
     this.xctoolStdoutReader = Optional.empty();
@@ -395,12 +410,20 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               Optional.of(testLogLevelEnvironmentVariable),
               Optional.of(testLogLevel),
               testRuleTimeoutMs,
-              snapshotReferenceImagesPath);
+              snapshotReferenceImagesPath,
+              withDownwardApi);
 
       if (useIdb) {
         idbStdoutReader = Optional.of(new AppleTestIdbStdoutReader(testReportingCallback));
+        ProcessExecutor processExecutor = context.getProcessExecutor();
+        if (withDownwardApi) {
+          processExecutor =
+              processExecutor.withDownwardAPI(
+                  DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+        }
+
         AppleDeviceController appleDeviceController =
-            new AppleDeviceController(context.getProcessExecutor(), idbPath);
+            new AppleDeviceController(processExecutor, idbPath);
         Optional<String> deviceUdid;
         if (platformName.contains("mac")) {
           deviceUdid = Optional.of("mac");
@@ -421,7 +444,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 logicTestPathsBuilder.build(),
                 appTestPathsToHostAppsBuilder.build(),
                 appTestPathsToTestHostAppPathsToTestTargetAppsBuilder.build(),
-                deviceUdid);
+                deviceUdid,
+                withDownwardApi);
         for (IdbRunTestsStep step : idbSteps) {
           steps.add(step);
         }
@@ -457,7 +481,8 @@ public class AppleTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
               resolvedTestBundleDirectory,
               resolvedTestOutputPath,
               xctestOutputReader,
-              appleDeveloperDirectoryForTestsProvider);
+              appleDeveloperDirectoryForTestsProvider,
+              withDownwardApi);
       steps.add(xctestStep);
       externalSpec.setType("xctest");
       externalSpec.setCommand(xctestStep.getCommand());

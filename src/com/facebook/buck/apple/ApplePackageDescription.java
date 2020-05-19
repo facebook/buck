@@ -38,6 +38,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.sandbox.SandboxExecutionStrategy;
 import com.google.common.collect.ImmutableCollection;
@@ -59,15 +60,18 @@ public class ApplePackageDescription
 
   private final ToolchainProvider toolchainProvider;
   private final SandboxExecutionStrategy sandboxExecutionStrategy;
-  private final AppleConfig config;
+  private final AppleConfig conappleConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public ApplePackageDescription(
       ToolchainProvider toolchainProvider,
       SandboxExecutionStrategy sandboxExecutionStrategy,
-      AppleConfig config) {
+      AppleConfig config,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.sandboxExecutionStrategy = sandboxExecutionStrategy;
-    this.config = config;
+    this.conappleConfig = config;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -98,10 +102,11 @@ public class ApplePackageDescription
               ? Optional.of(
                   AndroidTools.getAndroidTools(
                       toolchainProvider, buildTarget.getTargetConfiguration()))
-              : Optional.empty());
+              : Optional.empty(),
+          downwardApiConfig.isEnabledForApple());
     } else {
       return new BuiltinApplePackage(
-          buildTarget, projectFilesystem, params, bundle, config.getZipCompressionLevel());
+          buildTarget, projectFilesystem, params, bundle, conappleConfig.getZipCompressionLevel());
     }
   }
 
@@ -160,9 +165,9 @@ public class ApplePackageDescription
   /**
    * Get the correct package configuration based on the platform flavors of this build target.
    *
-   * <p>Validates that all named platforms yields the identical package config.
+   * <p>Validates that all named platforms yields the identical package conappleConfig.
    *
-   * @return If found, a package config for this target.
+   * @return If found, a package conappleConfig for this target.
    * @throws HumanReadableException if there are multiple possible package configs.
    */
   private Optional<ImmutableApplePackageConfigAndPlatformInfo> getApplePackageConfig(
@@ -173,7 +178,7 @@ public class ApplePackageDescription
     Set<Flavor> platformFlavors =
         getPlatformFlavorsOrDefault(target, defaultPlatform, appleCxxPlatformFlavorDomain);
 
-    // Ensure that different platforms generate the same config.
+    // Ensure that different platforms generate the same conappleConfig.
     // The value of this map is just for error reporting.
     Multimap<Optional<ImmutableApplePackageConfigAndPlatformInfo>, Flavor> packageConfigs =
         MultimapBuilder.hashKeys().arrayListValues().build();
@@ -182,7 +187,7 @@ public class ApplePackageDescription
       AppleCxxPlatform platform =
           appleCxxPlatformFlavorDomain.getValue(flavor).resolve(graphBuilder);
       Optional<AppleConfig.ApplePackageConfig> packageConfig =
-          config.getPackageConfigForPlatform(platform.getAppleSdk().getApplePlatform());
+          conappleConfig.getPackageConfigForPlatform(platform.getAppleSdk().getApplePlatform());
       packageConfigs.put(
           packageConfig.map(
               applePackageConfig ->

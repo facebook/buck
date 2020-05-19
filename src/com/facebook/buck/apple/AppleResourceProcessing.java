@@ -67,7 +67,8 @@ public class AppleResourceProcessing {
       Tool ibtool,
       boolean ibtoolModuleFlag,
       BuildTarget buildTarget,
-      Optional<String> binaryName) {
+      Optional<String> binaryName,
+      boolean withDownwardApi) {
     ImmutableList<String> modifiedFlags =
         ImmutableList.<String>builder().addAll(BASE_IBTOOL_FLAGS).addAll(ibtoolFlags).build();
 
@@ -89,7 +90,8 @@ public class AppleResourceProcessing {
                   .add("--target-device", "watch", "--compile")
                   .build(),
               sourcePath,
-              compiledStoryboardPath.getPath()));
+              compiledStoryboardPath.getPath(),
+              withDownwardApi));
 
       stepsBuilder.add(
           new IbtoolStep(
@@ -102,7 +104,8 @@ public class AppleResourceProcessing {
                   .add("--target-device", "watch", "--link")
                   .build(),
               compiledStoryboardPath.getPath(),
-              destinationPath.getParent()));
+              destinationPath.getParent(),
+              withDownwardApi));
 
     } else {
       LOG.debug("Compiling storyboard %s to storyboardc %s", sourcePath, destinationPath);
@@ -120,7 +123,8 @@ public class AppleResourceProcessing {
               ibtoolModuleFlag ? binaryName : Optional.empty(),
               ImmutableList.<String>builder().addAll(modifiedFlags).add("--compile").build(),
               sourcePath,
-              compiledStoryboardPath));
+              compiledStoryboardPath,
+              withDownwardApi));
     }
   }
 
@@ -139,7 +143,8 @@ public class AppleResourceProcessing {
       Tool ibtool,
       boolean ibtoolModuleFlag,
       BuildTarget buildTarget,
-      Optional<String> binaryName) {
+      Optional<String> binaryName,
+      boolean withDownwardApi) {
     for (SourcePath path : resources.getResourceVariantFiles()) {
       Path variantFilePath = context.getSourcePathResolver().getAbsolutePath(path);
 
@@ -175,7 +180,8 @@ public class AppleResourceProcessing {
           ibtool,
           ibtoolModuleFlag,
           buildTarget,
-          binaryName);
+          binaryName,
+          withDownwardApi);
     }
   }
 
@@ -225,7 +231,8 @@ public class AppleResourceProcessing {
       Path bundleBinaryPath,
       AppleBundleDestinations destinations,
       boolean sliceAppPackageSwiftRuntime,
-      boolean sliceAppBundleSwiftRuntime) {
+      boolean sliceAppBundleSwiftRuntime,
+      boolean withDownwardApi) {
     // It's apparently safe to run this even on a non-swift bundle (in that case, no libs
     // are copied over).
     boolean shouldCopySwiftStdlib =
@@ -255,7 +262,8 @@ public class AppleResourceProcessing {
                   bundleRoot.resolve(destinations.getFrameworksPath()),
                   bundleRoot.resolve(destinations.getPlugInsPath())),
               codeSignIdentitySupplier,
-              sliceArchitectures));
+              sliceArchitectures,
+              withDownwardApi));
     }
   }
 
@@ -273,7 +281,8 @@ public class AppleResourceProcessing {
       Tool ibtool,
       boolean ibtoolModuleFlag,
       BuildTarget buildTarget,
-      Optional<String> binaryName) {
+      Optional<String> binaryName,
+      boolean withDownwardApi) {
     String sourcePathExtension =
         Files.getFileExtension(sourcePath.toString()).toLowerCase(Locale.US);
     switch (sourcePathExtension) {
@@ -304,7 +313,8 @@ public class AppleResourceProcessing {
             ibtool,
             ibtoolModuleFlag,
             buildTarget,
-            binaryName);
+            binaryName,
+            withDownwardApi);
         break;
       case "xib":
         String compiledNibFilename =
@@ -323,7 +333,8 @@ public class AppleResourceProcessing {
                     .addAll(ImmutableList.of("--compile"))
                     .build(),
                 sourcePath,
-                compiledNibPath));
+                compiledNibPath,
+                withDownwardApi));
         break;
       default:
         stepsBuilder.add(CopyStep.forFile(projectFilesystem, sourcePath, destinationPath));
@@ -348,7 +359,8 @@ public class AppleResourceProcessing {
       Tool ibtool,
       boolean ibtoolModuleFlag,
       BuildTarget buildTarget,
-      Optional<String> binaryName) {
+      Optional<String> binaryName,
+      boolean withDownwardApi) {
     boolean hasNoResourceToCopy =
         resources.getResourceDirs().isEmpty()
             && resources.getDirsContainingResourceDirs().isEmpty()
@@ -410,7 +422,8 @@ public class AppleResourceProcessing {
           ibtool,
           ibtoolModuleFlag,
           buildTarget,
-          binaryName);
+          binaryName,
+          withDownwardApi);
       if (fileWithDestination.getCodesignOnCopy()) {
         codeSignOnCopyPathsBuilder.add(destinationPath);
       }

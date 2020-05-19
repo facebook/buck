@@ -53,8 +53,9 @@ class ActoolStep extends ShellStep {
       Path outputPlist,
       Optional<String> appIcon,
       Optional<String> launchImage,
-      AppleAssetCatalogsCompilationOptions compilationOptions) {
-    super(workingDirectory);
+      AppleAssetCatalogsCompilationOptions compilationOptions,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.applePlatformName = applePlatformName;
     this.targetSDKVersion = targetSDKVersion;
     this.environment = environment;

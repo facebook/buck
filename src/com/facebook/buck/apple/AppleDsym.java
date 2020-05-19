@@ -24,6 +24,10 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -70,6 +74,13 @@ public class AppleDsym extends AbstractBuildRule
 
   private final boolean isCacheable;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public AppleDsym(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -79,7 +90,8 @@ public class AppleDsym extends AbstractBuildRule
       SourcePath unstrippedBinarySourcePath,
       ImmutableSortedSet<SourcePath> additionalSymbolDeps,
       Path dsymOutputPath,
-      boolean isCacheable) {
+      boolean isCacheable,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.dsymutil = dsymutil;
     this.lldb = lldb;
@@ -88,6 +100,7 @@ public class AppleDsym extends AbstractBuildRule
     this.dsymOutputPath = dsymOutputPath;
     this.isCacheable = isCacheable;
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, sourcePathRuleFinder);
+    this.withDownwardApi = withDownwardApi;
     checkFlavorCorrectness(buildTarget);
   }
 
@@ -150,7 +163,8 @@ public class AppleDsym extends AbstractBuildRule
             dsymutil.getEnvironment(context.getSourcePathResolver()),
             dsymutil.getCommandPrefix(context.getSourcePathResolver()),
             unstrippedBinaryPath,
-            dsymOutputPath),
+            dsymOutputPath,
+            withDownwardApi),
         new MoveStep(
             getProjectFilesystem(),
             dwarfFileFolder.resolve(unstrippedBinaryPath.getFileName()),
@@ -170,7 +184,8 @@ public class AppleDsym extends AbstractBuildRule
             unstrippedBinarySourcePath,
             lldb,
             context.getSourcePathResolver(),
-            dsymOutputPath));
+            dsymOutputPath,
+            withDownwardApi));
   }
 
   @Override

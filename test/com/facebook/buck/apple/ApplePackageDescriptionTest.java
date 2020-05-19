@@ -37,6 +37,7 @@ import com.facebook.buck.core.rules.TestBuildRuleParams;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.sandbox.NoSandboxExecutionStrategy;
@@ -116,6 +117,7 @@ public class ApplePackageDescriptionTest {
                 "macosx_package_command = " + command.replace("$", "\\$"),
                 "macosx_package_extension = api")
             .build()
-            .getView(AppleConfig.class));
+            .getView(AppleConfig.class),
+        DownwardApiConfig.of(FakeBuckConfig.empty()));
   }
 }

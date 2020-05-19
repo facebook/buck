@@ -61,6 +61,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -115,6 +116,7 @@ public class AppleBinaryDescription
   private final AppleConfig appleConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors;
   private final CxxBinaryFactory cxxBinaryFactory;
   private final CxxBinaryMetadataFactory cxxBinaryMetadataFactory;
@@ -127,6 +129,7 @@ public class AppleBinaryDescription
       AppleConfig appleConfig,
       CxxBuckConfig cxxBuckConfig,
       SwiftBuckConfig swiftBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxBinaryImplicitFlavors cxxBinaryImplicitFlavors,
       CxxBinaryFactory cxxBinaryFactory,
       CxxBinaryMetadataFactory cxxBinaryMetadataFactory,
@@ -138,6 +141,7 @@ public class AppleBinaryDescription
     this.appleConfig = appleConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.cxxBinaryImplicitFlavors = cxxBinaryImplicitFlavors;
     this.cxxBinaryFactory = cxxBinaryFactory;
     this.cxxBinaryMetadataFactory = cxxBinaryMetadataFactory;
@@ -329,7 +333,8 @@ public class AppleBinaryDescription
         AppleDebugFormat.FLAVOR_DOMAIN.getRequiredValue(buildTarget),
         cxxPlatformsProvider,
         appleCxxPlatformsFlavorDomain,
-        cxxBuckConfig.shouldCacheStrip());
+        cxxBuckConfig.shouldCacheStrip(),
+        downwardApiConfig.isEnabledForApple());
   }
 
   private BuildRule createBundleBuildRule(
@@ -416,7 +421,8 @@ public class AppleBinaryDescription
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
         Predicates.alwaysTrue(),
         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
-        swiftBuckConfig.getSliceAppBundleSwiftRuntime());
+        swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
+        downwardApiConfig.isEnabledForApple());
   }
 
   private BuildRule createBinary(
@@ -470,6 +476,7 @@ public class AppleBinaryDescription
           fatBinaryInfo.get(),
           thinRules.build(),
           cxxBuckConfig,
+          downwardApiConfig,
           appleCxxPlatformsFlavorDomain);
     } else {
       return requireThinBinary(

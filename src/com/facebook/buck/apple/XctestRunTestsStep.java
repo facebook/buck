@@ -19,6 +19,7 @@ package com.facebook.buck.apple;
 import com.facebook.buck.apple.toolchain.AppleDeveloperDirectoryForTestsProvider;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -62,6 +63,7 @@ class XctestRunTestsStep implements Step {
   private final Optional<? extends OutputReadingCallback> outputReadingCallback;
   private final Optional<AppleDeveloperDirectoryForTestsProvider>
       appleDeveloperDirectoryForTestsProvider;
+  private final boolean withDownwardApi;
 
   public XctestRunTestsStep(
       ProjectFilesystem filesystem,
@@ -70,7 +72,8 @@ class XctestRunTestsStep implements Step {
       Path logicTestBundlePath,
       Path outputPath,
       Optional<? extends OutputReadingCallback> outputReadingCallback,
-      Optional<AppleDeveloperDirectoryForTestsProvider> appleDeveloperDirectoryForTestsProvider) {
+      Optional<AppleDeveloperDirectoryForTestsProvider> appleDeveloperDirectoryForTestsProvider,
+      boolean withDownwardApi) {
     this.filesystem = filesystem;
     this.environment = environment;
     this.xctest = xctest;
@@ -78,6 +81,7 @@ class XctestRunTestsStep implements Step {
     this.outputPath = outputPath;
     this.outputReadingCallback = outputReadingCallback;
     this.appleDeveloperDirectoryForTestsProvider = appleDeveloperDirectoryForTestsProvider;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -121,6 +125,10 @@ class XctestRunTestsStep implements Step {
     LOG.debug("xctest command: %s", Joiner.on(" ").join(params.getCommand()));
 
     ProcessExecutor executor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      executor =
+          executor.withDownwardAPI(DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
     try (LaunchedProcess launchedProcess = executor.launchProcess(params)) {
 
       int exitCode;

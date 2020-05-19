@@ -82,6 +82,7 @@ import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.swift.SwiftBuckConfig;
@@ -197,6 +198,7 @@ public class AppleLibraryDescription
   private final AppleConfig appleConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors;
   private final CxxLibraryFlavored cxxLibraryFlavored;
   private final CxxLibraryFactory cxxLibraryFactory;
@@ -212,12 +214,14 @@ public class AppleLibraryDescription
       AppleConfig appleConfig,
       CxxBuckConfig cxxBuckConfig,
       SwiftBuckConfig swiftBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       CxxLibraryImplicitFlavors cxxLibraryImplicitFlavors,
       CxxLibraryFlavored cxxLibraryFlavored,
       CxxLibraryFactory cxxLibraryFactory,
       CxxLibraryMetadataFactory cxxLibraryMetadataFactory) {
     this.toolchainProvider = toolchainProvider;
     this.xcodeDescriptions = xcodeDescriptions;
+    this.downwardApiConfig = downwardApiConfig;
     this.cxxLibraryImplicitFlavors = cxxLibraryImplicitFlavors;
     this.cxxLibraryFlavored = cxxLibraryFlavored;
     this.cxxLibraryFactory = cxxLibraryFactory;
@@ -471,7 +475,8 @@ public class AppleLibraryDescription
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
         Predicates.alwaysTrue(),
         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
-        swiftBuckConfig.getSliceAppBundleSwiftRuntime());
+        swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
+        downwardApiConfig.isEnabledForApple());
   }
 
   /**
@@ -541,7 +546,8 @@ public class AppleLibraryDescription
             cxxBuckConfig.shouldCacheStrip(),
             unstrippedBinaryRule,
             representativePlatform,
-            Optional.empty());
+            Optional.empty(),
+            downwardApiConfig.isEnabledForApple());
 
     return AppleDescriptions.createAppleDebuggableBinary(
         unstrippedBuildTarget,
@@ -555,7 +561,8 @@ public class AppleLibraryDescription
         cxxPlatformsProvider,
         AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
             toolchainProvider, buildTarget.getTargetConfiguration()),
-        cxxBuckConfig.shouldCacheStrip());
+        cxxBuckConfig.shouldCacheStrip(),
+        downwardApiConfig.isEnabledForApple());
   }
 
   private <A extends AppleNativeTargetDescriptionArg> BuildRule requireUnstrippedBuildRule(
@@ -602,6 +609,7 @@ public class AppleLibraryDescription
           multiarchFileInfo.get(),
           thinRules.build(),
           cxxBuckConfig,
+          downwardApiConfig,
           AppleDescriptions.getAppleCxxPlatformsFlavorDomain(
               toolchainProvider, buildTarget.getTargetConfiguration()));
     } else {

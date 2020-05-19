@@ -20,6 +20,10 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -60,6 +64,13 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
   @AddToRuleKey(stringify = true)
   private final Path output;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public MultiarchFile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -68,13 +79,15 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
       Tool lipo,
       ImmutableSortedSet<SourcePath> thinBinaries,
       boolean isCacheable,
-      Path output) {
+      Path output,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.ruleFinder = ruleFinder;
     this.lipo = lipo;
     this.thinBinaries = ImmutableSortedSet.copyOf(thinBinaries);
     this.isCacheable = isCacheable;
     this.output = output;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -137,6 +150,7 @@ public class MultiarchFile extends AbstractBuildRuleWithDeclaredAndExtraDeps
     steps.add(
         new DefaultShellStep(
             getProjectFilesystem().getRootPath(),
+            withDownwardApi,
             commandBuilder.build(),
             lipo.getEnvironment(context.getSourcePathResolver())));
   }

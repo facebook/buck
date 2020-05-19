@@ -24,6 +24,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -46,6 +50,10 @@ import java.util.stream.Collectors;
  * Xcode.
  */
 public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclaredAndExtraDeps {
+
+  private static final String RESOURCES_BASENAME = "resources";
+  private static final String CODE_BASENAME = "code";
+
   private final Path aggregationRoot;
   private static final Logger LOG = Logger.get(AppleBundle.class);
   @AddToRuleKey private final ImmutableList<SourcePath> staticLibDeps;
@@ -54,9 +62,31 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
   @AddToRuleKey private final Tool libTool;
   @AddToRuleKey private final Tool ibTool;
 
-  private static String RESOURCES_BASENAME = "resources";
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
 
-  private static String CODE_BASENAME = "code";
+  AppleTestAggregatedDependencies(
+      BuildTarget buildTarget,
+      ProjectFilesystem projectFilesystem,
+      BuildRuleParams params,
+      Path aggregationRoot,
+      AppleBundleResources resources,
+      AppleCxxPlatform appleCxxPlatform,
+      ImmutableList<SourcePath> staticLibDeps,
+      boolean withDownwardApi) {
+    super(buildTarget, projectFilesystem, params);
+    this.aggregationRoot = aggregationRoot;
+    this.resources = resources;
+    this.applePlatform = appleCxxPlatform.getAppleSdk().getApplePlatform();
+    this.libTool = appleCxxPlatform.getLibtool();
+    this.ibTool = appleCxxPlatform.getIbtool();
+    this.staticLibDeps = ImmutableList.copyOf(staticLibDeps);
+    this.withDownwardApi = withDownwardApi;
+  }
 
   @Override
   public ImmutableList<Step> getBuildSteps(
@@ -97,7 +127,8 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
         ibTool,
         false,
         getBuildTarget(),
-        Optional.empty());
+        Optional.empty(),
+        withDownwardApi);
 
     if (staticLibDeps.size() > 0) {
       RelPath argsFile =
@@ -116,27 +147,11 @@ public class AppleTestAggregatedDependencies extends AbstractBuildRuleWithDeclar
               argsFile.getPath(),
               codeDir.resolve("TEST_DEPS.a"),
               ImmutableList.of("-no_warning_for_no_symbols"),
-              LibtoolStep.Style.STATIC));
+              LibtoolStep.Style.STATIC,
+              withDownwardApi));
     }
 
     return stepsBuilder.build();
-  }
-
-  AppleTestAggregatedDependencies(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      Path aggregationRoot,
-      AppleBundleResources resources,
-      AppleCxxPlatform appleCxxPlatform,
-      ImmutableList<SourcePath> staticLibDeps) {
-    super(buildTarget, projectFilesystem, params);
-    this.aggregationRoot = aggregationRoot;
-    this.resources = resources;
-    this.applePlatform = appleCxxPlatform.getAppleSdk().getApplePlatform();
-    this.libTool = appleCxxPlatform.getLibtool();
-    this.ibTool = appleCxxPlatform.getIbtool();
-    this.staticLibDeps = ImmutableList.copyOf(staticLibDeps);
   }
 
   @Override

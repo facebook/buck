@@ -78,6 +78,7 @@ import com.facebook.buck.cxx.toolchain.linker.Linker;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
@@ -148,6 +149,7 @@ public class AppleTestDescription
   private final AppleConfig appleConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final AppleLibraryDescription appleLibraryDescription;
 
   public AppleTestDescription(
@@ -156,12 +158,14 @@ public class AppleTestDescription
       AppleConfig appleConfig,
       CxxBuckConfig cxxBuckConfig,
       SwiftBuckConfig swiftBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       AppleLibraryDescription appleLibraryDescription) {
     this.toolchainProvider = toolchainProvider;
     this.xcodeDescriptions = xcodeDescriptions;
     this.appleConfig = appleConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.appleLibraryDescription = appleLibraryDescription;
   }
 
@@ -374,7 +378,8 @@ public class AppleTestDescription
                         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
                         Predicates.alwaysTrue(),
                         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
-                        swiftBuckConfig.getSliceAppBundleSwiftRuntime()));
+                        swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
+                        downwardApiConfig.isEnabledForApple()));
 
     Optional<SourcePath> xctool =
         getXctool(projectFilesystem, params, targetConfiguration, graphBuilder);
@@ -460,7 +465,8 @@ public class AppleTestDescription
         args.getSnapshotReferenceImagesPath(),
         args.getEnv(),
         appleConfig.useIdb(),
-        appleConfig.getIdbPath());
+        appleConfig.getIdbPath(),
+        downwardApiConfig.isEnabledForApple());
   }
 
   private UnresolvedAppleCxxPlatform verifyAppleCxxPlatform(
@@ -557,7 +563,8 @@ public class AppleTestDescription
         outputPath,
         collectedResources,
         appleCxxPlatform,
-        depBuildRuleSourcePaths);
+        depBuildRuleSourcePaths,
+        downwardApiConfig.isEnabledForApple());
   }
 
   private ImmutableSortedSet<BuildRule> collectTransitiveStaticLibraries(

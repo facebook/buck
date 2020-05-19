@@ -20,6 +20,7 @@ import com.facebook.buck.apple.toolchain.CodeSignIdentity;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
@@ -57,6 +58,7 @@ class SwiftStdlibStep implements Step {
   private final Iterable<String> lipoCommandPrefix;
   private final Path binaryPathToScan;
   private final Iterable<Path> additionalFoldersToScan;
+  private final boolean withDownwardApi;
 
   private final Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier;
   private final boolean sliceArchitectures;
@@ -71,9 +73,11 @@ class SwiftStdlibStep implements Step {
       Path binaryPathToScan,
       Iterable<Path> additionalFoldersToScan,
       Optional<Supplier<CodeSignIdentity>> codeSignIdentitySupplier,
-      boolean sliceArchitectures) {
+      boolean sliceArchitectures,
+      boolean withDownwardApi) {
     this.workingDirectory = workingDirectory;
     this.sdkPath = sdkPath;
+    this.withDownwardApi = withDownwardApi;
     this.destinationDirectory = workingDirectory.resolve(destinationDirectory);
     this.temp = workingDirectory.resolve(temp);
     this.swiftStdlibToolCommandPrefix = swiftStdlibToolCommandPrefix;
@@ -152,6 +156,11 @@ class SwiftStdlibStep implements Step {
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     ProcessExecutor executor = new DefaultProcessExecutor(Console.createNullConsole());
+    if (withDownwardApi) {
+      executor =
+          executor.withDownwardAPI(DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
+
     ProcessExecutorParams params = makeProcessExecutorParams(context, getSwiftStdlibCommand());
 
     LOG.debug("%s", params.getCommand());
@@ -259,7 +268,6 @@ class SwiftStdlibStep implements Step {
         return StepExecutionResult.of(result);
       }
     }
-
     return StepExecutionResults.SUCCESS;
   }
 

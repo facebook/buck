@@ -20,6 +20,7 @@ import com.facebook.buck.apple.simulator.AppleDeviceController;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.TeeInputStream;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
@@ -60,6 +61,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.Nonnull;
 
 /** Runs {@code idb} on one or more logic, ui or application tests */
 public class IdbRunTestsStep implements Step {
@@ -92,12 +94,14 @@ public class IdbRunTestsStep implements Step {
   private final Optional<Long> timeoutInMs;
   private final String testBundleId;
   private final TestTypeEnum type;
+  @Nonnull private final Path testBundlePath;
   private final Optional<Path> appTestBundlePath;
   private final Optional<Path> testHostAppBundlePath;
   private final ImmutableList<String> command;
   private final ImmutableList<String> installCommand;
   private final ImmutableList<String> runCommand;
   private final Optional<String> deviceUdid;
+  private final boolean withDownwardApi;
 
   public IdbRunTestsStep(
       Path idbPath,
@@ -113,7 +117,8 @@ public class IdbRunTestsStep implements Step {
       Path testBundlePath,
       Optional<Path> appTestBundlePath,
       Optional<Path> testHostAppBundlePath,
-      Optional<String> deviceUdid) {
+      Optional<String> deviceUdid,
+      boolean withDownwardApi) {
     this.idbPath = idbPath;
     this.filesystem = filesystem;
     this.sdkName = sdkName;
@@ -124,9 +129,11 @@ public class IdbRunTestsStep implements Step {
     this.timeoutInMs = timeoutInMs;
     this.testBundleId = testBundleId;
     this.type = type;
+    this.testBundlePath = testBundlePath;
     this.appTestBundlePath = parseBuckAppPath(appTestBundlePath);
     this.testHostAppBundlePath = parseBuckAppPath(testHostAppBundlePath);
     this.deviceUdid = deviceUdid;
+    this.withDownwardApi = withDownwardApi;
     ImmutableList.Builder<String> installCommandBuilder = ImmutableList.builder();
     ImmutableList.Builder<String> runCommandBuilder = ImmutableList.builder();
     installCommandBuilder.add(idbPath.toString(), "xctest", "install", testBundlePath.toString());
@@ -175,7 +182,8 @@ public class IdbRunTestsStep implements Step {
       Collection<Path> logicTestBundlePaths,
       Map<Path, Path> appTestBundleToHostAppPaths,
       Map<Path, Map<Path, Path>> appTestPathsToTestHostAppPathsToTestTargetAppPaths,
-      Optional<String> deviceUdid) {
+      Optional<String> deviceUdid,
+      boolean withDownwardApi) {
     String testBundleId = getAppleBundleId(testBundle, filesystem).get();
     ImmutableList.Builder<IdbRunTestsStep> commandBuilder = ImmutableList.builder();
     for (Path bundlePath : logicTestBundlePaths) {
@@ -194,7 +202,8 @@ public class IdbRunTestsStep implements Step {
               bundlePath,
               Optional.empty(),
               Optional.empty(),
-              deviceUdid));
+              deviceUdid,
+              withDownwardApi));
     }
     for (Map.Entry<Path, Path> appTestBundleToHostAppPath :
         appTestBundleToHostAppPaths.entrySet()) {
@@ -213,7 +222,8 @@ public class IdbRunTestsStep implements Step {
               appTestBundleToHostAppPath.getKey(),
               Optional.of(appTestBundleToHostAppPath.getValue()),
               Optional.empty(),
-              deviceUdid));
+              deviceUdid,
+              withDownwardApi));
     }
     for (Map.Entry<Path, Map<Path, Path>> appTestPathToTestHostAppPathToTestTargetAppPath :
         appTestPathsToTestHostAppPathsToTestTargetAppPaths.entrySet()) {
@@ -234,7 +244,8 @@ public class IdbRunTestsStep implements Step {
                 appTestPathToTestHostAppPathToTestTargetAppPath.getKey(),
                 Optional.of(testHostAppPathToTestTargetAppPath.getValue()),
                 Optional.of(testHostAppPathToTestTargetAppPath.getKey()),
-                deviceUdid));
+                deviceUdid,
+                withDownwardApi));
       }
     }
 
@@ -258,6 +269,11 @@ public class IdbRunTestsStep implements Step {
         ProcessExecutorParams.builder().setCommand(installCommand).build();
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
     ProcessExecutor.Result result =
         processExecutor.launchAndExecute(
             processExecutorParams,

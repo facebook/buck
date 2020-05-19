@@ -77,7 +77,8 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -130,7 +131,8 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -188,7 +190,8 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
@@ -246,7 +249,8 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
@@ -302,7 +306,8 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
@@ -360,7 +365,8 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
@@ -416,7 +422,8 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
@@ -471,7 +478,8 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     ProcessExecutorParams xctoolListOnlyParams =
         ProcessExecutorParams.builder()
@@ -563,7 +571,8 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     ProcessExecutorParams xctoolListOnlyParams =
         ProcessExecutorParams.builder()
@@ -630,7 +639,8 @@ public class XctoolRunTestsStepTest {
             Optional.empty(),
             Optional.empty(),
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
     ProcessExecutorParams xctoolListOnlyParams =
         ProcessExecutorParams.builder()
             .setCommand(
@@ -693,7 +703,8 @@ public class XctoolRunTestsStepTest {
             Optional.of("TEST_LOG_LEVEL"),
             Optional.of("verbose"),
             Optional.empty(),
-            Optional.of("/path/to/snapshotimages"));
+            Optional.of("/path/to/snapshotimages"),
+            false);
     ProcessExecutorParams xctoolParams =
         ProcessExecutorParams.builder()
             .setCommand(

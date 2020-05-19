@@ -25,6 +25,10 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
@@ -78,6 +82,13 @@ public class AppleAssetCatalog extends AbstractBuildRule {
 
   private final Supplier<SortedSet<BuildRule>> buildDepsSupplier;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   private static final ImmutableSet<String> TYPES_REQUIRING_CONTENTS_JSON =
       ImmutableSet.of(
           "appiconset",
@@ -105,12 +116,14 @@ public class AppleAssetCatalog extends AbstractBuildRule {
       Optional<String> appIcon,
       Optional<String> launchImage,
       AppleAssetCatalogsCompilationOptions compilationOptions,
-      String bundleName) {
+      String bundleName,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.applePlatformName = applePlatformName;
     this.targetSDKVersion = targetSDKVersion;
     this.actool = actool;
     this.assetCatalogDirs = assetCatalogDirs;
+    this.withDownwardApi = withDownwardApi;
     this.outputDir =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
             .resolve(bundleName + BUNDLE_DIRECTORY_EXTENSION);
@@ -149,7 +162,8 @@ public class AppleAssetCatalog extends AbstractBuildRule {
             getProjectFilesystem().resolve(outputPlist).getPath(),
             appIcon,
             launchImage,
-            compilationOptions));
+            compilationOptions,
+            withDownwardApi));
 
     buildableContext.recordArtifact(getOutputDir());
     buildableContext.recordArtifact(outputPlist.getPath());

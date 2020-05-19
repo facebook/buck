@@ -48,8 +48,9 @@ public class LibtoolStep extends ShellStep {
       Path argsfile,
       Path output,
       ImmutableList<String> flags,
-      LibtoolStep.Style style) {
-    super(filesystem.getRootPath());
+      LibtoolStep.Style style,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
     this.filesystem = filesystem;
     this.environment = environment;
     this.libtoolCommand = libtoolCommand;

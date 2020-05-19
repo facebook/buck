@@ -85,7 +85,8 @@ public class ExternallyBuiltApplePackageTest {
             FakeSourcePath.of(bundleLocation),
             true,
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
     graphBuilder.addToIndex(rule);
     ShellStep step =
         Iterables.getOnlyElement(
@@ -116,7 +117,8 @@ public class ExternallyBuiltApplePackageTest {
             FakeSourcePath.of("Fake/Bundle/Location"),
             true,
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
     graphBuilder.addToIndex(rule);
     assertThat(
         graphBuilder
@@ -138,7 +140,8 @@ public class ExternallyBuiltApplePackageTest {
             FakeSourcePath.of("Fake/Bundle/Location"),
             true,
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
     graphBuilder.addToIndex(rule);
     AbstractGenruleStep step =
         Iterables.getOnlyElement(
@@ -165,7 +168,8 @@ public class ExternallyBuiltApplePackageTest {
                 FakeSourcePath.of("Fake/Bundle/Location"),
                 true,
                 Optional.empty(),
-                Optional.empty());
+                Optional.empty(),
+                false);
     assertNotEquals(
         newRuleKeyFactory().build(packageWithVersion.apply("real")),
         newRuleKeyFactory().build(packageWithVersion.apply("fake")));
@@ -187,7 +191,8 @@ public class ExternallyBuiltApplePackageTest {
                 FakeSourcePath.of("Fake/Bundle/Location"),
                 true,
                 Optional.empty(),
-                Optional.empty());
+                Optional.empty(),
+                false);
     assertNotEquals(
         newRuleKeyFactory().build(packageWithSdkVersion.apply("real")),
         newRuleKeyFactory().build(packageWithSdkVersion.apply("fake")));

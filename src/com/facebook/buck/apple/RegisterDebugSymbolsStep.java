@@ -20,9 +20,11 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -37,18 +39,21 @@ class RegisterDebugSymbolsStep implements Step {
   private final Tool lldb;
   private final SourcePathResolverAdapter resolver;
   private final Path dsymPath;
+  private final boolean withDownwardApi;
 
   public RegisterDebugSymbolsStep(
       ProjectFilesystem filesystem,
       SourcePath binary,
       Tool lldb,
       SourcePathResolverAdapter resolver,
-      Path dsymPath) {
+      Path dsymPath,
+      boolean withDownwardApi) {
     this.filesystem = filesystem;
     this.binary = binary;
     this.lldb = lldb;
     this.resolver = resolver;
     this.dsymPath = dsymPath;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -59,18 +64,22 @@ class RegisterDebugSymbolsStep implements Step {
         ProcessExecutorParams.builder()
             .addCommand(lldbCommandPrefix.toArray(new String[0]))
             .build();
+    ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
     return StepExecutionResult.of(
-        context
-            .getProcessExecutor()
-            .launchAndExecute(
-                params,
-                ImmutableSet.of(),
-                Optional.of(
-                    String.format(
-                        "target create %s\ntarget symbols add %s",
-                        resolver.getAbsolutePath(binary), filesystem.resolve(dsymPath))),
-                Optional.empty(),
-                Optional.empty()));
+        processExecutor.launchAndExecute(
+            params,
+            ImmutableSet.of(),
+            Optional.of(
+                String.format(
+                    "target create %s\ntarget symbols add %s",
+                    resolver.getAbsolutePath(binary), filesystem.resolve(dsymPath))),
+            Optional.empty(),
+            Optional.empty()));
   }
 
   @Override

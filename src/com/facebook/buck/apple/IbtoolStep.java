@@ -47,8 +47,9 @@ class IbtoolStep extends ShellStep {
       Optional<String> moduleName,
       List<String> flags,
       Path input,
-      Path output) {
-    super(filesystem.getRootPath());
+      Path output,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
     this.filesystem = filesystem;
     this.environment = environment;
     this.ibtoolCommand = ImmutableList.copyOf(ibtoolCommand);

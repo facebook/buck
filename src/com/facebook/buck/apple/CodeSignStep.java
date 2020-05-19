@@ -22,6 +22,7 @@ import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -54,6 +55,7 @@ class CodeSignStep implements Step {
   private final ProjectFilesystem filesystem;
   private final ImmutableList<String> codesignFlags;
   private final Duration codesignTimeout;
+  private final boolean withDownwardApi;
 
   public CodeSignStep(
       ProjectFilesystem filesystem,
@@ -65,7 +67,8 @@ class CodeSignStep implements Step {
       Optional<Tool> codesignAllocatePath,
       Optional<Pair<Path, ImmutableList<Path>>> dryRunResultsWithExtraPaths,
       ImmutableList<String> codesignFlags,
-      Duration codesignTimeout) {
+      Duration codesignTimeout,
+      boolean withDownwardApi) {
     this.filesystem = filesystem;
     this.resolver = resolver;
     this.pathToSign = pathToSign;
@@ -76,6 +79,7 @@ class CodeSignStep implements Step {
     this.dryRunResultsWithExtraPaths = dryRunResultsWithExtraPaths;
     this.codesignFlags = codesignFlags;
     this.codesignTimeout = codesignTimeout;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -125,6 +129,11 @@ class CodeSignStep implements Step {
     // Must specify that stdout is expected or else output may be wrapped in Ansi escape chars.
     Set<ProcessExecutor.Option> options = EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
     if (LOG.isDebugEnabled()) {
       LOG.debug("codesign command: %s", Joiner.on(" ").join(processExecutorParams.getCommand()));
     }

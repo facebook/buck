@@ -25,6 +25,10 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -59,16 +63,25 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final Path sdkRoot;
   private final Path outputDir;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   CoreDataModel(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
       AppleCxxPlatform appleCxxPlatform,
       String moduleName,
-      ImmutableSet<SourcePath> dataModelPaths) {
+      ImmutableSet<SourcePath> dataModelPaths,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.moduleName = moduleName;
     this.dataModelPaths = dataModelPaths;
+    this.withDownwardApi = withDownwardApi;
     String outputDirString =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), buildTarget, "%s")
             .toString()
@@ -90,7 +103,7 @@ public class CoreDataModel extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 context.getBuildCellRootPath(), getProjectFilesystem(), outputDir)));
     for (SourcePath dataModelPath : dataModelPaths) {
       stepsBuilder.add(
-          new ShellStep(getProjectFilesystem().getRootPath()) {
+          new ShellStep(getProjectFilesystem().getRootPath(), withDownwardApi) {
             @Override
             protected ImmutableList<String> getShellCommandInternal(
                 ExecutionContext executionContext) {

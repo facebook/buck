@@ -37,6 +37,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
@@ -195,6 +199,13 @@ public class AppleBundle extends AbstractBuildRule
   private final BuildRuleParams buildRuleParams;
   private BuildableSupport.DepsSupplier depsSupplier;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   AppleBundle(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -229,7 +240,8 @@ public class AppleBundle extends AbstractBuildRule
       boolean copySwiftStdlibToFrameworks,
       boolean useEntitlementsWhenAdhocCodeSigning,
       boolean sliceAppPackageSwiftRuntime,
-      boolean sliceAppBundleSwiftRuntime) {
+      boolean sliceAppBundleSwiftRuntime,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.buildRuleParams = params;
     this.extension =
@@ -238,6 +250,7 @@ public class AppleBundle extends AbstractBuildRule
     this.infoPlist = infoPlist;
     this.infoPlistSubstitutions = ImmutableMap.copyOf(infoPlistSubstitutions);
     this.binary = binary;
+    this.withDownwardApi = withDownwardApi;
     Optional<SourcePath> entitlementsFile = Optional.empty();
     if (binary.isPresent()) {
       Optional<HasEntitlementsFile> hasEntitlementsFile =
@@ -495,7 +508,8 @@ public class AppleBundle extends AbstractBuildRule
         ibtool,
         ibtoolModuleFlag,
         getBuildTarget(),
-        Optional.of(binaryName));
+        Optional.of(binaryName),
+        withDownwardApi);
 
     addStepsToCopyExtensionBundlesDependencies(context, stepsBuilder, codeSignOnCopyPathsBuilder);
 
@@ -513,7 +527,8 @@ public class AppleBundle extends AbstractBuildRule
         ibtool,
         ibtoolModuleFlag,
         getBuildTarget(),
-        Optional.of(binaryName));
+        Optional.of(binaryName),
+        withDownwardApi);
     AppleResourceProcessing.addFrameworksProcessingSteps(
         frameworks,
         bundleRoot,
@@ -618,7 +633,8 @@ public class AppleBundle extends AbstractBuildRule
           bundleBinaryPath,
           destinations,
           sliceAppPackageSwiftRuntime,
-          sliceAppBundleSwiftRuntime);
+          sliceAppBundleSwiftRuntime,
+          isWithDownwardApi());
 
       for (BuildRule extraBinary : extraBinaries) {
         Path outputPath = getBundleBinaryPathForBuildRule(extraBinary);
@@ -655,7 +671,8 @@ public class AppleBundle extends AbstractBuildRule
                             ImmutableList.of()))
                     : Optional.empty(),
                 codesignFlags,
-                codesignTimeout));
+                codesignTimeout,
+                withDownwardApi));
       }
 
       stepsBuilder.add(
@@ -674,7 +691,8 @@ public class AppleBundle extends AbstractBuildRule
                           extraPathsToSignBuilder.build()))
                   : Optional.empty(),
               codesignFlags,
-              codesignTimeout));
+              codesignTimeout,
+              withDownwardApi));
     } else {
       AppleResourceProcessing.addSwiftStdlibStepIfNeeded(
           context.getSourcePathResolver(),
@@ -693,7 +711,8 @@ public class AppleBundle extends AbstractBuildRule
           bundleBinaryPath,
           destinations,
           sliceAppPackageSwiftRuntime,
-          sliceAppBundleSwiftRuntime);
+          sliceAppBundleSwiftRuntime,
+          withDownwardApi);
     }
 
     // Ensure the bundle directory is archived so we can fetch it later.
@@ -839,7 +858,8 @@ public class AppleBundle extends AbstractBuildRule
         bundleBinaryPath,
         destinations,
         sliceAppPackageSwiftRuntime,
-        sliceAppBundleSwiftRuntime);
+        sliceAppBundleSwiftRuntime,
+        withDownwardApi);
   }
 
   private void copyAnotherCopyOfWatchKitStub(
@@ -1103,5 +1123,9 @@ public class AppleBundle extends AbstractBuildRule
   @Override
   public void updateBuildRuleResolver(BuildRuleResolver ruleResolver) {
     this.depsSupplier = BuildableSupport.buildDepsSupplier(this, ruleResolver);
+  }
+
+  public boolean isWithDownwardApi() {
+    return withDownwardApi;
   }
 }

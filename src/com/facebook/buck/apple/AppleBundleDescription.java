@@ -51,6 +51,7 @@ import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.LinkerMapMode;
 import com.facebook.buck.cxx.toolchain.StripStyle;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.versions.Version;
@@ -86,6 +87,7 @@ public class AppleBundleDescription
   private final AppleConfig appleConfig;
   private final CxxBuckConfig cxxBuckConfig;
   private final SwiftBuckConfig swiftBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public AppleBundleDescription(
       ToolchainProvider toolchainProvider,
@@ -94,7 +96,8 @@ public class AppleBundleDescription
       AppleLibraryDescription appleLibraryDescription,
       AppleConfig appleConfig,
       CxxBuckConfig cxxBuckConfig,
-      SwiftBuckConfig swiftBuckConfig) {
+      SwiftBuckConfig swiftBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.xcodeDescriptions = xcodeDescriptions;
     this.appleBinaryDescription = appleBinaryDescription;
@@ -102,6 +105,7 @@ public class AppleBundleDescription
     this.appleConfig = appleConfig;
     this.cxxBuckConfig = cxxBuckConfig;
     this.swiftBuckConfig = swiftBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -221,7 +225,8 @@ public class AppleBundleDescription
         appleConfig.useEntitlementsWhenAdhocCodeSigning(),
         resourceFilter,
         swiftBuckConfig.getSliceAppPackageSwiftRuntime(),
-        swiftBuckConfig.getSliceAppBundleSwiftRuntime());
+        swiftBuckConfig.getSliceAppBundleSwiftRuntime(),
+        downwardApiConfig.isEnabledForApple());
   }
 
   /**

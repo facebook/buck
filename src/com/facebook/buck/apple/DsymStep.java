@@ -51,8 +51,9 @@ class DsymStep extends ShellStep {
       ImmutableMap<String, String> environment,
       List<String> command,
       Path input,
-      Path output) {
-    super(filesystem.getRootPath());
+      Path output,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
 
     this.filesystem = filesystem;
     this.environment = environment;
