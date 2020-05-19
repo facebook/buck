@@ -183,32 +183,30 @@ public class SwiftCompile extends AbstractBuildRule {
   }
 
   private SwiftCompileStep makeCompileStep(SourcePathResolverAdapter resolver) {
-    ImmutableList.Builder<String> compilerCommand = ImmutableList.builder();
-    compilerCommand.addAll(swiftCompiler.getCommandPrefix(resolver));
-
-    compilerCommand.add("-target", swiftTarget.getTriple());
+    ImmutableList.Builder<String> compilerArgs = ImmutableList.builder();
+    compilerArgs.add("-target", swiftTarget.getTriple());
 
     if (bridgingHeader.isPresent()) {
-      compilerCommand.add(
+      compilerArgs.add(
           "-import-objc-header", resolver.getRelativePath(bridgingHeader.get()).toString());
     }
     if (importUnderlyingModule) {
-      compilerCommand.add("-import-underlying-module");
+      compilerArgs.add("-import-underlying-module");
     }
 
     Function<FrameworkPath, Path> frameworkPathToSearchPath =
         CxxDescriptionEnhancer.frameworkPathToSearchPath(cxxPlatform, resolver);
 
-    compilerCommand.addAll(
+    compilerArgs.addAll(
         Streams.concat(frameworks.stream(), cxxDeps.getFrameworkPaths().stream())
             .filter(x -> !x.isSDKROOTFrameworkPath())
             .map(frameworkPathToSearchPath)
             .flatMap(searchPath -> ImmutableSet.of("-F", searchPath.toString()).stream())
             .iterator());
 
-    compilerCommand.addAll(
+    compilerArgs.addAll(
         MoreIterables.zipAndConcat(Iterables.cycle("-Xcc"), getSwiftIncludeArgs(resolver)));
-    compilerCommand.addAll(
+    compilerArgs.addAll(
         MoreIterables.zipAndConcat(
             Iterables.cycle(INCLUDE_FLAG),
             getBuildDeps().stream()
@@ -222,7 +220,7 @@ public class SwiftCompile extends AbstractBuildRule {
             .map(input -> resolver.getAbsolutePath(input).getFileName().toString())
             .anyMatch(SwiftDescriptions.SWIFT_MAIN_FILENAME::equalsIgnoreCase);
 
-    compilerCommand.add(
+    compilerArgs.add(
         "-c",
         enableObjcInterop ? "-enable-objc-interop" : "",
         hasMainEntry ? "" : "-parse-as-library",
@@ -238,27 +236,29 @@ public class SwiftCompile extends AbstractBuildRule {
         objectFilePath.toString());
 
     if (shouldEmitSwiftdocs) {
-      compilerCommand.add("-emit-module-doc", "-emit-module-doc-path", swiftdocPath.toString());
+      compilerArgs.add("-emit-module-doc", "-emit-module-doc-path", swiftdocPath.toString());
     }
 
     version.ifPresent(
         v -> {
-          compilerCommand.add("-swift-version", validVersionString(v));
+          compilerArgs.add("-swift-version", validVersionString(v));
         });
 
-    compilerCommand.addAll(
+    compilerArgs.addAll(
         Iterables.filter(Arg.stringify(compilerFlags, resolver), arg -> !arg.equals("-Xfrontend")));
     if (swiftFileListPath.isPresent()) {
-      compilerCommand.add("-filelist", swiftFileListPath.get().toString());
+      compilerArgs.add("-filelist", swiftFileListPath.get().toString());
     } else {
       for (SourcePath sourcePath : srcs) {
-        compilerCommand.add(resolver.getRelativePath(sourcePath).toString());
+        compilerArgs.add(resolver.getRelativePath(sourcePath).toString());
       }
     }
 
+    ImmutableList<String> commandPrefix = swiftCompiler.getCommandPrefix(resolver);
+
     ProjectFilesystem projectFilesystem = getProjectFilesystem();
     return new SwiftCompileStep(
-        projectFilesystem.getRootPath(), ImmutableMap.of(), compilerCommand.build());
+        projectFilesystem.getRootPath(), ImmutableMap.of(), commandPrefix, compilerArgs.build());
   }
 
   @VisibleForTesting

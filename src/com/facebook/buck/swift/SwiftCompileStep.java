@@ -30,6 +30,7 @@ import com.google.common.collect.ImmutableMap;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** A step that compiles Swift sources to a single module. */
 class SwiftCompileStep implements Step {
@@ -38,15 +39,18 @@ class SwiftCompileStep implements Step {
 
   private final AbsPath compilerCwd;
   private final ImmutableMap<String, String> compilerEnvironment;
-  private final ImmutableList<String> compilerCommand;
+  private final ImmutableList<String> compilerCommandPrefix;
+  private final ImmutableList<String> compilerCommandArguments;
 
   SwiftCompileStep(
       AbsPath compilerCwd,
       Map<String, String> compilerEnvironment,
-      Iterable<String> compilerCommand) {
+      ImmutableList<String> compilerCommandPrefix,
+      ImmutableList<String> compilerCommandArguments) {
     this.compilerCwd = compilerCwd;
     this.compilerEnvironment = ImmutableMap.copyOf(compilerEnvironment);
-    this.compilerCommand = ImmutableList.copyOf(compilerCommand);
+    this.compilerCommandPrefix = compilerCommandPrefix;
+    this.compilerCommandArguments = compilerCommandArguments;
   }
 
   @Override
@@ -60,7 +64,8 @@ class SwiftCompileStep implements Step {
     builder.setEnvironment(compilerEnvironment);
     builder.setCommand(
         ImmutableList.<String>builder()
-            .addAll(compilerCommand)
+            .addAll(compilerCommandPrefix)
+            .addAll(compilerCommandArguments)
             .addAll(getColorArguments(context.getAnsi().isAnsiTerminal()))
             .build());
     return builder.build();
@@ -70,13 +75,18 @@ class SwiftCompileStep implements Step {
     return allowColorInDiagnostics ? ImmutableList.of("-color-diagnostics") : ImmutableList.of();
   }
 
+  private ImmutableList<String> getRawCommand() {
+    return Stream.concat(compilerCommandPrefix.stream(), compilerCommandArguments.stream())
+        .collect(ImmutableList.toImmutableList());
+  }
+
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws IOException, InterruptedException {
     ProcessExecutorParams params = makeProcessExecutorParams(context);
 
     // TODO(markwang): parse the output, print build failure errors, etc.
-    LOG.debug("%s", compilerCommand);
+    LOG.debug("%s", getRawCommand());
 
     Result processResult = context.getProcessExecutor().launchAndExecute(params);
 
@@ -90,6 +100,6 @@ class SwiftCompileStep implements Step {
 
   @Override
   public String getDescription(ExecutionContext context) {
-    return Joiner.on(" ").join(compilerCommand);
+    return Joiner.on(" ").join(getRawCommand());
   }
 }
