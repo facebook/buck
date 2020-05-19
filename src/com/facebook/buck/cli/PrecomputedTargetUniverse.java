@@ -153,9 +153,10 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
           TargetNode<?> node =
               Objects.requireNonNull(
                   targetToNodeIndex.get(target),
-                  String.format(
-                      "Node %s should have been discovered by `discoverNewTargetsConcurrently`.",
-                      target));
+                  () ->
+                      String.format(
+                          "Node %s should have been discovered by `discoverNewTargetsConcurrently`.",
+                          target));
 
           // If a node has been added to the graph it means it and all of its children have been
           // visited by an acyclic traversal and added to the graph. From this it follows that there
@@ -181,7 +182,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
               node,
               Objects.requireNonNull(
                   targetToNodeIndex.get(dep),
-                  String.format("Couldn't find TargetNode for %s", dep)));
+                  () -> String.format("Couldn't find TargetNode for %s", dep)));
         }
       }
     } catch (CycleException e) {
