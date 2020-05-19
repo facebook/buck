@@ -58,7 +58,7 @@ public class GroovyLibraryDescription
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.downwardApiConfig = downwardApiConfig;
-    this.compilerFactory = new GroovyConfiguredCompilerFactory(groovyBuckConfig);
+    this.compilerFactory = new GroovyConfiguredCompilerFactory(groovyBuckConfig, downwardApiConfig);
   }
 
   @Override

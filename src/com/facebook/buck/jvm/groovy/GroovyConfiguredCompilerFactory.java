@@ -21,6 +21,7 @@ import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.Optionals;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.CoreArg;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
@@ -34,9 +35,12 @@ import javax.annotation.Nullable;
 
 public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final GroovyBuckConfig groovyBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
-  public GroovyConfiguredCompilerFactory(GroovyBuckConfig groovyBuckConfig) {
+  public GroovyConfiguredCompilerFactory(
+      GroovyBuckConfig groovyBuckConfig, DownwardApiConfig downwardApiConfig) {
     this.groovyBuckConfig = groovyBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -51,7 +55,8 @@ public class GroovyConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     return new GroovycToJarStepFactory(
         groovyBuckConfig.getGroovyc(targetConfiguration),
         Optional.of(groovyArgs.getExtraGroovycArguments()),
-        javacOptions);
+        javacOptions,
+        downwardApiConfig.isEnabledForGroovy());
   }
 
   @Override

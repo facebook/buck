@@ -22,6 +22,7 @@ import static com.google.common.collect.Iterables.transform;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.tool.Tool;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.Javac;
 import com.facebook.buck.jvm.java.JavacOptions;
@@ -51,6 +52,7 @@ class GroovycStep implements Step {
   private final Path pathToSrcsList;
   private final ImmutableSortedSet<Path> declaredClasspathEntries;
   private final ProjectFilesystem filesystem;
+  private final boolean withDownwardApi;
 
   GroovycStep(
       Tool groovyc,
@@ -61,7 +63,8 @@ class GroovycStep implements Step {
       ImmutableSortedSet<Path> sourceFilePaths,
       Path pathToSrcsList,
       ImmutableSortedSet<Path> declaredClasspathEntries,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      boolean withDownwardApi) {
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
     this.javacOptions = javacOptions;
@@ -71,6 +74,7 @@ class GroovycStep implements Step {
     this.pathToSrcsList = pathToSrcsList;
     this.declaredClasspathEntries = declaredClasspathEntries;
     this.filesystem = filesystem;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -84,6 +88,11 @@ class GroovycStep implements Step {
             .build();
     writePathToSourcesList(sourceFilePaths);
     ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
     return StepExecutionResult.of(processExecutor.launchAndExecute(params));
   }
 

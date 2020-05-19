@@ -21,6 +21,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
@@ -38,11 +42,22 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
   @AddToRuleKey private final Optional<ImmutableList<String>> extraArguments;
   @AddToRuleKey private final JavacOptions javacOptions;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public GroovycToJarStepFactory(
-      Tool groovyc, Optional<ImmutableList<String>> extraArguments, JavacOptions javacOptions) {
+      Tool groovyc,
+      Optional<ImmutableList<String>> extraArguments,
+      JavacOptions javacOptions,
+      boolean withDownwardApi) {
     this.groovyc = groovyc;
     this.extraArguments = extraArguments;
     this.javacOptions = javacOptions;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -70,7 +85,8 @@ class GroovycToJarStepFactory extends CompileToJarStepFactory implements AddsToR
             sourceFilePaths,
             pathToSrcsList,
             declaredClasspathEntries,
-            projectFilesystem));
+            projectFilesystem,
+            withDownwardApi));
   }
 
   @Override

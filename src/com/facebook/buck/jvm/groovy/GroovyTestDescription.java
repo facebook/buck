@@ -111,7 +111,7 @@ public class GroovyTestDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                new GroovyConfiguredCompilerFactory(groovyBuckConfig),
+                new GroovyConfiguredCompilerFactory(groovyBuckConfig, downwardApiConfig),
                 javaBuckConfig,
                 downwardApiConfig,
                 args)
