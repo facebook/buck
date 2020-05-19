@@ -31,6 +31,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -65,15 +66,18 @@ public class KotlinLibraryDescription
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
   private final JavacFactory javacFactory;
+  private final DownwardApiConfig downwardApiConfig;
 
   public KotlinLibraryDescription(
       ToolchainProvider toolchainProvider,
       KotlinBuckConfig kotlinBuckConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -148,6 +152,7 @@ public class KotlinLibraryDescription
                 graphBuilder,
                 kotlinBuckConfig,
                 javaBuckConfig,
+                downwardApiConfig,
                 args,
                 javacFactory)
             .setJavacOptions(javacOptions)

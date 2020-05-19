@@ -53,4 +53,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForApple() {
     return getDelegate().getBooleanValue(SECTION, "apple_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForJava() {
+    return getDelegate().getBooleanValue(SECTION, "java_enabled", false);
+  }
 }

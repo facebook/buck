@@ -22,6 +22,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.rulekey.CustomFieldBehavior;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
@@ -88,6 +90,13 @@ public class JarBuildStepsFactory
 
   @AddToRuleKey private final AbiGenerationMode abiGenerationMode;
   @AddToRuleKey private final AbiGenerationMode abiCompatibilityMode;
+
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
 
   /** Contains information about a Java classpath dependency. */
   public static class JavaDependencyInfo implements AddsToRuleKey {
@@ -199,7 +208,8 @@ public class JarBuildStepsFactory
       AbiGenerationMode abiGenerationMode,
       AbiGenerationMode abiCompatibilityMode,
       ImmutableList<JavaDependencyInfo> dependencyInfos,
-      boolean isRequiredForSourceOnlyAbi) {
+      boolean isRequiredForSourceOnlyAbi,
+      boolean withDownwardApi) {
     this.libraryTarget = libraryTarget;
     this.configuredCompiler = configuredCompiler;
     this.srcs = srcs;
@@ -213,6 +223,7 @@ public class JarBuildStepsFactory
     this.abiGenerationMode = abiGenerationMode;
     this.abiCompatibilityMode = abiCompatibilityMode;
     this.dependencyInfos = new DependencyInfoHolder(dependencyInfos);
+    this.withDownwardApi = withDownwardApi;
     this.abiClasspath = this.dependencyInfos.getAbiClasspath();
     this.isRequiredForSourceOnlyAbi = isRequiredForSourceOnlyAbi;
   }
@@ -318,7 +329,8 @@ public class JarBuildStepsFactory
         getAbiJarParameters(buildTarget, context, filesystem, compilerParameters).orElse(null),
         getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
         steps,
-        buildableContext);
+        buildableContext,
+        withDownwardApi);
 
     return steps.build();
   }
@@ -365,7 +377,8 @@ public class JarBuildStepsFactory
         null,
         getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
         steps,
-        buildableContext);
+        buildableContext,
+        withDownwardApi);
 
     JavaLibraryRules.addAccumulateClassNamesStep(
         ModernBuildableSupport.newCellRelativePathFactory(
@@ -533,7 +546,8 @@ public class JarBuildStepsFactory
         firstRule,
         compilerParameters,
         getAbiJarParameters(firstRule, context, filesystem, compilerParameters).orElse(null),
-        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null));
+        getLibraryJarParameters(context, filesystem, compilerParameters).orElse(null),
+        withDownwardApi);
   }
 
   public boolean hasAnnotationProcessing() {

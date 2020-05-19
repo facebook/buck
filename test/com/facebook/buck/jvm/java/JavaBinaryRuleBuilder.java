@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWARD_API_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_OPTIONS;
 
@@ -66,7 +67,8 @@ public class JavaBinaryRuleBuilder
                 .withToolchain(
                     JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
                 .build(),
-            javaBuckConfig),
+            javaBuckConfig,
+            DEFAULT_DOWNWARD_API_CONFIG),
         target);
   }
 

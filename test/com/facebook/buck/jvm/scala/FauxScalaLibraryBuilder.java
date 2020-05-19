@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.jvm.java.JavacSpec;
@@ -44,22 +45,26 @@ public class FauxScalaLibraryBuilder
   private final ProjectFilesystem projectFilesystem;
 
   private FauxScalaLibraryBuilder(
-      BuildTarget target, ProjectFilesystem projectFilesystem, ScalaBuckConfig scalaBuckConfig) {
-    super(
-        new ScalaLibraryDescription(
-            new ToolchainProviderBuilder()
-                .withToolchain(
-                    JavacOptionsProvider.DEFAULT_NAME,
-                    JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
-                .withToolchain(
-                    JavaToolchain.DEFAULT_NAME,
-                    JavaToolchain.of(JavacSpec.builder().build().getJavacProvider()))
-                .build(),
-            scalaBuckConfig,
-            null),
-        target,
-        projectFilesystem);
+      BuildTarget target, ProjectFilesystem projectFilesystem, BuckConfig buckConfig) {
+    super(getDescription(buckConfig), target, projectFilesystem);
     this.projectFilesystem = projectFilesystem;
+  }
+
+  private static ScalaLibraryDescription getDescription(BuckConfig buckConfig) {
+    ScalaBuckConfig scalaBuckConfig = new ScalaBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
+
+    return new ScalaLibraryDescription(
+        new ToolchainProviderBuilder()
+            .withToolchain(
+                JavacOptionsProvider.DEFAULT_NAME, JavacOptionsProvider.of(DEFAULT_JAVAC_OPTIONS))
+            .withToolchain(
+                JavaToolchain.DEFAULT_NAME,
+                JavaToolchain.of(JavacSpec.builder().build().getJavacProvider()))
+            .build(),
+        scalaBuckConfig,
+        null,
+        downwardApiConfig);
   }
 
   public static FauxScalaLibraryBuilder createBuilder(BuildTarget target) {
@@ -72,8 +77,7 @@ public class FauxScalaLibraryBuilder
                         "compiler", "scala-compiler.jar",
                         "library", "//:scala-library")))
             .build();
-    ScalaBuckConfig scalaBuckConfig = new ScalaBuckConfig(buckConfig);
-    return new FauxScalaLibraryBuilder(target, new FakeProjectFilesystem(), scalaBuckConfig);
+    return new FauxScalaLibraryBuilder(target, new FakeProjectFilesystem(), buckConfig);
   }
 
   public FauxScalaLibraryBuilder addSrc(SourcePath path) {

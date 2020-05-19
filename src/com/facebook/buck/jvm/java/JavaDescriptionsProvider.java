@@ -47,12 +47,12 @@ public class JavaDescriptionsProvider implements DescriptionProvider {
             reConfig,
             downwardApiConfig,
             context.getSandboxExecutionStrategy()),
-        new JavaBinaryDescription(toolchainProvider, javaConfig),
+        new JavaBinaryDescription(toolchainProvider, javaConfig, downwardApiConfig),
         new JavaAnnotationProcessorDescription(),
         new JavaPluginDescription(),
-        new JavaLibraryDescription(toolchainProvider, javaConfig),
-        new JavaTestRunnerDescription(toolchainProvider, javaConfig),
-        new JavaTestDescription(toolchainProvider, javaConfig),
+        new JavaLibraryDescription(toolchainProvider, javaConfig, downwardApiConfig),
+        new JavaTestRunnerDescription(toolchainProvider, javaConfig, downwardApiConfig),
+        new JavaTestDescription(toolchainProvider, javaConfig, downwardApiConfig),
         new KeystoreDescription());
   }
 }

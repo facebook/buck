@@ -67,7 +67,8 @@ public class AndroidLibraryGraphEnhancerTest {
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
-            /* skipNonUnionRDotJava */ false);
+            /* skipNonUnionRDotJava */ false,
+            false);
 
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
@@ -90,7 +91,8 @@ public class AndroidLibraryGraphEnhancerTest {
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
-            /* skipNonUnionRDotJava */ false);
+            /* skipNonUnionRDotJava */ false,
+            false);
 
     ActionGraphBuilder graphBuilder = new TestActionGraphBuilder();
     Optional<DummyRDotJava> result =
@@ -135,7 +137,8 @@ public class AndroidLibraryGraphEnhancerTest {
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
-            /* skipNonUnionRDotJava */ false);
+            /* skipNonUnionRDotJava */ false,
+            false);
 
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
@@ -199,7 +202,8 @@ public class AndroidLibraryGraphEnhancerTest {
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
-            /* skipNonUnionRDotJava */ false);
+            /* skipNonUnionRDotJava */ false,
+            false);
     Optional<DummyRDotJava> dummyRDotJava =
         graphEnhancer.getBuildableForAndroidResources(
             graphBuilder, /* createBuildableIfEmptyDeps */ false);
@@ -242,7 +246,8 @@ public class AndroidLibraryGraphEnhancerTest {
             /* unionPackage */ Optional.empty(),
             /* rName */ Optional.empty(),
             /* useOldStyleableFormat */ false,
-            /* skipNonUnionRDotJava */ false);
+            /* skipNonUnionRDotJava */ false,
+            false);
     Optional<DummyRDotJava> result =
         graphEnhancer.getBuildableForAndroidResources(
             graphBuilder, /* createdBuildableIfEmptyDeps */ true);

@@ -95,7 +95,8 @@ public class JarGenruleDescription extends AbstractGenruleDescription<JarGenrule
         args.getEnvironmentExpansionSeparator(),
         javaOptions
             .apply(buildTarget.getTargetConfiguration())
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        downwardApiConfig.isEnabledForJava());
   }
 
   @Override

@@ -23,6 +23,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -46,11 +50,28 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
+  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
   public JavacToJarStepFactory(
       Javac javac, JavacOptions javacOptions, ExtraClasspathProvider extraClasspathProvider) {
+    this(javac, javacOptions, extraClasspathProvider, false);
+  }
+
+  public JavacToJarStepFactory(
+      Javac javac,
+      JavacOptions javacOptions,
+      ExtraClasspathProvider extraClasspathProvider,
+      boolean withDownwardApi) {
     this.javac = javac;
     this.javacOptions = javacOptions;
     this.extraClasspathProvider = extraClasspathProvider;
+    this.withDownwardApi = withDownwardApi;
   }
 
   public JavacPipelineState createPipelineState(
@@ -58,7 +79,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       BuildTarget invokingRule,
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
-      @Nullable JarParameters libraryJarParameters) {
+      @Nullable JarParameters libraryJarParameters,
+      boolean withDownwardApi) {
     JavacOptions buildTimeOptions =
         javacOptions.withBootclasspathFromContext(extraClasspathProvider);
 
@@ -70,7 +92,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
         new ClasspathChecker(),
         compilerParameters,
         abiJarParameters,
-        libraryJarParameters);
+        libraryJarParameters,
+        withDownwardApi);
   }
 
   private static void addAnnotationGenFolderStep(
@@ -113,7 +136,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
             new ClasspathChecker(),
             parameters,
             null,
-            null));
+            null,
+            withDownwardApi));
   }
 
   public final void createPipelinedCompileToJarStep(
@@ -177,7 +201,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
       @Nullable JarParameters libraryJarParameters,
       /* output params */
       Builder<Step> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      boolean withDownwardApi) {
     Preconditions.checkArgument(
         libraryJarParameters == null
             || libraryJarParameters
@@ -217,7 +242,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
               new ClasspathChecker(),
               compilerParameters,
               abiJarParameters,
-              libraryJarParameters));
+              libraryJarParameters,
+              withDownwardApi));
     } else {
       super.createCompileToJarStepImpl(
           projectFilesystem,
@@ -228,7 +254,8 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
           null,
           libraryJarParameters,
           steps,
-          buildableContext);
+          buildableContext,
+          withDownwardApi);
     }
   }
 

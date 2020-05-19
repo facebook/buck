@@ -37,6 +37,7 @@ import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.DefaultJavaAbiInfo;
 import com.facebook.buck.jvm.core.EmptyJavaAbiInfo;
@@ -133,6 +134,7 @@ public class DefaultJavaLibrary
       ActionGraphBuilder graphBuilder,
       ConfiguredCompilerFactory compilerFactory,
       @Nullable JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       @Nullable JavaLibraryDescription.CoreArg args) {
     return new DefaultJavaLibraryRules.Builder(
         buildTarget,
@@ -142,6 +144,7 @@ public class DefaultJavaLibrary
         graphBuilder,
         compilerFactory,
         javaBuckConfig,
+        downwardApiConfig,
         args);
   }
 

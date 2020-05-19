@@ -35,6 +35,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.toolchain.JavaCxxPlatformProvider;
@@ -62,13 +63,18 @@ public class JavaBinaryDescription
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
   private final JavacFactory javacFactory;
+  private final DownwardApiConfig downwardApiConfig;
   private final Function<TargetConfiguration, JavaOptions> javaOptions;
 
-  public JavaBinaryDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+  public JavaBinaryDescription(
+      ToolchainProvider toolchainProvider,
+      JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -179,7 +185,8 @@ public class JavaBinaryDescription
               nativeLibraries,
               javaOptions
                   .apply(buildTarget.getTargetConfiguration())
-                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
+                  .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+              downwardApiConfig.isEnabledForJava());
     }
 
     return rule;

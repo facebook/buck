@@ -22,6 +22,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -82,6 +86,13 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final Path output;
   private final JavaBinary innerJarRule;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public JarFattener(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -91,7 +102,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
       SourcePath innerJar,
       JavaBinary innerJarRule,
       ImmutableMap<String, SourcePath> nativeLibraries,
-      Tool javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.javac = javac;
     this.javacOptions = javacOptions;
@@ -99,6 +111,7 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.innerJarRule = innerJarRule;
     this.nativeLibraries = nativeLibraries;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
+    this.withDownwardApi = withDownwardApi;
     this.output =
         BuildTargetPaths.getGenPath(getProjectFilesystem(), getBuildTarget(), "%s")
             .resolve(getBuildTarget().getShortName() + ".jar");
@@ -196,7 +209,8 @@ public class JarFattener extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 compilerParameters.getOutputPaths().getPathToSourcesList().getParent())));
 
     JavacToJarStepFactory compileStepFactory =
-        new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathProvider.EMPTY);
+        new JavacToJarStepFactory(
+            javac, javacOptions, ExtraClasspathProvider.EMPTY, withDownwardApi);
 
     compileStepFactory.createCompileStep(
         context,

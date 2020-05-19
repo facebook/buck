@@ -59,7 +59,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
     AndroidLibraryCompilerFactory defaultAndroidCompilerFactory =
-        new DefaultAndroidLibraryCompilerFactory(javaConfig, scalaConfig, kotlinBuckConfig);
+        new DefaultAndroidLibraryCompilerFactory(
+            javaConfig, scalaConfig, kotlinBuckConfig, downwardApiConfig);
     AndroidInstallConfig androidInstallConfig = new AndroidInstallConfig(buckConfig);
     AndroidManifestFactory androidManifestFactory = new AndroidManifestFactory();
 
@@ -79,7 +80,7 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             toolchainProvider,
             new AndroidBinaryGraphEnhancerFactory(),
             new AndroidBinaryFactory(androidBuckConfig, downwardApiConfig)),
-        new AndroidBuildConfigDescription(toolchainProvider),
+        new AndroidBuildConfigDescription(toolchainProvider, downwardApiConfig),
         new AndroidBundleDescription(
             javaConfig,
             proGuardConfig,
@@ -101,7 +102,8 @@ public class AndroidDescriptionsProvider implements DescriptionProvider {
             downwardApiConfig),
         new AndroidInstrumentationTestDescription(
             testBuckConfig, downwardApiConfig, toolchainProvider),
-        new AndroidLibraryDescription(javaConfig, defaultAndroidCompilerFactory, toolchainProvider),
+        new AndroidLibraryDescription(
+            javaConfig, downwardApiConfig, defaultAndroidCompilerFactory, toolchainProvider),
         new AndroidPrebuiltAarDescription(toolchainProvider, androidBuckConfig, downwardApiConfig),
         new AndroidResourceDescription(toolchainProvider, androidBuckConfig, downwardApiConfig),
         new RobolectricTestDescription(

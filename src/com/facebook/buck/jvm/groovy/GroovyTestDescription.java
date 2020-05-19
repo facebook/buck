@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -59,15 +60,18 @@ public class GroovyTestDescription
   private final ToolchainProvider toolchainProvider;
   private final GroovyBuckConfig groovyBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
 
   public GroovyTestDescription(
       ToolchainProvider toolchainProvider,
       GroovyBuckConfig groovyBuckConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.groovyBuckConfig = groovyBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
   }
 
@@ -109,6 +113,7 @@ public class GroovyTestDescription
                 graphBuilder,
                 new GroovyConfiguredCompilerFactory(groovyBuckConfig),
                 javaBuckConfig,
+                downwardApiConfig,
                 args)
             .setJavacOptions(javacOptions)
             .build();

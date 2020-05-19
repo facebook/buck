@@ -18,6 +18,7 @@ package com.facebook.buck.android;
 
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.TargetConfiguration;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import com.facebook.buck.jvm.java.JavaConfiguredCompilerFactory;
@@ -31,12 +32,17 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
   private final JavaBuckConfig javaConfig;
   private final ScalaBuckConfig scalaConfig;
   private final KotlinBuckConfig kotlinBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public DefaultAndroidLibraryCompilerFactory(
-      JavaBuckConfig javaConfig, ScalaBuckConfig scalaConfig, KotlinBuckConfig kotlinBuckConfig) {
+      JavaBuckConfig javaConfig,
+      ScalaBuckConfig scalaConfig,
+      KotlinBuckConfig kotlinBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.javaConfig = javaConfig;
     this.scalaConfig = scalaConfig;
     this.kotlinBuckConfig = kotlinBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -47,7 +53,7 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
     switch (language) {
       case JAVA:
         return new JavaConfiguredCompilerFactory(
-            javaConfig, AndroidClasspathProvider::new, javacFactory);
+            javaConfig, downwardApiConfig, AndroidClasspathProvider::new, javacFactory);
       case SCALA:
         return new ScalaConfiguredCompilerFactory(
             scalaConfig, AndroidClasspathProvider::new, javacFactory);

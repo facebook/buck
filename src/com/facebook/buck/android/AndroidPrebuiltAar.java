@@ -61,7 +61,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
       Iterable<PrebuiltJar> exportedDeps,
       boolean requiredForSourceAbi,
       Optional<String> mavenCoords,
-      boolean useSystemLibraryLoader) {
+      boolean useSystemLibraryLoader,
+      boolean withDownwardApi) {
     super(
         androidLibraryBuildTarget,
         projectFilesystem,
@@ -79,7 +80,8 @@ public class AndroidPrebuiltAar extends AndroidLibrary
             AbiGenerationMode.CLASS,
             AbiGenerationMode.CLASS,
             ImmutableList.of(),
-            requiredForSourceAbi),
+            requiredForSourceAbi,
+            withDownwardApi),
         ruleFinder,
         Optional.of(proguardConfig),
         /* firstOrderPackageableDeps */ androidLibraryParams.getDeclaredDeps().get(),

@@ -27,6 +27,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.DefaultJavaLibrary;
@@ -61,6 +62,7 @@ public class KotlinTestDescription
 
   private final KotlinBuckConfig kotlinBuckConfig;
   private final JavaBuckConfig javaBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
   private final JavacFactory javacFactory;
   private final LoadingCache<TargetConfiguration, JavacOptions> defaultJavacOptions;
@@ -68,7 +70,8 @@ public class KotlinTestDescription
   public KotlinTestDescription(
       ToolchainProvider toolchainProvider,
       KotlinBuckConfig kotlinBuckConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.kotlinBuckConfig = kotlinBuckConfig;
     this.javaBuckConfig = javaBuckConfig;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
@@ -85,6 +88,7 @@ public class KotlinTestDescription
                         .getJavacOptions();
                   }
                 });
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -119,6 +123,7 @@ public class KotlinTestDescription
                 graphBuilder,
                 kotlinBuckConfig,
                 javaBuckConfig,
+                downwardApiConfig,
                 args,
                 javacFactory)
             .setJavacOptions(javacOptions)

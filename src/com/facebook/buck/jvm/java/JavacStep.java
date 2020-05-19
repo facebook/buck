@@ -59,7 +59,8 @@ public class JavacStep implements Step {
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
-      @Nullable JarParameters libraryJarParameters) {
+      @Nullable JarParameters libraryJarParameters,
+      boolean withDownwardApi) {
     this(
         new JavacPipelineState(
             javaPackageFinder,
@@ -69,7 +70,8 @@ public class JavacStep implements Step {
             classpathChecker,
             compilerParameters,
             abiJarParameters,
-            libraryJarParameters),
+            libraryJarParameters,
+            withDownwardApi),
         invokingRule,
         true,
         resolver,

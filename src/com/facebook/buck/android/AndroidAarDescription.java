@@ -223,7 +223,8 @@ public class AndroidAarDescription
                       buildTarget.getTargetConfiguration(),
                       JavacOptionsProvider.class)
                   .getJavacOptions(),
-              packageableCollection);
+              packageableCollection,
+              downwardApiConfig.isEnabledForAndroid());
       buildConfigRules.forEach(graphBuilder::addToIndex);
       aarExtraDepsBuilder.addAll(buildConfigRules);
       classpathToIncludeInAar.addAll(

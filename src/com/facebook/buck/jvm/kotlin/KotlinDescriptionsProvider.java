@@ -21,6 +21,7 @@ import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.java.JavaBuckConfig;
 import java.util.Arrays;
 import java.util.Collection;
@@ -32,12 +33,15 @@ public class KotlinDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
-    BuckConfig config = context.getBuckConfig();
-    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(config);
-    JavaBuckConfig javaConfig = config.getView(JavaBuckConfig.class);
+    BuckConfig buckConfig = context.getBuckConfig();
+    KotlinBuckConfig kotlinBuckConfig = new KotlinBuckConfig(buckConfig);
+    JavaBuckConfig javaConfig = buckConfig.getView(JavaBuckConfig.class);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     return Arrays.asList(
-        new KotlinLibraryDescription(toolchainProvider, kotlinBuckConfig, javaConfig),
-        new KotlinTestDescription(toolchainProvider, kotlinBuckConfig, javaConfig));
+        new KotlinLibraryDescription(
+            toolchainProvider, kotlinBuckConfig, javaConfig, downwardApiConfig),
+        new KotlinTestDescription(
+            toolchainProvider, kotlinBuckConfig, javaConfig, downwardApiConfig));
   }
 }

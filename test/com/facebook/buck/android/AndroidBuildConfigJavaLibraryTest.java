@@ -56,7 +56,8 @@ public class AndroidBuildConfigJavaLibraryTest {
             /* useConstantExpressions */ false,
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            graphBuilder);
+            graphBuilder,
+            false);
 
     AndroidPackageableCollector collector = new AndroidPackageableCollector(buildTarget);
     buildConfigJavaLibrary.addToCollector(collector);
@@ -87,7 +88,8 @@ public class AndroidBuildConfigJavaLibraryTest {
             /* useConstantExpressions */ false,
             DEFAULT_JAVAC,
             DEFAULT_JAVAC_OPTIONS,
-            graphBuilder);
+            graphBuilder,
+            false);
     AndroidBuildConfig buildConfig = buildConfigJavaLibrary.getAndroidBuildConfig();
     assertEquals("com.example.buck", buildConfig.getJavaPackage());
     assertEquals(fields, buildConfig.getBuildConfigFields());

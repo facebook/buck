@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWARD_API_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVA_CONFIG;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
@@ -46,12 +47,18 @@ public class AndroidLibraryBuilder
   private static final AndroidLibraryCompilerFactory JAVA_ONLY_COMPILER_FACTORY =
       (language, factory, toolchainTargetConfiguration) ->
           new JavaConfiguredCompilerFactory(
-              DEFAULT_JAVA_CONFIG, AndroidClasspathProvider::new, factory);
+              DEFAULT_JAVA_CONFIG,
+              DEFAULT_DOWNWARD_API_CONFIG,
+              AndroidClasspathProvider::new,
+              factory);
 
   private AndroidLibraryBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(
         new AndroidLibraryDescription(
-            javaBuckConfig, JAVA_ONLY_COMPILER_FACTORY, createToolchainProviderForAndroidLibrary()),
+            javaBuckConfig,
+            DEFAULT_DOWNWARD_API_CONFIG,
+            JAVA_ONLY_COMPILER_FACTORY,
+            createToolchainProviderForAndroidLibrary()),
         target,
         new FakeProjectFilesystem(),
         createToolchainProviderForAndroidLibrary());

@@ -54,7 +54,8 @@ public final class JarGenrule extends BaseGenrule<GenruleBuildable> implements B
       String out,
       boolean isCacheable,
       Optional<String> environmentExpansionSeparator,
-      Tool javaRuntimeLauncher) {
+      Tool javaRuntimeLauncher,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -76,7 +77,8 @@ public final class JarGenrule extends BaseGenrule<GenruleBuildable> implements B
             environmentExpansionSeparator.orElse(" "),
             Optional.empty(),
             Optional.empty(),
-            false));
+            false,
+            withDownwardApi));
     this.javaRuntimeLauncher = javaRuntimeLauncher;
   }
 

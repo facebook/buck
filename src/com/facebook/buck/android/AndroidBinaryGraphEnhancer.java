@@ -406,8 +406,10 @@ public class AndroidBinaryGraphEnhancer {
                   toolchainProvider,
                   paramsForCompileGenCode,
                   graphBuilder,
-                  new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
+                  new JavaConfiguredCompilerFactory(
+                      javaBuckConfig, downwardApiConfig, javacFactory),
                   javaBuckConfig,
+                  downwardApiConfig,
                   null)
               // Kind of a hack: override language level to 7 to allow string switch.
               // This can be removed once no one who uses this feature sets the level
@@ -452,7 +454,8 @@ public class AndroidBinaryGraphEnhancer {
               graphBuilder,
               javac,
               javacOptions,
-              packageableCollection);
+              packageableCollection,
+              downwardApiConfig.isEnabledForAndroid());
       additionalJavaLibrariesBuilder.addAll(buildConfigDepsRules);
     }
 
@@ -572,8 +575,9 @@ public class AndroidBinaryGraphEnhancer {
                 toolchainProvider,
                 paramsForCompileUberRDotJava,
                 graphBuilder,
-                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
+                new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
+                downwardApiConfig,
                 null)
             .setJavacOptions(
                 javacOptions.withLanguageLevelOptions(
@@ -700,7 +704,8 @@ public class AndroidBinaryGraphEnhancer {
       ActionGraphBuilder graphBuilder,
       Javac javac,
       JavacOptions javacOptions,
-      AndroidPackageableCollection packageableCollection) {
+      AndroidPackageableCollection packageableCollection,
+      boolean withDownwardApi) {
     ImmutableSortedSet.Builder<JavaLibrary> result = ImmutableSortedSet.naturalOrder();
     BuildConfigFields buildConfigConstants =
         BuildConfigFields.fromFields(
@@ -747,7 +752,8 @@ public class AndroidBinaryGraphEnhancer {
               /* useConstantExpressions */ true,
               javac,
               javacOptions,
-              graphBuilder);
+              graphBuilder,
+              withDownwardApi);
       graphBuilder.addToIndex(buildConfigJavaLibrary);
 
       Preconditions.checkNotNull(

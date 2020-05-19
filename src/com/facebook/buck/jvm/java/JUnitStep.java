@@ -18,6 +18,7 @@ package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.ExecutableFinder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.shell.ShellStep;
@@ -196,26 +197,31 @@ public class JUnitStep extends ShellStep {
               .getStdErr()
               .println("Test has timed out!  Here is a trace of what it is currently doing:");
           try {
-            context
-                .getProcessExecutor()
-                .launchAndExecute(
-                    /* command */ ProcessExecutorParams.builder()
-                        .addCommand(jstack.get().toString(), "-l", pid.get().toString())
-                        .setEnvironment(context.getEnvironment())
-                        .build(),
-                    /* options */ ImmutableSet.<ProcessExecutor.Option>builder()
-                        .add(ProcessExecutor.Option.PRINT_STD_OUT)
-                        .add(ProcessExecutor.Option.PRINT_STD_ERR)
-                        .build(),
-                    /* stdin */ Optional.empty(),
-                    /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
-                    /* timeOutHandler */ Optional.of(
-                        input -> {
-                          context
-                              .getStdErr()
-                              .print(
-                                  "Printing the stack took longer than 30 seconds. No longer trying.");
-                        }));
+            ProcessExecutor processExecutor = context.getProcessExecutor();
+            if (isWithDownwardApi()) {
+              processExecutor =
+                  processExecutor.withDownwardAPI(
+                      DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+            }
+
+            processExecutor.launchAndExecute(
+                /* command */ ProcessExecutorParams.builder()
+                    .addCommand(jstack.get().toString(), "-l", pid.get().toString())
+                    .setEnvironment(context.getEnvironment())
+                    .build(),
+                /* options */ ImmutableSet.<ProcessExecutor.Option>builder()
+                    .add(ProcessExecutor.Option.PRINT_STD_OUT)
+                    .add(ProcessExecutor.Option.PRINT_STD_ERR)
+                    .build(),
+                /* stdin */ Optional.empty(),
+                /* timeOutMs */ Optional.of(TimeUnit.SECONDS.toMillis(30)),
+                /* timeOutHandler */ Optional.of(
+                    input -> {
+                      context
+                          .getStdErr()
+                          .print(
+                              "Printing the stack took longer than 30 seconds. No longer trying.");
+                    }));
           } catch (Exception e) {
             LOG.error(e);
           }

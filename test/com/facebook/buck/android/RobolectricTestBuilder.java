@@ -48,7 +48,8 @@ public class RobolectricTestBuilder
       new DefaultAndroidLibraryCompilerFactory(
           DEFAULT_JAVA_CONFIG,
           new ScalaBuckConfig(FakeBuckConfig.empty()),
-          new KotlinBuckConfig(FakeBuckConfig.empty()));
+          new KotlinBuckConfig(FakeBuckConfig.empty()),
+          CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG);
 
   private RobolectricTestBuilder(BuildTarget target, JavaBuckConfig javaBuckConfig) {
     super(

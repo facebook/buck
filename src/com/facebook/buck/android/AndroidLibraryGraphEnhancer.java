@@ -52,6 +52,7 @@ public class AndroidLibraryGraphEnhancer {
   private final boolean useOldStyleableFormat;
   private final ProjectFilesystem projectFilesystem;
   private final boolean skipNonUnionRDotJava;
+  private final boolean withDownwardApi;
 
   public AndroidLibraryGraphEnhancer(
       BuildTarget buildTarget,
@@ -64,7 +65,8 @@ public class AndroidLibraryGraphEnhancer {
       Optional<String> resourceUnionPackage,
       Optional<String> finalRName,
       boolean useOldStyleableFormat,
-      boolean skipNonUnionRDotJava) {
+      boolean skipNonUnionRDotJava,
+      boolean withDownwardApi) {
     this.projectFilesystem = projectFilesystem;
     Preconditions.checkState(!JavaAbis.isAbiTarget(buildTarget));
     this.dummyRDotJavaBuildTarget = getDummyRDotJavaTarget(buildTarget);
@@ -81,6 +83,7 @@ public class AndroidLibraryGraphEnhancer {
     this.finalRName = finalRName;
     this.useOldStyleableFormat = useOldStyleableFormat;
     this.skipNonUnionRDotJava = skipNonUnionRDotJava;
+    this.withDownwardApi = withDownwardApi;
   }
 
   public static BuildTarget getDummyRDotJavaTarget(BuildTarget buildTarget) {
@@ -127,7 +130,8 @@ public class AndroidLibraryGraphEnhancer {
               JavacOptions filteredOptions = javacOptions.withExtraArguments(ImmutableList.of());
 
               JavacToJarStepFactory compileToJarStepFactory =
-                  new JavacToJarStepFactory(javac, filteredOptions, ExtraClasspathProvider.EMPTY);
+                  new JavacToJarStepFactory(
+                      javac, filteredOptions, ExtraClasspathProvider.EMPTY, withDownwardApi);
 
               return new DummyRDotJava(
                   dummyRDotJavaBuildTarget,

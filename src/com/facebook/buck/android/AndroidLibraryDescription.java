@@ -33,6 +33,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.infer.InferJava;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
@@ -73,6 +74,7 @@ public class AndroidLibraryDescription
   }
 
   private final JavaBuckConfig javaBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final AndroidLibraryCompilerFactory compilerFactory;
   private final JavacFactory javacFactory;
   private final Function<TargetConfiguration, Optional<UnresolvedInferPlatform>>
@@ -80,9 +82,11 @@ public class AndroidLibraryDescription
 
   public AndroidLibraryDescription(
       JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       AndroidLibraryCompilerFactory compilerFactory,
       ToolchainProvider toolchainProvider) {
     this.javaBuckConfig = javaBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.compilerFactory = compilerFactory;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
     this.unresolvedInferPlatform =
@@ -168,6 +172,7 @@ public class AndroidLibraryDescription
             params,
             context.getActionGraphBuilder(),
             javaBuckConfig,
+            downwardApiConfig,
             javacFactory,
             javacOptions,
             args,

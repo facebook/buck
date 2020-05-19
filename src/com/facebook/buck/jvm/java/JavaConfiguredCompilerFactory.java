@@ -19,6 +19,7 @@ package com.facebook.buck.jvm.java;
 import com.facebook.buck.core.model.TargetConfiguration;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.java.abi.AbiGenerationMode;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -26,23 +27,30 @@ import javax.annotation.Nullable;
 
 public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final JavaBuckConfig javaBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
       extraClasspathProviderSupplier;
   private final JavacFactory javacFactory;
 
-  public JavaConfiguredCompilerFactory(JavaBuckConfig javaBuckConfig, JavacFactory javacFactory) {
+  public JavaConfiguredCompilerFactory(
+      JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      JavacFactory javacFactory) {
     this(
         javaBuckConfig,
+        downwardApiConfig,
         (toolchainProvider, toolchainTargetConfiguration) -> ExtraClasspathProvider.EMPTY,
         javacFactory);
   }
 
   public JavaConfiguredCompilerFactory(
       JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
           extraClasspathProviderSupplier,
       JavacFactory javacFactory) {
     this.javaBuckConfig = javaBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.extraClasspathProviderSupplier = extraClasspathProviderSupplier;
     this.javacFactory = javacFactory;
   }
@@ -93,7 +101,8 @@ public class JavaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
     return new JavacToJarStepFactory(
         getJavac(buildRuleResolver, arg, targetConfiguration),
         javacOptions,
-        extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration));
+        extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
+        downwardApiConfig.isEnabledForJava());
   }
 
   @Override

@@ -54,13 +54,15 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
       SourcePathRuleFinder ruleFinder,
       Javac javac,
       JavacOptions javacOptions,
-      AndroidBuildConfig androidBuildConfig) {
+      AndroidBuildConfig androidBuildConfig,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
         new JarBuildStepsFactory(
             buildTarget,
-            new JavacToJarStepFactory(javac, javacOptions, ExtraClasspathProvider.EMPTY),
+            new JavacToJarStepFactory(
+                javac, javacOptions, ExtraClasspathProvider.EMPTY, withDownwardApi),
             /* srcs */ ImmutableSortedSet.of(androidBuildConfig.getSourcePathToOutput()),
             ImmutableSortedSet.of(),
             ResourcesParameters.of(),
@@ -72,7 +74,8 @@ class AndroidBuildConfigJavaLibrary extends DefaultJavaLibrary implements Androi
             AbiGenerationMode.CLASS,
             AbiGenerationMode.CLASS,
             ImmutableList.of(),
-            false),
+            false,
+            withDownwardApi),
         ruleFinder,
         Optional.empty(),
         ImmutableSortedSet.of(androidBuildConfig),

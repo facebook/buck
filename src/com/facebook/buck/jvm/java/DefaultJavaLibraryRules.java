@@ -26,6 +26,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.BuckStyleValueWithBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.common.ResourceValidator;
 import com.facebook.buck.jvm.core.CalculateAbi;
@@ -110,6 +111,9 @@ public abstract class DefaultJavaLibraryRules {
   @org.immutables.builder.Builder.Parameter
   @Nullable
   abstract JavaBuckConfig getJavaBuckConfig();
+
+  @org.immutables.builder.Builder.Parameter
+  abstract DownwardApiConfig getDownwardApiConfig();
 
   @Value.Default
   DefaultJavaLibraryConstructor getConstructor() {
@@ -614,7 +618,8 @@ public abstract class DefaultJavaLibraryRules {
         getAbiGenerationMode(),
         getAbiCompatibilityMode(),
         classpaths.getDependencyInfos(),
-        getRequiredForSourceOnlyAbi());
+        getRequiredForSourceOnlyAbi(),
+        getDownwardApiConfig().isEnabledForJava());
   }
 
   @Value.Lazy
@@ -633,7 +638,8 @@ public abstract class DefaultJavaLibraryRules {
         getAbiGenerationMode(),
         getAbiCompatibilityMode(),
         getClasspaths().getDependencyInfosForSourceOnlyAbi(),
-        getRequiredForSourceOnlyAbi());
+        getRequiredForSourceOnlyAbi(),
+        getDownwardApiConfig().isEnabledForJava());
   }
 
   private ResourcesParameters getResourcesParameters() {
@@ -687,6 +693,7 @@ public abstract class DefaultJavaLibraryRules {
         ActionGraphBuilder graphBuilder,
         ConfiguredCompilerFactory configuredCompilerFactory,
         @Nullable JavaBuckConfig javaBuckConfig,
+        DownwardApiConfig downwardApiConfig,
         @Nullable JavaLibraryDescription.CoreArg args) {
       super(
           initialBuildTarget,
@@ -697,6 +704,7 @@ public abstract class DefaultJavaLibraryRules {
           configuredCompilerFactory,
           getUnusedDependenciesAction(javaBuckConfig, args),
           javaBuckConfig,
+          downwardApiConfig,
           args);
 
       this.actionGraphBuilder = graphBuilder;

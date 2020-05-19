@@ -16,6 +16,7 @@
 
 package com.facebook.buck.jvm.java;
 
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWARD_API_CONFIG;
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_JAVAC_OPTIONS;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
@@ -1356,8 +1357,11 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                 buildRuleParams,
                 graphBuilder,
                 new JavaConfiguredCompilerFactory(
-                    testJavaBuckConfig, JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
+                    testJavaBuckConfig,
+                    DEFAULT_DOWNWARD_API_CONFIG,
+                    JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                 testJavaBuckConfig,
+                DEFAULT_DOWNWARD_API_CONFIG,
                 null)
             .setJavacOptions(javacOptions)
             .setSrcs(srcsAsPaths)
@@ -1683,8 +1687,10 @@ public class DefaultJavaLibraryTest extends AbiCompilationModeTest {
                   graphBuilder,
                   new JavaConfiguredCompilerFactory(
                       testJavaBuckConfig,
+                      DEFAULT_DOWNWARD_API_CONFIG,
                       JavacFactoryHelper.createJavacFactory(testJavaBuckConfig)),
                   testJavaBuckConfig,
+                  DEFAULT_DOWNWARD_API_CONFIG,
                   null)
               .setJavacOptions(options)
               .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of(src)))

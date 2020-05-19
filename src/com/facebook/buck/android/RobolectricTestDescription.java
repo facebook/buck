@@ -191,7 +191,8 @@ public class RobolectricTestDescription
             args.getResourceUnionPackage(),
             /* rName */ Optional.empty(),
             args.isUseOldStyleableFormat(),
-            /* skipNonUnionRDotJava */ false);
+            /* skipNonUnionRDotJava */ false,
+            downwardApiConfig.isEnabledForAndroid());
 
     StringWithMacrosConverter macrosConverter =
         StringWithMacrosConverter.of(
@@ -360,6 +361,7 @@ public class RobolectricTestDescription
                         javacFactory,
                         buildTarget.getTargetConfiguration()),
                     javaBuckConfig,
+                    downwardApiConfig,
                     testLibraryArgs)
                 .setJavacOptions(javacOptions)
                 .build()

@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.groovy.GroovyLibraryDescription.AbstractGroovyLibraryDescriptionArg;
@@ -46,14 +47,17 @@ public class GroovyLibraryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final GroovyConfiguredCompilerFactory compilerFactory;
 
   public GroovyLibraryDescription(
       ToolchainProvider toolchainProvider,
       GroovyBuckConfig groovyBuckConfig,
-      JavaBuckConfig javaBuckConfig) {
+      JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.compilerFactory = new GroovyConfiguredCompilerFactory(groovyBuckConfig);
   }
 
@@ -90,6 +94,7 @@ public class GroovyLibraryDescription
                 graphBuilder,
                 compilerFactory,
                 javaBuckConfig,
+                downwardApiConfig,
                 args)
             .setJavacOptions(javacOptions)
             .build();

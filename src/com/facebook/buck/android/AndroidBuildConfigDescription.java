@@ -30,6 +30,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateClassAbi;
@@ -51,9 +52,12 @@ public class AndroidBuildConfigDescription
   public static final Flavor GEN_JAVA_FLAVOR = InternalFlavor.of("gen_java_android_build_config");
 
   private final JavacFactory javacFactory;
+  private final DownwardApiConfig downwardApiConfig;
 
-  public AndroidBuildConfigDescription(ToolchainProvider toolchainProvider) {
+  public AndroidBuildConfigDescription(
+      ToolchainProvider toolchainProvider, DownwardApiConfig downwardApiConfig) {
     javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -94,7 +98,8 @@ public class AndroidBuildConfigDescription
                 buildTarget.getTargetConfiguration(),
                 JavacOptionsProvider.class)
             .getJavacOptions(),
-        graphBuilder);
+        graphBuilder,
+        downwardApiConfig.isEnabledForJava());
   }
 
   /**
@@ -115,7 +120,8 @@ public class AndroidBuildConfigDescription
       boolean useConstantExpressions,
       Javac javac,
       JavacOptions javacOptions,
-      ActionGraphBuilder graphBuilder) {
+      ActionGraphBuilder graphBuilder,
+      boolean withDownwardApi) {
     // Normally, the build target for an intermediate rule is a flavored version of the target for
     // the original rule. For example, if the build target for an android_build_config() were
     // //foo:bar, then the build target for the intermediate AndroidBuildConfig rule created by this
@@ -164,7 +170,13 @@ public class AndroidBuildConfigDescription
 
     // Create a second build rule to compile BuildConfig.java and expose it as a JavaLibrary.
     return new AndroidBuildConfigJavaLibrary(
-        buildTarget, projectFilesystem, graphBuilder, javac, javacOptions, androidBuildConfig);
+        buildTarget,
+        projectFilesystem,
+        graphBuilder,
+        javac,
+        javacOptions,
+        androidBuildConfig,
+        withDownwardApi);
   }
 
   @Override

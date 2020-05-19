@@ -60,7 +60,8 @@ public class CompileToJarStepFactoryTest {
             postprocessClassesCommands,
             outputDirectory,
             classpathEntries,
-            Optional.of(androidBootClassPath)));
+            Optional.of(androidBootClassPath),
+            false));
 
     ImmutableList<Step> steps = commands.build();
     assertEquals(2, steps.size());

@@ -21,9 +21,11 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.pipeline.RulePipelineState;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaPackageFinder;
 import com.facebook.buck.util.CapturingPrintStream;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.Verbosity;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -54,6 +56,7 @@ public class JavacPipelineState implements RulePipelineState {
   private final ClasspathChecker classpathChecker;
   @Nullable private final JarParameters abiJarParameters;
   @Nullable private final JarParameters libraryJarParameters;
+  private final boolean withDownwardApi;
 
   private final List<AutoCloseable> closeables = new ArrayList<>();
 
@@ -69,7 +72,8 @@ public class JavacPipelineState implements RulePipelineState {
       ClasspathChecker classpathChecker,
       CompilerParameters compilerParameters,
       @Nullable JarParameters abiJarParameters,
-      @Nullable JarParameters libraryJarParameters) {
+      @Nullable JarParameters libraryJarParameters,
+      boolean withDownwardApi) {
     this.javaPackageFinder = javaPackageFinder;
     this.javac = javac;
     this.javacOptions = javacOptions;
@@ -78,6 +82,7 @@ public class JavacPipelineState implements RulePipelineState {
     this.compilerParameters = compilerParameters;
     this.abiJarParameters = abiJarParameters;
     this.libraryJarParameters = libraryJarParameters;
+    this.withDownwardApi = withDownwardApi;
   }
 
   public boolean isRunning() {
@@ -103,6 +108,13 @@ public class JavacPipelineState implements RulePipelineState {
           context.createSubContext(stdout, stderr, Optional.of(verbosity));
       closeables.add(firstOrderContext);
 
+      ProcessExecutor processExecutor = firstOrderContext.getProcessExecutor();
+      if (withDownwardApi) {
+        processExecutor =
+            processExecutor.withDownwardAPI(
+                DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+      }
+
       JavacExecutionContext javacExecutionContext =
           ImmutableJavacExecutionContext.ofImpl(
               new JavacEventSinkToBuckEventBusBridge(firstOrderContext.getBuckEventBus()),
@@ -114,7 +126,7 @@ public class JavacPipelineState implements RulePipelineState {
               filesystem,
               context.getProjectFilesystemFactory(),
               firstOrderContext.getEnvironment(),
-              firstOrderContext.getProcessExecutor());
+              processExecutor);
 
       ImmutableList<JavacPluginJsr199Fields> annotationProcessors =
           ImmutableList.copyOf(

@@ -217,6 +217,7 @@ public class AndroidPrebuiltAarDescription
                 ImmutableSortedSet.copyOf(
                     Iterables.concat(javaDeps, Collections.singleton(prebuiltJar))))
             .withExtraDeps(ImmutableSortedSet.of(unzipAar));
+    boolean withDownwardApi = downwardApiConfig.isEnabledForAndroid();
     return new AndroidPrebuiltAar(
         buildTarget,
         projectFilesystem,
@@ -236,11 +237,13 @@ public class AndroidPrebuiltAarDescription
                     buildTarget.getTargetConfiguration(),
                     JavacOptionsProvider.class)
                 .getJavacOptions(),
-            ExtraClasspathProvider.EMPTY),
+            ExtraClasspathProvider.EMPTY,
+            withDownwardApi),
         /* exportedDeps */ javaDeps,
         args.getRequiredForSourceOnlyAbi(),
         args.getMavenCoords(),
-        args.isUseSystemLibraryLoader());
+        args.isUseSystemLibraryLoader(),
+        withDownwardApi);
   }
 
   @Override

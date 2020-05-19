@@ -89,7 +89,7 @@ public class DummyRDotJavaTest {
             graphBuilder,
             ImmutableSet.of(resourceRule1, resourceRule2),
             new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY),
+                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY, false),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.of("R2"),
@@ -153,7 +153,8 @@ public class DummyRDotJavaTest {
                             .setClasspathEntries(ImmutableSortedSet.of())
                             .build(),
                         null,
-                        null)
+                        null,
+                        false)
                     .getDescription(TestExecutionContext.newInstance()))
             .add(String.format("jar cf %s  %s", rDotJavaOutputJar, rDotJavaBinFolder))
             .add(String.format("check_dummy_r_jar_not_empty %s", rDotJavaOutputJar))
@@ -181,7 +182,7 @@ public class DummyRDotJavaTest {
             ruleFinder,
             ImmutableSet.of(),
             new JavacToJarStepFactory(
-                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY),
+                DEFAULT_JAVAC, ANDROID_JAVAC_OPTIONS, ExtraClasspathProvider.EMPTY, false),
             /* forceFinalResourceIds */ false,
             Optional.empty(),
             Optional.empty(),

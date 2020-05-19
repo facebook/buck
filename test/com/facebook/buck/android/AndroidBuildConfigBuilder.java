@@ -17,6 +17,7 @@
 package com.facebook.buck.android;
 
 import static com.facebook.buck.jvm.java.JavaCompilationConstants.ANDROID_JAVAC_OPTIONS;
+import static com.facebook.buck.jvm.java.JavaCompilationConstants.DEFAULT_DOWNWARD_API_CONFIG;
 
 import com.facebook.buck.android.toolchain.AndroidPlatformTarget;
 import com.facebook.buck.core.model.BuildTarget;
@@ -44,7 +45,8 @@ public class AndroidBuildConfigBuilder
                     AndroidPlatformTarget.DEFAULT_NAME, TestAndroidPlatformTargetFactory.create())
                 .withToolchain(
                     JavaToolchain.DEFAULT_NAME, JavaCompilationConstants.DEFAULT_JAVA_TOOLCHAIN)
-                .build()),
+                .build(),
+            DEFAULT_DOWNWARD_API_CONFIG),
         target);
   }
 

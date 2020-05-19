@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.java.toolchain.JavacOptionsProvider;
 import com.facebook.buck.versions.VersionPropagator;
@@ -43,17 +44,21 @@ public class JavaTestRunnerDescription
         ImplicitDepsInferringDescription<JavaTestRunnerDescriptionArg> {
 
   private final JavaBuckConfig javaBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final JavacFactory javacFactory;
   private final JavaConfiguredCompilerFactory defaultJavaCompilerFactory;
 
   public static final Flavor RUNNER_LIB_FLAVOR = InternalFlavor.of("runnerlib");
 
   public JavaTestRunnerDescription(
-      ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.javaBuckConfig = javaBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.downwardApiConfig = downwardApiConfig;
     this.defaultJavaCompilerFactory =
-        new JavaConfiguredCompilerFactory(this.javaBuckConfig, this.javacFactory);
+        new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory);
   }
 
   @Override
@@ -92,6 +97,7 @@ public class JavaTestRunnerDescription
                 graphBuilder,
                 defaultJavaCompilerFactory,
                 javaBuckConfig,
+                downwardApiConfig,
                 args)
             .setJavacOptions(javacOptions)
             .setToolchainProvider(context.getToolchainProvider())

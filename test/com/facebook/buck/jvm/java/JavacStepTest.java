@@ -84,7 +84,8 @@ public class JavacStepTest {
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
-            null);
+            null,
+            false);
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
@@ -132,7 +133,8 @@ public class JavacStepTest {
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
-            null);
+            null,
+            false);
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 
@@ -188,7 +190,8 @@ public class JavacStepTest {
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
-            null);
+            null,
+            false);
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
@@ -236,7 +239,8 @@ public class JavacStepTest {
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
-            null);
+            null,
+            false);
 
     FakeProcess fakeJavacProcess = new FakeProcess(0, "javac stdout\n", "javac stderr\n");
 
@@ -290,7 +294,8 @@ public class JavacStepTest {
             classpathChecker,
             CompilerParameters.builder().setScratchPaths(target, fakeFilesystem).build(),
             null,
-            null);
+            null,
+            false);
 
     FakeProcess fakeJavacProcess = new FakeProcess(1, "javac stdout\n", "javac stderr\n");
 

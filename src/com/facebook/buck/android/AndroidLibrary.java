@@ -26,6 +26,7 @@ import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.java.CalculateSourceAbi;
@@ -57,6 +58,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       JavacFactory javacFactory,
       JavacOptions javacOptions,
       CoreArg args,
@@ -68,6 +70,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         params,
         graphBuilder,
         javaBuckConfig,
+        downwardApiConfig,
         javacFactory,
         javacOptions,
         args,
@@ -166,6 +169,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
         BuildRuleParams params,
         ActionGraphBuilder graphBuilder,
         JavaBuckConfig javaBuckConfig,
+        DownwardApiConfig downwardApiConfig,
         JavacFactory javacFactory,
         JavacOptions javacOptions,
         CoreArg args,
@@ -180,6 +184,7 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               graphBuilder,
               compilerFactory,
               javaBuckConfig,
+              downwardApiConfig,
               args);
       delegateBuilder.setConstructor(
           new DefaultJavaLibraryRules.DefaultJavaLibraryConstructor() {
@@ -252,7 +257,8 @@ public class AndroidLibrary extends DefaultJavaLibrary implements AndroidPackage
               args.getResourceUnionPackage(),
               args.getFinalRName(),
               /* useOldStyleableFormat */ false,
-              args.isSkipNonUnionRDotJava());
+              args.isSkipNonUnionRDotJava(),
+              downwardApiConfig.isEnabledForAndroid());
 
       getDummyRDotJava()
           .ifPresent(

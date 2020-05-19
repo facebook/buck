@@ -56,7 +56,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       @Nullable JarParameters libraryJarParameters,
       /* output params */
       Builder<Step> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      boolean withDownwardApi) {
     Preconditions.checkArgument(libraryJarParameters != null || abiJarParameters == null);
 
     addCompilerSetupSteps(
@@ -83,7 +84,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
           abiJarParameters,
           libraryJarParameters,
           steps,
-          buildableContext);
+          buildableContext,
+          withDownwardApi);
     }
 
     if (jarParameters != null) {
@@ -195,7 +197,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       @Nullable JarParameters libraryJarParameters,
       /* output params */
       Builder<Step> steps,
-      BuildableContext buildableContext) {
+      BuildableContext buildableContext,
+      boolean withDownwardApi) {
     Preconditions.checkArgument(abiJarParameters == null);
     Preconditions.checkArgument(
         libraryJarParameters != null
@@ -213,7 +216,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
                 postprocessClassesCommands,
                 compilerParameters.getOutputPaths().getClassesDir(),
                 compilerParameters.getClasspathEntries(),
-                getBootClasspath(context))));
+                getBootClasspath(context),
+                withDownwardApi)));
 
     createJarStep(projectFilesystem, libraryJarParameters, steps);
   }
@@ -256,7 +260,8 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
       List<String> postprocessClassesCommands,
       Path outputDirectory,
       ImmutableSortedSet<Path> declaredClasspathEntries,
-      Optional<String> bootClasspath) {
+      Optional<String> bootClasspath,
+      boolean withDownwardApi) {
     if (postprocessClassesCommands.isEmpty()) {
       return ImmutableList.of();
     }
@@ -275,7 +280,9 @@ public abstract class CompileToJarStepFactory implements AddsToRuleKey {
     for (String postprocessClassesCommand : postprocessClassesCommands) {
       BashStep bashStep =
           new BashStep(
-              filesystem.getRootPath(), postprocessClassesCommand + " " + outputDirectory) {
+              filesystem.getRootPath(),
+              withDownwardApi,
+              postprocessClassesCommand + " " + outputDirectory) {
             @Override
             public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {
               return envVars;

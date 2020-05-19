@@ -37,6 +37,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.infer.InferConfig;
 import com.facebook.buck.infer.InferJava;
 import com.facebook.buck.infer.UnresolvedInferPlatform;
@@ -78,16 +79,20 @@ public class JavaLibraryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final JavacFactory javacFactory;
   private final JavaConfiguredCompilerFactory defaultJavaCompilerFactory;
 
   public JavaLibraryDescription(
-      ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
+    this.downwardApiConfig = downwardApiConfig;
     this.defaultJavaCompilerFactory =
-        new JavaConfiguredCompilerFactory(this.javaBuckConfig, this.javacFactory);
+        new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory);
   }
 
   private Optional<UnresolvedInferPlatform> unresolvedInferPlatform(
@@ -194,7 +199,8 @@ public class JavaLibraryDescription
           args.getMavenCoords(),
           args.getMavenPomTemplate(),
           summary.getMavenDeps(),
-          sources);
+          sources,
+          downwardApiConfig.isEnabledForJava());
     }
 
     BuildTarget buildTargetWithMavenFlavor = buildTarget;
@@ -233,6 +239,7 @@ public class JavaLibraryDescription
                 graphBuilder,
                 defaultJavaCompilerFactory,
                 javaBuckConfig,
+                downwardApiConfig,
                 args)
             .setJavacOptions(javacOptions)
             .setToolchainProvider(context.getToolchainProvider())

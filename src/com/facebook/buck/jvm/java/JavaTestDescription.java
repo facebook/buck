@@ -42,6 +42,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.JavaAbis;
 import com.facebook.buck.jvm.core.JavaLibrary;
@@ -81,12 +82,17 @@ public class JavaTestDescription
 
   private final ToolchainProvider toolchainProvider;
   private final JavaBuckConfig javaBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final Function<TargetConfiguration, JavaOptions> javaOptionsForTests;
   private final JavacFactory javacFactory;
 
-  public JavaTestDescription(ToolchainProvider toolchainProvider, JavaBuckConfig javaBuckConfig) {
+  public JavaTestDescription(
+      ToolchainProvider toolchainProvider,
+      JavaBuckConfig javaBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.javaBuckConfig = javaBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.javaOptionsForTests = JavaOptionsProvider.getDefaultJavaOptionsForTests(toolchainProvider);
     this.javacFactory = JavacFactory.getDefault(toolchainProvider);
   }
@@ -156,8 +162,9 @@ public class JavaTestDescription
                 context.getToolchainProvider(),
                 params,
                 graphBuilder,
-                new JavaConfiguredCompilerFactory(javaBuckConfig, javacFactory),
+                new JavaConfiguredCompilerFactory(javaBuckConfig, downwardApiConfig, javacFactory),
                 javaBuckConfig,
+                downwardApiConfig,
                 args)
             .setJavacOptions(javacOptions)
             .setToolchainProvider(context.getToolchainProvider())
