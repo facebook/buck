@@ -38,8 +38,12 @@ import com.facebook.buck.core.model.targetgraph.impl.TargetNodes;
 import com.facebook.buck.core.parser.buildtargetparser.ParsingUnconfiguredBuildTargetViewFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
+import com.facebook.buck.core.toolchain.tool.impl.CommandTool;
+import com.facebook.buck.core.toolchain.toolprovider.impl.ConstantToolProvider;
+import com.facebook.buck.cxx.toolchain.CompilerProvider;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
+import com.facebook.buck.cxx.toolchain.ToolType;
 import com.facebook.buck.cxx.toolchain.impl.StaticUnresolvedCxxPlatform;
 import com.facebook.buck.remoteexecution.config.RemoteExecutionConfig;
 import com.facebook.buck.rules.args.Arg;
@@ -48,6 +52,9 @@ import com.facebook.buck.rules.coercer.DefaultTypeCoercerFactory;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
 import com.facebook.buck.rules.macros.CppFlagsMacro;
+import com.facebook.buck.rules.macros.CudaFlagsMacro;
+import com.facebook.buck.rules.macros.CudaMacro;
+import com.facebook.buck.rules.macros.CudappFlagsMacro;
 import com.facebook.buck.rules.macros.CxxFlagsMacro;
 import com.facebook.buck.rules.macros.CxxMacro;
 import com.facebook.buck.rules.macros.CxxppFlagsMacro;
@@ -360,6 +367,44 @@ public class CxxGenruleDescriptionTest {
                 .getRule(rule.getGenrule(CxxPlatformUtils.DEFAULT_PLATFORM, graphBuilder))
                 .orElseThrow(AssertionError::new);
     assertTrue(genrule.getBuildable().shouldExecuteRemotely());
+  }
+
+  @Test
+  public void cuda() {
+    CxxPlatform cxxPlatform =
+        CxxPlatformUtils.DEFAULT_PLATFORM
+            .withCuda(
+                new CompilerProvider(
+                    new ConstantToolProvider(new CommandTool.Builder().addArg("cuda").build()),
+                    CompilerProvider.Type.GCC,
+                    ToolType.CUDA,
+                    false))
+            .withCudappflags(ImmutableList.of(StringArg.of("-cudappflag")))
+            .withCudaflags(ImmutableList.of(StringArg.of("-cudaflag")));
+    CxxGenruleBuilder builder =
+        new CxxGenruleBuilder(
+                BuildTargetFactory.newInstance("//:rule#" + cxxPlatform.getFlavor()),
+                new FlavorDomain<>(
+                    "C/C++ Platform",
+                    ImmutableMap.of(
+                        cxxPlatform.getFlavor(), new StaticUnresolvedCxxPlatform(cxxPlatform))))
+            .setOut("out")
+            .setCmd(
+                StringWithMacrosUtils.format(
+                    "%s %s %s",
+                    CudaMacro.of(),
+                    CudappFlagsMacro.of(Optional.empty(), ImmutableList.of()),
+                    CudaFlagsMacro.of()));
+    TargetGraph targetGraph = TargetGraphFactory.newInstance(builder.build());
+    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
+    Genrule genrule = (Genrule) builder.build(graphBuilder);
+    assertThat(
+        Joiner.on(' ')
+            .join(
+                Arg.stringify(
+                    ImmutableList.of(genrule.getBuildable().getCmd().get()),
+                    graphBuilder.getSourcePathResolver())),
+        Matchers.containsString("cuda -cudappflag -cudaflag"));
   }
 
   private static <U extends ConstructorArg> U extractArg(TargetNode<?> node, Class<U> clazz) {

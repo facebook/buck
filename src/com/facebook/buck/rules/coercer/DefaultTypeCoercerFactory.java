@@ -36,6 +36,9 @@ import com.facebook.buck.rules.macros.CcMacro;
 import com.facebook.buck.rules.macros.ClasspathAbiMacro;
 import com.facebook.buck.rules.macros.ClasspathMacro;
 import com.facebook.buck.rules.macros.CppFlagsMacro;
+import com.facebook.buck.rules.macros.CudaFlagsMacro;
+import com.facebook.buck.rules.macros.CudaMacro;
+import com.facebook.buck.rules.macros.CudappFlagsMacro;
 import com.facebook.buck.rules.macros.CxxFlagsMacro;
 import com.facebook.buck.rules.macros.CxxMacro;
 import com.facebook.buck.rules.macros.CxxppFlagsMacro;
@@ -258,6 +261,24 @@ public class DefaultTypeCoercerFactory implements TypeCoercerFactory {
                     Optional.empty(),
                     buildTargetsTypeCoercer,
                     CxxppFlagsMacro.class,
+                    (p, t) ->
+                        UnconfiguredCxxGenruleFilterAndTargetsMacro.of(
+                            UnconfiguredCxxGenruleFilterAndTargetsMacro.Which.CXXPPFLAGS, p, t)))
+            .put(
+                "cuda",
+                CudaMacro.class,
+                new ZeroArgMacroTypeCoercer<>(CudaMacro.class, CudaMacro.of()))
+            .put(
+                "cudaflags",
+                CudaFlagsMacro.class,
+                new ZeroArgMacroTypeCoercer<>(CudaFlagsMacro.class, CudaFlagsMacro.of()))
+            .put(
+                "cudappflags",
+                CudappFlagsMacro.class,
+                new CxxGenruleFilterAndTargetsMacroTypeCoercer<>(
+                    Optional.empty(),
+                    buildTargetsTypeCoercer,
+                    CudappFlagsMacro.class,
                     (p, t) ->
                         UnconfiguredCxxGenruleFilterAndTargetsMacro.of(
                             UnconfiguredCxxGenruleFilterAndTargetsMacro.Which.CXXPPFLAGS, p, t)))

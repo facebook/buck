@@ -207,6 +207,27 @@ public interface CxxPlatform extends FlavorConvertible {
     return builder().from(this).setCpp(cpp).build();
   }
 
+  default CxxPlatform withCuda(CompilerProvider cuda) {
+    if (getCuda().isPresent() && getCuda().get().equals(cuda)) {
+      return this;
+    }
+    return builder().from(this).setCuda(cuda).build();
+  }
+
+  default CxxPlatform withCudappflags(ImmutableList<Arg> cudappFlags) {
+    if (getCudaflags().equals(cudappFlags)) {
+      return this;
+    }
+    return builder().from(this).setCudappflags(cudappFlags).build();
+  }
+
+  default CxxPlatform withCudaflags(ImmutableList<Arg> cudaFlags) {
+    if (getCudaflags().equals(cudaFlags)) {
+      return this;
+    }
+    return builder().from(this).setCudaflags(cudaFlags).build();
+  }
+
   default CxxPlatform withConflictingHeaderBasenameWhitelist(
       ImmutableSortedSet<String> conflictingHeaderBasenameWhitelist) {
     if (getConflictingHeaderBasenameWhitelist().equals(conflictingHeaderBasenameWhitelist)) {

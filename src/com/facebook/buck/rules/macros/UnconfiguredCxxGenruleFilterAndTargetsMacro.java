@@ -32,6 +32,7 @@ public abstract class UnconfiguredCxxGenruleFilterAndTargetsMacro implements Unc
   public enum Which {
     CPPFLAGS,
     CXXPPFLAGS,
+    CUDAPPFLAGS,
     LDFLAGS_SHARED,
     LDFLAGS_SHARED_FILTER,
     LDFLAGS_STATIC,
@@ -64,6 +65,8 @@ public abstract class UnconfiguredCxxGenruleFilterAndTargetsMacro implements Unc
         return CppFlagsMacro.of(getFilter(), configuredTargets);
       case CXXPPFLAGS:
         return CxxppFlagsMacro.of(getFilter(), configuredTargets);
+      case CUDAPPFLAGS:
+        return CudappFlagsMacro.of(getFilter(), configuredTargets);
       case LDFLAGS_SHARED:
         return LdflagsSharedMacro.of(getFilter(), configuredTargets);
       case LDFLAGS_SHARED_FILTER:

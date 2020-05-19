@@ -18,6 +18,7 @@ package com.facebook.buck.cxx;
 
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.description.attr.ImplicitDepsInferringDescription;
+import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.macros.MacroException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
@@ -68,6 +69,9 @@ import com.facebook.buck.rules.macros.ArgExpander;
 import com.facebook.buck.rules.macros.CcFlagsMacro;
 import com.facebook.buck.rules.macros.CcMacro;
 import com.facebook.buck.rules.macros.CppFlagsMacro;
+import com.facebook.buck.rules.macros.CudaFlagsMacro;
+import com.facebook.buck.rules.macros.CudaMacro;
+import com.facebook.buck.rules.macros.CudappFlagsMacro;
 import com.facebook.buck.rules.macros.CxxFlagsMacro;
 import com.facebook.buck.rules.macros.CxxGenruleFilterAndTargetsMacro;
 import com.facebook.buck.rules.macros.CxxMacro;
@@ -233,11 +237,13 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     expanders.add(
         new ToolExpander<>(
             CcMacro.class,
-            cxxPlatform.getCc().resolve(resolver, buildTarget.getTargetConfiguration())));
+            Optional.of(
+                cxxPlatform.getCc().resolve(resolver, buildTarget.getTargetConfiguration()))));
     expanders.add(
         new ToolExpander<>(
             CxxMacro.class,
-            cxxPlatform.getCxx().resolve(resolver, buildTarget.getTargetConfiguration())));
+            Optional.of(
+                cxxPlatform.getCxx().resolve(resolver, buildTarget.getTargetConfiguration()))));
 
     ImmutableList<Arg> asflags = cxxPlatform.getAsflags();
     ImmutableList<Arg> cflags = cxxPlatform.getCflags();
@@ -262,7 +268,8 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
     expanders.add(
         new ToolExpander<>(
             LdMacro.class,
-            cxxPlatform.getLd().resolve(resolver, buildTarget.getTargetConfiguration())));
+            Optional.of(
+                cxxPlatform.getLd().resolve(resolver, buildTarget.getTargetConfiguration()))));
 
     for (Map.Entry<Class<? extends CxxGenruleFilterAndTargetsMacro>, LinkableDepType> ent :
         ImmutableMap.<Class<? extends CxxGenruleFilterAndTargetsMacro>, LinkableDepType>builder()
@@ -278,6 +285,18 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
           new CxxLinkerFlagsExpander<>(
               ent.getKey(), buildTarget, filesystem, cxxPlatform, ent.getValue(), args.getOut()));
     }
+
+    expanders.add(
+        new ToolExpander<>(
+            CudaMacro.class,
+            cxxPlatform
+                .getCuda()
+                .map(cuda -> cuda.resolve(resolver, buildTarget.getTargetConfiguration()))));
+    expanders.add(
+        new ArgExpander<>(CudaFlagsMacro.class, new ShQuoteJoinArg(cxxPlatform.getCudaflags())));
+    expanders.add(
+        new CxxPreprocessorFlagsExpander<>(
+            CudappFlagsMacro.class, cxxPlatform, CxxSource.Type.CUDA));
 
     return Optional.of(expanders.build());
   }
@@ -361,9 +380,9 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
   private static class ToolExpander<M extends Macro> extends SimpleMacroExpander<M> {
 
     private final Class<M> clazz;
-    private final Tool tool;
+    private final Optional<Tool> tool;
 
-    ToolExpander(Class<M> clazz, Tool tool) {
+    ToolExpander(Class<M> clazz, Optional<Tool> tool) {
       this.clazz = clazz;
       this.tool = tool;
     }
@@ -375,7 +394,7 @@ public class CxxGenruleDescription extends AbstractGenruleDescription<CxxGenrule
 
     @Override
     public Arg expandFrom(BuildTarget target, BuildRuleResolver resolver) {
-      return ToolArg.of(tool);
+      return ToolArg.of(tool.orElseThrow(() -> new HumanReadableException("unsupported tool")));
     }
   }
 
