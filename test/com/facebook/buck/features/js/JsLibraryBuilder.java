@@ -16,9 +16,11 @@
 
 package com.facebook.buck.features.js;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.StringWithMacros;
 import com.facebook.buck.rules.query.Query;
@@ -32,7 +34,8 @@ import java.util.Optional;
 public class JsLibraryBuilder
     extends AbstractNodeBuilder<
         JsLibraryDescriptionArg.Builder, JsLibraryDescriptionArg, JsLibraryDescription, JsLibrary> {
-  private static final JsLibraryDescription libraryDescription = new JsLibraryDescription();
+  private static final JsLibraryDescription libraryDescription =
+      new JsLibraryDescription(DownwardApiConfig.of(FakeBuckConfig.empty()));
 
   JsLibraryBuilder(BuildTarget target, ProjectFilesystem filesystem) {
     super(libraryDescription, target, filesystem);

@@ -22,6 +22,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -46,14 +50,17 @@ import java.util.Optional;
 public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implements JsBundleOutputs {
 
   @AddToRuleKey private final String bundleName;
-
   @AddToRuleKey private final ImmutableSet<String> entryPoints;
-
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraries;
-
   @AddToRuleKey private final Optional<Arg> extraJson;
-
   @AddToRuleKey private final WorkerTool worker;
+
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
 
   private static final ImmutableMap<UserFlavor, String> RAM_BUNDLE_STRINGS =
       ImmutableMap.of(
@@ -68,13 +75,15 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
       ImmutableSet<String> entryPoints,
       Optional<Arg> extraJson,
       String bundleName,
-      WorkerTool worker) {
+      WorkerTool worker,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.extraJson = extraJson;
     this.bundleName = bundleName;
     this.entryPoints = entryPoints;
     this.libraries = libraries;
     this.worker = worker;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -130,7 +139,8 @@ public class JsBundle extends AbstractBuildRuleWithDeclaredAndExtraDeps implemen
                 jobArgs,
                 getBuildTarget(),
                 sourcePathResolverAdapter,
-                getProjectFilesystem()))
+                getProjectFilesystem(),
+                withDownwardApi))
         .build();
   }
 

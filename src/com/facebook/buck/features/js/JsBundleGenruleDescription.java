@@ -159,7 +159,8 @@ public class JsBundleGenruleDescription
             : Optional.empty(),
         bundleOutputs,
         jsDepsFileRule,
-        args.computeBundleName(buildTarget.getFlavors().getSet(), bundleOutputs::getBundleName));
+        args.computeBundleName(buildTarget.getFlavors().getSet(), bundleOutputs::getBundleName),
+        downwardApiConfig.isEnabledForJs());
   }
 
   @Override

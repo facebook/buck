@@ -41,6 +41,7 @@ import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.query.Query;
@@ -90,6 +91,12 @@ public class JsLibraryDescription
                       (sources, flavors) -> sources.size())
               .build();
 
+  private final DownwardApiConfig downwardApiConfig;
+
+  public JsLibraryDescription(DownwardApiConfig downwardApiConfig) {
+    this.downwardApiConfig = downwardApiConfig;
+  }
+
   @Override
   public Class<JsLibraryDescriptionArg> getConstructorArgType() {
     return JsLibraryDescriptionArg.class;
@@ -122,29 +129,46 @@ public class JsLibraryDescription
     WorkerTool worker =
         graphBuilder.getRuleWithType(workerTarget, ProvidesWorkerTool.class).getWorkerTool();
 
+    boolean withDownwardApi = downwardApiConfig.isEnabledForJs();
     if (file.isPresent()) {
       return buildTarget.getFlavors().contains(JsFlavors.RELEASE)
           ? createReleaseFileRule(
-              buildTarget, projectFilesystem, graphBuilder, cellRoots, args, worker)
+              buildTarget,
+              projectFilesystem,
+              graphBuilder,
+              cellRoots,
+              args,
+              worker,
+              withDownwardApi)
           : createDevFileRule(
-              buildTarget, projectFilesystem, graphBuilder, cellRoots, args, file.get(), worker);
-    } else if (buildTarget.getFlavors().contains(JsFlavors.LIBRARY_FILES)) {
-      return new LibraryFilesBuilder(graphBuilder, buildTarget, sourcesToFlavors)
-          .setSources(args.getSrcs())
-          .build(projectFilesystem, worker);
+              buildTarget,
+              projectFilesystem,
+              graphBuilder,
+              cellRoots,
+              args,
+              file.get(),
+              worker,
+              withDownwardApi);
     } else {
-      // We allow the `deps_query` to contain different kinds of build targets, but filter out
-      // all targets that don't refer to a JsLibrary rule.
-      // That prevents users from having to wrap every query into "kind(js_library, ...)".
-      Stream<BuildTarget> queryDeps =
-          args.getDepsQuery().map(Query::getResolvedQuery).orElseGet(ImmutableSortedSet::of)
-              .stream()
-              .filter(target -> JsUtil.isJsLibraryTarget(target, context.getTargetGraph()));
-      Stream<BuildTarget> declaredDeps = args.getDeps().stream();
-      Stream<BuildTarget> deps = Stream.concat(declaredDeps, queryDeps);
-      return new LibraryBuilder(context.getTargetGraph(), graphBuilder, buildTarget)
-          .setLibraryDependencies(deps)
-          .build(projectFilesystem, worker);
+      if (buildTarget.getFlavors().contains(JsFlavors.LIBRARY_FILES)) {
+        return new LibraryFilesBuilder(graphBuilder, buildTarget, sourcesToFlavors, withDownwardApi)
+            .setSources(args.getSrcs())
+            .build(projectFilesystem, worker);
+      } else {
+        // We allow the `deps_query` to contain different kinds of build targets, but filter out
+        // all targets that don't refer to a JsLibrary rule.
+        // That prevents users from having to wrap every query into "kind(js_library, ...)".
+        Stream<BuildTarget> queryDeps =
+            args.getDepsQuery().map(Query::getResolvedQuery).orElseGet(ImmutableSortedSet::of)
+                .stream()
+                .filter(target -> JsUtil.isJsLibraryTarget(target, context.getTargetGraph()));
+        Stream<BuildTarget> declaredDeps = args.getDeps().stream();
+        Stream<BuildTarget> deps = Stream.concat(declaredDeps, queryDeps);
+        return new LibraryBuilder(
+                context.getTargetGraph(), graphBuilder, buildTarget, withDownwardApi)
+            .setLibraryDependencies(deps)
+            .build(projectFilesystem, worker);
+      }
     }
   }
 
@@ -200,13 +224,15 @@ public class JsLibraryDescription
     private final ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor>
         sourcesToFlavors;
     private final BuildTarget fileBaseTarget;
+    private final boolean withDownwardApi;
 
     @Nullable private ImmutableList<JsFile<?>> jsFileRules;
 
     public LibraryFilesBuilder(
         ActionGraphBuilder graphBuilder,
         BuildTarget baseTarget,
-        ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors) {
+        ImmutableBiMap<Either<SourcePath, Pair<SourcePath, String>>, Flavor> sourcesToFlavors,
+        boolean withDownwardApi) {
       this.graphBuilder = graphBuilder;
       this.baseTarget = baseTarget;
       this.sourcesToFlavors = sourcesToFlavors;
@@ -223,6 +249,7 @@ public class JsLibraryDescription
                       baseTarget.getFlavors().getSet(),
                       JsFlavors.TRANSFORM_PROFILE_DOMAIN.getFlavors()))
               : baseTarget;
+      this.withDownwardApi = withDownwardApi;
     }
 
     private LibraryFilesBuilder setSources(
@@ -248,7 +275,8 @@ public class JsLibraryDescription
           jsFileRules.stream()
               .map(JsFile::getSourcePathToOutput)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
-          worker);
+          worker,
+          withDownwardApi);
     }
   }
 
@@ -257,14 +285,19 @@ public class JsLibraryDescription
     private final TargetGraph targetGraph;
     private final ActionGraphBuilder graphBuilder;
     private final BuildTarget baseTarget;
+    private final boolean withDownwardApi;
 
     @Nullable private ImmutableList<JsLibrary> libraryDependencies;
 
     private LibraryBuilder(
-        TargetGraph targetGraph, ActionGraphBuilder graphBuilder, BuildTarget baseTarget) {
+        TargetGraph targetGraph,
+        ActionGraphBuilder graphBuilder,
+        BuildTarget baseTarget,
+        boolean withDownwardApi) {
       this.targetGraph = targetGraph;
       this.baseTarget = baseTarget;
       this.graphBuilder = graphBuilder;
+      this.withDownwardApi = withDownwardApi;
     }
 
     private LibraryBuilder setLibraryDependencies(Stream<BuildTarget> deps) {
@@ -290,7 +323,8 @@ public class JsLibraryDescription
           libraryDependencies.stream()
               .map(JsLibrary::getSourcePathToOutput)
               .collect(ImmutableSortedSet.toImmutableSortedSet(Ordering.natural())),
-          worker);
+          worker,
+          withDownwardApi);
     }
 
     private boolean hasFlavors() {
@@ -320,7 +354,8 @@ public class JsLibraryDescription
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
       JsLibraryDescriptionArg args,
-      WorkerTool worker) {
+      WorkerTool worker,
+      boolean withDownwardApi) {
     BuildTarget devTarget = withFileFlavorOnly(buildTarget);
     graphBuilder.requireRule(devTarget);
     return JsFile.create(
@@ -329,7 +364,8 @@ public class JsLibraryDescription
         graphBuilder,
         JsUtil.getExtraJson(args, buildTarget, graphBuilder, cellRoots),
         worker,
-        graphBuilder.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput());
+        graphBuilder.getRuleWithType(devTarget, JsFile.class).getSourcePathToOutput(),
+        withDownwardApi);
   }
 
   private static <A extends AbstractJsLibraryDescriptionArg> BuildRule createDevFileRule(
@@ -339,7 +375,8 @@ public class JsLibraryDescription
       CellPathResolver cellRoots,
       A args,
       Either<SourcePath, Pair<SourcePath, String>> source,
-      WorkerTool worker) {
+      WorkerTool worker,
+      boolean withDownwardApi) {
     SourcePath sourcePath = source.transform(x -> x, Pair::getFirst);
     Optional<String> subPath = Optional.ofNullable(source.transform(x -> null, Pair::getSecond));
 
@@ -364,7 +401,8 @@ public class JsLibraryDescription
         worker,
         sourcePath,
         subPath,
-        virtualPath);
+        virtualPath,
+        withDownwardApi);
   }
 
   private static BuildTarget withFileFlavorOnly(BuildTarget target) {

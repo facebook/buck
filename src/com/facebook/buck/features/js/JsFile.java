@@ -20,6 +20,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -65,11 +69,19 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
     @AddToRuleKey final OutputPath output;
     @AddToRuleKey final Optional<String> transformProfile;
 
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
     AbstractImpl(
         BuildTarget buildTarget,
         Optional<Arg> extraJson,
         WorkerTool workerTool,
-        ProjectFilesystem projectFilesystem) {
+        ProjectFilesystem projectFilesystem,
+        boolean withDownwardApi) {
       this.buildTarget = buildTarget;
       this.extraJson = extraJson;
       this.workerTool = workerTool;
@@ -77,6 +89,7 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
           new PublicOutputPath(
               BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.jsfile"));
       this.transformProfile = JsFlavors.transformProfileArg(buildTarget.getFlavors());
+      this.withDownwardApi = withDownwardApi;
     }
 
     @Override
@@ -96,7 +109,8 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
                   .addRaw("extraData", getExtraJson(sourcePathResolverAdapter)),
               buildTarget,
               sourcePathResolverAdapter,
-              filesystem));
+              filesystem,
+              withDownwardApi));
     }
 
     abstract ObjectBuilder getJobArgs(
@@ -128,13 +142,21 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
       WorkerTool worker,
       SourcePath src,
       Optional<String> subPath,
-      Optional<Path> virtualPath) {
+      Optional<Path> virtualPath,
+      boolean withDownwardApi) {
     return new JsFile<>(
         buildTarget,
         projectFilesystem,
         ruleFinder,
         new JsFileDev(
-            buildTarget, projectFilesystem, extraJson, worker, src, subPath, virtualPath));
+            buildTarget,
+            projectFilesystem,
+            extraJson,
+            worker,
+            src,
+            subPath,
+            virtualPath,
+            withDownwardApi));
   }
 
   /** JS file dev rule implementation */
@@ -150,8 +172,9 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
         WorkerTool workerTool,
         SourcePath src,
         Optional<String> subPath,
-        Optional<Path> virtualPath) {
-      super(buildTarget, extraJson, workerTool, projectFilesystem);
+        Optional<Path> virtualPath,
+        boolean withDownwardApi) {
+      super(buildTarget, extraJson, workerTool, projectFilesystem, withDownwardApi);
       this.src = src;
       this.subPath = subPath;
       this.virtualPath = virtualPath.map(PathFormatter::pathWithUnixSeparators);
@@ -203,12 +226,14 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
       SourcePathRuleFinder ruleFinder,
       Optional<Arg> extraJson,
       WorkerTool worker,
-      BuildTargetSourcePath devFile) {
+      BuildTargetSourcePath devFile,
+      boolean withDownwardApi) {
     return new JsFile<>(
         buildTarget,
         projectFilesystem,
         ruleFinder,
-        new JsFileRelease(buildTarget, projectFilesystem, extraJson, worker, devFile));
+        new JsFileRelease(
+            buildTarget, projectFilesystem, extraJson, worker, devFile, withDownwardApi));
   }
 
   /** JS file release rule implementation */
@@ -221,8 +246,9 @@ public class JsFile<T extends AbstractImpl> extends ModernBuildRule<T> {
         ProjectFilesystem projectFilesystem,
         Optional<Arg> extraJson,
         WorkerTool workerTool,
-        BuildTargetSourcePath devFile) {
-      super(buildTarget, extraJson, workerTool, projectFilesystem);
+        BuildTargetSourcePath devFile,
+        boolean withDownwardApi) {
+      super(buildTarget, extraJson, workerTool, projectFilesystem, withDownwardApi);
       this.devFile = devFile;
     }
 

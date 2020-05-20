@@ -21,6 +21,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -43,12 +47,16 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
     implements JsDependenciesOutputs {
 
   @AddToRuleKey private final ImmutableSet<String> entryPoints;
-
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraries;
-
   @AddToRuleKey private final Optional<Arg> extraJson;
-
   @AddToRuleKey private final WorkerTool worker;
+
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
 
   protected JsDependenciesFile(
       BuildTarget buildTarget,
@@ -57,12 +65,14 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSet<String> entryPoints,
       Optional<Arg> extraJson,
-      WorkerTool worker) {
+      WorkerTool worker,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.entryPoints = entryPoints;
     this.libraries = libraries;
     this.extraJson = extraJson;
     this.worker = worker;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -87,7 +97,8 @@ public class JsDependenciesFile extends AbstractBuildRuleWithDeclaredAndExtraDep
                 jobArgs,
                 getBuildTarget(),
                 sourcePathResolverAdapter,
-                getProjectFilesystem()))
+                getProjectFilesystem(),
+                withDownwardApi))
         .build();
   }
 

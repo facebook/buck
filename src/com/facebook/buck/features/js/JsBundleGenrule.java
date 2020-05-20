@@ -105,7 +105,8 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
       Optional<AndroidTools> androidTools,
       JsBundleOutputs jsBundle,
       JsDependenciesOutputs jsDependencies,
-      String bundleName) {
+      String bundleName,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -150,7 +151,8 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
             args.getRewriteSourcemap(),
             args.getRewriteMisc(),
             args.getRewriteDepsFile(),
-            args.getSkipResources()));
+            args.getSkipResources(),
+            withDownwardApi));
     this.jsBundle = jsBundle;
     this.jsDependencies = jsDependencies;
   }
@@ -227,7 +229,8 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
         boolean rewriteSourcemap,
         boolean rewriteMisc,
         boolean rewriteDepsFile,
-        boolean skipResources) {
+        boolean skipResources,
+        boolean withDownwardApi) {
       super(
           buildTarget,
           filesystem,
@@ -245,7 +248,8 @@ public final class JsBundleGenrule extends BaseGenrule<JsBundleGenrule.Buildable
           environmentExpansionSeparator,
           sandboxProperties,
           androidTools,
-          executeRemotely);
+          executeRemotely,
+          withDownwardApi);
       this.jsBundleOutput = jsBundleOutput;
       this.jsBundleMisc = jsBundleMisc;
       this.jsBundleResources = jsBundleResources;

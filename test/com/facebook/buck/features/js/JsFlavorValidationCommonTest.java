@@ -20,12 +20,14 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.model.Flavored;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -42,13 +44,19 @@ public class JsFlavorValidationCommonTest {
   // because @Parameterized.Parameters(name = "{0}") will call toString() which by default resolves
   // to unstable string and cause test tracking system to explode test names
   // NOTE: JUnit does not support callbacks to infer name from
-  static final Map<Class<?>, Flavored> TEST_DATA =
-      ImmutableMap.of(
-          JsLibraryDescription.class, new JsLibraryDescription(),
-          JsBundleDescription.class,
-              new JsBundleDescription(
-                  new ToolchainProviderBuilder().build(),
-                  new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect())));
+  static final Map<Class<?>, Flavored> TEST_DATA = getTestData();
+
+  private static ImmutableMap<Class<?>, Flavored> getTestData() {
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
+    return ImmutableMap.of(
+        JsLibraryDescription.class, new JsLibraryDescription(downwardApiConfig),
+        JsBundleDescription.class,
+            new JsBundleDescription(
+                new ToolchainProviderBuilder().build(),
+                new AndroidBuckConfig(buckConfig, Platform.detect()),
+                downwardApiConfig));
+  }
 
   @Parameterized.Parameter public Class<?> description;
 

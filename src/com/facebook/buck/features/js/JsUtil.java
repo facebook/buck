@@ -93,7 +93,8 @@ public class JsUtil {
       ObjectBuilder jobArgs,
       BuildTarget buildTarget,
       SourcePathResolverAdapter pathResolver,
-      ProjectFilesystem filesystem) {
+      ProjectFilesystem filesystem,
+      boolean withDownwardApi) {
     String jobArgsString =
         jobArgs
             .addArray(
@@ -121,7 +122,7 @@ public class JsUtil {
         Optional.of(params),
         Optional.empty(),
         Optional.empty(),
-        new WorkerProcessPoolFactory(filesystem));
+        new WorkerProcessPoolFactory(filesystem, withDownwardApi));
   }
 
   static boolean isJsLibraryTarget(BuildTarget target, TargetGraph targetGraph) {

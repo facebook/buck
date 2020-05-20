@@ -123,4 +123,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForPython() {
     return getDelegate().getBooleanValue(SECTION, "python_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForJs() {
+    return getDelegate().getBooleanValue(SECTION, "js_enabled", false);
+  }
 }

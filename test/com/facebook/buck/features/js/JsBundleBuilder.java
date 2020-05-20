@@ -22,6 +22,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.Macro;
 import com.facebook.buck.rules.macros.StringWithMacrosUtils;
@@ -37,7 +38,8 @@ public class JsBundleBuilder
   private static final JsBundleDescription bundleDescription =
       new JsBundleDescription(
           new ToolchainProviderBuilder().build(),
-          new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()));
+          new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()),
+          DownwardApiConfig.of(FakeBuckConfig.empty()));
 
   JsBundleBuilder(
       BuildTarget target,

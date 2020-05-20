@@ -44,13 +44,13 @@ public class JsDescriptionsProvider implements DescriptionProvider {
     RemoteExecutionConfig reConfig = buckConfig.getView(RemoteExecutionConfig.class);
 
     return Arrays.asList(
-        new JsLibraryDescription(),
+        new JsLibraryDescription(downwardApiConfig),
         new JsBundleGenruleDescription(
             toolchainProvider,
             sandboxConfig,
             reConfig,
             downwardApiConfig,
             context.getSandboxExecutionStrategy()),
-        new JsBundleDescription(toolchainProvider, androidBuckConfig));
+        new JsBundleDescription(toolchainProvider, androidBuckConfig, downwardApiConfig));
   }
 }

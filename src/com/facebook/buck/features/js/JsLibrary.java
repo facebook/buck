@@ -21,6 +21,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.BuildTargetSourcePath;
@@ -51,13 +55,19 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
       SourcePathRuleFinder ruleFinder,
       BuildTargetSourcePath filesDependency,
       ImmutableSortedSet<SourcePath> libraryDependencies,
-      WorkerTool worker) {
+      WorkerTool worker,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
         ruleFinder,
         new JsLibraryImpl(
-            libraryDependencies, filesDependency, worker, buildTarget, projectFilesystem));
+            libraryDependencies,
+            filesDependency,
+            worker,
+            buildTarget,
+            projectFilesystem,
+            withDownwardApi));
   }
 
   /** Abstract buildable implementation that is used by JsLibrary and JsLibrary.Files rules */
@@ -66,10 +76,21 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
     @AddToRuleKey final BuildTarget buildTarget;
     @AddToRuleKey final OutputPath output;
 
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
     protected AbstractJsLibraryBuildable(
-        WorkerTool worker, BuildTarget buildTarget, ProjectFilesystem projectFilesystem) {
+        WorkerTool worker,
+        BuildTarget buildTarget,
+        ProjectFilesystem projectFilesystem,
+        boolean withDownwardApi) {
       this.worker = worker;
       this.buildTarget = buildTarget;
+      this.withDownwardApi = withDownwardApi;
       this.output =
           new PublicOutputPath(
               BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s.jslib"));
@@ -89,7 +110,8 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
               getJobArgs(resolver, outputPath, filesystem),
               buildTarget,
               resolver,
-              filesystem));
+              filesystem,
+              withDownwardApi));
     }
 
     abstract ObjectBuilder getJobArgs(
@@ -107,8 +129,9 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
         BuildTargetSourcePath filesDependency,
         WorkerTool worker,
         BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem) {
-      super(worker, buildTarget, projectFilesystem);
+        ProjectFilesystem projectFilesystem,
+        boolean withDownwardApi) {
+      super(worker, buildTarget, projectFilesystem, withDownwardApi);
       this.libraryDependencies = libraryDependencies;
       this.filesDependency = filesDependency;
     }
@@ -167,8 +190,13 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
         ProjectFilesystem filesystem,
         SourcePathRuleFinder ruleFinder,
         ImmutableSortedSet<BuildTargetSourcePath> sources,
-        WorkerTool worker) {
-      super(target, filesystem, ruleFinder, new FilesImpl(sources, worker, target, filesystem));
+        WorkerTool worker,
+        boolean withDownwardApi) {
+      super(
+          target,
+          filesystem,
+          ruleFinder,
+          new FilesImpl(sources, worker, target, filesystem, withDownwardApi));
     }
 
     @Override
@@ -200,8 +228,9 @@ public class JsLibrary extends ModernBuildRule<JsLibrary.JsLibraryImpl> {
         ImmutableSortedSet<BuildTargetSourcePath> sources,
         WorkerTool worker,
         BuildTarget buildTarget,
-        ProjectFilesystem projectFilesystem) {
-      super(worker, buildTarget, projectFilesystem);
+        ProjectFilesystem projectFilesystem,
+        boolean withDownwardApi) {
+      super(worker, buildTarget, projectFilesystem, withDownwardApi);
       this.sources = sources;
     }
 

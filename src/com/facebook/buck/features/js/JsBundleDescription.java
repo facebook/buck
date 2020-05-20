@@ -53,6 +53,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.shell.ExportFile;
@@ -90,11 +91,15 @@ public class JsBundleDescription
 
   private final ToolchainProvider toolchainProvider;
   private final AndroidBuckConfig androidBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public JsBundleDescription(
-      ToolchainProvider toolchainProvider, AndroidBuckConfig androidBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      AndroidBuckConfig androidBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.androidBuckConfig = androidBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -206,6 +211,7 @@ public class JsBundleDescription
 
     // If {@link JsFlavors.DEPENDENCY_FILE} is specified, the worker will output a file containing
     // all dependencies between files that go into the final bundle
+    boolean withDownwardApi = downwardApiConfig.isEnabledForJs();
     if (flavors.contains(JsFlavors.DEPENDENCY_FILE)) {
       return new JsDependenciesFile(
           buildTarget,
@@ -214,7 +220,8 @@ public class JsBundleDescription
           libraries,
           entryPoints,
           extraJson,
-          graphBuilder.getRuleWithType(args.getWorker(), ProvidesWorkerTool.class).getWorkerTool());
+          graphBuilder.getRuleWithType(args.getWorker(), ProvidesWorkerTool.class).getWorkerTool(),
+          withDownwardApi);
     }
 
     String bundleName =
@@ -228,7 +235,8 @@ public class JsBundleDescription
         entryPoints,
         extraJson,
         bundleName,
-        graphBuilder.getRuleWithType(args.getWorker(), ProvidesWorkerTool.class).getWorkerTool());
+        graphBuilder.getRuleWithType(args.getWorker(), ProvidesWorkerTool.class).getWorkerTool(),
+        withDownwardApi);
   }
 
   private BuildRule createAndroidRule(
@@ -301,9 +309,7 @@ public class JsBundleDescription
           jsBundle.getSourcePathToResources(),
           /* skipCrunchPngs */ false,
           androidBuckConfig.getFailOnLegacyAaptErrors(),
-          // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} from {@code
-          // DownwardApiConfig}
-          false);
+          downwardApiConfig.isEnabledForAndroid());
     }
 
     BuildRuleParams params =

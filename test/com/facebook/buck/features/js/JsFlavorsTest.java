@@ -21,11 +21,13 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.android.AndroidBuckConfig;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.model.FlavorDomainException;
 import com.facebook.buck.core.model.UnconfiguredTargetConfiguration;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -39,11 +41,14 @@ public class JsFlavorsTest {
 
   @BeforeClass
   public static void setupDescriptions() {
+    BuckConfig buckConfig = FakeBuckConfig.empty();
+    DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
     bundleDescription =
         new JsBundleDescription(
             new ToolchainProviderBuilder().build(),
-            new AndroidBuckConfig(FakeBuckConfig.empty(), Platform.detect()));
-    libraryDescription = new JsLibraryDescription();
+            new AndroidBuckConfig(buckConfig, Platform.detect()),
+            downwardApiConfig);
+    libraryDescription = new JsLibraryDescription(downwardApiConfig);
   }
 
   @Test
