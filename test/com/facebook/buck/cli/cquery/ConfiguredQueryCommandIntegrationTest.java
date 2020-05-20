@@ -16,14 +16,17 @@
 
 package com.facebook.buck.cli.cquery;
 
-import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertJSONOutputMatchesFileContents;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatches;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesExactly;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContentsExactly;
 import static org.junit.Assert.assertEquals;
 
 import com.facebook.buck.cli.ThriftOutputUtils;
 import com.facebook.buck.io.file.MorePaths;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraph;
 import com.facebook.buck.query.thrift.DirectedAcyclicGraphNode;
-import com.facebook.buck.testutil.OutputHelper;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
@@ -37,64 +40,6 @@ import org.junit.Test;
 public class ConfiguredQueryCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
-
-  /**
-   * Asserts that the result succeeded and that the lines printed to stdout are the same as those in
-   * the specified file. Note that sort order is not guaranteed by {@code buck query} unless it is
-   * specified explicitly via {@code --sort-output}.
-   */
-  private void assertOutputMatchesFileContents(
-      String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
-      throws IOException {
-    result.assertSuccess();
-
-    // All lines in expected output files are sorted so sort the output from `buck query` before
-    // comparing. Although query/--sort-output claims to sort labels by default, this does not
-    // appear to be honored, in practice.
-    assertEquals(
-        normalizeNewlines(workspace.getFileContents(expectedOutputFile)),
-        OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())));
-  }
-
-  /** Same as {@link #assertOutputMatchesFileContents} but doesn't attempt to sort output */
-  private void assertOutputMatchesFileContentsExactly(
-      String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
-      throws IOException {
-    result.assertSuccess();
-
-    assertEquals(
-        normalizeNewlines(workspace.getFileContents(expectedOutputFile)),
-        normalizeNewlines(result.getStdout()));
-  }
-
-  private void assertJSONOutputMatchesFileContents(
-      String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
-      throws IOException {
-    result.assertSuccess();
-
-    assertEquals(
-        OutputHelper.parseJSON(workspace.getFileContents(expectedOutputFile)),
-        OutputHelper.parseJSON(result.getStdout()));
-  }
-
-  /**
-   * Asserts that the result succeeded and that the lines printed to stdout are identical to {@code
-   * sortedExpectedOutput}. The stdout of {@code result} is sorted by line before being compared to
-   * {@code sortedExpectedOutput} to ensure deterministic results.
-   */
-  private void assertOutputMatches(String sortedExpectedOutput, ProcessResult result) {
-    result.assertSuccess();
-
-    assertEquals(
-        sortedExpectedOutput,
-        OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())).trim());
-  }
-
-  private void assertOutputMatchesExactly(String expectedOutput, ProcessResult result) {
-    result.assertSuccess();
-
-    assertEquals(normalizeNewlines(expectedOutput), normalizeNewlines(result.getStdout()));
-  }
 
   @Test
   public void basicTargetPrinting() throws IOException {
