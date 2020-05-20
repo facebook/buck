@@ -60,8 +60,9 @@ public class GoCompileStep extends ShellStep {
       boolean allowExternalReferences,
       GoPlatform platform,
       Optional<Path> asmSymabisPath,
-      Path output) {
-    super(workingDirectory);
+      Path output,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.compilerCommandPrefix = compilerCommandPrefix;
     this.flags = flags;

@@ -52,8 +52,9 @@ public class GoListStep extends ShellStep {
       Path workingDirectory,
       Optional<Path> targetFile,
       GoPlatform platform,
-      List<ListType> listTypes) {
-    super(workingDirectory);
+      List<ListType> listTypes,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.targetFile = targetFile;
     this.platform = platform;
     this.listTypes = listTypes;

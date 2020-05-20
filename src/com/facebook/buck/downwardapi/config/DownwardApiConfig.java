@@ -88,4 +88,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForCSharp() {
     return getDelegate().getBooleanValue(SECTION, "csharp_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForGo() {
+    return getDelegate().getBooleanValue(SECTION, "go_enabled", false);
+  }
 }

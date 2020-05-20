@@ -44,8 +44,9 @@ public class CGoCompileStep extends ShellStep {
       ImmutableList<String> cxxCompilerFlags,
       ImmutableList<Path> srcs,
       GoPlatform platform,
-      Path outputDir) {
-    super(workingDirectory);
+      Path outputDir,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.cgoCommandPrefix = cgoCommandPrefix;
     this.cppCommandPrefix = cppCommandPrefix;

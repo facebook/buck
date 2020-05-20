@@ -37,6 +37,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.versions.Version;
@@ -61,10 +62,15 @@ public class GoLibraryDescription
         VersionPropagator<GoLibraryDescriptionArg> {
 
   private final GoBuckConfig goBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
 
-  public GoLibraryDescription(GoBuckConfig goBuckConfig, ToolchainProvider toolchainProvider) {
+  public GoLibraryDescription(
+      GoBuckConfig goBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      ToolchainProvider toolchainProvider) {
     this.goBuckConfig = goBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
@@ -139,6 +145,7 @@ public class GoLibraryDescription
           params,
           context.getActionGraphBuilder(),
           goBuckConfig,
+          downwardApiConfig,
           args.getPackageName()
               .map(Paths::get)
               .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),

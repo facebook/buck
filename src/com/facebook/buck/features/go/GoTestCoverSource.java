@@ -22,6 +22,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
@@ -61,6 +65,13 @@ public class GoTestCoverSource extends AbstractBuildRule {
   private final ImmutableSortedSet<BuildRule> buildDeps;
   private final RelPath genDir;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public GoTestCoverSource(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -68,12 +79,14 @@ public class GoTestCoverSource extends AbstractBuildRule {
       GoPlatform platform,
       ImmutableSet<SourcePath> srcs,
       Tool cover,
-      GoTestCoverStep.Mode coverageMode) {
+      GoTestCoverStep.Mode coverageMode,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
     this.platform = platform;
     this.srcs = srcs;
     this.cover = cover;
     this.coverageMode = coverageMode;
+    this.withDownwardApi = withDownwardApi;
     this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s");
     this.buildDeps =
         ImmutableSortedSet.<BuildRule>naturalOrder()
@@ -123,7 +136,8 @@ public class GoTestCoverSource extends AbstractBuildRule {
               genDir.resolve(context.getSourcePathResolver().getAbsolutePath(entry.getValue())),
               cover.getEnvironment(context.getSourcePathResolver()),
               cover.getCommandPrefix(context.getSourcePathResolver()),
-              coverageMode));
+              coverageMode,
+              withDownwardApi));
     }
 
     buildableContext.recordArtifact(genDir.getPath());

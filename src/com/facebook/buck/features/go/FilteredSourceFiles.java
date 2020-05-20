@@ -32,19 +32,25 @@ public class FilteredSourceFiles implements Iterable<Path> {
   private final ImmutableList<Path> rawSrcFiles;
   private final ImmutableList<Path> extraSrcFiles;
   private final ImmutableMap<Path, GoListStep> filterSteps;
+  private final boolean withDownwardApi;
 
   public FilteredSourceFiles(
-      List<Path> rawSrcFiles, GoPlatform platform, List<ListType> fileTypes) {
-    this(rawSrcFiles, ImmutableList.of(), platform, fileTypes);
+      List<Path> rawSrcFiles,
+      GoPlatform platform,
+      List<ListType> fileTypes,
+      boolean withDownwardApi) {
+    this(rawSrcFiles, ImmutableList.of(), platform, fileTypes, withDownwardApi);
   }
 
   public FilteredSourceFiles(
       List<Path> rawSrcFiles,
       List<Path> extraSrcFiles,
       GoPlatform platform,
-      List<ListType> fileTypes) {
+      List<ListType> fileTypes,
+      boolean withDownwardApi) {
     this.rawSrcFiles = ImmutableList.copyOf(rawSrcFiles);
     this.extraSrcFiles = ImmutableList.copyOf(extraSrcFiles);
+    this.withDownwardApi = withDownwardApi;
     filterSteps = createFilterSteps(platform, fileTypes);
   }
 
@@ -54,7 +60,9 @@ public class FilteredSourceFiles implements Iterable<Path> {
     for (Path srcFile : rawSrcFiles) {
       Path absPath = srcFile.getParent();
       if (!filterSteps.containsKey(absPath)) {
-        filterSteps.put(absPath, new GoListStep(absPath, Optional.empty(), platform, fileTypes));
+        filterSteps.put(
+            absPath,
+            new GoListStep(absPath, Optional.empty(), platform, fileTypes, withDownwardApi));
       }
     }
     return ImmutableMap.copyOf(filterSteps);

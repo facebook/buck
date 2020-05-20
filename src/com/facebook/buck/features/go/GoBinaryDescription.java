@@ -33,6 +33,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.versions.VersionRoot;
 import com.google.common.collect.ImmutableCollection;
 import com.google.common.collect.ImmutableSet;
@@ -44,10 +45,15 @@ public class GoBinaryDescription
         Flavored {
 
   private final GoBuckConfig goBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
 
-  public GoBinaryDescription(GoBuckConfig goBuckConfig, ToolchainProvider toolchainProvider) {
+  public GoBinaryDescription(
+      GoBuckConfig goBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      ToolchainProvider toolchainProvider) {
     this.goBuckConfig = goBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
@@ -82,6 +88,7 @@ public class GoBinaryDescription
         params,
         context.getActionGraphBuilder(),
         goBuckConfig,
+        downwardApiConfig,
         args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
         args.getLinkMode(),
         args.getSrcs(),

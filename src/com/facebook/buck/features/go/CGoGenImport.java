@@ -22,6 +22,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.common.BuildableSupport;
@@ -54,6 +58,13 @@ public class CGoGenImport extends AbstractBuildRule {
   private final Path outputFile;
   private final RelPath genDir;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public CGoGenImport(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -61,13 +72,15 @@ public class CGoGenImport extends AbstractBuildRule {
       Tool cgo,
       GoPlatform platform,
       SourcePath sourceWithPackageName,
-      SourcePath cgoBin) {
+      SourcePath cgoBin,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem);
 
     this.pathResolver = ruleFinder.getSourcePathResolver();
     this.cgo = cgo;
     this.platform = platform;
     this.sourceWithPackageName = sourceWithPackageName;
+    this.withDownwardApi = withDownwardApi;
     this.genDir = BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "%s/gen");
     this.outputFile = genDir.resolve("_cgo_import.go");
     this.cgoBin = cgoBin;
@@ -96,7 +109,8 @@ public class CGoGenImport extends AbstractBuildRule {
             srcFile.getParent(),
             Optional.of(srcFile.getFileName()),
             platform,
-            Collections.singletonList(ListType.Name));
+            Collections.singletonList(ListType.Name),
+            withDownwardApi);
     steps.add(listStep);
 
     steps.add(
@@ -106,7 +120,8 @@ public class CGoGenImport extends AbstractBuildRule {
             platform,
             MoreSuppliers.memoize(listStep::getRawOutput),
             pathResolver.getAbsolutePath(cgoBin),
-            outputFile));
+            outputFile,
+            withDownwardApi));
 
     buildableContext.recordArtifact(outputFile);
     return steps.build();

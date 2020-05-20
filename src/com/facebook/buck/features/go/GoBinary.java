@@ -24,6 +24,10 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.BuildRuleResolver;
@@ -67,6 +71,13 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final SymlinkTree linkTree;
   private final ImmutableSortedSet<SourcePath> resources;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public GoBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -79,7 +90,9 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
       GoLinkStep.LinkMode linkMode,
       ImmutableList<String> linkerFlags,
       ImmutableList<Arg> cxxLinkerArgs,
-      GoPlatform platform) {
+      GoPlatform platform,
+      boolean withDownwardApi) {
+
     super(buildTarget, projectFilesystem, params);
     this.cxxLinker = cxxLinker;
     this.cxxLinkerArgs = cxxLinkerArgs;
@@ -88,6 +101,7 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.linkTree = linkTree;
     this.mainObject = mainObject;
     this.platform = platform;
+    this.withDownwardApi = withDownwardApi;
 
     String outputFormat = "%s/" + buildTarget.getShortName();
     if (platform.getGoOs() == GoOs.WINDOWS) {
@@ -210,7 +224,8 @@ public class GoBinary extends AbstractBuildRuleWithDeclaredAndExtraDeps
             resolver.getRelativePath(mainObject.getSourcePathToOutput()),
             GoLinkStep.BuildMode.EXECUTABLE,
             linkMode,
-            output.getPath()));
+            output.getPath(),
+            withDownwardApi));
     return steps.build();
   }
 

@@ -37,6 +37,7 @@ import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.TestProjectFilesystems;
@@ -158,6 +159,7 @@ public class GoDescriptorsTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     BuckConfig buckConfig = FakeBuckConfig.empty();
     GoBuckConfig goBuckConfig = new GoBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
 
     GoCompile compile =
         GoDescriptors.createGoCompileRule(
@@ -166,6 +168,7 @@ public class GoDescriptorsTest {
             params,
             graphBuilder,
             goBuckConfig,
+            downwardApiConfig,
             Paths.get("package"),
             ImmutableSet.of(
                 PathSourcePath.of(filesystem, Paths.get("not_build_target.go")),
@@ -203,6 +206,7 @@ public class GoDescriptorsTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     BuckConfig buckConfig = FakeBuckConfig.empty();
     GoBuckConfig goBuckConfig = new GoBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
 
     GoBinary binary =
         GoDescriptors.createGoBinaryRule(
@@ -211,6 +215,7 @@ public class GoDescriptorsTest {
             params,
             graphBuilder,
             goBuckConfig,
+            downwardApiConfig,
             Linker.LinkableDepType.STATIC_PIC,
             Optional.empty(),
             ImmutableSet.of(
@@ -254,6 +259,7 @@ public class GoDescriptorsTest {
     BuildRuleParams params = TestBuildRuleParams.create();
     BuckConfig buckConfig = FakeBuckConfig.empty();
     GoBuckConfig goBuckConfig = new GoBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = DownwardApiConfig.of(buckConfig);
 
     ImmutableMap<Optional<GoLinkStep.LinkMode>, Matcher> modes =
         ImmutableMap.of(
@@ -276,6 +282,7 @@ public class GoDescriptorsTest {
               params,
               graphBuilder,
               goBuckConfig,
+              downwardApiConfig,
               Linker.LinkableDepType.STATIC_PIC,
               entry.getKey(),
               ImmutableSet.of(),

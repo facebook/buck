@@ -55,8 +55,9 @@ public class GoTestCoverStep extends ShellStep {
       Path targetFile,
       ImmutableMap<String, String> environment,
       ImmutableList<String> generatorCommandPrefix,
-      Mode coverageMode) {
-    super(workingDirectory);
+      Mode coverageMode,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.generatorCommandPrefix = generatorCommandPrefix;
     this.coverageMode = coverageMode;

@@ -43,8 +43,9 @@ public class GoAssembleStep extends ShellStep {
       Iterable<Path> srcs,
       ImmutableList<Path> includeDirectories,
       GoPlatform platform,
-      Path output) {
-    super(workingDirectory);
+      Path output,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.asmCommandPrefix = asmCommandPrefix;
     this.flags = flags;

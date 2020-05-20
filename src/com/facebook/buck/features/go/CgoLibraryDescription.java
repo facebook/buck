@@ -193,6 +193,7 @@ public class CgoLibraryDescription
           params,
           context.getActionGraphBuilder(),
           goBuckConfig,
+          downwardApiConfig,
           args.getPackageName()
               .map(Paths::get)
               .orElse(goBuckConfig.getDefaultPackageName(buildTarget)),

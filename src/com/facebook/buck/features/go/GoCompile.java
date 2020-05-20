@@ -22,6 +22,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.rules.impl.SymlinkTree;
@@ -68,6 +72,13 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final GoPlatform platform;
   @AddToRuleKey private final boolean gensymabis;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   // TODO(mikekap): Make these part of the rule key.
   private final ImmutableList<Path> assemblerIncludeDirs;
   private final ImmutableMap<Path, Path> importPathMap;
@@ -90,7 +101,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       GoPlatform platform,
       boolean gensymabis,
       ImmutableList<SourcePath> extraAsmOutputs,
-      List<ListType> goListTypes) {
+      List<ListType> goListTypes,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.importPathMap = importPathMap;
     this.srcs = srcs;
@@ -105,6 +117,7 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.packer = platform.getPacker();
     this.platform = platform;
     this.gensymabis = gensymabis;
+    this.withDownwardApi = withDownwardApi;
     this.output =
         BuildTargetPaths.getGenPath(
             getProjectFilesystem(),
@@ -129,7 +142,10 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
     FilteredSourceFiles filteredAsmSrcs =
         new FilteredSourceFiles(
-            getAsmSources(groupedSrcs), platform, Collections.singletonList(ListType.SFiles));
+            getAsmSources(groupedSrcs),
+            platform,
+            Collections.singletonList(ListType.SFiles),
+            withDownwardApi);
     steps.addAll(filteredAsmSrcs.getFilterSteps());
 
     steps.add(
@@ -199,7 +215,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                     .add(asmIncludeDir.getPath())
                     .build(),
                 platform,
-                asmSymabisPath.get()));
+                asmSymabisPath.get(),
+                withDownwardApi));
       }
 
       FilteredSourceFiles filteredCompileSrcs =
@@ -207,7 +224,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               getGoSources(groupedSrcs),
               getSourceFiles(generatedSrcs, context),
               platform,
-              goListTypes);
+              goListTypes,
+              withDownwardApi);
       steps.addAll(filteredCompileSrcs.getFilterSteps());
 
       steps.add(
@@ -225,7 +243,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               allowExternalReferences,
               platform,
               asmSymabisPath,
-              output.getPath()));
+              output.getPath(),
+              withDownwardApi));
     }
 
     ImmutableList.Builder<Path> asmOutputs = ImmutableList.builder();
@@ -258,7 +277,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                   .add(asmIncludeDir.getPath())
                   .build(),
               platform,
-              asmOutputPath));
+              asmOutputPath,
+              withDownwardApi));
       asmOutputs.add(asmOutputPath);
     }
 
@@ -273,7 +293,8 @@ public class GoCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                   .addAll(extraAsmOutputs.stream().map(x -> resolver.getAbsolutePath(x)).iterator())
                   .build(),
               filteredAsmSrcs,
-              output.getPath()));
+              output.getPath(),
+              withDownwardApi));
     }
 
     return steps.build();

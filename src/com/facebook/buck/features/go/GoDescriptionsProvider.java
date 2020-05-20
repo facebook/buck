@@ -40,12 +40,12 @@ public class GoDescriptionsProvider implements DescriptionProvider {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
 
     return Arrays.asList(
-        new GoBinaryDescription(goBuckConfig, toolchainProvider),
-        new GoLibraryDescription(goBuckConfig, toolchainProvider),
+        new GoBinaryDescription(goBuckConfig, downwardApiConfig, toolchainProvider),
+        new GoLibraryDescription(goBuckConfig, downwardApiConfig, toolchainProvider),
         new CgoLibraryDescription(
             goBuckConfig, cxxBuckConfig, downwardApiConfig, toolchainProvider),
         new GoTestRunnerDescription(),
-        new GoTestDescription(goBuckConfig, toolchainProvider),
+        new GoTestDescription(goBuckConfig, downwardApiConfig, toolchainProvider),
         new PrebuiltGoLibraryDescription(goBuckConfig, toolchainProvider));
   }
 }

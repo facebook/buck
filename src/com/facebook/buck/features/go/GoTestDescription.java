@@ -47,6 +47,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.impl.CxxPlatforms;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.macros.AbsoluteOutputMacroExpander;
@@ -83,10 +84,15 @@ public class GoTestDescription
       ImmutableList.of(LocationMacroExpander.INSTANCE, AbsoluteOutputMacroExpander.INSTANCE);
 
   private final GoBuckConfig goBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
 
-  public GoTestDescription(GoBuckConfig goBuckConfig, ToolchainProvider toolchainProvider) {
+  public GoTestDescription(
+      GoBuckConfig goBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      ToolchainProvider toolchainProvider) {
     this.goBuckConfig = goBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
@@ -166,6 +172,7 @@ public class GoTestDescription
     Tool testMainGenerator =
         GoDescriptors.getTestMainGenerator(
             goBuckConfig,
+            downwardApiConfig,
             // Since TestMainGenRule produces a go binary that is later exec'd
             // to produce a go test, we want it to use the platform of the
             // current machine, not whatever was specified in the rule or config.
@@ -191,7 +198,8 @@ public class GoTestDescription
             packageName,
             platform,
             coverVariables,
-            coverageMode);
+            coverageMode,
+            downwardApiConfig.isEnabledForGo());
     graphBuilder.addToIndex(generatedTestMain);
     return generatedTestMain;
   }
@@ -243,7 +251,8 @@ public class GoTestDescription
                           platform,
                           rawSrcs.build(),
                           platform.getCover(),
-                          coverage));
+                          coverage,
+                          downwardApiConfig.isEnabledForGo()));
 
       coverVariables = coverSource.getVariables();
       srcs = ImmutableSet.builder();
@@ -294,6 +303,7 @@ public class GoTestDescription
                           generatorParams,
                           graphBuilder,
                           goBuckConfig,
+                          downwardApiConfig,
                           Linker.LinkableDepType.STATIC_PIC,
                           Optional.empty(),
                           ImmutableSet.of(testRunner.getTestRunnerGenerator()),
@@ -320,7 +330,8 @@ public class GoTestDescription
               packageName,
               platform,
               ImmutableMap.of(packageName, coverVariables),
-              coverageMode);
+              coverageMode,
+              downwardApiConfig.isEnabledForGo());
       graphBuilder.addToIndex(generatedTestMain);
     } else {
       generatedTestMain =
@@ -408,6 +419,7 @@ public class GoTestDescription
                 .withExtraDeps(ImmutableSortedSet.of(generatedTestMain)),
             graphBuilder,
             goBuckConfig,
+            downwardApiConfig,
             args.getLinkStyle().orElse(Linker.LinkableDepType.STATIC_PIC),
             args.getLinkMode(),
             ImmutableSet.of(generatedTestMain.getSourcePathToOutput()),
@@ -498,6 +510,7 @@ public class GoTestDescription
               testTargetParams,
               graphBuilder,
               goBuckConfig,
+              downwardApiConfig,
               packageName,
               ImmutableSet.<SourcePath>builder().addAll(srcs).build(),
               ImmutableList.<String>builder()
@@ -522,6 +535,7 @@ public class GoTestDescription
               params,
               graphBuilder,
               goBuckConfig,
+              downwardApiConfig,
               packageName,
               srcs,
               args.getCompilerFlags(),

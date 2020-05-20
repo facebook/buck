@@ -48,6 +48,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.go.GoListStep.ListType;
 import com.facebook.buck.file.WriteFile;
 import com.facebook.buck.io.file.MorePaths;
@@ -129,6 +130,7 @@ abstract class GoDescriptors {
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       GoBuckConfig goBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       Path packageName,
       ImmutableSet<SourcePath> srcs,
       List<String> compilerFlags,
@@ -186,7 +188,8 @@ abstract class GoDescriptors {
         platform,
         goBuckConfig.getGensymabis(),
         extraAsmOutputsBuilder.build(),
-        goListTypes);
+        goListTypes,
+        downwardApiConfig.isEnabledForGo());
   }
 
   @VisibleForTesting
@@ -316,6 +319,7 @@ abstract class GoDescriptors {
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       GoBuckConfig goBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       Linker.LinkableDepType linkStyle,
       Optional<GoLinkStep.LinkMode> linkMode,
       ImmutableSet<SourcePath> srcs,
@@ -335,6 +339,7 @@ abstract class GoDescriptors {
             params,
             graphBuilder,
             goBuckConfig,
+            downwardApiConfig,
             Paths.get("main"),
             srcs,
             compilerFlags,
@@ -453,11 +458,13 @@ abstract class GoDescriptors {
         linkMode.get(),
         ImmutableList.copyOf(linkerFlags),
         cxxLinkerArgs,
-        platform);
+        platform,
+        downwardApiConfig.isEnabledForGo());
   }
 
   static Tool getTestMainGenerator(
       GoBuckConfig goBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       GoPlatform platform,
       BuildTarget sourceBuildTarget,
       ProjectFilesystem projectFilesystem,
@@ -497,6 +504,7 @@ abstract class GoDescriptors {
                       .withExtraDeps(ImmutableSortedSet.of(writeFile)),
                   graphBuilder,
                   goBuckConfig,
+                  downwardApiConfig,
                   Linker.LinkableDepType.STATIC_PIC,
                   Optional.empty(),
                   ImmutableSet.of(writeFile.getSourcePathToOutput()),

@@ -182,7 +182,8 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                             .getCxxPlatform()
                             .getCpp()
                             .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-                        platform));
+                        platform,
+                        downwardApiConfig.isEnabledForGo()));
 
     // generated c files needs to be compiled and linked into a single object
     // file (equivalent of (_cgo_.o), includes:
@@ -236,7 +237,8 @@ public class CGoLibrary extends NoopBuildRuleWithDeclaredAndExtraDeps {
                     // take first source file in the list to infer the package
                     // name via go list
                     goSourcesFromArg.build().iterator().next(),
-                    Objects.requireNonNull(cgoBin.getSourcePathToOutput())));
+                    Objects.requireNonNull(cgoBin.getSourcePathToOutput()),
+                    downwardApiConfig.isEnabledForGo()));
 
     // filter out compiled object only for the sources we are interested in
     ImmutableList<String> linkableObjectFiles =

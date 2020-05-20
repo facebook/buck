@@ -40,8 +40,9 @@ public class CGoGenerateImportStep extends ShellStep {
       GoPlatform platform,
       Supplier<String> packageName,
       Path bin,
-      Path outputFile) {
-    super(workingDirectory);
+      Path outputFile,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.cgoCommandPrefix = cgoCommandPrefix;
     this.packageName = packageName;
     this.bin = bin;

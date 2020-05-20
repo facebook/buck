@@ -22,6 +22,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -52,6 +56,13 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   private final RelPath output;
   private final GoPlatform platform;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public GoTestMain(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -61,12 +72,14 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Path testPackage,
       GoPlatform platform,
       ImmutableMap<Path, ImmutableMap<String, Path>> coverVariables,
-      GoTestCoverStep.Mode coverageMode) {
+      GoTestCoverStep.Mode coverageMode,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.testMainGen = testMainGen;
     this.testSources = testSources;
     this.testPackage = testPackage;
     this.platform = platform;
+    this.withDownwardApi = withDownwardApi;
     this.output =
         BuildTargetPaths.getScratchPath(
             getProjectFilesystem(),
@@ -93,7 +106,8 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             GoCompile.getSourceFiles(testSources, context),
             ImmutableList.of(),
             platform,
-            ImmutableList.of(ListType.GoFiles, ListType.TestGoFiles, ListType.XTestGoFiles));
+            ImmutableList.of(ListType.GoFiles, ListType.TestGoFiles, ListType.XTestGoFiles),
+            withDownwardApi);
     steps.addAll(filteredSrcs.getFilterSteps());
     steps.add(
         new GoTestMainStep(
@@ -104,7 +118,8 @@ public class GoTestMain extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             coverVariables,
             testPackage,
             filteredSrcs,
-            output.getPath()));
+            output.getPath(),
+            withDownwardApi));
     return steps.build();
   }
 

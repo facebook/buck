@@ -83,8 +83,9 @@ public class GoLinkStep extends ShellStep {
       Path mainArchive,
       BuildMode buildMode,
       LinkMode linkMode,
-      Path output) {
-    super(workingDirectory);
+      Path output,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.cxxLinkCommandPrefix = cxxLinkCommandPrefix;
     this.linkCommandPrefix = linkCommandPrefix;

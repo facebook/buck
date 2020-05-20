@@ -55,8 +55,9 @@ public class GoPackStep extends ShellStep {
       Operation op,
       ImmutableList<Path> srcs,
       Iterable<Path> filteredAsmSrcs,
-      Path output) {
-    super(workingDirectory);
+      Path output,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.packCommandPrefix = packCommandPrefix;
     this.op = op;

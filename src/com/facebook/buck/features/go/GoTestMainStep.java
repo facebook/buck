@@ -45,8 +45,9 @@ public class GoTestMainStep extends ShellStep {
       ImmutableMap<Path, ImmutableMap<String, Path>> coverageVariables,
       Path packageName,
       Iterable<Path> testFiles,
-      Path output) {
-    super(workingDirectory);
+      Path output,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.generatorCommandPrefix = generatorCommandPrefix;
     this.coverageMode = coverageMode;
