@@ -43,6 +43,7 @@ import com.facebook.buck.util.ExitCode;
 import com.facebook.buck.util.PatternsMatcher;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -56,7 +57,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedMap;
-import javax.annotation.Nullable;
+import java.util.function.Supplier;
 import org.kohsuke.args4j.Option;
 
 /** Buck subcommand which facilitates querying information about the configured target graph. */
@@ -67,12 +68,12 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
 
   @Option(
       name = "--target-universe",
+      handler = SingleStringSetOptionHandler.class,
       usage =
           "Comma separated list of targets at which to root the queryable universe. "
               + "This is useful since targets can exist in multiple configurations. "
               + "While this argument isn't required, it's recommended for basically all queries")
-  @Nullable
-  private String targetUniverseParam = null;
+  Supplier<ImmutableSet<String>> targetUniverseParam = Suppliers.ofInstance(ImmutableSet.of());
 
   @Override
   public String getShortDescription() {
@@ -194,10 +195,16 @@ public class ConfiguredQueryCommand extends AbstractQueryCommand {
   // TODO: This API is too stringly typed. It's easy for users to provide strings here which will
   // cause us to have problems - if not outright crash - later down the line. We should use a type
   // here which better reflects our intent, something like `BuildTargetPattern`.
-  private List<String> rootTargetsForUniverse() throws QueryException {
+  private ImmutableList<String> rootTargetsForUniverse() throws QueryException {
     // Happy path - the user told us what universe they wanted.
-    if (targetUniverseParam != null) {
-      return Splitter.on(',').splitToList(targetUniverseParam);
+    if (!targetUniverseParam.get().isEmpty()) {
+      // TODO(srice): Remove support for comma-separated `--target-universe` parameters since ','
+      // is a valid character in target names (and therefore can't be relied upon as a separator
+      // between targets.
+      Splitter csv = Splitter.on(',');
+      return targetUniverseParam.get().stream()
+          .flatMap((param) -> csv.splitToList(param).stream())
+          .collect(ImmutableList.toImmutableList());
     }
 
     // Less happy path - parse the query and try to infer the roots of the target universe.

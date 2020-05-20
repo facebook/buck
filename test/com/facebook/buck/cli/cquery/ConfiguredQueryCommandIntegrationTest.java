@@ -478,6 +478,24 @@ public class ConfiguredQueryCommandIntegrationTest {
   }
 
   @Test
+  public void targetUniverseSpecifiedAsRepeatedArgument() throws IOException {
+    ProjectWorkspace workspace =
+        TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
+    workspace.setUp();
+
+    ProcessResult result =
+        workspace.runBuckCommand(
+            "cquery",
+            "//lib:foo",
+            "--target-universe",
+            "//bin:tvos-bin",
+            "--target-universe",
+            "//bin:mac-bin");
+    assertOutputMatches(
+        "//lib:foo (//config/platform:macos)\n//lib:foo (//config/platform:tvos)", result);
+  }
+
+  @Test
   public void ownerFunctionReturnsOwnerOfFileInAllConfigurationsInUniverse() throws IOException {
     ProjectWorkspace workspace =
         TestDataHelper.createProjectWorkspaceForScenario(this, "sample_apple", tmp);
