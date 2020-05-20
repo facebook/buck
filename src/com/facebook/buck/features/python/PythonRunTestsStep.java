@@ -19,6 +19,7 @@ package com.facebook.buck.features.python;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.shell.ShellStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
@@ -51,6 +52,7 @@ public class PythonRunTestsStep implements Step {
   private final TestSelectorList testSelectorList;
   private final Optional<Long> testRuleTimeoutMs;
   private final Path resultsOutputPath;
+  private final boolean withDownwardApi;
 
   private final Consumer<Process> timeoutHandler =
       input -> {
@@ -66,7 +68,8 @@ public class PythonRunTestsStep implements Step {
       ImmutableMap<String, String> environment,
       TestSelectorList testSelectorList,
       Optional<Long> testRuleTimeoutMs,
-      Path resultsOutputPath) {
+      Path resultsOutputPath,
+      boolean withDownwardApi) {
     this.workingDirectory = workingDirectory;
     this.testName = testName;
     this.commandPrefix = commandPrefix;
@@ -74,7 +77,7 @@ public class PythonRunTestsStep implements Step {
     this.testSelectorList = testSelectorList;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.resultsOutputPath = resultsOutputPath;
-
+    this.withDownwardApi = withDownwardApi;
     this.timedOut = false;
   }
 
@@ -108,15 +111,19 @@ public class PythonRunTestsStep implements Step {
             .setDirectory(workingDirectory.getPath())
             .setEnvironment(environment)
             .build();
+    ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
     ProcessExecutor.Result result =
-        context
-            .getProcessExecutor()
-            .launchAndExecute(
-                params,
-                EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
-                Optional.empty(),
-                testRuleTimeoutMs,
-                Optional.of(timeoutHandler));
+        processExecutor.launchAndExecute(
+            params,
+            EnumSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT),
+            Optional.empty(),
+            testRuleTimeoutMs,
+            Optional.of(timeoutHandler));
 
     if (timedOut) {
       return StepExecutionResults.ERROR;
@@ -181,7 +188,7 @@ public class PythonRunTestsStep implements Step {
   }
 
   private ShellStep getShellStepWithArgs(String... args) {
-    return new ShellStep(workingDirectory) {
+    return new ShellStep(workingDirectory, withDownwardApi) {
       @Override
       public StepExecutionResult execute(ExecutionContext context)
           throws InterruptedException, IOException {

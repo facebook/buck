@@ -44,6 +44,7 @@ public class PythonLibraryBuilder
       FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms) {
     super(
         new PythonLibraryDescription(
+            CxxPlatformUtils.DEFAULT_DOWNWARD_API_CONFIG,
             new ToolchainProviderBuilder()
                 .withToolchain(
                     PythonPlatformsProvider.DEFAULT_NAME,

@@ -40,6 +40,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
@@ -64,6 +65,7 @@ public class PythonLibraryDescription
         MetadataProvidingDescription<PythonLibraryDescriptionArg>,
         Flavored {
 
+  private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
 
   private static final FlavorDomain<MetadataType> METADATA_TYPE =
@@ -72,7 +74,9 @@ public class PythonLibraryDescription
   private static final FlavorDomain<LibraryType> LIBRARY_TYPE =
       FlavorDomain.from("Python Library Type", LibraryType.class);
 
-  public PythonLibraryDescription(ToolchainProvider toolchainProvider) {
+  public PythonLibraryDescription(
+      DownwardApiConfig downwardApiConfig, ToolchainProvider toolchainProvider) {
+    this.downwardApiConfig = downwardApiConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
@@ -139,7 +143,8 @@ public class PythonLibraryDescription
                   () ->
                       new HumanReadableException(
                           "%s: rule has no sources to compile", buildTarget)),
-          false);
+          false,
+          downwardApiConfig.isEnabledForPython());
     }
 
     return new PythonLibrary(

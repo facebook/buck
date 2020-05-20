@@ -50,6 +50,8 @@ abstract class PythonBinaryPackagable implements PythonPackagable {
   @Override
   public abstract Optional<Boolean> isPythonZipSafe();
 
+  abstract boolean isWithDownwardApi();
+
   @Value.Lazy
   public Optional<PythonMappedComponents> getPythonSources() {
     return getPythonModules()
@@ -106,7 +108,8 @@ abstract class PythonBinaryPackagable implements PythonPackagable {
                                   graphBuilder,
                                   pythonPlatform.getEnvironment(),
                                   sources,
-                                  false));
+                                  false,
+                                  isWithDownwardApi()));
               return compileRule.getCompiledSources();
             });
   }

@@ -77,6 +77,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> labels;
   private final Optional<Long> testRuleTimeoutMs;
   private final ImmutableSet<String> contacts;
+  private final boolean withDownwardApi;
   private final ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage;
   private final ImmutableSet<SourcePath> additionalCoverageTargets;
 
@@ -93,7 +94,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       ImmutableSet<SourcePath> additionalCoverageTargets,
       Optional<Long> testRuleTimeoutMs,
-      ImmutableSet<String> contacts) {
+      ImmutableSet<String> contacts,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.ruleResolver = ruleResolver;
     this.originalDeclaredDeps = originalDeclaredDeps;
@@ -105,6 +107,7 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.additionalCoverageTargets = additionalCoverageTargets;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.contacts = contacts;
+    this.withDownwardApi = withDownwardApi;
   }
 
   public static PythonTest from(
@@ -118,7 +121,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<Pair<Float, ImmutableSet<Path>>> neededCoverage,
       ImmutableSet<SourcePath> additionalCoverageTargets,
       Optional<Long> testRuleTimeoutMs,
-      ImmutableSet<String> contacts) {
+      ImmutableSet<String> contacts,
+      boolean withDownwardApi) {
 
     return new PythonTest(
         buildTarget,
@@ -133,7 +137,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         neededCoverage,
         additionalCoverageTargets,
         testRuleTimeoutMs,
-        contacts);
+        contacts,
+        withDownwardApi);
   }
 
   @Override
@@ -170,7 +175,8 @@ public class PythonTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getMergedEnv(buildContext.getSourcePathResolver()),
                 options.getTestSelectorList(),
                 testRuleTimeoutMs,
-                getProjectFilesystem().resolve(getPathToTestOutputResult())))
+                getProjectFilesystem().resolve(getPathToTestOutputResult()),
+                withDownwardApi))
         .build();
   }
 

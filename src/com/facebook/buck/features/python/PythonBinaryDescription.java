@@ -266,7 +266,8 @@ public class PythonBinaryDescription
             components,
             preloadLibraries,
             pythonBuckConfig.shouldCacheBinaries(),
-            pythonBuckConfig.legacyOutputPath());
+            pythonBuckConfig.legacyOutputPath(),
+            downwardApiConfig.isEnabledForPython());
 
       default:
         throw new IllegalStateException();
@@ -367,7 +368,8 @@ public class PythonBinaryDescription
                 .collect(ImmutableList.toImmutableList()),
             modules,
             Optional.empty(),
-            args.getZipSafe());
+            args.getZipSafe(),
+            downwardApiConfig.isEnabledForPython());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =

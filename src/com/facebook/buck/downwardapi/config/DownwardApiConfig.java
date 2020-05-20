@@ -118,4 +118,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForRust() {
     return getDelegate().getBooleanValue(SECTION, "rust_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForPython() {
+    return getDelegate().getBooleanValue(SECTION, "python_enabled", false);
+  }
 }

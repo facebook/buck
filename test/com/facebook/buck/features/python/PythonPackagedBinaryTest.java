@@ -100,7 +100,8 @@ public class PythonPackagedBinaryTest {
                 .build(),
             ImmutableSortedSet.of(),
             /* cache */ true,
-            /* legacyOutputPath */ false);
+            /* legacyOutputPath */ false,
+            false);
 
     // Calculate and return the rule key.
     return ruleKeyFactory.build(binary);

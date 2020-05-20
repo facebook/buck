@@ -61,8 +61,9 @@ public class PexStep extends ShellStep {
       Path destination,
       String entry,
       PythonResolvedPackageComponents components,
-      ImmutableSet<String> preloadLibraries) {
-    super(filesystem.getRootPath());
+      ImmutableSet<String> preloadLibraries,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
 
     this.environment = environment;
     this.commandPrefix = commandPrefix;

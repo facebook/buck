@@ -96,7 +96,8 @@ public class PexStepTest {
             DEST_PATH,
             ENTRY_POINT,
             COMPONENTS,
-            PRELOAD_LIBRARIES);
+            PRELOAD_LIBRARIES,
+            false);
     String command =
         Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
@@ -122,7 +123,8 @@ public class PexStepTest {
                 .from(COMPONENTS)
                 .setZipSafe(false)
                 .build(),
-            PRELOAD_LIBRARIES);
+            PRELOAD_LIBRARIES,
+            false);
     String command =
         Joiner.on(" ").join(step.getShellCommandInternal(TestExecutionContext.newInstance()));
 
@@ -167,7 +169,8 @@ public class PexStepTest {
                         TARGET,
                         new PythonModuleDirComponents.Resolved(realDir2)))
                 .build(),
-            PRELOAD_LIBRARIES);
+            PRELOAD_LIBRARIES,
+            false);
 
     Map<String, Object> args = ObjectMappers.readValue(step.getStdin().orElse(""), Map.class);
     Assert.assertTrue(file1.isAbsolute());
@@ -206,7 +209,8 @@ public class PexStepTest {
             DEST_PATH,
             ENTRY_POINT,
             COMPONENTS,
-            PRELOAD_LIBRARIES);
+            PRELOAD_LIBRARIES,
+            false);
     assertThat(
         step.getShellCommandInternal(TestExecutionContext.newInstance()),
         hasItems("--some", "--args"));

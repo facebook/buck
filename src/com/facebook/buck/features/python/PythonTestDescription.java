@@ -353,7 +353,8 @@ public class PythonTestDescription
             deps,
             Optional.of(PythonMappedComponents.of(modules)),
             Optional.of(PythonMappedComponents.of(ImmutableSortedMap.copyOf(resources))),
-            args.getZipSafe());
+            args.getZipSafe(),
+            downwardApiConfig.isEnabledForPython());
 
     CellPathResolver cellRoots = context.getCellPathResolver();
     StringWithMacrosConverter macrosConverter =
@@ -497,7 +498,8 @@ public class PythonTestDescription
                     .getDelegate()
                     .getView(TestBuckConfig.class)
                     .getDefaultTestRuleTimeoutMs()),
-        args.getContacts());
+        args.getContacts(),
+        downwardApiConfig.isEnabledForPython());
   }
 
   private Optional<PythonTestRunner> maybeGetTestRunner(

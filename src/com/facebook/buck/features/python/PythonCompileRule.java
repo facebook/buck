@@ -20,8 +20,13 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.features.python.toolchain.PythonEnvironment;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.modern.BuildCellRelativePathFactory;
@@ -33,6 +38,7 @@ import com.facebook.buck.step.AbstractExecutionStep;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -62,9 +68,10 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
       SourcePathRuleFinder ruleFinder,
       PythonEnvironment python,
       PythonComponents sources,
-      boolean ignoreErrors) {
+      boolean ignoreErrors,
+      boolean withDownwardApi) {
     return new PythonCompileRule(
-        target, filesystem, ruleFinder, new Impl(python, sources, ignoreErrors));
+        target, filesystem, ruleFinder, new Impl(python, sources, ignoreErrors, withDownwardApi));
   }
 
   @Override
@@ -82,15 +89,25 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
     private static final OutputPath OUTPUT = new OutputPath("py-compile");
 
     @AddToRuleKey private final PythonEnvironment python;
-
     @AddToRuleKey private final PythonComponents sources;
-
     @AddToRuleKey private final boolean ignoreErrors;
 
-    public Impl(PythonEnvironment python, PythonComponents sources, boolean ignoreErrors) {
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
+    public Impl(
+        PythonEnvironment python,
+        PythonComponents sources,
+        boolean ignoreErrors,
+        boolean withDownwardApi) {
       this.python = python;
       this.sources = sources;
       this.ignoreErrors = ignoreErrors;
+      this.withDownwardApi = withDownwardApi;
     }
 
     @Override
@@ -123,18 +140,22 @@ public class PythonCompileRule extends ModernBuildRule<PythonCompileRule.Impl> {
                               String.format(
                                   "%s=%s", PythonUtil.toModuleName(dst.toString()), src)));
                   ImmutableList<String> command = builder.build();
+                  ProcessExecutor processExecutor = context.getProcessExecutor();
+                  if (withDownwardApi) {
+                    processExecutor =
+                        processExecutor.withDownwardAPI(
+                            DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+                  }
                   return StepExecutionResult.of(
-                      context
-                          .getProcessExecutor()
-                          .launchAndExecute(
-                              ProcessExecutorParams.builder()
-                                  .setDirectory(context.getBuildCellRootPath())
-                                  // On some platforms (e.g. linux), python hash code randomness can
-                                  // cause the bytecode to be non-deterministic, so pin via the
-                                  // `PYTHONHASHSEED` env var.
-                                  .setEnvironment(ImmutableMap.of("PYTHONHASHSEED", "7"))
-                                  .setCommand(command)
-                                  .build()));
+                      processExecutor.launchAndExecute(
+                          ProcessExecutorParams.builder()
+                              .setDirectory(context.getBuildCellRootPath())
+                              // On some platforms (e.g. linux), python hash code randomness can
+                              // cause the bytecode to be non-deterministic, so pin via the
+                              // `PYTHONHASHSEED` env var.
+                              .setEnvironment(ImmutableMap.of("PYTHONHASHSEED", "7"))
+                              .setCommand(command)
+                              .build()));
                 }
               })
           .build();

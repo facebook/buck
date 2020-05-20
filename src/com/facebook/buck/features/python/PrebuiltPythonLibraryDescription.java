@@ -34,6 +34,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.toolchain.CxxPlatformsProvider;
 import com.facebook.buck.cxx.toolchain.UnresolvedCxxPlatform;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatformsProvider;
 import com.google.common.collect.ImmutableSet;
@@ -47,9 +48,12 @@ public class PrebuiltPythonLibraryDescription
   private static final FlavorDomain<PythonLibraryDescription.LibraryType> LIBRARY_TYPE =
       FlavorDomain.from("Python Library Type", PythonLibraryDescription.LibraryType.class);
 
+  private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
 
-  public PrebuiltPythonLibraryDescription(ToolchainProvider toolchainProvider) {
+  public PrebuiltPythonLibraryDescription(
+      DownwardApiConfig downwardApiConfig, ToolchainProvider toolchainProvider) {
+    this.downwardApiConfig = downwardApiConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
@@ -118,7 +122,8 @@ public class PrebuiltPythonLibraryDescription
           context.getActionGraphBuilder(),
           pythonPlatform.getValue().getEnvironment(),
           PrebuiltPythonLibraryComponents.ofSources(lib.getSourcePathToOutput()),
-          args.isIgnoreCompileErrors());
+          args.isIgnoreCompileErrors(),
+          downwardApiConfig.isEnabledForPython());
     }
 
     return new PrebuiltPythonLibrary(
