@@ -295,15 +295,17 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ProcessResult runBuckBuild(Optional<NGContext> context, String... args) {
-    return runBuckBuild(context, this.destPath, ImmutableMap.of(), args);
+    return runBuckBuild(context, this.destPath, args);
   }
 
-  public ProcessResult runBuckBuild(
-      Optional<NGContext> context, Path root, ImmutableMap<String, String> env, String... args) {
+  public ProcessResult runBuckBuild(Optional<NGContext> context, Path root, String... args) {
     String[] totalArgs = new String[args.length + 1];
     totalArgs[0] = "build";
     System.arraycopy(args, 0, totalArgs, 1, args.length);
-    return runBuckCommand(root, env, totalArgs);
+    return context
+        .map(ctx -> runBuckCommandWithContext(root, ctx, totalArgs))
+        .orElseGet(
+            () -> runBuckCommandWithEnvironmentOverrides(root, ImmutableMap.of(), totalArgs));
   }
 
   public ProcessResult runBuckTest(String... args) {
@@ -314,15 +316,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   private ImmutableMap<String, String> buildMultipleAndReturnStringOutputs(
-      Optional<NGContext> context,
-      Path buildRoot,
-      ImmutableMap<String, String> env,
-      String... args) {
+      Optional<NGContext> context, Path buildRoot, String... args) {
     // Add in `--show-output` to the build, so we can parse the output paths after the fact.
     ImmutableList<String> buildArgs =
         ImmutableList.<String>builder().add("--show-output").add(args).build();
-    ProcessResult buildResult =
-        runBuckBuild(context, buildRoot, env, buildArgs.toArray(new String[0]));
+    ProcessResult buildResult = runBuckBuild(context, buildRoot, buildArgs.toArray(new String[0]));
     buildResult.assertSuccess();
 
     // Build outputs are contained on stdout
@@ -363,22 +361,15 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(
       Optional<NGContext> context, String... args) {
-    return buildMultipleAndReturnOutputs(context, this.destPath, ImmutableMap.of(), args);
+    return buildMultipleAndReturnOutputs(context, this.destPath, args);
   }
 
   public ImmutableMap<String, Path> buildMultipleAndReturnOutputs(
-      Optional<NGContext> context,
-      Path buildRoot,
-      ImmutableMap<String, String> env,
-      String[] args) {
-    return buildMultipleAndReturnStringOutputs(context, buildRoot, env, args).entrySet().stream()
+      Optional<NGContext> context, Path buildRoot, String[] args) {
+    return buildMultipleAndReturnStringOutputs(context, buildRoot, args).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(
                 Map.Entry::getKey, entry -> buildRoot.resolve(entry.getValue())));
-  }
-
-  public Path buildAndReturnOutput(Map<String, String> env, String... args) {
-    return buildAndReturnOutput(Optional.empty(), args);
   }
 
   public Path buildAndReturnOutput(String... args) {
@@ -394,8 +385,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public Path buildAndReturnOutput(Optional<NGContext> context, Path buildRoot, String[] args) {
-    ImmutableMap<String, Path> outputs =
-        buildMultipleAndReturnOutputs(context, buildRoot, ImmutableMap.of(), args);
+    ImmutableMap<String, Path> outputs = buildMultipleAndReturnOutputs(context, buildRoot, args);
 
     // Verify we only have a single output.
     assertThat(
@@ -414,8 +404,7 @@ public class ProjectWorkspace extends AbstractWorkspace {
 
   public ImmutableMap<String, Path> buildMultipleAndReturnRelativeOutputs(
       Path root, String[] args) {
-    return buildMultipleAndReturnStringOutputs(Optional.empty(), root, ImmutableMap.of(), args)
-        .entrySet().stream()
+    return buildMultipleAndReturnStringOutputs(Optional.empty(), root, args).entrySet().stream()
         .collect(
             ImmutableMap.toImmutableMap(Map.Entry::getKey, entry -> Paths.get(entry.getValue())));
   }
@@ -492,16 +481,11 @@ public class ProjectWorkspace extends AbstractWorkspace {
   }
 
   public ProcessResult runBuckCommand(Path repoRoot, String... args) {
-    return runBuckCommand(repoRoot, ImmutableMap.of(), args);
-  }
-
-  public ProcessResult runBuckCommand(
-      Path repoRoot, ImmutableMap<String, String> env, String... args) {
-    return runBuckCommandWithEnvironmentOverrides(repoRoot, env, args);
+    return runBuckCommandWithEnvironmentOverrides(repoRoot, ImmutableMap.of(), args);
   }
 
   public ProcessResult runBuckCommand(NGContext context, String... args) {
-    return runBuckCommand(destPath, context, args);
+    return runBuckCommandWithContext(destPath, context, args);
   }
 
   public ProcessResult runBuckCommand(Path repoRoot, NGContext context, String... args) {
@@ -511,34 +495,46 @@ public class ProjectWorkspace extends AbstractWorkspace {
             .getOptionalExecutable(Paths.get("watchman"), EnvVariablesProvider.getSystemEnv())
             .isPresent());
 
-    ImmutableMap<String, String> clientEnv = ImmutableMap.copyOf((Map) context.getEnv());
-    return runBuckCommandWithEnvironmentOverrides(repoRoot, clientEnv, args);
+    return runBuckCommandWithContext(repoRoot, context, args);
+  }
+
+  public ProcessResult runBuckCommandWithContext(Path repoRoot, NGContext context, String... args) {
+    return runBuckCommandWithEnvironmentOverrides(
+        repoRoot, ImmutableMap.<String, String>copyOf((Map) context.getEnv()), args);
   }
 
   public ProcessResult runBuckCommandWithEnvironmentOverrides(
       Path repoRoot, ImmutableMap<String, String> environmentOverrides, String... args) {
+    assertTrue("setUp() must be run before this method is invoked", isSetUp);
+    TestConsole testConsole = new TestConsole();
+    InputStream stdin = new ByteArrayInputStream("".getBytes());
+
+    ImmutableMap<String, String> sanizitedEnv =
+        EnvironmentSanitizer.getSanitizedEnvForTests(environmentOverrides);
+
+    MainForTests main =
+        new MainForTests(
+            testConsole,
+            stdin,
+            knownRuleTypesFactoryFactory == null
+                ? DefaultKnownNativeRuleTypesFactory::new
+                : knownRuleTypesFactoryFactory,
+            repoRoot,
+            repoRoot.toAbsolutePath().resolve(relativeWorkingDir).normalize().toString(),
+            sanizitedEnv,
+            DaemonMode.DAEMON);
+
+    return launchAndRunMain(main, testConsole, buckDaemonState, args);
+  }
+
+  private ProcessResult launchAndRunMain(
+      MainForTests main,
+      TestConsole testConsole,
+      BuckGlobalStateLifecycleManager buckDaemonState,
+      String... args) {
+    BackgroundTaskManager manager = AsyncBackgroundTaskManager.of();
+
     try {
-      assertTrue("setUp() must be run before this method is invoked", isSetUp);
-      TestConsole testConsole = new TestConsole();
-      InputStream stdin = new ByteArrayInputStream("".getBytes());
-
-      ImmutableMap<String, String> sanizitedEnv =
-          EnvironmentSanitizer.getSanitizedEnvForTests(environmentOverrides);
-
-      BackgroundTaskManager manager = AsyncBackgroundTaskManager.of();
-
-      MainForTests main =
-          new MainForTests(
-              testConsole,
-              stdin,
-              knownRuleTypesFactoryFactory == null
-                  ? DefaultKnownNativeRuleTypesFactory::new
-                  : knownRuleTypesFactoryFactory,
-              repoRoot,
-              repoRoot.toAbsolutePath().resolve(relativeWorkingDir).normalize().toString(),
-              sanizitedEnv,
-              DaemonMode.DAEMON);
-
       MainRunner mainRunner =
           main.prepareMainRunner(manager, buckDaemonState, new MainForTests.TestCommandManager());
       ExitCode exitCode;

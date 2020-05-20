@@ -24,6 +24,7 @@ import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.pathformat.PathFormatter;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
+import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.VersionStringComparator;
 import com.facebook.buck.util.environment.Platform;
@@ -37,6 +38,7 @@ import java.nio.file.Path;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.hamcrest.Matchers;
@@ -109,7 +111,7 @@ public class PythonLibraryIntegrationTest {
                   workspace.buildAndReturnOutput(
                       // Generate some randomness to encourage this test to fail if propagated
                       // through.
-                      ImmutableMap.of("PYTHONHASHSEED", "random"),
+                      Optional.of(new TestContext(ImmutableMap.of("PYTHONHASHSEED", "random"))),
                       "-c",
                       "python.interpreter=" + py3,
                       "//:lib#py-default,default,compile"));
