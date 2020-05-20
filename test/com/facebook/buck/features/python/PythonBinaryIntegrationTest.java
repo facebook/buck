@@ -410,7 +410,7 @@ public class PythonBinaryIntegrationTest {
             workspace.newBuildTarget("//:main_module_with_prebuilt_dep_bin#link-tree"), "%s");
     Path originalWhlDir =
         workspace.getGenPath(
-            BuildTargetFactory.newInstance("//external_sources:whl_dep"), "__%s__extracted");
+            BuildTargetFactory.newInstance("//external_sources:whl_dep#extract"), "%s/extracted");
 
     ImmutableSet<Path> expectedPaths =
         ImmutableSet.of(

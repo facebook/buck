@@ -16,58 +16,48 @@
 
 package com.facebook.buck.features.python;
 
-import com.facebook.buck.core.build.buildable.context.BuildableContext;
-import com.facebook.buck.core.build.context.BuildContext;
-import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.model.impl.BuildTargetPaths;
-import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
-import com.facebook.buck.core.rules.BuildRuleParams;
-import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
-import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
+import com.facebook.buck.core.rules.impl.NoopBuildRule;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.features.python.toolchain.PythonPlatform;
-import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
-import com.facebook.buck.step.Step;
-import com.facebook.buck.step.fs.MakeCleanDirectoryStep;
-import com.facebook.buck.unarchive.UnzipStep;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
-import java.util.Objects;
+import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import javax.annotation.Nullable;
 
-public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtraDeps
-    implements PythonPackagable {
+public class PrebuiltPythonLibrary extends NoopBuildRule implements PythonPackagable {
 
-  @AddToRuleKey private final SourcePath binarySrc;
-  private final RelPath extractedOutput;
+  private final ImmutableSortedSet<BuildTarget> deps;
   private final boolean excludeDepsFromOmnibus;
   private final boolean compile;
 
   public PrebuiltPythonLibrary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
-      BuildRuleParams params,
-      SourcePath binarySrc,
+      ImmutableSortedSet<BuildTarget> deps,
       boolean excludeDepsFromOmnibus,
       boolean compile) {
-    super(buildTarget, projectFilesystem, params);
-    this.binarySrc = binarySrc;
-    this.extractedOutput =
-        BuildTargetPaths.getGenPath(projectFilesystem, buildTarget, "__%s__extracted");
+    super(buildTarget, projectFilesystem);
+    this.deps = deps;
     this.excludeDepsFromOmnibus = excludeDepsFromOmnibus;
     this.compile = compile;
+  }
+
+  private SourcePath getExtractedSources(ActionGraphBuilder graphBuilder) {
+    return graphBuilder
+        .requireRule(
+            getBuildTarget()
+                .withAppendedFlavors(
+                    PrebuiltPythonLibraryDescription.LibraryType.EXTRACT.getFlavor()))
+        .getSourcePathToOutput();
   }
 
   @Override
   public Iterable<BuildRule> getPythonPackageDeps(
       PythonPlatform pythonPlatform, CxxPlatform cxxPlatform, ActionGraphBuilder graphBuilder) {
-    return getBuildDeps();
+    return graphBuilder.getAllRules(deps);
   }
 
   @Override
@@ -76,7 +66,7 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
     // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
     // extension modules).
     return Optional.of(
-        PrebuiltPythonLibraryComponents.ofModules(Objects.requireNonNull(getSourcePathToOutput())));
+        PrebuiltPythonLibraryComponents.ofModules(getExtractedSources(graphBuilder)));
   }
 
   @Override
@@ -85,13 +75,12 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
     // TODO(mikekap): Allow varying sources by cxx platform (in cases of prebuilt
     // extension modules).
     return Optional.of(
-        PrebuiltPythonLibraryComponents.ofResources(
-            Objects.requireNonNull(getSourcePathToOutput())));
+        PrebuiltPythonLibraryComponents.ofResources(getExtractedSources(graphBuilder)));
   }
 
-  private Optional<PythonComponents> getPythonSources() {
+  private Optional<PythonComponents> getPythonSources(ActionGraphBuilder graphBuilder) {
     return Optional.of(
-        PrebuiltPythonLibraryComponents.ofSources(Objects.requireNonNull(getSourcePathToOutput())));
+        PrebuiltPythonLibraryComponents.ofSources(getExtractedSources(graphBuilder)));
   }
 
   @Override
@@ -100,7 +89,7 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
     if (!compile) {
       return Optional.empty();
     }
-    return getPythonSources()
+    return getPythonSources(graphBuilder)
         .map(
             sources -> {
               PythonCompileRule compileRule =
@@ -114,32 +103,6 @@ public class PrebuiltPythonLibrary extends AbstractBuildRuleWithDeclaredAndExtra
                                       .getFlavor()));
               return compileRule.getCompiledSources();
             });
-  }
-
-  @Override
-  public ImmutableList<? extends Step> getBuildSteps(
-      BuildContext context, BuildableContext buildableContext) {
-    Builder<Step> builder = ImmutableList.builder();
-    buildableContext.recordArtifact(extractedOutput.getPath());
-
-    builder.addAll(
-        MakeCleanDirectoryStep.of(
-            BuildCellRelativePath.fromCellRelativePath(
-                context.getBuildCellRootPath(), getProjectFilesystem(), extractedOutput)));
-    builder.add(
-        new UnzipStep(
-            getProjectFilesystem(),
-            context.getSourcePathResolver().getAbsolutePath(binarySrc),
-            extractedOutput.getPath(),
-            Optional.empty()));
-    builder.add(new MovePythonWhlDataStep(getProjectFilesystem(), extractedOutput.getPath()));
-    return builder.build();
-  }
-
-  @Nullable
-  @Override
-  public SourcePath getSourcePathToOutput() {
-    return ExplicitBuildTargetSourcePath.of(getBuildTarget(), extractedOutput);
   }
 
   @Override

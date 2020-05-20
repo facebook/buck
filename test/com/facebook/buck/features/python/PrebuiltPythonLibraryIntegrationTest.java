@@ -52,7 +52,7 @@ import org.junit.Test;
 
 public class PrebuiltPythonLibraryIntegrationTest {
 
-  @Rule public TemporaryPaths tmp = new TemporaryPaths();
+  @Rule public TemporaryPaths tmp = new TemporaryPaths(true);
   public ProjectWorkspace workspace;
 
   @Before
@@ -95,9 +95,11 @@ public class PrebuiltPythonLibraryIntegrationTest {
     whlResults.assertSuccess();
 
     Path extractedEgg =
-        workspace.getGenPath(BuildTargetFactory.newInstance("//:python_egg"), "__%s__extracted");
+        workspace.getGenPath(
+            BuildTargetFactory.newInstance("//:python_egg#extract"), "%s/extracted");
     Path extractedWhl =
-        workspace.getGenPath(BuildTargetFactory.newInstance("//:python_whl"), "__%s__extracted");
+        workspace.getGenPath(
+            BuildTargetFactory.newInstance("//:python_whl#extract"), "%s/extracted");
 
     Assert.assertTrue(Files.exists(extractedEgg.resolve(Paths.get("package", "__init__.py"))));
     Assert.assertTrue(Files.exists(extractedEgg.resolve(Paths.get("package", "file.py"))));

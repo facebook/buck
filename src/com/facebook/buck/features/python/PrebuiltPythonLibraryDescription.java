@@ -45,8 +45,8 @@ import org.immutables.value.Value;
 public class PrebuiltPythonLibraryDescription
     implements DescriptionWithTargetGraph<PrebuiltPythonLibraryDescriptionArg>, Flavored {
 
-  private static final FlavorDomain<PythonLibraryDescription.LibraryType> LIBRARY_TYPE =
-      FlavorDomain.from("Python Library Type", PythonLibraryDescription.LibraryType.class);
+  private static final FlavorDomain<LibraryType> LIBRARY_TYPE =
+      FlavorDomain.from("Python Library Type", LibraryType.class);
 
   private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
@@ -94,43 +94,60 @@ public class PrebuiltPythonLibraryDescription
       BuildRuleParams params,
       PrebuiltPythonLibraryDescriptionArg args) {
 
-    Optional<Map.Entry<Flavor, PythonLibraryDescription.LibraryType>> optionalType =
+    Optional<Map.Entry<Flavor, LibraryType>> optionalType =
         LIBRARY_TYPE.getFlavorAndValue(buildTarget);
     if (optionalType.isPresent()) {
-      Map.Entry<Flavor, PythonPlatform> pythonPlatform =
-          getPythonPlatforms(buildTarget.getTargetConfiguration())
-              .getFlavorAndValue(buildTarget)
-              .orElseThrow(IllegalArgumentException::new);
-      FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
-          toolchainProvider
-              .getByName(
-                  CxxPlatformsProvider.DEFAULT_NAME,
-                  buildTarget.getTargetConfiguration(),
-                  CxxPlatformsProvider.class)
-              .getUnresolvedCxxPlatforms();
-      Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
-          cxxPlatforms.getFlavorAndValue(buildTarget).orElseThrow(IllegalArgumentException::new);
-      BuildTarget baseTarget =
-          buildTarget.withoutFlavors(
-              optionalType.get().getKey(), pythonPlatform.getKey(), cxxPlatform.getKey());
-      PrebuiltPythonLibrary lib =
-          (PrebuiltPythonLibrary)
-              context.getActionGraphBuilder().requireRule(baseTarget.withAppendedFlavors());
-      return PythonCompileRule.from(
-          buildTarget,
-          context.getProjectFilesystem(),
-          context.getActionGraphBuilder(),
-          pythonPlatform.getValue().getEnvironment(),
-          PrebuiltPythonLibraryComponents.ofSources(lib.getSourcePathToOutput()),
-          args.isIgnoreCompileErrors(),
-          downwardApiConfig.isEnabledForPython());
+      switch (optionalType.get().getValue()) {
+        case COMPILE:
+          {
+            Map.Entry<Flavor, PythonPlatform> pythonPlatform =
+                getPythonPlatforms(buildTarget.getTargetConfiguration())
+                    .getFlavorAndValue(buildTarget)
+                    .orElseThrow(IllegalArgumentException::new);
+            FlavorDomain<UnresolvedCxxPlatform> cxxPlatforms =
+                toolchainProvider
+                    .getByName(
+                        CxxPlatformsProvider.DEFAULT_NAME,
+                        buildTarget.getTargetConfiguration(),
+                        CxxPlatformsProvider.class)
+                    .getUnresolvedCxxPlatforms();
+            Map.Entry<Flavor, UnresolvedCxxPlatform> cxxPlatform =
+                cxxPlatforms
+                    .getFlavorAndValue(buildTarget)
+                    .orElseThrow(IllegalArgumentException::new);
+            BuildTarget baseTarget =
+                buildTarget.withoutFlavors(
+                    optionalType.get().getKey(), pythonPlatform.getKey(), cxxPlatform.getKey());
+            ExtractPrebuiltPythonLibrary lib =
+                (ExtractPrebuiltPythonLibrary)
+                    context
+                        .getActionGraphBuilder()
+                        .requireRule(
+                            baseTarget.withAppendedFlavors(LibraryType.EXTRACT.getFlavor()));
+            return PythonCompileRule.from(
+                buildTarget,
+                context.getProjectFilesystem(),
+                context.getActionGraphBuilder(),
+                pythonPlatform.getValue().getEnvironment(),
+                PrebuiltPythonLibraryComponents.ofSources(lib.getSourcePathToOutput()),
+                args.isIgnoreCompileErrors(),
+                downwardApiConfig.isEnabledForPython());
+          }
+        case EXTRACT:
+          {
+            return new ExtractPrebuiltPythonLibrary(
+                buildTarget,
+                context.getProjectFilesystem(),
+                context.getActionGraphBuilder(),
+                args.getBinarySrc());
+          }
+      }
     }
 
     return new PrebuiltPythonLibrary(
         buildTarget,
         context.getProjectFilesystem(),
-        params,
-        args.getBinarySrc(),
+        args.getDeps(),
         args.isExcludeDepsFromMergedLinking(),
         args.isCompile());
   }
@@ -144,6 +161,7 @@ public class PrebuiltPythonLibraryDescription
   enum LibraryType implements FlavorConvertible {
     /** Compile the sources in this library into bytecode. */
     COMPILE(InternalFlavor.of("compile")),
+    EXTRACT(InternalFlavor.of("extract")),
     ;
 
     private final Flavor flavor;
