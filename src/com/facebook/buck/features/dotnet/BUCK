@@ -17,6 +17,7 @@ buck_module(
         "//src/com/facebook/buck/core/toolchain/toolprovider/impl:impl",
         "//src/com/facebook/buck/core/util/immutables:immutables",
         "//src/com/facebook/buck/core/util/log:log",
+        "//src/com/facebook/buck/downwardapi/config:config",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",
         "//src/com/facebook/buck/rules/tool/config:config",

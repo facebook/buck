@@ -35,6 +35,7 @@ import com.facebook.buck.core.rules.providers.lib.ImmutableDefaultInfo;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.types.Either;
 import com.google.common.collect.ImmutableList;
@@ -48,7 +49,11 @@ public class CsharpLibraryDescription
     implements DescriptionWithTargetGraph<CsharpLibraryDescriptionArg>,
         LegacyProviderCompatibleDescription<CsharpLibraryDescriptionArg> {
 
-  public CsharpLibraryDescription() {}
+  private final DownwardApiConfig downwardApiConfig;
+
+  public CsharpLibraryDescription(DownwardApiConfig downwardApiConfig) {
+    this.downwardApiConfig = downwardApiConfig;
+  }
 
   @Override
   public Class<CsharpLibraryDescriptionArg> getConstructorArgType() {
@@ -89,7 +94,8 @@ public class CsharpLibraryDescription
         args.getResources(),
         args.getFrameworkVer(),
         args.getCompilerFlags(),
-        getOutputPath(context.getProjectFilesystem(), buildTarget, args));
+        getOutputPath(context.getProjectFilesystem(), buildTarget, args),
+        downwardApiConfig.isEnabledForCSharp());
   }
 
   private Path getOutputPath(

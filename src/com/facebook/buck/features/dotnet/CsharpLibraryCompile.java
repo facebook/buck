@@ -47,8 +47,9 @@ public class CsharpLibraryCompile extends ShellStep {
       ImmutableList<Either<Path, String>> references,
       ImmutableListMultimap<Path, String> resources,
       FrameworkVersion version,
-      ImmutableList<String> compilerFlags) {
-    super(output.getParent());
+      ImmutableList<String> compilerFlags,
+      boolean withDownwardApi) {
+    super(output.getParent(), withDownwardApi);
     this.pathResolver = pathResolver;
     this.csharpCompiler = csharpCompiler;
     this.references = references;

@@ -16,6 +16,7 @@
 
 package com.facebook.buck.features.dotnet;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.BuiltInProviderProvider;
@@ -23,6 +24,7 @@ import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisComputationMode;
 import com.facebook.buck.core.rules.analysis.config.RuleAnalysisConfig;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -31,15 +33,19 @@ import org.pf4j.Extension;
 public class DotNetRuleProvider implements DescriptionProvider, BuiltInProviderProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
-    if (context
-        .getBuckConfig()
-        .getView(RuleAnalysisConfig.class)
+    BuckConfig buckConfig = context.getBuckConfig();
+    RuleAnalysisConfig ruleAnalysisConfig = buckConfig.getView(RuleAnalysisConfig.class);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+
+    if (ruleAnalysisConfig
         .getComputationMode()
         .equals(RuleAnalysisComputationMode.PROVIDER_COMPATIBLE)) {
       return Arrays.asList(
-          new CsharpLibraryDescription(), new PrebuiltDotnetLibraryRuleDescription());
+          new CsharpLibraryDescription(downwardApiConfig),
+          new PrebuiltDotnetLibraryRuleDescription());
     }
-    return Arrays.asList(new CsharpLibraryDescription(), new PrebuiltDotnetLibraryDescription());
+    return Arrays.asList(
+        new CsharpLibraryDescription(downwardApiConfig), new PrebuiltDotnetLibraryDescription());
   }
 
   @Override
