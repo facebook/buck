@@ -32,6 +32,7 @@ import com.facebook.buck.cxx.TransitiveCxxPreprocessorInputCache;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HeaderVisibility;
 import com.facebook.buck.cxx.toolchain.Preprocessor;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.swift.SwiftCompile;
@@ -58,6 +59,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
       CxxPlatform platform,
       AppleCxxPlatform applePlatform,
       SwiftBuckConfig swiftBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       ImmutableSet<CxxPreprocessorInput> inputs) {
 
     SwiftLibraryDescriptionArg.Builder delegateArgsBuilder = SwiftLibraryDescriptionArg.builder();
@@ -92,6 +94,7 @@ public class AppleLibraryDescriptionSwiftEnhancer {
         platform,
         swiftPlatform,
         swiftBuckConfig,
+        downwardApiConfig,
         target,
         graphBuilder,
         cellRoots,

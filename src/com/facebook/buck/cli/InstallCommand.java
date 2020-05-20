@@ -60,6 +60,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.core.util.Optionals;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.InstallEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -294,12 +295,20 @@ public class InstallCommand extends BuildCommand {
         AppleBundle appleBundle = (AppleBundle) buildRule;
         InstallEvent.Started started = InstallEvent.started(appleBundle.getBuildTarget());
         params.getBuckEventBus().post(started);
+        ExecutionContext context = build.getExecutionContext();
+        ProcessExecutor processExecutor = context.getProcessExecutor();
+        if (appleBundle.isWithDownwardApi()) {
+          processExecutor =
+              processExecutor.withDownwardAPI(
+                  DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+        }
+
         InstallResult installResult =
             installAppleBundle(
                 params,
                 appleBundle,
                 appleBundle.getProjectFilesystem(),
-                build.getExecutionContext().getProcessExecutor(),
+                processExecutor,
                 pathResolver);
         params
             .getBuckEventBus()

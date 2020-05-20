@@ -356,6 +356,7 @@ public class AppleLibraryDescription
                     cxxPlatform,
                     applePlatform,
                     swiftBuckConfig,
+                    downwardApiConfig,
                     preprocessorInputs));
           }
 

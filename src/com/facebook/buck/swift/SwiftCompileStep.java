@@ -19,10 +19,12 @@ package com.facebook.buck.swift;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.step.Step;
 import com.facebook.buck.step.StepExecutionResult;
 import com.facebook.buck.step.StepExecutionResults;
+import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutor.Result;
 import com.facebook.buck.util.ProcessExecutorParams;
 import com.google.common.base.Joiner;
@@ -45,6 +47,7 @@ class SwiftCompileStep implements Step {
   private final ImmutableList<String> compilerCommandArguments;
   private final ProjectFilesystem filesystem;
   private final Optional<AbsPath> argfilePath;
+  private final boolean withDownwardApi;
 
   SwiftCompileStep(
       AbsPath compilerCwd,
@@ -52,13 +55,15 @@ class SwiftCompileStep implements Step {
       ImmutableList<String> compilerCommandPrefix,
       ImmutableList<String> compilerCommandArguments,
       ProjectFilesystem filesystem,
-      Optional<AbsPath> argfilePath) {
+      Optional<AbsPath> argfilePath,
+      boolean withDownwardApi) {
     this.compilerCwd = compilerCwd;
     this.compilerEnvironment = ImmutableMap.copyOf(compilerEnvironment);
     this.compilerCommandPrefix = compilerCommandPrefix;
     this.compilerCommandArguments = compilerCommandArguments;
     this.filesystem = filesystem;
     this.argfilePath = argfilePath;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -118,7 +123,13 @@ class SwiftCompileStep implements Step {
     // TODO(markwang): parse the output, print build failure errors, etc.
     LOG.debug("%s", getRawCommand());
 
-    Result processResult = context.getProcessExecutor().launchAndExecute(params);
+    ProcessExecutor processExecutor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      processExecutor =
+          processExecutor.withDownwardAPI(
+              DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
+    Result processResult = processExecutor.launchAndExecute(params);
 
     int result = processResult.getExitCode();
     Optional<String> stderr = processResult.getStderr();

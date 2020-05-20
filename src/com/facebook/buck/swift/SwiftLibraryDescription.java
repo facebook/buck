@@ -316,7 +316,8 @@ public class SwiftLibraryDescription
           args.getBridgingHeader(),
           preprocessor,
           cxxDeps,
-          false);
+          false,
+          downwardApiConfig.isEnabledForApple());
     }
 
     // Otherwise, we return the generic placeholder of this library.
@@ -451,6 +452,7 @@ public class SwiftLibraryDescription
       CxxPlatform cxxPlatform,
       SwiftPlatform swiftPlatform,
       SwiftBuckConfig swiftBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       BuildTarget buildTarget,
       ActionGraphBuilder graphBuilder,
       CellPathResolver cellRoots,
@@ -487,7 +489,8 @@ public class SwiftLibraryDescription
         args.getBridgingHeader(),
         preprocessor,
         preprocessFlags,
-        importUnderlyingModule);
+        importUnderlyingModule,
+        downwardApiConfig.isEnabledForApple());
   }
 
   public static boolean isSwiftTarget(BuildTarget buildTarget) {
