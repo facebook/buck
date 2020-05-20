@@ -34,6 +34,7 @@ import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.macros.StringWithMacros;
@@ -62,10 +63,15 @@ public class RustBinaryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final RustBuckConfig rustBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
-  public RustBinaryDescription(ToolchainProvider toolchainProvider, RustBuckConfig rustBuckConfig) {
+  public RustBinaryDescription(
+      ToolchainProvider toolchainProvider,
+      RustBuckConfig rustBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.rustBuckConfig = rustBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -105,6 +111,7 @@ public class RustBinaryDescription
         params,
         context.getActionGraphBuilder(),
         rustBuckConfig,
+        downwardApiConfig,
         rustPlatform,
         args.getCrate(),
         args.getEdition(),

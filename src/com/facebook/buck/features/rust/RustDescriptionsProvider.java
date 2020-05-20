@@ -16,10 +16,12 @@
 
 package com.facebook.buck.features.rust;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -30,12 +32,14 @@ public class RustDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
-    RustBuckConfig rustBuckConfig = new RustBuckConfig(context.getBuckConfig());
+    BuckConfig buckConfig = context.getBuckConfig();
+    RustBuckConfig rustBuckConfig = new RustBuckConfig(buckConfig);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     return Arrays.asList(
-        new RustBinaryDescription(toolchainProvider, rustBuckConfig),
-        new RustLibraryDescription(toolchainProvider, rustBuckConfig),
-        new RustTestDescription(toolchainProvider, rustBuckConfig),
+        new RustBinaryDescription(toolchainProvider, rustBuckConfig, downwardApiConfig),
+        new RustLibraryDescription(toolchainProvider, rustBuckConfig, downwardApiConfig),
+        new RustTestDescription(toolchainProvider, rustBuckConfig, downwardApiConfig),
         new PrebuiltRustLibraryDescription());
   }
 }

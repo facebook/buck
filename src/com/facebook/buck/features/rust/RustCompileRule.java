@@ -24,6 +24,8 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.path.ForwardRelativePath;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
 import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rulekey.IgnoredFieldInputs;
@@ -89,7 +91,8 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       String rootModule,
       RemapSrcPaths remapSrcPaths,
-      Optional<String> xcrunSdkPath) {
+      Optional<String> xcrunSdkPath,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -106,7 +109,8 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
             filename,
             mappedSources,
             remapSrcPaths,
-            xcrunSdkPath));
+            xcrunSdkPath,
+            withDownwardApi));
   }
 
   public static RustCompileRule from(
@@ -123,7 +127,8 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
       String rootModule,
       RemapSrcPaths remapSrcPaths,
-      Optional<String> xcrunSdkPath) {
+      Optional<String> xcrunSdkPath,
+      boolean withDownwardApi) {
     return new RustCompileRule(
         buildTarget,
         projectFilesystem,
@@ -138,7 +143,8 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         mappedSources,
         rootModule,
         remapSrcPaths,
-        xcrunSdkPath);
+        xcrunSdkPath,
+        withDownwardApi);
   }
 
   protected static RelPath getOutputDir(BuildTarget target, ProjectFilesystem filesystem) {
@@ -179,6 +185,13 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         inputs = IgnoredFieldInputs.class)
     private final Optional<String> xcrunSdkpath;
 
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
     public Impl(
         Tool compiler,
         Linker linker,
@@ -191,7 +204,8 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
         String outputName,
         ImmutableSortedMap<SourcePath, Optional<String>> mappedSources,
         RemapSrcPaths remapSrcPaths,
-        Optional<String> xcrunpath) {
+        Optional<String> xcrunpath,
+        boolean withDownwardApi) {
       this.compiler = compiler;
       this.linker = linker;
       this.buildTarget = buildTarget;
@@ -204,6 +218,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
       this.mappedSources = mappedSources;
       this.remapSrcPaths = remapSrcPaths;
       this.xcrunSdkpath = xcrunpath;
+      this.withDownwardApi = withDownwardApi;
     }
 
     @Override
@@ -260,7 +275,7 @@ public class RustCompileRule extends ModernBuildRule<RustCompileRule.Impl> {
               resolver));
 
       steps.add(
-          new ShellStep(filesystem.getRootPath()) {
+          new ShellStep(filesystem.getRootPath(), withDownwardApi) {
 
             @Override
             protected ImmutableList<String> getShellCommandInternal(

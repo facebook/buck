@@ -36,6 +36,7 @@ import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.linker.Linker;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.rust.RustBinaryDescription.Type;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
@@ -64,10 +65,15 @@ public class RustTestDescription
 
   private final ToolchainProvider toolchainProvider;
   private final RustBuckConfig rustBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
-  public RustTestDescription(ToolchainProvider toolchainProvider, RustBuckConfig rustBuckConfig) {
+  public RustTestDescription(
+      ToolchainProvider toolchainProvider,
+      RustBuckConfig rustBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.rustBuckConfig = rustBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -118,6 +124,7 @@ public class RustTestDescription
                         params,
                         graphBuilder,
                         rustBuckConfig,
+                        downwardApiConfig,
                         rustPlatform,
                         args.getCrate(),
                         args.getEdition(),

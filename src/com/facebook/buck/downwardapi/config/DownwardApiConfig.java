@@ -113,4 +113,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForOCaml() {
     return getDelegate().getBooleanValue(SECTION, "ocaml_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForRust() {
+    return getDelegate().getBooleanValue(SECTION, "rust_enabled", false);
+  }
 }

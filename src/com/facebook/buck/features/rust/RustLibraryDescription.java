@@ -44,6 +44,7 @@ import com.facebook.buck.cxx.toolchain.nativelink.LegacyNativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
 import com.facebook.buck.cxx.toolchain.nativelink.PlatformLockedNativeLinkableGroup;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -73,11 +74,15 @@ public class RustLibraryDescription
 
   private final ToolchainProvider toolchainProvider;
   private final RustBuckConfig rustBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public RustLibraryDescription(
-      ToolchainProvider toolchainProvider, RustBuckConfig rustBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      RustBuckConfig rustBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.rustBuckConfig = rustBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -91,6 +96,7 @@ public class RustLibraryDescription
       ActionGraphBuilder graphBuilder,
       RustPlatform rustPlatform,
       RustBuckConfig rustBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       ImmutableSortedMap<String, Arg> environment,
       ImmutableList<Arg> extraFlags,
       ImmutableList<Arg> extraLinkerFlags,
@@ -119,6 +125,7 @@ public class RustLibraryDescription
         graphBuilder,
         rustPlatform,
         rustBuckConfig,
+        downwardApiConfig,
         environment,
         extraFlags,
         extraLinkerFlags,
@@ -216,6 +223,7 @@ public class RustLibraryDescription
           graphBuilder,
           platform,
           rustBuckConfig,
+          downwardApiConfig,
           argenv.getSecond(),
           argenv.getFirst(),
           /* linkerArgs */ ImmutableList.of(),
@@ -294,6 +302,7 @@ public class RustLibraryDescription
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
+                downwardApiConfig,
                 argenv.getSecond(),
                 argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
@@ -337,6 +346,7 @@ public class RustLibraryDescription
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
+                downwardApiConfig,
                 argenv.getSecond(),
                 argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
@@ -445,6 +455,7 @@ public class RustLibraryDescription
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
+                downwardApiConfig,
                 argenv.getSecond(),
                 argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),
@@ -490,6 +501,7 @@ public class RustLibraryDescription
                 graphBuilder,
                 rustPlatform,
                 rustBuckConfig,
+                downwardApiConfig,
                 argenv.getSecond(),
                 argenv.getFirst(),
                 /* linkerArgs */ ImmutableList.of(),

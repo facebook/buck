@@ -21,6 +21,7 @@ buck_module(
         "//src/com/facebook/buck/cxx/toolchain/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/linker/impl:impl",
         "//src/com/facebook/buck/cxx/toolchain/nativelink:nativelink",
+        "//src/com/facebook/buck/downwardapi/config:config",
         "//src/com/facebook/buck/event/external:external_lib",
         "//src/com/facebook/buck/io:executable-finder",
         "//src/com/facebook/buck/io:io",

@@ -250,7 +250,8 @@ public class RustCompileTest {
                       Comparator.naturalOrder(), src -> src, src -> Optional.empty())),
           rootModule,
           RustBuckConfig.RemapSrcPaths.NO,
-          Optional.empty());
+          Optional.empty(),
+          false);
     }
 
     static FakeRustCompileRule from(String target, ImmutableSortedSet<SourcePath> srcs) {

@@ -48,6 +48,7 @@ import com.facebook.buck.cxx.toolchain.linker.impl.Linkers;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroups;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkables;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -115,6 +116,7 @@ public class RustCompileUtils {
       ActionGraphBuilder graphBuilder,
       RustPlatform rustPlatform,
       RustBuckConfig rustConfig,
+      DownwardApiConfig downwardApiConfig,
       ImmutableSortedMap<String, Arg> environment,
       ImmutableList<Arg> extraFlags,
       ImmutableList<Arg> extraLinkerFlags,
@@ -317,7 +319,8 @@ public class RustCompileUtils {
         mappedSources,
         rootModule,
         rustConfig.getRemapSrcPaths(),
-        rustPlatform.getXcrunSdkPath().map(path -> path.toString()));
+        rustPlatform.getXcrunSdkPath().map(path -> path.toString()),
+        downwardApiConfig.isEnabledForRust());
   }
 
   private static void addDependencyArgs(
@@ -349,6 +352,7 @@ public class RustCompileUtils {
       ActionGraphBuilder graphBuilder,
       RustPlatform rustPlatform,
       RustBuckConfig rustConfig,
+      DownwardApiConfig downwardApiConfig,
       ImmutableSortedMap<String, Arg> environment,
       ImmutableList<Arg> extraFlags,
       ImmutableList<Arg> extraLinkerFlags,
@@ -376,6 +380,7 @@ public class RustCompileUtils {
                     graphBuilder,
                     rustPlatform,
                     rustConfig,
+                    downwardApiConfig,
                     environment,
                     extraFlags,
                     extraLinkerFlags,
@@ -446,6 +451,7 @@ public class RustCompileUtils {
       BuildRuleParams params,
       ActionGraphBuilder graphBuilder,
       RustBuckConfig rustBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       RustPlatform rustPlatform,
       Optional<String> crateName,
       Optional<String> edition,
@@ -567,6 +573,7 @@ public class RustCompileUtils {
                         graphBuilder,
                         rustPlatform,
                         rustBuckConfig,
+                        downwardApiConfig,
                         environment,
                         rustcArgs.build(),
                         linkerArgs.build(),
