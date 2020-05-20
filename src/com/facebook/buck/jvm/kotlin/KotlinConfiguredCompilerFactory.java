@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.core.HasJavaAbi;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
@@ -44,25 +45,31 @@ import javax.annotation.Nullable;
 public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
 
   private final KotlinBuckConfig kotlinBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
       extraClasspathProviderSupplier;
   private final JavacFactory javacFactory;
 
   public KotlinConfiguredCompilerFactory(
-      KotlinBuckConfig kotlinBuckConfig, JavacFactory javacFactory) {
+      KotlinBuckConfig kotlinBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      JavacFactory javacFactory) {
     this(
         kotlinBuckConfig,
+        downwardApiConfig,
         (toolchainProvider, toolchainTargetConfiguration) -> ExtraClasspathProvider.EMPTY,
         javacFactory);
   }
 
   public KotlinConfiguredCompilerFactory(
       KotlinBuckConfig kotlinBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
           extraClasspathProviderSupplier,
       JavacFactory javacFactory) {
     super();
     this.kotlinBuckConfig = kotlinBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.extraClasspathProviderSupplier = extraClasspathProviderSupplier;
     this.javacFactory = javacFactory;
   }
@@ -94,7 +101,8 @@ public class KotlinConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         kotlinBuckConfig.hasKaptUseAnnotationProcessorParams(),
         extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
         getJavac(buildRuleResolver, args, targetConfiguration),
-        javacOptions);
+        javacOptions,
+        downwardApiConfig.isEnabledForKotlin());
   }
 
   @Override

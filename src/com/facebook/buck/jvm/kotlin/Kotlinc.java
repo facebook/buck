@@ -46,7 +46,8 @@ public interface Kotlinc extends Tool {
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      ProjectFilesystem fileSystem)
+      ProjectFilesystem fileSystem,
+      boolean withDownwardApi)
       throws InterruptedException;
 
   String getDescription(

@@ -124,7 +124,8 @@ public class JarBackedReflectedKotlinc implements Kotlinc {
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      ProjectFilesystem projectFilesystem) {
+      ProjectFilesystem projectFilesystem,
+      boolean withDownwardApi) {
 
     ImmutableList<Path> expandedSources;
     try {

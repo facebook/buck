@@ -54,6 +54,7 @@ public class KotlincStep implements Step {
   private final Path pathToSrcsList;
   private final BuildTarget invokingRule;
   private final Optional<Path> workingDirectory;
+  private final boolean withDownwardApi;
 
   KotlincStep(
       BuildTarget invokingRule,
@@ -65,7 +66,8 @@ public class KotlincStep implements Step {
       ImmutableList<String> extraArguments,
       ImmutableList<String> verboseModeOnlyExtraArguments,
       ProjectFilesystem filesystem,
-      Optional<Path> workingDirectory) {
+      Optional<Path> workingDirectory,
+      boolean withDownwardApi) {
     this.invokingRule = invokingRule;
     this.outputDirectory = outputDirectory;
     this.sourceFilePaths = sourceFilePaths;
@@ -76,6 +78,7 @@ public class KotlincStep implements Step {
     this.verboseModeOnlyExtraArguments = verboseModeOnlyExtraArguments;
     this.filesystem = filesystem;
     this.workingDirectory = workingDirectory;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -102,7 +105,8 @@ public class KotlincStep implements Step {
               sourceFilePaths,
               pathToSrcsList,
               workingDirectory,
-              filesystem);
+              filesystem,
+              withDownwardApi);
 
       String firstOrderStderr = stderr.getContentsAsString(StandardCharsets.UTF_8);
       Optional<String> returnedStderr;

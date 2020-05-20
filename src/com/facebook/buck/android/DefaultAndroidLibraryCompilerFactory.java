@@ -59,7 +59,7 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
             scalaConfig, AndroidClasspathProvider::new, javacFactory);
       case KOTLIN:
         return new KotlinConfiguredCompilerFactory(
-            kotlinBuckConfig, AndroidClasspathProvider::new, javacFactory);
+            kotlinBuckConfig, downwardApiConfig, AndroidClasspathProvider::new, javacFactory);
     }
     throw new HumanReadableException("Unsupported `language` parameter value: %s", language);
   }

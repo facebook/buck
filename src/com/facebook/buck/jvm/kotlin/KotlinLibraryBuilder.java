@@ -46,7 +46,7 @@ final class KotlinLibraryBuilder {
         toolchainProvider,
         params,
         graphBuilder,
-        new KotlinConfiguredCompilerFactory(kotlinBuckConfig, javacFactory),
+        new KotlinConfiguredCompilerFactory(kotlinBuckConfig, downwardApiConfig, javacFactory),
         javaBuckConfig,
         downwardApiConfig,
         args);

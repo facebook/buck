@@ -24,6 +24,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.Console;
 import com.facebook.buck.util.DefaultProcessExecutor;
@@ -107,7 +108,8 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
       ImmutableSortedSet<Path> kotlinSourceFilePaths,
       Path pathToSrcsList,
       Optional<Path> workingDirectory,
-      ProjectFilesystem projectFilesystem)
+      ProjectFilesystem projectFilesystem,
+      boolean withDownwardApi)
       throws InterruptedException {
 
     ImmutableList<Path> expandedSources;
@@ -143,7 +145,14 @@ public class ExternalKotlinc implements Kotlinc, AddsToRuleKey {
               .setEnvironment(context.getEnvironment())
               .setDirectory(projectFilesystem.getRootPath().getPath())
               .build();
-      ProcessExecutor.Result result = context.getProcessExecutor().launchAndExecute(params);
+      ProcessExecutor processExecutor = context.getProcessExecutor();
+      if (withDownwardApi) {
+        processExecutor =
+            processExecutor.withDownwardAPI(
+                DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+      }
+
+      ProcessExecutor.Result result = processExecutor.launchAndExecute(params);
       exitCode = result.getExitCode();
     } catch (IOException e) {
       e.printStackTrace(context.getStdErr());
