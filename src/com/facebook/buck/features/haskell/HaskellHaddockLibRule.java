@@ -24,6 +24,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -83,6 +87,13 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
   @AddToRuleKey HaskellPackageInfo packageInfo;
   private HaskellPlatform platform;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   private HaskellHaddockLibRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -94,7 +105,8 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       ImmutableList<String> linkerFlags,
       HaskellPackageInfo packageInfo,
       HaskellPlatform platform,
-      Preprocessor preprocessor) {
+      Preprocessor preprocessor,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.srcs = srcs;
     this.haddockTool = haddockTool;
@@ -104,6 +116,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
     this.packageInfo = packageInfo;
     this.platform = platform;
     this.preprocessor = preprocessor;
+    this.withDownwardApi = withDownwardApi;
   }
 
   public static HaskellHaddockLibRule from(
@@ -118,7 +131,8 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
       ImmutableList<String> linkerFlags,
       HaskellPackageInfo packageInfo,
       HaskellPlatform platform,
-      Preprocessor preprocessor) {
+      Preprocessor preprocessor,
+      boolean withDownwardApi) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         MoreSuppliers.memoize(
             () ->
@@ -139,7 +153,8 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
         linkerFlags,
         packageInfo,
         platform,
-        preprocessor);
+        preprocessor,
+        withDownwardApi);
   }
 
   private Path getObjectDir() {
@@ -207,7 +222,7 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), dir)));
     steps.add(new WriteArgsfileStep(context));
-    steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context));
+    steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), withDownwardApi, context));
 
     buildableContext.recordArtifact(dir);
     return steps.build();
@@ -270,8 +285,8 @@ public class HaskellHaddockLibRule extends AbstractBuildRuleWithDeclaredAndExtra
 
     private BuildContext buildContext;
 
-    public HaddockStep(AbsPath rootPath, BuildContext buildContext) {
-      super(rootPath);
+    public HaddockStep(AbsPath rootPath, boolean withDownwardApi, BuildContext buildContext) {
+      super(rootPath, withDownwardApi);
       this.buildContext = buildContext;
     }
 

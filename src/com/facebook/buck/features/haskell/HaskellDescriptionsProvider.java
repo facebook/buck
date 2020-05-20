@@ -38,7 +38,7 @@ public class HaskellDescriptionsProvider implements DescriptionProvider {
     DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     return Arrays.asList(
-        new HaskellHaddockDescription(toolchainProvider),
+        new HaskellHaddockDescription(toolchainProvider, downwardApiConfig),
         new HaskellLibraryDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),
         new HaskellBinaryDescription(toolchainProvider, cxxBuckConfig, downwardApiConfig),
         new HaskellPrebuiltLibraryDescription(),

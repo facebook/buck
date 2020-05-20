@@ -24,6 +24,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -64,6 +68,13 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   private final boolean useArgsfile;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public HaskellLinkRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -73,7 +84,8 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableList<Arg> args,
       ImmutableList<Arg> linkerArgs,
       boolean cacheable,
-      boolean useArgsfile) {
+      boolean useArgsfile,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.linker = linker;
     this.outputPath = outputPath;
@@ -81,6 +93,7 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.linkerArgs = linkerArgs;
     this.cacheable = cacheable;
     this.useArgsfile = useArgsfile;
+    this.withDownwardApi = withDownwardApi;
   }
 
   private Path getOutputDir() {
@@ -143,7 +156,7 @@ public class HaskellLinkRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               }
             })
         .add(
-            new ShellStep(getProjectFilesystem().getRootPath()) {
+            new ShellStep(getProjectFilesystem().getRootPath(), withDownwardApi) {
 
               @Override
               public ImmutableMap<String, String> getEnvironmentVariables(Platform platform) {

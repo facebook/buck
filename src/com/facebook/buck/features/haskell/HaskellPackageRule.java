@@ -23,6 +23,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -61,22 +65,22 @@ import java.util.stream.Collectors;
 public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final Tool ghcPkg;
+  @AddToRuleKey private Linker.LinkableDepType depType;
+  @AddToRuleKey private final HaskellPackageInfo packageInfo;
+  @AddToRuleKey private final ImmutableSortedMap<String, HaskellPackage> depPackages;
+  @AddToRuleKey private final ImmutableSortedSet<String> modules;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraries;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> interfaces;
+  @AddToRuleKey private final ImmutableSortedSet<SourcePath> objects;
 
   private final HaskellVersion haskellVersion;
 
-  @AddToRuleKey Linker.LinkableDepType depType;
-
-  @AddToRuleKey private final HaskellPackageInfo packageInfo;
-
-  @AddToRuleKey private final ImmutableSortedMap<String, HaskellPackage> depPackages;
-
-  @AddToRuleKey private final ImmutableSortedSet<String> modules;
-
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> libraries;
-
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> interfaces;
-
-  @AddToRuleKey private final ImmutableSortedSet<SourcePath> objects;
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
 
   public HaskellPackageRule(
       BuildTarget buildTarget,
@@ -90,7 +94,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableSortedSet<String> modules,
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSortedSet<SourcePath> interfaces,
-      ImmutableSortedSet<SourcePath> objects) {
+      ImmutableSortedSet<SourcePath> objects,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.ghcPkg = ghcPkg;
     this.haskellVersion = haskellVersion;
@@ -101,6 +106,7 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.libraries = libraries;
     this.interfaces = interfaces;
     this.objects = objects;
+    this.withDownwardApi = withDownwardApi;
   }
 
   public static HaskellPackageRule from(
@@ -116,7 +122,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       ImmutableSortedSet<String> modules,
       ImmutableSortedSet<SourcePath> libraries,
       ImmutableSortedSet<SourcePath> interfaces,
-      ImmutableSortedSet<SourcePath> objects) {
+      ImmutableSortedSet<SourcePath> objects,
+      boolean withDownwardApi) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         MoreSuppliers.memoize(
             () ->
@@ -141,7 +148,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         modules,
         libraries,
         interfaces,
-        objects);
+        objects,
+        withDownwardApi);
   }
 
   private RelPath getPackageDb() {
@@ -244,7 +252,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         new GhcPkgStep(
             context.getSourcePathResolver(),
             ImmutableList.of("init", packageDb.toString()),
-            ImmutableMap.of()));
+            ImmutableMap.of(),
+            withDownwardApi));
 
     // Build the the package DB.
     ImmutableList.Builder<String> ghcPkgCmdBuilder = ImmutableList.builder();
@@ -274,7 +283,8 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
                     // processing which can make `ghc-pkg` really slow.  So, dedup the package DBs
                     // before passing them into `ghc-pkg`.
                     .distinct()
-                    .collect(Collectors.joining(":")))));
+                    .collect(Collectors.joining(":"))),
+            withDownwardApi));
 
     return steps.build();
   }
@@ -303,8 +313,9 @@ public class HaskellPackageRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     public GhcPkgStep(
         SourcePathResolverAdapter resolver,
         ImmutableList<String> args,
-        ImmutableMap<String, String> env) {
-      super(getProjectFilesystem().getRootPath());
+        ImmutableMap<String, String> env,
+        boolean withDownwardApi) {
+      super(getProjectFilesystem().getRootPath(), withDownwardApi);
       this.resolver = resolver;
       this.args = args;
       this.env = env;

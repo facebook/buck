@@ -24,6 +24,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -62,6 +66,13 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
   @AddToRuleKey private final ImmutableSet<SourcePath> interfaces;
   @AddToRuleKey private final ImmutableSet<SourcePath> outputDirs;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   private HaskellHaddockRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -69,12 +80,14 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       Tool haddockTool,
       ImmutableList<String> flags,
       ImmutableSet<SourcePath> interfaces,
-      ImmutableSet<SourcePath> outputDirs) {
+      ImmutableSet<SourcePath> outputDirs,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.haddockTool = haddockTool;
     this.flags = flags;
     this.interfaces = interfaces;
     this.outputDirs = outputDirs;
+    this.withDownwardApi = withDownwardApi;
   }
 
   public static HaskellHaddockRule from(
@@ -84,7 +97,8 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       SourcePathRuleFinder ruleFinder,
       Tool haddockTool,
       ImmutableList<String> flags,
-      ImmutableSet<HaskellHaddockInput> inputs) {
+      ImmutableSet<HaskellHaddockInput> inputs,
+      boolean withDownwardApi) {
     ImmutableSet.Builder<SourcePath> ifacesBuilder = ImmutableSet.builder();
     ImmutableSet.Builder<SourcePath> outDirsBuilder = ImmutableSet.builder();
     for (HaskellHaddockInput i : inputs) {
@@ -109,7 +123,8 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         haddockTool,
         flags,
         ifaces,
-        outDirs);
+        outDirs,
+        withDownwardApi);
   }
 
   private RelPath getOutputDir() {
@@ -140,7 +155,7 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         MakeCleanDirectoryStep.of(
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), getOutputDir())));
-    steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context));
+    steps.add(new HaddockStep(getProjectFilesystem().getRootPath(), context, withDownwardApi));
 
     // Copy the generated data from dependencies into our output directory
     Path haddockOutputDir = getHaddockOuptutDir();
@@ -161,8 +176,8 @@ public class HaskellHaddockRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     private BuildContext buildContext;
 
-    public HaddockStep(AbsPath rootPath, BuildContext buildContext) {
-      super(rootPath);
+    public HaddockStep(AbsPath rootPath, BuildContext buildContext, boolean withDownwardApi) {
+      super(rootPath, withDownwardApi);
       this.buildContext = buildContext;
     }
 

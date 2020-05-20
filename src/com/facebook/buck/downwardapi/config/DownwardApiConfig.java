@@ -98,4 +98,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForHalide() {
     return getDelegate().getBooleanValue(SECTION, "halide_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForHaskell() {
+    return getDelegate().getBooleanValue(SECTION, "haskell_enabled", false);
+  }
 }

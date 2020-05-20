@@ -24,6 +24,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -90,6 +94,13 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
   @AddToRuleKey private final Preprocessor preprocessor;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   private HaskellCompileRule(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -102,7 +113,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       HaskellSources sources,
-      Preprocessor preprocessor) {
+      Preprocessor preprocessor,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.compiler = compiler;
     this.flags = flags;
@@ -113,6 +125,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
     this.packageInfo = packageInfo;
     this.sources = sources;
     this.preprocessor = preprocessor;
+    this.withDownwardApi = withDownwardApi;
   }
 
   public static HaskellCompileRule from(
@@ -128,7 +141,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       HaskellSources sources,
-      Preprocessor preprocessor) {
+      Preprocessor preprocessor,
+      boolean withDownwardApi) {
     Supplier<ImmutableSortedSet<BuildRule>> declaredDeps =
         MoreSuppliers.memoize(
             () ->
@@ -149,7 +163,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         main,
         packageInfo,
         sources,
-        preprocessor);
+        preprocessor,
+        withDownwardApi);
   }
 
   private Path getObjectDir() {
@@ -293,8 +308,8 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
 
     private BuildContext buildContext;
 
-    public GhcStep(AbsPath rootPath, BuildContext buildContext) {
-      super(rootPath);
+    public GhcStep(AbsPath rootPath, boolean withDownwardApi, BuildContext buildContext) {
+      super(rootPath, withDownwardApi);
       this.buildContext = buildContext;
     }
 
@@ -339,7 +354,7 @@ public class HaskellCompileRule extends AbstractBuildRuleWithDeclaredAndExtraDep
         .add(prepareOutputDir("interface", getInterfaceDir(), getInterfaceSuffix()))
         .add(prepareOutputDir("stub", getStubDir(), "h"))
         .add(new WriteArgsfileStep(buildContext))
-        .add(new GhcStep(getProjectFilesystem().getRootPath(), buildContext));
+        .add(new GhcStep(getProjectFilesystem().getRootPath(), withDownwardApi, buildContext));
 
     return steps.build();
   }

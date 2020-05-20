@@ -32,6 +32,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.query.Query;
 import com.facebook.buck.rules.query.QueryUtils;
 import com.facebook.buck.versions.VersionPropagator;
@@ -50,9 +51,12 @@ public class HaskellHaddockDescription
   private static final Logger LOG = Logger.get(HaskellHaddockDescription.class);
 
   private final ToolchainProvider toolchainProvider;
+  private final DownwardApiConfig downwardApiConfig;
 
-  public HaskellHaddockDescription(ToolchainProvider toolchainProvider) {
+  public HaskellHaddockDescription(
+      ToolchainProvider toolchainProvider, DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -103,7 +107,8 @@ public class HaskellHaddockDescription
             graphBuilder,
             platform.getHaddock().resolve(graphBuilder, baseTarget.getTargetConfiguration()),
             args.getHaddockFlags(),
-            haddockInputs.build()));
+            haddockInputs.build(),
+            downwardApiConfig.isEnabledForHaskell()));
   }
 
   // Return the C/C++ platform to build against.

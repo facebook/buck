@@ -152,7 +152,8 @@ public class HaskellLibraryDescription
         Optional.empty(),
         Optional.of(getPackageInfo(platform, buildTarget)),
         args.getCompilerFlags(),
-        HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", args.getSrcs()));
+        HaskellSources.from(buildTarget, graphBuilder, platform, "srcs", args.getSrcs()),
+        downwardApiConfig.isEnabledForHaskell());
   }
 
   private Archive createStaticLibrary(
@@ -200,7 +201,8 @@ public class HaskellLibraryDescription
         // mismatch with what is embedded in thin archives, just disable caching when using thin
         // archives.
         platform.getArchiveContents(),
-        /* cacheable */ platform.getArchiveContents() != ArchiveContents.THIN);
+        /* cacheable */ platform.getArchiveContents() != ArchiveContents.THIN,
+        downwardApiConfig.isEnabledForHaskell());
   }
 
   private Archive requireStaticLibrary(
@@ -381,7 +383,8 @@ public class HaskellLibraryDescription
         compileRule.getModules(),
         libraries,
         interfaces,
-        objects);
+        objects,
+        downwardApiConfig.isEnabledForHaskell());
   }
 
   private HaskellPackageRule requirePackage(
@@ -472,7 +475,8 @@ public class HaskellLibraryDescription
             getPackageInfo(platform, baseTarget),
             platform,
             CxxSourceTypes.getPreprocessor(platform.getCxxPlatform(), CxxSource.Type.C)
-                .resolve(graphBuilder, baseTarget.getTargetConfiguration())));
+                .resolve(graphBuilder, baseTarget.getTargetConfiguration()),
+            downwardApiConfig.isEnabledForHaskell()));
   }
 
   private HaskellLinkRule createSharedLibrary(
@@ -515,7 +519,8 @@ public class HaskellLibraryDescription
         Linker.LinkableDepType.SHARED,
         outputPath,
         Optional.of(name),
-        hsProfile);
+        hsProfile,
+        downwardApiConfig.isEnabledForHaskell());
   }
 
   private HaskellLinkRule requireSharedLibrary(

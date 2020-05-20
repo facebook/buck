@@ -161,7 +161,8 @@ public class HaskellDescriptionUtils {
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
-      HaskellSources sources) {
+      HaskellSources sources,
+      boolean withDownwardApi) {
 
     CxxPlatform cxxPlatform = platform.getCxxPlatform();
     ImmutableList<String> additionalFlags =
@@ -183,7 +184,8 @@ public class HaskellDescriptionUtils {
         packageInfo,
         sources,
         CxxSourceTypes.getPreprocessor(cxxPlatform, CxxSource.Type.C)
-            .resolve(graphBuilder, target.getTargetConfiguration()));
+            .resolve(graphBuilder, target.getTargetConfiguration()),
+        withDownwardApi);
   }
 
   protected static BuildTarget getCompileBuildTarget(
@@ -216,7 +218,8 @@ public class HaskellDescriptionUtils {
       Optional<String> main,
       Optional<HaskellPackageInfo> packageInfo,
       ImmutableList<String> flags,
-      HaskellSources srcs) {
+      HaskellSources srcs,
+      boolean withDownwardApi) {
 
     return (HaskellCompileRule)
         graphBuilder.computeIfAbsent(
@@ -234,7 +237,8 @@ public class HaskellDescriptionUtils {
                     main,
                     packageInfo,
                     flags,
-                    srcs));
+                    srcs,
+                    withDownwardApi));
   }
 
   /**
@@ -255,7 +259,8 @@ public class HaskellDescriptionUtils {
       Linker.LinkableDepType depType,
       Path outputPath,
       Optional<String> soname,
-      boolean hsProfile) {
+      boolean hsProfile,
+      boolean withDownwardApi) {
 
     Tool linker = platform.getLinker().resolve(graphBuilder, target.getTargetConfiguration());
 
@@ -336,7 +341,8 @@ public class HaskellDescriptionUtils {
                 ImmutableList.of(),
                 ImmutableHaskellSources.ofImpl(
                     ImmutableMap.of(
-                        HaskellSourceModule.UNUSED, emptyModule.getSourcePathToOutput()))));
+                        HaskellSourceModule.UNUSED, emptyModule.getSourcePathToOutput())),
+                withDownwardApi));
     BuildTarget emptyArchiveTarget = target.withAppendedFlavors(InternalFlavor.of("empty-archive"));
     Archive emptyArchive =
         graphBuilder.addToIndex(
@@ -346,7 +352,8 @@ public class HaskellDescriptionUtils {
                 graphBuilder,
                 platform.getCxxPlatform(),
                 "libempty.a",
-                emptyCompiledModule.getObjects()));
+                emptyCompiledModule.getObjects(),
+                withDownwardApi));
     argsBuilder.add(SourcePathArg.of(emptyArchive.getSourcePathToOutput()));
 
     ImmutableList<Arg> args = argsBuilder.build();
@@ -372,7 +379,8 @@ public class HaskellDescriptionUtils {
             args,
             linkerArgs,
             platform.shouldCacheLinks(),
-            platform.shouldUseArgsfile()));
+            platform.shouldUseArgsfile(),
+            withDownwardApi));
   }
 
   /** Accumulate parse-time deps needed by Haskell descriptions in depsBuilder. */
