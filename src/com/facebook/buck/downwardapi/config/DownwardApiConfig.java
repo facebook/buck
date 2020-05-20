@@ -68,4 +68,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForKotlin() {
     return getDelegate().getBooleanValue(SECTION, "kotlin_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForScala() {
+    return getDelegate().getBooleanValue(SECTION, "scala_enabled", false);
+  }
 }

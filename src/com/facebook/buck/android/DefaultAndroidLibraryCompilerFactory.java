@@ -56,7 +56,7 @@ public class DefaultAndroidLibraryCompilerFactory implements AndroidLibraryCompi
             javaConfig, downwardApiConfig, AndroidClasspathProvider::new, javacFactory);
       case SCALA:
         return new ScalaConfiguredCompilerFactory(
-            scalaConfig, AndroidClasspathProvider::new, javacFactory);
+            scalaConfig, downwardApiConfig, AndroidClasspathProvider::new, javacFactory);
       case KOTLIN:
         return new KotlinConfiguredCompilerFactory(
             kotlinBuckConfig, downwardApiConfig, AndroidClasspathProvider::new, javacFactory);

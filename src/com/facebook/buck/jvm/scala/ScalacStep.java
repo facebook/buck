@@ -46,8 +46,9 @@ public class ScalacStep extends ShellStep {
       Path outputDirectory,
       ImmutableSortedSet<Path> sourceFilePaths,
       ImmutableSortedSet<Path> classpathEntries,
-      ProjectFilesystem filesystem) {
-    super(filesystem.getRootPath());
+      ProjectFilesystem filesystem,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
 
     this.scalac = scalac;
     this.extraArguments = extraArguments;

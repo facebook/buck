@@ -46,7 +46,7 @@ final class ScalaLibraryBuilder {
         toolchainProvider,
         params,
         graphBuilder,
-        new ScalaConfiguredCompilerFactory(scalaBuckConfig, javacFactory),
+        new ScalaConfiguredCompilerFactory(scalaBuckConfig, downwardApiConfig, javacFactory),
         javaBuckConfig,
         downwardApiConfig,
         args);

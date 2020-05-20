@@ -22,6 +22,7 @@ import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.util.Optionals;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.jvm.java.CompileToJarStepFactory;
 import com.facebook.buck.jvm.java.ConfiguredCompilerFactory;
 import com.facebook.buck.jvm.java.ExtraClasspathProvider;
@@ -38,24 +39,31 @@ import javax.annotation.Nullable;
 
 public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
   private final ScalaBuckConfig scalaBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
   private final BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
       extraClasspathProviderSupplier;
   private @Nullable Tool scalac;
   private final JavacFactory javacFactory;
 
-  public ScalaConfiguredCompilerFactory(ScalaBuckConfig config, JavacFactory javacFactory) {
+  public ScalaConfiguredCompilerFactory(
+      ScalaBuckConfig scalaBuckConfig,
+      DownwardApiConfig downwardApiConfig,
+      JavacFactory javacFactory) {
     this(
-        config,
+        scalaBuckConfig,
+        downwardApiConfig,
         (toolchainProvider, toolchainTargetConfiguration) -> ExtraClasspathProvider.EMPTY,
         javacFactory);
   }
 
   public ScalaConfiguredCompilerFactory(
-      ScalaBuckConfig config,
+      ScalaBuckConfig scalaBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       BiFunction<ToolchainProvider, TargetConfiguration, ExtraClasspathProvider>
           extraClasspathProviderSupplier,
       JavacFactory javacFactory) {
-    this.scalaBuckConfig = config;
+    this.scalaBuckConfig = scalaBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
     this.extraClasspathProviderSupplier = extraClasspathProviderSupplier;
     this.javacFactory = javacFactory;
   }
@@ -81,7 +89,8 @@ public class ScalaConfiguredCompilerFactory extends ConfiguredCompilerFactory {
         buildRuleResolver.getAllRules(scalaBuckConfig.getCompilerPlugins(targetConfiguration)),
         getJavac(buildRuleResolver, arg, targetConfiguration),
         javacOptions,
-        extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration));
+        extraClasspathProviderSupplier.apply(toolchainProvider, targetConfiguration),
+        downwardApiConfig.isEnabledForScala());
   }
 
   @Override
