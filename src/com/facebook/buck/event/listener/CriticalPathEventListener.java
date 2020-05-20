@@ -135,6 +135,7 @@ public class CriticalPathEventListener implements BuckEventListener {
               CriticalPathNode criticalPathNode = pair.getSecond();
               return ImmutableCriticalPathReportableNode.ofImpl(
                   pair.getFirst(),
+                  criticalPathNode.getSiblingDeltaMs(),
                   criticalPathNode.getExecutionTimeInfo().getExecutionDurationMs(),
                   criticalPathNode.getExecutionTimeInfo().getEventNanoTime(),
                   criticalPathNode.getType());
@@ -160,6 +161,7 @@ public class CriticalPathEventListener implements BuckEventListener {
                     node.getTarget(),
                     ImmutableCriticalPathNode.ofImpl(
                         node.getPathCostMilliseconds(),
+                        node.getClosestSiblingExecutionTimeDelta().orElse(0L),
                         node.getType(),
                         ImmutableExecutionTimeInfo.ofImpl(
                             node.getExecutionTimeMilliseconds(), node.getEventNanoTime()))))
@@ -196,6 +198,8 @@ public class CriticalPathEventListener implements BuckEventListener {
   @BuckStyleValue
   interface CriticalPathNode {
     long getTotalElapsedTimeMs();
+
+    long getSiblingDeltaMs();
 
     @Nullable
     String getType();

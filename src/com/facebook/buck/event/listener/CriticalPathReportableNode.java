@@ -26,6 +26,8 @@ public interface CriticalPathReportableNode {
 
   BuildTarget getBuildTarget();
 
+  long getSiblingDeltaMs();
+
   long getElapsedTimeMs();
 
   long getEventNanoTime();
