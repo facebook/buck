@@ -16,9 +16,11 @@
 
 package com.facebook.buck.features.gwt;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import java.util.Collection;
 import java.util.Collections;
 import org.pf4j.Extension;
@@ -28,6 +30,10 @@ public class GwtDescriptionsProvider implements DescriptionProvider {
 
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
-    return Collections.singletonList(new GwtBinaryDescription(context.getToolchainProvider()));
+    BuckConfig buckConfig = context.getBuckConfig();
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+
+    return Collections.singletonList(
+        new GwtBinaryDescription(downwardApiConfig, context.getToolchainProvider()));
   }
 }

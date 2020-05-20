@@ -31,6 +31,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.graph.AbstractBreadthFirstTraversal;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.features.gwt.GwtBinary.Style;
 import com.facebook.buck.jvm.core.JavaLibrary;
 import com.facebook.buck.jvm.java.JavaOptions;
@@ -64,9 +65,12 @@ public class GwtBinaryDescription
   /** This value is taken from GWT's source code: http://bit.ly/1nZtmMv */
   private static final Integer DEFAULT_OPTIMIZE = Integer.valueOf(9);
 
+  private final DownwardApiConfig downwardApiConfig;
   private final Function<TargetConfiguration, JavaOptions> javaOptions;
 
-  public GwtBinaryDescription(ToolchainProvider toolchainProvider) {
+  public GwtBinaryDescription(
+      DownwardApiConfig downwardApiConfig, ToolchainProvider toolchainProvider) {
+    this.downwardApiConfig = downwardApiConfig;
     this.javaOptions = JavaOptionsProvider.getDefaultJavaOptions(toolchainProvider);
   }
 
@@ -159,7 +163,8 @@ public class GwtBinaryDescription
         args.getLocalWorkers().orElse(DEFAULT_NUM_LOCAL_WORKERS),
         args.getStrict().orElse(DEFAULT_STRICT),
         args.getExperimentalArgs(),
-        gwtModuleJarsBuilder.build());
+        gwtModuleJarsBuilder.build(),
+        downwardApiConfig.isEnabledForJava());
   }
 
   @Override
