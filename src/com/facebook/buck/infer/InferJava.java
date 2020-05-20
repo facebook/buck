@@ -23,11 +23,16 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.FlavorSet;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.jvm.core.CalculateAbi;
 import com.facebook.buck.jvm.core.HasJavaAbi;
@@ -133,7 +138,8 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
       JavacOptions javacOptions,
       Optional<ExtraClasspathProvider> extraClasspathProvider,
       UnresolvedInferPlatform unresolvedInferPlatform,
-      InferConfig config) {
+      InferConfig inferConfig,
+      DownwardApiConfig downwardApiConfig) {
     BuildTarget unflavored = buildTarget.withoutFlavors();
     JavaLibrary baseLibrary = (JavaLibrary) graphBuilder.requireRule(unflavored);
 
@@ -151,7 +157,7 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
     if (flavor.equals(INFER_NULLSAFE)) {
       command = Command.RUN;
 
-      ImmutableList<String> nullsafeArgs = config.getNullsafeArgs();
+      ImmutableList<String> nullsafeArgs = inferConfig.getNullsafeArgs();
       // Ensure sensible default behavior
       if (nullsafeArgs.isEmpty()) {
         args = NULLSAFE_DEFAULT_ARGS;
@@ -183,7 +189,8 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
             extraClasspathProvider,
             generatedClassesJar,
             limitToOutputFile,
-            config.getPrettyPrint()));
+            inferConfig.getPrettyPrint(),
+            downwardApiConfig.isEnabledForInfer()));
   }
 
   /**
@@ -258,6 +265,13 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
     // ~10% overhead, so we don't want to do it, unless explicitly asked.
     @AddToRuleKey private final Boolean prettyPrint;
 
+    @ExcludeFromRuleKey(
+        reason = "downward API doesn't affect the result of rule's execution",
+        serialization = DefaultFieldSerialization.class,
+        inputs = DefaultFieldInputs.class,
+        deps = DefaultFieldDeps.class)
+    private final boolean withDownwardApi;
+
     Impl(
         InferPlatform inferPlatform,
         Command command,
@@ -268,7 +282,8 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
         Optional<ExtraClasspathProvider> extraClasspathProvider,
         @Nullable SourcePath generatedClasses,
         Optional<String> limitToOutputFile,
-        Boolean prettyPrint) {
+        Boolean prettyPrint,
+        boolean withDownwardApi) {
       this.inferPlatform = inferPlatform;
       this.command = command;
       this.args = args;
@@ -280,6 +295,7 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
       this.limitToOutputFile = limitToOutputFile;
       this.output = limitToOutputFile.map(OutputPath::new).orElseGet(() -> new OutputPath("."));
       this.prettyPrint = prettyPrint;
+      this.withDownwardApi = withDownwardApi;
     }
 
     private static void addNotEmpty(
@@ -321,7 +337,7 @@ public final class InferJava extends ModernBuildRule<InferJava.Impl> {
       ImmutableList<String> cmd = buildCommand(argFilePath, sourcePathResolverAdapter);
       ImmutableMap<String, String> cmdEnv = buildEnv(sourcePathResolverAdapter);
       steps.add(
-          new DefaultShellStep(filesystem.getRootPath(), cmd, cmdEnv) {
+          new DefaultShellStep(filesystem.getRootPath(), withDownwardApi, cmd, cmdEnv) {
             @Override
             protected boolean shouldPrintStdout(Verbosity verbosity) {
               return verbosity.shouldPrintBinaryRunInformation();

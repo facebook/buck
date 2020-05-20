@@ -155,7 +155,8 @@ public class JavaLibraryDescription
                   () ->
                       new HumanReadableException(
                           "Cannot use #nullsafe flavor: infer platform not configured")),
-          InferConfig.of(javaBuckConfig.getDelegate()));
+          InferConfig.of(javaBuckConfig.getDelegate()),
+          downwardApiConfig);
     }
 
     if (flavors.contains(Javadoc.DOC_JAR)) {

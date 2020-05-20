@@ -73,4 +73,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForScala() {
     return getDelegate().getBooleanValue(SECTION, "scala_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForInfer() {
+    return getDelegate().getBooleanValue(SECTION, "infer_enabled", false);
+  }
 }

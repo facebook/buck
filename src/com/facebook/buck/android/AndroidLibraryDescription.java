@@ -161,7 +161,8 @@ public class AndroidLibraryDescription
                   () ->
                       new HumanReadableException(
                           "Cannot use #nullsafe flavor: infer platform not configured")),
-          InferConfig.of(javaBuckConfig.getDelegate()));
+          InferConfig.of(javaBuckConfig.getDelegate()),
+          downwardApiConfig);
     }
 
     AndroidLibrary.Builder androidLibraryBuilder =
