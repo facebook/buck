@@ -24,7 +24,6 @@ import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.log.LogFormatter;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -63,27 +62,25 @@ public class IncrementalActionGraphIntegrationTest {
     // When --target-platforms is used, config nodes appear in the target graph
     // The incremental action graph must be able to be built, taking into account the fact
     // those node don't appear in previous action graphs (only in target graphs).
-    try (TestContext context = new TestContext()) {
 
-      // First populate the cache
-      workspace
-          .runBuckCommand(context, "build", "--target-platforms=//:platform", "//:thing1")
-          .assertSuccess();
+    // First populate the cache
+    workspace
+        .runBuckCommand("build", "--target-platforms=//:platform", "//:thing1")
+        .assertSuccess();
 
-      // The new action graph must be built with no problems
-      workspace
-          .runBuckCommand(context, "build", "--target-platforms=//:platform", "//:thing2")
-          .assertSuccess();
+    // The new action graph must be built with no problems
+    workspace
+        .runBuckCommand("build", "--target-platforms=//:platform", "//:thing2")
+        .assertSuccess();
 
-      // make sure we attempted to incrementally create the action graph
-      String logs = workspace.getFileContents(getLogFilePath());
-      String expectedMsg =
-          "[com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphGenerator] reused 1 of 3 build rules";
+    // make sure we attempted to incrementally create the action graph
+    String logs = workspace.getFileContents(getLogFilePath());
+    String expectedMsg =
+        "[com.facebook.buck.core.model.actiongraph.computation.IncrementalActionGraphGenerator] reused 1 of 3 build rules";
 
-      assertTrue(
-          "Incremental action graph generator should have reused the shared dep",
-          logs.contains(expectedMsg));
-    }
+    assertTrue(
+        "Incremental action graph generator should have reused the shared dep",
+        logs.contains(expectedMsg));
   }
 
   private AbsPath getLogFilePath() {

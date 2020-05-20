@@ -27,7 +27,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.testutil.ProcessResult;
 import com.facebook.buck.testutil.TemporaryPaths;
 import com.facebook.buck.testutil.integration.ProjectWorkspace;
-import com.facebook.buck.testutil.integration.TestContext;
 import com.facebook.buck.testutil.integration.TestDataHelper;
 import com.facebook.buck.util.MoreStringsForTests;
 import com.facebook.buck.util.environment.Platform;
@@ -40,7 +39,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.hamcrest.junit.MatcherAssert;
 import org.junit.Assume;
@@ -175,23 +173,15 @@ public class ConfigurationsIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
     workspace.setUp();
 
-    try (TestContext context = new TestContext()) {
-      workspace.runBuckBuild(
-          Optional.of(context),
-          "--target-platforms",
-          "//config:osx_x86-64",
-          "//:platform_dependent_genrule");
+    workspace.runBuckBuild(
+        "--target-platforms", "//config:osx_x86-64", "//:platform_dependent_genrule");
 
-      workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
+    workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
 
-      workspace.runBuckBuild(
-          Optional.of(context),
-          "--target-platforms",
-          "//config:linux_x86-64",
-          "//:platform_dependent_genrule");
+    workspace.runBuckBuild(
+        "--target-platforms", "//config:linux_x86-64", "//:platform_dependent_genrule");
 
-      workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
-    }
+    workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
   }
 
   @Test
@@ -322,40 +312,31 @@ public class ConfigurationsIntegrationTest {
         TestDataHelper.createProjectWorkspaceForScenario(this, "builds_with_constraints", tmp);
     workspace.setUp();
 
-    try (TestContext context = new TestContext()) {
+    Path output =
+        workspace.buildAndReturnOutput(
+            "//:platform_dependent_genrule", "--target-platforms", "//config-change:linux_x86-64");
+    String linuxOutput = String.join(" ", Files.readAllLines(output)).trim();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
 
-      Path output =
-          workspace.buildAndReturnOutput(
-              Optional.of(context),
-              "//:platform_dependent_genrule",
-              "--target-platforms",
-              "//config-change:linux_x86-64");
-      String linuxOutput = String.join(" ", Files.readAllLines(output)).trim();
-      workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
+    assertEquals("linux", linuxOutput);
 
-      assertEquals("linux", linuxOutput);
+    workspace.writeContentsToPath(
+        "platform(\n"
+            + "    name = \"linux\",\n"
+            + "    constraint_values = [\n"
+            + "        \"buck//config/constraints:osx\",\n"
+            + "    ],\n"
+            + "    visibility = [\"PUBLIC\"],\n"
+            + ")\n",
+        "config-change/platform-dep/BUCK");
 
-      workspace.writeContentsToPath(
-          "platform(\n"
-              + "    name = \"linux\",\n"
-              + "    constraint_values = [\n"
-              + "        \"buck//config/constraints:osx\",\n"
-              + "    ],\n"
-              + "    visibility = [\"PUBLIC\"],\n"
-              + ")\n",
-          "config-change/platform-dep/BUCK");
+    output =
+        workspace.buildAndReturnOutput(
+            "//:platform_dependent_genrule", "--target-platforms", "//config-change:linux_x86-64");
+    String osxOutput = String.join(" ", Files.readAllLines(output)).trim();
+    workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
 
-      output =
-          workspace.buildAndReturnOutput(
-              Optional.of(context),
-              "//:platform_dependent_genrule",
-              "--target-platforms",
-              "//config-change:linux_x86-64");
-      String osxOutput = String.join(" ", Files.readAllLines(output)).trim();
-      workspace.getBuildLog().assertTargetBuiltLocally("//:platform_dependent_genrule");
-
-      assertEquals("osx", osxOutput);
-    }
+    assertEquals("osx", osxOutput);
   }
 
   @Test
