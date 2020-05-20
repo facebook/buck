@@ -40,7 +40,7 @@ public class DDescriptionsProvider implements DescriptionProvider {
 
     return Arrays.asList(
         new DBinaryDescription(toolchainProvider, dBuckConfig, cxxBuckConfig, downwardApiConfig),
-        new DLibraryDescription(toolchainProvider, dBuckConfig, cxxBuckConfig),
+        new DLibraryDescription(toolchainProvider, dBuckConfig, cxxBuckConfig, downwardApiConfig),
         new DTestDescription(toolchainProvider, dBuckConfig, cxxBuckConfig, downwardApiConfig));
   }
 }

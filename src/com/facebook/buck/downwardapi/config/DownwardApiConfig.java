@@ -78,4 +78,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForInfer() {
     return getDelegate().getBooleanValue(SECTION, "infer_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForD() {
+    return getDelegate().getBooleanValue(SECTION, "d_enabled", false);
+  }
 }

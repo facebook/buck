@@ -21,6 +21,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -39,14 +43,17 @@ import java.util.Objects;
 public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final Tool compiler;
-
   @AddToRuleKey private final ImmutableList<String> compilerFlags;
-
   @AddToRuleKey private final String name;
-
   @AddToRuleKey private final ImmutableSortedSet<SourcePath> sources;
-
   @AddToRuleKey private final ImmutableList<DIncludes> includes;
+
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
 
   public DCompileBuildRule(
       BuildTarget buildTarget,
@@ -56,13 +63,15 @@ public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableList<String> compilerFlags,
       String name,
       ImmutableSortedSet<SourcePath> sources,
-      ImmutableList<DIncludes> includes) {
+      ImmutableList<DIncludes> includes,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.compiler = compiler;
     this.compilerFlags = compilerFlags;
     this.name = name;
     this.sources = sources;
     this.includes = includes;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -95,7 +104,8 @@ public class DCompileBuildRule extends AbstractBuildRuleWithDeclaredAndExtraDeps
             compiler.getCommandPrefix(context.getSourcePathResolver()),
             flags,
             context.getSourcePathResolver().getRelativePath(getSourcePathToOutput()),
-            context.getSourcePathResolver().getAllAbsolutePaths(sources)));
+            context.getSourcePathResolver().getAllAbsolutePaths(sources),
+            withDownwardApi));
     return steps.build();
   }
 

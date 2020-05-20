@@ -35,6 +35,7 @@ import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.PicType;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
 import com.facebook.buck.versions.VersionPropagator;
@@ -50,12 +51,17 @@ public class DLibraryDescription
   private final ToolchainProvider toolchainProvider;
   private final DBuckConfig dBuckConfig;
   private final CxxBuckConfig cxxBuckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public DLibraryDescription(
-      ToolchainProvider toolchainProvider, DBuckConfig dBuckConfig, CxxBuckConfig cxxBuckConfig) {
+      ToolchainProvider toolchainProvider,
+      DBuckConfig dBuckConfig,
+      CxxBuckConfig cxxBuckConfig,
+      DownwardApiConfig downwardApiConfig) {
     this.toolchainProvider = toolchainProvider;
     this.dBuckConfig = dBuckConfig;
     this.cxxBuckConfig = cxxBuckConfig;
+    this.downwardApiConfig = downwardApiConfig;
   }
 
   @Override
@@ -122,6 +128,7 @@ public class DLibraryDescription
             graphBuilder,
             cxxPlatform,
             dBuckConfig,
+            downwardApiConfig,
             compilerFlags,
             sources,
             dIncludes);
@@ -144,7 +151,8 @@ public class DLibraryDescription
         graphBuilder,
         cxxPlatform,
         staticLibraryName,
-        compiledSources);
+        compiledSources,
+        downwardApiConfig.isEnabledForD());
   }
 
   @Override

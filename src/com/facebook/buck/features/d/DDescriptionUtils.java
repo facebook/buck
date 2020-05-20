@@ -131,6 +131,7 @@ abstract class DDescriptionUtils {
             graphBuilder,
             cxxPlatform,
             dBuckConfig,
+            downwardApiConfig,
             compilerFlags,
             sources,
             includes);
@@ -249,6 +250,7 @@ abstract class DDescriptionUtils {
       BuildRuleParams baseParams,
       ActionGraphBuilder graphBuilder,
       DBuckConfig dBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       ImmutableList<String> compilerFlags,
       String name,
       SourcePath src,
@@ -285,7 +287,8 @@ abstract class DDescriptionUtils {
                       .build(),
                   name,
                   ImmutableSortedSet.of(src),
-                  ImmutableList.copyOf(transitiveIncludes.values()));
+                  ImmutableList.copyOf(transitiveIncludes.values()),
+                  downwardApiConfig.isEnabledForD());
             });
   }
 
@@ -308,6 +311,7 @@ abstract class DDescriptionUtils {
       ActionGraphBuilder graphBuilder,
       CxxPlatform cxxPlatform,
       DBuckConfig dBuckConfig,
+      DownwardApiConfig downwardApiConfig,
       ImmutableList<String> compilerFlags,
       SourceSortedSet sources,
       DIncludes includes) {
@@ -326,6 +330,7 @@ abstract class DDescriptionUtils {
               baseParams,
               graphBuilder,
               dBuckConfig,
+              downwardApiConfig,
               compilerFlags,
               source.getKey(),
               source.getValue(),

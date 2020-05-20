@@ -39,8 +39,9 @@ public class DCompileStep extends ShellStep {
       ImmutableList<String> compiler,
       ImmutableList<String> flags,
       Path output,
-      ImmutableCollection<Path> inputs) {
-    super(workingDirectory);
+      ImmutableCollection<Path> inputs,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.compiler = compiler;
     this.flags = flags;
