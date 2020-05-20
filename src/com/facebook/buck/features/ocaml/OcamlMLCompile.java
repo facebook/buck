@@ -20,6 +20,10 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -34,13 +38,22 @@ import java.nio.file.Path;
 public class OcamlMLCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final OcamlMLCompileStep.Args args;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public OcamlMLCompile(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
       BuildRuleParams params,
-      OcamlMLCompileStep.Args args) {
+      OcamlMLCompileStep.Args args,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.args = args;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -54,7 +67,10 @@ public class OcamlMLCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             BuildCellRelativePath.fromCellRelativePath(
                 context.getBuildCellRootPath(), getProjectFilesystem(), args.output.getParent())),
         new OcamlMLCompileStep(
-            getProjectFilesystem().getRootPath(), context.getSourcePathResolver(), args));
+            getProjectFilesystem().getRootPath(),
+            withDownwardApi,
+            context.getSourcePathResolver(),
+            args));
   }
 
   @Override

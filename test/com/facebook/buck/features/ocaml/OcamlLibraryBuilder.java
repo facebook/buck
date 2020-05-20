@@ -16,10 +16,12 @@
 
 package com.facebook.buck.features.ocaml;
 
+import com.facebook.buck.core.config.FakeBuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.FlavorDomain;
 import com.facebook.buck.core.model.targetgraph.AbstractNodeBuilder;
 import com.facebook.buck.core.toolchain.impl.ToolchainProviderBuilder;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.google.common.collect.ImmutableSortedSet;
 
@@ -34,6 +36,7 @@ public class OcamlLibraryBuilder
       BuildTarget target, OcamlPlatform defaultPlatform, FlavorDomain<OcamlPlatform> platforms) {
     super(
         new OcamlLibraryDescription(
+            DownwardApiConfig.of(FakeBuckConfig.empty()),
             new ToolchainProviderBuilder()
                 .withToolchain(
                     OcamlToolchain.DEFAULT_NAME, OcamlToolchain.of(defaultPlatform, platforms))

@@ -42,8 +42,12 @@ public class OcamlLexStep extends ShellStep {
   private final SourcePathResolverAdapter resolver;
   private final Args args;
 
-  public OcamlLexStep(AbsPath workingDirectory, SourcePathResolverAdapter resolver, Args args) {
-    super(workingDirectory);
+  public OcamlLexStep(
+      AbsPath workingDirectory,
+      SourcePathResolverAdapter resolver,
+      Args args,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.resolver = resolver;
     this.args = args;
   }

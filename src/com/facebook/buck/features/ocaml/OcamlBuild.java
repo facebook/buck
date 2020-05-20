@@ -21,6 +21,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -42,6 +46,13 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final Linker cxxLinker;
   @AddToRuleKey private final boolean bytecodeOnly;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public OcamlBuild(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -49,12 +60,14 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       OcamlBuildContext ocamlContext,
       Compiler cCompiler,
       Linker cxxLinker,
-      boolean bytecodeOnly) {
+      boolean bytecodeOnly,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.ocamlContext = ocamlContext;
     this.cCompiler = cCompiler;
     this.cxxLinker = cxxLinker;
     this.bytecodeOnly = bytecodeOnly;
+    this.withDownwardApi = withDownwardApi;
 
     Objects.requireNonNull(ocamlContext.getInput());
   }
@@ -87,7 +100,8 @@ public class OcamlBuild extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                 cCompiler.getCommandPrefix(context.getSourcePathResolver()),
                 cxxLinker.getEnvironment(context.getSourcePathResolver()),
                 cxxLinker.getCommandPrefix(context.getSourcePathResolver()),
-                bytecodeOnly))
+                bytecodeOnly,
+                withDownwardApi))
         .build();
   }
 

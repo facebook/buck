@@ -20,6 +20,10 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -57,6 +61,13 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
   @AddToRuleKey private final boolean isBytecode;
   @AddToRuleKey private final boolean buildNativePlugin;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public OcamlLink(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -73,7 +84,8 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       ImmutableList<Arg> cDepInput,
       boolean isLibrary,
       boolean isBytecode,
-      boolean buildNativePlugin) {
+      boolean buildNativePlugin,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
 
     this.inputs = inputs;
@@ -89,6 +101,7 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
     this.isLibrary = isLibrary;
     this.isBytecode = isBytecode;
     this.buildNativePlugin = buildNativePlugin;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -124,7 +137,8 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
                         .collect(ImmutableList.toImmutableList()),
                     isLibrary,
                     isBytecode,
-                    context.getSourcePathResolver()));
+                    context.getSourcePathResolver(),
+                    withDownwardApi));
     if (isLibrary && buildNativePlugin) {
       ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
@@ -150,7 +164,8 @@ public class OcamlLink extends AbstractBuildRuleWithDeclaredAndExtraDeps {
               inputs.stream()
                   .map(context.getSourcePathResolver()::getAbsolutePath)
                   .collect(ImmutableList.toImmutableList()),
-              ocamlInput));
+              ocamlInput,
+              withDownwardApi));
     }
     return steps.build();
   }

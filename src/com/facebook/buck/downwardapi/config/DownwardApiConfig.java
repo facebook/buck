@@ -108,4 +108,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForLua() {
     return getDelegate().getBooleanValue(SECTION, "lua_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForOCaml() {
+    return getDelegate().getBooleanValue(SECTION, "ocaml_enabled", false);
+  }
 }

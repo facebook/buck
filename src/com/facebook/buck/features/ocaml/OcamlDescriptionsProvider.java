@@ -16,10 +16,12 @@
 
 package com.facebook.buck.features.ocaml;
 
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.description.Description;
 import com.facebook.buck.core.description.DescriptionCreationContext;
 import com.facebook.buck.core.model.targetgraph.DescriptionProvider;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import java.util.Arrays;
 import java.util.Collection;
 import org.pf4j.Extension;
@@ -30,9 +32,12 @@ public class OcamlDescriptionsProvider implements DescriptionProvider {
   @Override
   public Collection<Description<?>> getDescriptions(DescriptionCreationContext context) {
     ToolchainProvider toolchainProvider = context.getToolchainProvider();
+    BuckConfig buckConfig = context.getBuckConfig();
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+
     return Arrays.asList(
-        new OcamlBinaryDescription(toolchainProvider),
-        new OcamlLibraryDescription(toolchainProvider),
+        new OcamlBinaryDescription(downwardApiConfig, toolchainProvider),
+        new OcamlLibraryDescription(downwardApiConfig, toolchainProvider),
         new PrebuiltOcamlLibraryDescription());
   }
 }

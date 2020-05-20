@@ -36,6 +36,7 @@ import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableInput;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSet;
@@ -57,9 +58,12 @@ public class OcamlLibraryDescription
         VersionPropagator<OcamlLibraryDescriptionArg>,
         Flavored {
 
+  private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
 
-  public OcamlLibraryDescription(ToolchainProvider toolchainProvider) {
+  public OcamlLibraryDescription(
+      DownwardApiConfig downwardApiConfig, ToolchainProvider toolchainProvider) {
+    this.downwardApiConfig = downwardApiConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
@@ -120,7 +124,8 @@ public class OcamlLibraryDescription
                 args.getBytecodeOnly(),
                 flags,
                 args.getOcamldepFlags(),
-                !args.getBytecodeOnly() && args.getNativePlugin());
+                !args.getBytecodeOnly() && args.getNativePlugin(),
+                downwardApiConfig.isEnabledForOCaml());
         return new OcamlStaticLibrary(
             buildTarget,
             context.getProjectFilesystem(),
@@ -158,7 +163,8 @@ public class OcamlLibraryDescription
                 /* isLibrary */ true,
                 args.getBytecodeOnly(),
                 flags,
-                args.getOcamldepFlags());
+                args.getOcamldepFlags(),
+                downwardApiConfig.isEnabledForOCaml());
         return new OcamlStaticLibrary(
             buildTarget,
             context.getProjectFilesystem(),

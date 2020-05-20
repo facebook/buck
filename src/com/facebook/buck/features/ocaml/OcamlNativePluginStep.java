@@ -58,8 +58,9 @@ public class OcamlNativePluginStep extends ShellStep {
       Path output,
       ImmutableList<Arg> cDepInput,
       ImmutableList<Path> input,
-      ImmutableList<String> ocamlInput) {
-    super(workingDirectory);
+      ImmutableList<String> ocamlInput,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.ocamlCompilerCommandPrefix = ocamlCompilerCommandPrefix;
     this.cxxCompiler = cxxCompiler;

@@ -32,6 +32,7 @@ import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.toolchain.ToolchainProvider;
 import com.facebook.buck.core.util.immutables.RuleArg;
 import com.facebook.buck.cxx.CxxDeps;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.coercer.PatternMatchedCollection;
 import com.facebook.buck.rules.coercer.SourceSet;
@@ -49,9 +50,12 @@ public class OcamlBinaryDescription
         ImplicitDepsInferringDescription<OcamlBinaryDescription.AbstractOcamlBinaryDescriptionArg>,
         VersionRoot<OcamlBinaryDescriptionArg> {
 
+  private final DownwardApiConfig downwardApiConfig;
   private final ToolchainProvider toolchainProvider;
 
-  public OcamlBinaryDescription(ToolchainProvider toolchainProvider) {
+  public OcamlBinaryDescription(
+      DownwardApiConfig downwardApiConfig, ToolchainProvider toolchainProvider) {
+    this.downwardApiConfig = downwardApiConfig;
     this.toolchainProvider = toolchainProvider;
   }
 
@@ -99,6 +103,7 @@ public class OcamlBinaryDescription
     BuildTarget compileBuildTarget = OcamlRuleBuilder.createOcamlLinkTarget(buildTarget);
 
     ImmutableList<BuildRule> rules;
+    boolean withDownwardApi = downwardApiConfig.isEnabledForOCaml();
     if (OcamlRuleBuilder.shouldUseFineGrainedRules(context.getActionGraphBuilder(), srcs)) {
       OcamlGeneratedBuildRules result =
           OcamlRuleBuilder.createFineGrainedBuildRules(
@@ -114,7 +119,8 @@ public class OcamlBinaryDescription
               args.getBytecodeOnly().orElse(false),
               flags,
               args.getOcamldepFlags(),
-              /* buildNativePlugin */ false);
+              /* buildNativePlugin */ false,
+              withDownwardApi);
       rules = result.getRules();
     } else {
 
@@ -131,7 +137,8 @@ public class OcamlBinaryDescription
               /* isLibrary */ false,
               args.getBytecodeOnly().orElse(false),
               flags,
-              args.getOcamldepFlags());
+              args.getOcamldepFlags(),
+              withDownwardApi);
       rules = ImmutableList.of(ocamlLibraryBuild);
     }
 

@@ -62,7 +62,8 @@ public class OcamlLinkStep extends ShellStep {
       ImmutableList<Path> input,
       boolean isLibrary,
       boolean isBytecode,
-      SourcePathResolverAdapter pathResolver) {
+      SourcePathResolverAdapter pathResolver,
+      boolean withDownwardApi) {
     ImmutableList.Builder<String> ocamlInputBuilder = ImmutableList.builder();
 
     String linkExt = isBytecode ? OcamlCompilables.OCAML_CMA : OcamlCompilables.OCAML_CMXA;
@@ -91,7 +92,8 @@ public class OcamlLinkStep extends ShellStep {
             .toList(),
         input,
         isLibrary,
-        isBytecode);
+        isBytecode,
+        withDownwardApi);
   }
 
   private OcamlLinkStep(
@@ -107,8 +109,9 @@ public class OcamlLinkStep extends ShellStep {
       ImmutableList<String> cDepInput,
       ImmutableList<Path> input,
       boolean isLibrary,
-      boolean isBytecode) {
-    super(filesystem.getRootPath());
+      boolean isBytecode,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
     this.filesystem = filesystem;
     this.environment = environment;
     this.ocamlCompilerCommandPrefix = ocamlCompilerCommandPrefix;

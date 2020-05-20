@@ -42,8 +42,9 @@ public class OcamlDepToolStep extends ShellStep {
       SourcePathResolverAdapter resolver,
       Tool ocamlDepTool,
       List<SourcePath> input,
-      List<String> flags) {
-    super(workingDirectory);
+      List<String> flags,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.resolver = resolver;
     this.ocamlDepTool = ocamlDepTool;
     this.flags = ImmutableList.copyOf(flags);

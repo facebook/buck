@@ -53,6 +53,7 @@ public class OcamlBuildStep implements Step {
   private final boolean bytecodeOnly;
 
   private final boolean hasGeneratedSources;
+  private final boolean withDownwardApi;
   private final OcamlDepToolStep depToolStep;
 
   public OcamlBuildStep(
@@ -64,7 +65,8 @@ public class OcamlBuildStep implements Step {
       ImmutableList<String> cCompiler,
       ImmutableMap<String, String> cxxLinkerEnvironment,
       ImmutableList<String> cxxLinker,
-      boolean bytecodeOnly) {
+      boolean bytecodeOnly,
+      boolean withDownwardApi) {
     this.buildContext = buildContext;
     this.filesystem = filesystem;
     this.ocamlContext = ocamlContext;
@@ -77,6 +79,7 @@ public class OcamlBuildStep implements Step {
 
     hasGeneratedSources =
         ocamlContext.getLexInput().size() > 0 || ocamlContext.getYaccInput().size() > 0;
+    this.withDownwardApi = withDownwardApi;
 
     ImmutableList<String> ocamlDepFlags =
         ImmutableList.<String>builder()
@@ -91,7 +94,8 @@ public class OcamlBuildStep implements Step {
             this.ocamlContext.getSourcePathResolver(),
             this.ocamlContext.getOcamlDepTool().get(),
             ocamlContext.getMLInput(),
-            ocamlDepFlags);
+            ocamlDepFlags,
+            withDownwardApi);
   }
 
   @Override
@@ -136,7 +140,7 @@ public class OcamlBuildStep implements Step {
     if (!bytecodeOnly) {
       StepExecutionResult mlCompileNativeExecutionResult =
           executeMLNativeCompilation(
-              context, filesystem.getRootPath(), sortedInput, nativeLinkerInputs);
+              context, filesystem.getRootPath(), sortedInput, nativeLinkerInputs, withDownwardApi);
       if (!mlCompileNativeExecutionResult.isSuccess()) {
         return mlCompileNativeExecutionResult;
       }
@@ -216,7 +220,8 @@ public class OcamlBuildStep implements Step {
                   outputPath,
                   cSrc,
                   cCompileFlags.build(),
-                  cxxPreprocessorInput.getIncludes()));
+                  cxxPreprocessorInput.getIncludes()),
+              withDownwardApi);
       StepExecutionResult compileExecutionResult = compileStep.execute(context);
       if (!compileExecutionResult.isSuccess()) {
         return compileExecutionResult;
@@ -248,7 +253,8 @@ public class OcamlBuildStep implements Step {
             linkerInputs,
             ocamlContext.isLibrary(),
             /* isBytecode */ false,
-            getResolver());
+            getResolver(),
+            withDownwardApi);
     return linkStep.execute(context);
   }
 
@@ -275,7 +281,8 @@ public class OcamlBuildStep implements Step {
             linkerInputs,
             ocamlContext.isLibrary(),
             /* isBytecode */ true,
-            getResolver());
+            getResolver(),
+            withDownwardApi);
     return linkStep.execute(context);
   }
 
@@ -296,7 +303,8 @@ public class OcamlBuildStep implements Step {
       ExecutionContext context,
       AbsPath workingDirectory,
       ImmutableList<Path> sortedInput,
-      ImmutableList.Builder<Path> linkerInputs)
+      ImmutableList.Builder<Path> linkerInputs,
+      boolean withDownwardApi)
       throws IOException, InterruptedException {
     for (Step step :
         MakeCleanDirectoryStep.of(
@@ -326,6 +334,7 @@ public class OcamlBuildStep implements Step {
       Step compileStep =
           new OcamlMLCompileStep(
               workingDirectory,
+              withDownwardApi,
               getResolver(),
               new OcamlMLCompileStep.Args(
                   cCompilerEnvironment,
@@ -377,6 +386,7 @@ public class OcamlBuildStep implements Step {
       Step compileBytecodeStep =
           new OcamlMLCompileStep(
               workingDirectory,
+              withDownwardApi,
               getResolver(),
               new OcamlMLCompileStep.Args(
                   cCompilerEnvironment,
@@ -412,6 +422,7 @@ public class OcamlBuildStep implements Step {
       OcamlYaccStep yaccStep =
           new OcamlYaccStep(
               workingDirectory,
+              withDownwardApi,
               getResolver(),
               new OcamlYaccStep.Args(
                   ocamlContext.getYaccCompiler().get(),
@@ -431,7 +442,8 @@ public class OcamlBuildStep implements Step {
               new OcamlLexStep.Args(
                   ocamlContext.getLexCompiler().get(),
                   getResolver().getAbsolutePath(output),
-                  getResolver().getAbsolutePath(lexSource)));
+                  getResolver().getAbsolutePath(lexSource)),
+              withDownwardApi);
       StepExecutionResult lexExecutionResult = lexStep.execute(context);
       if (!lexExecutionResult.isSuccess()) {
         return lexExecutionResult;

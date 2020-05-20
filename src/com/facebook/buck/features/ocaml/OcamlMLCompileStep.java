@@ -98,8 +98,11 @@ public class OcamlMLCompileStep extends ShellStep {
   private final SourcePathResolverAdapter resolver;
 
   public OcamlMLCompileStep(
-      AbsPath workingDirectory, SourcePathResolverAdapter resolver, Args args) {
-    super(workingDirectory);
+      AbsPath workingDirectory,
+      boolean withDownwardApi,
+      SourcePathResolverAdapter resolver,
+      Args args) {
+    super(workingDirectory, withDownwardApi);
     this.resolver = resolver;
     this.args = args;
   }

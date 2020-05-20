@@ -43,8 +43,12 @@ public class OcamlYaccStep extends ShellStep {
 
   private final Args args;
 
-  public OcamlYaccStep(AbsPath workingDirectory, SourcePathResolverAdapter resolver, Args args) {
-    super(workingDirectory);
+  public OcamlYaccStep(
+      AbsPath workingDirectory,
+      boolean withDownwardApi,
+      SourcePathResolverAdapter resolver,
+      Args args) {
+    super(workingDirectory, withDownwardApi);
     this.resolver = resolver;
     this.args = args;
   }

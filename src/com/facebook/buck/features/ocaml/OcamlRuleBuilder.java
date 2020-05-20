@@ -206,7 +206,8 @@ public class OcamlRuleBuilder {
       boolean isLibrary,
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
-      ImmutableList<String> ocamlDepFlags) {
+      ImmutableList<String> ocamlDepFlags,
+      boolean withDownwardApi) {
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessorInput.concat(
             CxxPreprocessables.getTransitiveCxxPreprocessorInput(
@@ -322,7 +323,8 @@ public class OcamlRuleBuilder {
                 .getCxxPlatform()
                 .getLd()
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
-            bytecodeOnly));
+            bytecodeOnly,
+            withDownwardApi));
   }
 
   static OcamlGeneratedBuildRules createFineGrainedBuildRules(
@@ -338,7 +340,8 @@ public class OcamlRuleBuilder {
       boolean bytecodeOnly,
       ImmutableList<Arg> argFlags,
       ImmutableList<String> ocamlDepFlags,
-      boolean buildNativePlugin) {
+      boolean buildNativePlugin,
+      boolean withDownwardApi) {
 
     CxxPreprocessorInput cxxPreprocessorInputFromDeps =
         CxxPreprocessorInput.concat(
@@ -439,7 +442,8 @@ public class OcamlRuleBuilder {
             .build();
 
     AbsPath baseDir = projectFilesystem.getRootPath();
-    ImmutableMap<Path, ImmutableList<Path>> mlInput = getMLInputWithDeps(baseDir, ocamlContext);
+    ImmutableMap<Path, ImmutableList<Path>> mlInput =
+        getMLInputWithDeps(baseDir, ocamlContext, withDownwardApi);
 
     ImmutableList<SourcePath> cInput = getCInput(graphBuilder.getSourcePathResolver(), srcs);
 
@@ -460,7 +464,8 @@ public class OcamlRuleBuilder {
                 .getLd()
                 .resolve(graphBuilder, buildTarget.getTargetConfiguration()),
             bytecodeOnly,
-            buildNativePlugin);
+            buildNativePlugin,
+            withDownwardApi);
 
     return generator.generate();
   }
@@ -473,7 +478,7 @@ public class OcamlRuleBuilder {
   }
 
   private static ImmutableMap<Path, ImmutableList<Path>> getMLInputWithDeps(
-      AbsPath baseDir, OcamlBuildContext ocamlContext) {
+      AbsPath baseDir, OcamlBuildContext ocamlContext, boolean withDownwardApi) {
 
     ImmutableList<String> ocamlDepFlags =
         ImmutableList.<String>builder()
@@ -487,7 +492,8 @@ public class OcamlRuleBuilder {
             ocamlContext.getSourcePathResolver(),
             ocamlContext.getOcamlDepTool().get(),
             ocamlContext.getMLInput(),
-            ocamlDepFlags);
+            ocamlDepFlags,
+            withDownwardApi);
     ImmutableList<String> cmd = depToolStep.getShellCommandInternal(null);
     Optional<String> depsString;
     try {
@@ -528,11 +534,12 @@ public class OcamlRuleBuilder {
       AbsPath baseDir, ImmutableList<String> cmd) throws IOException, InterruptedException {
     ImmutableSet.Builder<ProcessExecutor.Option> options = ImmutableSet.builder();
     options.add(ProcessExecutor.Option.EXPECTING_STD_OUT);
-    ProcessExecutor exe = new DefaultProcessExecutor(Console.createNullConsole());
+    ProcessExecutor processExecutor = new DefaultProcessExecutor(Console.createNullConsole());
+
     ProcessExecutorParams params =
         ProcessExecutorParams.builder().setCommand(cmd).setDirectory(baseDir.getPath()).build();
     ProcessExecutor.Result result =
-        exe.launchAndExecute(
+        processExecutor.launchAndExecute(
             params,
             options.build(),
             /* stdin */ Optional.empty(),

@@ -65,6 +65,7 @@ public class OcamlBuildRulesGenerator {
   private final Linker cxxLinker;
   private final boolean bytecodeOnly;
   private final boolean buildNativePlugin;
+  private final boolean withDownwardApi;
 
   private BuildRule cleanRule;
 
@@ -79,7 +80,8 @@ public class OcamlBuildRulesGenerator {
       Compiler cCompiler,
       Linker cxxLinker,
       boolean bytecodeOnly,
-      boolean buildNativePlugin) {
+      boolean buildNativePlugin,
+      boolean withDownwardApi) {
     this.buildTarget = buildTarget;
     this.projectFilesystem = projectFilesystem;
     this.params = params;
@@ -92,6 +94,7 @@ public class OcamlBuildRulesGenerator {
     this.cxxLinker = cxxLinker;
     this.bytecodeOnly = bytecodeOnly;
     this.buildNativePlugin = buildNativePlugin;
+    this.withDownwardApi = withDownwardApi;
     this.cleanRule = generateCleanBuildRule(buildTarget, projectFilesystem, params, ocamlContext);
   }
 
@@ -206,7 +209,8 @@ public class OcamlBuildRulesGenerator {
                   outputPath,
                   cSrc,
                   cCompileFlags.build(),
-                  cxxPreprocessorInput.getIncludes()));
+                  cxxPreprocessorInput.getIncludes()),
+              withDownwardApi);
       graphBuilder.addToIndex(compileRule);
       objects.add(compileRule.getSourcePathToOutput());
     }
@@ -288,7 +292,8 @@ public class OcamlBuildRulesGenerator {
             ocamlContext.getCLinkableInput().getArgs(),
             ocamlContext.isLibrary(),
             /* isBytecode */ false,
-            buildNativePlugin);
+            buildNativePlugin,
+            withDownwardApi);
     graphBuilder.addToIndex(link);
     return link;
   }
@@ -339,7 +344,8 @@ public class OcamlBuildRulesGenerator {
             ocamlContext.getCLinkableInput().getArgs(),
             ocamlContext.isLibrary(),
             /* isBytecode */ true,
-            /* buildNativePlugin */ false);
+            /* buildNativePlugin */ false,
+            withDownwardApi);
     graphBuilder.addToIndex(link);
     return link;
   }
@@ -486,7 +492,8 @@ public class OcamlBuildRulesGenerator {
                 ocamlContext.getOcamlInteropIncludesDir(),
                 outputPath,
                 mlSource,
-                compileFlags));
+                compileFlags),
+            withDownwardApi);
     graphBuilder.addToIndex(compile);
     sourceToRule.put(
         mlSource, ImmutableSortedSet.<BuildRule>naturalOrder().add(compile).addAll(deps).build());
@@ -565,7 +572,8 @@ public class OcamlBuildRulesGenerator {
                 ocamlContext.getOcamlInteropIncludesDir(),
                 outputPath,
                 mlSource,
-                compileFlags));
+                compileFlags),
+            withDownwardApi);
     graphBuilder.addToIndex(compileBytecode);
     sourceToRule.put(
         mlSource,

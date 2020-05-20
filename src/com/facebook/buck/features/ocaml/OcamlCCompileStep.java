@@ -42,8 +42,12 @@ public class OcamlCCompileStep extends ShellStep {
   private final SourcePathResolverAdapter resolver;
   private final Args args;
 
-  OcamlCCompileStep(SourcePathResolverAdapter resolver, ProjectFilesystem filesystem, Args args) {
-    super(filesystem.getRootPath());
+  OcamlCCompileStep(
+      SourcePathResolverAdapter resolver,
+      ProjectFilesystem filesystem,
+      Args args,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
     this.filesystem = filesystem;
     this.resolver = resolver;
     this.args = args;
