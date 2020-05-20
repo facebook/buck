@@ -20,6 +20,7 @@ import static com.facebook.buck.cli.ThriftOutputUtils.edgesToStringList;
 import static com.facebook.buck.cli.ThriftOutputUtils.nodesToStringList;
 import static com.facebook.buck.cli.ThriftOutputUtils.parseThriftDag;
 import static com.facebook.buck.testutil.OutputHelper.parseJSON;
+import static com.facebook.buck.testutil.integration.ProcessOutputAssertions.assertOutputMatchesFileContents;
 import static com.facebook.buck.util.MoreStringsForTests.containsIgnoringPlatformNewlines;
 import static com.facebook.buck.util.MoreStringsForTests.equalToIgnoringPlatformNewlines;
 import static com.facebook.buck.util.MoreStringsForTests.normalizeNewlines;
@@ -72,22 +73,6 @@ public class QueryCommandIntegrationTest {
 
   @Rule public TemporaryPaths tmp = new TemporaryPaths();
 
-  /**
-   * Asserts that the result succeeded and that the lines printed to stdout are the same as those in
-   * the specified file. Note that sort order is not guaranteed by {@code buck query}
-   */
-  private void assertLinesMatch(
-      String expectedOutputFile, ProcessResult result, ProjectWorkspace workspace)
-      throws IOException {
-    result.assertSuccess();
-
-    // All lines in expected output files are sorted so sort the output from `buck query` before
-    // comparing.
-    assertEquals(
-        normalizeNewlines(workspace.getFileContents(expectedOutputFile)),
-        OutputHelper.normalizeOutputLines(normalizeNewlines(result.getStdout())));
-  }
-
   @Test
   public void testNormalizesRelativeBuildTargetsInQueries() throws IOException {
     ProjectWorkspace workspace =
@@ -99,10 +84,14 @@ public class QueryCommandIntegrationTest {
     ProcessResult subdirPackage = workspace.runBuckCommand("query", "testsof(example/app:)");
     ProcessResult subdirTarget = workspace.runBuckCommand("query", "testsof(example/app:seven)");
 
-    assertLinesMatch("stdout-recursive-pattern-testsof", topLevelRecursive, workspace);
-    assertLinesMatch("stdout-subdir-recursive-pattern-testsof", subdirRecursive, workspace);
-    assertLinesMatch("stdout-subdir-recursive-pattern-testsof", subdirPackage, workspace);
-    assertLinesMatch("stdout-subdir-recursive-pattern-testsof", subdirTarget, workspace);
+    assertOutputMatchesFileContents(
+        "stdout-recursive-pattern-testsof", topLevelRecursive, workspace);
+    assertOutputMatchesFileContents(
+        "stdout-subdir-recursive-pattern-testsof", subdirRecursive, workspace);
+    assertOutputMatchesFileContents(
+        "stdout-subdir-recursive-pattern-testsof", subdirPackage, workspace);
+    assertOutputMatchesFileContents(
+        "stdout-subdir-recursive-pattern-testsof", subdirTarget, workspace);
   }
 
   @Test
@@ -113,7 +102,7 @@ public class QueryCommandIntegrationTest {
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("query", "deps(//example:one)");
-    assertLinesMatch("stdout-one-transitive-deps", result, workspace);
+    assertOutputMatchesFileContents("stdout-one-transitive-deps", result, workspace);
   }
 
   @Test
@@ -124,7 +113,7 @@ public class QueryCommandIntegrationTest {
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("query", "testsof(//example:one)");
-    assertLinesMatch("stdout-one-testsof", result, workspace);
+    assertOutputMatchesFileContents("stdout-one-testsof", result, workspace);
   }
 
   @Parameters(method = "getJsonParams")
@@ -168,7 +157,7 @@ public class QueryCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result =
         workspace.runBuckCommand("query", "testsof(deps(%s, 1))", "//example:two");
-    assertLinesMatch("stdout-two-deps-tests", result, workspace);
+    assertOutputMatchesFileContents("stdout-two-deps-tests", result, workspace);
   }
 
   @Parameters(method = "getJsonParams")
@@ -223,7 +212,7 @@ public class QueryCommandIntegrationTest {
     // Print all of the inputs to the rule.
     ProcessResult result =
         workspace.runBuckCommand("query", "deps(%s, 1) union testsof(%s)", "//example:one");
-    assertLinesMatch("stdout-one-direct-deps-tests", result, workspace);
+    assertOutputMatchesFileContents("stdout-one-direct-deps-tests", result, workspace);
   }
 
   @Test
@@ -234,7 +223,7 @@ public class QueryCommandIntegrationTest {
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("query", "testsof(//example:)");
-    assertLinesMatch("stdout-pkg-pattern-testsof", result, workspace);
+    assertOutputMatchesFileContents("stdout-pkg-pattern-testsof", result, workspace);
   }
 
   @Test
@@ -252,10 +241,12 @@ public class QueryCommandIntegrationTest {
     ProcessResult simpleDeps = workspace.runBuckCommand("query", "deps(:one)").assertSuccess();
     ProcessResult simpleSubdir = workspace.runBuckCommand("query", "app:seven").assertSuccess();
 
-    assertLinesMatch("stdout-pkg-pattern-testsof", testsOfPackage, workspace);
-    assertLinesMatch("stdout-recursive-pattern-testsof", testsOfRecursive, workspace);
-    assertLinesMatch("stdout-subdir-recursive-pattern-testsof", testsOfSubdirRecursive, workspace);
-    assertLinesMatch("stdout-one-transitive-deps", simpleDeps, workspace);
+    assertOutputMatchesFileContents("stdout-pkg-pattern-testsof", testsOfPackage, workspace);
+    assertOutputMatchesFileContents(
+        "stdout-recursive-pattern-testsof", testsOfRecursive, workspace);
+    assertOutputMatchesFileContents(
+        "stdout-subdir-recursive-pattern-testsof", testsOfSubdirRecursive, workspace);
+    assertOutputMatchesFileContents("stdout-one-transitive-deps", simpleDeps, workspace);
     assertEquals("//example/app:seven", simpleSubdir.getStdout().trim());
   }
 
@@ -267,7 +258,7 @@ public class QueryCommandIntegrationTest {
 
     // Print all of the inputs to the rule.
     ProcessResult result = workspace.runBuckCommand("query", "testsof(//...)");
-    assertLinesMatch("stdout-recursive-pattern-testsof", result, workspace);
+    assertOutputMatchesFileContents("stdout-recursive-pattern-testsof", result, workspace);
   }
 
   @Parameters(method = "getJsonParams")
@@ -296,7 +287,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("query", "owner('example/1.txt')");
-    assertLinesMatch("stdout-one-owner", result, workspace);
+    assertOutputMatchesFileContents("stdout-one-owner", result, workspace);
   }
 
   @Test
@@ -426,7 +417,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("query", "kind('.*_test', '//example/...')");
-    assertLinesMatch("stdout-recursive-pattern-kind", result, workspace);
+    assertOutputMatchesFileContents("stdout-recursive-pattern-kind", result, workspace);
   }
 
   @Test
@@ -474,7 +465,7 @@ public class QueryCommandIntegrationTest {
         workspace.runBuckCommand(
             "query",
             "rdeps(set(//example:one //example/app:seven), set(//example/app:seven //example:five))");
-    assertLinesMatch("stdout-five-seven-rdeps", result, workspace);
+    assertOutputMatchesFileContents("stdout-five-seven-rdeps", result, workspace);
   }
 
   @Test
@@ -489,7 +480,7 @@ public class QueryCommandIntegrationTest {
             "rdeps(set(//example:one //example/app:seven), %Ss)",
             "//example/app:seven",
             "//example:five");
-    assertLinesMatch("stdout-five-seven-rdeps", result, workspace);
+    assertOutputMatchesFileContents("stdout-five-seven-rdeps", result, workspace);
   }
 
   /**
@@ -712,7 +703,7 @@ public class QueryCommandIntegrationTest {
     workspace.setUp();
 
     ProcessResult result = workspace.runBuckCommand("query", "filter('four', '//example/...')");
-    assertLinesMatch("stdout-filter-four", result, workspace);
+    assertOutputMatchesFileContents("stdout-filter-four", result, workspace);
   }
 
   @Test
