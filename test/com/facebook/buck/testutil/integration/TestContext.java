@@ -17,7 +17,6 @@
 package com.facebook.buck.testutil.integration;
 
 import com.facebook.buck.util.CapturingPrintStream;
-import com.facebook.buck.util.environment.EnvVariablesProvider;
 import com.facebook.nailgun.NGClientDisconnectReason;
 import com.facebook.nailgun.NGClientListener;
 import com.facebook.nailgun.NGContext;
@@ -27,6 +26,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
@@ -44,7 +44,7 @@ public class TestContext extends NGContext implements Closeable {
 
   /** Simulates client that never disconnects, with normal system environment. */
   public TestContext() {
-    this(EnvVariablesProvider.getSystemEnv(), createNoOpStream(), 0);
+    this(ImmutableMap.of());
   }
 
   /** Simulates client that never disconnects, with given environment. */
@@ -61,12 +61,15 @@ public class TestContext extends NGContext implements Closeable {
   public TestContext(
       ImmutableMap<String, String> environment, InputStream clientStream, long timeoutMillis) {
 
+    ImmutableMap<String, String> sanitizedEnv =
+        EnvironmentSanitizer.getSanitizedEnvForTests(environment);
+
     in = new DataInputStream(clientStream);
     out = new CapturingPrintStream();
     err = new CapturingPrintStream();
     properties = new Properties();
-    for (String key : environment.keySet()) {
-      properties.setProperty(key, environment.get(key));
+    for (Map.Entry<String, String> entry : sanitizedEnv.entrySet()) {
+      properties.setProperty(entry.getKey(), entry.getValue());
     }
     listeners = new HashSet<>();
     if (timeoutMillis > 0) {
