@@ -240,7 +240,8 @@ public class HalideLibraryDescription
             ExplicitBuildTargetSourcePath.of(
                 halideCompileBuildTarget,
                 HalideCompile.objectOutputPath(
-                    halideCompileBuildTarget, projectFilesystem, args.getFunctionName()))));
+                    halideCompileBuildTarget, projectFilesystem, args.getFunctionName()))),
+        downwardApiConfig.isEnabledForHalide());
   }
 
   private Optional<ImmutableList<String>> expandInvocationFlags(
@@ -276,7 +277,8 @@ public class HalideLibraryDescription
         halideCompiler.getExecutableCommand(OutputLabel.defaultLabel()),
         halideBuckConfig.getHalideTargetForPlatform(platform),
         expandInvocationFlags(compilerInvocationFlags, platform),
-        functionName);
+        functionName,
+        downwardApiConfig.isEnabledForHalide());
   }
 
   @Override

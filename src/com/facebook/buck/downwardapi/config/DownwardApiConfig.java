@@ -93,4 +93,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForGo() {
     return getDelegate().getBooleanValue(SECTION, "go_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForHalide() {
+    return getDelegate().getBooleanValue(SECTION, "halide_enabled", false);
+  }
 }

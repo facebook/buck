@@ -51,8 +51,9 @@ public class HalideCompilerStep extends ShellStep {
       Path outputDir,
       String funcName,
       String halideTarget,
-      Optional<ImmutableList<String>> compilerInvocationFlags) {
-    super(workingDirectory);
+      Optional<ImmutableList<String>> compilerInvocationFlags,
+      boolean withDownwardApi) {
+    super(workingDirectory, withDownwardApi);
     this.environment = environment;
     this.compilerPrefix = compilerPrefix;
     this.outputDir = outputDir;

@@ -22,6 +22,10 @@ import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -38,12 +42,16 @@ import java.util.Optional;
 public class HalideCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
 
   @AddToRuleKey private final Tool halideCompiler;
-
   @AddToRuleKey private final String targetPlatform;
-
   @AddToRuleKey private final Optional<ImmutableList<String>> compilerInvocationFlags;
-
   @AddToRuleKey private final Optional<String> functionNameOverride;
+
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
 
   public HalideCompile(
       BuildTarget buildTarget,
@@ -52,12 +60,14 @@ public class HalideCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
       Tool halideCompiler,
       String targetPlatform,
       Optional<ImmutableList<String>> compilerInvocationFlags,
-      Optional<String> functionNameOverride) {
+      Optional<String> functionNameOverride,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.halideCompiler = halideCompiler;
     this.targetPlatform = targetPlatform;
     this.compilerInvocationFlags = compilerInvocationFlags;
     this.functionNameOverride = functionNameOverride;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -84,7 +94,8 @@ public class HalideCompile extends AbstractBuildRuleWithDeclaredAndExtraDeps {
             outputDir,
             fileOutputName(getBuildTarget(), functionNameOverride),
             targetPlatform,
-            compilerInvocationFlags));
+            compilerInvocationFlags,
+            withDownwardApi));
     return commands.build();
   }
 
