@@ -656,7 +656,8 @@ public class LuaBinaryDescription
       LuaPlatform luaPlatform,
       SourcePath starter,
       String mainModule,
-      LuaPackageComponents components) {
+      LuaPackageComponents components,
+      boolean withDownwardApi) {
     RelPath output = getOutputPath(buildTarget, projectFilesystem, luaPlatform);
 
     Tool lua = luaPlatform.getLua().resolve(graphBuilder, buildTarget.getTargetConfiguration());
@@ -682,7 +683,8 @@ public class LuaBinaryDescription
                 starter,
                 components,
                 mainModule,
-                luaPlatform.shouldCacheBinaries()));
+                luaPlatform.shouldCacheBinaries(),
+                withDownwardApi));
 
     return new CommandTool.Builder()
         .addArg(SourcePathArg.of(binary.getSourcePathToOutput()))
@@ -698,7 +700,8 @@ public class LuaBinaryDescription
       String mainModule,
       SourcePath starter,
       LuaPackageComponents components,
-      LuaPlatform.PackageStyle packageStyle) {
+      LuaPlatform.PackageStyle packageStyle,
+      boolean withDownwardApi) {
     switch (packageStyle) {
       case STANDALONE:
         return getStandaloneBinary(
@@ -709,7 +712,8 @@ public class LuaBinaryDescription
             luaPlatform,
             starter,
             mainModule,
-            components);
+            components,
+            withDownwardApi);
       case INPLACE:
         return getInPlaceBinary(
             buildTarget,
@@ -798,7 +802,8 @@ public class LuaBinaryDescription
             args.getMainModule(),
             components.getStarter(),
             components.getComponents(),
-            packageStyle);
+            packageStyle,
+            downwardApiConfig.isEnabledForLua());
     return new LuaBinary(
         buildTarget,
         projectFilesystem,

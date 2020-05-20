@@ -103,4 +103,9 @@ public abstract class DownwardApiConfig implements ConfigView<BuckConfig> {
   public boolean isEnabledForHaskell() {
     return getDelegate().getBooleanValue(SECTION, "haskell_enabled", false);
   }
+
+  @Value.Lazy
+  public boolean isEnabledForLua() {
+    return getDelegate().getBooleanValue(SECTION, "lua_enabled", false);
+  }
 }

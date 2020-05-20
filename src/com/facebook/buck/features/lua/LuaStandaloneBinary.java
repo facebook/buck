@@ -21,6 +21,10 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
+import com.facebook.buck.core.rulekey.DefaultFieldDeps;
+import com.facebook.buck.core.rulekey.DefaultFieldInputs;
+import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
+import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
 import com.facebook.buck.core.sourcepath.ExplicitBuildTargetSourcePath;
@@ -58,6 +62,13 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
 
   private final boolean cache;
 
+  @ExcludeFromRuleKey(
+      reason = "downward API doesn't affect the result of rule's execution",
+      serialization = DefaultFieldSerialization.class,
+      inputs = DefaultFieldInputs.class,
+      deps = DefaultFieldDeps.class)
+  private final boolean withDownwardApi;
+
   public LuaStandaloneBinary(
       BuildTarget buildTarget,
       ProjectFilesystem projectFilesystem,
@@ -67,7 +78,8 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
       SourcePath starter,
       LuaPackageComponents components,
       String mainModule,
-      boolean cache) {
+      boolean cache,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.builder = builder;
     this.output = output;
@@ -75,6 +87,7 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
     this.components = components;
     this.mainModule = mainModule;
     this.cache = cache;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -101,7 +114,7 @@ public class LuaStandaloneBinary extends AbstractBuildRuleWithDeclaredAndExtraDe
     SourcePathResolverAdapter resolver = context.getSourcePathResolver();
 
     steps.add(
-        new ShellStep(getProjectFilesystem().getRootPath()) {
+        new ShellStep(getProjectFilesystem().getRootPath(), withDownwardApi) {
 
           @Override
           protected Optional<String> getStdin() {
