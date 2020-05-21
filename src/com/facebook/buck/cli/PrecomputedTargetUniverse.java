@@ -87,8 +87,6 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
     // Ideally we would use an `ImmutableMap.Builder` here, but at various points we assert that a
     // node is already in the map and `ImmutableMap.Builder` has no `get` method.
     Map<BuildTarget, TargetNode<?>> targetToNodeIndex = new ConcurrentHashMap<>();
-    Map<CellRelativePath, Map<BuildTarget, BuildTarget>> pathToBuildTargetIdentityMap =
-        new ConcurrentHashMap<>();
 
     Cell rootCell = params.getCells().getRootCell();
     Parser parser = params.getParser();
@@ -126,7 +124,6 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
       for (BuildTarget buildTarget : rootTargets) {
         discoverNewTargetsConcurrently(
                 targetToNodeIndex,
-                pathToBuildTargetIdentityMap,
                 parser,
                 perBuildState,
                 buildTarget,
@@ -173,10 +170,16 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
     AcyclicDepthFirstPostOrderTraversalWithPayload<BuildTarget, TargetNode<?>> targetNodeTraversal =
         new AcyclicDepthFirstPostOrderTraversalWithPayload<>(traversable);
+    ImmutableSetMultimap.Builder<CellRelativePath, BuildTarget> pathToBuildTargetIndexBuilder =
+        ImmutableSetMultimap.builder();
     try {
       for (Pair<BuildTarget, TargetNode<?>> entry : targetNodeTraversal.traverse(rootTargets)) {
         TargetNode<?> node = entry.getSecond();
         graph.addNode(node);
+
+        BuildTarget buildTarget = node.getBuildTarget();
+        pathToBuildTargetIndexBuilder.put(buildTarget.getCellRelativeBasePath(), buildTarget);
+
         for (BuildTarget dep : node.getParseDeps()) {
           graph.addEdge(
               node,
@@ -190,10 +193,7 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
     }
 
     ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex =
-        pathToBuildTargetIdentityMap.entrySet().stream()
-            .collect(
-                ImmutableSetMultimap.flatteningToImmutableSetMultimap(
-                    entry -> entry.getKey(), entry -> entry.getValue().keySet().stream()));
+        pathToBuildTargetIndexBuilder.build();
 
     return new PrecomputedTargetUniverse(
         new DirectedAcyclicGraph<>(graph),
@@ -331,7 +331,6 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
   private static Optional<ListenableFuture<Unit>> discoverNewTargetsConcurrently(
       Map<BuildTarget, TargetNode<?>> targetToNodeIndex,
-      Map<CellRelativePath, Map<BuildTarget, BuildTarget>> pathToBuildTargetIdentityIndex,
       Parser parser,
       PerBuildState parserState,
       BuildTarget buildTarget,
@@ -352,20 +351,11 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
             parser.getTargetNodeJobAssertCompatible(parserState, buildTarget, dependencyStack),
             targetNode -> {
               targetToNodeIndex.put(buildTarget, targetNode);
-              // Since we're using a poor mans approximation of a Multimap, we need to do this in
-              // two stages. First ensure that the top level map has a value (another map). Then
-              // we can actually provide our data to that second map.
-              pathToBuildTargetIdentityIndex.putIfAbsent(
-                  buildTarget.getCellRelativeBasePath(), new ConcurrentHashMap<>());
-              pathToBuildTargetIdentityIndex
-                  .get(buildTarget.getCellRelativeBasePath())
-                  .put(buildTarget, buildTarget);
               List<ListenableFuture<Unit>> depsFuture = new ArrayList<>();
               Set<BuildTarget> parseDeps = targetNode.getParseDeps();
               for (BuildTarget parseDep : parseDeps) {
                 discoverNewTargetsConcurrently(
                         targetToNodeIndex,
-                        pathToBuildTargetIdentityIndex,
                         parser,
                         parserState,
                         parseDep,
