@@ -88,6 +88,23 @@ public class ParserConfigTest {
   }
 
   @Test
+  public void testGetPathsCheckMethod() throws IOException {
+    ParserConfig config;
+
+    config = getDefaultConfig();
+    assertEquals(config.getPathsCheckMethod(), ParserConfig.PathsCheckMethod.FILESYSTEM);
+
+    config = parseConfig("[project]\npaths_check_method = filesystem");
+    assertEquals(config.getPathsCheckMethod(), ParserConfig.PathsCheckMethod.FILESYSTEM);
+
+    config = parseConfig("[project]\npaths_check_method = watchman");
+    assertEquals(config.getPathsCheckMethod(), ParserConfig.PathsCheckMethod.WATCHMAN);
+
+    config = parseConfig("[project]\npaths_check_method = none");
+    assertEquals(config.getPathsCheckMethod(), ParserConfig.PathsCheckMethod.NONE);
+  }
+
+  @Test
   public void testGetWatchCells() throws IOException {
     assertTrue("watch_cells defaults to true", getDefaultConfig().getWatchCells());
 
