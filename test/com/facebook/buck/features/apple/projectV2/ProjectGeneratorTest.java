@@ -54,8 +54,6 @@ import com.facebook.buck.apple.SceneKitAssetsBuilder;
 import com.facebook.buck.apple.XCodeDescriptions;
 import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.clang.HeaderMap;
-import com.facebook.buck.apple.xcode.AbstractPBXObjectFactory;
-import com.facebook.buck.apple.xcode.PBXObjectGIDFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildFile;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXBuildPhase;
 import com.facebook.buck.apple.xcode.xcodeproj.PBXContainerItemProxy;
@@ -91,12 +89,10 @@ import com.facebook.buck.core.model.targetgraph.TargetNode;
 import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.BuildRuleResolver;
-import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.DefaultBuildTargetSourcePath;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
-import com.facebook.buck.core.util.graph.AbstractBottomUpTraversal;
 import com.facebook.buck.cxx.CxxDescriptionEnhancer;
 import com.facebook.buck.cxx.CxxLibraryBuilder;
 import com.facebook.buck.cxx.CxxPrecompiledHeaderBuilder;
@@ -160,8 +156,6 @@ import org.junit.rules.ExpectedException;
 
 public class ProjectGeneratorTest {
 
-  private static final Path OUTPUT_DIRECTORY = Paths.get("_gen");
-  private static final String PROJECT_NAME = "GeneratedProject";
   private static final CxxPlatform DEFAULT_PLATFORM = CxxPlatformUtils.DEFAULT_PLATFORM;
   private static final Flavor DEFAULT_FLAVOR = InternalFlavor.of("default");
   private static final String WATCH_EXTENSION_PRODUCT_TYPE =
@@ -174,6 +168,7 @@ public class ProjectGeneratorTest {
   private CxxBuckConfig cxxBuckConfig;
   private AppleConfig appleConfig;
   private SwiftBuckConfig swiftBuckConfig;
+  private XcodeProjectWriteOptions xcodeProjectWriteOptions;
 
   @Rule public ExpectedException thrown = ExpectedException.none();
   private AbsPath rootPath;
@@ -222,6 +217,7 @@ public class ProjectGeneratorTest {
     cxxBuckConfig = new CxxBuckConfig(config);
     appleConfig = config.getView(AppleConfig.class);
     swiftBuckConfig = new SwiftBuckConfig(config);
+    xcodeProjectWriteOptions = AppleProjectHelper.defaultXcodeProjectWriteOptions();
   }
 
   @Test
@@ -246,7 +242,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -267,7 +263,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libraryNode), libraryTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup fooGroup = PBXTestUtils.assertHasSubgroupAndReturnIt(project.getMainGroup(), "foo");
@@ -313,7 +309,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
     assertEquals(project.getMainGroup().getChildren().size(), 5);
     assertEquals(project.getTargets().size(), 3);
@@ -349,7 +345,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -389,7 +385,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -429,7 +425,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -448,7 +444,7 @@ public class ProjectGeneratorTest {
             "foo/foo.m", Optional.empty(),
             "bar.m", Optional.empty()),
         projectFilesystem,
-        OUTPUT_DIRECTORY);
+        AppleProjectHelper.OUTPUT_DIRECTORY);
   }
 
   @Test
@@ -504,7 +500,7 @@ public class ProjectGeneratorTest {
             Optional.empty());
 
     projectGenerator.createXcodeProject(
-        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+        xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     FakeProjectFilesystem frameworkBundleFileSystem =
         (FakeProjectFilesystem) frameworkBundleNode.getFilesystem();
@@ -549,7 +545,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
     assertNotNull(project);
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
@@ -610,7 +606,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget libPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:framework");
@@ -666,7 +662,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:framework");
@@ -736,7 +732,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -861,7 +857,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -953,7 +949,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
 
@@ -1014,7 +1010,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1062,7 +1058,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1134,7 +1130,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1211,7 +1207,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1285,7 +1281,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1329,7 +1325,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1349,7 +1345,7 @@ public class ProjectGeneratorTest {
 
     result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1376,7 +1372,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     List<Path> headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1395,7 +1391,7 @@ public class ProjectGeneratorTest {
 
     result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     headerSymlinkTrees = result.headerSymlinkTrees;
     assertThat(headerSymlinkTrees, hasSize(1));
@@ -1432,7 +1428,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
@@ -1488,7 +1484,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
@@ -1553,7 +1549,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
@@ -1609,7 +1605,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget testPBXTarget = assertTargetExistsAndReturnTarget(project, "//foo:test");
@@ -1704,7 +1700,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1719,7 +1715,7 @@ public class ProjectGeneratorTest {
             "bar.m", Optional.empty(),
             "libsomething.a", Optional.empty()),
         projectFilesystem,
-        OUTPUT_DIRECTORY);
+        AppleProjectHelper.OUTPUT_DIRECTORY);
 
     // this target should not have an asset catalog build phase
     assertTrue(
@@ -1748,7 +1744,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(compiler, lib), libTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1791,7 +1787,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1805,7 +1801,7 @@ public class ProjectGeneratorTest {
             "foo.cpp", Optional.of("-foo"),
             "bar.cpp", Optional.empty()),
         projectFilesystem,
-        OUTPUT_DIRECTORY);
+        AppleProjectHelper.OUTPUT_DIRECTORY);
   }
 
   @Test
@@ -1822,7 +1818,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1856,7 +1852,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1881,7 +1877,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//hi:lib#shared");
@@ -1909,7 +1905,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -1934,7 +1930,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -1968,7 +1964,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -1995,7 +1991,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2029,7 +2025,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
@@ -2051,7 +2047,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2083,7 +2079,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
@@ -2109,7 +2105,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2159,7 +2155,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2200,7 +2196,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
@@ -2224,7 +2220,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2258,7 +2254,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
@@ -2282,7 +2278,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertHasConfigurations(target, "Debug", "Release", "Profile");
@@ -2342,7 +2338,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertHasConfigurations(target, "Debug", "Release", "Profile");
@@ -2380,7 +2376,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -2414,7 +2410,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:bin");
 
@@ -2463,7 +2459,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertHasConfigurations(target, "Debug", "Release", "Profile");
@@ -2509,7 +2505,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
     assertThat(target.isa(), equalTo("PBXNativeTarget"));
@@ -2577,7 +2573,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
@@ -2639,7 +2635,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
@@ -2711,7 +2707,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
@@ -2753,7 +2749,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
@@ -2800,7 +2796,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
 
@@ -2827,7 +2823,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(testNode), testTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:xctest");
     assertEquals(target.getProductType(), ProductTypes.UNIT_TEST);
@@ -2869,7 +2865,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(depNode, binaryNode), binaryTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:binary");
     assertHasConfigurations(target, "Debug");
@@ -2881,7 +2877,7 @@ public class ProjectGeneratorTest {
             "foo.m", Optional.of("-foo"),
             "libsomething.a", Optional.empty()),
         projectFilesystem,
-        OUTPUT_DIRECTORY);
+        AppleProjectHelper.OUTPUT_DIRECTORY);
 
     // this test does not have a dependency on any asset catalogs, so verify no build phase for them
     // exists.
@@ -2913,7 +2909,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(sharedLibraryNode, node), buildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bundle");
@@ -2957,7 +2953,7 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(fooLibraryNode, bundleNode, resourceNode), bundleTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup storyboardGroup = project.getMainGroup().getOrCreateChildGroupByName("Base.lproj");
@@ -2992,7 +2988,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(sharedLibraryNode, node), buildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
@@ -3029,7 +3025,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(sharedLibraryNode, node), buildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:custombundle");
@@ -3064,7 +3060,7 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(fooLibraryNode, bundleNode, modelNode), bundleTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup modelGroup =
@@ -3117,7 +3113,7 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(fooLibraryNode, bundleNode, modelNode), bundleTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup modelGroup =
@@ -3164,7 +3160,7 @@ public class ProjectGeneratorTest {
             ImmutableList.of(bundleNode, fooLibraryNode, sceneKitNode), bundleTarget);
     ProjectGenerator.Result result =
         generator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(project.getMainGroup(), "foo.scnassets");
@@ -3193,7 +3189,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -3258,7 +3254,7 @@ public class ProjectGeneratorTest {
             hostAppTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject generatedProject = result.generatedProject;
     PBXTarget generatedHostAppTarget =
@@ -3297,7 +3293,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     assertEquals(
         buildTarget, Iterables.getOnlyElement(result.buildTargetsToGeneratedTargetMap.keySet()));
@@ -3309,7 +3305,7 @@ public class ProjectGeneratorTest {
             "foo.m", Optional.of("-foo"),
             "bar.m", Optional.empty()),
         projectFilesystem,
-        OUTPUT_DIRECTORY);
+        AppleProjectHelper.OUTPUT_DIRECTORY);
   }
 
   @Test
@@ -3324,7 +3320,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject generatedProject = result.generatedProject;
     ImmutableMap<String, String> settings =
@@ -3362,7 +3358,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(node1, node2), buildTarget1);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject generatedProject = result.generatedProject;
     Map<String, XCBuildConfiguration> configurations =
@@ -3385,7 +3381,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
     projectGenerator.createXcodeProject(
-        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+        xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
   }
 
   @Test
@@ -3401,7 +3397,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
     projectGenerator.createXcodeProject(
-        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+        xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
   }
 
   @Test
@@ -3416,7 +3412,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
     projectGenerator.createXcodeProject(
-        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+        xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
   }
 
   @Test
@@ -3432,7 +3428,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator =
         createProjectGenerator(result.getSecond(), result.getFirst());
     projectGenerator.createXcodeProject(
-        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+        xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
   }
 
   @Test
@@ -3452,7 +3448,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator projectGenerator = createProjectGenerator(nodes, buildTarget);
     projectGenerator.createXcodeProject(
-        xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+        xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
   }
 
   private BuckEventBus getFakeBuckEventBus() {
@@ -3506,7 +3502,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target =
         assertTargetExistsAndReturnTarget(result.generatedProject, libTarget.toString());
@@ -3518,7 +3514,7 @@ public class ProjectGeneratorTest {
             "Vendor/source2", Optional.empty(),
             "Vendor/source3", Optional.empty()),
         projectFilesystem,
-        OUTPUT_DIRECTORY);
+        AppleProjectHelper.OUTPUT_DIRECTORY);
 
     ImmutableMap<String, String> settings = getBuildSettings(libTarget, target, "Debug");
     assertEquals("../Vendor/header", settings.get("GCC_PREFIX_HEADER"));
@@ -3554,7 +3550,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
@@ -3602,7 +3598,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
@@ -3653,7 +3649,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
@@ -3693,7 +3689,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget testPBXTarget =
         assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:AppTest");
@@ -3732,7 +3728,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -3768,7 +3764,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXTarget target = assertTargetExistsAndReturnTarget(result.generatedProject, "//foo:lib");
 
@@ -3821,7 +3817,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
@@ -3852,7 +3848,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
@@ -3884,7 +3880,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
@@ -3919,7 +3915,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
     PBXGroup mainGroup = project.getMainGroup();
@@ -3945,7 +3941,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     // check if bridging header file existing in the project structure
     PBXProject project = result.generatedProject;
@@ -3975,7 +3971,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
@@ -3997,7 +3993,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:lib");
@@ -4019,7 +4015,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:Bar");
@@ -4048,7 +4044,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:BarWithSuffix");
@@ -4082,7 +4078,7 @@ public class ProjectGeneratorTest {
     ProjectGenerator projectGenerator = createProjectGenerator(ImmutableSet.of(node), buildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//Foo:Bar");
@@ -4106,7 +4102,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(appBinaryNode), binBuildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
@@ -4145,7 +4141,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(libNode, binNode), binBuildTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
     PBXProject project = result.generatedProject;
 
     PBXTarget target = assertTargetExistsAndReturnTarget(project, "//foo:bin");
@@ -4186,7 +4182,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     HeaderMap headerMap = getHeaderMapInDir(PUBLIC_HEADER_MAP_PATH);
     assertThat(headerMap.getNumEntries(), equalTo(1));
@@ -4262,7 +4258,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -4324,7 +4320,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject project = result.generatedProject;
 
@@ -4408,7 +4404,7 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(lib1Target, lib4Target),
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
-            getActionGraphBuilderNodeFunction(targetGraph),
+            AppleProjectHelper.getActionGraphBuilderNodeFunction(targetGraph),
             getFakeBuckEventBus(),
             halideBuckConfig,
             cxxBuckConfig,
@@ -4418,7 +4414,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGeneratorLib1.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     // The merged header map should not generated at this point.
     assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
@@ -4536,7 +4532,7 @@ public class ProjectGeneratorTest {
             ImmutableSet.of(lib1Target, lib4Target),
             DEFAULT_PLATFORM,
             ImmutableSet.of(),
-            getActionGraphBuilderNodeFunction(targetGraph),
+            AppleProjectHelper.getActionGraphBuilderNodeFunction(targetGraph),
             getFakeBuckEventBus(),
             halideBuckConfig,
             cxxBuckConfig,
@@ -4546,7 +4542,7 @@ public class ProjectGeneratorTest {
 
     ProjectGenerator.Result result =
         projectGeneratorLib1.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     // The merged header map should not generated at this point.
     assertTrue(hmapPath + " should exist.", projectFilesystem.isFile(hmapPath));
@@ -4625,7 +4621,7 @@ public class ProjectGeneratorTest {
         createProjectGenerator(ImmutableSet.of(binaryNode, bundleNode), bundleTarget);
     ProjectGenerator.Result result =
         projectGenerator.createXcodeProject(
-            xcodeProjectWriteOptions(), MoreExecutors.newDirectExecutorService());
+            xcodeProjectWriteOptions, MoreExecutors.newDirectExecutorService());
 
     PBXProject generatedProject = result.generatedProject;
     PBXGroup entitlementsGroup =
@@ -4633,13 +4629,6 @@ public class ProjectGeneratorTest {
             generatedProject.getMainGroup(), ImmutableList.of("foo", "Support", "Entitlements"));
     PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(
         entitlementsGroup, "My-Entitlements.plist");
-  }
-
-  private XcodeProjectWriteOptions xcodeProjectWriteOptions() {
-    return XcodeProjectWriteOptions.of(
-        new PBXProject(PROJECT_NAME, Optional.empty(), AbstractPBXObjectFactory.DefaultFactory()),
-        new PBXObjectGIDFactory(),
-        OUTPUT_DIRECTORY);
   }
 
   private ProjectGenerator createProjectGenerator(
@@ -4680,7 +4669,8 @@ public class ProjectGeneratorTest {
             .add(workspaceTarget)
             .build();
 
-    ActionGraphBuilder actionGraphBuilderForNode = getActionGraphBuilderNodeFunction(targetGraph);
+    ActionGraphBuilder actionGraphBuilderForNode =
+        AppleProjectHelper.getActionGraphBuilderNodeFunction(targetGraph);
 
     AppleDependenciesCache cache = new AppleDependenciesCache(targetGraph);
     ProjectGenerationStateCache projStateCache = new ProjectGenerationStateCache();
@@ -4705,27 +4695,6 @@ public class ProjectGeneratorTest {
         appleConfig,
         swiftBuckConfig,
         sharedLibrariesToBundles);
-  }
-
-  private ActionGraphBuilder getActionGraphBuilderNodeFunction(TargetGraph targetGraph) {
-    ActionGraphBuilder graphBuilder = new TestActionGraphBuilder(targetGraph);
-    AbstractBottomUpTraversal<TargetNode<?>, RuntimeException> bottomUpTraversal =
-        new AbstractBottomUpTraversal<TargetNode<?>, RuntimeException>(targetGraph) {
-          @Override
-          @SuppressWarnings("PMD.EmptyCatchBlock")
-          public void visit(TargetNode<?> node) {
-            try {
-              graphBuilder.requireRule(node.getBuildTarget());
-            } catch (Exception e) {
-              // NOTE(agallagher): A large number of the tests appear to setup their target nodes
-              // incorrectly, causing action graph creation to fail with lots of missing expected
-              // Apple C/C++ platform flavors.  This is gross, but to support tests that need a
-              // complete sub-action graph, just skip over the errors.
-            }
-          }
-        };
-    bottomUpTraversal.traverse();
-    return graphBuilder;
   }
 
   private Pair<BuildTarget, ImmutableSet<TargetNode<?>>> setupSimpleLibraryWithResources(
@@ -4832,7 +4801,7 @@ public class ProjectGeneratorTest {
     for (PBXBuildFile file : sourcesBuildPhase.getFiles()) {
       String filePath =
           PBXTestUtils.assertFileRefIsRelativeAndResolvePath(
-              file.getFileRef(), projectFilesystem, OUTPUT_DIRECTORY);
+              file.getFileRef(), projectFilesystem, AppleProjectHelper.OUTPUT_DIRECTORY);
       assertFalse(
           "Build phase should not contain this file " + filePath,
           absoluteSources.contains(filePath));
@@ -4859,7 +4828,8 @@ public class ProjectGeneratorTest {
 
   private AbsPath getAbsoluteOutputForNode(TargetNode<?> node, ImmutableSet<TargetNode<?>> nodes) {
     TargetGraph targetGraph = TargetGraphFactory.newInstance(nodes);
-    BuildRuleResolver ruleResolver = getActionGraphBuilderNodeFunction(targetGraph);
+    BuildRuleResolver ruleResolver =
+        AppleProjectHelper.getActionGraphBuilderNodeFunction(targetGraph);
     SourcePath nodeOutput = ruleResolver.getRule(node.getBuildTarget()).getSourcePathToOutput();
     return ruleResolver.getSourcePathResolver().getAbsolutePath(nodeOutput);
   }

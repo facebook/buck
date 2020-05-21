@@ -5,7 +5,6 @@ java_library(
     srcs = glob(
         ["*.java"],
         exclude = [
-            "*Benchmark.java",
             "*Test.java",
         ],
     ),
@@ -87,6 +86,7 @@ java_library(
         "//src/com/facebook/buck/worker:worker_process",
         "//test/com/facebook/buck/core/config:FakeBuckConfig",
         "//test/com/facebook/buck/core/model/targetgraph:testutil",
+        "//test/com/facebook/buck/core/rules/resolver/impl:testutil",
         "//test/com/facebook/buck/features/apple/common:testutil",
         "//test/com/facebook/buck/features/js:testutil",
         "//test/com/facebook/buck/io/filesystem/impl:testutil",

@@ -38,7 +38,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
-import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
@@ -66,7 +65,6 @@ public class XcodeNativeTargetProjectWriterTest {
   private PathRelativizer pathRelativizer;
   private SourcePathResolverAdapter sourcePathResolverAdapter;
   private ProjectExcludeResolver projectExcludeResolver;
-  private BuildRuleResolver buildRuleResolver;
   private NewCellPathResolver newCellPathResolver;
   private AbstractPBXObjectFactory objectFactory;
 
@@ -78,8 +76,8 @@ public class XcodeNativeTargetProjectWriterTest {
         new PBXProject("TestProject", Optional.empty(), AbstractPBXObjectFactory.DefaultFactory());
     buildTarget = BuildTargetFactory.newInstance("//foo:bar");
     appleConfig = AppleProjectHelper.createDefaultAppleConfig(new FakeProjectFilesystem());
-    buildRuleResolver = new TestActionGraphBuilder();
-    sourcePathResolverAdapter = buildRuleResolver.getSourcePathResolver();
+    sourcePathResolverAdapter =
+        AppleProjectHelper.defaultSourcePathResolverAdapter(new TestActionGraphBuilder());
     TargetGraph targetGraph = TargetGraphFactory.newInstance();
     projectExcludeResolver = new ProjectExcludeResolver(targetGraph, ImmutableList.of());
     pathRelativizer =
