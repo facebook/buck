@@ -187,6 +187,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
           "specify one or more input targets after the query expression format");
     }
 
+    LOG.debug("Preloading target patterns for multi query");
+
     // Do an initial pass over the query arguments and parse them into their expressions so we can
     // preload all the target patterns from every argument in one go, as doing them one-by-one is
     // really inefficient.
@@ -197,6 +199,8 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
       expr.collectTargetPatterns(targetLiterals);
     }
     env.preloadTargetPatterns(targetLiterals);
+
+    LOG.debug("Finished preloading target patterns. Executing queries.");
 
     // Now execute the query on the arguments one-by-one.
     LinkedHashMultimap<String, QueryTarget> queryResultMap = LinkedHashMultimap.create();
@@ -217,7 +221,10 @@ public abstract class AbstractQueryCommand extends AbstractCommand {
   private void runSingleQuery(
       CommandRunnerParams params, ConfiguredQueryEnvironment env, String query)
       throws IOException, InterruptedException, QueryException {
+    LOG.debug("Evaluating single query");
+
     Set<QueryTarget> queryResult = env.evaluateQuery(query);
+
     LOG.debug("Printing out %d targets", queryResult.size());
 
     try (CloseableWrapper<PrintStream> printStreamWrapper = getPrintStreamWrapper(params)) {

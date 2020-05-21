@@ -33,6 +33,7 @@ import com.facebook.buck.core.util.graph.CycleException;
 import com.facebook.buck.core.util.graph.DirectedAcyclicGraph;
 import com.facebook.buck.core.util.graph.GraphTraversableWithPayload;
 import com.facebook.buck.core.util.graph.MutableDirectedGraph;
+import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.parser.Parser;
 import com.facebook.buck.parser.ParserMessages;
 import com.facebook.buck.parser.ParsingContext;
@@ -71,6 +72,8 @@ import java.util.concurrent.ExecutionException;
 /** A TargetUniverse implementation that operates on an already-made graph. */
 public class PrecomputedTargetUniverse implements TargetUniverse {
 
+  private static final Logger LOG = Logger.get(PrecomputedTargetUniverse.class);
+
   private final DirectedAcyclicGraph<TargetNode<?>> graph;
   private final ImmutableMap<BuildTarget, TargetNode<?>> targetToNodeIndex;
   private final ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex;
@@ -83,6 +86,9 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
       PerBuildState perBuildState,
       ParsingContext parsingContext)
       throws QueryException {
+
+    LOG.debug("Creating universe from %d roots", targets.size());
+
     MutableDirectedGraph<TargetNode<?>> graph = MutableDirectedGraph.createConcurrent();
     // Ideally we would use an `ImmutableMap.Builder` here, but at various points we assert that a
     // node is already in the map and `ImmutableMap.Builder` has no `get` method.
@@ -194,6 +200,8 @@ public class PrecomputedTargetUniverse implements TargetUniverse {
 
     ImmutableSetMultimap<CellRelativePath, BuildTarget> pathToBuildTargetIndex =
         pathToBuildTargetIndexBuilder.build();
+
+    LOG.debug("Finished creating universe with final total of %d nodes", graph.getNodeCount());
 
     return new PrecomputedTargetUniverse(
         new DirectedAcyclicGraph<>(graph),
