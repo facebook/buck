@@ -29,9 +29,16 @@ SUPPORTED_VCS = {".git": buck_version, ".hg": buck_version_mercurial}
 
 def main(argv):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--release-version", help="The buck release version")
     parser.add_argument(
-        "--release-timestamp", help="The unix timestamp when the release happened"
+        "--release-version",
+        nargs = "?",
+        default = None,
+        help="The buck release version")
+    parser.add_argument(
+        "--release-timestamp",
+        nargs = "?",
+        default = None,
+        help="The unix timestamp when the release happened"
     )
     parser.add_argument(
         "--java-version",
@@ -52,7 +59,7 @@ def main(argv):
     candidate_paths = []
     vcs_module = None
     while vcs_module is None and os.path.dirname(path) != path:
-        while not os.path.exists(os.path.join(path, ".buckconfig")):
+        while not os.path.exists(os.path.join(path, ".buckconfig")) and os.path.dirname(path) != path:
             path = os.path.dirname(path)
         for vcs_dir, module in SUPPORTED_VCS.items():
             if os.path.exists(os.path.join(path, vcs_dir)):
