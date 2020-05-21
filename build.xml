@@ -800,7 +800,7 @@
     </build-buck-module-jar>
   </target>
 
-  <target name="build-module-xcode" depends="compile, build-module-halide, build-module-js">
+  <target name="build-module-xcode" depends="compile, build-module-filegroup, build-module-halide, build-module-js">
     <build-buck-module-jar-with-resources module-name="xcode">
       <module-javac-params>
         <include name="com/facebook/buck/features/apple/common/*.java" />
@@ -812,6 +812,7 @@
         <include name="com/facebook/buck/features/apple/projectV2/*.st"/>
       </module-resources>
       <additional-classpath-entries>
+        <include name="filegroup.jar" />
         <include name="js.jar"/>
         <include name="halide.jar"/>
       </additional-classpath-entries>

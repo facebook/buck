@@ -78,6 +78,8 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.HasSystemFrameworkAndLibraries;
 import com.facebook.buck.cxx.toolchain.nativelink.NativeLinkableGroup.Linkage;
+import com.facebook.buck.features.filegroup.FileGroupDescriptionArg;
+import com.facebook.buck.features.filegroup.FilegroupDescription;
 import com.facebook.buck.features.halide.HalideBuckConfig;
 import com.facebook.buck.features.halide.HalideLibraryDescription;
 import com.facebook.buck.features.halide.HalideLibraryDescriptionArg;
@@ -387,6 +389,8 @@ public class XcodeNativeTargetGenerator {
     ImmutableXCodeNativeTargetAttributes.Builder nativeTargetBuilder =
         ImmutableXCodeNativeTargetAttributes.builder().setAppleConfig(appleConfig);
 
+    BaseDescription<?> description = targetNode.getDescription();
+
     // Not sure if this is still needed -- IT excludes BUCK compilation targets, according to the
     // comment
     // Something we can revisit. (@cjjones)
@@ -396,7 +400,7 @@ public class XcodeNativeTargetGenerator {
 
     HeaderSearchPathAttributes headerSearchPathAttributes = null;
     ImmutableList<BuildTarget> dependencies = ImmutableList.of();
-    if (targetNode.getDescription() instanceof AppleLibraryDescription) {
+    if (description instanceof AppleLibraryDescription) {
       TargetNode<AppleNativeTargetDescriptionArg> libraryDescriptionTarget =
           (TargetNode<AppleNativeTargetDescriptionArg>) targetNode;
       headerSearchPathAttributes =
@@ -410,7 +414,7 @@ public class XcodeNativeTargetGenerator {
               headerSearchPathAttributes,
               libraryDescriptionTarget,
               Optional.empty());
-    } else if (targetNode.getDescription() instanceof CxxLibraryDescription) {
+    } else if (description instanceof CxxLibraryDescription) {
       TargetNode<CommonArg> libraryDescriptionTarget = (TargetNode<CommonArg>) targetNode;
       headerSearchPathAttributes =
           headerSearchPaths.getHeaderSearchPathAttributes(libraryDescriptionTarget);
@@ -425,7 +429,7 @@ public class XcodeNativeTargetGenerator {
               ImmutableSet.of(),
               ImmutableSet.of(),
               Optional.empty());
-    } else if (targetNode.getDescription() instanceof AppleBinaryDescription) {
+    } else if (description instanceof AppleBinaryDescription) {
       TargetNode<AppleNativeTargetDescriptionArg> binaryDescriptionTarget =
           (TargetNode<AppleNativeTargetDescriptionArg>) targetNode;
       headerSearchPathAttributes =
@@ -438,7 +442,7 @@ public class XcodeNativeTargetGenerator {
               targetConfigNamesBuilder,
               headerSearchPathAttributes,
               binaryDescriptionTarget);
-    } else if (targetNode.getDescription() instanceof AppleBundleDescription) {
+    } else if (description instanceof AppleBundleDescription) {
       TargetNode<AppleBundleDescriptionArg> bundleTargetNode =
           (TargetNode<AppleBundleDescriptionArg>) targetNode;
       TargetNode<AppleNativeTargetDescriptionArg> nativeTargetNode =
@@ -456,7 +460,7 @@ public class XcodeNativeTargetGenerator {
               bundleTargetNode,
               nativeTargetNode,
               Optional.empty());
-    } else if (targetNode.getDescription() instanceof AppleTestDescription) {
+    } else if (description instanceof AppleTestDescription) {
       TargetNode<AppleTestDescriptionArg> testNode =
           (TargetNode<AppleTestDescriptionArg>) targetNode;
       headerSearchPathAttributes = headerSearchPaths.getHeaderSearchPathAttributes(testNode);
@@ -468,10 +472,10 @@ public class XcodeNativeTargetGenerator {
               targetConfigNamesBuilder,
               headerSearchPathAttributes,
               nativeTargetBuilder);
-    } else if (targetNode.getDescription() instanceof AppleResourceDescription) {
+    } else if (description instanceof AppleResourceDescription) {
       checkAppleResourceTargetNodeReferencingValidContents(
           (TargetNode<AppleResourceDescriptionArg>) targetNode);
-    } else if (targetNode.getDescription() instanceof HalideLibraryDescription) {
+    } else if (description instanceof HalideLibraryDescription) {
       TargetNode<HalideLibraryDescriptionArg> halideTargetNode =
           (TargetNode<HalideLibraryDescriptionArg>) targetNode;
       BuildTarget buildTarget = targetNode.getBuildTarget();
@@ -501,12 +505,20 @@ public class XcodeNativeTargetGenerator {
             buildTarget.withFlavors(
                 HalideLibraryDescription.HALIDE_COMPILE_FLAVOR, defaultCxxPlatform.getFlavor()));
       }
-    } else if (targetNode.getDescription() instanceof AbstractGenruleDescription) {
+    } else if (description instanceof AbstractGenruleDescription) {
       TargetNode<AbstractGenruleDescription.CommonArg> genruleNode =
           (TargetNode<AbstractGenruleDescription.CommonArg>) targetNode;
 
       for (SourcePath genruleFilePath : genruleNode.getConstructorArg().getSrcs().getPaths()) {
         nativeTargetBuilder.addGenruleFiles(genruleFilePath);
+      }
+    } else if (description instanceof FilegroupDescription
+        && appleConfig.enableFilegroupsInProjectGeneration()) {
+      TargetNode<FileGroupDescriptionArg> filegroupNode =
+          (TargetNode<FileGroupDescriptionArg>) targetNode;
+
+      for (SourcePath filegroupSourcePath : filegroupNode.getConstructorArg().getSrcs()) {
+        nativeTargetBuilder.addFilegroupFiles(filegroupSourcePath);
       }
     }
 

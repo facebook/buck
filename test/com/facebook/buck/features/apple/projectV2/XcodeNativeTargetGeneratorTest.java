@@ -55,6 +55,7 @@ import com.facebook.buck.cxx.config.CxxBuckConfig;
 import com.facebook.buck.cxx.toolchain.CxxPlatform;
 import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
+import com.facebook.buck.features.filegroup.FilegroupBuilder;
 import com.facebook.buck.features.halide.HalideLibraryBuilder;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
@@ -83,6 +84,7 @@ public class XcodeNativeTargetGeneratorTest {
 
   // Test graph
   private Cells cells;
+  private BuildTarget tuxFileGroupTarget;
   private BuildTarget bazTestTarget;
   private BuildTarget bazLibTarget;
   private BuildTarget quxTestTarget;
@@ -91,6 +93,7 @@ public class XcodeNativeTargetGeneratorTest {
   private BuildTarget barBinaryTarget;
   private BuildTarget barExtTarget;
   private BuildTarget fooAppBundleTarget;
+  private TargetNode tuxFileGroupNode;
   private TargetNode bazTestNode;
   private TargetNode bazLibNode;
   private TargetNode quxTestNode;
@@ -404,6 +407,17 @@ public class XcodeNativeTargetGeneratorTest {
     assertEquals("Baz.h", ((PathSourcePath) header).getRelativePath().toString());
   }
 
+  @Test
+  public void fileGroupNodes() throws IOException {
+    XcodeNativeTargetGenerator.Result result =
+        xcodeNativeTargetGenerator.generateTarget(tuxFileGroupNode);
+    assertEquals(1, result.targetAttributes.filegroupFiles().size());
+    SourcePath fileGroupSrc = result.targetAttributes.filegroupFiles().get(0);
+    assertTrue(fileGroupSrc instanceof PathSourcePath);
+    assertEquals(
+        "SomeFileGroupFile.txt", ((PathSourcePath) fileGroupSrc).getRelativePath().toString());
+  }
+
   private void setupTargetGraph() {
     cells = (new TestCellBuilder()).build();
 
@@ -420,6 +434,15 @@ public class XcodeNativeTargetGeneratorTest {
     //   |        /
     //   V     V
     //   BazLib -has-unit-test-> BazTest
+    //   |
+    //   V
+    //   TuxFileGroup
+
+    tuxFileGroupTarget = BuildTargetFactory.newInstance("//baz:test");
+    tuxFileGroupNode =
+        FilegroupBuilder.createBuilder(tuxFileGroupTarget)
+            .setSrcs(ImmutableSortedSet.of(FakeSourcePath.of("SomeFileGroupFile.txt")))
+            .build();
 
     bazTestTarget = BuildTargetFactory.newInstance("//baz:test");
     bazTestNode =
@@ -477,6 +500,7 @@ public class XcodeNativeTargetGeneratorTest {
 
     targetGraph =
         TargetGraphFactory.newInstance(
+            tuxFileGroupNode,
             bazTestNode,
             bazLibNode,
             quxTestNode,

@@ -523,6 +523,10 @@ public class AppleConfig implements ConfigView<BuckConfig> {
         .orElse(ImmutableList.of(PROJECT_EXCLUDE_LABEL));
   }
 
+  public boolean enableFilegroupsInProjectGeneration() {
+    return delegate.getBooleanValue(APPLE_SECTION, "enable_filegroups_in_xcode", true);
+  }
+
   @BuckStyleValue
   interface ApplePackageConfig {
     String getCommand();

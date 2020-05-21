@@ -146,6 +146,11 @@ abstract class XCodeNativeTargetAttributes {
   }
 
   @Value.Default
+  public ImmutableList<SourcePath> filegroupFiles() {
+    return ImmutableList.of();
+  }
+
+  @Value.Default
   public ImmutableList<FrameworkPath> systemFrameworks() {
     return ImmutableList.of();
   }

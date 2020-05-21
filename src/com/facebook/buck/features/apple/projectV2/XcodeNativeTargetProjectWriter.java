@@ -243,6 +243,10 @@ class XcodeNativeTargetProjectWriter {
         .genruleFiles()
         .forEach(sourcePath -> projectFileWriter.writeSourcePath(sourcePath));
 
+    targetAttributes
+        .filegroupFiles()
+        .forEach(sourcePath -> projectFileWriter.writeSourcePath(sourcePath));
+
     PBXGroup targetGroup = project.getMainGroup();
 
     return new Result(generatedNativeTarget, targetGroup);

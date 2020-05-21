@@ -117,7 +117,7 @@ public class XcodeNativeTargetProjectWriterTest {
   }
 
   @Test
-  public void testSourceGroups() throws NoSuchBuildTargetException {
+  public void sourceGroups() throws NoSuchBuildTargetException {
     SourcePath foo = FakeSourcePath.of("Group1/foo.m");
     SourcePath bar = FakeSourcePath.of("Group1/bar.m");
     SourcePath baz = FakeSourcePath.of("Group2/baz.m");
@@ -156,7 +156,7 @@ public class XcodeNativeTargetProjectWriterTest {
   }
 
   @Test
-  public void testLibraryHeaderGroups() throws NoSuchBuildTargetException {
+  public void libraryHeaderGroups() throws NoSuchBuildTargetException {
     SourcePath foo = FakeSourcePath.of("HeaderGroup1/foo.h");
     SourcePath bar = FakeSourcePath.of("HeaderGroup1/bar.h");
     SourcePath baz = FakeSourcePath.of("HeaderGroup2/baz.h");
@@ -195,7 +195,7 @@ public class XcodeNativeTargetProjectWriterTest {
   }
 
   @Test
-  public void testPrefixHeaderInCorrectGroup() throws NoSuchBuildTargetException {
+  public void prefixHeaderInCorrectGroup() throws NoSuchBuildTargetException {
     SourcePath prefixHeader = FakeSourcePath.of("Group1/prefix.pch");
 
     XCodeNativeTargetAttributes targetAttributes =
@@ -218,7 +218,7 @@ public class XcodeNativeTargetProjectWriterTest {
   }
 
   @Test
-  public void testBuckFileAddedInCorrectGroup() throws NoSuchBuildTargetException {
+  public void buckFileAddedInCorrectGroup() throws NoSuchBuildTargetException {
     XCodeNativeTargetAttributes targetAttributes =
         builderWithCommonDefaults()
             .setBuckFilePath(Optional.of(Paths.get("MyApp/MyLib/BUCK")))
@@ -244,7 +244,7 @@ public class XcodeNativeTargetProjectWriterTest {
   }
 
   @Test
-  public void testTargetHasBuildScriptPhase() {
+  public void targetHasBuildScriptPhase() {
     XCodeNativeTargetAttributes targetAttributes =
         ImmutableXCodeNativeTargetAttributes.builder()
             .setTarget(Optional.of(buildTarget))
@@ -275,6 +275,33 @@ public class XcodeNativeTargetProjectWriterTest {
         "Buck build script command is as expected",
         phase.getShellScript(),
         is(equalTo("cd $SOURCE_ROOT/.. && ./build_script.sh")));
+  }
+
+  @Test
+  public void writeFileGroupFiles() {
+    XCodeNativeTargetAttributes targetAttributes =
+        ImmutableXCodeNativeTargetAttributes.builder()
+            .setTarget(Optional.of(buildTarget))
+            .setAppleConfig(appleConfig)
+            .setFilegroupFiles(ImmutableList.of(FakeSourcePath.of("SomeGroup/SomeRandomFile.txt")))
+            .build();
+
+    XcodeNativeTargetProjectWriter projectWriter =
+        new XcodeNativeTargetProjectWriter(
+            pathRelativizer,
+            sourcePathResolverAdapter::getRelativePath,
+            projectExcludeResolver,
+            false,
+            newCellPathResolver,
+            objectFactory);
+    XcodeNativeTargetProjectWriter.Result result =
+        projectWriter.writeTargetToProject(targetAttributes, generatedProject);
+
+    PBXGroup filesGroup =
+        PBXTestUtils.assertHasSubgroupAndReturnIt(result.getTargetGroup(), "SomeGroup");
+    PBXFileReference filegroupFileReference =
+        PBXTestUtils.assertHasFileReferenceWithNameAndReturnIt(filesGroup, "SomeRandomFile.txt");
+    assertEquals(filegroupFileReference.getExplicitFileType(), Optional.of("text"));
   }
 
   private ImmutableXCodeNativeTargetAttributes.Builder builderWithCommonDefaults() {

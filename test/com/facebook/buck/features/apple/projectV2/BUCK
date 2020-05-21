@@ -226,6 +226,7 @@ standard_java_test(
         "//test/com/facebook/buck/cxx/toolchain:testutil",
         "//test/com/facebook/buck/event:testutil",
         "//test/com/facebook/buck/features/apple/common:testutil",
+        "//test/com/facebook/buck/features/filegroup:testutil",
         "//test/com/facebook/buck/features/halide:testutil",
         "//test/com/facebook/buck/features/js:testutil",
         "//test/com/facebook/buck/io:testutil",

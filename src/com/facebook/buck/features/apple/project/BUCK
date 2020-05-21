@@ -5,6 +5,7 @@ buck_module(
     srcs = glob(["*.java"]),
     module_deps = [
         "//src/com/facebook/buck/features/js:js",
+        "//src/com/facebook/buck/features/filegroup:filegroup",
         "//src/com/facebook/buck/features/halide:halide",
     ],
     provided_deps = [
