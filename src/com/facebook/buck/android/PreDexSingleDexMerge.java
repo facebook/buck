@@ -21,10 +21,7 @@ import com.facebook.buck.core.build.buildable.context.BuildableContext;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
+import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -44,12 +41,7 @@ import java.util.stream.Stream;
 public class PreDexSingleDexMerge extends PreDexMerge {
   private final Collection<DexProducedFromJavaLibrary> preDexDeps;
 
-  @ExcludeFromRuleKey(
-      reason = "downward API doesn't affect the result of rule's execution",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class,
-      deps = DefaultFieldDeps.class)
-  private final boolean withDownwardApi;
+  @AddToRuleKey private final boolean withDownwardApi;
 
   public PreDexSingleDexMerge(
       BuildTarget buildTarget,

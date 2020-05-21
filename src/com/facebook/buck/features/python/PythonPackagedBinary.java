@@ -21,10 +21,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -61,13 +57,7 @@ public class PythonPackagedBinary extends PythonBinary implements HasRuntimeDeps
   @AddToRuleKey private final PythonEnvironment pythonEnvironment;
   @AddToRuleKey private final ImmutableSet<String> preloadLibraries;
   private final boolean cache;
-
-  @ExcludeFromRuleKey(
-      reason = "downward API doesn't affect the result of rule's execution",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class,
-      deps = DefaultFieldDeps.class)
-  private final boolean withDownwardApi;
+  @AddToRuleKey private final boolean withDownwardApi;
 
   private final ImmutableSortedSet<BuildRule> buildDeps;
 

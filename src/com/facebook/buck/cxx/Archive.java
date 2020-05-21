@@ -20,10 +20,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleResolver;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
@@ -100,39 +96,6 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
     this.cacheable = cacheable;
   }
 
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public static Archive from(
-      BuildTarget target,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleResolver resolver,
-      CxxPlatform platform,
-      String outputFileName,
-      ImmutableList<SourcePath> inputs,
-      ArchiveContents contents,
-      boolean cacheable) {
-    return from(
-        target,
-        projectFilesystem,
-        resolver,
-        platform,
-        outputFileName,
-        inputs,
-        contents,
-        cacheable,
-        false);
-  }
-
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public static Archive from(
-      BuildTarget target,
-      ProjectFilesystem projectFilesystem,
-      BuildRuleResolver resolver,
-      CxxPlatform platform,
-      String outputFileName,
-      ImmutableList<SourcePath> inputs) {
-    return from(target, projectFilesystem, resolver, platform, outputFileName, inputs, false);
-  }
-
   /** @return the {@link Archive} created from the given parameters. */
   public static Archive from(
       BuildTarget target,
@@ -190,13 +153,7 @@ public class Archive extends ModernBuildRule<Archive.Impl> {
     @AddToRuleKey private final ArchiveContents contents;
     @AddToRuleKey private final OutputPath output;
     @AddToRuleKey private final ImmutableList<SourcePath> inputs;
-
-    @ExcludeFromRuleKey(
-        reason = "downward API doesn't affect the result of rule's execution",
-        serialization = DefaultFieldSerialization.class,
-        inputs = DefaultFieldInputs.class,
-        deps = DefaultFieldDeps.class)
-    private final boolean withDownwardApi;
+    @AddToRuleKey private final boolean withDownwardApi;
 
     Impl(
         Archiver archiver,

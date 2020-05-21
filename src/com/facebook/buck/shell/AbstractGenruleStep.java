@@ -56,21 +56,6 @@ public abstract class AbstractGenruleStep extends ShellStep {
                 }
               });
 
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public AbstractGenruleStep(
-      ProjectFilesystem projectFilesystem,
-      CommandString commandString,
-      Path workingDirectory,
-      ProgramRunner programRunner) {
-    this(projectFilesystem, commandString, workingDirectory, false, programRunner);
-  }
-
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public AbstractGenruleStep(
-      ProjectFilesystem projectFilesystem, CommandString commandString, AbsPath workingDirectory) {
-    this(projectFilesystem, commandString, workingDirectory.getPath(), false);
-  }
-
   public AbstractGenruleStep(
       ProjectFilesystem projectFilesystem,
       CommandString commandString,

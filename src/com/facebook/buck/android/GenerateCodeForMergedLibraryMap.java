@@ -25,10 +25,6 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -69,12 +65,7 @@ class GenerateCodeForMergedLibraryMap extends AbstractBuildRuleWithDeclaredAndEx
   @AddToRuleKey
   private final ImmutableSortedMap<String, ImmutableSortedSet<String>> sharedObjectTargets;
 
-  @ExcludeFromRuleKey(
-      reason = "downward API doesn't affect the result of rule's execution",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class,
-      deps = DefaultFieldDeps.class)
-  private final boolean withDownwardApi;
+  @AddToRuleKey private final boolean withDownwardApi;
 
   GenerateCodeForMergedLibraryMap(
       BuildTarget buildTarget,

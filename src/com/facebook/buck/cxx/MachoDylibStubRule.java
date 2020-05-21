@@ -70,13 +70,7 @@ public class MachoDylibStubRule extends ModernBuildRule<MachoDylibStubRule.Dylib
     @AddToRuleKey private final Tool strip;
     @AddToRuleKey private final OutputPath outputPath;
     @AddToRuleKey private final String libName;
-
-    @ExcludeFromRuleKey(
-        reason = "downward API doesn't affect the result of rule's execution",
-        serialization = DefaultFieldSerialization.class,
-        inputs = DefaultFieldInputs.class,
-        deps = DefaultFieldDeps.class)
-    private final boolean withDownwardApi;
+    @AddToRuleKey private final boolean withDownwardApi;
 
     // The main idea behind the dylib stub rule is to prevent unnecessary relinking of
     // any dependents of the dylib if and only if the ABI does not change. But any changes to

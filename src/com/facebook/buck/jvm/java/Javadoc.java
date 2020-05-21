@@ -26,10 +26,6 @@ import com.facebook.buck.core.model.Flavor;
 import com.facebook.buck.core.model.InternalFlavor;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.BuildRuleParams;
 import com.facebook.buck.core.rules.impl.AbstractBuildRuleWithDeclaredAndExtraDeps;
@@ -66,13 +62,7 @@ public class Javadoc extends AbstractBuildRuleWithDeclaredAndExtraDeps implement
 
   private final RelPath output;
   private final RelPath scratchDir;
-
-  @ExcludeFromRuleKey(
-      reason = "downward API doesn't affect the result of rule's execution",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class,
-      deps = DefaultFieldDeps.class)
-  private final boolean withDownwardApi;
+  @AddToRuleKey private final boolean withDownwardApi;
 
   protected Javadoc(
       BuildTarget buildTarget,

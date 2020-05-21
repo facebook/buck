@@ -23,10 +23,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.util.log.Logger;
 import com.facebook.buck.io.BuildCellRelativePath;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -49,19 +45,7 @@ public class JavacToJarStepFactory extends CompileToJarStepFactory implements Ad
   @AddToRuleKey private final Javac javac;
   @AddToRuleKey private final JavacOptions javacOptions;
   @AddToRuleKey private final ExtraClasspathProvider extraClasspathProvider;
-
-  @ExcludeFromRuleKey(
-      reason = "downward API doesn't affect the result of rule's execution",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class,
-      deps = DefaultFieldDeps.class)
-  private final boolean withDownwardApi;
-
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public JavacToJarStepFactory(
-      Javac javac, JavacOptions javacOptions, ExtraClasspathProvider extraClasspathProvider) {
-    this(javac, javacOptions, extraClasspathProvider, false);
-  }
+  @AddToRuleKey private final boolean withDownwardApi;
 
   public JavacToJarStepFactory(
       Javac javac,

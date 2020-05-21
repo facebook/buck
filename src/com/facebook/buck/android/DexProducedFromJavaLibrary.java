@@ -29,10 +29,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.BuildOutputInitializer;
@@ -157,13 +153,7 @@ public class DexProducedFromJavaLibrary extends ModernBuildRule<DexProducedFromJ
     @AddToRuleKey private final OutputPath metadataWeight;
     @AddToRuleKey private final OutputPath metadataClassnamesToHashes;
     @AddToRuleKey private final OutputPath metadataReferencedResources;
-
-    @ExcludeFromRuleKey(
-        reason = "downward API doesn't affect the result of rule's execution",
-        serialization = DefaultFieldSerialization.class,
-        inputs = DefaultFieldInputs.class,
-        deps = DefaultFieldDeps.class)
-    private final boolean withDownwardApi;
+    @AddToRuleKey private final boolean withDownwardApi;
 
     Impl(
         ProjectFilesystem projectFilesystem,

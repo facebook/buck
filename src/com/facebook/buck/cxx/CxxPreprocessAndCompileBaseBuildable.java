@@ -19,10 +19,6 @@ package com.facebook.buck.cxx;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
 import com.facebook.buck.cxx.toolchain.DebugPathSanitizer;
@@ -47,15 +43,8 @@ abstract class CxxPreprocessAndCompileBaseBuildable implements Buildable {
   @AddToRuleKey protected final OutputPath output;
   @AddToRuleKey protected final SourcePath input;
   @AddToRuleKey protected final CxxSource.Type inputType;
-
   @AddToRuleKey protected final Optional<PrecompiledHeaderData> precompiledHeaderData;
-
-  @ExcludeFromRuleKey(
-      reason = "downward API doesn't affect the result of rule's execution",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class,
-      deps = DefaultFieldDeps.class)
-  protected final boolean withDownwardApi;
+  @AddToRuleKey protected final boolean withDownwardApi;
 
   public CxxPreprocessAndCompileBaseBuildable(
       BuildTarget targetName,

@@ -95,16 +95,6 @@ public abstract class ShellStep implements Step {
     this(workingDirectory.getPath(), withDownwardApi);
   }
 
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  protected ShellStep(Path workingDirectory) {
-    this(workingDirectory, false);
-  }
-
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  protected ShellStep(AbsPath workingDirectory) {
-    this(workingDirectory, false);
-  }
-
   @Override
   public StepExecutionResult execute(ExecutionContext context)
       throws InterruptedException, IOException {

@@ -20,10 +20,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -65,13 +61,7 @@ public class StripLinkable extends ModernBuildRule<StripLinkable.Impl> {
     @AddToRuleKey private final Tool stripTool;
     @AddToRuleKey private final SourcePath sourcePathToStrip;
     @AddToRuleKey private final OutputPath output;
-
-    @ExcludeFromRuleKey(
-        reason = "downward API doesn't affect the result of rule's execution",
-        serialization = DefaultFieldSerialization.class,
-        inputs = DefaultFieldInputs.class,
-        deps = DefaultFieldDeps.class)
-    private final boolean withDownwardApi;
+    @AddToRuleKey private final boolean withDownwardApi;
 
     Impl(
         Tool stripTool,

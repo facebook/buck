@@ -20,10 +20,6 @@ import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.filesystems.RelPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -139,13 +135,7 @@ public class CxxThinLTOOpt extends ModernBuildRule<CxxThinLTOOpt.Impl>
     @AddToRuleKey private final SourcePath input;
     @AddToRuleKey private final SourcePath thinIndicesRoot;
     @AddToRuleKey private final CxxSource.Type inputType;
-
-    @ExcludeFromRuleKey(
-        reason = "downward API doesn't affect the result of rule's execution",
-        serialization = DefaultFieldSerialization.class,
-        inputs = DefaultFieldInputs.class,
-        deps = DefaultFieldDeps.class)
-    private final boolean withDownwardApi;
+    @AddToRuleKey private final boolean withDownwardApi;
 
     public Impl(
         BuildTarget targetName,

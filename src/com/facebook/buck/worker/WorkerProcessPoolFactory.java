@@ -51,11 +51,6 @@ public class WorkerProcessPoolFactory {
   private final ProjectFilesystem filesystem;
   private final boolean withDownwardApi;
 
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public WorkerProcessPoolFactory(ProjectFilesystem filesystem) {
-    this(filesystem, false);
-  }
-
   public WorkerProcessPoolFactory(ProjectFilesystem filesystem, boolean withDownwardApi) {
     this.filesystem = filesystem;
     this.withDownwardApi = withDownwardApi;

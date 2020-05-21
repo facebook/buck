@@ -56,28 +56,6 @@ public class DefaultShellStep extends ShellStep {
     this(workingDirectory.getPath(), withDownwardApi, args);
   }
 
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public DefaultShellStep(
-      Path workingDirectory, List<String> args, Map<String, String> environment) {
-    this(workingDirectory, false, args, environment);
-  }
-
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public DefaultShellStep(
-      AbsPath workingDirectory, List<String> args, Map<String, String> environment) {
-    this(workingDirectory, false, args, environment);
-  }
-
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public DefaultShellStep(Path workingDirectory, List<String> args) {
-    this(workingDirectory, false, args, ImmutableMap.of());
-  }
-
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public DefaultShellStep(AbsPath workingDirectory, List<String> args) {
-    this(workingDirectory, false, args, ImmutableMap.of());
-  }
-
   @Override
   public String getShortName() {
     return args.get(0);

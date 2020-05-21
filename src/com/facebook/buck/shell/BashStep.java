@@ -45,16 +45,6 @@ public class BashStep extends ShellStep {
     this(workingDirectory.getPath(), withDownwardApi, bashCommand);
   }
 
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public BashStep(Path workingDirectory, String... bashCommand) {
-    this(workingDirectory, false, bashCommand);
-  }
-
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public BashStep(AbsPath workingDirectory, String... bashCommand) {
-    this(workingDirectory, false, bashCommand);
-  }
-
   @Override
   public String getShortName() {
     return "bash";

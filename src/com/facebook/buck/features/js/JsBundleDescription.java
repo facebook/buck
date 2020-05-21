@@ -309,7 +309,7 @@ public class JsBundleDescription
           jsBundle.getSourcePathToResources(),
           /* skipCrunchPngs */ false,
           androidBuckConfig.getFailOnLegacyAaptErrors(),
-          downwardApiConfig.isEnabledForAndroid());
+          downwardApiConfig.isEnabledForJs());
     }
 
     BuildRuleParams params =

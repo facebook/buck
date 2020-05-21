@@ -26,9 +26,7 @@ import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.OutputLabel;
 import com.facebook.buck.core.model.impl.BuildTargetPaths;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
 import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
 import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
@@ -214,52 +212,7 @@ public class GenruleBuildable implements Buildable {
       inputs = SandboxPropertiesBehavior.class)
   private final Optional<SandboxProperties> sandboxProperties;
 
-  @ExcludeFromRuleKey(
-      reason = "downward API doesn't affect the result of rule's execution",
-      serialization = DefaultFieldSerialization.class,
-      inputs = DefaultFieldInputs.class,
-      deps = DefaultFieldDeps.class)
-  private final boolean withDownwardApi;
-
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public GenruleBuildable(
-      BuildTarget buildTarget,
-      ProjectFilesystem filesystem,
-      SandboxExecutionStrategy sandboxExecutionStrategy,
-      SourceSet srcs,
-      Optional<Arg> cmd,
-      Optional<Arg> bash,
-      Optional<Arg> cmdExe,
-      Optional<String> type,
-      Optional<String> out,
-      Optional<ImmutableMap<OutputLabel, ImmutableSet<String>>> outs,
-      Optional<ImmutableSet<String>> defaultOuts,
-      boolean enableSandboxingInGenrule,
-      boolean isCacheable,
-      String environmentExpansionSeparator,
-      Optional<SandboxProperties> sandboxProperties,
-      Optional<GenruleAndroidTools> androidTools,
-      boolean executeRemotely) {
-    this(
-        buildTarget,
-        filesystem,
-        sandboxExecutionStrategy,
-        srcs,
-        cmd,
-        bash,
-        cmdExe,
-        type,
-        out,
-        outs,
-        defaultOuts,
-        enableSandboxingInGenrule,
-        isCacheable,
-        environmentExpansionSeparator,
-        sandboxProperties,
-        androidTools,
-        executeRemotely,
-        false);
-  }
+  @AddToRuleKey private final boolean withDownwardApi;
 
   public GenruleBuildable(
       BuildTarget buildTarget,

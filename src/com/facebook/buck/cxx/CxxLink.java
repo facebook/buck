@@ -22,10 +22,6 @@ import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rulekey.AddToRuleKey;
-import com.facebook.buck.core.rulekey.DefaultFieldDeps;
-import com.facebook.buck.core.rulekey.DefaultFieldInputs;
-import com.facebook.buck.core.rulekey.DefaultFieldSerialization;
-import com.facebook.buck.core.rulekey.ExcludeFromRuleKey;
 import com.facebook.buck.core.rules.BuildRule;
 import com.facebook.buck.core.rules.SourcePathRuleFinder;
 import com.facebook.buck.core.rules.attr.HasSupplementaryOutputs;
@@ -73,38 +69,6 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
   // Stored here so we can access it without an OutputPathResolver.
   private final Path output;
   private final ImmutableMap<String, Path> extraOutputs;
-
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public CxxLink(
-      BuildTarget buildTarget,
-      ProjectFilesystem projectFilesystem,
-      SourcePathRuleFinder ruleFinder,
-      CellPathResolver cellResolver,
-      Linker linker,
-      Path output,
-      ImmutableMap<String, Path> extraOutputs,
-      ImmutableList<Arg> args,
-      Optional<LinkOutputPostprocessor> postprocessor,
-      Optional<RuleScheduleInfo> ruleScheduleInfo,
-      boolean cacheable,
-      boolean thinLto,
-      boolean fatLto) {
-    this(
-        buildTarget,
-        projectFilesystem,
-        ruleFinder,
-        cellResolver,
-        linker,
-        output,
-        extraOutputs,
-        args,
-        postprocessor,
-        ruleScheduleInfo,
-        cacheable,
-        thinLto,
-        fatLto,
-        false);
-  }
 
   public CxxLink(
       BuildTarget buildTarget,
@@ -174,13 +138,7 @@ public class CxxLink extends ModernBuildRule<CxxLink.Impl>
     @AddToRuleKey private final Optional<PublicOutputPath> thinLTOPath;
     @AddToRuleKey private final ImmutableList<PublicOutputPath> extraOutputs;
     @AddToRuleKey private final BuildTarget buildTarget;
-
-    @ExcludeFromRuleKey(
-        reason = "downward API doesn't affect the result of rule's execution",
-        serialization = DefaultFieldSerialization.class,
-        inputs = DefaultFieldInputs.class,
-        deps = DefaultFieldDeps.class)
-    private final boolean withDownwardApi;
+    @AddToRuleKey private final boolean withDownwardApi;
 
     public Impl(
         Linker linker,

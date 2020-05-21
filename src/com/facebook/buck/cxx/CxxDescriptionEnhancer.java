@@ -1564,28 +1564,6 @@ public class CxxDescriptionEnhancer {
         deps);
   }
 
-  // TODO: msemko remove. Clients have to directly pass {@code withDownwardApi} param
-  public static CxxStrip createCxxStripRule(
-      BuildTarget baseBuildTarget,
-      ProjectFilesystem projectFilesystem,
-      ActionGraphBuilder graphBuilder,
-      StripStyle stripStyle,
-      boolean isCacheable,
-      BuildRule unstrippedBinaryRule,
-      CxxPlatform cxxPlatform,
-      Optional<String> outputRootName) {
-    return createCxxStripRule(
-        baseBuildTarget,
-        projectFilesystem,
-        graphBuilder,
-        stripStyle,
-        isCacheable,
-        unstrippedBinaryRule,
-        cxxPlatform,
-        outputRootName,
-        false);
-  }
-
   /** Creates {@code CxxStrip} rule */
   public static CxxStrip createCxxStripRule(
       BuildTarget baseBuildTarget,

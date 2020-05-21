@@ -99,7 +99,7 @@ public class AndroidBuildConfigDescription
                 JavacOptionsProvider.class)
             .getJavacOptions(),
         graphBuilder,
-        downwardApiConfig.isEnabledForJava());
+        downwardApiConfig.isEnabledForAndroid());
   }
 
   /**
