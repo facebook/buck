@@ -24,12 +24,18 @@ import static org.junit.Assume.assumeTrue;
 import com.facebook.buck.apple.AppleBinaryBuilder;
 import com.facebook.buck.apple.AppleBundleBuilder;
 import com.facebook.buck.apple.AppleBundleExtension;
+import com.facebook.buck.apple.AppleConfig;
+import com.facebook.buck.apple.AppleDependenciesCache;
 import com.facebook.buck.apple.AppleLibraryBuilder;
 import com.facebook.buck.apple.AppleTestBuilder;
+import com.facebook.buck.apple.XCodeDescriptions;
+import com.facebook.buck.apple.XCodeDescriptionsFactory;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductType;
 import com.facebook.buck.apple.xcode.xcodeproj.ProductTypes;
+import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.Cells;
 import com.facebook.buck.core.cell.TestCellBuilder;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
 import com.facebook.buck.core.model.Flavor;
@@ -37,13 +43,24 @@ import com.facebook.buck.core.model.UserFlavor;
 import com.facebook.buck.core.model.targetgraph.TargetGraph;
 import com.facebook.buck.core.model.targetgraph.TargetGraphFactory;
 import com.facebook.buck.core.model.targetgraph.TargetNode;
+import com.facebook.buck.core.plugin.impl.BuckPluginManagerFactory;
 import com.facebook.buck.core.rules.ActionGraphBuilder;
 import com.facebook.buck.core.rules.resolver.impl.TestActionGraphBuilder;
 import com.facebook.buck.core.sourcepath.FakeSourcePath;
+import com.facebook.buck.core.sourcepath.PathSourcePath;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.sourcepath.SourceWithFlags;
+import com.facebook.buck.core.sourcepath.resolver.SourcePathResolverAdapter;
+import com.facebook.buck.cxx.config.CxxBuckConfig;
+import com.facebook.buck.cxx.toolchain.CxxPlatform;
+import com.facebook.buck.cxx.toolchain.CxxPlatformUtils;
 import com.facebook.buck.cxx.toolchain.impl.DefaultCxxPlatforms;
+import com.facebook.buck.features.halide.HalideLibraryBuilder;
+import com.facebook.buck.io.filesystem.ProjectFilesystem;
+import com.facebook.buck.io.filesystem.impl.FakeProjectFilesystem;
 import com.facebook.buck.rules.coercer.SourceSortedSet;
+import com.facebook.buck.rules.keys.config.TestRuleKeyConfigurationFactory;
+import com.facebook.buck.swift.SwiftBuckConfig;
 import com.facebook.buck.util.environment.Platform;
 import com.facebook.buck.util.types.Either;
 import com.facebook.buck.util.types.Pair;
@@ -53,6 +70,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.ImmutableSortedSet;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -61,6 +79,9 @@ import org.junit.Test;
 
 public class XcodeNativeTargetGeneratorTest {
 
+  private XcodeNativeTargetGenerator xcodeNativeTargetGenerator;
+
+  // Test graph
   private Cells cells;
   private BuildTarget bazTestTarget;
   private BuildTarget bazLibTarget;
@@ -81,104 +102,113 @@ public class XcodeNativeTargetGeneratorTest {
   private TargetGraph targetGraph;
 
   @Before
-  public void setUp() {
+  public void setUp() throws IOException {
     assumeTrue(Platform.detect() == Platform.MACOS || Platform.detect() == Platform.LINUX);
 
-    cells = (new TestCellBuilder()).build();
+    setupTargetGraph();
 
-    // Create the following dep tree:
-    //   FooAppBundle -has-extension-> BarExt -> BarBinary
-    //   |
-    //   V
-    //   FooAppBinary -has-dep-> QuxLib -has-ui-test-> QuxTest
-    //   |                       /
-    //   |                    /
-    //   |                 /
-    //   |              /
-    //   |           /
-    //   |        /
-    //   V     V
-    //   BazLib -has-unit-test-> BazTest
+    XCodeDescriptions xcodeDescriptions =
+        XCodeDescriptionsFactory.create(BuckPluginManagerFactory.createPluginManager());
+    AppleDependenciesCache dependenciesCache = new AppleDependenciesCache(targetGraph);
+    ProjectGenerationStateCache projGenerationStateCache = new ProjectGenerationStateCache();
+    ProjectFilesystem projectFilesystem = new FakeProjectFilesystem();
+    Cell projectCell = cells.getRootCell();
 
-    bazTestTarget = BuildTargetFactory.newInstance("//baz:test");
-    bazTestNode =
-        AppleTestBuilder.createBuilder(bazTestTarget)
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .build();
+    ActionGraphBuilder actionGraphBuilder =
+        AppleProjectHelper.getActionGraphBuilderNodeFunction(targetGraph);
+    SourcePathResolverAdapter defaultPathResolver =
+        AppleProjectHelper.defaultSourcePathResolverAdapter(actionGraphBuilder);
 
-    bazLibTarget = BuildTargetFactory.newInstance("//baz:lib");
-    bazLibNode =
-        AppleLibraryBuilder.createBuilder(bazLibTarget)
-            .setTests(ImmutableSortedSet.of(bazTestTarget))
-            .build();
+    CxxPlatform cxxPlatform = CxxPlatformUtils.DEFAULT_PLATFORM;
+    ImmutableSet<Flavor> appleCxxFlavors = ImmutableSet.of();
 
-    quxTestTarget = BuildTargetFactory.newInstance("//qux:test");
-    quxTestNode =
-        AppleTestBuilder.createBuilder(quxTestTarget)
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .isUiTest(true)
-            .build();
+    ProjectSourcePathResolver projectSourcePathResolver =
+        new ProjectSourcePathResolver(
+            cells.getRootCell(), defaultPathResolver, targetGraph, actionGraphBuilder);
 
-    quxLibTarget = BuildTargetFactory.newInstance("//qux:lib");
-    quxLibNode =
-        AppleLibraryBuilder.createBuilder(quxLibTarget)
-            .setDeps(ImmutableSortedSet.of(bazLibTarget))
-            .setTests(ImmutableSortedSet.of(quxTestTarget))
-            .build();
+    BuckConfig config = AppleProjectHelper.createDefaultBuckConfig(projectFilesystem);
 
-    fooAppBinaryTarget = BuildTargetFactory.newInstance("//foo:appBinary");
-    fooAppBinaryNode =
-        AppleBinaryBuilder.createBuilder(fooAppBinaryTarget)
-            .setDeps(ImmutableSortedSet.of(quxLibTarget, bazLibTarget))
-            .build();
+    CxxBuckConfig cxxBuckConfig = new CxxBuckConfig(config);
+    AppleConfig appleConfig = config.getView(AppleConfig.class);
+    SwiftBuckConfig swiftBuckConfig = new SwiftBuckConfig(config);
 
-    barBinaryTarget = BuildTargetFactory.newInstance("//bar:binary");
-    barBinaryNode = AppleBinaryBuilder.createBuilder(barBinaryTarget).build();
+    PathRelativizer pathRelativizer = AppleProjectHelper.defaultPathRelativizer("test-out");
 
-    barExtTarget = BuildTargetFactory.newInstance("//bar", "ext", DefaultCxxPlatforms.FLAVOR);
-    barExtNode =
-        AppleBundleBuilder.createBuilder(barExtTarget)
-            .setBinary(barBinaryTarget)
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setExtension(Either.ofLeft(AppleBundleExtension.APPEX))
-            .setXcodeProductType(Optional.of(ProductTypes.APP_EXTENSION.getIdentifier()))
-            .build();
+    SwiftAttributeParser swiftAttributeParser =
+        new SwiftAttributeParser(swiftBuckConfig, projGenerationStateCache, projectFilesystem);
 
-    fooAppBundleTarget = BuildTargetFactory.newInstance("//foo:appBundle");
-    fooAppBundleNode =
-        AppleBundleBuilder.createBuilder(fooAppBundleTarget)
-            .setBinary(fooAppBinaryTarget)
-            .setInfoPlist(FakeSourcePath.of("Info.plist"))
-            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
-            .setDeps(ImmutableSortedSet.of(barExtTarget))
-            .build();
+    XcodeProjectWriteOptions xcodeProjectWriteOptions =
+        AppleProjectHelper.defaultXcodeProjectWriteOptions();
 
-    targetGraph =
-        TargetGraphFactory.newInstance(
-            bazTestNode,
-            bazLibNode,
-            quxTestNode,
-            quxLibNode,
-            fooAppBinaryNode,
-            barBinaryNode,
-            barExtNode,
-            fooAppBundleNode);
+    HeaderSearchPaths headerSearchPaths =
+        new HeaderSearchPaths(
+            projectCell,
+            cxxBuckConfig,
+            cxxPlatform,
+            TestRuleKeyConfigurationFactory.create(),
+            xcodeDescriptions,
+            targetGraph,
+            actionGraphBuilder,
+            dependenciesCache,
+            projectSourcePathResolver,
+            pathRelativizer,
+            swiftAttributeParser);
+
+    FlagParser flagParser =
+        new FlagParser(
+            projectCell,
+            appleConfig,
+            swiftBuckConfig,
+            cxxBuckConfig,
+            appleCxxFlavors,
+            xcodeDescriptions,
+            targetGraph,
+            actionGraphBuilder,
+            dependenciesCache,
+            defaultPathResolver,
+            headerSearchPaths);
+
+    xcodeNativeTargetGenerator =
+        new XcodeNativeTargetGenerator(
+            xcodeDescriptions,
+            targetGraph,
+            dependenciesCache,
+            projGenerationStateCache,
+            projectCell.getFilesystem(),
+            xcodeProjectWriteOptions.sourceRoot(),
+            "BUCK",
+            pathRelativizer,
+            defaultPathResolver,
+            projectSourcePathResolver,
+            ProjectGeneratorOptions.builder().build(),
+            CxxPlatformUtils.DEFAULT_PLATFORM,
+            appleCxxFlavors,
+            actionGraphBuilder,
+            HalideLibraryBuilder.createDefaultHalideConfig(projectFilesystem),
+            headerSearchPaths,
+            cxxBuckConfig,
+            appleConfig,
+            swiftBuckConfig,
+            swiftAttributeParser,
+            flagParser,
+            Optional.empty(),
+            xcodeProjectWriteOptions.objectFactory());
   }
 
   @Test
-  public void testGetProductType() {
-    assertEquals(ProductTypes.UNIT_TEST, getProductType(bazTestNode));
-    assertEquals(ProductTypes.STATIC_LIBRARY, getProductType(bazLibNode));
-    assertEquals(ProductTypes.UI_TEST, getProductType(quxTestNode));
-    assertEquals(ProductTypes.STATIC_LIBRARY, getProductType(quxLibNode));
-    assertEquals(ProductTypes.TOOL, getProductType(fooAppBinaryNode));
-    assertEquals(ProductTypes.TOOL, getProductType(barBinaryNode));
-    assertEquals(ProductTypes.APP_EXTENSION, getProductType(barExtNode));
-    assertEquals(ProductTypes.APPLICATION, getProductType(fooAppBundleNode));
+  public void getProductType() {
+    assertEquals(ProductTypes.UNIT_TEST, getProductTypeWithNode(bazTestNode));
+    assertEquals(ProductTypes.STATIC_LIBRARY, getProductTypeWithNode(bazLibNode));
+    assertEquals(ProductTypes.UI_TEST, getProductTypeWithNode(quxTestNode));
+    assertEquals(ProductTypes.STATIC_LIBRARY, getProductTypeWithNode(quxLibNode));
+    assertEquals(ProductTypes.TOOL, getProductTypeWithNode(fooAppBinaryNode));
+    assertEquals(ProductTypes.TOOL, getProductTypeWithNode(barBinaryNode));
+    assertEquals(ProductTypes.APP_EXTENSION, getProductTypeWithNode(barExtNode));
+    assertEquals(ProductTypes.APPLICATION, getProductTypeWithNode(fooAppBundleNode));
   }
 
   @Test
-  public void testSwapWithSharedBundes() {
+  public void swapWithSharedBundes() {
     BuildTarget sharedLibrary = BuildTargetFactory.newInstance("//foo:shared#shared");
     BuildTarget bundleTarget = BuildTargetFactory.newInstance("//foo", "sharedFramework");
 
@@ -204,7 +234,7 @@ public class XcodeNativeTargetGeneratorTest {
   }
 
   @Test
-  public void testPlatformSourcesAndHeaders() {
+  public void platformSourcesAndHeaders() {
     SourceWithFlags androidSource = SourceWithFlags.of(FakeSourcePath.of("androidFile.cpp"));
     SourceWithFlags iOSAndSimulatorSource =
         SourceWithFlags.of(FakeSourcePath.of("iOSAndSimulatorFile.cpp"));
@@ -362,7 +392,102 @@ public class XcodeNativeTargetGeneratorTest {
     assertEquals(result, expectedResult);
   }
 
-  public ProductType getProductType(TargetNode targetNode) {
+  @Test
+  public void appleLibraryHasHeaders() throws IOException {
+    XcodeNativeTargetGenerator.Result result =
+        xcodeNativeTargetGenerator.generateTarget(bazLibNode);
+    assertEquals(bazLibNode, result.targetNode);
+    assertEquals(bazLibTarget, result.targetAttributes.target().get());
+    assertEquals(1, result.targetAttributes.privateHeaders().size());
+    SourcePath header = result.targetAttributes.privateHeaders().asList().get(0);
+    assertTrue(header instanceof PathSourcePath);
+    assertEquals("Baz.h", ((PathSourcePath) header).getRelativePath().toString());
+  }
+
+  private void setupTargetGraph() {
+    cells = (new TestCellBuilder()).build();
+
+    // Create the following dep tree:
+    //   FooAppBundle -has-extension-> BarExt -> BarBinary
+    //   |
+    //   V
+    //   FooAppBinary -has-dep-> QuxLib -has-ui-test-> QuxTest
+    //   |                       /
+    //   |                    /
+    //   |                 /
+    //   |              /
+    //   |           /
+    //   |        /
+    //   V     V
+    //   BazLib -has-unit-test-> BazTest
+
+    bazTestTarget = BuildTargetFactory.newInstance("//baz:test");
+    bazTestNode =
+        AppleTestBuilder.createBuilder(bazTestTarget)
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .build();
+
+    bazLibTarget = BuildTargetFactory.newInstance("//baz:lib");
+    bazLibNode =
+        AppleLibraryBuilder.createBuilder(bazLibTarget)
+            .setHeaders(ImmutableSortedSet.of(FakeSourcePath.of("Baz.h")))
+            .setTests(ImmutableSortedSet.of(bazTestTarget))
+            .build();
+
+    quxTestTarget = BuildTargetFactory.newInstance("//qux:test");
+    quxTestNode =
+        AppleTestBuilder.createBuilder(quxTestTarget)
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .isUiTest(true)
+            .build();
+
+    quxLibTarget = BuildTargetFactory.newInstance("//qux:lib");
+    quxLibNode =
+        AppleLibraryBuilder.createBuilder(quxLibTarget)
+            .setDeps(ImmutableSortedSet.of(bazLibTarget))
+            .setTests(ImmutableSortedSet.of(quxTestTarget))
+            .build();
+
+    fooAppBinaryTarget = BuildTargetFactory.newInstance("//foo:appBinary");
+    fooAppBinaryNode =
+        AppleBinaryBuilder.createBuilder(fooAppBinaryTarget)
+            .setDeps(ImmutableSortedSet.of(quxLibTarget, bazLibTarget))
+            .build();
+
+    barBinaryTarget = BuildTargetFactory.newInstance("//bar:binary");
+    barBinaryNode = AppleBinaryBuilder.createBuilder(barBinaryTarget).build();
+
+    barExtTarget = BuildTargetFactory.newInstance("//bar", "ext", DefaultCxxPlatforms.FLAVOR);
+    barExtNode =
+        AppleBundleBuilder.createBuilder(barExtTarget)
+            .setBinary(barBinaryTarget)
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setExtension(Either.ofLeft(AppleBundleExtension.APPEX))
+            .setXcodeProductType(Optional.of(ProductTypes.APP_EXTENSION.getIdentifier()))
+            .build();
+
+    fooAppBundleTarget = BuildTargetFactory.newInstance("//foo:appBundle");
+    fooAppBundleNode =
+        AppleBundleBuilder.createBuilder(fooAppBundleTarget)
+            .setBinary(fooAppBinaryTarget)
+            .setInfoPlist(FakeSourcePath.of("Info.plist"))
+            .setExtension(Either.ofLeft(AppleBundleExtension.APP))
+            .setDeps(ImmutableSortedSet.of(barExtTarget))
+            .build();
+
+    targetGraph =
+        TargetGraphFactory.newInstance(
+            bazTestNode,
+            bazLibNode,
+            quxTestNode,
+            quxLibNode,
+            fooAppBinaryNode,
+            barBinaryNode,
+            barExtNode,
+            fooAppBundleNode);
+  }
+
+  public ProductType getProductTypeWithNode(TargetNode targetNode) {
     return XcodeNativeTargetGenerator.getProductType(targetNode, targetGraph).get();
   }
 }
