@@ -5,12 +5,17 @@ SHELL ["powershell", "-command"]
 ARG version=
 ARG timestamp=
 ARG repository=facebook/buck
+ARG chocolateyUseWindowsCompression=true
 
 # Install chocolatey
 RUN Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 
 # Download enough to bootstrap a build
-RUN choco install -y python2 git jdk8
+RUN choco install -y python --version=3.6.2
+RUN choco install -y git jdk8
+
+# Choco installs python3 and named it to python, buck expects python3 so make a copy of python3
+RUN $pythonpath=(Split-Path((Get-Command python).Path)); copy ${pythonpath}\python.exe ${pythonpath}\python3.exe
 
 # The JRE package that ant depends on seems to be somewhat spotty,
 # install the jdk instead and use its java binary.

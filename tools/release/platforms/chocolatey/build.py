@@ -88,7 +88,7 @@ def write_license_file(original_license):
 
 def write_verification_txt(original_verification_txt, version, timestamp):
     dest = "VERIFICATION.txt"
-    with open(original_verification_txt, "r") as fin, open(dest, "w") as fout:
+    with open(original_verification_txt, "rb") as fin, open(dest, "w") as fout:
         verification_text = fin.read().decode("utf-8")
         verification_text = verification_text.format(
             release_version=version, release_timestamp=timestamp

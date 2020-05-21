@@ -19,6 +19,7 @@ import tempfile
 import dateutil.parser
 import magic
 import requests
+import time
 
 from platforms.common import ReleaseException, run
 
@@ -39,7 +40,8 @@ Includes various improvements and bug fixes, viewable here: {html_url}
 def get_version_and_timestamp_from_release(release):
     """ Returns the version (without a 'v' prefix) and the timestamp of the release """
     release_version = release["tag_name"].lstrip("v")
-    release_timestamp = dateutil.parser.parse(release["created_at"]).strftime("%s")
+    created_at = dateutil.parser.parse(release["created_at"])
+    release_timestamp = str(int(time.mktime(created_at.timetuple())))
     return release_version, release_timestamp
 
 
