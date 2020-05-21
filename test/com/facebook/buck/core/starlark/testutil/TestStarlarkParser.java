@@ -16,10 +16,10 @@
 
 package com.facebook.buck.core.starlark.testutil;
 
+import com.google.devtools.build.lib.syntax.CallExpression;
 import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Expression;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.ParserInput;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.SyntaxError;
@@ -27,9 +27,9 @@ import com.google.devtools.build.lib.vfs.PathFragment;
 
 public class TestStarlarkParser {
 
-  public static FuncallExpression parseFuncall(String expr) {
+  public static CallExpression parseFuncall(String expr) {
     try {
-      return (FuncallExpression)
+      return (CallExpression)
           Expression.parse(ParserInput.create(expr, PathFragment.EMPTY_FRAGMENT));
     } catch (SyntaxError syntaxError) {
       throw new RuntimeException(syntaxError);

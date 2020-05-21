@@ -158,11 +158,6 @@ class BuckStarlarkCallable implements SkylarkCallable {
   }
 
   @Override
-  public boolean useAst() {
-    return false;
-  }
-
-  @Override
   public boolean useStarlarkThread() {
     return false;
   }

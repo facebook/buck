@@ -35,14 +35,13 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 /**
  * Responsible for creating instances of Skylark functions based on Buck's {@link BaseDescription}s.
@@ -75,33 +74,35 @@ public class RuleFunctionFactory {
    */
   BaseFunction create(BaseDescription<?> ruleClass) {
     String name = DescriptionCache.getRuleType(ruleClass).getName();
-    return new BaseFunction(FunctionSignature.KWARGS) {
+    return new BaseFunction() {
+
+      @Override
+      public FunctionSignature getSignature() {
+        return FunctionSignature.KWARGS;
+      }
 
       @Override
       public String getName() {
         return name;
       }
 
-      @SuppressWarnings("unchecked")
       @Override
-      protected Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread thread)
+      public Object call(
+          StarlarkThread thread, Location loc, Tuple<Object> args, Dict<String, Object> kwargs)
           throws EvalException, InterruptedException {
 
-        Preconditions.checkArgument(args.length == 1);
+        // sanity check; Starlark has already validated signature
+        Preconditions.checkArgument(args.isEmpty());
 
-        Dict<String, Object> kwargs = (Dict<String, Object>) args[0];
-
-        ParseContext parseContext =
-            ParseContext.getParseContext(thread, ast != null ? ast.getLocation() : null, name);
+        ParseContext parseContext = ParseContext.getParseContext(thread, loc, name);
         String basePath =
             parseContext
                 .getPackageContext()
                 .getPackageIdentifier()
                 .getPackageFragment()
                 .getPathString();
-        RecordedRule recordedRule =
-            populateAttributes(ruleClass, getName(), basePath, kwargs, ast.getLocation());
-        parseContext.recordRule(recordedRule, ast.getLocation());
+        RecordedRule recordedRule = populateAttributes(ruleClass, getName(), basePath, kwargs, loc);
+        parseContext.recordRule(recordedRule, loc);
         return Starlark.NONE;
       }
     };

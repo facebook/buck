@@ -49,6 +49,7 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.EvalException;
+import com.google.devtools.build.lib.syntax.Starlark;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
@@ -235,7 +236,12 @@ public class ListCommandLineArgsTest {
     try (TestMutableEnv env = new TestMutableEnv()) {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)
-              provider.call(ImmutableList.of(), ImmutableMap.of("foo", args), null, env.getEnv());
+              Starlark.call(
+                  env.getEnv(),
+                  provider,
+                  Location.BUILTIN,
+                  ImmutableList.of(),
+                  ImmutableMap.of("foo", args));
       assertEquals(args, providerInfo.getValue("foo"));
       assertTrue(providerInfo.isImmutable());
     }

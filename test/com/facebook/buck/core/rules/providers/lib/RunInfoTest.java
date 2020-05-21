@@ -196,7 +196,7 @@ public class RunInfoTest {
 
       // Make sure we're freezing properly
       args.add("arg3", Location.BUILTIN);
-      env.pop("foo", "", Location.BUILTIN, environment);
+      env.pop("foo", "", environment);
 
       new WriteAction(
           registry,
@@ -236,7 +236,12 @@ public class RunInfoTest {
     try (TestMutableEnv env = new TestMutableEnv()) {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)
-              provider.call(ImmutableList.of(), ImmutableMap.of("foo", args), null, env.getEnv());
+              Starlark.call(
+                  env.getEnv(),
+                  provider,
+                  Location.BUILTIN,
+                  ImmutableList.of(),
+                  ImmutableMap.of("foo", args));
       assertEquals(args, providerInfo.getValue("foo"));
       assertTrue(providerInfo.isImmutable());
     }

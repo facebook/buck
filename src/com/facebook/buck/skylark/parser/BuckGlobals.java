@@ -17,7 +17,6 @@
 package com.facebook.buck.skylark.parser;
 
 import com.facebook.buck.core.description.BaseDescription;
-import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.rules.providers.impl.BuiltInProvider;
 import com.facebook.buck.core.starlark.knowntypes.KnownUserDefinedRuleTypes;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -36,7 +35,6 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.packages.StructProvider;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.ClassObject;
-import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Starlark;
 import java.util.function.Function;
@@ -156,11 +154,7 @@ public abstract class BuckGlobals {
    */
   @Lazy
   public ImmutableCollection<String> getNativeModuleFieldNames() {
-    try {
-      return getNativeModule().getFieldNames();
-    } catch (EvalException e) {
-      throw new BuckUncheckedExecutionException(e);
-    }
+    return getNativeModule().getFieldNames();
   }
 
   /** Puts all native module functions into provided {@code builder}. */

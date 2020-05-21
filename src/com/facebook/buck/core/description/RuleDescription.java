@@ -45,8 +45,7 @@ public interface RuleDescription<T extends BuildRuleArg> extends Description<T> 
   /**
    * Runs the rule implementation during the analysis phase. The rule implementation should create
    * the propagated {@link com.google.devtools.build.lib.packages.Provider}s and corresponding
-   * {@link com.google.devtools.build.lib.packages.InfoInterface}s, and register its corresponding
-   * actions.
+   * {@link com.google.devtools.build.lib.packages.Info}s, and register its corresponding actions.
    *
    * @param context a {@link RuleAnalysisContext} containing all the information usable by this rule
    *     for it's analysis and constructive of its corresponding {@link
@@ -56,7 +55,7 @@ public interface RuleDescription<T extends BuildRuleArg> extends Description<T> 
    * @param args The args of type {@code T} that this rule uses to rule its analysis
    * @return a {@link ProviderInfoCollection} that contains all the {@link
    *     com.google.devtools.build.lib.packages.Provider} and the corresponding {@link
-   *     com.google.devtools.build.lib.packages.InfoInterface} to be propagated by this rule.
+   *     com.google.devtools.build.lib.packages.Info} to be propagated by this rule.
    * @throws ActionCreationException If an action cannot be created correctly
    * @throws RuleAnalysisException If the rule implementation could not run as expected. e.g. if the
    *     implementation method of a User Defined Rule fails to eval

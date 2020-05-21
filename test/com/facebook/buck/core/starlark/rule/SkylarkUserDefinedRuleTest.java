@@ -42,13 +42,15 @@ import com.google.devtools.build.lib.events.EventKind;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.events.PrintingEventHandler;
 import com.google.devtools.build.lib.syntax.BaseFunction;
+import com.google.devtools.build.lib.syntax.CallExpression;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Module;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.Tuple;
 import com.google.devtools.build.lib.vfs.PathFragment;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -71,16 +73,31 @@ public class SkylarkUserDefinedRuleTest {
   public static class SimpleFunction extends BaseFunction {
 
     private final String name;
+    private final FunctionSignature signature;
+    private final Tuple<Object> defaultValues;
 
     public SimpleFunction(
         String name, FunctionSignature signature, ImmutableList<Object> defaultValues) {
-      super(signature, defaultValues);
       this.name = name;
+      this.signature = signature;
+      this.defaultValues = Tuple.copyOf(defaultValues);
     }
 
     public SimpleFunction(String name, FunctionSignature signature) {
-      super(signature);
       this.name = name;
+      this.signature = signature;
+      this.defaultValues = Tuple.of();
+    }
+
+    @Override
+    public FunctionSignature getSignature() {
+      return signature;
+    }
+
+    @Nullable
+    @Override
+    public Tuple<Object> getDefaultValues() {
+      return defaultValues;
     }
 
     @Override
@@ -99,7 +116,9 @@ public class SkylarkUserDefinedRuleTest {
     }
 
     @Override
-    public Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env) {
+    public Object call(
+        StarlarkThread thread, Location loc, Tuple<Object> args, Dict<String, Object> kwargs)
+        throws EvalException, InterruptedException {
       throw new UnsupportedOperationException();
     }
   }
@@ -132,7 +151,7 @@ public class SkylarkUserDefinedRuleTest {
    * logging during an error case that is not encountered in the wild, so just go with the easiest
    * ast to construct
    */
-  private FuncallExpression getJunkAst() {
+  private CallExpression getJunkAst() {
     return TestStarlarkParser.parseFuncall("junk()");
   }
 
@@ -311,8 +330,12 @@ public class SkylarkUserDefinedRuleTest {
       StarlarkThread env = newEnvironment(mutability);
 
       Object res =
-          rule.call(
-              ImmutableList.of(), ImmutableMap.of("name", "some_rule_name"), getJunkAst(), env);
+          Starlark.call(
+              env,
+              rule,
+              getJunkAst().getLocation(),
+              ImmutableList.of(),
+              ImmutableMap.of("name", "some_rule_name"));
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, Location.BUILTIN, "some_rule_name").getRecordedRules();
@@ -361,11 +384,12 @@ public class SkylarkUserDefinedRuleTest {
       StarlarkThread env = newEnvironment(mutability);
 
       Object res =
-          rule.call(
+          Starlark.call(
+              env,
+              rule,
+              getJunkAst().getLocation(),
               ImmutableList.of(),
-              ImmutableMap.of("name", "some_rule_name", "arg2", "arg2_val", "arg4", 2),
-              getJunkAst(),
-              env);
+              ImmutableMap.of("name", "some_rule_name", "arg2", "arg2_val", "arg4", 2));
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, Location.BUILTIN, "some_rule_name").getRecordedRules();
@@ -408,11 +432,12 @@ public class SkylarkUserDefinedRuleTest {
       expectedException.expect(EvalException.class);
       expectedException.expectMessage(
           "missing mandatory named-only argument 'arg4' while calling @foo//bar:extension.bzl:baz_rule(*, name, arg2, arg4, arg1 = \"some string\", arg3 = 5)");
-      rule.call(
+      Starlark.call(
+          env,
+          rule,
+          getJunkAst().getLocation(),
           ImmutableList.of(),
-          ImmutableMap.of("name", "some_rule_name", "arg2", "arg2_val"),
-          getJunkAst(),
-          env);
+          ImmutableMap.of("name", "some_rule_name", "arg2", "arg2_val"));
     }
   }
 
@@ -452,7 +477,10 @@ public class SkylarkUserDefinedRuleTest {
       StarlarkThread env = newEnvironment(mutability);
 
       Object res =
-          rule.call(
+          Starlark.call(
+              env,
+              rule,
+              getJunkAst().getLocation(),
               ImmutableList.of(),
               ImmutableMap.of(
                   "name",
@@ -464,9 +492,7 @@ public class SkylarkUserDefinedRuleTest {
                   "arg3",
                   1,
                   "arg4",
-                  2),
-              getJunkAst(),
-              env);
+                  2));
 
       TwoArraysImmutableHashMap<String, RecordedRule> rules =
           ParseContext.getParseContext(env, Location.BUILTIN, "some_rule_name").getRecordedRules();

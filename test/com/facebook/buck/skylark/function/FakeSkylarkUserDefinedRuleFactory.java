@@ -31,14 +31,14 @@ import com.google.devtools.build.lib.cmdline.Label;
 import com.google.devtools.build.lib.cmdline.LabelSyntaxException;
 import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.syntax.BaseFunction;
+import com.google.devtools.build.lib.syntax.Dict;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.Map;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /** Simple container class to make constructing {@link SkylarkUserDefinedRule}s easier in tests */
 public class FakeSkylarkUserDefinedRuleFactory {
@@ -97,12 +97,19 @@ public class FakeSkylarkUserDefinedRuleFactory {
     FunctionSignature signature =
         FunctionSignature.create(1, 0, 0, 0, false, false, ImmutableList.of("ctx"));
     BaseFunction implementation =
-        new BaseFunction(signature) {
+        new BaseFunction() {
           @Override
-          public Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env) {
-            Preconditions.checkArgument(args.length == 1);
-            Preconditions.checkArgument(args[0] instanceof SkylarkRuleContext);
-            return callable.apply((SkylarkRuleContext) args[0]);
+          public FunctionSignature getSignature() {
+            return signature;
+          }
+
+          @Override
+          public Object call(
+              StarlarkThread thread, Location loc, Tuple<Object> args, Dict<String, Object> kwargs)
+              throws EvalException, InterruptedException {
+            Preconditions.checkArgument(args.size() == 1);
+            Preconditions.checkArgument(args.get(0) instanceof SkylarkRuleContext);
+            return callable.apply((SkylarkRuleContext) args.get(0));
           }
 
           @Override

@@ -90,11 +90,12 @@ public class UserDefinedProviderTest {
     try (TestMutableEnv env = new TestMutableEnv()) {
       UserDefinedProviderInfo providerInfo =
           (UserDefinedProviderInfo)
-              provider.call(
+              Starlark.call(
+                  env.getEnv(),
+                  provider,
+                  Location.BUILTIN,
                   ImmutableList.of(),
-                  ImmutableMap.of("foo", "val_1", "bar", "val_2", "baz", "val_3"),
-                  null,
-                  env.getEnv());
+                  ImmutableMap.of("foo", "val_1", "bar", "val_2", "baz", "val_3"));
       Assert.assertTrue(providerInfo.isImmutable());
     }
   }
@@ -115,7 +116,12 @@ public class UserDefinedProviderTest {
     try (TestMutableEnv env = new TestMutableEnv()) {
       thrown.expect(Exception.class);
       thrown.expectMessage("Tried to call a Provider before exporting it");
-      provider.call(ImmutableList.of(), ImmutableMap.of("foo", "foo_value"), null, env.getEnv());
+      Starlark.call(
+          env.getEnv(),
+          provider,
+          Location.BUILTIN,
+          ImmutableList.of(),
+          ImmutableMap.of("foo", "foo_value"));
     }
   }
 
@@ -128,11 +134,12 @@ public class UserDefinedProviderTest {
 
     try (TestMutableEnv env = new TestMutableEnv()) {
       Object rawInfo =
-          provider.call(
+          Starlark.call(
+              env.getEnv(),
+              provider,
+              Location.BUILTIN,
               ImmutableList.of(),
-              ImmutableMap.of("foo", "foo_value", "baz", "baz_value"),
-              null,
-              env.getEnv());
+              ImmutableMap.of("foo", "foo_value", "baz", "baz_value"));
 
       assertTrue(rawInfo instanceof UserDefinedProviderInfo);
 
@@ -152,11 +159,12 @@ public class UserDefinedProviderTest {
 
     try (TestMutableEnv env = new TestMutableEnv()) {
       Object rawInfo =
-          provider.call(
+          Starlark.call(
+              env.getEnv(),
+              provider,
+              Location.BUILTIN,
               ImmutableList.of(),
-              ImmutableMap.of("foo", "foo_value", "bar", "bar_value", "baz", "baz_value"),
-              null,
-              env.getEnv());
+              ImmutableMap.of("foo", "foo_value", "bar", "bar_value", "baz", "baz_value"));
 
       assertTrue(rawInfo instanceof UserDefinedProviderInfo);
 

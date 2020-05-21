@@ -50,6 +50,7 @@ import com.google.devtools.build.lib.syntax.EvalException;
 import com.google.devtools.build.lib.syntax.EvalUtils;
 import com.google.devtools.build.lib.syntax.Mutability;
 import com.google.devtools.build.lib.syntax.Sequence;
+import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkList;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import java.util.HashMap;
@@ -97,7 +98,13 @@ public class SkylarkDescription implements RuleDescriptionWithInstanceName<Skyla
 
         implementation = args.getImplementation();
 
-        implResult = implementation.call(ImmutableList.of(ctx), ImmutableMap.of(), null, env);
+        implResult =
+            Starlark.call(
+                env,
+                implementation,
+                implementation.getLocation(),
+                ImmutableList.of(ctx),
+                ImmutableMap.of());
       }
 
       List<SkylarkProviderInfo> returnedProviders =

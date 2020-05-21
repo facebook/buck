@@ -1,14 +1,14 @@
-commit 0e014ae9a47eda4c83de54e2124cbf26a929cac8
+commit 108ecab61568dabd97b3f33e21cb0981fda281ae
 Author: Stiopa Koltsov <stepan.koltsov@gmail.com>
 Date:   Wed Apr 22 13:56:39 2020 +0100
 
     bazel import patch
 
 diff --git a/src/main/java/com/google/devtools/build/lib/BUILD b/src/main/java/com/google/devtools/build/lib/BUILD
-index ff6ebb1c83..23a99be78e 100644
+index c1ed32732a..2852aab98b 100644
 --- a/src/main/java/com/google/devtools/build/lib/BUILD
 +++ b/src/main/java/com/google/devtools/build/lib/BUILD
-@@ -1508,3 +1508,62 @@ java_library(
+@@ -1512,3 +1512,62 @@ java_library(
          "analysis/BuildInfo.java",
      ],
  )
@@ -25,7 +25,6 @@ index ff6ebb1c83..23a99be78e 100644
 +        "packages/BuiltinProvider.java",
 +        "packages/Globber.java",
 +        "packages/Info.java",
-+        "packages/InfoInterface.java",
 +        "packages/NativeInfo.java",
 +        "packages/NativeProvider.java",
 +        "packages/Provider.java",
@@ -54,6 +53,7 @@ index ff6ebb1c83..23a99be78e 100644
 +        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization",
 +        "//src/main/java/com/google/devtools/build/lib/skyframe/serialization/autocodec:autocodec-annotation",
 +        "//src/main/java/com/google/devtools/build/lib/skylarkbuildapi",
++        "//src/main/java/com/google/devtools/build/lib/skylarkbuildapi/core",
 +        "//src/main/java/com/google/devtools/build/lib/syntax:evaluator",
 +        "//src/main/java/com/google/devtools/build/lib/syntax:frontend",
 +        "//src/main/java/com/google/devtools/build/lib/syntax:semantics",
@@ -105,7 +105,7 @@ index 41374dde6f..36be72a9fa 100644
  
    /**
 diff --git a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
-index e21e4778a7..c7828491a2 100644
+index 1cc7840a10..8389144c37 100644
 --- a/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
 +++ b/src/main/java/com/google/devtools/build/lib/collect/nestedset/NestedSet.java
 @@ -47,8 +47,6 @@ import javax.annotation.Nullable;
@@ -117,7 +117,7 @@ index e21e4778a7..c7828491a2 100644
    /**
     * Order and size of set packed into one int.
     *
-@@ -392,7 +390,6 @@ public final class NestedSet<E> implements Iterable<E> {
+@@ -398,7 +396,6 @@ public final class NestedSet<E> implements Iterable<E> {
          try {
            return Arrays.toString(Futures.getDone(future));
          } catch (ExecutionException e) {
@@ -126,10 +126,10 @@ index e21e4778a7..c7828491a2 100644
            return "Future " + future + " with error: " + e.getCause().getMessage();
          }
 diff --git a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-index 9bd5b11db7..321c106326 100644
+index 76332bb661..321c106326 100644
 --- a/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
 +++ b/src/main/java/com/google/devtools/build/lib/packages/Attribute.java
-@@ -14,2274 +14,13 @@
+@@ -14,2276 +14,13 @@
  
  package com.google.devtools.build.lib.packages;
  
@@ -1599,7 +1599,9 @@ index 9bd5b11db7..321c106326 100644
 -        if (!attr.hasComputedDefault()) {
 -          Object value = rule.get(attrName, attr.getType());
 -          if (!EvalUtils.isNullOrNone(value)) {
--            attrValues.put(attr.getName(), value);
+-            // Some attribute values are not valid Starlark values:
+-            // visibility is an ImmutableList, for example.
+-            attrValues.put(attr.getName(), Starlark.fromJava(value, /*mutability=*/ null));
 -          }
 -        }
 -      }
@@ -2411,7 +2413,7 @@ index 9bd5b11db7..321c106326 100644
  
    /**
     * Returns if an attribute with the given name is an implicit dependency according to the
-@@ -2291,14 +30,6 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2293,14 +30,6 @@ public final class Attribute implements Comparable<Attribute> {
      return name.startsWith("$");
    }
  
@@ -2426,7 +2428,7 @@ index 9bd5b11db7..321c106326 100644
    /**
     * Returns if an attribute with the given name is late-bound according to the naming policy
     * that designates late-bound attributes.
-@@ -2323,76 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
+@@ -2325,76 +54,4 @@ public final class Attribute implements Comparable<Attribute> {
      }
      return nativeAttrName;
    }
@@ -2504,23 +2506,23 @@ index 9bd5b11db7..321c106326 100644
 -  }
  }
 diff --git a/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java b/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java
-index 539dfdd0c7..166dd60123 100644
+index 6ea557dca6..0b37ec320c 100644
 --- a/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java
 +++ b/src/main/java/com/google/devtools/build/lib/syntax/CallUtils.java
-@@ -247,7 +247,7 @@ public final class CallUtils {
-    *     example, if any arguments are of unexpected type, or not all mandatory parameters are
+@@ -226,7 +226,7 @@ public final class CallUtils {
     *     specified by the user
     */
+   // TODO(adonovan): move to BuiltinCallable
 -  static Object[] convertStarlarkArgumentsToJavaMethodArguments(
 +  public static Object[] convertStarlarkArgumentsToJavaMethodArguments(
        StarlarkThread thread,
-       FuncallExpression call,
-       MethodDescriptor method,
+       String methodName,
+       Location loc,
 diff --git a/src/main/java/com/google/devtools/build/lib/syntax/MethodDescriptor.java b/src/main/java/com/google/devtools/build/lib/syntax/MethodDescriptor.java
-index 2e31842faa..211b3e35c9 100644
+index bf2c173c4f..3256a8b1a7 100644
 --- a/src/main/java/com/google/devtools/build/lib/syntax/MethodDescriptor.java
 +++ b/src/main/java/com/google/devtools/build/lib/syntax/MethodDescriptor.java
-@@ -30,7 +30,7 @@ import java.util.Arrays;
+@@ -31,7 +31,7 @@ import javax.annotation.Nullable;
   * <p>The annotation metadata is duplicated in this class to avoid usage of Java dynamic proxies
   * which are ~7X slower.
   */
@@ -2529,7 +2531,7 @@ index 2e31842faa..211b3e35c9 100644
    private final Method method;
    private final SkylarkCallable annotation;
  
-@@ -87,7 +87,7 @@ final class MethodDescriptor {
+@@ -85,7 +85,7 @@ final class MethodDescriptor {
    }
  
    /** @return Skylark method descriptor for provided Java method and signature annotation. */
@@ -2538,7 +2540,7 @@ index 2e31842faa..211b3e35c9 100644
        Method method, SkylarkCallable annotation, StarlarkSemantics semantics) {
      // This happens when the interface is public but the implementation classes
      // have reduced visibility.
-@@ -164,7 +164,7 @@ final class MethodDescriptor {
+@@ -173,7 +173,7 @@ final class MethodDescriptor {
    }
  
    /** @see SkylarkCallable#name() */
@@ -2547,7 +2549,7 @@ index 2e31842faa..211b3e35c9 100644
      return name;
    }
  
-@@ -193,7 +193,7 @@ final class MethodDescriptor {
+@@ -202,7 +202,7 @@ final class MethodDescriptor {
    }
  
    /** @see SkylarkCallable#allowReturnNones() */
@@ -2556,7 +2558,7 @@ index 2e31842faa..211b3e35c9 100644
      return allowReturnNones;
    }
  
-@@ -222,7 +222,7 @@ final class MethodDescriptor {
+@@ -226,7 +226,7 @@ final class MethodDescriptor {
    }
  
    /** @see SkylarkCallable#parameters() */
@@ -2566,10 +2568,10 @@ index 2e31842faa..211b3e35c9 100644
    }
  
 diff --git a/src/main/java/com/google/devtools/build/lib/syntax/ParamDescriptor.java b/src/main/java/com/google/devtools/build/lib/syntax/ParamDescriptor.java
-index 4c8260b25d..bc6e29568c 100644
+index cf16770663..0720a41b94 100644
 --- a/src/main/java/com/google/devtools/build/lib/syntax/ParamDescriptor.java
 +++ b/src/main/java/com/google/devtools/build/lib/syntax/ParamDescriptor.java
-@@ -22,7 +22,7 @@ import java.util.Arrays;
+@@ -21,7 +21,7 @@ import com.google.devtools.build.lib.syntax.StarlarkSemantics.FlagIdentifier;
  import javax.annotation.Nullable;
  
  /** A value class for storing {@link Param} metadata to avoid using Java proxies. */
@@ -2578,16 +2580,13 @@ index 4c8260b25d..bc6e29568c 100644
  
    private final String name;
    private final String defaultValue;
-@@ -115,7 +115,7 @@ final class ParamDescriptor {
+@@ -106,12 +106,12 @@ final class ParamDescriptor {
    }
  
    /** @see Param#name() */
 -  String getName() {
 +  public String getName() {
      return name;
-   }
- 
-@@ -125,7 +125,7 @@ final class ParamDescriptor {
    }
  
    /** @see Param#type() */

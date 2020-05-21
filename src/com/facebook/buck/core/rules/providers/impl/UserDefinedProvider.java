@@ -27,12 +27,12 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.SkylarkExportable;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
 import com.google.devtools.build.lib.syntax.StarlarkValue;
+import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.Collections;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -55,20 +55,32 @@ public class UserDefinedProvider extends BaseFunction
   private boolean isExported = false;
   @Nullable private String name = null;
 
+  private final FunctionSignature functionSignature;
+  private final Tuple<Object> defaultValues;
+
   /**
    * Create an instance of {@link UserDefinedProvider}
    *
    * @param location The location where the provider was defined by the user
-   * @param fieldNames List of kwargs that will be available when {@link #call(Object[],
-   *     FuncallExpression, com.google.devtools.build.lib.syntax.StarlarkThread)} is called, and
-   *     will be available as fields on the resulting {@link UserDefinedProviderInfo} object
+   * @param fieldNames List of kwargs that will be available when {@link #fastcall(StarlarkThread,
+   *     Location, Object[], Object[])} is called, and will be available as fields on the resulting
+   *     {@link UserDefinedProviderInfo} object
    */
   public UserDefinedProvider(Location location, String[] fieldNames) {
-    super(
-        FunctionSignature.namedOnly(0, fieldNames),
-        Collections.nCopies(fieldNames.length, Starlark.NONE));
+    this.functionSignature = FunctionSignature.namedOnly(0, fieldNames);
+    this.defaultValues = Tuple.copyOf(Collections.nCopies(fieldNames.length, Starlark.NONE));
     this.location = location;
     this.key = new Key();
+  }
+
+  @Override
+  public FunctionSignature getSignature() {
+    return functionSignature;
+  }
+
+  @Override
+  public Tuple<Object> getDefaultValues() {
+    return defaultValues;
   }
 
   @Override
@@ -125,17 +137,37 @@ public class UserDefinedProvider extends BaseFunction
   }
 
   @Override
-  protected Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env) {
+  public Object fastcall(StarlarkThread thread, Location loc, Object[] positional, Object[] named)
+      throws EvalException, InterruptedException {
     Verify.verify(isExported, "Tried to call a Provider before exporting it");
 
+    Object[] args =
+        Starlark.matchSignature(
+            functionSignature, this, defaultValues, thread.mutability(), positional, named);
+
     ImmutableList<String> fieldNames = Objects.requireNonNull(getSignature()).getParameterNames();
-    Verify.verify(args.length == fieldNames.size());
+
+    // TODO(nga): there seems to be a bug in Starlark 2.1.0
+    //   it adds an extra null value for a parameter for named-only signature:
+    //     ```
+    //     private boolean hasStar() {
+    //       return hasVarargs() || (numNamedOnly() > 0);
+    //     }
+    //     public int numParameters() {
+    //       return numPositionals() + numNamedOnly() + (hasStar() ? 1 : 0) + (hasKwargs() ? 1 : 0);
+    //     }
+    //     ```
+    //   (The snippet above should say `hasVarargs()` not `hasStar()`
+    //   But that code was heavily rewritten in 735094645155f8d231a8f5546901de005b28a899.
+    //   So no reason to report a bug.
+    Verify.verify(args.length == fieldNames.size() || args.length == fieldNames.size() + 1);
 
     ImmutableMap.Builder<String, Object> builder =
         ImmutableMap.builderWithExpectedSize(args.length);
     for (int i = 0; i < fieldNames.size(); i++) {
       builder.put(fieldNames.get(i), args[i]);
     }
+
     return new UserDefinedProviderInfo(this, builder.build());
   }
 

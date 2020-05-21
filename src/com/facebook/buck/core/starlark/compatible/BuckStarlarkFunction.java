@@ -26,7 +26,6 @@ import com.google.devtools.build.lib.profiler.SilentCloseable;
 import com.google.devtools.build.lib.skylarkinterface.SkylarkCallable;
 import com.google.devtools.build.lib.syntax.CallUtils;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.MethodDescriptor;
 import com.google.devtools.build.lib.syntax.Printer;
 import com.google.devtools.build.lib.syntax.Starlark;
@@ -39,8 +38,6 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -89,8 +86,8 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
    * the parameter list for the method handle.
    *
    * @param methodName the function name exposed to skylark
-   * @param method a method that will eventually be called in {@link #call(List, Map,
-   *     FuncallExpression, StarlarkThread)}
+   * @param method a method that will eventually be called in {@link #fastcall(StarlarkThread,
+   *     Location, Object[], Object[])}
    * @param namedParams a list of named parameters for skylark. The names are mapped in order to the
    *     parameters of {@code method}
    * @param defaultSkylarkValues a list of default values for parameters in skylark. The values are
@@ -161,23 +158,14 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
   }
 
   @Override
-  public Object call(
-      List<Object> args,
-      @Nullable Map<String, Object> kwargs,
-      @Nullable FuncallExpression nullableAst,
-      StarlarkThread env)
+  public Object fastcall(StarlarkThread env, Location loc, Object[] args, Object[] kwargs)
       throws EvalException, InterruptedException {
-
-    FuncallExpression ast =
-        Objects.requireNonNull(
-            nullableAst, "AST should not be null as this should only be called from Starlark");
-
     // this is the effectively the same as bazel's {@BuiltInCallable}
     try (SilentCloseable c =
         Profiler.instance().profile(ProfilerTask.STARLARK_BUILTIN_FN, methodDescriptor.getName())) {
       Object[] javaArguments =
           CallUtils.convertStarlarkArgumentsToJavaMethodArguments(
-              env, ast, methodDescriptor, getClass(), args, kwargs);
+              env, getName(), loc, methodDescriptor, getClass(), args, kwargs);
 
       // TODO: deal with Optionals and some java/skylark object coercing
       ImmutableList<Object> argsForReflectionBuilder = ImmutableList.copyOf(javaArguments);
@@ -193,37 +181,31 @@ public abstract class BuckStarlarkFunction implements StarlarkCallable {
             return Starlark.NONE;
           } else {
             throw new EvalException(
-                ast.getLocation(),
+                loc,
                 "method invocation returned None, please file a bug report: "
                     + getName()
-                    + "("
-                    + String.join(
-                        ", ",
-                        args.stream()
-                            .map(Objects::toString)
-                            .collect(ImmutableList.toImmutableList()))
-                    + ")");
+                    + "(...)");
           }
         }
         if (!Starlark.valid(result)) {
           throw new EvalException(
-              ast.getLocation(),
+              loc,
               String.format(
                   "method '%s' returns an object of invalid type %s",
                   getName(), result.getClass().getName()));
         }
         return result;
       } catch (WrongMethodTypeException e) {
-        throw new EvalException(ast.getLocation(), "Method invocation failed: " + e);
+        throw new EvalException(loc, "Method invocation failed: " + e);
       } catch (Throwable e) {
         if (e.getCause() instanceof EvalException) {
           throw (EvalException) e.getCause();
         } else if (e.getCause() != null) {
           Throwables.throwIfInstanceOf(e.getCause(), InterruptedException.class);
-          throw new EvalException(ast.getLocation(), e.getCause());
+          throw new EvalException(loc, e.getCause());
         } else {
           // This is unlikely to happen
-          throw new EvalException(ast.getLocation(), "method invocation failed: " + e);
+          throw new EvalException(loc, "method invocation failed: " + e);
         }
       }
     }

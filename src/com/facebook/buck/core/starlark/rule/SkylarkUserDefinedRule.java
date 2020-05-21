@@ -36,10 +36,10 @@ import com.google.devtools.build.lib.events.Location;
 import com.google.devtools.build.lib.packages.SkylarkExportable;
 import com.google.devtools.build.lib.syntax.BaseFunction;
 import com.google.devtools.build.lib.syntax.EvalException;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.FunctionSignature;
 import com.google.devtools.build.lib.syntax.Starlark;
 import com.google.devtools.build.lib.syntax.StarlarkThread;
+import com.google.devtools.build.lib.syntax.Tuple;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Map;
@@ -61,6 +61,8 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   @Nullable private String name = null;
   @Nullable private Label label = null;
   @Nullable private String exportedName = null;
+  private final FunctionSignature signature;
+  private final Tuple<Object> defaultValues;
   private final Location location;
   private final BaseFunction implementation;
   private final ImmutableMap<ParamName, Attribute<?>> attrs;
@@ -78,11 +80,14 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
       Set<ParamName> hiddenImplicitAttributes,
       boolean shouldInferRunInfo,
       boolean shouldBeTestRule) {
+    Preconditions.checkArgument(defaultValues.size() == signature.numOptionals());
+
     /**
      * The name is incomplete until {@link #export(Label, String)} is called, so we know what is on
      * the left side of the assignment operator to create a function name
      */
-    super(signature, defaultValues);
+    this.signature = signature;
+    this.defaultValues = Tuple.copyOf(defaultValues);
     this.location = location;
     this.implementation = implementation;
     this.attrs = attrs;
@@ -97,18 +102,28 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
   }
 
   @Override
+  public FunctionSignature getSignature() {
+    return signature;
+  }
+
+  @Override
+  public Tuple<Object> getDefaultValues() {
+    return defaultValues;
+  }
+
   @SuppressWarnings("unchecked")
-  protected Object call(Object[] args, @Nullable FuncallExpression ast, StarlarkThread env)
+  @Override
+  public Object fastcall(StarlarkThread thread, Location loc, Object[] positional, Object[] named)
       throws EvalException, InterruptedException {
+
+    Object[] args =
+        Starlark.matchSignature(
+            signature, this, defaultValues, thread.mutability(), positional, named);
+
     // We're being called directly somewhere that is not in the parser (e.g. with Location.BuiltIn)
-    if (ast == null) {
-      throw new EvalException(
-          location, "Invalid parser state while trying to call result of rule()");
-    }
     ImmutableList<String> names = Objects.requireNonNull(this.getSignature()).getParameterNames();
-    Preconditions.checkArgument(
-        names.size() == args.length, "Got different number of arguments than expected");
-    ParseContext parseContext = ParseContext.getParseContext(env, ast.getLocation(), getName());
+
+    ParseContext parseContext = ParseContext.getParseContext(thread, loc, getName());
     String basePath =
         parseContext
             .getPackageContext()
@@ -119,14 +134,16 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
     ImmutableList<String> withinView = ImmutableList.of();
     TwoArraysImmutableHashMap.Builder<ParamName, Object> builder =
         TwoArraysImmutableHashMap.builder();
+
     /**
-     * We can iterate through linearly because the calling conventions of {@link BaseFunction} are
-     * such that it makes an {@link Object} array with arguments in the same order as our signature
-     * that is constructed in {@link #createSignature} below. If this protected method is invoked in
-     * any other way, this contract is broken, and undefined behavior may result.
+     * We can iterate through linearly because the calling conventions of {@link
+     * Starlark#matchSignature(FunctionSignature, StarlarkCallable, Tuple, Mutability, Object[],
+     * Object[])} are such that it makes an {@link Object} array with arguments in the same order as
+     * our signature that is constructed in {@link #createSignature} below.
      */
     int i = 0;
     for (String name : names) {
+      Preconditions.checkNotNull(args[i]);
       if (name.equals(CommonParamNames.VISIBILITY.getSnakeCase())) {
         visibility = (ImmutableList<String>) args[i];
       } else if (name.equals(CommonParamNames.WITHIN_VIEW.getSnakeCase())) {
@@ -143,7 +160,7 @@ public class SkylarkUserDefinedRule extends BaseFunction implements SkylarkExpor
             visibility,
             withinView,
             builder.build()),
-        ast.getLocation());
+        loc);
     return Starlark.NONE;
   }
 

@@ -19,9 +19,9 @@ package com.facebook.buck.skylark.parser;
 import com.google.devtools.build.lib.events.Event;
 import com.google.devtools.build.lib.events.EventHandler;
 import com.google.devtools.build.lib.syntax.Argument;
+import com.google.devtools.build.lib.syntax.CallExpression;
 import com.google.devtools.build.lib.syntax.DefStatement;
 import com.google.devtools.build.lib.syntax.ForStatement;
-import com.google.devtools.build.lib.syntax.FuncallExpression;
 import com.google.devtools.build.lib.syntax.IfStatement;
 import com.google.devtools.build.lib.syntax.Node;
 import com.google.devtools.build.lib.syntax.NodeVisitor;
@@ -70,7 +70,7 @@ class StarlarkBuckFileSyntax {
           }
 
           @Override
-          public void visit(FuncallExpression node) {
+          public void visit(CallExpression node) {
             for (Argument arg : node.getArguments()) {
               if (arg instanceof Argument.StarStar) {
                 error(

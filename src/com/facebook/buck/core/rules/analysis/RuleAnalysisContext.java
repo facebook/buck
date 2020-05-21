@@ -40,8 +40,8 @@ import java.util.Map;
  *
  * <p>This will contain information on the configurations of the current rule, information about
  * it's transitive dependencies via {@link com.google.devtools.build.lib.packages.Provider}s and
- * their corresponding {@link com.google.devtools.build.lib.packages.InfoInterface}s. It will also
- * offer ways to register {@link com.facebook.buck.step.Step}s.
+ * their corresponding {@link com.google.devtools.build.lib.packages.Info}s. It will also offer ways
+ * to register {@link com.facebook.buck.step.Step}s.
  */
 public interface RuleAnalysisContext extends DependencyOnlyRuleAnalysisContext {
 
