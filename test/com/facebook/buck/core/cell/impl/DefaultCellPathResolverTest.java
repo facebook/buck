@@ -270,7 +270,8 @@ public class DefaultCellPathResolverTest {
                 "maple", vfs.getPath("/foo/cell")));
 
     thrown.expectMessage("Unknown cell: mappl. Did you mean one of [apple, maple] instead?");
-    cellPathResolver.getCellPathOrThrow(Optional.of("mappl"));
+    cellPathResolver.getCellPathOrThrow(
+        cellPathResolver.getCellNameResolver().getName(Optional.of("mappl")));
   }
 
   @Test
@@ -286,6 +287,7 @@ public class DefaultCellPathResolverTest {
 
     thrown.expectMessage(
         "Unknown cell: does_not_exist. Did you mean one of [apple, maple, root] instead?");
-    cellPathResolver.getCellPathOrThrow(Optional.of("does_not_exist"));
+    cellPathResolver.getCellPathOrThrow(
+        cellPathResolver.getCellNameResolver().getName(Optional.of("does_not_exist")));
   }
 }

@@ -118,8 +118,10 @@ public class CellTest {
             .build();
 
     Cells cell1 = new TestCellBuilder().setBuckConfig(config).setFilesystem(filesystem1).build();
+    CellPathResolver cellPathResolver = cell1.getRootCell().getCellPathResolver();
     AbsPath path =
-        cell1.getRootCell().getCellPathResolver().getCellPathOrThrow(Optional.of("example"));
+        cellPathResolver.getCellPathOrThrow(
+            cellPathResolver.getCellNameResolver().getName(Optional.of("example")));
 
     assertEquals(path.getPath(), cell2Root);
   }

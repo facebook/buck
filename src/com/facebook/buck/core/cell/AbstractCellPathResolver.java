@@ -22,7 +22,6 @@ import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.CellRelativePath;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedSet;
-import java.util.Optional;
 
 /** Contains base logic for {@link CellPathResolver}. */
 public abstract class AbstractCellPathResolver implements CellPathResolver {
@@ -34,21 +33,17 @@ public abstract class AbstractCellPathResolver implements CellPathResolver {
         .addAll(
             getCellPathsByRootCellExternalName().values().stream()
                 .collect(ImmutableList.toImmutableList()))
-        .add(getCellPathOrThrow(Optional.empty()))
+        .add(getCellPathOrThrow(CanonicalCellName.rootCell()))
         .build();
   }
 
   @Override
-  public AbsPath getCellPathOrThrow(Optional<String> cellName) {
+  public AbsPath getCellPathOrThrow(CanonicalCellName cellName) {
     return getCellPath(cellName)
         .orElseThrow(
             () ->
-                new UnknownCellException(cellName, getCellPathsByRootCellExternalName().keySet()));
-  }
-
-  @Override
-  public AbsPath getCellPathOrThrow(CanonicalCellName cellName) {
-    return getNewCellPathResolver().getCellPath(cellName);
+                new UnknownCellException(
+                    cellName.getLegacyName(), getCellPathsByRootCellExternalName().keySet()));
   }
 
   @Override

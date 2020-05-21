@@ -19,6 +19,7 @@ package com.facebook.buck.core.cell.impl;
 import com.facebook.buck.core.cell.AbstractCellPathResolver;
 import com.facebook.buck.core.cell.CellName;
 import com.facebook.buck.core.cell.NewCellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.util.immutables.BuckStyleValue;
@@ -162,9 +163,10 @@ public abstract class DefaultCellPathResolver extends AbstractCellPathResolver {
   }
 
   @Override
-  public Optional<AbsPath> getCellPath(Optional<String> cellName) {
-    if (cellName.isPresent()) {
-      return Optional.ofNullable(getCellPathsByRootCellExternalName().get(cellName.get()));
+  public Optional<AbsPath> getCellPath(CanonicalCellName cellName) {
+    Optional<String> legacyName = cellName.getLegacyName();
+    if (legacyName.isPresent()) {
+      return Optional.ofNullable(getCellPathsByRootCellExternalName().get(legacyName.get()));
     } else {
       return Optional.of(getRoot());
     }

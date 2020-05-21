@@ -19,7 +19,6 @@ package com.facebook.buck.core.cell;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import java.nio.file.Path;
-import java.util.Optional;
 
 /**
  * The {@link NewCellPathResolver} maps between {@link CanonicalCellName}s and the absolute {@link
@@ -30,9 +29,9 @@ import java.util.Optional;
  */
 public interface NewCellPathResolver {
   /**
-   * Note: unlike {@link CellPathResolver#getCellPath(Optional)} this function always returns a
-   * value. Existence/visibility of the cell is enforced when the {@link CanonicalCellName} is
-   * resolved.
+   * Note: unlike {@link CellPathResolver#getCellPath(CanonicalCellName)} this function always
+   * returns a value. Existence/visibility of the cell is enforced when the {@link
+   * CanonicalCellName} is resolved.
    *
    * @param cellName Canonical name of the cell.
    * @return Absolute path to the physical root of the cell.

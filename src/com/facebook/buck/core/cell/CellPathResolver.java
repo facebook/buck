@@ -49,14 +49,7 @@ public interface CellPathResolver {
    * @return Absolute path to the physical location of the cell, or {@code Optional.empty()} if the
    *     cell name cannot be resolved.
    */
-  Optional<AbsPath> getCellPath(Optional<String> cellName);
-
-  /**
-   * @param cellName name of cell, Optional.empty() for root cell.
-   * @return Absolute path to the physical location of the cell
-   * @throws AssertionError if cell is not known
-   */
-  AbsPath getCellPathOrThrow(Optional<String> cellName);
+  Optional<AbsPath> getCellPath(CanonicalCellName cellName);
 
   /**
    * @return Absolute path to the physical location of the cell that contains the provided target
@@ -79,8 +72,8 @@ public interface CellPathResolver {
    * <p>Returns {@code Optional.empty()} if the path refers to the root cell. Returns the
    * lexicographically smallest name if the cell path has multiple names.
    *
-   * <p>Note: this is not the inverse of {@link #getCellPath(Optional)}, which returns the current,
-   * rather than the root, cell path if the cell name is empty.
+   * <p>Note: this is not the inverse of {@link #getCellPath(CanonicalCellName)}, which returns the
+   * current, rather than the root, cell path if the cell name is empty.
    *
    * @throws IllegalArgumentException if cell path is not known to the CellPathResolver.
    */

@@ -18,6 +18,7 @@ package com.facebook.buck.parser;
 
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -60,6 +61,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -310,10 +312,15 @@ public class DaemonicParserState {
     // the path against the owning cell's root.
     Matcher matcher = INCLUDE_PATH_PATTERN.matcher(include);
     Preconditions.checkState(matcher.matches());
-    Optional<String> cellName = Optional.ofNullable(matcher.group(1));
+    String cellName = matcher.group(1);
+    CanonicalCellName canonicalCellName =
+        (Objects.isNull(cellName) || cellName.isEmpty())
+            ? CanonicalCellName.rootCell()
+            : cellPathResolver.getCellNameResolver().getName(Optional.of(cellName));
+
     String includePath = matcher.group(2);
     return cellPathResolver
-        .getCellPath(cellName)
+        .getCellPath(canonicalCellName)
         .map(cellPath -> cellPath.resolve(includePath))
         .orElseGet(() -> cell.getFilesystem().resolve(includePath));
   }

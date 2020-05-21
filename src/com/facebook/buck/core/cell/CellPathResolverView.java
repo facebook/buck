@@ -16,6 +16,7 @@
 
 package com.facebook.buck.core.cell;
 
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.google.common.collect.ImmutableMap;
@@ -67,9 +68,10 @@ public final class CellPathResolverView extends AbstractCellPathResolver {
   }
 
   @Override
-  public Optional<AbsPath> getCellPath(Optional<String> cellName) {
-    if (cellName.isPresent()) {
-      if (declaredCellNames.contains(cellName.get())) {
+  public Optional<AbsPath> getCellPath(CanonicalCellName cellName) {
+    Optional<String> legacyName = cellName.getLegacyName();
+    if (legacyName.isPresent()) {
+      if (declaredCellNames.contains(legacyName.get())) {
         return delegate.getCellPath(cellName);
       } else {
         return Optional.empty();

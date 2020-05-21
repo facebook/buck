@@ -21,6 +21,8 @@ import com.facebook.buck.core.build.engine.BuildRuleSuccessType;
 import com.facebook.buck.core.build.engine.BuildStrategyContext;
 import com.facebook.buck.core.cell.Cell;
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.rules.BuildRule;
@@ -71,11 +73,14 @@ class ReconstructingStrategy extends AbstractModernBuildRuleStrategy {
     serializer = new Serializer(ruleFinder, cellResolver, delegate);
     deserializer =
         new Deserializer(
-            name ->
-                rootCell
-                    .getCellProvider()
-                    .getCellByPath(cellResolver.getCellPathOrThrow(name))
-                    .getFilesystem(),
+            name -> {
+              CellNameResolver cellNameResolver = cellResolver.getCellNameResolver();
+              CanonicalCellName canonicalCellName = cellNameResolver.getName(name);
+              return rootCell
+                  .getCellProvider()
+                  .getCellByPath(cellResolver.getCellPathOrThrow(canonicalCellName))
+                  .getFilesystem();
+            },
             Class::forName,
             ruleFinder::getSourcePathResolver,
             rootCell.getToolchainProvider());

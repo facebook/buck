@@ -27,6 +27,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
 import com.facebook.buck.core.model.BuildTargetFactory;
@@ -110,7 +111,7 @@ public class BuildableSerializerTest extends AbstractValueVisitorTest {
         .andReturn(Optional.of("other"))
         .anyTimes();
 
-    expect(cellResolver.getCellPathOrThrow(Optional.empty()))
+    expect(cellResolver.getCellPathOrThrow(CanonicalCellName.rootCell()))
         .andReturn(rootFilesystem.getRootPath())
         .anyTimes();
   }

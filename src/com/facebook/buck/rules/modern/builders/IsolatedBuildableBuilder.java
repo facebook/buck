@@ -24,6 +24,7 @@ import com.facebook.buck.core.cell.CellProvider;
 import com.facebook.buck.core.cell.impl.DefaultCellPathResolver;
 import com.facebook.buck.core.cell.impl.LocalCellProviderFactory;
 import com.facebook.buck.core.cell.name.CanonicalCellName;
+import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -157,6 +158,7 @@ public abstract class IsolatedBuildableBuilder {
     UnconfiguredBuildTargetViewFactory buildTargetFactory =
         new ParsingUnconfiguredBuildTargetViewFactory();
 
+    CellNameResolver cellNameResolver = cellPathResolver.getCellNameResolver();
     BuckConfig buckConfig =
         new BuckConfig(
             config,
@@ -165,7 +167,7 @@ public abstract class IsolatedBuildableBuilder {
             platform,
             clientEnvironment,
             buildTargetFactory,
-            cellPathResolver.getCellNameResolver());
+            cellNameResolver);
 
     BuckModuleManager moduleManager =
         new DefaultBuckModuleManager(pluginManager, new BuckModuleJarHashProvider());
@@ -191,10 +193,15 @@ public abstract class IsolatedBuildableBuilder {
             buildTargetFactory);
 
     this.filesystemFunction =
-        (cellName) ->
-            cellProvider
-                .getCellByPath(cellPathResolver.getCellPath(cellName).get())
-                .getFilesystem();
+        (cellName) -> {
+          CanonicalCellName canonicalCellName =
+              cellName.isPresent()
+                  ? cellNameResolver.getName(cellName)
+                  : CanonicalCellName.rootCell();
+          return cellProvider
+              .getCellByPath(cellPathResolver.getCellPath(canonicalCellName).get())
+              .getFilesystem();
+        };
 
     JavaPackageFinder javaPackageFinder =
         buckConfig.getView(JavaBuckConfig.class).createDefaultJavaPackageFinder();
@@ -245,10 +252,15 @@ public abstract class IsolatedBuildableBuilder {
             buckConfig.getView(BuildBuckConfig.class).getShouldDeleteTemporaries());
 
     this.toolchainProviderFunction =
-        cellName ->
-            cellProvider
-                .getCellByPath(cellPathResolver.getCellPath(cellName).get())
-                .getToolchainProvider();
+        cellName -> {
+          CanonicalCellName canonicalCellName =
+              cellName.isPresent()
+                  ? cellNameResolver.getName(cellName)
+                  : CanonicalCellName.rootCell();
+          return cellProvider
+              .getCellByPath(cellPathResolver.getCellPath(canonicalCellName).get())
+              .getToolchainProvider();
+        };
 
     RichStream.from(cellPathResolver.getCellPathsByRootCellExternalName().keySet())
         .forEachThrowing(

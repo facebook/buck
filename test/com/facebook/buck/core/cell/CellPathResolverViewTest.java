@@ -16,6 +16,9 @@
 
 package com.facebook.buck.core.cell;
 
+import static org.junit.Assert.assertEquals;
+
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.cell.nameresolver.CellNameResolver;
 import com.facebook.buck.core.cell.nameresolver.TestCellNameResolver;
 import com.facebook.buck.core.filesystems.AbsPath;
@@ -25,7 +28,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import java.util.Optional;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -47,15 +49,19 @@ public class CellPathResolverViewTest {
             ImmutableSet.of("b", "c"),
             filesystem.resolve("foo/c"));
 
-    Assert.assertEquals(filesystem.resolve("foo/b"), view.getCellPath(Optional.of("b")).get());
-    Assert.assertEquals(filesystem.resolve("foo/c"), view.getCellPath(Optional.of("c")).get());
+    assertEquals(
+        filesystem.resolve("foo/b"),
+        view.getCellPath(CanonicalCellName.of(Optional.of("b"))).get());
+    assertEquals(
+        filesystem.resolve("foo/c"),
+        view.getCellPath(CanonicalCellName.of(Optional.of("c"))).get());
 
-    Assert.assertEquals(
+    assertEquals(
         "Looking up undeclared cell should return empty",
         Optional.empty(),
-        view.getCellPath(Optional.of("a")));
+        view.getCellPath(CanonicalCellName.of(Optional.of("a"))));
 
-    Assert.assertEquals(
+    assertEquals(
         ImmutableMap.of(
             "b", filesystem.resolve("foo/b"),
             "c", filesystem.resolve("foo/c")),
@@ -70,7 +76,9 @@ public class CellPathResolverViewTest {
             getTestCellNameResolver("c", Optional.empty(), "b", "c"),
             ImmutableSet.of("b", "c"),
             filesystem.resolve("foo/c"));
-    Assert.assertEquals(filesystem.resolve("foo/c"), view.getCellPathOrThrow(Optional.empty()));
+    assertEquals(
+        filesystem.resolve("foo/c"),
+        view.getCellPathOrThrow(CanonicalCellName.of(Optional.empty())));
   }
 
   @Test
@@ -81,11 +89,11 @@ public class CellPathResolverViewTest {
             getTestCellNameResolver("c", Optional.empty(), "b", "c"),
             ImmutableSet.of("b", "c"),
             filesystem.resolve("foo/c"));
-    Assert.assertEquals(
+    assertEquals(
         "root cell resolves to no prefix.",
         Optional.empty(),
         view.getCanonicalCellName(filesystem.getRootPath()));
-    Assert.assertEquals(
+    assertEquals(
         "current cell resolves to current cell's prefix.",
         Optional.of("c"),
         view.getCanonicalCellName(filesystem.resolve("foo/c")));
@@ -102,7 +110,7 @@ public class CellPathResolverViewTest {
 
     ImmutableSortedSet<AbsPath> knownRoots = view.getKnownRoots();
 
-    Assert.assertEquals(
+    assertEquals(
         knownRoots,
         ImmutableSortedSet.orderedBy(AbsPath.comparator())
             .add(filesystem.resolve("foo/b"), filesystem.resolve("foo/c"))
@@ -125,8 +133,8 @@ public class CellPathResolverViewTest {
             ImmutableSet.of("b"),
             filesystem.resolve("foo/c"));
 
-    Assert.assertEquals(view1, view2);
-    Assert.assertEquals(view1.hashCode(), view2.hashCode());
+    assertEquals(view1, view2);
+    assertEquals(view1.hashCode(), view2.hashCode());
   }
 
   private CellNameResolver getTestCellNameResolver(

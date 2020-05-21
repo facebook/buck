@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern.tools;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.rulekey.AddsToRuleKey;
@@ -93,7 +94,7 @@ public class IsolationChecker {
   public IsolationChecker(
       SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, FailureReporter reporter) {
     this.pathResolver = ruleFinder.getSourcePathResolver();
-    this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
+    this.rootCellPath = cellResolver.getCellPathOrThrow(CanonicalCellName.rootCell());
     this.cellMap =
         cellResolver.getKnownRoots().stream()
             .collect(ImmutableMap.toImmutableMap(p -> p, cellResolver::getCanonicalCellName));

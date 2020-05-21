@@ -17,6 +17,7 @@
 package com.facebook.buck.rules.modern;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.filesystems.RelPath;
@@ -111,7 +112,7 @@ public class Serializer {
       SourcePathRuleFinder ruleFinder, CellPathResolver cellResolver, Delegate delegate) {
     this.ruleFinder = ruleFinder;
     this.delegate = delegate;
-    this.rootCellPath = cellResolver.getCellPathOrThrow(Optional.empty());
+    this.rootCellPath = cellResolver.getCellPathOrThrow(CanonicalCellName.rootCell());
     this.cellMap =
         cellResolver.getKnownRoots().stream()
             .collect(ImmutableMap.toImmutableMap(p -> p, cellResolver::getCanonicalCellName));

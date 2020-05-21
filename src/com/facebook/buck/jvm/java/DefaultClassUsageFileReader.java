@@ -17,6 +17,7 @@
 package com.facebook.buck.jvm.java;
 
 import com.facebook.buck.core.cell.CellPathResolver;
+import com.facebook.buck.core.cell.name.CanonicalCellName;
 import com.facebook.buck.core.exceptions.BuckUncheckedExecutionException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.sourcepath.ArchiveMemberSourcePath;
@@ -151,10 +152,10 @@ class DefaultClassUsageFileReader {
       relativeToCellRoot = relativeToCellRoot.resolve(pathIterator.next());
     }
     String cellName = cellNamePath.toString();
-    Optional<String> canonicalCellName =
+    CanonicalCellName canonicalCellName =
         cellName.equals(DefaultClassUsageFileWriter.ROOT_CELL_IDENTIFIER)
-            ? Optional.empty()
-            : Optional.of(cellName);
+            ? CanonicalCellName.rootCell()
+            : cellPathResolver.getCellNameResolver().getName(Optional.of(cellName));
     return cellPathResolver.getCellPathOrThrow(canonicalCellName).resolve(relativeToCellRoot);
   }
 }
