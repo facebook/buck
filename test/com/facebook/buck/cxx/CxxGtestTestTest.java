@@ -124,7 +124,8 @@ public class CxxGtestTestTest {
             /* runTestSeparately */ false,
             /* testRuleTimeoutMs */ Optional.empty(),
             /* maxTestOutputSize */ 100L,
-            true);
+            true,
+            false);
 
     for (String sample : samples) {
       Path exitCode = workspace.resolve(Paths.get(sample)).resolve("exitCode");

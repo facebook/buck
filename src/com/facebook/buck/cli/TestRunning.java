@@ -23,6 +23,7 @@ import com.facebook.buck.android.HasInstallableApk;
 import com.facebook.buck.core.build.context.BuildContext;
 import com.facebook.buck.core.build.engine.BuildEngine;
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
+import com.facebook.buck.core.config.BuckConfig;
 import com.facebook.buck.core.exceptions.HumanReadableException;
 import com.facebook.buck.core.filesystems.AbsPath;
 import com.facebook.buck.core.model.BuildTarget;
@@ -39,6 +40,7 @@ import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.toolchain.tool.Tool;
 import com.facebook.buck.core.toolchain.toolprovider.ToolProvider;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.event.BuckEventBus;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.io.BuildCellRelativePath;
@@ -411,7 +413,10 @@ public class TestRunning {
     // Generate the code coverage report.
     if (options.isCodeCoverageEnabled() && !rulesUnderTestForCoverage.isEmpty()) {
       try {
-        JavaBuckConfig javaBuckConfig = params.getBuckConfig().getView(JavaBuckConfig.class);
+        BuckConfig buckConfig = params.getBuckConfig();
+        JavaBuckConfig javaBuckConfig = buckConfig.getView(JavaBuckConfig.class);
+        DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
+
         DefaultJavaPackageFinder defaultJavaPackageFinder =
             javaBuckConfig.createDefaultJavaPackageFinder();
 
@@ -450,7 +455,8 @@ public class TestRunning {
                         .getSpoolMode()
                     == JavacOptions.SpoolMode.INTERMEDIATE_TO_DISK,
                 options.getCoverageIncludes(),
-                options.getCoverageExcludes()),
+                options.getCoverageExcludes(),
+                downwardApiConfig.isEnabledForTests()),
             Optional.empty());
       } catch (StepFailedException e) {
         params
@@ -736,7 +742,8 @@ public class TestRunning {
       String title,
       boolean useIntermediateClassesDir,
       Optional<String> coverageIncludes,
-      Optional<String> coverageExcludes) {
+      Optional<String> coverageExcludes,
+      boolean withDownwardApi) {
     ImmutableSet.Builder<String> srcDirectories = ImmutableSet.builder();
     ImmutableSet.Builder<Path> pathsToJars = ImmutableSet.builder();
 
@@ -775,7 +782,8 @@ public class TestRunning {
         formats,
         title,
         coverageIncludes,
-        coverageExcludes);
+        coverageExcludes,
+        withDownwardApi);
   }
 
   /** Returns a set of source folders of the java files of a library. */

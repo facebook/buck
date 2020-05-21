@@ -165,7 +165,8 @@ public class RustTestDescription
         testParams,
         testExeBuild,
         args.getLabels(),
-        args.getContacts());
+        args.getContacts(),
+        downwardApiConfig.isEnabledForTests());
   }
 
   @Override

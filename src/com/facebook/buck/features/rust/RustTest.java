@@ -69,6 +69,7 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
 
   private final ImmutableSet<String> labels;
   private final ImmutableSet<String> contacts;
+  private final boolean withDownwardApi;
 
   private final BinaryBuildRule testExeBuild;
 
@@ -84,12 +85,14 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRuleParams params,
       BinaryBuildRule testExeBuild,
       ImmutableSet<String> labels,
-      ImmutableSet<String> contacts) {
+      ImmutableSet<String> contacts,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
 
     this.testExeBuild = testExeBuild;
     this.labels = labels;
     this.contacts = contacts;
+    this.withDownwardApi = withDownwardApi;
     this.testOutputFile = getProjectFilesystem().resolve(getPathToTestResults());
     this.testStdoutFile = getProjectFilesystem().resolve(getPathToTestStdout());
   }
@@ -116,7 +119,8 @@ public class RustTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 Optional.empty(), // TODO(stash): environment
                 workingDirectory.resolve("exitcode"),
                 Optional.empty(),
-                testStdoutFile) {})
+                testStdoutFile,
+                withDownwardApi) {})
         .build();
   }
 

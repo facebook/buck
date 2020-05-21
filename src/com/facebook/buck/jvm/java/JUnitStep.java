@@ -62,8 +62,9 @@ public class JUnitStep extends ShellStep {
       Optional<Long> testCaseTimeoutMs,
       ImmutableMap<String, String> env,
       ImmutableList<String> javaRuntimeLauncher,
-      JUnitJvmArgs junitJvmArgs) {
-    super(filesystem.getRootPath());
+      JUnitJvmArgs junitJvmArgs,
+      boolean withDownwardApi) {
+    super(filesystem.getRootPath(), withDownwardApi);
     this.filesystem = filesystem;
     this.javaRuntimeLauncher = javaRuntimeLauncher;
     this.nativeLibsEnvironment = ImmutableMap.copyOf(nativeLibsEnvironment);

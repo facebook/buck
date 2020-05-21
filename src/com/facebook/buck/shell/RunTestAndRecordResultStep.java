@@ -48,6 +48,7 @@ public class RunTestAndRecordResultStep implements Step {
   private final String testName;
   private final Optional<Long> testRuleTimeoutMs;
   private final String mainTestCaseName;
+  private final boolean withDownwardApi;
 
   public RunTestAndRecordResultStep(
       ProjectFilesystem filesystem,
@@ -57,7 +58,8 @@ public class RunTestAndRecordResultStep implements Step {
       BuildTarget buildTarget,
       Path pathToTestResultFile,
       String shortName,
-      String testName) {
+      String testName,
+      boolean withDownwardApi) {
     this.filesystem = filesystem;
     this.command = command;
     this.env = env;
@@ -66,6 +68,7 @@ public class RunTestAndRecordResultStep implements Step {
     this.pathToTestResultFile = pathToTestResultFile;
     this.shortName = shortName;
     this.testName = testName;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -86,7 +89,7 @@ public class RunTestAndRecordResultStep implements Step {
       throws IOException, InterruptedException {
 
     ShellStep test =
-        new ShellStep(filesystem.getRootPath()) {
+        new ShellStep(filesystem.getRootPath(), withDownwardApi) {
           boolean timedOut = false;
 
           @Override

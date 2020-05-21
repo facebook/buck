@@ -96,7 +96,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs,
       long maxTestOutputSize,
-      boolean checkGTestTestList) {
+      boolean checkGTestTestList,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -112,7 +113,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
         contacts,
         runTestSeparately,
         testRuleTimeoutMs,
-        CxxTestType.GTEST);
+        CxxTestType.GTEST,
+        withDownwardApi);
     this.maxTestOutputSize = maxTestOutputSize;
     this.checkGTestTestList = checkGTestTestList;
   }
@@ -142,7 +144,8 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
           new WriteTestListToFileStep(
               getExecutableCommand(OutputLabel.defaultLabel())
                   .getCommandPrefix(buildContext.getSourcePathResolver()),
-              buildContext.getBuildCellRootPath()));
+              buildContext.getBuildCellRootPath(),
+              withDownwardApi));
     }
     return builder.build();
   }
@@ -288,8 +291,9 @@ class CxxGtestTest extends CxxTest implements HasRuntimeDeps, ExternalTestRunner
   private class WriteTestListToFileStep extends ShellStep {
     private ImmutableList<String> command;
 
-    public WriteTestListToFileStep(ImmutableList<String> testCommand, Path workingDirectory) {
-      super(workingDirectory);
+    public WriteTestListToFileStep(
+        ImmutableList<String> testCommand, Path workingDirectory, boolean withDownwardApi) {
+      super(workingDirectory, withDownwardApi);
       this.command = testCommand;
     }
 

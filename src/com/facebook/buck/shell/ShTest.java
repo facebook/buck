@@ -77,6 +77,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
   private final ImmutableSet<String> contacts;
   private final boolean runTestSeparately;
   private final ImmutableSet<String> labels;
+  private final boolean withDownwardApi;
 
   protected ShTest(
       BuildTarget buildTarget,
@@ -89,7 +90,8 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
       boolean runTestSeparately,
       Set<String> labels,
       Optional<String> type,
-      ImmutableSet<String> contacts) {
+      ImmutableSet<String> contacts,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.args = args;
     this.env = env;
@@ -99,6 +101,7 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
     this.labels = ImmutableSet.copyOf(labels);
     this.type = type;
     this.contacts = contacts;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -132,7 +135,8 @@ public class ShTest extends NoopBuildRuleWithDeclaredAndExtraDeps
                 Arg.stringify(env, buildContext.getSourcePathResolver()),
                 testRuleTimeoutMs,
                 getBuildTarget(),
-                getPathToTestOutputResult()))
+                getPathToTestOutputResult(),
+                withDownwardApi))
         .build();
   }
 

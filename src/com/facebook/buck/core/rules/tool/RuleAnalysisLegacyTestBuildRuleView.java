@@ -120,7 +120,8 @@ public class RuleAnalysisLegacyTestBuildRuleView extends RuleAnalysisLegacyBinar
                 getBuildTarget(),
                 getPathToTestOutputResult(),
                 testInfo.testCaseName(),
-                testInfo.testName()))
+                testInfo.testName(),
+                options.isRunWithDownwardApi()))
         .build();
   }
 

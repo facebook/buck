@@ -28,6 +28,7 @@ import com.facebook.buck.core.rules.DescriptionWithTargetGraph;
 import com.facebook.buck.core.rules.common.BuildableSupport;
 import com.facebook.buck.core.sourcepath.SourcePath;
 import com.facebook.buck.core.util.immutables.RuleArg;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.rules.args.Arg;
 import com.facebook.buck.rules.args.SourcePathArg;
@@ -61,9 +62,11 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
           new ExecutableMacroExpander<>(ExecutableTargetMacro.class));
 
   private final BuckConfig buckConfig;
+  private final DownwardApiConfig downwardApiConfig;
 
   public ShTestDescription(BuckConfig buckConfig) {
     this.buckConfig = buckConfig;
+    this.downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
   }
 
   @Override
@@ -110,7 +113,8 @@ public class ShTestDescription implements DescriptionWithTargetGraph<ShTestDescr
         args.getRunTestSeparately(),
         args.getLabels(),
         args.getType(),
-        args.getContacts());
+        args.getContacts(),
+        downwardApiConfig.isEnabledForTests());
   }
 
   @Override

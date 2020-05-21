@@ -63,6 +63,7 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private ImmutableSortedSet<String> labels;
   private final BuildRule testBinaryBuildRule;
   private final Optional<Long> testRuleTimeoutMs;
+  private final boolean withDownwardApi;
 
   public DTest(
       BuildTarget buildTarget,
@@ -71,12 +72,14 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       BuildRule testBinaryBuildRule,
       ImmutableSortedSet<String> contacts,
       ImmutableSortedSet<String> labels,
-      Optional<Long> testRuleTimeoutMs) {
+      Optional<Long> testRuleTimeoutMs,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.contacts = contacts;
     this.labels = labels;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.testBinaryBuildRule = testBinaryBuildRule;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -202,7 +205,8 @@ public class DTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getShellCommand(buildContext.getSourcePathResolver()),
                 getPathToTestExitCode(),
                 testRuleTimeoutMs,
-                getPathToTestOutput()))
+                getPathToTestOutput(),
+                withDownwardApi))
         .build();
   }
 

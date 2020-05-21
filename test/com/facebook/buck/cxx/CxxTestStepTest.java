@@ -80,7 +80,8 @@ public class CxxTestStepTest {
             ImmutableMap.of(),
             exitCode,
             output,
-            /* testRuleTimeoutMs */ Optional.empty());
+            /* testRuleTimeoutMs */ Optional.empty(),
+            false);
     step.execute(context);
     assertSame(0, readExitCode(exitCode));
     assertContents(output, "");
@@ -99,7 +100,8 @@ public class CxxTestStepTest {
             ImmutableMap.of(),
             exitCode,
             output,
-            /* testRuleTimeoutMs */ Optional.empty());
+            /* testRuleTimeoutMs */ Optional.empty(),
+            false);
     step.execute(context);
     assertSame(1, readExitCode(exitCode));
     assertContents(output, "");
@@ -119,7 +121,8 @@ public class CxxTestStepTest {
             ImmutableMap.of(),
             exitCode,
             output,
-            /* testRuleTimeoutMs */ Optional.empty());
+            /* testRuleTimeoutMs */ Optional.empty(),
+            false);
     step.execute(context);
     assertSame(0, readExitCode(exitCode));
     assertContents(output, stdout + System.lineSeparator());
@@ -138,7 +141,8 @@ public class CxxTestStepTest {
             ImmutableMap.of(),
             exitCode,
             output,
-            /* testRuleTimeoutMs */ Optional.of(10L));
+            /* testRuleTimeoutMs */ Optional.of(10L),
+            false);
     expectedException.expectMessage("Timed out after 10 ms running test command");
     step.execute(context);
   }

@@ -468,7 +468,8 @@ public class RobolectricTestDescription
             .getBooleanValue("test", "pass_robolectric_directories_in_file", false),
         javaOptionsForTests
             .apply(buildTarget.getTargetConfiguration())
-            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()));
+            .getJavaRuntimeLauncher(graphBuilder, buildTarget.getTargetConfiguration()),
+        downwardApiConfig.isEnabledForTests());
   }
 
   @Override

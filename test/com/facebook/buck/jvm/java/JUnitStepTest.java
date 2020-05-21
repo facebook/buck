@@ -87,7 +87,8 @@ public class JUnitStepTest {
             /* testCaseTimeoutMs */ Optional.empty(),
             ImmutableMap.of(),
             ImmutableList.of("/foo/bar/custom/java"),
-            args);
+            args,
+            false);
 
     ExecutionContext executionContext =
         TestExecutionContext.newBuilder().setConsole(new TestConsole(Verbosity.ALL)).build();
@@ -163,7 +164,8 @@ public class JUnitStepTest {
             /* testCaseTimeoutMs */ Optional.empty(),
             ImmutableMap.of(),
             ImmutableList.of("/foo/bar/custom/java"),
-            args);
+            args,
+            false);
 
     ExecutionContext executionContext =
         TestExecutionContext.newBuilder().setConsole(new TestConsole(Verbosity.ALL)).build();
@@ -225,7 +227,8 @@ public class JUnitStepTest {
             /* testCaseTimeoutMs */ Optional.empty(),
             ImmutableMap.of("FOO", "BAR"),
             ImmutableList.of("/foo/bar/custom/java"),
-            args);
+            args,
+            false);
 
     ImmutableMap<String, String> observedEnvironment =
         junit.getEnvironmentVariables(Platform.detect());
@@ -277,7 +280,8 @@ public class JUnitStepTest {
             /* testCaseTimeoutMs */ Optional.empty(),
             ImmutableMap.of(),
             ImmutableList.of("/foo/bar/custom/java"),
-            args);
+            args,
+            false);
 
     TestConsole console = new TestConsole(Verbosity.ALL);
     ExecutionContext executionContext =

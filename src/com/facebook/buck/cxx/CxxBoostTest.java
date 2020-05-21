@@ -81,7 +81,8 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
       ImmutableSet<String> labels,
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
-      Optional<Long> testRuleTimeoutMs) {
+      Optional<Long> testRuleTimeoutMs,
+      boolean withDownwardApi) {
     super(
         buildTarget,
         projectFilesystem,
@@ -97,7 +98,8 @@ class CxxBoostTest extends CxxTest implements HasRuntimeDeps {
         contacts,
         runTestSeparately,
         testRuleTimeoutMs,
-        CxxTestType.BOOST);
+        CxxTestType.BOOST,
+        withDownwardApi);
   }
 
   @Override

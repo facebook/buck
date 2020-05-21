@@ -37,7 +37,8 @@ class CxxTestStep extends AbstractTestStep {
       ImmutableMap<String, String> env,
       Path exitCode,
       Path output,
-      Optional<Long> testRuleTimeoutMs) {
+      Optional<Long> testRuleTimeoutMs,
+      boolean withDownwardApi) {
     super(
         NAME,
         filesystem,
@@ -46,7 +47,8 @@ class CxxTestStep extends AbstractTestStep {
         Optional.of(env),
         exitCode,
         testRuleTimeoutMs,
-        output);
+        output,
+        withDownwardApi);
   }
 
   @Override

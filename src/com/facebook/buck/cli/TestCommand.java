@@ -46,6 +46,7 @@ import com.facebook.buck.core.test.rule.ExternalTestRunnerRule;
 import com.facebook.buck.core.test.rule.ExternalTestSpec;
 import com.facebook.buck.core.test.rule.TestRule;
 import com.facebook.buck.core.util.log.Logger;
+import com.facebook.buck.downwardapi.config.DownwardApiConfig;
 import com.facebook.buck.event.ConsoleEvent;
 import com.facebook.buck.event.SimplePerfEvent;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
@@ -260,6 +261,7 @@ public class TestCommand extends BuildCommand {
 
     BuckConfig buckConfig = params.getBuckConfig();
     TestBuckConfig testBuckConfig = buckConfig.getView(TestBuckConfig.class);
+    DownwardApiConfig downwardApiConfig = buckConfig.getView(DownwardApiConfig.class);
 
     TestRunningOptions.Builder builder =
         TestRunningOptions.builder()
@@ -277,7 +279,8 @@ public class TestCommand extends BuildCommand {
             .setCodeCoverageEnabled(isCodeCoverageEnabled)
             .setDebugEnabled(isDebugEnabled)
             .setDefaultTestTimeoutMillis(testBuckConfig.getDefaultTestTimeoutMillis())
-            .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled());
+            .setInclNoLocationClassesEnabled(testBuckConfig.isInclNoLocationClassesEnabled())
+            .setRunWithDownwardApi(downwardApiConfig.isEnabledForTests());
 
     Optional<ImmutableList<String>> coverageIncludes = testBuckConfig.getCoverageIncludes();
     Optional<ImmutableList<String>> coverageExcludes = testBuckConfig.getCoverageExcludes();

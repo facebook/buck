@@ -394,7 +394,8 @@ public class GoTestDescription
         ImmutableMap.copyOf(Maps.transformValues(args.getEnv(), macrosConverter::convert)),
         args.getRunTestSeparately(),
         args.getResources(),
-        coverageMode);
+        coverageMode,
+        downwardApiConfig.isEnabledForTests());
   }
 
   private GoBinary createTestMainRule(

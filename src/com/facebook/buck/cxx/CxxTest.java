@@ -89,6 +89,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean runTestSeparately;
   private final Optional<Long> testRuleTimeoutMs;
   private final CxxTestType cxxTestType;
+  protected final boolean withDownwardApi;
 
   public CxxTest(
       BuildTarget buildTarget,
@@ -105,7 +106,8 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableSet<String> contacts,
       boolean runTestSeparately,
       Optional<Long> testRuleTimeoutMs,
-      CxxTestType cxxTestType) {
+      CxxTestType cxxTestType,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.binary = binary;
     this.executable = executable;
@@ -119,6 +121,7 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.runTestSeparately = runTestSeparately;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.cxxTestType = cxxTestType;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -186,7 +189,8 @@ public abstract class CxxTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 getEnv(buildContext.getSourcePathResolver()),
                 getPathToTestExitCode(),
                 getPathToTestOutput(),
-                testRuleTimeoutMs))
+                testRuleTimeoutMs,
+                withDownwardApi))
         .build();
   }
 

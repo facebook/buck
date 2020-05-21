@@ -95,6 +95,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final boolean runTestsSeparately;
   private final ImmutableSortedSet<SourcePath> resources;
   private final Mode coverageMode;
+  private final boolean withDownwardApi;
 
   public GoTest(
       BuildTarget buildTarget,
@@ -107,7 +108,8 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ImmutableMap<String, Arg> env,
       boolean runTestsSeparately,
       ImmutableSortedSet<SourcePath> resources,
-      Mode coverageMode) {
+      Mode coverageMode,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, buildRuleParams);
     this.testMain = testMain;
     this.labels = labels;
@@ -117,6 +119,7 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.runTestsSeparately = runTestsSeparately;
     this.resources = resources;
     this.coverageMode = coverageMode;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -165,7 +168,8 @@ public class GoTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                     .collect(ImmutableMap.toImmutableMap(Entry::getKey, Entry::getValue)),
                 getPathToTestExitCode(),
                 processTimeoutMs,
-                getPathToTestResults()))
+                getPathToTestResults(),
+                withDownwardApi))
         .build();
   }
 

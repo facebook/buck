@@ -41,7 +41,8 @@ public class RunShTestAndRecordResultStep extends RunTestAndRecordResultStep {
       ImmutableMap<String, String> env,
       Optional<Long> testRuleTimeoutMs,
       BuildTarget buildTarget,
-      Path pathToTestResultFile) {
+      Path pathToTestResultFile,
+      boolean withDownwardApi) {
     super(
         filesystem,
         command,
@@ -50,7 +51,8 @@ public class RunShTestAndRecordResultStep extends RunTestAndRecordResultStep {
         buildTarget,
         pathToTestResultFile,
         command.get(0),
-        "sh_test");
+        "sh_test",
+        withDownwardApi);
   }
 
   @Override

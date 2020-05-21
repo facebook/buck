@@ -105,16 +105,7 @@ public class ActionExecutionStepTest {
     assertEquals(
         StepExecutionResult.builder().setExitCode(0).setStderr(Optional.of("my std err")).build(),
         step.execute(
-            ExecutionContext.builder()
-                .setConsole(Console.createNullConsole())
-                .setBuckEventBus(testEventBus)
-                .setPlatform(Platform.UNKNOWN)
-                .setEnvironment(ImmutableMap.of())
-                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
-                .setBuildCellRootPath(baseCell)
-                .setProcessExecutor(new FakeProcessExecutor())
-                .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
-                .build()));
+            getCommonExecutionContentBuilder(projectFilesystem, baseCell, testEventBus).build()));
 
     assertThat(
         consoleEventListener.getLogMessages(),
@@ -157,14 +148,7 @@ public class ActionExecutionStepTest {
     assertEquals(
         StepExecutionResult.builder().setExitCode(-1).setStderr(Optional.of("my std err")).build(),
         step.execute(
-            ExecutionContext.builder()
-                .setConsole(Console.createNullConsole())
-                .setBuckEventBus(testEventBus)
-                .setPlatform(Platform.UNKNOWN)
-                .setEnvironment(ImmutableMap.of())
-                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
-                .setBuildCellRootPath(baseCell)
-                .setProcessExecutor(new FakeProcessExecutor())
+            getCommonExecutionContentBuilder(projectFilesystem, baseCell, testEventBus)
                 .setProjectFilesystemFactory(new DefaultProjectFilesystemFactory())
                 .build()));
     assertTrue(projectFilesystem.isDirectory(packagePath));
@@ -206,16 +190,20 @@ public class ActionExecutionStepTest {
     assertEquals(
         StepExecutionResult.builder().setExitCode(-1).setStderr(Optional.of("my std err")).build(),
         step.execute(
-            ExecutionContext.builder()
-                .setConsole(Console.createNullConsole())
-                .setBuckEventBus(testEventBus)
-                .setPlatform(Platform.UNKNOWN)
-                .setEnvironment(ImmutableMap.of())
-                .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
-                .setBuildCellRootPath(baseCell)
-                .setProcessExecutor(new FakeProcessExecutor())
-                .setProjectFilesystemFactory(new FakeProjectFilesystemFactory())
-                .build()));
+            getCommonExecutionContentBuilder(projectFilesystem, baseCell, testEventBus).build()));
     assertFalse("file must exist: " + expectedPath, projectFilesystem.exists(expectedPath));
+  }
+
+  private ExecutionContext.Builder getCommonExecutionContentBuilder(
+      ProjectFilesystem projectFilesystem, Path baseCell, BuckEventBus testEventBus) {
+    return ExecutionContext.builder()
+        .setConsole(Console.createNullConsole())
+        .setBuckEventBus(testEventBus)
+        .setPlatform(Platform.UNKNOWN)
+        .setEnvironment(ImmutableMap.of())
+        .setCellPathResolver(TestCellPathResolver.get(projectFilesystem))
+        .setBuildCellRootPath(baseCell)
+        .setProcessExecutor(new FakeProcessExecutor())
+        .setProjectFilesystemFactory(new FakeProjectFilesystemFactory());
   }
 }

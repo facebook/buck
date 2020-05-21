@@ -35,7 +35,8 @@ public class GoTestStep extends AbstractTestStep {
       ImmutableMap<String, String> env,
       Path exitCode,
       Optional<Long> testRuleTimeoutMs,
-      Path output) {
+      Path output,
+      boolean withDownwardApi) {
     super(
         NAME,
         filesystem,
@@ -44,7 +45,8 @@ public class GoTestStep extends AbstractTestStep {
         Optional.of(env),
         exitCode,
         testRuleTimeoutMs,
-        output);
+        output,
+        withDownwardApi);
   }
 
   @Override

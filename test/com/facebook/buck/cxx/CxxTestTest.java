@@ -80,7 +80,8 @@ public class CxxTestTest {
           ImmutableSet.of(),
           /* runTestSeparately */ false,
           TEST_TIMEOUT_MS,
-          CxxTestType.GTEST);
+          CxxTestType.GTEST,
+          false);
     }
 
     @Override
@@ -139,7 +140,8 @@ public class CxxTestTest {
             ImmutableMap.of(),
             cxxTest.getPathToTestExitCode(),
             cxxTest.getPathToTestOutput(),
-            TEST_TIMEOUT_MS);
+            TEST_TIMEOUT_MS,
+            false);
 
     assertEquals(cxxTestStep, Iterables.getLast(actualSteps));
   }

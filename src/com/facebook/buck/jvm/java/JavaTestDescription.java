@@ -269,7 +269,8 @@ public class JavaTestDescription
         args.getForkMode(),
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
-        args.getUnbundledResourcesRoot());
+        args.getUnbundledResourcesRoot(),
+        downwardApiConfig.isEnabledForTests());
   }
 
   @Override

@@ -128,7 +128,8 @@ public class DTestDescription
                 dBuckConfig
                     .getDelegate()
                     .getView(TestBuckConfig.class)
-                    .getDefaultTestRuleTimeoutMs()));
+                    .getDefaultTestRuleTimeoutMs()),
+        downwardApiConfig.isEnabledForTests());
   }
 
   @Override

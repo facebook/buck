@@ -175,7 +175,8 @@ public class ScalaTestDescription
         args.getForkMode(),
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
-        args.getUnbundledResourcesRoot());
+        args.getUnbundledResourcesRoot(),
+        downwardApiConfig.isEnabledForTests());
   }
 
   private UnresolvedCxxPlatform getCxxPlatform(TargetConfiguration toolchainTargetConfiguration) {

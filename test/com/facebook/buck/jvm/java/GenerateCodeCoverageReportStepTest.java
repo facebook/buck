@@ -100,7 +100,8 @@ public class GenerateCodeCoverageReportStepTest {
             EnumSet.of(CoverageReportFormat.HTML),
             "TitleFoo",
             Optional.empty(),
-            Optional.empty());
+            Optional.empty(),
+            false);
 
     context = TestExecutionContext.newInstance();
   }
@@ -137,7 +138,8 @@ public class GenerateCodeCoverageReportStepTest {
             EnumSet.of(CoverageReportFormat.HTML),
             "TitleFoo",
             Optional.empty(),
-            Optional.empty()) {
+            Optional.empty(),
+            false) {
           @Override
           StepExecutionResult executeInternal(ExecutionContext context, Set<Path> jarFiles) {
             for (int i = 0; i < 2; i++) {
@@ -171,7 +173,8 @@ public class GenerateCodeCoverageReportStepTest {
             EnumSet.of(CoverageReportFormat.HTML),
             "TitleFoo",
             Optional.empty(),
-            Optional.empty()) {
+            Optional.empty(),
+            false) {
           @Override
           StepExecutionResult executeInternal(ExecutionContext context, Set<Path> jarFiles) {
             assertEquals(1, jarFiles.size());

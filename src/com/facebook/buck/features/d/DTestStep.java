@@ -34,7 +34,8 @@ public class DTestStep extends AbstractTestStep {
       ImmutableList<String> command,
       Path exitCode,
       Optional<Long> testRuleTimeoutMs,
-      Path output) {
+      Path output,
+      boolean withDownwardApi) {
     super(
         NAME,
         filesystem,
@@ -43,7 +44,8 @@ public class DTestStep extends AbstractTestStep {
         Optional.empty(),
         exitCode,
         testRuleTimeoutMs,
-        output);
+        output,
+        withDownwardApi);
   }
 
   @Override

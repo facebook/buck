@@ -149,6 +149,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
   private final ForkMode forkMode;
 
   private final Optional<SourcePath> unbundledResourcesRoot;
+  private final boolean withDownwardApi;
 
   public JavaTest(
       BuildTarget buildTarget,
@@ -170,7 +171,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       ForkMode forkMode,
       Optional<Level> stdOutLogLevel,
       Optional<Level> stdErrLogLevel,
-      Optional<SourcePath> unbundledResourcesRoot) {
+      Optional<SourcePath> unbundledResourcesRoot,
+      boolean withDownwardApi) {
     super(buildTarget, projectFilesystem, params);
     this.compiledTestsLibrary = compiledTestsLibrary;
     this.additionalClasspathEntriesProvider = additionalClasspathEntriesProvider;
@@ -189,6 +191,7 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
     this.stdOutLogLevel = stdOutLogLevel;
     this.stdErrLogLevel = stdErrLogLevel;
     this.unbundledResourcesRoot = unbundledResourcesRoot;
+    this.withDownwardApi = withDownwardApi;
     this.pathToTestLogs = getPathToTestOutputDirectory().resolve("logs.txt");
   }
 
@@ -218,7 +221,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
       TestRunningOptions options,
       Optional<Path> outDir,
       Optional<Path> robolectricLogPath,
-      Set<String> testClassNames) {
+      Set<String> testClassNames,
+      boolean withDownwardApi) {
 
     Iterable<String> reorderedTestClasses =
         reorderClasses(testClassNames, options.isShufflingTests());
@@ -267,7 +271,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
         testCaseTimeoutMs,
         Arg.stringify(env, pathResolver),
         javaRuntimeLauncher.getCommandPrefix(pathResolver),
-        args);
+        args,
+        withDownwardApi);
   }
 
   /** Returns the underlying java library containing the compiled tests. */
@@ -317,7 +322,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                 options,
                 Optional.of(pathToTestOutput),
                 Optional.of(pathToTestLogs),
-                Collections.singleton(testClass)));
+                Collections.singleton(testClass),
+                withDownwardApi));
       }
       junits = junitsBuilder.build();
     } else {
@@ -329,7 +335,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
                   options,
                   Optional.of(pathToTestOutput),
                   Optional.of(pathToTestLogs),
-                  testClassNames));
+                  testClassNames,
+                  withDownwardApi));
     }
     steps.addAll(junits);
     return steps.build();
@@ -553,7 +560,8 @@ public class JavaTest extends AbstractBuildRuleWithDeclaredAndExtraDeps
             options,
             Optional.empty(),
             Optional.empty(),
-            getClassNamesForSources(buildContext.getSourcePathResolver()));
+            getClassNamesForSources(buildContext.getSourcePathResolver()),
+            withDownwardApi);
     return ExternalTestRunnerTestSpec.builder()
         .setCwd(getProjectFilesystem().getRootPath().getPath())
         .setTarget(getBuildTarget())

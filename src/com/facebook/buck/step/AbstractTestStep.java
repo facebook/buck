@@ -18,6 +18,7 @@ package com.facebook.buck.step;
 
 import com.facebook.buck.core.build.execution.context.ExecutionContext;
 import com.facebook.buck.core.exceptions.HumanReadableException;
+import com.facebook.buck.downwardapi.processexecutor.DownwardApiProcessExecutor;
 import com.facebook.buck.io.filesystem.ProjectFilesystem;
 import com.facebook.buck.util.ProcessExecutor;
 import com.facebook.buck.util.ProcessExecutorParams;
@@ -46,6 +47,7 @@ public abstract class AbstractTestStep implements Step {
   private final Path exitCode;
   private final Path output;
   private final Optional<Long> testRuleTimeoutMs;
+  private final boolean withDownwardApi;
 
   public AbstractTestStep(
       String name,
@@ -55,7 +57,8 @@ public abstract class AbstractTestStep implements Step {
       Optional<ImmutableMap<String, String>> env,
       Path exitCode,
       Optional<Long> testRuleTimeoutMs,
-      Path output) {
+      Path output,
+      boolean withDownwardApi) {
     this.name = name;
     this.filesystem = filesystem;
     this.workingDirectory = workingDirectory;
@@ -64,6 +67,7 @@ public abstract class AbstractTestStep implements Step {
     this.exitCode = exitCode;
     this.testRuleTimeoutMs = testRuleTimeoutMs;
     this.output = output;
+    this.withDownwardApi = withDownwardApi;
   }
 
   @Override
@@ -93,6 +97,11 @@ public abstract class AbstractTestStep implements Step {
     ProcessExecutor.Result result;
     // Run the test process, saving the exit code.
     ProcessExecutor executor = context.getProcessExecutor();
+    if (withDownwardApi) {
+      executor =
+          executor.withDownwardAPI(DownwardApiProcessExecutor.FACTORY, context.getBuckEventBus());
+    }
+
     ImmutableSet<ProcessExecutor.Option> options =
         ImmutableSet.of(ProcessExecutor.Option.EXPECTING_STD_OUT);
     result =

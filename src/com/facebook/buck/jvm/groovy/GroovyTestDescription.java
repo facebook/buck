@@ -158,7 +158,8 @@ public class GroovyTestDescription
         args.getForkMode(),
         args.getStdOutLogLevel(),
         args.getStdErrLogLevel(),
-        args.getUnbundledResourcesRoot());
+        args.getUnbundledResourcesRoot(),
+        downwardApiConfig.isEnabledForTests());
   }
 
   @Override

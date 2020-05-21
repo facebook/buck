@@ -3,9 +3,27 @@ load(
     "java_immutables_library",
 )
 
+TEST_STEP_SRCS = ["AbstractTestStep.java"]
+
+java_immutables_library(
+    name = "test_step",
+    srcs = TEST_STEP_SRCS,
+    visibility = ["PUBLIC"],
+    deps = [
+        ":step",
+        "//src/com/facebook/buck/downwardapi/processexecutor:processexecutor",
+    ],
+    exported_deps = [
+        "//src/com/facebook/buck/core/build/execution/context:context",
+    ],
+)
+
 java_immutables_library(
     name = "step",
-    srcs = glob(["*.java"]),
+    srcs = glob(
+        ["*.java"],
+        exclude = TEST_STEP_SRCS,
+    ),
     tests = [
         "//test/com/facebook/buck/step:step",
     ],

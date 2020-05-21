@@ -60,7 +60,8 @@ public class ShTestTest {
             /* runTestSeparately */ false,
             /* labels */ ImmutableSet.of(),
             /* type */ Optional.of("custom"),
-            /* contacts */ ImmutableSet.of());
+            /* contacts */ ImmutableSet.of(),
+            false);
 
     assertThat(
         shTest.getRuntimeDeps(resolver).collect(ImmutableSet.toImmutableSet()),

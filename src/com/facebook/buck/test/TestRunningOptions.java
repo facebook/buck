@@ -68,6 +68,11 @@ public abstract class TestRunningOptions {
     return false;
   }
 
+  @Value.Default
+  public boolean isRunWithDownwardApi() {
+    return false;
+  }
+
   public abstract Optional<String> getPathToXmlTestOutput();
 
   public abstract Optional<String> getPathToJavaAgent();
